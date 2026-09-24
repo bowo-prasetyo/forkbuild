@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import NotificationHistoryPanel from '../ui/components/NotificationHistoryPanel.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import {
     NotificationCollisionOutcome,
@@ -8,11 +8,11 @@ import {
     classifyNotificationCollision
 } from '../core/NotificationDeduplicationPolicy.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
-import { GetRecipientNotificationEventsUseCase } from '../application/GetRecipientNotificationEventsUseCase.js';
+import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { PublicationCommentaryStore, PublicationCommentaryConflictError } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer, PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/PublicationCommentaryNotificationProducer.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer, PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -204,13 +204,13 @@ async function runTests() {
         // outside the tests/ tree: the Commentary producer. A fresh,
         // repo-wide sweep, not inherited from 0.9.286 Section A's own
         // (now nine-milestone-old) proof.
-        const producerSource = await rawSource('application/PublicationCommentaryNotificationProducer.js');
+        const producerSource = await rawSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js');
         assert(/new NotificationEvent\(/.test(producerSource),
             'A1. PublicationCommentaryNotificationProducer.js still constructs NotificationEvent instances.');
 
         const candidateFiles = [
-            'application/WorldNavigationSession.js',
-            'application/GetRecipientNotificationEventsUseCase.js',
+            'application/world/WorldNavigationSession.js',
+            'application/chat/GetRecipientNotificationEventsUseCase.js',
             'storage/NotificationEventStore.js',
             'ui/components/NotificationHistoryPanel.js',
             'ui/views/WorldView.js'
@@ -273,7 +273,7 @@ async function runTests() {
 
         // B4 — GetRecipientNotificationEventsUseCase.execute() is a pure
         // filter: it never calls save()/persist on the store it reads.
-        const useCaseSource = await rawSource('application/GetRecipientNotificationEventsUseCase.js');
+        const useCaseSource = await rawSource('application/chat/GetRecipientNotificationEventsUseCase.js');
         const executeMatch = useCaseSource.match(/execute\(\) \{([\s\S]*?)\n {4}\}/);
         assert(executeMatch, 'B4a. execute() is present and matchable.');
         assert(!/\.save\(|\.persist\(/.test(executeMatch[1]),
@@ -436,7 +436,7 @@ async function runTests() {
         // E1 — the producer's payload names exactly publicationId,
         // commentaryId, authorIdentityId — never documentId or
         // contentHash.
-        const producerSource = await rawSource('application/PublicationCommentaryNotificationProducer.js');
+        const producerSource = await rawSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js');
         const payloadBlockMatch = producerSource.match(/payload:\s*\{([\s\S]*?)\}/);
         assert(payloadBlockMatch, 'E1a. The producer\'s payload literal is present and matchable.');
         const payloadBlock = payloadBlockMatch[1];

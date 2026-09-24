@@ -1,42 +1,42 @@
-import { describePublicationReplicaKnowledge } from '../application/PublicationReplicaKnowledgeView.js';
-import { derivePublicationEvidenceConvergence } from '../application/PublicationEvidenceConvergence.js';
-import { publicationEvidenceConvergenceView } from '../application/PublicationEvidenceConvergenceView.js';
-import { derivePublicationSnapshotPlacementConvergence } from '../application/PublicationSnapshotPlacementConvergence.js';
-import { publicationSnapshotPlacementConvergenceView } from '../application/PublicationSnapshotPlacementConvergenceView.js';
-import { describePublicationSnapshotPossession, isSnapshotPossessed } from '../application/PublicationSnapshotPossessionView.js';
-import { describePublicationReplicaContentKnowledge } from '../application/PublicationReplicaContentKnowledgeView.js';
+import { describePublicationReplicaKnowledge } from '../application/publication/replica/PublicationReplicaKnowledgeView.js';
+import { derivePublicationEvidenceConvergence } from '../application/publication/evidence/PublicationEvidenceConvergence.js';
+import { publicationEvidenceConvergenceView } from '../application/publication/evidence/PublicationEvidenceConvergenceView.js';
+import { derivePublicationSnapshotPlacementConvergence } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergence.js';
+import { publicationSnapshotPlacementConvergenceView } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergenceView.js';
+import { describePublicationSnapshotPossession, isSnapshotPossessed } from '../application/snapshot/possession/PublicationSnapshotPossessionView.js';
+import { describePublicationReplicaContentKnowledge } from '../application/publication/replica/PublicationReplicaContentKnowledgeView.js';
 
-import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
-import { LocalSnapshotContentAvailabilityOutcome } from '../application/LocalSnapshotContentAvailabilityOutcome.js';
+import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
+import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
 
-import { buildPublicationReplicaPackage } from '../application/PublicationReplicaPackage.js';
-import { ImportPublicationReplicaPackageUseCase } from '../application/ImportPublicationReplicaPackageUseCase.js';
-import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/BuildPublicationSnapshotTransferPackageUseCase.js';
-import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
-import { SnapshotContentTransferOutcome } from '../application/SnapshotContentTransferOutcome.js';
+import { buildPublicationReplicaPackage } from '../application/publication/replica/PublicationReplicaPackage.js';
+import { ImportPublicationReplicaPackageUseCase } from '../application/publication/replica/ImportPublicationReplicaPackageUseCase.js';
+import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js';
+import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js';
+import { SnapshotContentTransferOutcome } from '../application/snapshot/materialization/SnapshotContentTransferOutcome.js';
 
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
-import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
-import { MaterializeSnapshotFromPlacementUseCase } from '../application/MaterializeSnapshotFromPlacementUseCase.js';
-import { SnapshotPlacementMaterializationOutcome } from '../application/SnapshotPlacementMaterializationOutcome.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
+import { MaterializeSnapshotFromPlacementUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js';
+import { SnapshotPlacementMaterializationOutcome } from '../application/snapshot/placement/SnapshotPlacementMaterializationOutcome.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
 
-import { MaterializeSnapshotFromPeerUseCase } from '../application/MaterializeSnapshotFromPeerUseCase.js';
-import { PeerSnapshotMaterializationOutcome } from '../application/PeerSnapshotMaterializationOutcome.js';
+import { MaterializeSnapshotFromPeerUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromPeerUseCase.js';
+import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { createSnapshotMaterializationAttempt } from '../application/SnapshotMaterializationAttempt.js';
-import { appendSnapshotMaterializationHistoryEntry } from '../application/SnapshotMaterializationHistory.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { createSnapshotMaterializationAttempt } from '../application/snapshot/materialization/SnapshotMaterializationAttempt.js';
+import { appendSnapshotMaterializationHistoryEntry } from '../application/snapshot/materialization/SnapshotMaterializationHistory.js';
 
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
 
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -135,7 +135,7 @@ function makeFakeIpfsNode(network = new Map()) {
     return { network, fetchImpl };
 }
 
-// A minimal fake application/PublicationSnapshotContentPeerExchange.js,
+// A minimal fake application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js,
 // mirroring tests/SnapshotMaterializationHistory.test.js's own FakeExchange
 // exactly — deterministic and scriptable.
 class FakeExchange {

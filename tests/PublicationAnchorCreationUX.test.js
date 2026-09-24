@@ -1,18 +1,18 @@
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/CreateExternalPublicationAnchorOrchestratorUseCase.js';
-import { ExternalAnchorPublisherRegistry } from '../application/ExternalAnchorPublisherRegistry.js';
-import { ExternalAnchorCreationOutcome } from '../application/ExternalAnchorCreationOutcome.js';
-import { PublicationAnchorCreationCoordinator } from '../application/PublicationAnchorCreationCoordinator.js';
-import { CreatePublicationAnchorCreationCoordinatorUseCase } from '../application/CreatePublicationAnchorCreationCoordinatorUseCase.js';
-import { ExternalAnchorCreationUiState } from '../application/ExternalAnchorCreationUiState.js';
-import { describeCreationAttempt, describeCreationButtonLabel } from '../application/PublicationAnchorCreationView.js';
-import { CreatePublicationEvidenceCoordinatorUseCase } from '../application/CreatePublicationEvidenceCoordinatorUseCase.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/anchoring/CreateExternalPublicationAnchorOrchestratorUseCase.js';
+import { ExternalAnchorPublisherRegistry } from '../application/anchoring/ExternalAnchorPublisherRegistry.js';
+import { ExternalAnchorCreationOutcome } from '../application/anchoring/ExternalAnchorCreationOutcome.js';
+import { PublicationAnchorCreationCoordinator } from '../application/anchoring/PublicationAnchorCreationCoordinator.js';
+import { CreatePublicationAnchorCreationCoordinatorUseCase } from '../application/anchoring/CreatePublicationAnchorCreationCoordinatorUseCase.js';
+import { ExternalAnchorCreationUiState } from '../application/anchoring/ExternalAnchorCreationUiState.js';
+import { describeCreationAttempt, describeCreationButtonLabel } from '../application/anchoring/PublicationAnchorCreationView.js';
+import { CreatePublicationEvidenceCoordinatorUseCase } from '../application/publication/evidence/CreatePublicationEvidenceCoordinatorUseCase.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
 import { BitcoinAnchorPublisher } from '../anchoring/BitcoinAnchorPublisher.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -147,7 +147,7 @@ function publishContent(publicationCatalog, { id, hash }) {
 
 // Mirrors ui/views/DecentralizedPublicationsView.js#createAnchor() exactly
 // — a caller-supplied try/catch around the coordinator, since
-// application/PublicationAnchorCreationCoordinator.js never catches a
+// application/anchoring/PublicationAnchorCreationCoordinator.js never catches a
 // signing failure itself (see that class's own header).
 async function clickCreate(creationCoordinator, publicationId, anchorType) {
     try {
@@ -196,7 +196,7 @@ async function run() {
 
         // The new anchor immediately shows up in the ordinary,
         // never-auto-verified evidence list — the identical purely local
-        // catalog read application/PublicationEvidenceCoordinator.js#
+        // catalog read application/publication/evidence/PublicationEvidenceCoordinator.js#
         // discover() already provides, completely unchanged by this
         // milestone.
         const discovered = evidenceCoordinator.discover('pub-flagship');

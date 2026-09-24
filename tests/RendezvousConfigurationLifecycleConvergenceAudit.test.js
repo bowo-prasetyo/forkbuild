@@ -9,7 +9,7 @@ import { RendezvousConfigurationStore } from '../storage/RendezvousConfiguration
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
-import { SetRendezvousConfigurationUseCase } from '../application/SetRendezvousConfigurationUseCase.js';
+import { SetRendezvousConfigurationUseCase } from '../application/settings/SetRendezvousConfigurationUseCase.js';
 import { RendezvousTransport } from '../peer/RendezvousTransport.js';
 import { WebSocketRendezvousTransport } from '../peer/WebSocketRendezvousTransport.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
@@ -221,7 +221,7 @@ async function run() {
     {
         const configSource = await source('core/RendezvousConfiguration.js');
         const storeSource = await source('storage/RendezvousConfigurationStore.js');
-        const useCaseSource = await source('application/SetRendezvousConfigurationUseCase.js');
+        const useCaseSource = await source('application/settings/SetRendezvousConfigurationUseCase.js');
         const viewSource = await source('ui/views/RendezvousSettingsView.js');
         const mainSource = await source('ui/main.js');
 
@@ -243,7 +243,7 @@ async function run() {
         }
 
         assert(storeSource.includes("'rendezvous-configuration'"), 'A6. the store owns the one storage key literal');
-        for (const [label, src] of [['core/RendezvousConfiguration.js', configSource], ['application/SetRendezvousConfigurationUseCase.js', useCaseSource], ['ui/views/RendezvousSettingsView.js', viewSource], ...otherFiles]) {
+        for (const [label, src] of [['core/RendezvousConfiguration.js', configSource], ['application/settings/SetRendezvousConfigurationUseCase.js', useCaseSource], ['ui/views/RendezvousSettingsView.js', viewSource], ...otherFiles]) {
             assert(!src.includes('rendezvous-configuration'), `A7 (${label}). no second file hardcodes the storage key — one key, one owner`);
         }
 
@@ -824,12 +824,12 @@ async function run() {
     {
         const configSource = executableOf(await source('core/RendezvousConfiguration.js'));
         const storeSource = executableOf(await source('storage/RendezvousConfigurationStore.js'));
-        const useCaseSource = executableOf(await source('application/SetRendezvousConfigurationUseCase.js'));
+        const useCaseSource = executableOf(await source('application/settings/SetRendezvousConfigurationUseCase.js'));
         const viewSource = executableOf(await source('ui/views/RendezvousSettingsView.js'));
         const filesUnderAudit = [
             ['core/RendezvousConfiguration.js', configSource],
             ['storage/RendezvousConfigurationStore.js', storeSource],
-            ['application/SetRendezvousConfigurationUseCase.js', useCaseSource],
+            ['application/settings/SetRendezvousConfigurationUseCase.js', useCaseSource],
             ['ui/views/RendezvousSettingsView.js', viewSource]
         ];
 

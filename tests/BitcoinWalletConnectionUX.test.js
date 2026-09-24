@@ -3,8 +3,8 @@ import { BitcoinAnchorPsbtBuilder } from '../anchoring/BitcoinAnchorPsbtBuilder.
 import { BitcoinAnchorWalletSigner } from '../anchoring/BitcoinAnchorWalletSigner.js';
 import { BitcoinWalletConnection } from '../anchoring/BitcoinWalletConnection.js';
 import { BitcoinInjectedProviderWalletAdapter } from '../anchoring/BitcoinInjectedProviderWalletAdapter.js';
-import { BitcoinWalletConnectionState } from '../application/BitcoinWalletConnectionState.js';
-import { describeBitcoinWalletConnectionStateLabel, describeBitcoinWalletConnection } from '../application/BitcoinWalletConnectionView.js';
+import { BitcoinWalletConnectionState } from '../application/anchoring/bitcoin/BitcoinWalletConnectionState.js';
+import { describeBitcoinWalletConnectionStateLabel, describeBitcoinWalletConnection } from '../application/anchoring/bitcoin/BitcoinWalletConnectionView.js';
 
 // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.
 //

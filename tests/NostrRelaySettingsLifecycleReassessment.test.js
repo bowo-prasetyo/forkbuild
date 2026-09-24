@@ -3,17 +3,17 @@ import { readFile } from 'node:fs/promises';
 import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
-import { SetNostrRelayConfigurationUseCase } from '../application/SetNostrRelayConfigurationUseCase.js';
+import { SetNostrRelayConfigurationUseCase } from '../application/settings/SetNostrRelayConfigurationUseCase.js';
 import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
-import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQueryService.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
-import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
+import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
+import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 import { DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL, DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
@@ -472,8 +472,8 @@ async function run() {
         // D1. Behavioral proof: the three write-path composition
         // functions never read a settings-saved override, even when one
         // is on file at the exact same moment.
-        const { composeSnapshotDistributionRuntime } = await import('../application/SnapshotDistributionRuntimeComposition.js');
-        const { composePlaceNamingPublicationRuntime } = await import('../application/PlaceNamingPublicationRuntimeComposition.js');
+        const { composeSnapshotDistributionRuntime } = await import('../application/snapshot/SnapshotDistributionRuntimeComposition.js');
+        const { composePlaceNamingPublicationRuntime } = await import('../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js');
 
         const store = new NostrRelayConfigurationStore(new InMemoryStorageProvider());
         new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore: store }).execute({ relayUrls: ['wss://my-read-only-relay.example'] });
@@ -608,7 +608,7 @@ async function run() {
         // so a Nostr-only outage does not necessarily produce a total
         // empty result the way it does for the two sole-sourced families
         // above.
-        const worldEncounterCompositionSource = await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
+        const worldEncounterCompositionSource = await source('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(/each configured service is queried independently/.test(worldEncounterCompositionSource),
             'E5. Publication discovery genuinely queries Nostr and Arweave independently — never a single point of failure the way Snapshot/Place-Naming discovery are');
 
@@ -749,7 +749,7 @@ async function run() {
         // bot-detection wall), a structurally different fact from the
         // occasional-outage narrowness this section's own DEFER reasoning
         // was originally about.
-        const worldEncounterCompositionSource = await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
+        const worldEncounterCompositionSource = await source('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(!/ipfs/i.test(worldEncounterCompositionSource), 'H1. World Encounter material discovery composition still never references IPFS — Local + Nostr + Arweave only');
         const mainSourceForIpfs = await source('ui/main.js');
         const ipfsGatewayUsageCount = (mainSourceForIpfs.match(/composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/g) || []).length;

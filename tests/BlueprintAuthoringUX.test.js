@@ -6,19 +6,19 @@ import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { Structure } from '../core/Structure.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { EditorContext } from '../application/EditorContext.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
-import { EditorActionContext } from '../application/EditorActionContext.js';
-import { LocalStructureLibraryStore } from '../application/LocalStructureLibraryStore.js';
-import { ForkStructureToLibraryUseCase } from '../application/ForkStructureToLibraryUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { EditorContext } from '../application/editor/EditorContext.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { EditorActionContext } from '../application/editor/EditorActionContext.js';
+import { LocalStructureLibraryStore } from '../application/editor/LocalStructureLibraryStore.js';
+import { ForkStructureToLibraryUseCase } from '../application/editor/ForkStructureToLibraryUseCase.js';
 
 // 0.6.3 — Blueprint Authoring & Versioning UX.
 //
@@ -33,14 +33,14 @@ import { ForkStructureToLibraryUseCase } from '../application/ForkStructureToLib
 // Nothing in this milestone adds mutable Structure editing (0.4.3's own
 // "Structures remain immutable values" stands unchanged) or a
 // sourceStructureId/version/parentBlueprintId field on Structure itself
-// — see application/ForkStructureToLibraryUseCase.js's own header, and
+// — see application/editor/ForkStructureToLibraryUseCase.js's own header, and
 // docs/Roadmap.md, 0.6.3's "Deliberately excluded."
 //
 //   Section A: EditorActionRegistry — 'structure.createFromSelection'
 //              is now labeled "Create Blueprint", tier 'advanced', and
 //              opens ui.openCreateBlueprintDialog(), degrading to
 //              feedback on a surface without that hook.
-//   Section B: application/ForkStructureToLibraryUseCase.js /
+//   Section B: application/editor/ForkStructureToLibraryUseCase.js /
 //              EditorSession#forkStructureToPersonalLibrary() — a
 //              built-in Structure fork gets a fresh id and fresh brick
 //              ids, preserves metadata, and never touches the built-in
@@ -266,8 +266,8 @@ async function run() {
 
         // 7. Export Farmstead Deluxe, import it into a wholly separate
         //    "device" (its own store), place the imported copy.
-        const { ExportBlueprintUseCase } = await import('../application/ExportBlueprintUseCase.js');
-        const { ImportBlueprintUseCase } = await import('../application/ImportBlueprintUseCase.js');
+        const { ExportBlueprintUseCase } = await import('../application/blueprint/ExportBlueprintUseCase.js');
+        const { ImportBlueprintUseCase } = await import('../application/blueprint/ImportBlueprintUseCase.js');
         const pkg = new ExportBlueprintUseCase().execute(deluxe);
         const otherDeviceStore = new LocalStructureLibraryStore({ storageProvider: new InMemoryStorageProvider() });
         const importedDeluxe = new ImportBlueprintUseCase().execute(pkg, { registry: brickRegistry });

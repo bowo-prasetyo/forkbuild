@@ -1,8 +1,8 @@
 // 0.9.204 — Editor Autosave & Recovery UI Integration. Exactly
 // ActionFeedback.js/DocumentInfoPanel.js's own posture: no use-case
 // imports, no mutation, no storage access — it only renders whatever
-// application/RecoveryObserver.js last offered (the shape
-// application/CheckRecoveryUseCase.js's own execute() returns) and emits
+// application/document/RecoveryObserver.js last offered (the shape
+// application/document/CheckRecoveryUseCase.js's own execute() returns) and emits
 // 'recover'/'discard' for the host view to run through the existing
 // RecoverDocumentUseCase/DiscardRecoveryUseCase. See docs/Roadmap.md,
 // 0.9.204: "The UI should not implement recovery itself."

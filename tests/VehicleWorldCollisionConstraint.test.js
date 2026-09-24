@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { resolveHorizontalMovement, AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
-import { AvatarMovementConstraint } from '../application/AvatarMovementConstraint.js';
-import { AvatarTreeConstraint } from '../application/AvatarTreeConstraint.js';
-import { AvatarVehicleMovementController, isMovableVehicleType } from '../application/AvatarVehicleMovementController.js';
+import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
+import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
+import { AvatarVehicleMovementController, isMovableVehicleType } from '../application/avatar/AvatarVehicleMovementController.js';
 import { VehicleInstance } from '../core/VehicleInstance.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
@@ -16,24 +16,24 @@ import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.119 — Vehicle–World Collision Constraint.
 //
 //   Section A: core/AvatarCollision.js — resolveHorizontalMovement()'s new
 //              optional `radius` parameter
-//   Section B: application/AvatarMovementConstraint.js — apply()'s new
+//   Section B: application/avatar/AvatarMovementConstraint.js — apply()'s new
 //              optional `avatarRadius` option, against a REAL brick
-//   Section C: application/AvatarVehicleMovementController.js — the
+//   Section C: application/avatar/AvatarVehicleMovementController.js — the
 //              actual composition seam: building collision, then tree
 //              collision, applied to a vehicle's own simulated position,
 //              each handed the vehicle's own capability.collisionRadius
-//   Section D: application/WorldNavigationSession.js — end to end, real
+//   Section D: application/world/WorldNavigationSession.js — end to end, real
 //              fixture bicycle, real tree, real dismount, real on-foot
 //              avatar sharing the identical constraint instances
 //   Section E: architectural regression — no second collision system, no
@@ -159,7 +159,7 @@ function findIsolatedTree() {
 
 // A single real 1x1x1 'core:cube' brick as the sole obstacle in an
 // otherwise-empty document/building, plus the loadedDocuments/
-// getWorldPosition/brickRegistry trio application/AvatarMovementConstraint.js
+// getWorldPosition/brickRegistry trio application/avatar/AvatarMovementConstraint.js
 // itself expects — the exact same minimal fixture
 // tests/AvatarCollision.test.js's own Section A already builds by hand,
 // with no publication/spatial-index machinery needed for a pure
@@ -206,7 +206,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — application/AvatarMovementConstraint.js: apply()'s new
+    // Section B — application/avatar/AvatarMovementConstraint.js: apply()'s new
     // optional `avatarRadius`, against a REAL brick.
     // -------------------------------------------------------------
     {
@@ -228,7 +228,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — application/AvatarVehicleMovementController.js: the
+    // Section C — application/avatar/AvatarVehicleMovementController.js: the
     // actual collision-constraint composition seam.
     // -------------------------------------------------------------
     const bicycleCapability = resolveAvatarVehicleMovementCapability(VehicleType.BICYCLE);
@@ -367,12 +367,12 @@ async function runTests() {
     // type left to exercise the "canMove()'s own gate runs before
     // either constraint is ever consulted" scenario this block once
     // tested with DRONE. The defense-in-depth gate itself
-    // (application/AvatarVehicleMovementController.js's own
+    // (application/avatar/AvatarVehicleMovementController.js's own
     // `isMovableVehicleType()` check inside tick()) remains in place for
     // a future, not-yet-movable vehicle type.
 
     // -------------------------------------------------------------
-    // Section D — application/WorldNavigationSession.js: end to end,
+    // Section D — application/world/WorldNavigationSession.js: end to end,
     // real fixture bicycle, real tree, real dismount, real on-foot
     // avatar.
     // -------------------------------------------------------------
@@ -472,8 +472,8 @@ async function runTests() {
             'vehicle-vs-vehicle', 'vehicleVsVehicle'
         ];
         for (const path of [
-            '../application/AvatarVehicleMovementController.js',
-            '../application/AvatarMovementConstraint.js',
+            '../application/avatar/AvatarVehicleMovementController.js',
+            '../application/avatar/AvatarMovementConstraint.js',
             '../core/AvatarCollision.js'
         ]) {
             const codeOnly = await sourceOf(path);
@@ -482,11 +482,11 @@ async function runTests() {
             }
         }
 
-        const controllerSource = await sourceOf('../application/AvatarVehicleMovementController.js');
+        const controllerSource = await sourceOf('../application/avatar/AvatarVehicleMovementController.js');
         assert((controllerSource.match(/capability\.collisionRadius/g) || []).length >= 2,
             '29. AvatarVehicleMovementController.js hands capability.collisionRadius to BOTH constraints — never a hardcoded radius for either');
 
-        const sessionSource = await sourceOf('../application/WorldNavigationSession.js');
+        const sessionSource = await sourceOf('../application/world/WorldNavigationSession.js');
         assert(sessionSource.includes('new AvatarVehicleMovementController(') && sessionSource.includes('movementConstraint,') && sessionSource.includes('treeConstraint'),
             '30. WorldNavigationSession.js wires movementConstraint/treeConstraint into AvatarVehicleMovementController — never a second, vehicle-only pair of constraint instances');
     }

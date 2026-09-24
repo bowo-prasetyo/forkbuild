@@ -160,7 +160,7 @@ export function abbreviateIdentityLabel(label, maxLength = 10) {
 // OPTIONAL contextual target noun — "Bob is BUILDING" becomes "Bob is
 // Building House" the moment a caller can resolve WHAT Bob's own
 // `WorldSpatialSelection` actually points at (see
-// application/WorldNavigationSession.js#_resolveSpatialContextualLabel()).
+// application/world/WorldNavigationSession.js#_resolveSpatialContextualLabel()).
 // `contextualLabel` is deliberately just a display string, resolved
 // entirely OUTSIDE this file — this function stays exactly as pure as
 // deriveWorldSpatialActivity() itself, never reaching into a World or a

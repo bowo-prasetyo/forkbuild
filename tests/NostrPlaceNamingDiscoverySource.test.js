@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 
@@ -260,9 +260,9 @@ async function run() {
     // proving "no semantic leakage" structurally, not just by convention.
     // ---------------------------------------------------------------
     {
-        const source = await readFile(new URL('../application/NostrPlaceNamingDiscoverySource.js', import.meta.url), 'utf8');
+        const source = await readFile(new URL('../application/placeNaming/NostrPlaceNamingDiscoverySource.js', import.meta.url), 'utf8');
         // utils/ helpers carry no Place Naming vocabulary, so they don't count.
-        const importLines = source.split('\n').filter((line) => /^\s*import\s/.test(line) && !line.includes("from '../utils/"));
+        const importLines = source.split('\n').filter((line) => /^\s*import\s/.test(line) && !line.includes("from '../../utils/"));
         assert(importLines.length === 0, '22. this file imports nothing but utils/ helpers — no envelope parser, no verifier, no store, no presentation module, not even a sibling discovery family; it is a pure Nostr transport shim over an injected queryImpl');
 
         console.log('✓ Section J: architectural regression — no imports beyond utils/ helpers, proving "no semantic leakage" structurally rather than by convention alone');

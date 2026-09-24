@@ -1,17 +1,17 @@
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import {
     LocalPublicationSnapshotPlacementStore,
     PUBLICATION_SNAPSHOT_PLACEMENT_STORE_KEY
-} from '../application/LocalPublicationSnapshotPlacementStore.js';
+} from '../application/snapshot/placement/LocalPublicationSnapshotPlacementStore.js';
 import {
     RestorePublicationSnapshotPlacementCatalogUseCase,
     PlacementRestorationRejectionReason
-} from '../application/RestorePublicationSnapshotPlacementCatalogUseCase.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { SnapshotPlacementResolver } from '../application/SnapshotPlacementResolver.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
+} from '../application/snapshot/placement/RestorePublicationSnapshotPlacementCatalogUseCase.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -182,7 +182,7 @@ async function run() {
         catalog.add(secondPlacement);
         const preExistingKeyEntries = storageProvider.load(PUBLICATION_SNAPSHOT_PLACEMENT_STORE_KEY);
         assert(Array.isArray(preExistingKeyEntries) && preExistingKeyEntries.some((e) => e.placement.id === secondPlacement.id),
-            '5. the catalog persists under the same key application/LocalPublicationSnapshotPlacementStore.js reads/writes');
+            '5. the catalog persists under the same key application/snapshot/placement/LocalPublicationSnapshotPlacementStore.js reads/writes');
     }
     console.log('✓ Section B: LocalPublicationSnapshotPlacementCatalog and LocalPublicationSnapshotPlacementStore share one physical storage/key');
 

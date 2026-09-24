@@ -6,8 +6,8 @@ import { ContentReference } from '../core/ContentReference.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
-import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/PublicationCommentaryNotificationProducer.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
+import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.350 — Cross-Arc Product Evolution Reassessment.
@@ -120,20 +120,20 @@ async function runTests() {
     // ===============================================================
     {
         const arcs = [
-            ['Local Repository / Publication creation', 'application/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase', 'COMPLETE'],
-            ['Editing and recovery', 'application/CheckRecoveryUseCase.js', 'export class CheckRecoveryUseCase', 'COMPLETE'],
+            ['Local Repository / Publication creation', 'application/publication/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase', 'COMPLETE'],
+            ['Editing and recovery', 'application/document/CheckRecoveryUseCase.js', 'export class CheckRecoveryUseCase', 'COMPLETE'],
             ['Collaboration', 'collaboration/CollaborationSession.js', 'export class', 'OBSOLETE (legacy authority protocol) / COMPLETE (live causal chain)'],
-            ['Publication Commentary', 'application/AddPublicationCommentaryUseCase.js', 'export class AddPublicationCommentaryUseCase', 'COMPLETE'],
+            ['Publication Commentary', 'application/publication/commentary/AddPublicationCommentaryUseCase.js', 'export class AddPublicationCommentaryUseCase', 'COMPLETE'],
             ['World View / Encounter', 'ui/components/WorldEncounterCanvas.js', 'export default', 'COMPLETE'],
-            ['Snapshot discovery and materialization', 'application/MaterializeSnapshotFromPlacementUseCase.js', 'export class', 'COMPLETE'],
-            ['Snapshot World placement', 'application/AddPublicationSnapshotPlacementUseCase.js', 'export class', 'COMPLETE'],
-            ['Place Naming', 'application/PlaceNamingClaimUseCase.js', 'export class', 'COMPLETE'],
+            ['Snapshot discovery and materialization', 'application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js', 'export class', 'COMPLETE'],
+            ['Snapshot World placement', 'application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js', 'export class', 'COMPLETE'],
+            ['Place Naming', 'application/placeNaming/PlaceNamingClaimUseCase.js', 'export class', 'COMPLETE'],
             ['Decentralized Publication discovery', 'discovery/DecentralizedPublicationDiscoveryProvider.js', 'export class DecentralizedPublicationDiscoveryProvider', 'COMPLETE (encounter-driven; proactive search deliberately excluded)'],
-            ['Decentralized Snapshot distribution', 'application/SnapshotDistributionCommand.js', 'export', 'COMPLETE'],
-            ['Publication announcement', 'application/PublicationDistributionCommand.js', 'export', 'COMPLETE'],
-            ['Provider preference for content', 'application/ResolvePreferredRoleProviderUseCase.js', 'export class', 'COMPLETE (CONTENT role only, by design)'],
-            ['Peer Publication synchronization', 'application/PublicationPeerConnectionSync.js', 'export class', 'COMPLETE'],
-            ['Known-peer auto-connection', 'application/AutoConnectKnownPeersUseCase.js', 'export class', 'COMPLETE'],
+            ['Decentralized Snapshot distribution', 'application/snapshot/SnapshotDistributionCommand.js', 'export', 'COMPLETE'],
+            ['Publication announcement', 'application/publication/distribution/PublicationDistributionCommand.js', 'export', 'COMPLETE'],
+            ['Provider preference for content', 'application/settings/ResolvePreferredRoleProviderUseCase.js', 'export class', 'COMPLETE (CONTENT role only, by design)'],
+            ['Peer Publication synchronization', 'application/publication/PublicationPeerConnectionSync.js', 'export class', 'COMPLETE'],
+            ['Known-peer auto-connection', 'application/peer/AutoConnectKnownPeersUseCase.js', 'export class', 'COMPLETE'],
             ['Post-publish distribution guidance', 'ui/components/OwnPublicationPanel.js', 'publicationDistributionCommand', 'COMPLETE'],
             ['Notification history', 'core/NotificationEvent.js', 'export class NotificationEvent', 'COMPLETE (no delivery/read-state, by design)']
         ];
@@ -154,13 +154,13 @@ async function runTests() {
             'collaboration/AuthorityCollaborationTransport.js',
             'collaboration/LocalCollaborationTransport.js',
             'core/CollaborationEnvelope.js',
-            'application/CreateCollaborationUseCase.js'
+            'application/document/CreateCollaborationUseCase.js'
         ];
         for (const path of legacyCollabFiles) {
             assert(await sourceExists(path), `A17a. ${path} still exists — not deleted.`);
         }
         const legacyCallers = await grepCount('CreateCollaborationUseCase', ['application', 'ui']);
-        assert(legacyCallers <= 1, `A17b. application/CreateCollaborationUseCase.js still has no caller outside its own file (found ${legacyCallers} matching file(s)).`);
+        assert(legacyCallers <= 1, `A17b. application/document/CreateCollaborationUseCase.js still has no caller outside its own file (found ${legacyCallers} matching file(s)).`);
 
         console.log('✓ A: Baseline frozen. All sixteen named arcs are IMPLEMENTED and REACHABLE (A1-A16, one fresh signal each). The legacy 0.2.7-0.2.9 collaboration protocol remains the one OBSOLETE exception, reconfirmed uncalled a fifth time (A17) — sixty-plus milestones of standing architecture debt, never a product gap.');
     }
@@ -185,14 +185,14 @@ async function runTests() {
             'B1d. EditorView.js still consumes route.query.fork through ForkDocumentUseCase on load.');
 
         // B2. Create -> Publish -> Distribute -> Remote Discover -> Retrieve.
-        const distCommandSource = await rawSource('application/PublicationDistributionCommand.js');
+        const distCommandSource = await rawSource('application/publication/distribution/PublicationDistributionCommand.js');
         assert(!/PeerContentExchange|ConnectedPeerRegistry/.test(distCommandSource),
             'B2a. PublicationDistributionCommand.js still never contacts a remote peer directly — distribution is upload+announce, never delivery.');
         const noPublicationDiscoveryQueryService = !(await sourceExists('application/PublicationDiscoveryQueryService.js'))
             && (await grepCount('class.*PublicationDiscoveryQueryService', ['application'])) === 0;
         assert(noPublicationDiscoveryQueryService,
             'B2b. No PublicationDiscoveryQueryService/Source pair exists for Publications (unlike Place Naming\'s NostrPlaceNamingDiscoverySource or Snapshot\'s own discovery sources) — proactive crawl-for-unknown-Publications stays absent, a documented 0.9.330/0.9.340 exclusion, reconfirmed fresh.');
-        const syncSource = await rawSource('application/PublicationPeerConnectionSync.js');
+        const syncSource = await rawSource('application/publication/PublicationPeerConnectionSync.js');
         assert(/never\s+["']?download content/.test(syncSource) || /never.*download content/i.test(syncSource),
             'B2c. PublicationPeerConnectionSync.js still documents that it moves the envelope only, never material bytes.');
         const mainSource = await rawSource('ui/main.js');
@@ -203,7 +203,7 @@ async function runTests() {
             'B2e. DecentralizedPublicationsView.js still carries the one production admission call (resolve -> admit -> Repository-visible).');
 
         // B3. Encounter -> Inspect -> Comment -> Receive Notification.
-        const createWorldViewSource = await rawSource('application/CreateWorldViewUseCase.js');
+        const createWorldViewSource = await rawSource('application/world/CreateWorldViewUseCase.js');
         assert(/new PublicationCommentaryNotificationProducer\(/.test(createWorldViewSource),
             'B3a. CreateWorldViewUseCase.js still wraps commentary through PublicationCommentaryNotificationProducer, never the raw use case directly.');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
@@ -224,7 +224,7 @@ async function runTests() {
         // B5. Connect -> Exchange Publication -> Repository -> Explore/Fork.
         assert(/new AutoConnectKnownPeersUseCase\(/.test(mainSource),
             'B5a. ui/main.js still constructs the real AutoConnectKnownPeersUseCase at startup (automatic Connect).');
-        const peerExchangeUseCaseSource = await rawSource('application/CreatePublicationPeerExchangeUseCase.js');
+        const peerExchangeUseCaseSource = await rawSource('application/publication/CreatePublicationPeerExchangeUseCase.js');
         assert(/new PublicationPeerConnectionSync\(/.test(peerExchangeUseCaseSource),
             'B5b. CreatePublicationPeerExchangeUseCase.js still constructs a real PublicationPeerConnectionSync (automatic Exchange on any authenticated peer, manual or auto-connected).');
         // Repository/Explore/Fork re-use exactly B1's own already-verified chain — never a second mechanism.
@@ -281,9 +281,9 @@ async function runTests() {
         // from the content itself. PublicationDistributionCommand.js's
         // own header names `discovery.relayUrl` as a real, separate
         // field from the material it discovers.
-        const distResultSource = await rawSource('application/PublicationDistributionResult.js');
+        const distResultSource = await rawSource('application/publication/distribution/PublicationDistributionResult.js');
         assert(/discovery\.relayUrl/.test(distResultSource),
-            'C5. application/PublicationDistributionResult.js still names discovery.relayUrl as its own field — discovery ORIGIN (where a rumor came from) stays distinct from the material itself.');
+            'C5. application/publication/distribution/PublicationDistributionResult.js still names discovery.relayUrl as its own field — discovery ORIGIN (where a rumor came from) stays distinct from the material itself.');
 
         // C6. Peer identity (peer/PeerIdentity.js's own identityId) is a
         // fourth, independent identity kind — never aliased to
@@ -313,7 +313,7 @@ async function runTests() {
 
         // C8. World source — a registry/selection concept distinct from
         // any of the above, confirmed to exist as its own family.
-        assert(await sourceExists('application/WorldDiscoverySourceRegistry.js') || (await grepCount('WorldDiscoverySourceRegistry', ['application', 'core'])) > 0,
+        assert(await sourceExists('application/discovery/WorldDiscoverySourceRegistry.js') || (await grepCount('WorldDiscoverySourceRegistry', ['application', 'core'])) > 0,
             'C8. A World-source concept (WorldDiscoverySourceRegistry or equivalent) still exists as its own family, independent of Publication/Snapshot/Peer identity.');
 
         console.log('✓ C: Identity-boundary audit. All thirteen kinds the brief names resolve to real, distinguishable values (C1-C8). No accidental equivalence found: Publication !== Snapshot (explicit on file, C2), contentHash !== contentReference !== material URI (C3), "discovery envelope" is three deliberately different shapes, never one type (C4), discovery origin is its own field (C5), peer identity is a fourth independent kind (C6), notificationId !== commentaryId even under a live same-event scenario (C7), World source remains its own family (C8).');
@@ -327,9 +327,9 @@ async function runTests() {
     {
         // D1. published !== distributed. PublishDocumentUseCase carries
         // no distribution vocabulary (0.9.349 Section E, reconfirmed).
-        const publishSource = codeOnlyLines(await rawSource('application/PublishDocumentUseCase.js'));
+        const publishSource = codeOnlyLines(await rawSource('application/publication/PublishDocumentUseCase.js'));
         assert(!/Distribution|distribute/i.test(publishSource),
-            'D1. application/PublishDocumentUseCase.js still carries no distribution vocabulary — publishing and distributing remain two separate acts, reconfirmed fresh.');
+            'D1. application/publication/PublishDocumentUseCase.js still carries no distribution vocabulary — publishing and distributing remain two separate acts, reconfirmed fresh.');
 
         // D2. distributed remains an ACTION, never a Publication STATE —
         // this milestone's own brief calls this out by name as
@@ -348,9 +348,9 @@ async function runTests() {
         // PublicationDistributionCommand.js nor
         // PublicationDistributionOrchestrator.js imports the
         // admission/discovery-ingestion pipeline.
-        const orchestratorSource = await rawSource('application/PublicationDistributionOrchestrator.js');
+        const orchestratorSource = await rawSource('application/publication/distribution/PublicationDistributionOrchestrator.js');
         assert(!/PublicationResolutionCoordinator|DecentralizedPublicationDiscoveryProvider|CompositeDiscoveryProvider/.test(distSourceOrEmpty(orchestratorSource))
-            && !/PublicationResolutionCoordinator|DecentralizedPublicationDiscoveryProvider|CompositeDiscoveryProvider/.test(distSourceOrEmpty(await rawSource('application/PublicationDistributionCommand.js'))),
+            && !/PublicationResolutionCoordinator|DecentralizedPublicationDiscoveryProvider|CompositeDiscoveryProvider/.test(distSourceOrEmpty(await rawSource('application/publication/distribution/PublicationDistributionCommand.js'))),
             'D3. Neither PublicationDistributionOrchestrator.js nor PublicationDistributionCommand.js imports any part of the Repository-admission/discovery-ingestion pipeline — announcing is never itself becoming visible.');
 
         // D4. discovered (envelope known) !== retrieved (bytes fetched)
@@ -358,15 +358,15 @@ async function runTests() {
         // without content ever being retrieved — PublicationResolver's
         // own content step reads ONLY the local ContentStore (0.9.343's
         // own headline finding, reconfirmed fresh).
-        const resolverSource = await rawSource('application/PublicationResolver.js');
+        const resolverSource = await rawSource('application/publication/PublicationResolver.js');
         assert(/local/i.test(resolverSource) && /ContentStore/.test(resolverSource),
-            'D4. application/PublicationResolver.js still documents its content step as local-store-bound — resolving the envelope and retrieving the bytes remain two distinct, separately-triggered stages.');
+            'D4. application/publication/PublicationResolver.js still documents its content step as local-store-bound — resolving the envelope and retrieving the bytes remain two distinct, separately-triggered stages.');
 
         // D5. materialized (Snapshot bytes exist) !== placed (Snapshot
         // has a World position) — two separate application-layer files,
         // reconfirmed (0.9.288's own G5 check, fresh).
-        assert(await sourceExists('application/MaterializeSnapshotFromPlacementUseCase.js')
-            && await sourceExists('application/AddPublicationSnapshotPlacementUseCase.js'),
+        assert(await sourceExists('application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js')
+            && await sourceExists('application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js'),
             'D5. Snapshot materialization and Snapshot World placement remain two separate application-layer files, not merged into one lifecycle stage.');
 
         // D6. notified !== read. NotificationHistoryPanel.js and
@@ -374,10 +374,10 @@ async function runTests() {
         // document the absence of read/unread state, rather than
         // silently lacking it — checked as an explicit, on-file
         // statement, not merely a missing field.
-        const notifQuerySource = await rawSource('application/GetRecipientNotificationEventsUseCase.js');
+        const notifQuerySource = await rawSource('application/chat/GetRecipientNotificationEventsUseCase.js');
         const notifPanelSource = await rawSource('ui/components/NotificationHistoryPanel.js');
         assert(/never read\/unread/.test(notifQuerySource),
-            'D6a. application/GetRecipientNotificationEventsUseCase.js still explicitly documents "never read/unread" as a deliberate scope boundary.');
+            'D6a. application/chat/GetRecipientNotificationEventsUseCase.js still explicitly documents "never read/unread" as a deliberate scope boundary.');
         assert(/no read\/unread state/.test(notifPanelSource),
             'D6b. ui/components/NotificationHistoryPanel.js still explicitly states "There is no read/unread state here."');
         assert(!/isRead|readAt|markAsRead/.test(codeOnlyLines(notifQuerySource) + codeOnlyLines(notifPanelSource)),
@@ -483,7 +483,7 @@ async function runTests() {
         findings.push(['Richer notification delivery', 'No journey requires it (in-app history suffices) — stays deferred']);
 
         // G3. IPFS UX (beyond the existing endpoint-configuration flow).
-        const ipfsCoordinatorSource = await rawSource('application/IpfsRemotePublicationCoordinator.js');
+        const ipfsCoordinatorSource = await rawSource('application/ipfs/IpfsRemotePublicationCoordinator.js');
         assert(/non-empty endpoint is required/.test(ipfsCoordinatorSource),
             'G3. IpfsRemotePublicationCoordinator.js still requires a pre-configured hosted endpoint before it will publish — the real prerequisite, unchanged since 0.9.349 Section D.');
         findings.push(['Richer IPFS UX', 'Prerequisite (hosted endpoint) is configuration, not missing UX — stays deferred']);
@@ -504,9 +504,9 @@ async function runTests() {
         const knownPeerReassessmentRan = /## 0\.9\.3\d\d — Known-Peer Auto-Connection Product Reassessment/.test(roadmapSource);
         assert(!knownPeerReassessmentRan,
             'G5a. Confirmed: no milestone titled "Known-Peer Auto-Connection Product Reassessment" was ever actually run — 0.9.345\'s own named follow-up question was superseded by the Distribution Guidance arc, not answered.');
-        const autoConnectSource = await rawSource('application/AutoConnectKnownPeersUseCase.js');
+        const autoConnectSource = await rawSource('application/peer/AutoConnectKnownPeersUseCase.js');
         assert(/NO RETRIES\./.test(autoConnectSource) && /no retry queue, backoff, or connection-health tracking/.test(autoConnectSource),
-            'G5b. application/AutoConnectKnownPeersUseCase.js still documents its own no-retry/no-scheduling boundary as deliberate, unchanged since 0.9.345.');
+            'G5b. application/peer/AutoConnectKnownPeersUseCase.js still documents its own no-retry/no-scheduling boundary as deliberate, unchanged since 0.9.345.');
         findings.push(['Retry/reconnection for known peers', 'Named follow-up question never formally re-asked (G5a) — but no evidence of a blocked journey has accumulated since (0.9.341-0.9.349 exercised auto-connect repeatedly with no reported failure mode) — stays deferred, not silently forgotten']);
 
         // G6. Other provider preferences (Announcement/Discovery,
@@ -531,7 +531,7 @@ async function runTests() {
     {
         const distinctions = [
             ['RoleProviderRole names three roles; only CONTENT has a settings UI', '"The architecture could support Discovery/Proof preference" — not "users need it" (Section G6)'],
-            ['application/PublicationResolver.js is a protocol-neutral kindPlugin pipeline; only two concrete plugins (BlueprintAttribution, PlaceNamingClaim) are ever registered', '"The pipeline could resolve any signed content kind" — not "a third kind is needed"'],
+            ['application/publication/PublicationResolver.js is a protocol-neutral kindPlugin pipeline; only two concrete plugins (BlueprintAttribution, PlaceNamingClaim) are ever registered', '"The pipeline could resolve any signed content kind" — not "a third kind is needed"'],
             ['BlockchainKind.BASE is named vocabulary with zero implementing publisher', '"A Base anchor type is reserved for the future" — not "Base anchoring is a current gap" (Section G4)'],
             ['CompositeDiscoveryProvider forwards to N providers with no dedup/ranking', '"Ranking/dedup could be added" — not "a user has been shown duplicate/misordered results" (0.9.340 Section H, reconfirmed absent)']
         ];

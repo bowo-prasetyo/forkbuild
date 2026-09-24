@@ -11,22 +11,22 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { CommandHistoryEvent } from '../application/events/CommandHistoryEvent.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { RemoveStructurePlacementCommand } from '../application/commands/RemoveStructurePlacementCommand.js';
 import { SetStructurePlacementTransformCommand } from '../application/commands/SetStructurePlacementTransformCommand.js';
-import { WorldCommandPropagationUseCase } from '../application/WorldCommandPropagationUseCase.js';
+import { WorldCommandPropagationUseCase } from '../application/document/WorldCommandPropagationUseCase.js';
 import { LogicalClock } from '../core/LogicalClock.js';
 import { compareWorldOperations, worldOperationSortKey } from '../core/WorldOperationOrder.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
@@ -383,9 +383,9 @@ async function runTests() {
     }
 
     // Every replica below EDITS as one of Alice's own AUTHORIZED
-    // DEVICES (application/DeviceAuthorizationPropagationUseCase.js,
+    // DEVICES (application/identity/DeviceAuthorizationPropagationUseCase.js,
     // 0.2.79/0.2.95's own model) — never as a second, independent
-    // OWNER. application/WorldAuthorizationService.js grants EDIT to
+    // OWNER. application/identity/WorldAuthorizationService.js grants EDIT to
     // exactly one cryptographic owner (plus that owner's authorized
     // devices, 0.2.95); it deliberately does not yet support two
     // DIFFERENT people co-owning a World (a genuinely different,
@@ -470,7 +470,7 @@ async function runTests() {
             stack.documents.set(worldId, buildPlacementDoc({ worldId, houseId, barnId, siloId, authorIdentityId: alice.identity.identityId, title: 'Three-Way World' }));
         }
 
-        // A full mesh: application/WorldCommandPropagationUseCase.js
+        // A full mesh: application/document/WorldCommandPropagationUseCase.js
         // never relays — an operation only ever reaches a DIRECTLY
         // connected, AUTHENTICATED peer (see that file's own header),
         // so three-way convergence requires three direct connections,
@@ -612,7 +612,7 @@ async function runTests() {
     assert(typeof propagationSpy.broadcasts[0].command.toJSON === 'function', '49. ...carrying the real, already-executed Command instance');
 
     session.undo();
-    assert(propagationSpy.broadcasts.length === 1, '50. undo() is NEVER broadcast — only forward COMMAND_EXECUTED, matching application/WorldCommandPropagationUseCase.js#attachCommandHistory()\'s own documented scope');
+    assert(propagationSpy.broadcasts.length === 1, '50. undo() is NEVER broadcast — only forward COMMAND_EXECUTED, matching application/document/WorldCommandPropagationUseCase.js#attachCommandHistory()\'s own documented scope');
 
     session.dispose();
     console.log('✓ Section E: closing the 0.2.96 composition gap — a real WorldNavigationSession broadcasts local mutations automatically once worldCommandPropagation is wired, and never broadcasts undo/redo');

@@ -9,7 +9,7 @@
 // `dx = sin(radians)*stepDistance, dz = cos(radians)*stepDistance` step
 // formula). No Three.js, no VehicleInstance, no world/collision/rendering
 // dependency of any kind — a caller (ordinarily
-// application/AvatarVehicleMovementController.js) supplies the raw
+// application/avatar/AvatarVehicleMovementController.js) supplies the raw
 // before/after displacement itself.
 //
 // HEADING COMES FROM WHERE THE VEHICLE ACTUALLY WENT, NEVER FROM STEERING

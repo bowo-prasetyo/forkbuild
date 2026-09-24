@@ -1,20 +1,20 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability, AvatarMovementCapabilityKind } from '../core/AvatarVehicleMovementCapability.js';
 import { AvatarVehicleBrakingIntent } from '../core/AvatarVehicleBrakingIntent.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.97 — Vehicle Movement State Observation Boundary.
 //
-// 0.9.86 through 0.9.96 gave application/AvatarMovementController.js one
+// 0.9.86 through 0.9.96 gave application/avatar/AvatarMovementController.js one
 // new piece of transient movement state per milestone — signed current
 // speed, braking intent, movement capability — each added because the
 // SIMULATION needed it, never because anything OUTSIDE the controller
@@ -493,7 +493,7 @@ async function runTests() {
     // Section 14 — architectural sweep
     // -------------------------------------------------------------
     {
-        const controllerSource = await readFile(new URL('../application/AvatarMovementController.js', import.meta.url), 'utf8');
+        const controllerSource = await readFile(new URL('../application/avatar/AvatarMovementController.js', import.meta.url), 'utf8');
 
         const methodMatch = controllerSource.match(/movementState\(\)\s*\{([\s\S]*?)\n {4}\}/);
         assert(methodMatch !== null, '44. sanity: movementState() exists and is extractable as a single method body');

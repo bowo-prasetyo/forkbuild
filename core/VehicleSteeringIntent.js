@@ -23,7 +23,7 @@
 // and only ever lets REALIZED displacement (not the intent itself) resolve
 // a new heading, exactly as core/VehicleMovementHeading.js already does
 // today. This file never imports core/VehicleMovementHeading.js,
-// core/VehicleInstance.js, or application/VehicleRuntimeInstances.js, and
+// core/VehicleInstance.js, or application/world/VehicleRuntimeInstances.js, and
 // none of them import this file — the boundary 0.9.124's own audit proved
 // clean stays exactly that clean after this milestone, not narrower.
 //
@@ -74,7 +74,7 @@
 // construction — only VALIDATION happens at construction time, matching
 // core/AvatarVehicleMount.js's own posture.
 //
-// A RUNTIME VALUE, NEVER RUNTIME STATE. `application/VehicleRuntimeInstances.js`
+// A RUNTIME VALUE, NEVER RUNTIME STATE. `application/world/VehicleRuntimeInstances.js`
 // does not acquire a `steering` field, and `core/VehicleInstance.js` gains
 // no `steering` getter, `withSteering()` method, or constructor field —
 // this milestone deliberately leaves both files byte-for-byte unchanged,
@@ -90,7 +90,7 @@
 //
 // Deliberately not yet, matching this milestone's own brief: any change to
 // core/VehicleMovementHeading.js, core/VehicleInstance.js, or
-// application/VehicleRuntimeInstances.js; a transition function of any
+// application/world/VehicleRuntimeInstances.js; a transition function of any
 // kind (there is no PRIOR intent this milestone reads — a caller simply
 // constructs whichever VehicleSteeringIntent the current input state
 // calls for, fresh, same as core/AvatarMovementState.js's own

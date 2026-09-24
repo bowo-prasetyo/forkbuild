@@ -3,11 +3,11 @@ import { readFile } from 'node:fs/promises';
 import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
-import { SetArweaveGatewayConfigurationUseCase } from '../application/SetArweaveGatewayConfigurationUseCase.js';
+import { SetArweaveGatewayConfigurationUseCase } from '../application/settings/SetArweaveGatewayConfigurationUseCase.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/ArweaveWorldEncounterMaterialResolver.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
+import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
 import { ContentReference } from '../core/ContentReference.js';
 
 // 0.9.367 — Arweave Gateway Settings Product & Lifecycle Reassessment.
@@ -542,7 +542,7 @@ async function run() {
         // World Encounter material discovery — the one place a default
         // gateway being unreachable blocks the CORE loop — is wired from
         // Local + Nostr + Arweave only. IPFS never appears in it.
-        const worldEncounterCompositionSource = await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
+        const worldEncounterCompositionSource = await source('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(!/ipfs/i.test(worldEncounterCompositionSource), 'H1. World Encounter material discovery composition never references IPFS at all — confirming it is Local + Nostr + Arweave only, never a fourth, IPFS-backed source');
 
         // IPFS Gateway's own two real call sites remain the same two
@@ -595,10 +595,10 @@ async function run() {
         // consolidation work IPFS Gateway also lacks, before any user
         // value question is even reachable.
         const nostrRelayFiles = [
-            'application/NostrDiscoveryQueryService.js',
-            'application/NostrPublicationDiscoveryPublisher.js',
-            'application/NostrSnapshotDiscoveryPublisher.js',
-            'application/NostrPlaceNamingDiscoveryPublisher.js'
+            'application/nostr/NostrDiscoveryQueryService.js',
+            'application/nostr/NostrPublicationDiscoveryPublisher.js',
+            'application/nostr/NostrSnapshotDiscoveryPublisher.js',
+            'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'
         ];
         let nostrDefaultDuplicationCount = 0;
         for (const file of nostrRelayFiles) {

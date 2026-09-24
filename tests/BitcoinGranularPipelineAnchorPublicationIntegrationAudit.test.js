@@ -11,24 +11,24 @@ import { BitcoinWalletConnection } from '../anchoring/BitcoinWalletConnection.js
 import { BitcoinInjectedProviderWalletAdapter } from '../anchoring/BitcoinInjectedProviderWalletAdapter.js';
 import { BitcoinAnchorEvidenceView } from '../anchoring/BitcoinAnchorEvidenceView.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
-import { BitcoinAnchorFundingObservationState } from '../application/BitcoinAnchorFundingObservationState.js';
-import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/BitcoinAnchorTransactionConstructionCoordinator.js';
-import { BitcoinAnchorTransactionConstructionState } from '../application/BitcoinAnchorTransactionConstructionState.js';
-import { BitcoinAnchorTransactionReviewCoordinator } from '../application/BitcoinAnchorTransactionReviewCoordinator.js';
-import { BitcoinAnchorReviewedSigningCoordinator } from '../application/BitcoinAnchorReviewedSigningCoordinator.js';
-import { BitcoinAnchorReviewedSigningState } from '../application/BitcoinAnchorReviewedSigningState.js';
-import { BitcoinAnchorSignedPsbtFinalizationCoordinator } from '../application/BitcoinAnchorSignedPsbtFinalizationCoordinator.js';
-import { BitcoinAnchorSignedPsbtFinalizationState } from '../application/BitcoinAnchorSignedPsbtFinalizationState.js';
-import { BitcoinAnchorBroadcastCoordinator } from '../application/BitcoinAnchorBroadcastCoordinator.js';
-import { BitcoinAnchorBroadcastState } from '../application/BitcoinAnchorBroadcastState.js';
-import { BitcoinAnchorPublicationCoordinator } from '../application/BitcoinAnchorPublicationCoordinator.js';
-import { BitcoinAnchorPublicationLifecycleState } from '../application/BitcoinAnchorPublicationLifecycleState.js';
-import { CreatePublicationAnchorUseCase } from '../application/CreatePublicationAnchorUseCase.js';
+import { BitcoinAnchorFundingObservationState } from '../application/anchoring/bitcoin/BitcoinAnchorFundingObservationState.js';
+import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionCoordinator.js';
+import { BitcoinAnchorTransactionConstructionState } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js';
+import { BitcoinAnchorTransactionReviewCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionReviewCoordinator.js';
+import { BitcoinAnchorReviewedSigningCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningCoordinator.js';
+import { BitcoinAnchorReviewedSigningState } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningState.js';
+import { BitcoinAnchorSignedPsbtFinalizationCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationCoordinator.js';
+import { BitcoinAnchorSignedPsbtFinalizationState } from '../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationState.js';
+import { BitcoinAnchorBroadcastCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastCoordinator.js';
+import { BitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { BitcoinAnchorPublicationCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js';
+import { BitcoinAnchorPublicationLifecycleState } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationLifecycleState.js';
+import { CreatePublicationAnchorUseCase } from '../application/anchoring/CreatePublicationAnchorUseCase.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -40,7 +40,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // transaction pipeline (fund -> construct -> review -> connect a wallet ->
 // sign -> finalize -> broadcast, 0.8.47 through 0.8.64) could execute the
 // full anchoring operation but never minted the corresponding Publication
-// Anchor — application/BitcoinAnchorPublicationCoordinator.js (0.8.53)
+// Anchor — application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js (0.8.53)
 // already existed as the intended bridge but was reachable from nowhere in
 // ui/main.js. This audit proves the bridge is now ACTIVATED, not replaced:
 //
@@ -483,13 +483,13 @@ async function run() {
     // Section A — Production reachability. Confirms, by direct source
     // inspection of ui/main.js and ui/views/DecentralizedPublicationsView.js,
     // that the real granular Bitcoin pipeline is now wired all the way
-    // into application/BitcoinAnchorPublicationCoordinator.js.
+    // into application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js.
     // -------------------------------------------------------------
     {
         const mainSrc = codeOnly(await source('ui/main.js'));
         const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
 
-        assert(mainSrc.includes("import { CreateBitcoinAnchorPublicationCoordinatorUseCase } from '../application/CreateBitcoinAnchorPublicationCoordinatorUseCase.js';"),
+        assert(mainSrc.includes("import { CreateBitcoinAnchorPublicationCoordinatorUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationCoordinatorUseCase.js';"),
             n('ui/main.js imports CreateBitcoinAnchorPublicationCoordinatorUseCase'));
         assert(/new CreateBitcoinAnchorPublicationCoordinatorUseCase\(\)\.execute\(\{[^}]*publicationCatalog[^}]*createPublicationAnchorUseCase[^}]*publicationAnchorCatalog[^}]*\}\)/s.test(mainSrc),
             n('ui/main.js constructs the coordinator from this app\'s own shared publicationCatalog/createPublicationAnchorUseCase/publicationAnchorCatalog'));

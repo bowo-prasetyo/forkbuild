@@ -1,15 +1,15 @@
 import { readFile } from 'node:fs/promises';
-import { PlaceNamingDiscoveryMonitor } from '../application/PlaceNamingDiscoveryMonitor.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
+import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.257 — World View Place Naming Presentation.
 // See docs/Roadmap.md, "0.9.257 — World View Place Naming Presentation."
 //
-// 0.9.256 built `application/PlaceNamingDiscoveryMonitor.js` — the
+// 0.9.256 built `application/placeNaming/PlaceNamingDiscoveryMonitor.js` — the
 // authority for "which Place Naming claims are currently nearby" — but,
 // per that milestone's own closing "deliberately excluded," never rendered
 // anything: "this file has no idea `ui/` exists." This milestone wires
@@ -101,7 +101,7 @@ function envelopeOf(overrides = {}) {
     };
 }
 
-// A fake `application/WorldNavigationSession.js` stand-in exposing ONLY
+// A fake `application/world/WorldNavigationSession.js` stand-in exposing ONLY
 // `getRegions()` — the ONE method ui/views/WorldView.js's own 0.9.257
 // wiring ever calls on `session` for Place Naming discovery (see that
 // file's own construction comment). Any OTHER property access throws
@@ -334,7 +334,7 @@ async function runTests() {
         // Each position below stays within the region's own proximityRadius
         // (the region sits fixed at (0,0)) while still moving far enough,
         // pairwise, to satisfy the monitor's own refresh threshold (100) on
-        // every tick — see application/ShouldRefreshPlaceNamingDiscovery.js.
+        // every tick — see application/placeNaming/ShouldRefreshPlaceNamingDiscovery.js.
         await tick({ monitor, position: pos(0, 0), refs, isActive: () => true });
         assert(refs.nearbyPlaceNamingClaims[0].claim.id === 'claim-x', 'sanity: the first successful observation is displayed');
 

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { DiscoverPlacementsUseCase } from '../application/DiscoverPlacementsUseCase.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -12,7 +12,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // 0.9.308 — Publication Multi-Placement Visibility.
 //
 // 0.9.307's own Post-Arc Product Evolution Reassessment found
-// `application/DiscoverPlacementsUseCase.js#findByPublicationId()` fully
+// `application/placement/DiscoverPlacementsUseCase.js#findByPublicationId()` fully
 // implemented and fully tested, but its ONE production reader
 // (`WorldNavigationSession#_resolvePlacementRecord()`) reduces every
 // Publication's placements down to a single, most-recently-updated one —
@@ -47,7 +47,7 @@ class InMemoryStorageProvider extends StorageProvider {
 // The real application stack this milestone wires OwnPublicationPanel.js
 // to — a real LocalPlacementRegistry/DiscoverPlacementsUseCase pair
 // backed by a real (in-memory) StorageProvider, exactly the collaborator
-// set application/CreatePlacementRegistryUseCase.js itself composes.
+// set application/placement/CreatePlacementRegistryUseCase.js itself composes.
 function makeBackend() {
     const storage = new InMemoryStorageProvider();
     const spatialIndexProvider = new LocalSpatialIndexProvider(storage);
@@ -129,7 +129,7 @@ async function runTests() {
         // WorldNavigationSession.getPlacementsForPublication(), which
         // itself delegates to the registry's own findByPublicationId() —
         // never a second, parallel discovery path.
-        const sessionCode = await codeOnlySource('application/WorldNavigationSession.js');
+        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
         assert(sessionCode.includes('getPlacementsForPublication(publicationId)'),
             '4. WorldNavigationSession exposes getPlacementsForPublication()');
         assert(sessionCode.includes('this._placementRegistry.findByPublicationId(publicationId)'),
@@ -285,9 +285,9 @@ async function runTests() {
         // any of them.
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         const forbidden = [
-            "from '../../application/PlacePublicationUseCase.js'",
-            "from '../../application/MoveWorldPlacementUseCase.js'",
-            "from '../../application/RemoveWorldPlacementUseCase.js'",
+            "from '../../application/placement/PlacePublicationUseCase.js'",
+            "from '../../application/placement/MoveWorldPlacementUseCase.js'",
+            "from '../../application/placement/RemoveWorldPlacementUseCase.js'",
             'new PlacePublicationUseCase(', 'new MoveWorldPlacementUseCase(', 'new RemoveWorldPlacementUseCase('
         ];
         for (const term of forbidden) {
@@ -385,10 +385,10 @@ async function runTests() {
         // machinery remain completely unmodified — this milestone touches
         // none of them.
         const useCaseFiles = [
-            ['application/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
-            ['application/MoveWorldPlacementUseCase.js', 'export class MoveWorldPlacementUseCase'],
-            ['application/RemoveWorldPlacementUseCase.js', 'export class RemoveWorldPlacementUseCase'],
-            ['application/UnpublishDocumentUseCase.js', 'export class UnpublishDocumentUseCase']
+            ['application/placement/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
+            ['application/placement/MoveWorldPlacementUseCase.js', 'export class MoveWorldPlacementUseCase'],
+            ['application/placement/RemoveWorldPlacementUseCase.js', 'export class RemoveWorldPlacementUseCase'],
+            ['application/publication/UnpublishDocumentUseCase.js', 'export class UnpublishDocumentUseCase']
         ];
         for (const [path, marker] of useCaseFiles) {
             const source = await readFile(new URL(path, SOURCE_ROOT), 'utf8');
@@ -397,7 +397,7 @@ async function runTests() {
 
         // J3. DiscoverPlacementsUseCase itself gains no new method and no
         // altered behavior — this milestone composes it, never edits it.
-        const discoverSource = await readFile(new URL('application/DiscoverPlacementsUseCase.js', SOURCE_ROOT), 'utf8');
+        const discoverSource = await readFile(new URL('application/placement/DiscoverPlacementsUseCase.js', SOURCE_ROOT), 'utf8');
         assert(discoverSource.includes('findByPublicationId(publicationId) {\n        return this._placementRegistry.findByPublicationId(publicationId);\n    }'),
             '37. DiscoverPlacementsUseCase.findByPublicationId() is unchanged — a thin, unmodified delegation to the registry');
 

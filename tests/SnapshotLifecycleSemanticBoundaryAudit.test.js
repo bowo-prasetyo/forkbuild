@@ -1,16 +1,16 @@
 import { readFile, readdir } from 'node:fs/promises';
 
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
-import { resolveSnapshotPublicationAttribution } from '../application/SnapshotPublicationAttribution.js';
-import { SnapshotPublicationAttributionOutcome } from '../application/SnapshotPublicationAttributionOutcome.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
+import { resolveSnapshotPublicationAttribution } from '../application/snapshot/SnapshotPublicationAttribution.js';
+import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
 import { describeSnapshotDiscoveryEnvelope, parseSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL } from '../core/SnapshotDiscoveryEnvelope.js';
 import { describeDecentralizedDiscoveryEnvelope, parseDecentralizedDiscoveryEnvelope, DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
@@ -231,33 +231,33 @@ async function run() {
     {
         const snapshotFamilyFiles = [
             'content/ArweaveContentStore.js',
-            'application/NostrSnapshotDiscoveryPublisher.js',
-            'application/NostrSnapshotDiscoveryQueryService.js',
-            'application/DecentralizedSnapshotResolver.js',
-            'application/DiscoverSnapshotCommand.js',
-            'application/DiscoverSnapshotCandidatesCommand.js',
-            'application/ResolveSelectedSnapshotCommand.js',
-            'application/SnapshotDistributionCommand.js',
-            'application/DiscoverSnapshotRuntimeComposition.js',
-            'application/SnapshotDistributionRuntimeComposition.js',
-            'application/SnapshotPublicationAttribution.js',
+            'application/nostr/NostrSnapshotDiscoveryPublisher.js',
+            'application/nostr/NostrSnapshotDiscoveryQueryService.js',
+            'application/snapshot/DecentralizedSnapshotResolver.js',
+            'application/snapshot/DiscoverSnapshotCommand.js',
+            'application/snapshot/DiscoverSnapshotCandidatesCommand.js',
+            'application/snapshot/ResolveSelectedSnapshotCommand.js',
+            'application/snapshot/SnapshotDistributionCommand.js',
+            'application/snapshot/DiscoverSnapshotRuntimeComposition.js',
+            'application/snapshot/SnapshotDistributionRuntimeComposition.js',
+            'application/snapshot/SnapshotPublicationAttribution.js',
             'core/SnapshotDiscoveryEnvelope.js'
         ];
         const signedClaimFamilyFiles = [
-            'application/PublicationDistributionCommand.js',
-            'application/PublicationDistributionExecutor.js',
-            'application/PublicationDistributionOrchestrator.js',
-            'application/PublicationDistributionLifecycle.js',
-            'application/PublicationDistributionLifecyclePersistence.js',
-            'application/PublicationDistributionRuntimeComposition.js',
-            'application/PublicationDistributionRuntimeConfiguration.js',
-            'application/ArweavePublicationDistributionRuntimeAdapter.js',
-            'application/NostrPublicationDistributionRuntimeAdapter.js',
-            'application/ArweavePublicationMaterialUploader.js',
-            'application/NostrPublicationDiscoveryPublisher.js',
+            'application/publication/distribution/PublicationDistributionCommand.js',
+            'application/publication/distribution/PublicationDistributionExecutor.js',
+            'application/publication/distribution/PublicationDistributionOrchestrator.js',
+            'application/publication/distribution/PublicationDistributionLifecycle.js',
+            'application/publication/distribution/PublicationDistributionLifecyclePersistence.js',
+            'application/publication/distribution/PublicationDistributionRuntimeComposition.js',
+            'application/publication/distribution/PublicationDistributionRuntimeConfiguration.js',
+            'application/arweave/ArweavePublicationDistributionRuntimeAdapter.js',
+            'application/nostr/NostrPublicationDistributionRuntimeAdapter.js',
+            'application/arweave/ArweavePublicationMaterialUploader.js',
+            'application/nostr/NostrPublicationDiscoveryPublisher.js',
             'core/PublicationSnapshotPlacement.js',
-            'application/SnapshotPlacementResolver.js',
-            'application/SnapshotPlacementStoreRegistry.js',
+            'application/snapshot/placement/SnapshotPlacementResolver.js',
+            'application/snapshot/placement/SnapshotPlacementStoreRegistry.js',
             'core/DecentralizedDiscoveryEnvelope.js'
         ];
 
@@ -357,12 +357,12 @@ async function run() {
         // import the other family's envelope module or query/publish
         // class — the transport-sharing above is a coincidence of BOTH
         // riding Nostr `content`, never a shared implementation.
-        const snapshotQueryServiceSource = await codeOnlySource('application/NostrSnapshotDiscoveryQueryService.js');
+        const snapshotQueryServiceSource = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         assert(!snapshotQueryServiceSource.includes('DecentralizedDiscoveryEnvelope') && !snapshotQueryServiceSource.includes('DecentralizedWorldDiscoveryQuery'),
-            'B3a. application/NostrSnapshotDiscoveryQueryService.js never imports the World Material discovery envelope or its base query class');
-        const snapshotPublisherSource = await codeOnlySource('application/NostrSnapshotDiscoveryPublisher.js');
+            'B3a. application/nostr/NostrSnapshotDiscoveryQueryService.js never imports the World Material discovery envelope or its base query class');
+        const snapshotPublisherSource = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryPublisher.js');
         assert(!snapshotPublisherSource.includes('DecentralizedDiscoveryEnvelope') && !snapshotPublisherSource.includes('NostrPublicationDiscoveryPublisher'),
-            'B3b. application/NostrSnapshotDiscoveryPublisher.js never imports the World Material discovery envelope or NostrPublicationDiscoveryPublisher.js');
+            'B3b. application/nostr/NostrSnapshotDiscoveryPublisher.js never imports the World Material discovery envelope or NostrPublicationDiscoveryPublisher.js');
 
         // B4. Behavioral: one shared Nostr network carrying BOTH kinds of
         // announcement under the same relay, queried through each
@@ -420,12 +420,12 @@ async function run() {
         // source ever references the vocabulary that belongs to a LATER
         // layer — this is architectural, not a fixture coincidence.
         const forbiddenVocabulary = /\bMATCH\b|\bNO_MATCH\b|\bVERIFIED\b|\bRESOLVED\b|\bTRUSTED\b|\bAUTHENTIC\b|\bOWNED\b/;
-        const queryServiceSource = await codeOnlySource('application/NostrSnapshotDiscoveryQueryService.js');
+        const queryServiceSource = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         assert(!forbiddenVocabulary.test(queryServiceSource),
-            'C3a. application/NostrSnapshotDiscoveryQueryService.js never references verification/attribution/trust vocabulary');
-        const candidatesCommandSource = await codeOnlySource('application/DiscoverSnapshotCandidatesCommand.js');
+            'C3a. application/nostr/NostrSnapshotDiscoveryQueryService.js never references verification/attribution/trust vocabulary');
+        const candidatesCommandSource = await codeOnlySource('application/snapshot/DiscoverSnapshotCandidatesCommand.js');
         assert(!forbiddenVocabulary.test(candidatesCommandSource),
-            'C3b. application/DiscoverSnapshotCandidatesCommand.js never references it either — it is a pure pass-through assembly boundary, per its own header');
+            'C3b. application/snapshot/DiscoverSnapshotCandidatesCommand.js never references it either — it is a pure pass-through assembly boundary, per its own header');
 
         console.log('✓ Section C: a discovered candidate is exactly { contentHash, locator, storage } — behaviorally and structurally, discovery alone never manufactures verification, attribution, trust, ownership, ranking, or authenticity');
     }
@@ -442,7 +442,7 @@ async function run() {
     {
         // D1. Structural: resolveCandidate() never re-discovers or
         // re-selects — it never calls the query service at all.
-        const resolverSource = await codeOnlySource('application/DecentralizedSnapshotResolver.js');
+        const resolverSource = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
         const resolveCandidateBody = (resolverSource.match(/async resolveCandidate\(candidate[\s\S]*?\n {4}\}/) || [''])[0];
         assert(resolveCandidateBody.length > 0, 'D1. sanity: resolveCandidate()\'s own body was located');
         assert(!resolveCandidateBody.includes('_queryService') && !resolveCandidateBody.includes('.search('),
@@ -495,7 +495,7 @@ async function run() {
         // E1. Structural: resolve()'s own body calls this.resolveCandidate()
         // exactly once — never a second, independent retrieval/verification
         // sequence.
-        const resolverSource = await codeOnlySource('application/DecentralizedSnapshotResolver.js');
+        const resolverSource = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
         const resolveBody = (resolverSource.match(/async resolve\(discoveryTag[\s\S]*?\n {4}\}/) || [''])[0];
         assert(resolveBody.length > 0, 'E1a. sanity: resolve()\'s own body was located');
         const resolveCandidateCallsWithinResolve = (resolveBody.match(/this\.resolveCandidate\(/g) || []).length;
@@ -575,7 +575,7 @@ async function run() {
     // ===============================================================
     // Section G — ATTRIBUTION AUTHORITY.
     //
-    // application/SnapshotPublicationAttribution.js remains the only
+    // application/snapshot/SnapshotPublicationAttribution.js remains the only
     // place MATCH/NO_MATCH are ever produced.
     // ===============================================================
     {
@@ -591,8 +591,8 @@ async function run() {
             ...(await listJsFilesRecursively('content/'))
         ];
         const allowedImporters = new Set([
-            'application/SnapshotPublicationAttribution.js',
-            'application/SnapshotPublicationAttributionOutcome.js'
+            'application/snapshot/SnapshotPublicationAttribution.js',
+            'application/snapshot/SnapshotPublicationAttributionOutcome.js'
         ]);
         const unexpectedImporters = [];
         for (const file of allSourceFiles) {
@@ -602,7 +602,7 @@ async function run() {
             }
         }
         assert(unexpectedImporters.length === 0,
-            `G1. FLAGSHIP — outside its own defining file and application/SnapshotPublicationAttribution.js's own use of it, no application/core/content/ui file ever references SnapshotPublicationAttributionOutcome directly; unexpected importers: ${unexpectedImporters.join(', ')}. Every OTHER file that displays MATCH/NO_MATCH (OwnPublicationPanel.js included) does so by reading an already-computed .outcome string, never by importing the vocabulary to manufacture one itself`);
+            `G1. FLAGSHIP — outside its own defining file and application/snapshot/SnapshotPublicationAttribution.js's own use of it, no application/core/content/ui file ever references SnapshotPublicationAttributionOutcome directly; unexpected importers: ${unexpectedImporters.join(', ')}. Every OTHER file that displays MATCH/NO_MATCH (OwnPublicationPanel.js included) does so by reading an already-computed .outcome string, never by importing the vocabulary to manufacture one itself`);
 
         // G2. No file outside SnapshotPublicationAttribution.js itself
         // constructs an object literal claiming `outcome: 'match'` or
@@ -610,7 +610,7 @@ async function run() {
         // enum reference G1 already checked.
         const literalOutcomePattern = /outcome\s*:\s*['"](?:match|no-match)['"]/;
         for (const file of allSourceFiles) {
-            if (file === 'application/SnapshotPublicationAttribution.js') continue;
+            if (file === 'application/snapshot/SnapshotPublicationAttribution.js') continue;
             const source = await codeOnlySource(file);
             assert(!literalOutcomePattern.test(source),
                 `G2. ${file} never constructs an object literal with outcome: 'match'/'no-match' — those literal values are manufactured in exactly one place`);
@@ -632,7 +632,7 @@ async function run() {
         const attribution = resolveSnapshotPublicationAttribution(publication, resolved);
         assert(attribution.outcome === SnapshotPublicationAttributionOutcome.MATCH, 'G3c. only the explicit attribution call produces MATCH — resolution itself never does');
 
-        console.log('✓ Section G: application/SnapshotPublicationAttribution.js remains the sole producer of MATCH/NO_MATCH, both by import graph and by literal-value construction, repository-wide — no resolver, discovery service, candidate, or UI component manufactures an attribution verdict of its own');
+        console.log('✓ Section G: application/snapshot/SnapshotPublicationAttribution.js remains the sole producer of MATCH/NO_MATCH, both by import graph and by literal-value construction, repository-wide — no resolver, discovery service, candidate, or UI component manufactures an attribution verdict of its own');
     }
 
     // ===============================================================
@@ -773,7 +773,7 @@ async function run() {
         // structurally conspicuous, not merely numerically unlucky.
         assert(locator.startsWith('ar://'), 'I2a. the Snapshot locator carries an explicit ar:// scheme, never a bare id indistinguishable from a transaction id or a hash');
         assert(!arweaveTransactionId.startsWith('ar://'), 'I2b. the extracted Arweave transaction id itself never carries the scheme prefix — locator and transaction id are related but distinct representations');
-        assert(/^[0-9a-f]{64}$/i.test(nostrEventId), 'I2c. the Nostr event id is a 64-hex-character value — this codebase\'s own EVENT_ID_PATTERN in application/NostrSnapshotDiscoveryPublisher.js');
+        assert(/^[0-9a-f]{64}$/i.test(nostrEventId), 'I2c. the Nostr event id is a 64-hex-character value — this codebase\'s own EVENT_ID_PATTERN in application/nostr/NostrSnapshotDiscoveryPublisher.js');
         assert(!/^[0-9a-f]{64}$/i.test(snapshotContentHash), 'I2d. the content hash (fnv1a-32, per core/ContentReference.js\'s own default algorithm) is never a 64-hex value — it can never be mistaken for a Nostr event id by format alone');
         assert(nostrRelayUrl.startsWith('wss://'), 'I2e. the relay URL carries an explicit wss:// scheme, distinct from every other identifier\'s own format');
 
@@ -781,12 +781,12 @@ async function run() {
         // never read the WRONG one for a given purpose — e.g.
         // SnapshotPublicationAttribution.js compares content hashes only,
         // never publication.id.
-        const attributionSource = await codeOnlySource('application/SnapshotPublicationAttribution.js');
+        const attributionSource = await codeOnlySource('application/snapshot/SnapshotPublicationAttribution.js');
         assert(!attributionSource.includes('publication.id'),
-            'I3a. application/SnapshotPublicationAttribution.js never reads publication.id — attribution compares content identity only, never a Publication\'s own, unrelated identity');
-        const discoverCommandSource = await codeOnlySource('application/DiscoverSnapshotCommand.js');
+            'I3a. application/snapshot/SnapshotPublicationAttribution.js never reads publication.id — attribution compares content identity only, never a Publication\'s own, unrelated identity');
+        const discoverCommandSource = await codeOnlySource('application/snapshot/DiscoverSnapshotCommand.js');
         assert(!discoverCommandSource.includes('publication.id') && !discoverCommandSource.includes('.relayUrl'),
-            'I3b. application/DiscoverSnapshotCommand.js never reads a Publication id or a relay url — discovery is driven by contentHash/discoveryTag alone');
+            'I3b. application/snapshot/DiscoverSnapshotCommand.js never reads a Publication id or a relay url — discovery is driven by contentHash/discoveryTag alone');
 
         console.log('✓ Section I: Publication ID, Publication content hash, Snapshot content hash, Snapshot locator, Arweave transaction ID, Nostr event ID, Nostr relay URL, and Discovery tag are pairwise distinct in value AND in wire format, and the collaborators that consume them never read the wrong one for a given purpose');
     }

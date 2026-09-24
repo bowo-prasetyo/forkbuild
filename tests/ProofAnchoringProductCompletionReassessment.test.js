@@ -263,7 +263,7 @@ async function run() {
     // not re-litigated or re-built.
     // ===============================================================
     {
-        const evidenceViewSrc = await source('application/PublicationEvidenceView.js');
+        const evidenceViewSrc = await source('application/publication/evidence/PublicationEvidenceView.js');
         check(/case AnchorVerificationOutcome\.VALID: return 'Independently verified';/.test(evidenceViewSrc),
             "E1. a positively verified anchor reads \"Independently verified\" — an explicit claim, never implied by mere presence in the evidence list");
         check(/case AnchorVerificationOutcome\.VALID_PROOF_UNVERIFIED: return 'Proof not independently verified';/.test(evidenceViewSrc),
@@ -324,18 +324,18 @@ async function run() {
     // migration. Regression-checked from real production source.
     // ===============================================================
     {
-        const outcomeSrc = await source('application/ExternalAnchorCreationOutcome.js');
+        const outcomeSrc = await source('application/anchoring/ExternalAnchorCreationOutcome.js');
         check(/CREATED:\s*'created'/.test(outcomeSrc) && /PUBLISH_REJECTED/.test(outcomeSrc) && /PUBLISH_UNAVAILABLE/.test(outcomeSrc),
             'G1. the shared, closed failure vocabulary — CREATED / PUBLISH_REJECTED / PUBLISH_UNAVAILABLE — covers every substrate; no per-chain success/failure vocabulary of any kind');
 
-        const coordinatorSrc = await source('application/CreateExternalPublicationAnchorUseCase.js');
+        const coordinatorSrc = await source('application/anchoring/CreateExternalPublicationAnchorUseCase.js');
         check(!/fallback|tryNext|otherPublisher|switchSubstrate/i.test(codeOnly(coordinatorSrc)),
             'G2. the creation use case contains no fallback/retry-on-another-substrate logic of any kind — a failed substrate stays failed, never silently retried elsewhere');
 
         const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(/entry\.creationAttempts\[anchorType\] = \{ creating: false, outcome: null, anchor: null, reason: null, error: error\.message \};/.test(viewSource),
             'G3. a thrown creation error is caught at the UI boundary and turned into an honest per-anchorType failure state — never a crash, never a silent no-op');
-        check(/The external system could not currently be reached\. No anchor was created\./.test(viewSource) || /message: 'The external system could not currently be reached/.test(await source('application/PublicationAnchorCreationView.js')),
+        check(/The external system could not currently be reached\. No anchor was created\./.test(viewSource) || /message: 'The external system could not currently be reached/.test(await source('application/anchoring/PublicationAnchorCreationView.js')),
             'G4. an unavailable external system reads as an explicit "no anchor was created" — never a false "created" state');
 
         console.log('✓ Section G: Bitcoin/Base/Arweave failures all resolve through the identical, closed {CREATED, PUBLISH_REJECTED, PUBLISH_UNAVAILABLE} vocabulary, with zero cross-substrate fallback anywhere in the creation path. An honest "no anchor was created" for one substrate never triggers an attempt on another.');

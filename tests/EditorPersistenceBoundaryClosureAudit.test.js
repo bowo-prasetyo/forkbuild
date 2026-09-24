@@ -14,16 +14,16 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { DocumentManifest } from '../application/DocumentManifest.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { DocumentManifest } from '../application/document/DocumentManifest.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { AutosaveScheduler } from '../application/AutosaveScheduler.js';
-import { AutosaveDocumentUseCase } from '../application/AutosaveDocumentUseCase.js';
-import { CheckRecoveryUseCase } from '../application/CheckRecoveryUseCase.js';
-import { RecoverDocumentUseCase } from '../application/RecoverDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { AutosaveScheduler } from '../application/document/AutosaveScheduler.js';
+import { AutosaveDocumentUseCase } from '../application/document/AutosaveDocumentUseCase.js';
+import { CheckRecoveryUseCase } from '../application/document/CheckRecoveryUseCase.js';
+import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentUseCase.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
 
@@ -202,7 +202,7 @@ async function run() {
         assert(priorFindingSource.includes('a real, silent, unwarned loss window'),
             'A1. 0.9.579 Section C3c\'s own documented finding is quoted verbatim in its own source file — this closure audit is anchored to the actual prior failure, not a paraphrase of it.');
 
-        const schedulerSource = await readSource('application/AutosaveScheduler.js');
+        const schedulerSource = await readSource('application/document/AutosaveScheduler.js');
         assert(/flush\(\) \{/.test(schedulerSource), 'A2. AutosaveScheduler.js now defines flush() — the exact seam 0.9.579 found missing.');
 
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
@@ -386,7 +386,7 @@ async function run() {
     // E. Recovery equivalence — the structural reason it always holds.
     // ---------------------------------------------------------------
     {
-        const schedulerSource = await readSource('application/AutosaveScheduler.js');
+        const schedulerSource = await readSource('application/document/AutosaveScheduler.js');
         const bareSource = schedulerSource.replace(/\/\/.*$/gm, '');
         const executeCallSite = 'this._autosaveDocumentUseCase.execute(this._documentManager)';
         const occurrences = bareSource.split(executeCallSite).length - 1;
@@ -528,7 +528,7 @@ async function run() {
     // H. Collaboration boundary — reconfirmed against current source.
     // ---------------------------------------------------------------
     {
-        const schedulerSource = await readSource('application/AutosaveScheduler.js');
+        const schedulerSource = await readSource('application/document/AutosaveScheduler.js');
         assert(!/peer|collaboration|Propagation|EventBus/i.test(schedulerSource.replace(/\/\/.*$/gm, '')),
             'H1. AutosaveScheduler.js (flush() included) still references nothing from peer/collaboration machinery.');
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
@@ -722,7 +722,7 @@ async function run() {
         // exit-specific persistence method to back flush(); flush()
         // reuses the SAME execute() (already proven identical
         // call-site text in Section E1).
-        const autosaveUseCaseSource = await readSource('application/AutosaveDocumentUseCase.js');
+        const autosaveUseCaseSource = await readSource('application/document/AutosaveDocumentUseCase.js');
         assert(/execute\(documentManager\) \{/.test(autosaveUseCaseSource), 'sanity — execute() still exists.');
         assert(!/flush\(|executeAtExit|executeOnExit|executeOnUnmount|checkpointOnExit/.test(autosaveUseCaseSource),
             'L3. AutosaveDocumentUseCase.js has no second, exit-specific persistence method — flush() calls its existing execute(), not a method invented for this milestone.');
@@ -740,7 +740,7 @@ async function run() {
             `L4. Exactly the two pre-existing recovery-store classes (RecoveryStore, LocalRecoveryStore) exist under persistence/ — no new recovery store was introduced (found: ${recoveryStoreClasses.sort().join(', ') || 'none'}).`);
 
         // L5 — flush()'s own body creates no new timer.
-        const schedulerSource = await readSource('application/AutosaveScheduler.js');
+        const schedulerSource = await readSource('application/document/AutosaveScheduler.js');
         const flushBodyMatch = schedulerSource.match(/flush\(\) \{[\s\S]*?\n    \}/);
         assert(flushBodyMatch !== null && !/_setTimeout|setTimeout/.test(flushBodyMatch[0]),
             'L5. flush()\'s own body contains no call to _setTimeout/setTimeout — it drains existing scheduled work, it never schedules new work.');

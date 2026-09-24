@@ -1,7 +1,7 @@
 import {
     describePublicationObservationTimeline, PublicationObservationTimelineEntryKind,
     PublicationObservationTimelineDomain
-} from '../../../application/PublicationObservationTimelineView.js';
+} from '../../../application/publication/observationArchive/PublicationObservationTimelineView.js';
 import {
     IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES, BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES,
     BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES, BITCOIN_ANCHOR_CONTENT_PROOF_BADGE_CLASSES,

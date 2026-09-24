@@ -8,12 +8,12 @@ import {
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalBlueprintAttributionStore } from '../application/LocalBlueprintAttributionStore.js';
-import { LocalBlueprintAttributionPublicationLog } from '../application/LocalBlueprintAttributionPublicationLog.js';
-import { BlueprintAttributionUseCase } from '../application/BlueprintAttributionUseCase.js';
-import { BlueprintAttributionExchange } from '../application/BlueprintAttributionExchange.js';
-import { ExportBlueprintUseCase } from '../application/ExportBlueprintUseCase.js';
-import { ImportBlueprintUseCase } from '../application/ImportBlueprintUseCase.js';
+import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
+import { LocalBlueprintAttributionPublicationLog } from '../application/blueprint/LocalBlueprintAttributionPublicationLog.js';
+import { BlueprintAttributionUseCase } from '../application/blueprint/BlueprintAttributionUseCase.js';
+import { BlueprintAttributionExchange } from '../application/blueprint/BlueprintAttributionExchange.js';
+import { ExportBlueprintUseCase } from '../application/blueprint/ExportBlueprintUseCase.js';
+import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprintUseCase.js';
 
 // 0.6.7 — Blueprint Attribution Resolution & Community Identity.
 //
@@ -26,7 +26,7 @@ import { ImportBlueprintUseCase } from '../application/ImportBlueprintUseCase.js
 //
 //   Section A: core/BlueprintAttributionView.js — pure derivation,
 //              distinct-author grouping, deterministic ranking
-//   Section B: application/BlueprintAttributionUseCase.js#communityView() —
+//   Section B: application/blueprint/BlueprintAttributionUseCase.js#communityView() —
 //              wiring, receivedAt attachment, summarize() untouched
 //   Section C: FLAGSHIP — Alice, Bob, and Carol each independently claim
 //              authorship of the SAME design; every replica exchanges
@@ -176,7 +176,7 @@ async function run() {
     console.log('✓ Section A: core/BlueprintAttributionView.js — distinct-author grouping, deterministic ranking, presentation-only summaries');
 
     // ---------------------------------------------------------------
-    // Section B — application/BlueprintAttributionUseCase.js#communityView()
+    // Section B — application/blueprint/BlueprintAttributionUseCase.js#communityView()
     // ---------------------------------------------------------------
     {
         const alice = makeReplica('Alice');
@@ -248,7 +248,7 @@ async function run() {
         assert(legacyView.authorCount === 1 && JSON.stringify(legacyView.receivedAt) === '{}',
             '38. no publicationLog wired in at all still works — receivedAt stays empty rather than throwing');
     }
-    console.log('✓ Section B: application/BlueprintAttributionUseCase.js#communityView() — wiring, receivedAt attachment, summarize() untouched');
+    console.log('✓ Section B: application/blueprint/BlueprintAttributionUseCase.js#communityView() — wiring, receivedAt attachment, summarize() untouched');
 
     // ---------------------------------------------------------------
     // Section C — FLAGSHIP: three independent authors converge on one

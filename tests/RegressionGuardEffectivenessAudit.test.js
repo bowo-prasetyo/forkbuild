@@ -193,7 +193,7 @@ async function run() {
                 caught: true, classification: 'BEHAVIORAL_GUARD'
             },
             {
-                id: 2, productionFile: 'application/WorldEncounterMaterialSignatureVerifier.js', guardFile: 'tests/WorldEncounterMaterialSignatureVerifier.test.js',
+                id: 2, productionFile: 'application/worldEncounter/WorldEncounterMaterialSignatureVerifier.js', guardFile: 'tests/WorldEncounterMaterialSignatureVerifier.test.js',
                 mutation: 'verifyIdentity(): `return result.valid === true` weakened to `return result.valid !== false`',
                 caught: false, classification: 'EQUIVALENT_MUTANT (see Section E — not a WEAK_GUARD finding)'
             },
@@ -203,17 +203,17 @@ async function run() {
                 caught: 'mixed', classification: 'CONTRACT_GUARD, correctly centralized (see Section F)'
             },
             {
-                id: 4, productionFile: 'application/AchievementBadgeView.js', guardFile: 'tests/AchievementBadgeView.test.js',
+                id: 4, productionFile: 'application/achievement/AchievementBadgeView.js', guardFile: 'tests/AchievementBadgeView.test.js',
                 mutation: 'findSourceAnchorId(): the `.sameAs(sourcePublicationIdentity)` identity match dropped — returns the first Bitcoin record in the array regardless of which one actually earned the badge',
                 caught: false, classification: 'WEAK_GUARD — FIXED (Section D)'
             },
             {
-                id: 5, productionFile: 'application/PublicationReferenceRecord.js', guardFile: 'tests/PublicationReferenceRecord.test.js',
+                id: 5, productionFile: 'application/publication/PublicationReferenceRecord.js', guardFile: 'tests/PublicationReferenceRecord.test.js',
                 mutation: 'constructor(): the self-reference rejection (`sourcePublicationIdentity.sameAs(referencedPublicationIdentity)` throw) short-circuited to never fire',
                 caught: true, classification: 'CONTRACT_GUARD'
             },
             {
-                id: 6, productionFile: 'application/CheckRecoveryUseCase.js', guardFile: 'tests/PersistenceRecovery.test.js',
+                id: 6, productionFile: 'application/document/CheckRecoveryUseCase.js', guardFile: 'tests/PersistenceRecovery.test.js',
                 mutation: 'execute(): the `checkpoint.contentHash !== actualHash` integrity comparison short-circuited to never fire',
                 caught: false, classification: 'WEAK_GUARD — FIXED (Section D)'
             },

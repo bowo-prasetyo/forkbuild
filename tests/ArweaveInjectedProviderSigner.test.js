@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
 
 // 0.9.121 — Arweave Injected Provider Signer.
 // See docs/Roadmap.md, "0.9.121 — Publication Distribution Host Capability

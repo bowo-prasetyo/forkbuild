@@ -1,12 +1,12 @@
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { PresenceVisibilityUseCase } from '../application/PresenceVisibilityUseCase.js';
+import { PresenceVisibilityUseCase } from '../application/presence/PresenceVisibilityUseCase.js';
 import { PresenceVisibility } from '../core/PresenceVisibility.js';
 
 // 0.3.1 — Presence Heartbeat.
@@ -17,7 +17,7 @@ import { PresenceVisibility } from '../core/PresenceVisibility.js';
 // when position/rotation/animation genuinely changed (see its own
 // header: "an avatar standing still ... produces an EXACT no-op"). So
 // an idle-but-still-connected local avatar published nothing at all,
-// and every OTHER replica's application/LocalPresenceStore.js aged that
+// and every OTHER replica's application/presence/LocalPresenceStore.js aged that
 // avatar's last-known advertisement into STALE (2500ms) then ABSENT
 // (6000ms) purely from elapsed wall-clock time — it silently vanished
 // from World View / Nearby Avatars despite never having actually left.

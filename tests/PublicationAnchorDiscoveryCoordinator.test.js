@@ -1,14 +1,14 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { PublicationAnchorPeerExchange } from '../application/PublicationAnchorPeerExchange.js';
-import { PublicationAnchorDiscoveryCoordinator } from '../application/PublicationAnchorDiscoveryCoordinator.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { PublicationAnchorPeerExchange } from '../application/anchoring/PublicationAnchorPeerExchange.js';
+import { PublicationAnchorDiscoveryCoordinator } from '../application/anchoring/PublicationAnchorDiscoveryCoordinator.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.8.5 — Historical Anchor Discovery & Synchronization.
@@ -84,7 +84,7 @@ function makeAnchorExchange() {
     return { catalog, verifier, exchange };
 }
 
-// A stand-in for application/PublicationAnchorPeerExchange.js whose
+// A stand-in for application/anchoring/PublicationAnchorPeerExchange.js whose
 // requestAnchors() only ever "answers" (fires onAnchorReceived, after a
 // short delay — never synchronously, so ordering across candidates is
 // genuinely exercised) for a peer whose `.id` has a configured response.

@@ -4,21 +4,21 @@ import { PeerInvitation } from '../peer/PeerInvitation.js';
 import { LocalRendezvousNetwork } from '../peer/LocalRendezvousNetwork.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
-import { AutoConnectKnownPeersUseCase } from '../application/AutoConnectKnownPeersUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
+import { AutoConnectKnownPeersUseCase } from '../application/peer/AutoConnectKnownPeersUseCase.js';
 import { PeerIdentity } from '../peer/PeerIdentity.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
-import { PublicationPeerConnectionSync } from '../application/PublicationPeerConnectionSync.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
+import { PublicationPeerConnectionSync } from '../application/publication/PublicationPeerConnectionSync.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License, LicenseId } from '../core/License.js';
@@ -30,7 +30,7 @@ import { License, LicenseId } from '../core/License.js';
 // PeerRelationshipUseCase.js#getRelationships() and application/
 // ConnectedPeerRegistry.js#list() — using a test-side-only coordinator
 // function it never shipped. This file exercises the PRODUCTION class that
-// replaces it, application/AutoConnectKnownPeersUseCase.js, over real, live
+// replaces it, application/peer/AutoConnectKnownPeersUseCase.js, over real, live
 // rendezvous/discovery/authentication, never a mocked transport.
 //
 // Sections (A-J):
@@ -69,7 +69,7 @@ class InMemoryStorageProvider extends StorageProvider {
 
 // Same device shape tests/KnownPeerAutoConnectionBoundaryAudit.test.js
 // already established: a real identity, a real ConnectToPeerUseCase (and
-// therefore a real application/ConnectedPeerRegistry.js), over an
+// therefore a real application/peer/ConnectedPeerRegistry.js), over an
 // in-process peer/LocalPeerConnectionProvider.js standing in only for real
 // WebRTC signaling — never for discovery, rendezvous, or authentication.
 function makeDevice(label, network) {
@@ -82,7 +82,7 @@ function makeDevice(label, network) {
     return { identityProvider, transport, connect, relationships, id: identityProvider.getSigningIdentity().id, stopListening: connect.listen() };
 }
 
-// Same honestly-labeled stand-in for application/PeerSessionManager.js's
+// Same honestly-labeled stand-in for application/peer/PeerSessionManager.js's
 // WebRTC-signaling-specific chrome the boundary audit already uses — real
 // discovery, rendezvous, and authentication throughout.
 function makeFakeSessionManager(connect, discoveryProvider) {
@@ -263,7 +263,7 @@ async function run() {
         autoConnect.dispose();
         bob.transport.dispose(); alice.transport.dispose();
     }
-    console.log('✓ Section E: an already-connected known peer is never attempted again — application/ConnectedPeerRegistry.js#list() is checked before every attempt, exactly as 0.9.344 Section F requires.');
+    console.log('✓ Section E: an already-connected known peer is never attempted again — application/peer/ConnectedPeerRegistry.js#list() is checked before every attempt, exactly as 0.9.344 Section F requires.');
 
     // =======================================================================
     // Section F — Failure isolation: one identity's rejected/mislabeled
@@ -390,7 +390,7 @@ async function run() {
 
         assert(authenticatedTo(alice.connect.registry, bob.id).length === 1, 'setup: the automatic connection itself succeeded.');
         assert(bobCatalog.has(envelope.id),
-            '1. bob automatically receives alice\'s already-cataloged publication the moment the automatic connection authenticates — application/PublicationPeerConnectionSync.js needed no change at all to react to a connection it did not initiate.');
+            '1. bob automatically receives alice\'s already-cataloged publication the moment the automatic connection authenticates — application/publication/PublicationPeerConnectionSync.js needed no change at all to react to a connection it did not initiate.');
 
         aliceSync.dispose(); alicePeerExchange.dispose(); bobPeerExchange.dispose();
         autoConnect.dispose();

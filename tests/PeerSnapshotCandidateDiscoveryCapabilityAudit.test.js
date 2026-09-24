@@ -2,25 +2,25 @@ import { execSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
 import {
     PublicationSnapshotPlacementPeerMessageKind,
     toPublicationSnapshotPlacementAnnounceMessage,
     toPublicationSnapshotPlacementRequestMessage,
     isValidPublicationSnapshotPlacementPeerMessage
-} from '../application/PublicationSnapshotPlacementPeerProtocol.js';
-import { PublicationSnapshotPlacementPeerExchange } from '../application/PublicationSnapshotPlacementPeerExchange.js';
+} from '../application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js';
+import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';
 import {
     PeerWorldEncounterMaterialMessageKind,
     isValidPeerWorldEncounterMaterialMessage
-} from '../application/PeerWorldEncounterMaterialProtocol.js';
+} from '../application/worldEncounter/PeerWorldEncounterMaterialProtocol.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 
 // 0.9.481 — Peer Snapshot Candidate Discovery Capability Audit.
 //
@@ -219,21 +219,21 @@ async function run() {
         // DiscoverPeersUseCase.js` mentions PublicationSnapshotPlacement,
         // contentHash, or discoveryTag anywhere in their own source.
         const peerDiscoverySource = await readSource('peer/PeerDiscoveryProvider.js');
-        const discoverPeersSource = await readSource('application/DiscoverPeersUseCase.js');
+        const discoverPeersSource = await readSource('application/peer/DiscoverPeersUseCase.js');
         assert(!/PublicationSnapshotPlacement|contentHash|discoveryTag/.test(peerDiscoverySource)
             && !/PublicationSnapshotPlacement|contentHash|discoveryTag/.test(discoverPeersSource),
-            "1. peer/PeerDiscoveryProvider.js and application/DiscoverPeersUseCase.js never mention a Snapshot candidate concept at all — \"discover a peer\" and \"discover a Snapshot candidate FROM a peer\" are two entirely separate vocabularies in this codebase, never to be conflated.");
+            "1. peer/PeerDiscoveryProvider.js and application/peer/DiscoverPeersUseCase.js never mention a Snapshot candidate concept at all — \"discover a peer\" and \"discover a Snapshot candidate FROM a peer\" are two entirely separate vocabularies in this codebase, never to be conflated.");
 
         // A2. Every existing *PeerProtocol.js REQUEST-shaped message
         // family in this codebase, inventoried live rather than from
         // memory, and each one's own scoping key:
         const families = [
-            { file: 'application/PublicationPeerProtocol.js', hasRequest: false, note: 'ANNOUNCE only — no REQUEST exists yet at all' },
-            { file: 'application/PeerContentProtocol.js', key: 'hash' },
-            { file: 'application/PeerSnapshotContentProtocol.js', key: 'publicationId' },
-            { file: 'application/PublicationAnchorPeerProtocol.js', key: 'publicationId' },
-            { file: 'application/PublicationSnapshotPlacementPeerProtocol.js', key: 'publicationId' },
-            { file: 'application/PeerWorldEncounterMaterialProtocol.js', key: 'objectId' }
+            { file: 'application/publication/PublicationPeerProtocol.js', hasRequest: false, note: 'ANNOUNCE only — no REQUEST exists yet at all' },
+            { file: 'application/peer/PeerContentProtocol.js', key: 'hash' },
+            { file: 'application/snapshot/materialization/PeerSnapshotContentProtocol.js', key: 'publicationId' },
+            { file: 'application/anchoring/PublicationAnchorPeerProtocol.js', key: 'publicationId' },
+            { file: 'application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js', key: 'publicationId' },
+            { file: 'application/worldEncounter/PeerWorldEncounterMaterialProtocol.js', key: 'objectId' }
         ];
         for (const family of families) {
             const source = await readSource(family.file);
@@ -377,7 +377,7 @@ async function run() {
         // identity onto the envelope itself — `meta.connectedPeer` is
         // transport metadata handed to a handler, never merged into the
         // signed placement or the candidate a future source would report.
-        const exchangeSource = await readSource('application/PublicationSnapshotPlacementPeerExchange.js');
+        const exchangeSource = await readSource('application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js');
         assert(/records no peerId, connectionId, or remote identity/i.test(exchangeSource.replace(/\r?\n\s*\/\/ ?/g, ' ')),
             '2. PublicationSnapshotPlacementPeerExchange.js\'s own header explicitly disclaims ever attaching peer/connection identity to a cataloged placement — a future Peer candidate source inherits that exact restraint for free.');
 
@@ -430,7 +430,7 @@ async function run() {
         // F4. Partial peer population — a mix of AUTHENTICATED and
         // not-yet-authenticated peers: only the AUTHENTICATED ones are
         // ever asked, exactly the filter announce() already applies one
-        // domain over (application/PublicationSnapshotPlacementPeerExchange.js
+        // domain over (application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js
         // #announce()).
         const authenticatedPeer = stubPeer('conn-a', 'did:key:zA', PeerLifecycleState.AUTHENTICATED);
         const authenticatingPeer = stubPeer('conn-b', 'did:key:zB', PeerLifecycleState.AUTHENTICATING);
@@ -462,7 +462,7 @@ async function run() {
         // G1. A peer-provided placement claim stays exactly that — a
         // claim — per this codebase's own already-existing header,
         // reconfirmed live rather than re-derived.
-        const exchangeSource = await readSource('application/PublicationSnapshotPlacementPeerExchange.js');
+        const exchangeSource = await readSource('application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js');
         assert(/never "the locator currently serves those bytes\."/.test(exchangeSource),
             "1. PublicationSnapshotPlacementPeerExchange.js's own header still states, verbatim, that a peer-sourced placement never means \"the locator currently serves those bytes\" — a claim, never a verification, exactly the restraint a Peer candidate source must inherit unchanged.");
 
@@ -470,16 +470,16 @@ async function run() {
         // discovery authority anywhere in this codebase's peer layer —
         // reconfirmed against a second, independent file family
         // (content retrieval) rather than the placement family alone.
-        const contentExchangeSource = await readSource('application/PeerContentExchange.js');
+        const contentExchangeSource = await readSource('application/peer/PeerContentExchange.js');
         assert(/a peer is never trusted merely because it supplied\s*\n?\/\/ ?bytes/.test(contentExchangeSource.replace(/\r?\n/g, '\n'))
             || /a peer is never trusted merely because it supplied/.test(contentExchangeSource),
-            '2. application/PeerContentExchange.js\'s own header independently states the identical restraint for a different kind of peer-supplied data — "a peer is never trusted merely because it supplied [bytes]" — confirming this is a codebase-wide posture, not a one-file coincidence.');
+            '2. application/peer/PeerContentExchange.js\'s own header independently states the identical restraint for a different kind of peer-supplied data — "a peer is never trusted merely because it supplied [bytes]" — confirming this is a codebase-wide posture, not a one-file coincidence.');
 
         // G3. Cataloging a placement never verifies its locator or
         // touches a ContentStore — reconfirms 0.9.480's own Section E,
         // now for the peer-sourced path specifically (the ANNOUNCE
         // Section C just proved live).
-        const catalogSource = await readSource('application/LocalPublicationSnapshotPlacementCatalog.js');
+        const catalogSource = await readSource('application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js');
         assert(!/ContentStore/.test(catalogSource),
             '3. the catalog a peer-sourced ANNOUNCE writes into never imports or mentions a ContentStore — discovery is not availability, for a peer-sourced candidate exactly as much as a self-declared one.');
 
@@ -526,7 +526,7 @@ async function run() {
     // ===============================================================
     {
         // A test-only, THIS-FILE-ONLY message pair — never exported, never
-        // touching application/PublicationSnapshotPlacementPeerProtocol.js
+        // touching application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js
         // or any other production file. Deliberately mirrors that file's
         // OWN restraint (structural validity only, size-bounded response)
         // rather than inventing a differently-shaped discipline.
@@ -681,9 +681,9 @@ async function run() {
     {
         const worldEncounterReferences = grepFiles(
             'WorldEncounterMaterialLoading|LocalWorldEncounterMaterialSource|AutomaticSnapshotEncounterCascade|registerMaterializedSnapshotWorldSource',
-            ['application/PublicationSnapshotPlacementPeerExchange.js',
-             'application/PublicationSnapshotPlacementPeerProtocol.js',
-             'application/LocalPublicationSnapshotPlacementCatalog.js']
+            ['application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js',
+             'application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js',
+             'application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js']
         );
         assert(worldEncounterReferences.length === 0,
             '1. none of the peer-facing placement files this audit\'s prototype builds on reference the World Encounter material-loading, cascade, or registration families at all — Peer candidate discovery, like Local\'s (0.9.480), never becomes a second World Encounter engine.');
@@ -727,7 +727,7 @@ async function run() {
         // the same reason). Amended to exclude exactly 0.9.597's own,
         // already-accounted-for files, while still catching any OTHER,
         // unexpected production drift.
-        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js']);
+        const expectedLaterMilestoneFiles = new Set(['application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js']);
         const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
             .filter((f) => !expectedLaterMilestoneFiles.has(f));
         assert(unexpectedNonTestFiles.length === 0, `1. AMENDED BY 0.9.597 — no UNEXPECTED production file is modified by this milestone (0.9.597's own, separately-justified files excepted) — found: ${unexpectedNonTestFiles.join(', ') || 'none'}.`);

@@ -4,14 +4,14 @@ import { isValidChatDeliveryState } from './ChatDeliveryState.js';
 
 // 0.2.83 — Multi-Device Conversation & Read-State Synchronization.
 //
-// The wire vocabulary for `application/DeviceConversationSyncUseCase.js`'s
+// The wire vocabulary for `application/chat/DeviceConversationSyncUseCase.js`'s
 // own protocol (`forkbuild:device-conversation-sync`) — deliberately a
 // SEPARATE protocol from `forkbuild:chat`/`forkbuild:chat-delivery-ack`/
 // `forkbuild:chat-read`, never a new message kind riding one of those.
 // See that file's own header, and docs/Principles.md, "Conversation
 // Synchronization Is A Protocol Between A Device And Itself, Never A
 // Wider Chat Feature" (0.2.83): this vocabulary only ever travels between
-// two connections `application/DeviceAuthorizationPropagationUseCase.js`
+// two connections `application/identity/DeviceAuthorizationPropagationUseCase.js`
 // independently resolves to the SAME parent identity — it carries no
 // authority over Bob's own copy of anything, and Bob's ChatUseCase never
 // subscribes to it at all.
@@ -20,7 +20,7 @@ import { isValidChatDeliveryState } from './ChatDeliveryState.js';
 // GRANT/REVOCATION split:
 //
 //   MESSAGES   — a bounded batch of one sending device's own
-//                application/ConversationStore.js entries for ONE
+//                application/chat/ConversationStore.js entries for ONE
 //                conversation bucket (`peerIdentityId` — the THIRD
 //                party, e.g. Bob; never the sibling this envelope is
 //                addressed to). Each entry is a verbatim
@@ -32,10 +32,10 @@ import { isValidChatDeliveryState } from './ChatDeliveryState.js';
 //                already globally unique, independent of which device
 //                produced it.
 //   READ_STATE — one sending device's own LOCAL read marker
-//                (application/ConversationReadTracker.js#getLastReadSequence)
+//                (application/chat/ConversationReadTracker.js#getLastReadSequence)
 //                for one peer — never a claim about what the RECEIVING
 //                device has read, and never merged INTO the receiver's
-//                own local marker (see application/SiblingReadStateStore.js's
+//                own local marker (see application/chat/SiblingReadStateStore.js's
 //                own header on why a sibling's report is tracked
 //                separately, never overwriting this device's own).
 //

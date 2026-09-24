@@ -10,21 +10,21 @@ import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStor
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { Publication } from '../publisher/Publication.js';
 
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
-import { PublicationCommentaryDistributionPeerExchange } from '../application/PublicationCommentaryDistributionPeerExchange.js';
-import { CreatePublicationCommentaryUseCase } from '../application/CreatePublicationCommentaryUseCase.js';
-import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryDistributionPeerExchange } from '../application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js';
+import { CreatePublicationCommentaryUseCase } from '../application/publication/commentary/CreatePublicationCommentaryUseCase.js';
+import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
 
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.9.620 — Wire Publication Commentary Peer Distribution.
 //
 // TYPE: production wiring. Closes exactly the gap 0.9.619's own Section
 // B/C flagship finding measured: the distribution capability 0.9.618
-// built (application/PublicationCommentaryDistributionExchange.js +
+// built (application/publication/commentary/PublicationCommentaryDistributionExchange.js +
 // PublicationCommentaryDistributionPeerExchange.js) was fully correct
 // but completely unreachable from the real, running application — no
 // composition root existed, ui/main.js never constructed or wired one,
@@ -33,7 +33,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //
 // WHAT THIS MILESTONE ADDS, AND ONLY THIS:
 //
-//   1. application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js
+//   1. application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js
 //      — a new composition root, mirroring application/
 //      CreatePublicationAnchorPeerExchangeUseCase.js's own exact shape.
 //      No new class inside it: PublicationCommentaryStore,
@@ -43,16 +43,16 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //   2. ui/main.js — constructs that composition root, riding the SAME
 //      app-wide peerMessageBus/peerSessionManager.registry/identityProvider
 //      every sibling capability already rides, and wraps the EXISTING
-//      application/CreatePublicationCommentaryUseCase.js's own
+//      application/publication/commentary/CreatePublicationCommentaryUseCase.js's own
 //      addPublicationCommentaryCommand with an ANNOUNCE side effect —
 //      local creation first, announce second, never the reverse; a
 //      distribution failure is swallowed and never turns local
 //      Commentary creation into a network-dependent operation.
 //
 // NEITHER core/PublicationCommentary.js, storage/PublicationCommentaryStore.js,
-// application/PublicationCommentaryDistributionExchange.js,
-// application/PublicationCommentaryDistributionPeerExchange.js, nor
-// application/CreatePublicationCommentaryUseCase.js is modified by this
+// application/publication/commentary/PublicationCommentaryDistributionExchange.js,
+// application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js, nor
+// application/publication/commentary/CreatePublicationCommentaryUseCase.js is modified by this
 // milestone — every one of the sections below either reads their source
 // to prove that, or exercises them live, unmodified, through the new
 // wiring.
@@ -192,7 +192,7 @@ async function run() {
     // Section A — the new composition root.
     // ===============================================================
     {
-        const source = codeOnly(await rawSource('application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'));
+        const source = codeOnly(await rawSource('application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'));
         assert(source.includes('PublicationCommentaryStore') && source.includes('PublicationCommentaryDistributionExchange') && source.includes('PublicationCommentaryDistributionPeerExchange'),
             n('the new composition root imports and composes the three EXISTING, 0.9.618/0.9.243 classes — no fourth, new class'));
         assert(!/DistributedPublicationCommentaryStore|CommentarySyncService|CommentaryReplicationService|CommentaryNetworkManager|CommentaryBroadcastManager/.test(source),
@@ -221,7 +221,7 @@ async function run() {
     // ===============================================================
     {
         const mainSource = codeOnly(await rawSource('ui/main.js'));
-        assert(mainSource.includes("import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';"),
+        assert(mainSource.includes("import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';"),
             n('ui/main.js imports the new composition root'));
         assert(mainSource.includes('new CreatePublicationCommentaryDistributionPeerExchangeUseCase().execute({') &&
                /identityProvider,\s*\n\s*peerMessageBus,\s*\n\s*connectedPeerRegistry: peerSessionManager\.registry/.test(mainSource),
@@ -242,7 +242,7 @@ async function run() {
     // A real, discoverable Publication — CanCommentOnPublicationUseCase's
     // own policy (0.9.246, unmodified) requires publicationId to
     // actually resolve. Seeded through the SAME window.localStorage key
-    // application/CreatePublicationCommentaryUseCase.js's own internal
+    // application/publication/commentary/CreatePublicationCommentaryUseCase.js's own internal
     // LocalDiscoveryProvider reads — the identical setup 0.9.619's own
     // Section C already used.
     const publisherProvider = makeIdentity('wiring-publisher');
@@ -550,9 +550,9 @@ async function run() {
         const signed = new PublicationCommentaryDistributionExchange(new PublicationCommentaryStore(new InMemoryStorageProvider()), authorProvider, new LocalAuthorizationVerifier())
             .exportCommentary(commentary);
         const { isNew } = receiver.exchange.importCommentaryEnvelope(signed);
-        assert(isNew === true, n('a Commentary about a publicationId the receiving device has never heard of is still accepted — the distribution layer never checks Publication existence, ownership, or discoverability, exactly as application/PublicationCommentaryDistributionExchange.js\'s own 0.9.618 header already documents, now reconfirmed unchanged by this milestone\'s wiring'));
+        assert(isNew === true, n('a Commentary about a publicationId the receiving device has never heard of is still accepted — the distribution layer never checks Publication existence, ownership, or discoverability, exactly as application/publication/commentary/PublicationCommentaryDistributionExchange.js\'s own 0.9.618 header already documents, now reconfirmed unchanged by this milestone\'s wiring'));
 
-        const useCaseSource = codeOnly(await rawSource('application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'));
+        const useCaseSource = codeOnly(await rawSource('application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'));
         assert(!/CanCommentOnPublicationUseCase|DiscoveryProvider|discoveryProvider/.test(useCaseSource),
             n('the new composition root itself never imports or mentions any Publication discovery/authorization collaborator — it cannot widen a check it never touches'));
 
@@ -587,7 +587,7 @@ async function run() {
     // ===============================================================
     {
         console.log(
-            '\n0.9.620 verdict: PRODUCTION_WIRING_GAP (0.9.619) -> CLOSED. application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js '
+            '\n0.9.620 verdict: PRODUCTION_WIRING_GAP (0.9.619) -> CLOSED. application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js '
             + 'composes the three existing 0.9.618/0.9.243 classes (Section A); ui/main.js constructs it on the app-wide peerMessageBus/registry/identityProvider '
             + 'and wraps the existing addPublicationCommentaryCommand with an announce side effect, still provided under the identical name (Section B); creating '
             + 'a Commentary through that real, reproduced composition now genuinely calls announce() (Section C) against the SAME underlying store '

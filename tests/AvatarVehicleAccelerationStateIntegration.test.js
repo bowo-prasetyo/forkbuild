@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -17,7 +17,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // vocabulary and its pure math half, and deliberately stopped short of
 // ever calling it — see that milestone's own closing paragraph, "next: a
 // future milestone integrates this seam into
-// application/AvatarMovementController.js." This is that milestone: the
+// application/avatar/AvatarMovementController.js." This is that milestone: the
 // controller now maintains a transient, SIGNED "current movement speed"
 // between ticks and feeds it through core/AvatarMovementSimulation.js's
 // own newly-wired resolveMovementSpeed() call to approach the active
@@ -49,7 +49,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              milestone), reaching its own resolved cruise speed
 //   Section K: architectural regression — the integration seam lives
 //              exactly where core/AvatarMovementSimulation.js's and
-//              application/AvatarMovementController.js's own 0.9.91
+//              application/avatar/AvatarMovementController.js's own 0.9.91
 //              headers say it does
 //
 // Central architectural claim under test throughout: movement CAPABILITY
@@ -427,7 +427,7 @@ async function runTests() {
 
         // First tick from rest: walking and running produce the exact
         // SAME speed — proof that running never alters the acceleration
-        // RATE (see application/AvatarMovementController.js's own 0.9.91
+        // RATE (see application/avatar/AvatarMovementController.js's own 0.9.91
         // header, "_resolvedAcceleration() reads only .acceleration.acceleration,
         // never .kind, and running never touches it either").
         const { avatarPresenceSession: walkingFirstTickSession } = buildAvatarStack(registry, 'accel-h1-walking');
@@ -621,22 +621,22 @@ async function runTests() {
     // Section K — architectural regression
     // -------------------------------------------------------------
     {
-        const controllerSource = await readFile(new URL('../application/AvatarMovementController.js', import.meta.url), 'utf8');
+        const controllerSource = await readFile(new URL('../application/avatar/AvatarMovementController.js', import.meta.url), 'utf8');
         const controllerCodeOnly = controllerSource
             .split('\n')
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
 
         assert(!/\bBICYCLE\b|\bMOTORCYCLE\b|\bCAR\b|\bDRONE\b/.test(controllerCodeOnly),
-            '39. application/AvatarMovementController.js never references BICYCLE/MOTORCYCLE/CAR/DRONE — it knows only about a resolved capability\'s own generic acceleration.acceleration number');
+            '39. application/avatar/AvatarMovementController.js never references BICYCLE/MOTORCYCLE/CAR/DRONE — it knows only about a resolved capability\'s own generic acceleration.acceleration number');
         assert(!controllerCodeOnly.includes('AvatarMovementAccelerationKind') && !controllerCodeOnly.includes('.kind'),
-            '40. application/AvatarMovementController.js never reads AvatarMovementAccelerationCapability\'s own .kind — the bare acceleration rate alone (always exactly 0 for INSTANT, always > 0 for RATE_LIMITED) already carries the distinction');
+            '40. application/avatar/AvatarMovementController.js never reads AvatarMovementAccelerationCapability\'s own .kind — the bare acceleration rate alone (always exactly 0 for INSTANT, always > 0 for RATE_LIMITED) already carries the distinction');
         assert(!controllerCodeOnly.includes('AvatarMovementAccelerationSimulation') && !controllerCodeOnly.includes('resolveMovementSpeed'),
-            '41. application/AvatarMovementController.js never imports core/AvatarMovementAccelerationSimulation.js or calls resolveMovementSpeed() directly — it only ever hands bare numbers to core/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
+            '41. application/avatar/AvatarMovementController.js never imports core/AvatarMovementAccelerationSimulation.js or calls resolveMovementSpeed() directly — it only ever hands bare numbers to core/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
         assert(controllerCodeOnly.includes('_resolvedAcceleration') && controllerCodeOnly.includes('_currentMovementSpeed'),
-            '42. application/AvatarMovementController.js exposes the _resolvedAcceleration()/_currentMovementSpeed seam this milestone exists to add');
+            '42. application/avatar/AvatarMovementController.js exposes the _resolvedAcceleration()/_currentMovementSpeed seam this milestone exists to add');
         assert(!/VehicleMovementController/.test(controllerCodeOnly),
-            '43. no second, per-vehicle movement controller was introduced — application/AvatarMovementController.js remains the one movement executor');
+            '43. no second, per-vehicle movement controller was introduced — application/avatar/AvatarMovementController.js remains the one movement executor');
 
         const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         assert(simulationSource.includes('AvatarMovementAccelerationSimulation') && simulationSource.includes('resolveMovementSpeed'),

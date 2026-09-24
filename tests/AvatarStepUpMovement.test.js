@@ -1,16 +1,16 @@
 import { walkableTopAt, isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
 import { brickAabb, translateAabb } from '../core/AvatarCollision.js';
-import { AvatarStepConstraint } from '../application/AvatarStepConstraint.js';
-import { AvatarMovementConstraint } from '../application/AvatarMovementConstraint.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
+import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -19,9 +19,9 @@ import { Position } from '../core/Position.js';
 // 0.3.2 — Step-Up Movement.
 //
 //   Section A: core/BrickWalkability.js — pure step-height geometry
-//   Section B: application/AvatarStepConstraint.js — real loaded-brick support height
-//   Section C: application/AvatarMovementConstraint.js — a climbable brick is excluded from collision
-//   Section D: application/AvatarMovementController.js — the full three-stage pipeline
+//   Section B: application/avatar/AvatarStepConstraint.js — real loaded-brick support height
+//   Section C: application/avatar/AvatarMovementConstraint.js — a climbable brick is excluded from collision
+//   Section D: application/avatar/AvatarMovementController.js — the full three-stage pipeline
 //   Section E: WorldNavigationSession integration
 //   Section F: FLAGSHIP — the design doc's own scripted scenario
 //
@@ -64,8 +64,8 @@ function buildAvatarStack(registry, username) {
     return { storage, identityProvider, avatarProfileUseCase, avatarPresenceSession };
 }
 
-// A minimal, duck-typed "loaded document" — application/AvatarMovementConstraint.js
-// and application/AvatarStepConstraint.js only ever read `document.world.getBuildings()`,
+// A minimal, duck-typed "loaded document" — application/avatar/AvatarMovementConstraint.js
+// and application/avatar/AvatarStepConstraint.js only ever read `document.world.getBuildings()`,
 // so a real Document/publication pipeline (tests/AvatarCollision.test.js's own
 // publishWallDocument()) is unnecessary plumbing for a test that's
 // entirely about the step-height decision, not about publishing itself.
@@ -124,7 +124,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — application/AvatarStepConstraint.js
+    // Section B — application/avatar/AvatarStepConstraint.js
     // -------------------------------------------------------------
     {
         const constraint = new AvatarStepConstraint({});
@@ -216,7 +216,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — application/AvatarMovementConstraint.js: 0.3.2
+    // Section C — application/avatar/AvatarMovementConstraint.js: 0.3.2
     // step-up obstacle exclusion
     // -------------------------------------------------------------
     {
@@ -265,7 +265,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section D — application/AvatarMovementController.js: the full
+    // Section D — application/avatar/AvatarMovementController.js: the full
     // three-stage pipeline (collision -> terrain slope -> step-up)
     // -------------------------------------------------------------
     {

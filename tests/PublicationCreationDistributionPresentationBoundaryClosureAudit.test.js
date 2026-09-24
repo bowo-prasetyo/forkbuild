@@ -3,14 +3,14 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { composePublicationDistributionCommand, composeMultiRelayNostrPublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js';
-import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
-import { createArweavePublicationDistributionRuntimeAdapter } from '../application/ArweavePublicationDistributionRuntimeAdapter.js';
-import { createNostrPublicationDistributionRuntimeAdapter } from '../application/NostrPublicationDistributionRuntimeAdapter.js';
-import { createArweaveTaggedTransactionUpload } from '../application/ArweaveTaggedTransactionUpload.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
+import { composePublicationDistributionCommand, composeMultiRelayNostrPublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { createPublicationDistributionRuntimeProvider } from '../application/publication/distribution/PublicationDistributionRuntimeProvider.js';
+import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js';
+import { createArweavePublicationDistributionRuntimeAdapter } from '../application/arweave/ArweavePublicationDistributionRuntimeAdapter.js';
+import { createNostrPublicationDistributionRuntimeAdapter } from '../application/nostr/NostrPublicationDistributionRuntimeAdapter.js';
+import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 import { worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.527 — Publication Creation & Distribution Presentation Boundary
@@ -755,9 +755,9 @@ async function run() {
         // No universal `PublicationDistributionResult[]` contract was
         // introduced at the application layer — the result module itself
         // is untouched by this arc.
-        const resultModuleSource = codeOnly(await source('application/PublicationDistributionResult.js'));
-        assert(!resultModuleSource.includes('Array') || resultModuleSource.match(/Array/g).length === (codeOnly(await source('application/PublicationDistributionResult.js')).match(/Array/g) || []).length,
-            n('H10. application/PublicationDistributionResult.js is untouched by this arc — it still describes exactly one result, never an array contract of its own'));
+        const resultModuleSource = codeOnly(await source('application/publication/distribution/PublicationDistributionResult.js'));
+        assert(!resultModuleSource.includes('Array') || resultModuleSource.match(/Array/g).length === (codeOnly(await source('application/publication/distribution/PublicationDistributionResult.js')).match(/Array/g) || []).length,
+            n('H10. application/publication/distribution/PublicationDistributionResult.js is untouched by this arc — it still describes exactly one result, never an array contract of its own'));
         assert(!resultModuleSource.includes('function describePublicationDistributionResultArray') && !resultModuleSource.includes('PublicationDistributionResultList'),
             n('H11. no array/list-flavored sibling was added to PublicationDistributionResult.js — the single-result module stays exactly that'));
 

@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { TurnServerConfiguration } from '../core/TurnServerConfiguration.js';
 import { TurnServerConfigurationStore } from '../storage/TurnServerConfigurationStore.js';
-import { resolveTurnServerConfiguration } from '../application/TurnServerConfigurationProvider.js';
+import { resolveTurnServerConfiguration } from '../application/settings/TurnServerConfigurationProvider.js';
 import { IceServerConfiguration } from '../core/IceServerConfiguration.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 import { NostrRelayConfiguration } from '../core/NostrRelayConfiguration.js';
@@ -184,7 +184,7 @@ async function run() {
 
         assert(mainSource.includes("import { TurnServerConfigurationStore } from '../storage/TurnServerConfigurationStore.js';"),
             n('01. ui/main.js imports the real TurnServerConfigurationStore'));
-        assert(mainSource.includes("import { resolveTurnServerConfiguration } from '../application/TurnServerConfigurationProvider.js';"),
+        assert(mainSource.includes("import { resolveTurnServerConfiguration } from '../application/settings/TurnServerConfigurationProvider.js';"),
             n('02. ui/main.js imports the real resolveTurnServerConfiguration()'));
 
         const storeConstructions = (mainSource.match(/new TurnServerConfigurationStore\(/g) || []).length;

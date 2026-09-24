@@ -13,7 +13,7 @@
 // decides whether a click is allowed — `row.canManage` (already
 // computed by buildWorldCollaborationRoster() from `isWorldOwner()`)
 // only controls whether the BUTTON is offered at all. The real gate is
-// application/WorldMembershipUseCase.js#grantEdit()/revokeEdit(),
+// application/identity/WorldMembershipUseCase.js#grantEdit()/revokeEdit(),
 // re-verified fresh the moment the host view's own handler calls it —
 // exactly the same "UI affordance -> application authorization ->
 // signed membership operation" chain 0.2.95 through 0.2.98 already
@@ -33,7 +33,7 @@
 // directly: `deviceCount` is per ROW (one identity), never one row per
 // device — "Bob · 2 devices," never "Bob's Laptop"/"Bob's Tablet" as
 // two independent people. That aggregation already happened one layer
-// down, in application/WorldPresenceUseCase.js#getRoster() (0.2.98);
+// down, in application/presence/WorldPresenceUseCase.js#getRoster() (0.2.98);
 // this component only ever renders the number it's handed.
 import { WorldCollaborationAccess } from './WorldCollaborationRoster.js';
 

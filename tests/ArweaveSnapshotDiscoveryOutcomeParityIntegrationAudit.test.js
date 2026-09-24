@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 
-import { ArweaveSnapshotDiscoveryQueryService } from '../application/ArweaveSnapshotDiscoveryQueryService.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/LocalSnapshotCandidateDiscoveryQueryService.js';
-import { SnapshotCandidateDiscoveryQueryService } from '../application/SnapshotCandidateDiscoveryQueryService.js';
-import { SnapshotCandidateDiscoveryOutcome } from '../application/SnapshotCandidateDiscoveryOutcome.js';
-import { executeDiscoverSnapshotCandidatesCommandWithOutcome } from '../application/DiscoverSnapshotCandidatesCommand.js';
+import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js';
+import { SnapshotCandidateDiscoveryQueryService } from '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
+import { SnapshotCandidateDiscoveryOutcome } from '../application/snapshot/SnapshotCandidateDiscoveryOutcome.js';
+import { executeDiscoverSnapshotCandidatesCommandWithOutcome } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 
@@ -298,7 +298,7 @@ async function runTests() {
         assert(Array.isArray(legacyResult) && legacyResult.length === 0,
             '20. search() still degrades a GraphQL failure to [], completely unchanged by this milestone');
 
-        const source = await readSource('application/ArweaveSnapshotDiscoveryQueryService.js');
+        const source = await readSource('application/arweave/ArweaveSnapshotDiscoveryQueryService.js');
         const searchMethodMatch = source.match(/async search\(discoveryTag\) \{[\s\S]*?\n {4}\}/);
         assert(searchMethodMatch, '21. search() is present and extractable');
         assert(!/searchWithOutcome|SnapshotCandidateDiscoveryOutcome|_searchAnnouncementTransactionIdsWithOutcome/.test(searchMethodMatch[0]),
@@ -376,7 +376,7 @@ async function runTests() {
     // Section H — boundary regression.
     // ---------------------------------------------------------------
     {
-        const arweaveSourceCode = await readSource('application/ArweaveSnapshotDiscoveryQueryService.js');
+        const arweaveSourceCode = await readSource('application/arweave/ArweaveSnapshotDiscoveryQueryService.js');
         const codeOnly = arweaveSourceCode.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(!codeOnly.includes("from '../content/"), '33. no ContentStore import — resolution stays untouched');
@@ -390,20 +390,20 @@ async function runTests() {
 
         // Files this milestone's own brief named as out of scope: none of
         // them changed.
-        const monitorSource = await readSource('application/WorldSnapshotDiscoveryMonitor.js');
+        const monitorSource = await readSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js');
         assert(!/searchWithOutcome|SnapshotCandidateDiscoveryOutcome/.test(monitorSource),
             '39. WorldSnapshotDiscoveryMonitor.js (walking-triggered discovery) has no idea this vocabulary exists — still on the legacy command');
 
-        const commandSource = await readSource('application/DiscoverSnapshotCandidatesCommand.js');
+        const commandSource = await readSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js');
         assert(!/^import /m.test(commandSource), '40. DiscoverSnapshotCandidatesCommand.js still imports nothing — it cannot reach Repository/resolution/verification even accidentally');
 
-        const publisherSource = await readSource('application/ArweaveSnapshotDiscoveryPublisher.js');
+        const publisherSource = await readSource('application/arweave/ArweaveSnapshotDiscoveryPublisher.js');
         assert(!/searchWithOutcome/.test(publisherSource),
             '41. ArweaveSnapshotDiscoveryPublisher.js (announcement publishing) is completely untouched by this milestone');
 
-        const compositionSource = await readSource('application/SnapshotCandidateDiscoveryRuntimeComposition.js');
+        const compositionSource = await readSource('application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js');
         assert(!/searchWithOutcome/.test(compositionSource),
-            '42. application/SnapshotCandidateDiscoveryRuntimeComposition.js (provider selection) needed no change — the composite already duck-types searchWithOutcome() per source');
+            '42. application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js (provider selection) needed no change — the composite already duck-types searchWithOutcome() per source');
 
         const mainSource = await readSource('ui/main.js');
         assert(/new ArweaveSnapshotDiscoveryQueryService\(\{ gatewayUrl: resolvedArweaveGatewayUrl \}\)/.test(mainSource),

@@ -2,11 +2,11 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
-import { PeerBlockUseCase } from '../application/PeerBlockUseCase.js';
-import { VoiceUseCase } from '../application/VoiceUseCase.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
+import { PeerBlockUseCase } from '../application/peer/PeerBlockUseCase.js';
+import { VoiceUseCase } from '../application/chat/VoiceUseCase.js';
 import { VoiceSessionState } from '../core/VoiceSessionState.js';
 import {
     VoiceCallSignalType,
@@ -113,8 +113,8 @@ function waitForIncomingCall(voiceUseCase, timeoutMs = 15000) {
 // Web Audio oscillator — genuinely flows over a real RTCPeerConnection
 // exactly like a real microphone track would, without needing OS
 // microphone permission or hardware in a headless browser. Injected as
-// application/VoiceUseCase.js's own `localAudioTrackProvider`
-// collaborator — see application/LocalAudioTrackProvider.js's own header
+// application/chat/VoiceUseCase.js's own `localAudioTrackProvider`
+// collaborator — see application/chat/LocalAudioTrackProvider.js's own header
 // on why that boundary exists.
 class SyntheticAudioTrackProvider {
     constructor(frequency = 440) {
@@ -418,7 +418,7 @@ let flagshipCleanup;
     const aliceConnection = aliceTransport.createOffer();
     // Alice believes this offer's endpoint leads to Bob (e.g. from a
     // stale or spoofed rendezvous record) and says so explicitly via
-    // expectedIdentityId — exactly application/FindPeerUseCase.js's own
+    // expectedIdentityId — exactly application/peer/FindPeerUseCase.js's own
     // "searched for Bob" precedent.
     const aliceConnectedPeer = aliceConnect.attach(aliceConnection, null, { expectedIdentityId: bobId });
     const offer = await waitForLocalSignal(aliceConnection);

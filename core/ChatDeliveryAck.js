@@ -3,7 +3,7 @@ import { MAX_CHAT_ID_LENGTH } from './ChatMessage.js';
 // 0.2.63 — Reliable Offline Messaging & Delivery State.
 //
 // A tiny, SEPARATE wire vocabulary from core/ChatMessage.js — see
-// application/ChatUseCase.js's own header, "Sent Is Not Delivered"
+// application/chat/ChatUseCase.js's own header, "Sent Is Not Delivered"
 // (0.2.63): a delivery acknowledgement is never folded into
 // ChatMessage's own shape, and never rides the `forkbuild:chat`
 // protocol string, so the ingestion boundary that already exists for
@@ -12,7 +12,7 @@ import { MAX_CHAT_ID_LENGTH } from './ChatMessage.js';
 // from acknowledgements by inspecting a payload's shape. It has its
 // own protocol, `application/ChatUseCase.ACK_PROTOCOL`, and its own
 // (much smaller) trust boundary — see
-// application/ChatUseCase.js#_handleIncomingAck().
+// application/chat/ChatUseCase.js#_handleIncomingAck().
 //
 //   messageId         — which core/ChatMessage.js this acknowledges.
 //   conversationId     — the SAME derivation core/ChatMessage.js's own
@@ -20,10 +20,10 @@ import { MAX_CHAT_ID_LENGTH } from './ChatMessage.js';
 //                        re-derived and compared by the receiver of
 //                        the ack, never trusted from the wire at face
 //                        value — the identical discipline
-//                        application/ChatUseCase.js#_handleIncoming()
+//                        application/chat/ChatUseCase.js#_handleIncoming()
 //                        already applies to a ChatMessage itself.
 //   recipientIdentity  — who is doing the acknowledging. Never trusted
-//                        on its own: application/ChatUseCase.js's
+//                        on its own: application/chat/ChatUseCase.js's
 //                        ingestion requires this to match the sending
 //                        connection's own already-proven
 //                        remoteIdentity, the same "claimed sender must

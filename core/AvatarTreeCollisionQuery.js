@@ -114,7 +114,7 @@ export const CANDIDATE_QUERY_MARGIN = AVATAR_COLLISION_RADIUS + MAX_TREE_COLLISI
 // path: the walking avatar's own existing radius by default, or a
 // mounted ground vehicle's own, larger
 // `AvatarVehicleMovementCapability#collisionRadius` when a caller
-// supplies one (see application/AvatarTreeConstraint.js's own 0.9.88
+// supplies one (see application/avatar/AvatarTreeConstraint.js's own 0.9.88
 // header for where that value comes from). THIS IS THE SAME SEAM 0.9.62
 // ALREADY ESTABLISHED, ONLY MADE VARIABLE: the margin is still exactly
 // `avatarRadius + MAX_TREE_COLLISION_RADIUS`, computed fresh from
@@ -144,8 +144,8 @@ export function treeCollisionCandidatesForMovement({ seed, currentPosition, requ
 // region" function distinct from
 // core/TreeCollisionGeometry.js#treeCollisionGeometryInRegion() — this
 // file only ever decides which region to ask that one function about;
-// wiring this file into application/AvatarMovementConstraint.js,
-// application/AvatarTerrainConstraint.js, or the World View avatar update
+// wiring this file into application/avatar/AvatarMovementConstraint.js,
+// application/avatar/AvatarTerrainConstraint.js, or the World View avatar update
 // loop in any way (a separate integration seam, deliberately left for a
 // later milestone — 0.9.63); mutating `currentPosition`, `requestedPosition`,
 // or any returned circle; a richer result than a plain array of circles
@@ -157,8 +157,8 @@ export function treeCollisionCandidatesForMovement({ seed, currentPosition, requ
 // integration. No existing file — core/NaturalFeatureField.js,
 // core/TreeCollisionGeometry.js, core/AvatarTreeCollision.js,
 // core/AvatarTreeMovement.js, core/AvatarCollision.js,
-// application/AvatarMovementConstraint.js, and
-// application/AvatarTerrainConstraint.js included — is modified by this
+// application/avatar/AvatarMovementConstraint.js, and
+// application/avatar/AvatarTerrainConstraint.js included — is modified by this
 // milestone; none of them import or reference
 // core/AvatarTreeCollisionQuery.js. See docs/Roadmap.md, 0.9.62, for the
 // full list.

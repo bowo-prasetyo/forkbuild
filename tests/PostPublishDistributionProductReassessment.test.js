@@ -2,13 +2,13 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState, describePublicationDistributionLifecycle } from '../application/PublicationDistributionLifecycle.js';
-import { IpfsRemotePublicationCoordinator } from '../application/IpfsRemotePublicationCoordinator.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
+import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState, describePublicationDistributionLifecycle } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { IpfsRemotePublicationCoordinator } from '../application/ipfs/IpfsRemotePublicationCoordinator.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -391,13 +391,13 @@ async function run() {
         // D2 — structural: Bitcoin anchoring is explicit, on file, that a
         // wallet/transaction capability is a SEPARATE prerequisite this
         // codebase's own coordinator never supplies itself.
-        const bitcoinPublisherCode = await rawSource('application/CreateBitcoinAnchorPublisherUseCase.js');
+        const bitcoinPublisherCode = await rawSource('application/anchoring/bitcoin/CreateBitcoinAnchorPublisherUseCase.js');
         assert(/never the wallet\/transaction capability/i.test(bitcoinPublisherCode),
             '19. Bitcoin anchoring\'s own source is explicit that a connected, funded wallet is a separate prerequisite it does not itself provide');
 
         // D3 — Base anchoring remains reserved/unimplemented, reconfirmed
         // fresh: still no anchoring/Base*.js transport anywhere.
-        const blockchainKindCode = await rawSource('application/BlockchainKind.js');
+        const blockchainKindCode = await rawSource('application/anchoring/BlockchainKind.js');
         assert(/RESERVED/i.test(blockchainKindCode) && blockchainKindCode.includes("BASE: 'base'"),
             '20. BlockchainKind.BASE remains named but reserved — still no implemented Base transport, reconfirmed fresh');
         const baseTransportFiles = grepFiles('BASE', ['anchoring']);
@@ -449,7 +449,7 @@ async function run() {
 
         // E2 — structural: neither publish handler nor either use case
         // ever calls into distribution machinery, or vice versa, reconfirmed fresh.
-        const publishUseCaseCode = await codeOnlySource('application/PublishDocumentUseCase.js');
+        const publishUseCaseCode = await codeOnlySource('application/publication/PublishDocumentUseCase.js');
         assert(!/Arweave|Nostr|Ipfs|Bitcoin|distribut/i.test(publishUseCaseCode),
             '26. PublishDocumentUseCase.js carries no distribution vocabulary of any kind');
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
@@ -490,10 +490,10 @@ async function run() {
         // confirm structurally that neither the Snapshot family nor the
         // Publication family nor the IPFS/Anchor coordinators import one
         // another — no shared aggregate outcome collaborator anywhere.
-        const snapshotCommandCode = await codeOnlySource('application/SnapshotDistributionCommand.js');
-        const publicationCommandCode = await codeOnlySource('application/PublicationDistributionCommand.js');
-        const ipfsCode = await codeOnlySource('application/IpfsRemotePublicationCoordinator.js');
-        const anchorCode = await codeOnlySource('application/PublicationAnchorCreationCoordinator.js');
+        const snapshotCommandCode = await codeOnlySource('application/snapshot/SnapshotDistributionCommand.js');
+        const publicationCommandCode = await codeOnlySource('application/publication/distribution/PublicationDistributionCommand.js');
+        const ipfsCode = await codeOnlySource('application/ipfs/IpfsRemotePublicationCoordinator.js');
+        const anchorCode = await codeOnlySource('application/anchoring/PublicationAnchorCreationCoordinator.js');
         assert(!snapshotCommandCode.includes('PublicationDistributionCommand') && !publicationCommandCode.includes('SnapshotDistributionCommand'),
             '30. Snapshot distribution and Publication distribution import neither one another');
         for (const code of [snapshotCommandCode, publicationCommandCode]) {
@@ -543,8 +543,8 @@ async function run() {
         // Repository) shares no import with the distribution/announcement
         // command this milestone's arc built — they are genuinely
         // separate mechanisms, not two names for one thing.
-        const publicationCommandCode = await codeOnlySource('application/PublicationDistributionCommand.js');
-        const orchestratorCode = await codeOnlySource('application/PublicationDistributionOrchestrator.js');
+        const publicationCommandCode = await codeOnlySource('application/publication/distribution/PublicationDistributionCommand.js');
+        const orchestratorCode = await codeOnlySource('application/publication/distribution/PublicationDistributionOrchestrator.js');
         for (const code of [publicationCommandCode, orchestratorCode]) {
             assert(!code.includes('PublicationResolutionCoordinator') && !code.includes('DecentralizedPublicationDiscoveryProvider') && !code.includes('CompositeDiscoveryProvider'),
                 '35. Publication distribution/announcement imports no part of the Repository-admission/discovery-ingestion pipeline');
@@ -553,7 +553,7 @@ async function run() {
         // G3 — the same holds for Snapshot distribution: a successful
         // placement+announcement never imports anything that admits a
         // Publication into Repository's own read model.
-        const snapshotCommandCode = await codeOnlySource('application/SnapshotDistributionCommand.js');
+        const snapshotCommandCode = await codeOnlySource('application/snapshot/SnapshotDistributionCommand.js');
         assert(!snapshotCommandCode.includes('DiscoveryProvider') && !snapshotCommandCode.includes('PublisherProvider'),
             '36. Snapshot distribution never imports a DiscoveryProvider or PublisherProvider — placing/announcing a Snapshot cannot itself make anything Repository-visible');
 
@@ -600,7 +600,7 @@ async function run() {
         // H3 — the underlying lifecycle store itself holds only the
         // MOST RECENT fact per Publication id, never a history array —
         // reconfirmed fresh against the real store class.
-        const storeCode = await codeOnlySource('application/PublicationDistributionLifecycleStore.js');
+        const storeCode = await codeOnlySource('application/publication/distribution/PublicationDistributionLifecycleStore.js');
         assert(!/history|History|\[\]/.test(storeCode.replace(/\/\/.*$/gm, '')) || !storeCode.includes('push('),
             '40. PublicationDistributionLifecycleStore.js accumulates no history array — each Publication maps to its single latest fact only');
 
@@ -632,17 +632,17 @@ async function run() {
 
         // No new Publication distribution STATE beyond PublicationDistributionState's
         // own two values, reconfirmed fresh.
-        const lifecycleStateCode = await rawSource('application/PublicationDistributionLifecycle.js');
+        const lifecycleStateCode = await rawSource('application/publication/distribution/PublicationDistributionLifecycle.js');
         const stateValues = [...lifecycleStateCode.matchAll(/^\s{4}([A-Z_]+):\s*'([A-Z_]+)'/gm)].map((m) => m[2]);
         assert(stateValues.length === 2 && stateValues.includes('ABSENT') && stateValues.includes('PRESENT'),
             `42. PublicationDistributionState still carries exactly ABSENT/PRESENT and nothing else — found: ${JSON.stringify(stateValues)}`);
 
         // No coupling between local publication lifecycle and external
         // distribution, reconfirmed fresh in both directions.
-        const publishUseCaseCode = await codeOnlySource('application/PublishDocumentUseCase.js');
-        const unpublishUseCaseCode = await codeOnlySource('application/UnpublishDocumentUseCase.js');
-        const commandCode = await codeOnlySource('application/PublicationDistributionCommand.js');
-        const orchestratorCode = await codeOnlySource('application/PublicationDistributionOrchestrator.js');
+        const publishUseCaseCode = await codeOnlySource('application/publication/PublishDocumentUseCase.js');
+        const unpublishUseCaseCode = await codeOnlySource('application/publication/UnpublishDocumentUseCase.js');
+        const commandCode = await codeOnlySource('application/publication/distribution/PublicationDistributionCommand.js');
+        const orchestratorCode = await codeOnlySource('application/publication/distribution/PublicationDistributionOrchestrator.js');
         assert(!/Arweave|Nostr|Ipfs|Bitcoin|distribut/i.test(publishUseCaseCode) && !/Arweave|Nostr|Ipfs|Bitcoin|distribut/i.test(unpublishUseCaseCode),
             '43. PublishDocumentUseCase.js/UnpublishDocumentUseCase.js carry no distribution vocabulary');
         assert(!commandCode.includes('PublishDocumentUseCase') && !commandCode.includes('UnpublishDocumentUseCase') &&

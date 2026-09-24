@@ -13,23 +13,23 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { WorldCommandPropagationUseCase, WorldOperationRejectionReason } from '../application/WorldCommandPropagationUseCase.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { WorldCommandPropagationUseCase, WorldOperationRejectionReason } from '../application/document/WorldCommandPropagationUseCase.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
@@ -231,8 +231,8 @@ async function main() {
         // A7. Structural: DocumentManager itself NEVER sets readOnly:true
         // — newDocument()/load()/close() are the only three places
         // DocumentState is constructed fresh, and none passes readOnly.
-        const managerSrc = await readSource('application/DocumentManager.js');
-        assert(!/readOnly:\s*true/.test(managerSrc), '11. application/DocumentManager.js never constructs a DocumentState with readOnly:true — nothing in this class can freeze a document for editing.');
+        const managerSrc = await readSource('application/document/DocumentManager.js');
+        assert(!/readOnly:\s*true/.test(managerSrc), '11. application/document/DocumentManager.js never constructs a DocumentState with readOnly:true — nothing in this class can freeze a document for editing.');
 
         // A8. Structural: the two real publish entry points — Toolbar.js
         // (Editor) and WorldNavigationSession.js (World View) — both
@@ -241,9 +241,9 @@ async function main() {
         const toolbarSrc = await readSource('ui/components/Toolbar.js');
         assert(/props\.publishDocumentUseCase\.execute\(props\.documentManager\)/.test(toolbarSrc),
             '12. ui/components/Toolbar.js#publish() calls publishDocumentUseCase.execute(documentManager) directly — the Editor\'s one real publish entry point.');
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
         assert(/this\._publishDocumentUseCase\.execute\(\{\s*document:\s*doc\s*\}\)/.test(sessionSrc),
-            '13. application/WorldNavigationSession.js#publishDocument() calls the SAME PublishDocumentUseCase — World View\'s one real publish entry point, never a second class.');
+            '13. application/world/WorldNavigationSession.js#publishDocument() calls the SAME PublishDocumentUseCase — World View\'s one real publish entry point, never a second class.');
 
         // A9. Structural: collaboration's own real entry point
         // (WorldCommandPropagationUseCase.attachCommandHistory) is wired
@@ -251,7 +251,7 @@ async function main() {
         // CommandHistory enters this session, per that method's own
         // header (already proven live in Section F below).
         assert(/this\._worldCommandPropagation\.attachCommandHistory/.test(sessionSrc),
-            '14. application/WorldNavigationSession.js#_registerCommandHistory() wires collaboration once, for every mutation pathway — Create/Edit/Collaborate converge on one CommandHistory per World.');
+            '14. application/world/WorldNavigationSession.js#_registerCommandHistory() wires collaboration once, for every mutation pathway — Create/Edit/Collaborate converge on one CommandHistory per World.');
 
         console.log('✓ Section A: create (DocumentManager.newDocument), open (load), edit (CommandHistory-tracked dirty), collaborate (attachCommandHistory, wired once), save (SaveDocumentUseCase), publish (PublishDocumentUseCase, reached identically from Toolbar.js and WorldNavigationSession.js), and return-to-editing (readOnly never set true) each trace to exactly one real production call site.');
     }
@@ -668,8 +668,8 @@ async function main() {
         // references Publication at all — collaboration and the
         // Publication boundary remain structurally disjoint, exactly as
         // 0.9.545 Section B already found.
-        const propagationSrc = await readSource('application/WorldCommandPropagationUseCase.js');
-        assert(!/\bPublication\b/.test(propagationSrc), '10. application/WorldCommandPropagationUseCase.js never references Publication — re-confirmed for this milestone\'s own live publish-mid-collaboration scenario.');
+        const propagationSrc = await readSource('application/document/WorldCommandPropagationUseCase.js');
+        assert(!/\bPublication\b/.test(propagationSrc), '10. application/document/WorldCommandPropagationUseCase.js never references Publication — re-confirmed for this milestone\'s own live publish-mid-collaboration scenario.');
 
         workshopHarness = { network, alice, phone, workshop, aliceStack, phoneStack, workshopStack, worldId, buildingId, brickId, liveDocument, publishDocumentUseCase, workshopManager, p1, p2, p1SnapshotBytes, storage };
         console.log('✓ Section F: a publish landing mid-collaboration disturbs neither side — collaborators keep editing the correct live Document with zero awareness a snapshot was just taken, and each frozen snapshot stays byte-for-byte untouched by every collaborative edit and every later publish that follows it.');

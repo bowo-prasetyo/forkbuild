@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { StructureDocumentResolver } from '../application/StructureDocumentResolver.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { StructureDocumentResolver } from '../application/editor/StructureDocumentResolver.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
@@ -133,9 +133,9 @@ async function main() {
 
         assert(priorAuditSource.includes("'Two silent-fallback catches (I3a, I3b)': 'ARCHITECTURAL_GAP'"),
             'A1. 0.9.586\'s own classification table names exactly ONE finding under the "silent fallback" label, covering two sub-occurrences (I3a, I3b) — not four separate findings.');
-        assert(priorAuditSource.includes("I3a. application/NostrSnapshotDiscoveryQueryService.js#search() collapses a query timeout/network error into the same [] a genuine zero-results response returns"),
+        assert(priorAuditSource.includes("I3a. application/nostr/NostrSnapshotDiscoveryQueryService.js#search() collapses a query timeout/network error into the same [] a genuine zero-results response returns"),
             'A2. I3a, quoted verbatim from 0.9.586\'s own file: a query timeout/network error and a genuine zero-results response both produce [].');
-        assert(priorAuditSource.includes("I3b. application/StructureDocumentResolver.js collapses a deserialize failure (corrupt/foreign blob) into the same null a genuine \"not found\" returns"),
+        assert(priorAuditSource.includes("I3b. application/editor/StructureDocumentResolver.js collapses a deserialize failure (corrupt/foreign blob) into the same null a genuine \"not found\" returns"),
             'A3. I3b, quoted verbatim from 0.9.586\'s own file: a deserialize failure (corrupt/foreign blob) and a genuine "not found" both produce null.');
 
         // A4. I2 and I5 (the other two narrow findings from the same
@@ -144,7 +144,7 @@ async function main() {
         // re-audited below.
         assert(priorAuditSource.includes('observation.state rendered raw x2 (I2)') && priorAuditSource.includes("'PRESENTATION_GAP'"),
             'A4. I2 (raw enum render) is 0.9.586\'s own PRESENTATION_GAP, not a fallback finding — a value that IS what was requested, rendered without a label, never a case where one thing was substituted for another.');
-        assert(priorAuditSource.includes("I5. application/PublicationDistributionCommand.js"),
+        assert(priorAuditSource.includes("I5. application/publication/distribution/PublicationDistributionCommand.js"),
             'A5. I5 (the protocol-string branch) is a branch on a literal string inside generic lifecycle code, not a primary-path/fallback-path substitution of any kind — out of this milestone\'s own scope by its own central question.');
 
         console.log('✓ Section A: exactly two silent-fallback occurrences (I3a, I3b) inventoried from 0.9.586\'s own file, verbatim — the requesting brief\'s "four" appears to count I2/I5 alongside them, but those two do not have a primary/fallback shape and are excluded from this audit\'s own central question rather than forced into it.');
@@ -155,8 +155,8 @@ async function main() {
     // applied live to I3a and I3b.
     // ===============================================================
     {
-        const nostrSource = await readSource('application/NostrSnapshotDiscoveryQueryService.js');
-        const resolverSource = await readSource('application/StructureDocumentResolver.js');
+        const nostrSource = await readSource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
+        const resolverSource = await readSource('application/editor/StructureDocumentResolver.js');
 
         // B1. I3a's OWN header states the design intent in its own
         // words: never throw, every failure degrades to []. This is the
@@ -164,12 +164,12 @@ async function main() {
         // contract), not EXPLICIT_FALLBACK (there is no second source
         // being tried) and not DEFAULT_VALUE in the config-value sense.
         assert(/NEVER THROWS FROM `search\(\)` — EVERY FAILURE DEGRADES TO `\[\]`/.test(nostrSource),
-            'B1. application/NostrSnapshotDiscoveryQueryService.js\'s own header states its design intent in these exact words — a documented API contract, not an unnoticed side effect.');
+            'B1. application/nostr/NostrSnapshotDiscoveryQueryService.js\'s own header states its design intent in these exact words — a documented API contract, not an unnoticed side effect.');
 
         // B2. I3b's OWN header/inline comments state the identical
         // intent for its own null.
         assert(/never\s+throws\s+—\s+a\s+placement\s+whose\s+Document\s+has\s+been\s+removed/is.test(uncommented(resolverSource)),
-            'B2. application/StructureDocumentResolver.js\'s own header states the identical intent — GRACEFUL_DEGRADATION, not an unnoticed side effect.');
+            'B2. application/editor/StructureDocumentResolver.js\'s own header states the identical intent — GRACEFUL_DEGRADATION, not an unnoticed side effect.');
 
         // B3. Neither file's degrade path branches on WHICH of several
         // sources/substrates produced the failure — there is exactly one
@@ -182,8 +182,8 @@ async function main() {
         // never touches a second substrate.
         const nostrClassBody = nostrSource.slice(nostrSource.indexOf('export class NostrSnapshotDiscoveryQueryService'));
         const resolverClassBody = resolverSource.slice(resolverSource.indexOf('export class StructureDocumentResolver'));
-        assert(!/arweave|ipfs|peer/i.test(nostrClassBody), 'B3a. application/NostrSnapshotDiscoveryQueryService.js\'s own class body never references a second substrate — its degrade path is single-source, not a cross-source fallback.');
-        assert(!/arweave|ipfs|peer/i.test(resolverClassBody), 'B3b. application/StructureDocumentResolver.js\'s own class body never references a second substrate — its degrade path is single-source (one storageProvider), not a cross-source fallback.');
+        assert(!/arweave|ipfs|peer/i.test(nostrClassBody), 'B3a. application/nostr/NostrSnapshotDiscoveryQueryService.js\'s own class body never references a second substrate — its degrade path is single-source, not a cross-source fallback.');
+        assert(!/arweave|ipfs|peer/i.test(resolverClassBody), 'B3b. application/editor/StructureDocumentResolver.js\'s own class body never references a second substrate — its degrade path is single-source (one storageProvider), not a cross-source fallback.');
 
         console.log('✓ Section B: both I3a and I3b classify as GRACEFUL_DEGRADATION at the mechanism level — a documented, single-source "never throw" contract, not EXPLICIT_FALLBACK, COMPATIBILITY_BEHAVIOR, or an undocumented UNKNOWN.');
     }
@@ -322,21 +322,21 @@ async function main() {
     // where the existing fallback actually applies.
     // ===============================================================
     {
-        const nostrSource = await readSource('application/NostrSnapshotDiscoveryQueryService.js');
-        const resolverSource = await readSource('application/StructureDocumentResolver.js');
+        const nostrSource = await readSource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
+        const resolverSource = await readSource('application/editor/StructureDocumentResolver.js');
 
         // F1. Neither finding has a second substrate to fail over to —
         // confirmed live by construction, not merely by absence of a
         // keyword: NostrSnapshotDiscoveryQueryService is constructed
         // with exactly one relayUrl and one queryImpl.
         assert(/EXACTLY ONE RELAY PER INSTANCE — NO FAN-OUT, NO RACE, NO AGGREGATION/.test(nostrSource),
-            'F1. application/NostrSnapshotDiscoveryQueryService.js\'s own header states "exactly one relay per instance" — there is no second relay, and no Arweave/IPFS/peer path, for this class to fall back to. The brief\'s own adversarial-combination scenarios (Nostr unavailable/Arweave available, etc.) do not apply to this finding: it is a single-substrate degrade, not a substrate switch.');
+            'F1. application/nostr/NostrSnapshotDiscoveryQueryService.js\'s own header states "exactly one relay per instance" — there is no second relay, and no Arweave/IPFS/peer path, for this class to fall back to. The brief\'s own adversarial-combination scenarios (Nostr unavailable/Arweave available, etc.) do not apply to this finding: it is a single-substrate degrade, not a substrate switch.');
 
         // F2. StructureDocumentResolver resolves against exactly the one
         // storageProvider it was constructed with — no peer/remote
         // fallback of any kind.
         assert(/this\._storageProvider = storageProvider;/.test(resolverSource) && !/peer|remote|network/i.test(resolverSource),
-            'F2. application/StructureDocumentResolver.js resolves against exactly one, already-injected storageProvider — no peer/remote fallback path exists for this class to accidentally substitute. The brief\'s own "Peer unavailable, Local available" scenario does not apply: there is no peer path here at all.');
+            'F2. application/editor/StructureDocumentResolver.js resolves against exactly one, already-injected storageProvider — no peer/remote fallback path exists for this class to accidentally substitute. The brief\'s own "Peer unavailable, Local available" scenario does not apply: there is no peer path here at all.');
 
         console.log('✓ Section F: confirmed N/A for both findings — neither is a cross-substrate mechanism, so neither can become automatic candidate substitution, cross-substrate identity substitution, or silent content-backend switching. This is a clean result, not a skipped section.');
     }
@@ -395,13 +395,13 @@ async function main() {
     // mutate or mint any durable fact.
     // ===============================================================
     {
-        const nostrSource = await readSource('application/NostrSnapshotDiscoveryQueryService.js');
-        const resolverSource = await readSource('application/StructureDocumentResolver.js');
+        const nostrSource = await readSource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
+        const resolverSource = await readSource('application/editor/StructureDocumentResolver.js');
 
         assert(!/publishImpl|\.publish\(/.test(nostrSource),
-            'H1. application/NostrSnapshotDiscoveryQueryService.js contains no publish call of any kind — search()\'s degrade path can only ever read, never announce a new discovery record as a side effect of failing to find one.');
+            'H1. application/nostr/NostrSnapshotDiscoveryQueryService.js contains no publish call of any kind — search()\'s degrade path can only ever read, never announce a new discovery record as a side effect of failing to find one.');
         assert(!/storageProvider\.save\(|\.save\(/.test(resolverSource),
-            'H2. application/StructureDocumentResolver.js contains no storage write of any kind — resolve()\'s degrade path can only ever read, never persist a placeholder Document as a side effect of failing to resolve one.');
+            'H2. application/editor/StructureDocumentResolver.js contains no storage write of any kind — resolve()\'s degrade path can only ever read, never persist a placeholder Document as a side effect of failing to resolve one.');
 
         // H3. Live: exercising the degrade path repeatedly never changes
         // storage's own contents.
@@ -423,10 +423,10 @@ async function main() {
     {
         // I1. Both mechanisms live in application/, own their own
         // degrade decision, and are never re-implemented in ui/.
-        assert((await readSource('application/NostrSnapshotDiscoveryQueryService.js')).length > 0,
-            'I1a. application/NostrSnapshotDiscoveryQueryService.js is the sole owner of I3a\'s degrade decision — an application-layer file.');
-        assert((await readSource('application/StructureDocumentResolver.js')).length > 0,
-            'I1b. application/StructureDocumentResolver.js is the sole owner of I3b\'s degrade decision — an application-layer file.');
+        assert((await readSource('application/nostr/NostrSnapshotDiscoveryQueryService.js')).length > 0,
+            'I1a. application/nostr/NostrSnapshotDiscoveryQueryService.js is the sole owner of I3a\'s degrade decision — an application-layer file.');
+        assert((await readSource('application/editor/StructureDocumentResolver.js')).length > 0,
+            'I1b. application/editor/StructureDocumentResolver.js is the sole owner of I3b\'s degrade decision — an application-layer file.');
 
         // I2. Neither ui/ consumer re-implements its own catch-and-swallow
         // around these two calls — OwnPublicationPanel.js's own .then()/
@@ -490,7 +490,7 @@ async function main() {
             'J2. Live regex search of docs/Principles.md and docs/Roadmap.md, scoped to passages naming NostrSnapshotDiscoveryQueryService itself, finds no statement of its "never throws / degrades to []" contract as a citable product-level statement — confirmed by absence, not assumed. (The generic, sibling DecentralizedDiscoveryQueryService family DOES have this exact contract cited in docs/Roadmap.md — but this class\'s own header explicitly refuses that shared lineage, so it does not inherit that citation.) The mechanism is real and deliberate here too (its own file header + tests/NostrSnapshotDiscoveryQueryService.test.js Sections D-F), just not recorded in either of the two files this series treats as the permanent citable record — the identical shape 0.9.586\'s own G3 finding had before 0.9.587 closed it.');
         const nostrDiscoverySection = roadmap.slice(roadmap.indexOf('## 0.9.133'), roadmap.indexOf('## 0.9.134'));
         assert(/a\s+genuine\s+transport\s+failure\s+propagates/.test(nostrDiscoverySection),
-            'J3. docs/Roadmap.md\'s own 0.9.133 entry DOES contain the phrase "a genuine transport failure propagates" — but live reading of its surrounding sentence, and live comparison against application/NostrSnapshotDiscoveryPublisher.js#publish() (which has no try/catch around its own await, so a rejection does propagate), confirms that phrase describes the PUBLISH side of this family, not search(). It is not a stale/contradicted claim about I3a — a different, correctly-documented behavior on a sibling method.');
+            'J3. docs/Roadmap.md\'s own 0.9.133 entry DOES contain the phrase "a genuine transport failure propagates" — but live reading of its surrounding sentence, and live comparison against application/nostr/NostrSnapshotDiscoveryPublisher.js#publish() (which has no try/catch around its own await, so a rejection does propagate), confirms that phrase describes the PUBLISH side of this family, not search(). It is not a stale/contradicted claim about I3a — a different, correctly-documented behavior on a sibling method.');
 
         // J4. docs/Roadmap.md DOES quote this exact empty-state copy —
         // live search finds it at 0.9.326 — but only as evidence that
@@ -616,7 +616,7 @@ async function main() {
 both independently against the requesting brief's own central question:
 does the fallback preserve or change the user's requested meaning?
 
-I3a (application/NostrSnapshotDiscoveryQueryService.js#search()) is a
+I3a (application/nostr/NostrSnapshotDiscoveryQueryService.js#search()) is a
 documented, single-source, GRACEFUL_DEGRADATION contract — a query
 timeout/relay failure and a genuine zero-announcement result both
 resolve to [], by explicit design, tested since 0.9.133. Live tracing to
@@ -632,7 +632,7 @@ PRESENTATION_GAP, not PRODUCT_GAP: no identity is lost or substituted,
 retrying costs nothing, and the fix (if pursued) is a wording change, not
 a mechanism change.
 
-I3b (application/StructureDocumentResolver.js#resolve()) is fully
+I3b (application/editor/StructureDocumentResolver.js#resolve()) is fully
 documented in docs/Principles.md's own 0.2.90 section and regression-
 guarded by a dedicated, pre-existing live test (tests/
 StructurePlacement.test.js) that has asserted this exact "not found and

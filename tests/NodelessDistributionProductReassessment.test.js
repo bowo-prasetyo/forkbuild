@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 
-import { IpfsRemotePublicationCoordinator } from '../application/IpfsRemotePublicationCoordinator.js';
-import { IpfsRemotePublicationState } from '../application/IpfsRemotePublicationState.js';
+import { IpfsRemotePublicationCoordinator } from '../application/ipfs/IpfsRemotePublicationCoordinator.js';
+import { IpfsRemotePublicationState } from '../application/ipfs/IpfsRemotePublicationState.js';
 import { PinningRejectedError } from '../content/HttpPinningProvider.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
@@ -44,7 +44,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //   A. Independent RETRIEVAL, not just discovery. Section H (0.9.663)
 //      proved a bare NostrSnapshotDiscoveryQueryService can discover the
 //      locator. It never proved the actual production retrieval seam
-//      (application/DiscoverSnapshotCommand.js + application/
+//      (application/snapshot/DiscoverSnapshotCommand.js + application/
 //      DecentralizedSnapshotResolver.js + a SnapshotPlacementStoreRegistry
 //      carrying the SAME IpfsGatewayContentStore shape ui/main.js's own
 //      `discoverSnapshotCommand` wiring registers under 'ipfs') can turn
@@ -317,13 +317,13 @@ async function run() {
     // items were silently required to answer A-C.
     // =======================================================================
     {
-        const registrySource = await source('application/SnapshotPlacementStoreRegistry.js');
+        const registrySource = await source('application/snapshot/placement/SnapshotPlacementStoreRegistry.js');
         const mainSource = await source('ui/main.js');
 
         assert(!/class IpfsRemote(Kubo|Fallback|Ranked)ContentStore/.test(await source('content/IpfsRemotePinningContentStore.js')),
             n('D1. no new IPFS provider class was needed to prove Section A\'s retrieval path — content/IpfsRemotePinningContentStore.js is read, never modified, by this reassessment.'));
         assert(!registrySource.includes('automaticFallback') && !registrySource.includes('registerFallback'),
-            n('D2. application/SnapshotPlacementStoreRegistry.js still has no automatic-fallback concept — Section A\'s retrieval succeeded through the SAME single \'ipfs\'-keyed lookup 0.9.662 already found provider-blind, not a new fallback path.'));
+            n('D2. application/snapshot/placement/SnapshotPlacementStoreRegistry.js still has no automatic-fallback concept — Section A\'s retrieval succeeded through the SAME single \'ipfs\'-keyed lookup 0.9.662 already found provider-blind, not a new fallback path.'));
         assert(mainSource.includes("get storage() { return 'ipfs'; }") === false,
             n('D3. this file makes no assertion requiring ui/main.js itself to define a storage getter (it does not) — a sanity check that this reassessment has not accidentally started depending on a registry-collision fix (0.9.662\'s own explicitly out-of-scope finding) it never needed.'));
     }

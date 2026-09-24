@@ -8,7 +8,7 @@ import {
 } from '../core/GeographicPlaceNavigation.js';
 import { buildGeographicPlaceView } from '../core/GeographicPlaceView.js';
 import { resolveGeographicPlaces } from '../core/GeographicPlaceResolution.js';
-import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from '../application/WorldLocationDirectory.js';
+import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from '../application/world/WorldLocationDirectory.js';
 import { WorldLocationKind } from '../core/WorldLocationKind.js';
 import { WorldRegion } from '../core/WorldRegion.js';
 import { RegionKind } from '../core/RegionKind.js';
@@ -17,13 +17,13 @@ import { World } from '../core/World.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStore.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 
@@ -44,12 +44,12 @@ import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvid
 //            (`place:<fingerprintKey>`), deriveGeographicPlaceNavigationTarget()'s
 //            deterministic representative pick, deriveNearbyGeographicPlaces()'s
 //            distance/direction math, searchGeographicPlaces()
-// Section B: application/WorldLocationDirectory.js (isolated) —
+// Section B: application/world/WorldLocationDirectory.js (isolated) —
 //            find('place:<key>') resolves a real GEOGRAPHIC_PLACE
 //            WorldLocation reusing the representative region's own
 //            already-offset position; graceful null for every
 //            unresolvable case
-// Section C: application/WorldNavigationSession.js wiring —
+// Section C: application/world/WorldNavigationSession.js wiring —
 //            getNearbyGeographicPlaces()/searchGeographicPlaces(),
 //            focusLocation('place:<key>') resolving through the exact
 //            same pipeline as focusLocation(regionId)
@@ -228,7 +228,7 @@ async function run() {
     console.log('✓ Section A: core/GeographicPlaceNavigation.js — id space, deterministic navigation target, distance/direction math, search');
 
     // -------------------------------------------------------------
-    // Section B: application/WorldLocationDirectory.js (isolated)
+    // Section B: application/world/WorldLocationDirectory.js (isolated)
     // -------------------------------------------------------------
     {
         const worldX = new World({ id: 'world-x' });
@@ -254,7 +254,7 @@ async function run() {
         assert(location.title === place.displayName, '43. the title is the place\'s own displayName');
         // world-space = region-local (10, 0, 20) + the containing
         // document's own layout offset (1000, 0, 2000) — the EXACT same
-        // offset application/WorldLocationDirectory.js#_regionLocationsFor()
+        // offset application/world/WorldLocationDirectory.js#_regionLocationsFor()
         // already applies for a plain REGION location.
         assert(location.position.x === 1010 && location.position.z === 2020,
             '44. the resolved position is the representative region\'s own layout-offset position, reusing _regionLocationsFor()\'s math rather than recomputing it');
@@ -279,10 +279,10 @@ async function run() {
             '51. a place whose representative region\'s own World isn\'t currently loaded resolves to null rather than a stale/guessed position');
         assert(directory.find('not-a-place-id') === null, '52. an ordinary unknown id still falls through to the pre-existing list()-based lookup and returns null');
     }
-    console.log('✓ Section B: application/WorldLocationDirectory.js — GEOGRAPHIC_PLACE resolution reuses region geometry, never listed, graceful nulls throughout');
+    console.log('✓ Section B: application/world/WorldLocationDirectory.js — GEOGRAPHIC_PLACE resolution reuses region geometry, never listed, graceful nulls throughout');
 
     // -------------------------------------------------------------
-    // Section C: application/WorldNavigationSession.js wiring
+    // Section C: application/world/WorldNavigationSession.js wiring
     // -------------------------------------------------------------
     {
         // Nothing loaded, nothing wired -> graceful empties, never a throw.
@@ -328,7 +328,7 @@ async function run() {
         assert(session.searchGeographicPlaces('Solitary').length === 1, '64. searchGeographicPlaces() finds a real place by name');
         assert(session.searchGeographicPlaces('does-not-exist').length === 0, '65. searchGeographicPlaces() with no match is []');
     }
-    console.log('✓ Section C: application/WorldNavigationSession.js — getNearbyGeographicPlaces()/searchGeographicPlaces() wiring, focusLocation() converges with region-level navigation');
+    console.log('✓ Section C: application/world/WorldNavigationSession.js — getNearbyGeographicPlaces()/searchGeographicPlaces() wiring, focusLocation() converges with region-level navigation');
 
     // -------------------------------------------------------------
     // Section D: CAPSTONE — the flagship scenario

@@ -2,10 +2,10 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -469,7 +469,7 @@ async function run() {
 
         // Reconfirmed fresh, per 0.9.349's own Section E/I: publish
         // itself still triggers no distribution automatically.
-        const publishUseCaseCode = await codeOnlySource('application/PublishDocumentUseCase.js');
+        const publishUseCaseCode = await codeOnlySource('application/publication/PublishDocumentUseCase.js');
         assert(!/Arweave|Nostr|Ipfs|Bitcoin|distribut/i.test(publishUseCaseCode),
             '29. PublishDocumentUseCase.js still carries no distribution vocabulary, reconfirmed fresh — Publish itself remains local-first regardless of what the notification surface does');
 
@@ -488,7 +488,7 @@ async function run() {
         // (whose own prose comments freely use words like "caller" and
         // "origin" — "origin" is legitimately part of the returned
         // discovery result shape, not a caller-identifying input).
-        const commandRaw = await rawSource('application/PublicationDistributionCommand.js');
+        const commandRaw = await rawSource('application/publication/distribution/PublicationDistributionCommand.js');
         const signatureMatch = commandRaw.match(/export function executePublicationDistributionCommand\(\{([\s\S]*?)\} = \{\}\)/);
         assert(signatureMatch, '30a. executePublicationDistributionCommand()\'s own destructured signature is found in source');
         const parameterNames = signatureMatch[1].split(',').map((p) => p.trim()).filter(Boolean);

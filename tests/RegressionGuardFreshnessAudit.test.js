@@ -202,7 +202,7 @@ async function run() {
         // fits what actually happened.
         const commentaryUiSource = await source('tests/PostCommentaryUIProductReassessment.test.js');
         assert(commentaryUiSource.includes("assert(notificationHits === 0, 'C2. No Notification class/use case/service exists anywhere — still genuinely absent.');"),
-            n('B5. tests/PostCommentaryUIProductReassessment.test.js still asserts zero Notification-vocabulary hits, unconditionally — a permanent negative claim later falsified by a real build (core/NotificationEvent.js, application/PublicationCommentaryNotificationProducer.js), classified UNKNOWN, not silently reclassified by this audit'));
+            n('B5. tests/PostCommentaryUIProductReassessment.test.js still asserts zero Notification-vocabulary hits, unconditionally — a permanent negative claim later falsified by a real build (core/NotificationEvent.js, application/publication/commentary/PublicationCommentaryNotificationProducer.js), classified UNKNOWN, not silently reclassified by this audit'));
         assert(await sourceExists('core/NotificationEvent.js'),
             n('B5. ...and core/NotificationEvent.js genuinely exists today — the C2 assertion above is not merely stale wording, it is now factually false about the current tree'));
 
@@ -254,7 +254,7 @@ async function run() {
                 file: 'tests/PostNotificationHistoryProductReassessment.test.js',
                 milestone: '0.9.28x-era',
                 assertion: 'A7a — exactly one production construction site for PublicationCommentaryNotificationProducer',
-                brokenBy: 'a later milestone added application/CreatePublicationCommentaryUseCase.js as a second, legitimate composition root reusing the identical notificationEventStore.save() sink — the count assertion was always a PROXY for "one shared sink," and the proxy broke while the real invariant held'
+                brokenBy: 'a later milestone added application/publication/commentary/CreatePublicationCommentaryUseCase.js as a second, legitimate composition root reusing the identical notificationEventStore.save() sink — the count assertion was always a PROXY for "one shared sink," and the proxy broke while the real invariant held'
             },
             {
                 file: 'tests/PostNotificationPersistenceProductReassessment.test.js',
@@ -266,7 +266,7 @@ async function run() {
                 file: 'tests/DurableBaseTransactionInclusionObservationArchive.test.js',
                 milestone: '0.8.130-era',
                 assertion: 'assertion 35 — PublicationObservationArchive.SCHEMA_VERSION === 8',
-                brokenBy: 'two later migrations (documented in application/PublicationObservationArchive.js\'s own header) bumped SCHEMA_VERSION to 9 then 10; this file\'s own comment already anticipated ONE further bump ("SCHEMA_VERSION itself has since been bumped again, to...") but was never revisited a second time'
+                brokenBy: 'two later migrations (documented in application/publication/observationArchive/PublicationObservationArchive.js\'s own header) bumped SCHEMA_VERSION to 9 then 10; this file\'s own comment already anticipated ONE further bump ("SCHEMA_VERSION itself has since been bumped again, to...") but was never revisited a second time'
             },
             {
                 file: 'tests/PublicationReferenceRecord.test.js',
@@ -296,18 +296,18 @@ async function run() {
         const producerSites = execSync('grep -rl "new PublicationCommentaryNotificationProducer(" application ui --include="*.js" || true',
             { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean).sort();
         assert(producerSites.length === 2
-            && producerSites.includes('application/CreateWorldViewUseCase.js')
-            && producerSites.includes('application/CreatePublicationCommentaryUseCase.js'),
+            && producerSites.includes('application/world/CreateWorldViewUseCase.js')
+            && producerSites.includes('application/publication/commentary/CreatePublicationCommentaryUseCase.js'),
             n(`C3. exactly two production construction sites for PublicationCommentaryNotificationProducer exist today (found: ${producerSites.join(', ')}) — the corrected counts in both notification-history/persistence files now match live reality`));
 
         const storeSites = execSync('grep -rl "new NotificationEventStore(" application ui --include="*.js" || true',
             { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean).sort();
         assert(storeSites.length === 2
-            && storeSites.includes('application/CreateWorldViewUseCase.js')
-            && storeSites.includes('application/CreatePublicationCommentaryUseCase.js'),
+            && storeSites.includes('application/world/CreateWorldViewUseCase.js')
+            && storeSites.includes('application/publication/commentary/CreatePublicationCommentaryUseCase.js'),
             n(`C3. exactly two production construction sites for NotificationEventStore exist today (found: ${storeSites.join(', ')}) — the corrected J2 count now matches live reality`));
 
-        const { PublicationObservationArchive } = await import('../application/PublicationObservationArchive.js');
+        const { PublicationObservationArchive } = await import('../application/publication/observationArchive/PublicationObservationArchive.js');
         assert(PublicationObservationArchive.SCHEMA_VERSION === 10,
             n(`C3. PublicationObservationArchive.SCHEMA_VERSION is 10 today (found ${PublicationObservationArchive.SCHEMA_VERSION}) — the corrected assertions in all three schema-version files now match live reality`));
 
@@ -342,11 +342,11 @@ async function run() {
         // lost to an unwired second store"). A second construction site
         // breaks the first without breaking the second, IF AND ONLY IF
         // both sites route to the same underlying sink.
-        const producerCaller = await source('application/CreatePublicationCommentaryUseCase.js');
+        const producerCaller = await source('application/publication/commentary/CreatePublicationCommentaryUseCase.js');
         assert(/\(notificationEvent\)\s*=>\s*notificationEventStore\.save\(notificationEvent\)/.test(producerCaller),
             n('D1. the second, newer PublicationCommentaryNotificationProducer construction site hands it the IDENTICAL sink shape as the original — the real invariant, not the count, is what this audit\'s own fix now checks'));
 
-        const storeCaller = await source('application/CreatePublicationCommentaryUseCase.js');
+        const storeCaller = await source('application/publication/commentary/CreatePublicationCommentaryUseCase.js');
         assert(/new NotificationEventStore\(storageProvider\)/.test(storeCaller),
             n('D1. the second, newer NotificationEventStore construction site wraps the SAME storageProvider argument — one storage namespace, not two — the real invariant this audit\'s own fix now checks in place of a bare construction-site count'));
 
@@ -539,9 +539,9 @@ async function run() {
         // "keep every reader's asserted number current," which is
         // precisely the discipline Section C's three schema-version
         // fixes restore.
-        const archiveSource = await source('application/PublicationObservationArchive.js');
+        const archiveSource = await source('application/publication/observationArchive/PublicationObservationArchive.js');
         assert(archiveSource.includes('CONSERVATIVE'),
-            n('H1. application/PublicationObservationArchive.js\'s own header still documents its deliberate, exact-version migration philosophy — SCHEMA_VERSION is an intentional snapshot, not a candidate for relaxation'));
+            n('H1. application/publication/observationArchive/PublicationObservationArchive.js\'s own header still documents its deliberate, exact-version migration philosophy — SCHEMA_VERSION is an intentional snapshot, not a candidate for relaxation'));
 
         // H2. Historical, append-only classification arrays (Roadmap
         // capability matrices, DEFERRED_CANDIDATES lists, milestone-arc

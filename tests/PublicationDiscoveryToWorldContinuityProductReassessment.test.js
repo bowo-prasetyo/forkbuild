@@ -2,23 +2,23 @@ import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import NotificationHistoryPanel from '../ui/components/NotificationHistoryPanel.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import {
     verifyWorldEncounterMaterial,
     WorldEncounterMaterialVerificationStatus,
     WorldEncounterMaterialVerifier
-} from '../application/WorldEncounterMaterialVerification.js';
-import { describeWorldEncounterMaterialVerificationStatusLabel } from '../application/WorldEncounterMaterialInspectionView.js';
+} from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { describeWorldEncounterMaterialVerificationStatusLabel } from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 import {
     PublicationMaterialProvenanceOrigin,
     describePublicationMaterialProvenanceFromInspection
-} from '../application/PublicationMaterialProvenance.js';
+} from '../application/publication/distribution/PublicationMaterialProvenance.js';
 
 // 0.9.532 — Publication Discovery-to-World Continuity Product Reassessment.
 //
@@ -262,7 +262,7 @@ async function main() {
         // WorldNavigationSession.js defines as a one-line alias for
         // focusDocument() itself — confirmed against real source, not
         // assumed.
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
         assert(sessionSource.includes('navigateToDocument(documentId) {\n        return this.focusDocument(documentId);\n    }'),
             '4. navigateToDocument() (WorldView\'s own mount-time entry) is a verbatim alias for focusDocument() (focusWorld()\'s own target) — Repository\'s router.push and every focusWorld() caller converge on the identical session primitive, never two navigation models.');
     }
@@ -391,7 +391,7 @@ async function main() {
     // discovery or verification.
     // ===============================================================
     {
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
         const focusDocumentBody = sessionSource.match(/focusDocument\(documentId, \{ setActive = true \} = \{\}\) \{([\s\S]*?)\n {4}\}/);
         assert(focusDocumentBody && focusDocumentBody[1],
             '1. focusDocument()\'s own body is present and extractable.');
@@ -401,7 +401,7 @@ async function main() {
         // G2. The session file that owns navigation never imports the
         // World Encounter verification/canvas family at all.
         assert(!/WorldEncounterMaterialVerification|WorldEncounterCanvas/.test(sessionSource),
-            '3. application/WorldNavigationSession.js never imports the World Encounter verification family — arriving at a Publication\'s World and encountering/verifying a placed object inside it remain two independent stacks, exactly as the existing architecture already keeps them.');
+            '3. application/world/WorldNavigationSession.js never imports the World Encounter verification family — arriving at a Publication\'s World and encountering/verifying a placed object inside it remain two independent stacks, exactly as the existing architecture already keeps them.');
     }
     console.log('✓ Section G: arriving at a Publication through Repository or Notification changes only the camera/active-document — it never re-triggers World Encounter discovery or re-verification. "Existing Publication -> World observation" holds; there is no "World discovers/verifies it again."');
 

@@ -19,7 +19,7 @@ import { DEFAULT_RENDEZVOUS_URLS } from '../../peer/RendezvousConfig.js';
 //      current override / Save / Reset to Defaults
 //      │
 //      ▼
-//   application/SetRendezvousConfigurationUseCase.js (Save)   (this same milestone)
+//   application/settings/SetRendezvousConfigurationUseCase.js (Save)   (this same milestone)
 //   storage/RendezvousConfigurationStore.js#clear() (Reset to Defaults)   (this same milestone, unmodified)
 //      │
 //      ▼

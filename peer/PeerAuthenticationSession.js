@@ -40,7 +40,7 @@ const DEFAULT_HANDSHAKE_TIMEOUT_MS = 20 * 1000;
 // LocalIdentityProvider.js's own AuthenticationSession) — signing a
 // peer-authentication PROOF reuses signCanonical() exactly the way
 // signing a presence/profile/interaction advertisement already does
-// (application/PresenceSigning.js), so a locked or logged-out identity
+// (application/presence/PresenceSigning.js), so a locked or logged-out identity
 // simply cannot authenticate a peer connection either, with no
 // separate code path to keep in sync.
 //
@@ -109,7 +109,7 @@ export class PeerAuthenticationSession {
         this._failureReason = null;
         this._localChallenge = null;
 
-        // Injectable, like application/AutosaveScheduler.js's own timer
+        // Injectable, like application/document/AutosaveScheduler.js's own timer
         // pair, so tests can drive the deadline deterministically instead
         // of actually waiting on it. `handshakeTimeoutMs: 0` (or any
         // falsy value) disables the timeout entirely — a real connection

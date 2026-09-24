@@ -9,15 +9,15 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { WorldCommandPropagationUseCase, WorldOperationRejectionReason } from '../application/WorldCommandPropagationUseCase.js';
-import { WorldMembershipUseCase } from '../application/WorldMembershipUseCase.js';
-import { WorldPresenceUseCase } from '../application/WorldPresenceUseCase.js';
-import { WorldAuthorizationService } from '../application/WorldAuthorizationService.js';
+import { WorldCommandPropagationUseCase, WorldOperationRejectionReason } from '../application/document/WorldCommandPropagationUseCase.js';
+import { WorldMembershipUseCase } from '../application/identity/WorldMembershipUseCase.js';
+import { WorldPresenceUseCase } from '../application/presence/WorldPresenceUseCase.js';
+import { WorldAuthorizationService } from '../application/identity/WorldAuthorizationService.js';
 import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
 import { WorldPresenceActivity, isValidWorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import {
@@ -121,7 +121,7 @@ async function connectAndAuthenticate(network, addressA, deviceA, addressB, devi
 
 // One replica's own full stack — device authorization, World membership,
 // World presence, and World command propagation, wired the identical
-// shape application/CreateWorldViewUseCase.js wires them in a real
+// shape application/world/CreateWorldViewUseCase.js wires them in a real
 // deployment (see that file's own 0.2.98 comments).
 function makeStack(device) {
     const peerMessageBus = new PeerMessageBus();

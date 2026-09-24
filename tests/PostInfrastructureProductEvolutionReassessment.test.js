@@ -104,7 +104,7 @@ async function run() {
         // A1. Arweave Gateway — the complete real chain, reconfirmed.
         assert(await sourceExists('core/ArweaveGatewayConfiguration.js'), 'A1. core/ArweaveGatewayConfiguration.js exists');
         assert(await sourceExists('storage/ArweaveGatewayConfigurationStore.js'), 'A1. storage/ArweaveGatewayConfigurationStore.js exists');
-        assert(await sourceExists('application/SetArweaveGatewayConfigurationUseCase.js'), 'A1. application/SetArweaveGatewayConfigurationUseCase.js exists');
+        assert(await sourceExists('application/settings/SetArweaveGatewayConfigurationUseCase.js'), 'A1. application/settings/SetArweaveGatewayConfigurationUseCase.js exists');
         assert(await sourceExists('ui/views/ArweaveGatewaySettingsView.js'), 'A1. ui/views/ArweaveGatewaySettingsView.js exists');
         const routerSource = await rawSource('ui/router/index.js');
         assert(routerSource.includes("path: '/settings/arweave-gateway'"), 'A1. /settings/arweave-gateway route registered');
@@ -116,7 +116,7 @@ async function run() {
         // A2. Nostr Relay — the direct structural mirror, reconfirmed.
         assert(await sourceExists('core/NostrRelayConfiguration.js'), 'A2. core/NostrRelayConfiguration.js exists');
         assert(await sourceExists('storage/NostrRelayConfigurationStore.js'), 'A2. storage/NostrRelayConfigurationStore.js exists');
-        assert(await sourceExists('application/SetNostrRelayConfigurationUseCase.js'), 'A2. application/SetNostrRelayConfigurationUseCase.js exists');
+        assert(await sourceExists('application/settings/SetNostrRelayConfigurationUseCase.js'), 'A2. application/settings/SetNostrRelayConfigurationUseCase.js exists');
         assert(await sourceExists('ui/views/NostrRelaySettingsView.js'), 'A2. ui/views/NostrRelaySettingsView.js exists');
         assert(routerSource.includes("path: '/settings/nostr-relay'"), 'A2. /settings/nostr-relay route registered');
         assert(networkSettingsSource.includes('to="/settings/nostr-relay"'), 'A2. Nostr Relay settings reachable from the Network Settings hub');
@@ -131,7 +131,7 @@ async function run() {
         // gatewayUrl instead of zero arguments.
         assert(await sourceExists('core/IpfsGatewayConfiguration.js'), 'A3. core/IpfsGatewayConfiguration.js exists');
         assert(await sourceExists('storage/IpfsGatewayConfigurationStore.js'), 'A3. storage/IpfsGatewayConfigurationStore.js exists');
-        assert(await sourceExists('application/SetIpfsGatewayConfigurationUseCase.js'), 'A3. application/SetIpfsGatewayConfigurationUseCase.js exists');
+        assert(await sourceExists('application/settings/SetIpfsGatewayConfigurationUseCase.js'), 'A3. application/settings/SetIpfsGatewayConfigurationUseCase.js exists');
         assert(await sourceExists('ui/views/IpfsGatewaySettingsView.js'), 'A3. ui/views/IpfsGatewaySettingsView.js exists');
         assert(routerSource.includes("path: '/settings/ipfs-gateway'"), 'A3. /settings/ipfs-gateway route registered');
         assert(networkSettingsSource.includes('to="/settings/ipfs-gateway"'), 'A3. IPFS Gateway settings reachable from the Network Settings hub');
@@ -143,7 +143,7 @@ async function run() {
         // a local-node identity question and a dynamic-credential fetch,
         // neither shaped like a plain configurable URL.
         assert(await sourceExists('content/IpfsContentStore.js'), 'A4. content/IpfsContentStore.js (local Kubo, get+put) still exists, independent of the gateway store');
-        assert(await sourceExists('application/IpfsRemotePublishingConfiguration.js'), 'A4. application/IpfsRemotePublishingConfiguration.js (deliberately ephemeral, credentialed) still exists');
+        assert(await sourceExists('application/ipfs/IpfsRemotePublishingConfiguration.js'), 'A4. application/ipfs/IpfsRemotePublishingConfiguration.js (deliberately ephemeral, credentialed) still exists');
         const iceSource = await rawSource('peer/IceServerConfig.js');
         assert(iceSource.includes("METERED_TURN_ENDPOINT = 'https://forkbuild.metered.live/api/v1/turn/credentials'"), 'A4. TURN remains a dynamic credential fetch, not a plain configurable URL');
 
@@ -229,25 +229,25 @@ async function run() {
     {
         const capabilityInventory = [
             { capability: 'Document creation & editing', evidence: ['core/Document.js', 'ui/views/EditorView.js'], classification: 'COMPLETE' },
-            { capability: 'Local Publication (publish)', evidence: ['publisher/Publication.js', 'application/PublishDocumentUseCase.js'], classification: 'COMPLETE' },
-            { capability: 'Peer Publication exchange', evidence: ['application/AutoConnectKnownPeersUseCase.js', 'application/ResolvePublicationUseCase.js'], classification: 'COMPLETE' },
-            { capability: 'Decentralized Publication discovery', evidence: ['application/NostrPublicationDiscoveryPublisher.js', 'content/ArweaveContentStore.js'], classification: 'COMPLETE' },
+            { capability: 'Local Publication (publish)', evidence: ['publisher/Publication.js', 'application/publication/PublishDocumentUseCase.js'], classification: 'COMPLETE' },
+            { capability: 'Peer Publication exchange', evidence: ['application/peer/AutoConnectKnownPeersUseCase.js', 'application/publication/ResolvePublicationUseCase.js'], classification: 'COMPLETE' },
+            { capability: 'Decentralized Publication discovery', evidence: ['application/nostr/NostrPublicationDiscoveryPublisher.js', 'content/ArweaveContentStore.js'], classification: 'COMPLETE' },
             { capability: 'Explore (World View)', evidence: ['ui/views/WorldView.js'], classification: 'COMPLETE' },
-            { capability: 'Fork', evidence: ['application/ForkDocumentUseCase.js', 'application/ForkFailureReason.js'], classification: 'COMPLETE', note: 'includes 0.9.353-0.9.355\'s own failure-recovery fix' },
-            { capability: 'Snapshot creation & distribution', evidence: ['application/CreateSnapshotPlacementOrchestratorUseCase.js', 'application/SnapshotDistributionRuntimeComposition.js'], classification: 'COMPLETE' },
-            { capability: 'Snapshot discovery & recovery', evidence: ['application/NostrSnapshotDiscoveryQueryService.js', 'application/ResolveSelectedSnapshotCommand.js'], classification: 'COMPLETE' },
-            { capability: 'Snapshot comparison', evidence: ['application/WorldSnapshotComparison.js', 'ui/components/WorldEncounterCanvas.js'], classification: 'COMPLETE' },
-            { capability: 'Publication Commentary', evidence: ['core/PublicationCommentary.js', 'application/AddPublicationCommentaryUseCase.js'], classification: 'COMPLETE', note: 'reaches PublicationCard, OwnPublicationPanel, WorldEncounterCanvas, and NotificationHistoryPanel — see Section C' },
-            { capability: 'Notifications & history', evidence: ['storage/NotificationEventStore.js', 'application/GetRecipientNotificationEventsUseCase.js'], classification: 'COMPLETE', note: 'durable history only — delivery/unread/read deliberately absent, STOP per 0.9.306, reconfirmed Section E' },
+            { capability: 'Fork', evidence: ['application/document/ForkDocumentUseCase.js', 'application/document/ForkFailureReason.js'], classification: 'COMPLETE', note: 'includes 0.9.353-0.9.355\'s own failure-recovery fix' },
+            { capability: 'Snapshot creation & distribution', evidence: ['application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js', 'application/snapshot/SnapshotDistributionRuntimeComposition.js'], classification: 'COMPLETE' },
+            { capability: 'Snapshot discovery & recovery', evidence: ['application/nostr/NostrSnapshotDiscoveryQueryService.js', 'application/snapshot/ResolveSelectedSnapshotCommand.js'], classification: 'COMPLETE' },
+            { capability: 'Snapshot comparison', evidence: ['application/snapshot/WorldSnapshotComparison.js', 'ui/components/WorldEncounterCanvas.js'], classification: 'COMPLETE' },
+            { capability: 'Publication Commentary', evidence: ['core/PublicationCommentary.js', 'application/publication/commentary/AddPublicationCommentaryUseCase.js'], classification: 'COMPLETE', note: 'reaches PublicationCard, OwnPublicationPanel, WorldEncounterCanvas, and NotificationHistoryPanel — see Section C' },
+            { capability: 'Notifications & history', evidence: ['storage/NotificationEventStore.js', 'application/chat/GetRecipientNotificationEventsUseCase.js'], classification: 'COMPLETE', note: 'durable history only — delivery/unread/read deliberately absent, STOP per 0.9.306, reconfirmed Section E' },
             { capability: 'Place Naming', evidence: ['core/PlaceNamingClaim.js'], classification: 'COMPLETE' },
-            { capability: 'Place Naming decentralized publication & discovery', evidence: ['application/NostrPlaceNamingDiscoverySource.js'], classification: 'COMPLETE' },
+            { capability: 'Place Naming decentralized publication & discovery', evidence: ['application/placeNaming/NostrPlaceNamingDiscoverySource.js'], classification: 'COMPLETE' },
             { capability: 'World presence', evidence: ['presence/AvatarPresenceBroadcastProvider.js'], classification: 'COMPLETE' },
             { capability: 'Vehicle / movement', evidence: ['core/VehicleInstance.js', 'core/VehicleSteeringInputAdapter.js'], classification: 'COMPLETE' },
             { capability: 'Collaboration', evidence: ['collaboration/CollaborationSession.js'], classification: 'COMPLETE', note: 'STOP since 0.9.241, reconfirmed 0.9.313; reconfirmed again Section E' },
             { capability: 'Provider preference', evidence: ['core/RoleProviderPreference.js', 'ui/views/ContentProviderSettingsView.js'], classification: 'COMPLETE' },
             { capability: 'Endpoint resilience settings', evidence: ['core/ArweaveGatewayConfiguration.js', 'core/NostrRelayConfiguration.js'], classification: 'COMPLETE', note: 'this arc, 0.9.364-0.9.373 — see Section A' },
-            { capability: 'Repository federation (encounter-driven)', evidence: ['application/ResolvePublicationUseCase.js', 'application/SearchPublicationsUseCase.js'], classification: 'COMPLETE', note: 'proactive discovery remains DEFERRED — see Section D' },
-            { capability: 'Achievement/Reconciliation Leaderboard', evidence: ['application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js', 'ui/views/ReconciliationCandidateLeaderboardView.js'], classification: 'INTERNAL', note: 'implemented and correct when reached, but no router-link or programmatic navigation anywhere in the app leads to it — see Section C' }
+            { capability: 'Repository federation (encounter-driven)', evidence: ['application/publication/ResolvePublicationUseCase.js', 'application/publication/SearchPublicationsUseCase.js'], classification: 'COMPLETE', note: 'proactive discovery remains DEFERRED — see Section D' },
+            { capability: 'Achievement/Reconciliation Leaderboard', evidence: ['application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js', 'ui/views/ReconciliationCandidateLeaderboardView.js'], classification: 'INTERNAL', note: 'implemented and correct when reached, but no router-link or programmatic navigation anywhere in the app leads to it — see Section C' }
         ];
         for (const row of capabilityInventory) {
             for (const file of row.evidence) {
@@ -288,7 +288,7 @@ async function run() {
         // C3. Peer connection -> automatic Publication synchronization
         // (0.9.341-0.9.345) — reconfirmed the real use case still exists
         // and is composed, not merely present as a file.
-        assert(await sourceExists('application/AutoConnectKnownPeersUseCase.js'), 'C3. application/AutoConnectKnownPeersUseCase.js still exists');
+        assert(await sourceExists('application/peer/AutoConnectKnownPeersUseCase.js'), 'C3. application/peer/AutoConnectKnownPeersUseCase.js still exists');
         const mainSource = await rawSource('ui/main.js');
         assert(mainSource.includes('AutoConnectKnownPeersUseCase'), 'C3. ui/main.js still composes AutoConnectKnownPeersUseCase, not merely importing an unused class');
 
@@ -303,9 +303,9 @@ async function run() {
         // C5. Fork failure -> meaningful failure recovery (0.9.353-0.9.355)
         // — reconfirmed the outcome vocabulary still exists and is still
         // consumed by the real fork use case.
-        const forkFailureReasonSource = await rawSource('application/ForkFailureReason.js');
+        const forkFailureReasonSource = await rawSource('application/document/ForkFailureReason.js');
         assert(/LICENSE_DENIED/.test(forkFailureReasonSource) && /MATERIAL_UNAVAILABLE/.test(forkFailureReasonSource), 'C5. ForkFailureReason.js still names both distinct outcomes');
-        const forkUseCaseSource = await rawSource('application/ForkDocumentUseCase.js');
+        const forkUseCaseSource = await rawSource('application/document/ForkDocumentUseCase.js');
         assert(forkUseCaseSource.includes('ForkFailureReason.LICENSE_DENIED') && forkUseCaseSource.includes('ForkFailureReason.MATERIAL_UNAVAILABLE'), 'C5. ForkDocumentUseCase.js still tags both failure causes with the named outcome');
 
         // C6. Publication -> Repository federation (0.9.340) — the sixth
@@ -313,7 +313,7 @@ async function run() {
         // proof already lives in tests/FederatedRepositoryProductGapAudit.test.js
         // and is not re-run here; Section D covers the boundary this
         // milestone's own brief specifically asks it to re-examine).
-        assert(await sourceExists('application/ResolvePublicationUseCase.js'), 'C6. application/ResolvePublicationUseCase.js still exists — the admission step Repository search reads through');
+        assert(await sourceExists('application/publication/ResolvePublicationUseCase.js'), 'C6. application/publication/ResolvePublicationUseCase.js still exists — the admission step Repository search reads through');
 
         // C7. This audit's own fresh sweep for a NEW seam — not merely
         // reconfirming the six the brief already names. Finding #1: the
@@ -363,7 +363,7 @@ async function run() {
         // 0.9.351): SearchPublicationsUseCase.js still imports no
         // network/discovery collaborator, and still resolves
         // synchronously.
-        const searchSource = await rawSource('application/SearchPublicationsUseCase.js');
+        const searchSource = await rawSource('application/publication/SearchPublicationsUseCase.js');
         assert(!/nostr|arweave|WebSocket|fetch\(/i.test(searchSource), 'D1. SearchPublicationsUseCase.js still imports no network/discovery-query collaborator of any kind');
         const searchClassBody = searchSource.replace(/\/\/.*$/gm, '');
         assert(!/async execute/.test(searchClassBody), 'D1. SearchPublicationsUseCase#execute() is still not an async method — still a plain synchronous local search');
@@ -379,8 +379,8 @@ async function run() {
         // and is still composed once, narrowly, for a different purpose
         // (known-objectId World Encounter material lookup) — the same
         // asymmetry 0.9.351 Section C found, reconfirmed present.
-        assert(await sourceExists('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js'), 'D3. the one existing decentralized-discovery composition (World Encounter material, known-objectId) still exists');
-        const decentralizedCompositionSource = await rawSource('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
+        assert(await sourceExists('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js'), 'D3. the one existing decentralized-discovery composition (World Encounter material, known-objectId) still exists');
+        const decentralizedCompositionSource = await rawSource('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(!/decentralizedPublicationDiscoveryProvider/.test(decentralizedCompositionSource), 'D3. that composition still never feeds Repository\'s own decentralizedPublicationDiscoveryProvider seam');
 
         // D4. No new discovery-triggering wiring was introduced by the
@@ -427,13 +427,13 @@ async function run() {
         // E4. Place Naming — reconfirmed complete, including
         // decentralized publication/discovery; no additional adoption
         // mechanism has been added.
-        assert(await sourceExists('application/NostrPlaceNamingDiscoverySource.js'), 'E4. application/NostrPlaceNamingDiscoverySource.js still exists');
-        assert(await sourceExists('application/PlaceNamingDiscoveryQueryService.js'), 'E4. application/PlaceNamingDiscoveryQueryService.js still exists — the aggregation layer that never throws');
+        assert(await sourceExists('application/placeNaming/NostrPlaceNamingDiscoverySource.js'), 'E4. application/placeNaming/NostrPlaceNamingDiscoverySource.js still exists');
+        assert(await sourceExists('application/placeNaming/PlaceNamingDiscoveryQueryService.js'), 'E4. application/placeNaming/PlaceNamingDiscoveryQueryService.js still exists — the aggregation layer that never throws');
 
         // E5. Repository federation — reconfirmed complete for
         // encounter-driven discovery; the proactive boundary is
         // Section D's own question, not reopened here.
-        assert(await sourceExists('application/ResolvePublicationUseCase.js'), 'E5. application/ResolvePublicationUseCase.js still exists');
+        assert(await sourceExists('application/publication/ResolvePublicationUseCase.js'), 'E5. application/publication/ResolvePublicationUseCase.js still exists');
 
         // E6. Distribution — reconfirmed still explicit and
         // user-directed only: no automatic/queued/scheduled distribution
@@ -466,12 +466,12 @@ async function run() {
         // already carry each one — never collapsed into a single
         // "available" boolean.
         assert(await sourceExists('core/DecentralizedWorldDiscoveryLead.js'), 'F1. "announced/discovered" has its own carrier type (a lead — origin/discoveryTag/uri, no content)');
-        assert(await sourceExists('application/ResolvePublicationUseCase.js'), 'F1. "resolved" is its own distinct step (ResolvePublicationUseCase)');
-        const resolutionOutcomeSource = await rawSource('application/PublicationResolutionOutcome.js');
+        assert(await sourceExists('application/publication/ResolvePublicationUseCase.js'), 'F1. "resolved" is its own distinct step (ResolvePublicationUseCase)');
+        const resolutionOutcomeSource = await rawSource('application/publication/PublicationResolutionOutcome.js');
         assert(/CONTENT_UNAVAILABLE/.test(resolutionOutcomeSource), 'F1. PublicationResolutionOutcome.js still names CONTENT_UNAVAILABLE as its own distinct outcome — resolution and content retrieval stay two separate facts, never fused');
-        assert(await sourceExists('application/SearchPublicationsUseCase.js'), 'F1. "visible in Repository" is a distinct, later read (SearchPublicationsUseCase), never fused with resolution itself');
-        const publishSource = await rawSource('application/PublishDocumentUseCase.js');
-        const distributionSource = await rawSource('application/SnapshotDistributionRuntimeComposition.js');
+        assert(await sourceExists('application/publication/SearchPublicationsUseCase.js'), 'F1. "visible in Repository" is a distinct, later read (SearchPublicationsUseCase), never fused with resolution itself');
+        const publishSource = await rawSource('application/publication/PublishDocumentUseCase.js');
+        const distributionSource = await rawSource('application/snapshot/SnapshotDistributionRuntimeComposition.js');
         assert(publishSource.length > 0 && distributionSource.length > 0, 'F1. "published" (local act) and "distributed" (explicit, separate user action) remain two distinct real files, never one combined step');
 
         // F2. Notification terms stay genuinely distinct — the exact

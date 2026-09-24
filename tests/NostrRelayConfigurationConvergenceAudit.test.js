@@ -5,16 +5,16 @@ import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
-import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQueryService.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
-import { composePlaceNamingPublicationRuntime } from '../application/PlaceNamingPublicationRuntimeComposition.js';
-import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
-import { createNostrPublicationDistributionRuntimeAdapter } from '../application/NostrPublicationDistributionRuntimeAdapter.js';
+import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
+import { composePlaceNamingPublicationRuntime } from '../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
+import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js';
+import { createNostrPublicationDistributionRuntimeAdapter } from '../application/nostr/NostrPublicationDistributionRuntimeAdapter.js';
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL, DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION } from '../core/DecentralizedDiscoveryEnvelope.js';
@@ -205,13 +205,13 @@ async function run() {
         const mainSource = await source('ui/main.js');
 
         const otherFiles = await Promise.all([
-            ['application/NostrDiscoveryQueryService.js', await source('application/NostrDiscoveryQueryService.js')],
-            ['application/NostrSnapshotDiscoveryQueryService.js', await source('application/NostrSnapshotDiscoveryQueryService.js')],
-            ['application/NostrPlaceNamingDiscoverySource.js', await source('application/NostrPlaceNamingDiscoverySource.js')],
-            ['application/NostrPublicationDiscoveryPublisher.js', await source('application/NostrPublicationDiscoveryPublisher.js')],
-            ['application/NostrSnapshotDiscoveryPublisher.js', await source('application/NostrSnapshotDiscoveryPublisher.js')],
-            ['application/NostrPlaceNamingDiscoveryPublisher.js', await source('application/NostrPlaceNamingDiscoveryPublisher.js')],
-            ['application/NostrPublicationDistributionRuntimeAdapter.js', await source('application/NostrPublicationDistributionRuntimeAdapter.js')],
+            ['application/nostr/NostrDiscoveryQueryService.js', await source('application/nostr/NostrDiscoveryQueryService.js')],
+            ['application/nostr/NostrSnapshotDiscoveryQueryService.js', await source('application/nostr/NostrSnapshotDiscoveryQueryService.js')],
+            ['application/placeNaming/NostrPlaceNamingDiscoverySource.js', await source('application/placeNaming/NostrPlaceNamingDiscoverySource.js')],
+            ['application/nostr/NostrPublicationDiscoveryPublisher.js', await source('application/nostr/NostrPublicationDiscoveryPublisher.js')],
+            ['application/nostr/NostrSnapshotDiscoveryPublisher.js', await source('application/nostr/NostrSnapshotDiscoveryPublisher.js')],
+            ['application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js', await source('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js')],
+            ['application/nostr/NostrPublicationDistributionRuntimeAdapter.js', await source('application/nostr/NostrPublicationDistributionRuntimeAdapter.js')],
             ['nostr/NostrRelayQueryClient.js', await source('nostr/NostrRelayQueryClient.js')],
             ['nostr/NostrInjectedProviderPublisher.js', await source('nostr/NostrInjectedProviderPublisher.js')]
         ]);
@@ -575,7 +575,7 @@ async function run() {
 
         // Structural: none of the write-path composition/publisher/
         // resolver files reference the read-path configuration boundary by
-        // name — EXCEPT `application/SnapshotDistributionRuntimeComposition.js`,
+        // name — EXCEPT `application/snapshot/SnapshotDistributionRuntimeComposition.js`,
         // a deliberate, narrow exception: Snapshot Distribution's own
         // announcement publishing now optionally accepts a caller-resolved
         // `relayUrls` set (fanning the announcement out across every
@@ -592,13 +592,13 @@ async function run() {
         // unaware this boundary exists at all — see G2-G8, above, still
         // passing unmodified.
         const writePathFiles = [
-            'application/NostrPublicationDiscoveryPublisher.js',
-            'application/NostrSnapshotDiscoveryPublisher.js',
-            'application/NostrPlaceNamingDiscoveryPublisher.js',
-            'application/NostrPublicationDistributionRuntimeAdapter.js',
-            'application/PlaceNamingPublicationRuntimeComposition.js',
-            'application/PublicationDistributionRuntimeConfiguration.js',
-            'application/PublicationDistributionConfigurationProvider.js',
+            'application/nostr/NostrPublicationDiscoveryPublisher.js',
+            'application/nostr/NostrSnapshotDiscoveryPublisher.js',
+            'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js',
+            'application/nostr/NostrPublicationDistributionRuntimeAdapter.js',
+            'application/placeNaming/PlaceNamingPublicationRuntimeComposition.js',
+            'application/publication/distribution/PublicationDistributionRuntimeConfiguration.js',
+            'application/publication/distribution/PublicationDistributionConfigurationProvider.js',
             'nostr/NostrInjectedProviderPublisher.js'
         ];
         for (const path of writePathFiles) {
@@ -707,12 +707,12 @@ async function run() {
         // concatenate anything onto relayUrl — each hands it straight to
         // queryImpl()/publishImpl()/new WebSocket() unmodified.
         const consumerFiles = [
-            'application/NostrDiscoveryQueryService.js',
-            'application/NostrSnapshotDiscoveryQueryService.js',
-            'application/NostrPlaceNamingDiscoverySource.js',
-            'application/NostrPublicationDiscoveryPublisher.js',
-            'application/NostrSnapshotDiscoveryPublisher.js',
-            'application/NostrPlaceNamingDiscoveryPublisher.js',
+            'application/nostr/NostrDiscoveryQueryService.js',
+            'application/nostr/NostrSnapshotDiscoveryQueryService.js',
+            'application/placeNaming/NostrPlaceNamingDiscoverySource.js',
+            'application/nostr/NostrPublicationDiscoveryPublisher.js',
+            'application/nostr/NostrSnapshotDiscoveryPublisher.js',
+            'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js',
             'nostr/NostrRelayQueryClient.js'
         ];
         for (const path of consumerFiles) {

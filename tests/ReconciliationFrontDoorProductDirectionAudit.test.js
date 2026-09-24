@@ -244,7 +244,7 @@ async function run() {
     {
         peerConnectionsSource = await readSource('ui/views/PeerConnectionsView.js');
         const claimCoreSource = await readSource('core/PublisherLeaderboardSnapshotClaim.js');
-        const claimExchangeSource = await readSource('application/PublisherLeaderboardSnapshotClaimExchange.js');
+        const claimExchangeSource = await readSource('application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js');
 
         // E1. PeerConnectionsView carries zero archive/claim vocabulary
         // today — a genuinely blank slate, not an existing, unwired seam.
@@ -263,7 +263,7 @@ async function run() {
         // this operation to Peer Connections would introduce a MISLEADING
         // coupling this feature does not actually have.
         assert(claimExchangeSource.includes('TRANSPORT INTRODUCES NO NEW TRUST SEMANTICS'),
-            n('E3. claim transport (application/PublisherLeaderboardSnapshotClaimExchange.js) is documented as portable JSON exchange, the identical out-of-band paste shape the Leaderboard\'s own peer-archive comparison already uses — never a live peer-session/connection dependency Peer Connections would actually provide'));
+            n('E3. claim transport (application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js) is documented as portable JSON exchange, the identical out-of-band paste shape the Leaderboard\'s own peer-archive comparison already uses — never a live peer-session/connection dependency Peer Connections would actually provide'));
         assert(!/Alice's replica.*Bob's replica.*peer connection|WebRTC|PeerSession/s.test(claimExchangeSource),
             n('E3. the claim exchange file never names a live peer session, WebRTC channel, or PeerSessionManager as part of its own transport — confirming the transport genuinely does not need what Peer Connections would supply'));
 
@@ -333,10 +333,10 @@ async function run() {
     // Section G — Candidate 4: Automatic reconciliation.
     // ===============================================================
     {
-        const createClaimSource = await readSource('application/CreatePublisherLeaderboardSnapshotClaimUseCase.js');
+        const createClaimSource = await readSource('application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js');
 
         assert(createClaimSource.includes('SIGNING IS NEVER AUTOMATIC — THE MOST IMPORTANT RESTRAINT THIS FILE'),
-            n('G1. application/CreatePublisherLeaderboardSnapshotClaimUseCase.js states, verbatim, in its own header, "SIGNING IS NEVER AUTOMATIC — THE MOST IMPORTANT RESTRAINT THIS FILE HOLDS" — a direct, named, documented boundary this candidate would violate by construction, not merely a missing seam'));
+            n('G1. application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js states, verbatim, in its own header, "SIGNING IS NEVER AUTOMATIC — THE MOST IMPORTANT RESTRAINT THIS FILE HOLDS" — a direct, named, documented boundary this candidate would violate by construction, not merely a missing seam'));
         assert(createClaimSource.includes('as a side effect of anything else in this codebase.'),
             n('G1. the same file explicitly rules out exactly this candidate\'s own shape — signing is called "never as a side effect of anything else in this codebase"'));
 
@@ -408,9 +408,9 @@ async function run() {
         // would need is proven live by 0.9.405 Section B, not merely
         // present on disk — reconfirmed here by import, not by citation.
         const { PublisherLeaderboardSnapshotClaim } = await import('../core/PublisherLeaderboardSnapshotClaim.js');
-        const { reconstructPublisherLeaderboard } = await import('../application/PublisherLeaderboardView.js');
+        const { reconstructPublisherLeaderboard } = await import('../application/leaderboard/PublisherLeaderboardView.js');
         assert(typeof PublisherLeaderboardSnapshotClaim === 'function', n('H3. core/PublisherLeaderboardSnapshotClaim.js is a real, importable class today'));
-        assert(typeof reconstructPublisherLeaderboard === 'function', n('H3. application/PublisherLeaderboardView.js#reconstructPublisherLeaderboard is a real, importable function today — the local, zero-network half of a first slice'));
+        assert(typeof reconstructPublisherLeaderboard === 'function', n('H3. application/leaderboard/PublisherLeaderboardView.js#reconstructPublisherLeaderboard is a real, importable function today — the local, zero-network half of a first slice'));
 
         const candidate = evaluateFrontDoorCandidate({
             name: 'Explicit reconciliation workspace',

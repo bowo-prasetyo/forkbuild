@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { resolveSnapshotPublicationAttribution } from '../application/SnapshotPublicationAttribution.js';
-import { SnapshotPublicationAttributionOutcome } from '../application/SnapshotPublicationAttributionOutcome.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { resolveSnapshotPublicationAttribution } from '../application/snapshot/SnapshotPublicationAttribution.js';
+import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -177,7 +177,7 @@ function run() {
         // real locator (simulated here by the resolver's own reported
         // outcome) actually served different bytes, so resolution itself
         // already refused it with CONTENT_HASH_MISMATCH — exactly what
-        // application/DecentralizedSnapshotResolver.js#resolveCandidate()
+        // application/snapshot/DecentralizedSnapshotResolver.js#resolveCandidate()
         // would report for a locator whose real bytes disagree with the
         // candidate's own declared contentHash.
         const lyingCandidate = { contentHash: publicationHash, locator: 'ar://section-c-lying-locator', storage: 'ar' };
@@ -379,7 +379,7 @@ function run() {
         return (async () => {
             const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
 
-            assert(panelCode.includes("from '../../application/SnapshotPublicationAttribution.js'"),
+            assert(panelCode.includes("from '../../application/snapshot/SnapshotPublicationAttribution.js'"),
                 'J1. OwnPublicationPanel.js imports the existing pure function — never reimplements it');
 
             const attributeBody = (panelCode.match(/attributeSelectedSnapshot\(\)\s*\{[\s\S]*?\n\s{8}\}/) || [''])[0];

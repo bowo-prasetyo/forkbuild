@@ -1,6 +1,6 @@
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { VehicleRuntimeInstancePersistenceStore } from '../storage/VehicleRuntimeInstancePersistenceStore.js';
-import { VehicleRuntimeInstances } from '../application/VehicleRuntimeInstances.js';
+import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
 import { VehicleInstance } from '../core/VehicleInstance.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { Position } from '../core/Position.js';

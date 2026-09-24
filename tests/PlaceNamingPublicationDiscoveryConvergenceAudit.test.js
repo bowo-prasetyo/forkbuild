@@ -5,12 +5,12 @@ import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import {
     buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag
 } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { NostrPlaceNamingDiscoveryPublisher } from '../application/NostrPlaceNamingDiscoveryPublisher.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
+import { NostrPlaceNamingDiscoveryPublisher } from '../application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -19,7 +19,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // See docs/Roadmap.md, "0.9.317 — Place Naming Publication/Discovery
 // Convergence Audit."
 //
-// 0.9.316 built application/NostrPlaceNamingDiscoveryPublisher.js and its
+// 0.9.316 built application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js and its
 // own two test files already proved a great deal of this boundary,
 // including a cross-device flagship (tests/PlaceNamingClaimPublication.test.js
 // Section D). This is a **test-only audit, not a rebuild** — it exists to
@@ -225,10 +225,10 @@ async function runTests() {
         assert(replica.store.list('world-b')[0].id === claim.id,
             'B3. The one claim on file is still the exact same claim.');
 
-        const useCaseCode = codeOnlyLines(await rawSource('application/PlaceNamingClaimUseCase.js'));
+        const useCaseCode = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js'));
         assert((useCaseCode.match(/new PlaceNamingClaim\(/g) || []).length === 1,
             'B4. PlaceNamingClaimUseCase itself still constructs exactly one PlaceNamingClaim per publish() call — the sole production constructor site remains unchanged by this milestone.');
-        const publisherCode = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
+        const publisherCode = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'));
         assert(!publisherCode.includes('new PlaceNamingClaim('), 'B5. The publisher itself never constructs a PlaceNamingClaim.');
         assert(!publisherCode.includes('.save(') && !publisherCode.includes('LocalPlaceNamingClaimStore'),
             'B6. The publisher never calls a store\'s save() and never even imports the local claim store.');
@@ -267,9 +267,9 @@ async function runTests() {
         // family — a future drift risk this section specifically guards
         // against.
         const familyFiles = [
-            'application/NostrPlaceNamingDiscoveryPublisher.js', 'application/NostrPlaceNamingDiscoverySource.js',
-            'application/PlaceNamingDiscoveryQueryService.js', 'application/DiscoverPlaceNamingClaimsCommand.js',
-            'application/PlaceNamingClaimUseCase.js'
+            'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js', 'application/placeNaming/NostrPlaceNamingDiscoverySource.js',
+            'application/placeNaming/PlaceNamingDiscoveryQueryService.js', 'application/placeNaming/DiscoverPlaceNamingClaimsCommand.js',
+            'application/placeNaming/PlaceNamingClaimUseCase.js'
         ];
         for (const path of familyFiles) {
             const code = codeOnlyLines(await rawSource(path));
@@ -410,7 +410,7 @@ async function runTests() {
         assert(discovered.length === 1 && discovered[0].claim.id === claim.id,
             'F5. Discovery\'s own pre-existing claim.id deduplication (0.9.253) collapses the three published echoes into exactly one result — proving deduplication is discovery\'s job, not the publisher\'s, and that publishing multiple times does not multiply discovered results.');
 
-        const publisherCode = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
+        const publisherCode = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'));
         assert(!/dedup|already.?published|seen\s*\.\s*(has|add)/i.test(publisherCode),
             'F6. The publisher\'s own source carries no deduplication vocabulary of any kind — it does not track what it has already published.');
 
@@ -493,7 +493,7 @@ async function runTests() {
         }
 
         // No retry mechanism anywhere in the publisher's own source.
-        const publisherCode = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
+        const publisherCode = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'));
         assert(!/retry|retries|backoff|attempt\s*\+\+|maxAttempts/i.test(publisherCode),
             'G6. No retry/backoff vocabulary of any kind exists in the publisher\'s own source — a failed publish is never automatically retried.');
 
@@ -518,7 +518,7 @@ async function runTests() {
         const retracted = replica.useCase.retract('world-h', claim.id);
         assert(retracted === true && replica.store.has('world-h', claim.id) === false, 'H3. retract() works exactly as before.');
 
-        const useCaseCode = codeOnlyLines(await rawSource('application/PlaceNamingClaimUseCase.js'));
+        const useCaseCode = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js'));
         assert(!useCaseCode.includes('NostrPlaceNamingDiscoveryPublisher'),
             'H4. PlaceNamingClaimUseCase itself never imports or references the publisher — publication remains never automatic.');
 
@@ -563,10 +563,10 @@ async function runTests() {
     // Section J — Architectural sweep.
     // ===============================================================
     {
-        const publisherCode = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
-        const sourceCode = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoverySource.js'));
-        const queryServiceCode = codeOnlyLines(await rawSource('application/PlaceNamingDiscoveryQueryService.js'));
-        const useCaseCode = codeOnlyLines(await rawSource('application/PlaceNamingClaimUseCase.js'));
+        const publisherCode = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'));
+        const sourceCode = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoverySource.js'));
+        const queryServiceCode = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingDiscoveryQueryService.js'));
+        const useCaseCode = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js'));
 
         assert(!publisherCode.includes('LocalPlaceNamingClaimStore'), 'J1. Publisher never imports local claim persistence.');
         assert(!publisherCode.includes('NostrPlaceNamingDiscoverySource') && !publisherCode.includes('PlaceNamingDiscoveryQueryService'),

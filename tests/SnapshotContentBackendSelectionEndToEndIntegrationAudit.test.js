@@ -4,23 +4,23 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import {
     SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES,
     availableSnapshotDistributionStorageTypes,
     resolveSnapshotDistributionContentStore
-} from '../application/SnapshotDistributionContentBackendSelection.js';
+} from '../application/snapshot/SnapshotDistributionContentBackendSelection.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { ArweaveSnapshotDiscoveryPublisher } from '../application/ArweaveSnapshotDiscoveryPublisher.js';
-import { ArweaveSnapshotDiscoveryQueryService } from '../application/ArweaveSnapshotDiscoveryQueryService.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { ArweaveSnapshotDiscoveryPublisher } from '../application/arweave/ArweaveSnapshotDiscoveryPublisher.js';
+import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.507 — Snapshot Content Backend Selection End-to-End Integration Audit.
@@ -47,7 +47,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //   select Content backend
 //        |
 //        v
-//   Snapshot Distribution (application/SnapshotDistributionCommand.js)
+//   Snapshot Distribution (application/snapshot/SnapshotDistributionCommand.js)
 //        |
 //        v
 //   ContentStore selection (application/
@@ -63,15 +63,15 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //        contentHash + locator (core/ContentReference.js)
 //               |
 //               v
-//   Announcement / Discovery (application/NostrSnapshotDiscoveryPublisher.js
-//   / application/ArweaveSnapshotDiscoveryPublisher.js)
+//   Announcement / Discovery (application/nostr/NostrSnapshotDiscoveryPublisher.js
+//   / application/arweave/ArweaveSnapshotDiscoveryPublisher.js)
 //               |
 //               v
-//          discovery (application/NostrSnapshotDiscoveryQueryService.js /
-//          application/ArweaveSnapshotDiscoveryQueryService.js)
+//          discovery (application/nostr/NostrSnapshotDiscoveryQueryService.js /
+//          application/arweave/ArweaveSnapshotDiscoveryQueryService.js)
 //               |
 //               v
-//          resolution (application/DecentralizedSnapshotResolver.js)
+//          resolution (application/snapshot/DecentralizedSnapshotResolver.js)
 //               |
 //               v
 //         hash verification (core/ContentReference.js#verify())
@@ -237,7 +237,7 @@ function makeFailingSigner() {
 
 // A shared, in-memory, network-free Nostr "relay": publishImpl() records
 // an event, queryImpl() hands every recorded event back — the resolver's
-// own contentHash filter (application/DecentralizedSnapshotResolver.js)
+// own contentHash filter (application/snapshot/DecentralizedSnapshotResolver.js)
 // narrows to the right one, exactly as a real relay-side filter would.
 function makeFakeNostrRelay() {
     const events = [];
@@ -253,7 +253,7 @@ function makeFakeNostrRelay() {
 }
 
 // A shared, in-memory, network-free Arweave DISCOVERY substrate — serves
-// BOTH application/ArweaveSnapshotDiscoveryPublisher.js's own
+// BOTH application/arweave/ArweaveSnapshotDiscoveryPublisher.js's own
 // uploadTaggedTransaction() and application/
 // ArweaveSnapshotDiscoveryQueryService.js's own fetchImpl (GraphQL tag
 // search + per-transaction gateway GET), against one shared, mutable
@@ -350,7 +350,7 @@ async function run() {
         // composition root. Naming this here keeps Section A an honest
         // account of what is ACTUALLY wired, not what the architecture
         // merely supports.
-        check(!mainSource.includes('new ArweaveSnapshotDiscoveryPublisher('), 'A. production constructs no ArweaveSnapshotDiscoveryPublisher — Snapshot Distribution\'s own announcement write-side remains the fixed, single Nostr discoveryPublisher application/SnapshotDistributionCommand.js\'s own header already documents');
+        check(!mainSource.includes('new ArweaveSnapshotDiscoveryPublisher('), 'A. production constructs no ArweaveSnapshotDiscoveryPublisher — Snapshot Distribution\'s own announcement write-side remains the fixed, single Nostr discoveryPublisher application/snapshot/SnapshotDistributionCommand.js\'s own header already documents');
         // AMENDED BY 0.9.669 — Per-Click Snapshot Announcement/Discovery
         // Substrate Override. composeSnapshotDistributionRuntime() — still
         // the ONE place a discoveryPublisher is built for this family — is
@@ -374,7 +374,7 @@ async function run() {
             && SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES.includes('ar'), 'B. exactly [\'ipfs\', \'ar\'] is eligible');
         check(!SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES.includes('local'), 'B. \'local\' is not eligible');
 
-        const source = await readFile(new URL('application/SnapshotDistributionContentBackendSelection.js', SOURCE_ROOT), 'utf8');
+        const source = await readFile(new URL('application/snapshot/SnapshotDistributionContentBackendSelection.js', SOURCE_ROOT), 'utf8');
         check(/reachable by\s*\n?\s*\/\/\s*OTHER replicas/i.test(source) || source.includes('OTHER replicas'), 'B. the exclusion of \'local\' is documented, in the module\'s own header, as an intentional product decision (reachability by other replicas), not an oversight');
 
         console.log('✓ B. the eligible-storage-set contract is closed, frozen, and its one exclusion is documented as deliberate.');
@@ -758,14 +758,14 @@ async function run() {
             const failingNostrPublisher = { discoveryTag, publish: async () => { throw new Error('relay unreachable'); } };
             await expectRejects(
                 executeSnapshotDistributionCommand({ bytes, contentStore: resolveSnapshotDistributionContentStore(registry, 'ipfs'), discoveryPublisher: failingNostrPublisher }),
-                'K2. a genuinely failing discoveryPublisher.publish() propagates as a rejection, per application/SnapshotDistributionCommand.js\'s own existing contract'
+                'K2. a genuinely failing discoveryPublisher.publish() propagates as a rejection, per application/snapshot/SnapshotDistributionCommand.js\'s own existing contract'
             );
 
             // Content placement itself already happened before the
             // announcement was attempted — the bytes are still there,
             // resolvable directly against the registry (Section G's own
             // path), even though the announcement failed.
-            const source = await codeOnlySource('application/DecentralizedSnapshotResolver.js');
+            const source = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
             check(!source.includes('new ArweaveSnapshotDiscoveryQueryService') && !source.includes('new NostrSnapshotDiscoveryQueryService'),
                 'K2. DecentralizedSnapshotResolver.js itself never constructs a second, fallback query service of any kind — it is handed exactly one, and only ever calls that one\'s own search()');
 
@@ -803,15 +803,15 @@ async function run() {
     // about, Placement's own registry usage.
     // ===============================================================
     {
-        const selectionSource = await codeOnlySource('application/SnapshotDistributionContentBackendSelection.js');
+        const selectionSource = await codeOnlySource('application/snapshot/SnapshotDistributionContentBackendSelection.js');
         check(!selectionSource.includes('SnapshotPlacementStoreRegistry'), 'M. the new selection module never imports SnapshotPlacementStoreRegistry by name — it is duck-typed against get()/has() only, exactly as its own header documents');
         check(!selectionSource.includes('ArweaveContentStore') && !selectionSource.includes('IpfsContentStore') && !selectionSource.includes('LocalContentStore'),
             'M. it imports no concrete ContentStore either — it cannot itself alter what any one of them does');
 
-        const registryFilesSource = await codeOnlySource('application/SnapshotPlacementStoreRegistry.js');
+        const registryFilesSource = await codeOnlySource('application/snapshot/placement/SnapshotPlacementStoreRegistry.js');
         check(!registryFilesSource.includes('SnapshotDistributionContentBackendSelection'), 'M. SnapshotPlacementStoreRegistry.js itself has no idea the Distribution eligibility module exists — no coupling in the other direction either');
-        const resolverSource = await codeOnlySource('application/SnapshotPlacementResolver.js');
-        check(!resolverSource.includes('SnapshotDistributionContentBackendSelection'), 'M. application/SnapshotPlacementResolver.js (the SIGNED Placement family\'s own resolution class) is equally untouched');
+        const resolverSource = await codeOnlySource('application/snapshot/placement/SnapshotPlacementResolver.js');
+        check(!resolverSource.includes('SnapshotDistributionContentBackendSelection'), 'M. application/snapshot/placement/SnapshotPlacementResolver.js (the SIGNED Placement family\'s own resolution class) is equally untouched');
 
         // 'local' remains a fully functional Placement backend — put(),
         // get(), and verify() all still work through the SAME registry
@@ -836,14 +836,14 @@ async function run() {
     {
         const leakageTerms = ['Publication', 'Anchor', 'attribution', 'WorldEncounter', 'World Encounter', 'publisherIdentity', 'placerIdentity'];
 
-        const selectionSource = await codeOnlySource('application/SnapshotDistributionContentBackendSelection.js');
+        const selectionSource = await codeOnlySource('application/snapshot/SnapshotDistributionContentBackendSelection.js');
         for (const term of leakageTerms) {
-            check(!selectionSource.includes(term), `N. application/SnapshotDistributionContentBackendSelection.js never mentions "${term}" — Content backend selection is pure storage routing, nothing about identity, provenance, or World placement`);
+            check(!selectionSource.includes(term), `N. application/snapshot/SnapshotDistributionContentBackendSelection.js never mentions "${term}" — Content backend selection is pure storage routing, nothing about identity, provenance, or World placement`);
         }
 
-        const commandSource = await codeOnlySource('application/SnapshotDistributionCommand.js');
+        const commandSource = await codeOnlySource('application/snapshot/SnapshotDistributionCommand.js');
         for (const term of leakageTerms) {
-            check(!commandSource.includes(term), `N. application/SnapshotDistributionCommand.js never mentions "${term}" either — unchanged by 0.9.506, and this audit confirms it stayed that way`);
+            check(!commandSource.includes(term), `N. application/snapshot/SnapshotDistributionCommand.js never mentions "${term}" either — unchanged by 0.9.506, and this audit confirms it stayed that way`);
         }
 
         const mainSource = await codeOnlySource('ui/main.js');

@@ -13,25 +13,25 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { executePublicationDistribution } from '../application/PublicationDistributionExecutor.js';
-import { composePublicationDistributionRuntime } from '../application/PublicationDistributionRuntimeComposition.js';
+import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
+import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
 
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 
 // 0.9.135 — End-to-End Decentralized Snapshot Distribution Audit.
 //
 // 0.9.131 named the boundary between Signed Claim distribution and
 // Snapshot distribution. 0.9.132 built the placement half of a genuinely
 // decentralized Snapshot path (content/ArweaveContentStore.js). 0.9.133
-// built the discovery half (application/NostrSnapshotDiscoveryPublisher.js
+// built the discovery half (application/nostr/NostrSnapshotDiscoveryPublisher.js
 // / NostrSnapshotDiscoveryQueryService.js, core/SnapshotDiscoveryEnvelope.js).
-// 0.9.134 connected the two (application/DecentralizedSnapshotResolver.js).
+// 0.9.134 connected the two (application/snapshot/DecentralizedSnapshotResolver.js).
 // Each of those milestones tested its own new seam in isolation. This
 // milestone tests nothing new — it is a TEST-ONLY audit, exactly as
 // 0.9.124, 0.9.129, and 0.9.130 were, proving the complete chain those
@@ -635,7 +635,7 @@ async function run() {
     // 0.9.131 and 0.9.134).
     // ===============================================================
     {
-        const resolverCode = await codeOnlySource('application/DecentralizedSnapshotResolver.js');
+        const resolverCode = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
         const resolverForbidden = [
             'PublicationDistribution',
             'ArweavePublicationMaterialUploader',
@@ -648,15 +648,15 @@ async function run() {
             'NostrInjectedProviderPublisher'
         ];
         for (const term of resolverForbidden) {
-            assert(!resolverCode.includes(term), `G1. application/DecentralizedSnapshotResolver.js never references '${term}'`);
+            assert(!resolverCode.includes(term), `G1. application/snapshot/DecentralizedSnapshotResolver.js never references '${term}'`);
         }
 
-        const nostrSnapshotPublisherCode = await codeOnlySource('application/NostrSnapshotDiscoveryPublisher.js');
-        assert(!nostrSnapshotPublisherCode.includes('NostrPublicationDiscoveryPublisher'), 'G2. application/NostrSnapshotDiscoveryPublisher.js never imports or references the Signed Claim family\'s own NostrPublicationDiscoveryPublisher');
+        const nostrSnapshotPublisherCode = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryPublisher.js');
+        assert(!nostrSnapshotPublisherCode.includes('NostrPublicationDiscoveryPublisher'), 'G2. application/nostr/NostrSnapshotDiscoveryPublisher.js never imports or references the Signed Claim family\'s own NostrPublicationDiscoveryPublisher');
         assert(!nostrSnapshotPublisherCode.includes('NostrInjectedProviderPublisher'), 'G3. ...and never imports a concrete Nostr host adapter either — publishImpl stays an injection point');
 
-        const nostrSnapshotQueryCode = await codeOnlySource('application/NostrSnapshotDiscoveryQueryService.js');
-        assert(!nostrSnapshotQueryCode.includes('SnapshotPlacementResolver') && !nostrSnapshotQueryCode.includes('SnapshotPlacementStoreRegistry') && !nostrSnapshotQueryCode.includes('PublicationSnapshotPlacement'), 'G4. application/NostrSnapshotDiscoveryQueryService.js never references the signed, peer-based Snapshot Placement family');
+        const nostrSnapshotQueryCode = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
+        assert(!nostrSnapshotQueryCode.includes('SnapshotPlacementResolver') && !nostrSnapshotQueryCode.includes('SnapshotPlacementStoreRegistry') && !nostrSnapshotQueryCode.includes('PublicationSnapshotPlacement'), 'G4. application/nostr/NostrSnapshotDiscoveryQueryService.js never references the signed, peer-based Snapshot Placement family');
 
         const arweaveStoreCode = await codeOnlySource('content/ArweaveContentStore.js');
         assert(!/nostr/i.test(arweaveStoreCode), 'G5. content/ArweaveContentStore.js remains ignorant of Nostr in any form');
@@ -674,7 +674,7 @@ async function run() {
     {
         // UPDATED 0.9.505 — Register Arweave as Snapshot Content Store.
         // ui/main.js now DOES reference 'ArweaveContentStore' by name — but
-        // only to register it into application/SnapshotPlacementStoreRegistry.js
+        // only to register it into application/snapshot/placement/SnapshotPlacementStoreRegistry.js
         // for Snapshot Placement, an entirely different composition root
         // from the Distribution/Discovery chain this section audits.
         // 'ArweaveContentStore' is therefore removed from the forbidden list
@@ -695,7 +695,7 @@ async function run() {
         // with no helper other than plain constructors — that IS the
         // "composable explicitly by a caller" half of this section's
         // claim, so it is not re-demonstrated here.
-        assert(await (async () => { try { await readFile(new URL('application/DecentralizedSnapshotResolver.js', SOURCE_ROOT)); return true; } catch { return false; } })(), 'H2. sanity: the file exists and is readable, i.e. genuinely importable by any caller who chooses to');
+        assert(await (async () => { try { await readFile(new URL('application/snapshot/DecentralizedSnapshotResolver.js', SOURCE_ROOT)); return true; } catch { return false; } })(), 'H2. sanity: the file exists and is readable, i.e. genuinely importable by any caller who chooses to');
 
         console.log('✓ H. no implicit application wiring — the decentralized Snapshot chain is explicitly composable (Section A) but never silently part of the application\'s default publication flow (ui/main.js)');
     }

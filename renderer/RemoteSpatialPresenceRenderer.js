@@ -79,13 +79,13 @@ function buildLabelSprite(primaryText, secondaryText, colorCss) {
 // stays the star; this never competes with it for visual weight the way
 // a full second avatar body would.
 //
-// Keyed by `deviceId` (application/WorldSpatialPresenceUseCase.js's own
+// Keyed by `deviceId` (application/presence/WorldSpatialPresenceUseCase.js's own
 // per-device roster shape — see that class's own header, "Device
 // aggregation must continue") — Bob's Desktop and Bob's Tablet each get
 // their OWN marker when both report different positions, exactly the
 // "genuinely different places" case that milestone's design conversation
-// called out. A caller (application/WorldNavigationSession.js, through
-// application/RenderWorldViewUseCase.js's own facade) decides what
+// called out. A caller (application/world/WorldNavigationSession.js, through
+// application/world/RenderWorldViewUseCase.js's own facade) decides what
 // label text to show — this class has no idea what a "display name" is,
 // mirroring every other renderer in this codebase staying presentation-
 // only, never identity-resolving.
@@ -183,7 +183,7 @@ export class RemoteSpatialPresenceRenderer {
     }
 
     // Every currently-tracked marker's root Object3D — the caller (see
-    // application/RenderWorldViewUseCase.js's own facade pattern) adds
+    // application/world/RenderWorldViewUseCase.js's own facade pattern) adds
     // each one to the scene exactly once, on first creation.
     getObject(deviceId) {
         const entry = this._entries.get(deviceId);

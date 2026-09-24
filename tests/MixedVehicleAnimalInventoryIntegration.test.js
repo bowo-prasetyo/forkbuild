@@ -1,9 +1,9 @@
-import { AvatarVehicleInteractionController } from '../application/AvatarVehicleInteractionController.js';
-import { AvatarAnimalInteractionController } from '../application/AvatarAnimalInteractionController.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { AvatarInventoryStore } from '../application/AvatarInventoryStore.js';
-import { VehicleRuntimeInstances } from '../application/VehicleRuntimeInstances.js';
-import { AnimalRuntimeInstances } from '../application/AnimalRuntimeInstances.js';
+import { AvatarVehicleInteractionController } from '../application/avatar/AvatarVehicleInteractionController.js';
+import { AvatarAnimalInteractionController } from '../application/avatar/AvatarAnimalInteractionController.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { AvatarInventoryStore } from '../application/avatar/AvatarInventoryStore.js';
+import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
+import { AnimalRuntimeInstances } from '../application/world/AnimalRuntimeInstances.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { animalPresenceInRegion } from '../core/AnimalPlacement.js';
 import { Position } from '../core/Position.js';

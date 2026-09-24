@@ -112,8 +112,8 @@ export function treeCollisionGeometryInRegion(seed, minX, minZ, maxX, maxZ) {
 // AABB intersect one of these circles — the next milestone's own job, see
 // docs/Roadmap.md, 0.9.59's own "Deliberately postponed" section);
 // collision RESPONSE (blocking, sliding, or any other movement outcome);
-// wiring this file into application/AvatarMovementConstraint.js,
-// application/AvatarTerrainConstraint.js, or core/AvatarCollision.js in
+// wiring this file into application/avatar/AvatarMovementConstraint.js,
+// application/avatar/AvatarTerrainConstraint.js, or core/AvatarCollision.js in
 // any way; a physics engine, velocity, acceleration, or mass of any kind;
 // tree destruction, harvesting, or any other interaction; a second
 // COLLISION_SHAPE (a box, a capsule) or a second COLLISION_OBJECT_KIND (a

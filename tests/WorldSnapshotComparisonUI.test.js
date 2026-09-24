@@ -1,15 +1,15 @@
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import WorldEncounterMarker from '../ui/components/WorldEncounterMarker.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { registerPeerWorldSource } from '../peer/PeerWorldDiscoveryLifecycleBridge.js';
 import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { WorldSnapshotContentComparison } from '../application/WorldSnapshotComparison.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { WorldSnapshotContentComparison } from '../application/snapshot/WorldSnapshotComparison.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -177,7 +177,7 @@ function stripLineComments(source) {
 
 async function run() {
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-    const candidateSource = await readFile(new URL('../application/WorldEncounterComparisonCandidate.js', import.meta.url), 'utf8');
+    const candidateSource = await readFile(new URL('../application/worldEncounter/WorldEncounterComparisonCandidate.js', import.meta.url), 'utf8');
 
     // ---------------------------------------------------------------
     // Section A — explicit comparison, through the UI.
@@ -499,7 +499,7 @@ async function run() {
         assert(!/registerMaterializedSnapshotWorldSource\(|unregisterMaterializedSnapshotWorldSource\(/.test(newMethodsBody),
             '6. none of this milestone\'s own new methods calls a Snapshot registration/unregistration function');
 
-        // application/WorldEncounterComparisonCandidate.js performs no I/O,
+        // application/worldEncounter/WorldEncounterComparisonCandidate.js performs no I/O,
         // no registry access, and no hashing of its own.
         const candidateCodeOnly = stripLineComments(candidateSource);
         assert(!/registry|Registry/.test(candidateCodeOnly), '7. WorldEncounterComparisonCandidate.js never references a registry of any kind');

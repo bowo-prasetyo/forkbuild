@@ -40,7 +40,7 @@ export function toIdentityLifecycleGossipMessage(kind, record) {
 // isValidPeerMessageEnvelope(), this says nothing about whether the
 // record's SIGNATURE verifies, whether it is relevant to this device,
 // or whether it is newer than something already on file. Those are
-// application/IdentityLifecyclePropagationUseCase.js's own ingestion
+// application/identity/IdentityLifecyclePropagationUseCase.js's own ingestion
 // boundary questions, asked in order, one layer up — see that file's
 // own header.
 export function isValidIdentityLifecycleGossipMessage(value) {

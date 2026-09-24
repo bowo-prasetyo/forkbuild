@@ -1,17 +1,17 @@
 import { computeContentHash } from '../serializer/contentHash.js';
-import { IpfsPublicationRecord } from '../application/IpfsPublicationRecord.js';
-import { IpfsPublicationContentVerificationState } from '../application/IpfsPublicationContentVerificationState.js';
-import { BitcoinAnchorBroadcastState } from '../application/BitcoinAnchorBroadcastState.js';
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
-import { BaseTransactionInclusionObservationState } from '../application/BaseTransactionInclusionObservationState.js';
+import { IpfsPublicationRecord } from '../application/ipfs/IpfsPublicationRecord.js';
+import { IpfsPublicationContentVerificationState } from '../application/ipfs/IpfsPublicationContentVerificationState.js';
+import { BitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
+import { BaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import {
     PublicationObservationTimelineDomain,
     PublicationObservationTimelineEntryKind,
     describePublicationObservationTimeline
-} from '../application/PublicationObservationTimelineView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
-import { describePublicationObservationArchive } from '../application/PublicationObservationArchiveView.js';
+} from '../application/publication/observationArchive/PublicationObservationTimelineView.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
+import { describePublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveView.js';
 
 // 0.8.98 — Base Transaction Inclusion Observation Timeline.
 //

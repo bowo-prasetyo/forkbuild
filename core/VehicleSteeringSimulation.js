@@ -23,7 +23,7 @@ import { VehicleSteeringIntent, isValidVehicleSteeringIntent } from './VehicleSt
 //   existing movement simulation (core/AvatarMovementSimulation.js)
 //              │
 //              ▼
-//   collision constraints (application/AvatarMovementConstraint.js, etc.)
+//   collision constraints (application/avatar/AvatarMovementConstraint.js, etc.)
 //              │
 //              ▼
 //   realized position
@@ -43,7 +43,7 @@ import { VehicleSteeringIntent, isValidVehicleSteeringIntent } from './VehicleSt
 // steering intent" — this milestone does not weaken that claim, it merely
 // gives the "where the vehicle actually went" step something steering-
 // aware to work from). This file never imports `core/VehicleInstance.js`,
-// `core/VehicleMovementHeading.js`, or `application/VehicleRuntimeInstances.js`,
+// `core/VehicleMovementHeading.js`, or `application/world/VehicleRuntimeInstances.js`,
 // and none of them import this file — the identical boundary
 // `core/VehicleSteeringIntent.js`'s own 0.9.125 header already drew stays
 // exactly that clean, one file wider.
@@ -79,7 +79,7 @@ import { VehicleSteeringIntent, isValidVehicleSteeringIntent } from './VehicleSt
 // representation `VehicleInstance.heading` already stores, so a caller can
 // feed that field straight into this function with no conversion. RIGHT
 // increases heading, LEFT decreases it — the identical sign convention
-// `application/AvatarMovementController.js`'s own `turnAxis` already
+// `application/avatar/AvatarMovementController.js`'s own `turnAxis` already
 // establishes (`turnAxis = right(1) - left(1)`, and increasing `turnAxis`
 // increases `rotationY` in `core/AvatarMovementSimulation.js`) and
 // `core/VehicleMovementHeading.js`'s own degrees convention already
@@ -104,7 +104,7 @@ import { VehicleSteeringIntent, isValidVehicleSteeringIntent } from './VehicleSt
 // collision is expected to leave the vehicle's own `heading` untouched by
 // simply never calling `VehicleInstance#withHeading()` for that tick — the
 // identical "no real horizontal movement, no new heading" rule
-// `application/AvatarVehicleMovementController.js`'s own `tick()` already
+// `application/avatar/AvatarVehicleMovementController.js`'s own `tick()` already
 // applies today for un-steered movement (see that file's own 0.9.123
 // section). This function's own return value never substitutes for that
 // check: it names an ATTEMPT, not a guarantee.

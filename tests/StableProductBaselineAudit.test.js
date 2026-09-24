@@ -144,24 +144,24 @@ async function runTests() {
     {
         const reachable = [
             ['Editor', 'ui/views/EditorView.js', 'export default'],
-            ['Publish', 'application/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase'],
-            ['Distribution', 'application/NostrPublicationDistributionRuntimeAdapter.js', 'export function createNostrPublicationDistributionRuntimeAdapter'],
+            ['Publish', 'application/publication/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase'],
+            ['Distribution', 'application/nostr/NostrPublicationDistributionRuntimeAdapter.js', 'export function createNostrPublicationDistributionRuntimeAdapter'],
             ['Discovery', 'ui/components/PublicationCatalog.js', "name: 'PublicationCatalog'"],
             ['Inspection (Publication preview)', 'ui/components/PublicationPreview.js', 'export default'],
             ['Commentary', 'core/PublicationCommentary.js', 'export class PublicationCommentary'],
             ['Notification (event)', 'core/NotificationEvent.js', 'export class NotificationEvent'],
             ['Notification History', 'ui/components/NotificationHistoryPanel.js', "name: 'NotificationHistoryPanel'"],
-            ['Placement (Publish -> World)', 'application/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
-            ['Snapshot discovery', 'application/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
-            ['Snapshot materialization', 'application/MaterializeSnapshotFromPlacementUseCase.js', 'export class MaterializeSnapshotFromPlacementUseCase'],
-            ['Snapshot placement (multi)', 'application/AddPublicationSnapshotPlacementUseCase.js', 'export class AddPublicationSnapshotPlacementUseCase'],
+            ['Placement (Publish -> World)', 'application/placement/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
+            ['Snapshot discovery', 'application/snapshot/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
+            ['Snapshot materialization', 'application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js', 'export class MaterializeSnapshotFromPlacementUseCase'],
+            ['Snapshot placement (multi)', 'application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js', 'export class AddPublicationSnapshotPlacementUseCase'],
             ['World View', 'ui/views/WorldView.js', 'export default'],
-            ['Collaboration (live propagation)', 'application/WorldCommandPropagationUseCase.js', 'export class WorldCommandPropagationUseCase'],
+            ['Collaboration (live propagation)', 'application/document/WorldCommandPropagationUseCase.js', 'export class WorldCommandPropagationUseCase'],
             ['Collaboration (conflict resolution)', 'replication/WorldConflictResolver.js', 'export class WorldConflictResolver'],
             ['Place Naming', 'core/PlaceNamingClaim.js', 'export class PlaceNamingClaim'],
             ['Provider preferences', 'core/RoleProviderPreference.js', 'export class RoleProviderPreference'],
             ['Authentication/identity', 'identity/LocalIdentityProvider.js', 'export class LocalIdentityProvider'],
-            ['Wanderer/vehicle', 'application/AvatarVehicleInteractionController.js', 'export class AvatarVehicleInteractionController']
+            ['Wanderer/vehicle', 'application/avatar/AvatarVehicleInteractionController.js', 'export class AvatarVehicleInteractionController']
         ];
         for (const [name, path, marker] of reachable) {
             assert(await sourceExists(path), `A. ${name} — ${path} exists.`);
@@ -205,8 +205,8 @@ async function runTests() {
         // inventory explicitly, per this milestone's own brief.
         const historicalFamily = [
             'replication/ConflictResolver.js', 'replication/ReplicaMergeService.js',
-            'replication/LocalReplicationStore.js', 'application/ReplicatePlacementUseCase.js',
-            'application/SynchronizeReplicaUseCase.js', 'application/CreateReplicationUseCase.js'
+            'replication/LocalReplicationStore.js', 'application/placement/ReplicatePlacementUseCase.js',
+            'application/placement/SynchronizeReplicaUseCase.js', 'application/placement/CreateReplicationUseCase.js'
         ];
         for (const path of historicalFamily) {
             assert(await sourceExists(path), `A. HISTORICAL family member ${path} still exists (0.9.312's own inventory).`);
@@ -256,16 +256,16 @@ async function runTests() {
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/encounterCommentaryPublicationId/.test(canvasSource),
             'B2a. WorldEncounterCanvas.js still gates its commentary panel on the selected encounter — Encounter -> Commentary.');
-        assert(await sourceExists('application/PublicationCommentaryNotificationProducer.js'),
+        assert(await sourceExists('application/publication/commentary/PublicationCommentaryNotificationProducer.js'),
             'B2b. PublicationCommentaryNotificationProducer.js still exists — Commentary -> Notification.');
         assert((await rawSource('ui/components/NotificationHistoryPanel.js')).includes("name: 'NotificationHistoryPanel'"),
             'B2c. NotificationHistoryPanel.js still exists — Notification -> Notification History, the journey\'s own terminus.');
 
         // B3. Snapshot -> Distribution -> Discovery -> Verification ->
         // Materialization -> Placement.
-        assert((await rawSource('application/DiscoverSnapshotCandidatesCommand.js')).includes('export function executeDiscoverSnapshotCandidatesCommand'),
+        assert((await rawSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js')).includes('export function executeDiscoverSnapshotCandidatesCommand'),
             'B3a. DiscoverSnapshotCandidatesCommand.js still exists — Snapshot -> Distribution -> Discovery.');
-        const materializeSource = await rawSource('application/MaterializeSnapshotFromPlacementUseCase.js');
+        const materializeSource = await rawSource('application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js');
         assert(materializeSource.includes('storeSnapshotContentUseCase') && materializeSource.includes('contentHash'),
             'B3b. MaterializeSnapshotFromPlacementUseCase.js still runs a hash-verify-then-store step before storing — Discovery -> Verification -> Materialization are one bound pipeline, not a skipped stage.');
         assert(canvasSource.includes('registerMaterializedSnapshotWorldSource') || canvasSource.includes('unregisterSelectedSnapshot'),
@@ -280,10 +280,10 @@ async function runTests() {
             'B4b. OwnPublicationPanel.js still renders the plural placements read path — Multiple Placements -> Placement Visibility, the journey\'s own terminus (observation by design, 0.9.308-0.9.310\'s own already-converged finding).');
 
         // B5. Collaboration -> Command Propagation -> Conflict Resolution.
-        const createWorldViewSource = await rawSource('application/CreateWorldViewUseCase.js');
+        const createWorldViewSource = await rawSource('application/world/CreateWorldViewUseCase.js');
         assert(createWorldViewSource.includes('new WorldCommandPropagationUseCase('),
             'B5a. CreateWorldViewUseCase.js — the real World-session composition root — still constructs a live WorldCommandPropagationUseCase — Collaboration -> Command Propagation.');
-        const propagationSource = await rawSource('application/WorldCommandPropagationUseCase.js');
+        const propagationSource = await rawSource('application/document/WorldCommandPropagationUseCase.js');
         assert(propagationSource.includes('WorldConflictResolver') || propagationSource.includes('_conflictResolver'),
             'B5b. WorldCommandPropagationUseCase.js still routes incoming operations through a WorldConflictResolver — Command Propagation -> Conflict Resolution, the journey\'s own terminus, executed live below.');
         {
@@ -334,7 +334,7 @@ async function runTests() {
         // C5. Provider preferences — RoleProviderPreference is read
         // through ResolvePreferredRoleProviderUseCase; the settings view
         // does not maintain its own separate preference value.
-        const settingsViewSource = codeOnlyLines(await rawSource('application/RoleProviderPreferenceSettingsView.js'));
+        const settingsViewSource = codeOnlyLines(await rawSource('application/settings/RoleProviderPreferenceSettingsView.js'));
         assert(!/this\._preference\s*=.*new RoleProviderPreference|localPreferenceCopy/.test(settingsViewSource),
             'C5. RoleProviderPreferenceSettingsView.js does not construct its own independent RoleProviderPreference to render from — it reads the one persisted preference.');
 
@@ -342,7 +342,7 @@ async function runTests() {
         // document; WorldCommandPropagationUseCase mutates it directly
         // through Commands, it does not project a separate World copy
         // for remote operations.
-        const propagationSource = codeOnlyLines(await rawSource('application/WorldCommandPropagationUseCase.js'));
+        const propagationSource = codeOnlyLines(await rawSource('application/document/WorldCommandPropagationUseCase.js'));
         assert(!/this\._worldCopy|shadowWorld|clonedWorldState/.test(propagationSource),
             'C6. WorldCommandPropagationUseCase.js applies remote Commands to the one live World directly — no shadow copy is projected and reconciled separately.');
 
@@ -358,7 +358,7 @@ async function runTests() {
         // and MaterializeSnapshotFromPlacementUseCase both route through
         // the SAME contentHash/ContentStore boundary (Section B3b) rather
         // than each keeping its own availability verdict.
-        const availabilitySource = await rawSource('application/CheckLocalSnapshotContentAvailabilityUseCase.js');
+        const availabilitySource = await rawSource('application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js');
         assert(availabilitySource.includes('contentHash'),
             'C8. CheckLocalSnapshotContentAvailabilityUseCase.js still keys its own availability check by the SAME contentHash MaterializeSnapshotFromPlacementUseCase.js verifies against — one shared fact, not two competing verdicts.');
 
@@ -377,7 +377,7 @@ async function runTests() {
     {
         // D1. World-session infrastructure (collaboration, placement
         // registry, world layout, identity, authorization) is built in
-        // ONE place — application/CreateWorldViewUseCase.js — never
+        // ONE place — application/world/CreateWorldViewUseCase.js — never
         // reconstructed piecemeal inside ui/views/WorldView.js itself.
         const worldViewSource = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!/new WorldCommandPropagationUseCase\(|new WorldConflictResolver\(/.test(worldViewSource),
@@ -407,7 +407,7 @@ async function runTests() {
         // D5. The historical family (0.9.312's own finding, reconfirmed
         // here from the composition-root angle specifically): neither
         // real composition root references it at all.
-        const compositionRoots = ['ui/main.js', 'application/CreateWorldViewUseCase.js'];
+        const compositionRoots = ['ui/main.js', 'application/world/CreateWorldViewUseCase.js'];
         const familyNames = ['ReplicaMergeService', 'CreateReplicationUseCase', 'ReplicatePlacementUseCase', 'SynchronizeReplicaUseCase', 'LocalReplicationStore'];
         for (const rootPath of compositionRoots) {
             const source = await rawSource(rootPath);
@@ -538,9 +538,9 @@ async function runTests() {
         // reports CANDIDATES; it never itself performs materialization
         // (Section B3's own hash-verify-then-store boundary is a later,
         // separate stage).
-        const discoverSource = codeOnlyLines(await rawSource('application/DiscoverSnapshotCandidatesCommand.js'));
+        const discoverSource = codeOnlyLines(await rawSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js'));
         assert(!/storeSnapshotContentUseCase|StoreSnapshotContentUseCase/.test(discoverSource),
-            'F2. application/DiscoverSnapshotCandidatesCommand.js never itself calls the storage/materialization boundary — Discovery observation is a distinct, earlier temporal stage from the distribution lifecycle\'s later materialize step.');
+            'F2. application/snapshot/DiscoverSnapshotCandidatesCommand.js never itself calls the storage/materialization boundary — Discovery observation is a distinct, earlier temporal stage from the distribution lifecycle\'s later materialize step.');
 
         // F3. Notification event (the fact) vs. notification persistence
         // (the durable store) vs. delivered vs. seen vs. read — the
@@ -599,16 +599,16 @@ async function runTests() {
         // files may depend on it.
         const HISTORICAL_FAMILY_FILES = new Set([
             'replication/ConflictResolver.js', 'replication/ReplicaMergeService.js',
-            'replication/LocalReplicationStore.js', 'application/ReplicatePlacementUseCase.js',
-            'application/SynchronizeReplicaUseCase.js', 'application/CreateReplicationUseCase.js'
+            'replication/LocalReplicationStore.js', 'application/placement/ReplicatePlacementUseCase.js',
+            'application/placement/SynchronizeReplicaUseCase.js', 'application/placement/CreateReplicationUseCase.js'
         ]);
         function outsideFamily(files) {
             return files.filter((f) => !HISTORICAL_FAMILY_FILES.has(f) && !f.startsWith('tests/'));
         }
         const guardPatterns = [
             "from '.*replication/ConflictResolver.js'", "from '.*replication/ReplicaMergeService.js'",
-            "from '.*replication/LocalReplicationStore.js'", "from '.*application/ReplicatePlacementUseCase.js'",
-            "from '.*application/SynchronizeReplicaUseCase.js'", "from '.*application/CreateReplicationUseCase.js'",
+            "from '.*replication/LocalReplicationStore.js'", "from '.*application/placement/ReplicatePlacementUseCase.js'",
+            "from '.*application/placement/SynchronizeReplicaUseCase.js'", "from '.*application/placement/CreateReplicationUseCase.js'",
             'new ConflictResolver(', 'new ReplicaMergeService(', 'new CreateReplicationUseCase(',
             'new ReplicatePlacementUseCase(', 'new SynchronizeReplicaUseCase(', 'new LocalReplicationStore('
         ];
@@ -678,7 +678,7 @@ async function runTests() {
                 assert(conflictUiHits === 0, 'H. Zero conflict/divergence UI vocabulary anywhere.');
             }, '0.9.311\'s own Section G finding, reconfirmed: no evidence anywhere, and (for conflict UI specifically) a deliberate policy decision, not an oversight.'],
             ['Revived peer-placement replication', async () => {
-                const hits = grepFiles('new CreateReplicationUseCase(', ['application', 'ui']).filter((f) => f !== 'application/CreateReplicationUseCase.js');
+                const hits = grepFiles('new CreateReplicationUseCase(', ['application', 'ui']).filter((f) => f !== 'application/placement/CreateReplicationUseCase.js');
                 assert(hits.length === 0, `H. Zero production callers of the historical replication family outside its own files (found ${hits.join(', ') || 'none'}).`);
             }, '0.9.312\'s own full boundary audit — superseded by the live WorldConflictResolver collaboration protocol (Section G1 above).']
         ];

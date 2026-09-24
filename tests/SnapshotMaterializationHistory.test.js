@@ -6,42 +6,42 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { AddPublicationSnapshotPlacementUseCase } from '../application/AddPublicationSnapshotPlacementUseCase.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { AddPublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
-import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotMaterializationSourceKind } from '../application/SnapshotMaterializationSourceKind.js';
-import { createSnapshotMaterializationAttempt } from '../application/SnapshotMaterializationAttempt.js';
-import { appendSnapshotMaterializationHistoryEntry, describeSnapshotMaterializationSourceCounts } from '../application/SnapshotMaterializationHistory.js';
-import { describeSnapshotMaterializationHistory, describeSnapshotMaterializationOutcomeLabel } from '../application/SnapshotMaterializationHistoryView.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotMaterializationSourceKind } from '../application/snapshot/materialization/SnapshotMaterializationSourceKind.js';
+import { createSnapshotMaterializationAttempt } from '../application/snapshot/materialization/SnapshotMaterializationAttempt.js';
+import { appendSnapshotMaterializationHistoryEntry, describeSnapshotMaterializationSourceCounts } from '../application/snapshot/materialization/SnapshotMaterializationHistory.js';
+import { describeSnapshotMaterializationHistory, describeSnapshotMaterializationOutcomeLabel } from '../application/snapshot/materialization/SnapshotMaterializationHistoryView.js';
 
-import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/BuildPublicationSnapshotTransferPackageUseCase.js';
-import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
-import { SnapshotContentTransferOutcome } from '../application/SnapshotContentTransferOutcome.js';
+import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js';
+import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js';
+import { SnapshotContentTransferOutcome } from '../application/snapshot/materialization/SnapshotContentTransferOutcome.js';
 
-import { MaterializeSnapshotFromPlacementUseCase } from '../application/MaterializeSnapshotFromPlacementUseCase.js';
-import { SnapshotPlacementMaterializationOutcome } from '../application/SnapshotPlacementMaterializationOutcome.js';
+import { MaterializeSnapshotFromPlacementUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js';
+import { SnapshotPlacementMaterializationOutcome } from '../application/snapshot/placement/SnapshotPlacementMaterializationOutcome.js';
 
-import { MaterializeSnapshotFromPeerUseCase } from '../application/MaterializeSnapshotFromPeerUseCase.js';
-import { PeerSnapshotMaterializationOutcome } from '../application/PeerSnapshotMaterializationOutcome.js';
+import { MaterializeSnapshotFromPeerUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromPeerUseCase.js';
+import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 
-import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
-import { LocalSnapshotContentAvailabilityOutcome } from '../application/LocalSnapshotContentAvailabilityOutcome.js';
+import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
+import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
 
 // 0.8.38 — Snapshot Materialization History & Source Inspection.
 //
-//   Section A: application/SnapshotMaterializationAttempt.js's own new
+//   Section A: application/snapshot/materialization/SnapshotMaterializationAttempt.js's own new
 //              `observedAt` field; application/
 //              SnapshotMaterializationHistory.js's append-only,
 //              non-mutating accumulation and non-judgmental source
-//              counts; application/SnapshotMaterializationHistoryView.js's
+//              counts; application/snapshot/materialization/SnapshotMaterializationHistoryView.js's
 //              own outcome labels and history narration — including that
 //              none of the vocabulary ever ranks one source over another.
 //   Section B — FLAGSHIP: Alice publishes a snapshot, holds it locally,
@@ -59,7 +59,7 @@ import { LocalSnapshotContentAvailabilityOutcome } from '../application/LocalSna
 //              order, including a rejected one. Erin tries "Get Snapshot
 //              from Peer" against a peer that never answers (UNAVAILABLE
 //              — never recorded, since resolution never reached
-//              application/StoreSnapshotContentUseCase.js at all), then
+//              application/snapshot/materialization/StoreSnapshotContentUseCase.js at all), then
 //              against a peer that answers with tampered bytes
 //              (HASH_MISMATCH — recorded, and local availability still
 //              reports NOT_AVAILABLE afterward), then finally against a
@@ -161,7 +161,7 @@ function makeReplicaPlacementPipeline(ipfsStore) {
     return { publicationCatalog, placementCatalog, contentStore, storeSnapshotContentUseCase, materializeUseCase };
 }
 
-// A minimal fake application/PublicationSnapshotContentPeerExchange.js,
+// A minimal fake application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js,
 // mirroring tests/PeerSnapshotContentTransfer.test.js's own FakeExchange
 // exactly — deterministic and scriptable, so this file's own focus (the
 // HISTORY that accumulates around a materialization result) is never
@@ -216,7 +216,7 @@ function mapPeerOutcome(outcome) {
 // Mirrors ui/views/DecentralizedPublicationsView.js's own
 // recordMaterializationHistoryEntry() exactly: appends nothing when the
 // mapped inner outcome is null (the outer outcome never reached
-// application/StoreSnapshotContentUseCase.js at all).
+// application/snapshot/materialization/StoreSnapshotContentUseCase.js at all).
 function recordHistoryEntry(history, { sourceKind, outcome, publicationId, contentHash, contentReference }) {
     if (!sourceKind || !outcome) return history;
     const attempt = createSnapshotMaterializationAttempt({ sourceKind, outcome, contentReference, publicationId, contentHash });
@@ -427,7 +427,7 @@ async function run() {
             sourceKind: first.source.kind, outcome: mapPeerOutcome(first.outcome),
             publicationId: first.publicationId, contentHash: first.contentHash, contentReference: first.contentReference
         });
-        assert(erinHistory.length === 0, '2. INVARIANT: an UNAVAILABLE attempt (never reached application/StoreSnapshotContentUseCase.js) leaves NO trace in the history');
+        assert(erinHistory.length === 0, '2. INVARIANT: an UNAVAILABLE attempt (never reached application/snapshot/materialization/StoreSnapshotContentUseCase.js) leaves NO trace in the history');
 
         // --- Attempt 2: the peer answers, but with tampered bytes — HASH_MISMATCH. ---
         const secondPending = useCase.execute({ peer, publicationId: publication.id, contentHash: realHash });

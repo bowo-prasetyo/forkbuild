@@ -7,7 +7,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { License, LicenseId } from '../core/License.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -15,17 +15,17 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
-import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
+import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { SpatialAllocationPolicy } from '../core/SpatialAllocationPolicy.js';
 
 // 0.9.202 — Unpublished Placement Physical-Occupancy Audit.
@@ -461,19 +461,19 @@ async function runTests() {
     {
         const overlapSource = codeOnlyLines(await rawSource('core/SpatialOverlap.js')).join('\n');
         const policySource = codeOnlyLines(await rawSource('core/SpatialAllocationPolicy.js')).join('\n');
-        const placeSource = codeOnlyLines(await rawSource('application/PlacePublicationUseCase.js')).join('\n');
-        const moveSource = codeOnlyLines(await rawSource('application/MoveWorldPlacementUseCase.js')).join('\n');
-        const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js')).join('\n');
+        const placeSource = codeOnlyLines(await rawSource('application/placement/PlacePublicationUseCase.js')).join('\n');
+        const moveSource = codeOnlyLines(await rawSource('application/placement/MoveWorldPlacementUseCase.js')).join('\n');
+        const sessionSource = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js')).join('\n');
 
         const unpublishAwareness = /UnpublishDocumentUseCase|isPublished|publicationExists|\bunpublish(ed)?\b/i;
         assert(!unpublishAwareness.test(overlapSource), 'H1. core/SpatialOverlap.js never references UnpublishDocumentUseCase or any unpublish/isPublished concept');
         assert(!unpublishAwareness.test(policySource), 'H2. core/SpatialAllocationPolicy.js never references UnpublishDocumentUseCase or any unpublish/isPublished concept — collision POLICY is defined purely in terms of allow/warn/reject/auto_offset, with no case for "occupant is orphaned"');
-        assert(!unpublishAwareness.test(moveSource), 'H3. application/MoveWorldPlacementUseCase.js never references unpublish state — a move executes identically whether its destination is empty, live-occupied, or orphan-occupied');
+        assert(!unpublishAwareness.test(moveSource), 'H3. application/placement/MoveWorldPlacementUseCase.js never references unpublish state — a move executes identically whether its destination is empty, live-occupied, or orphan-occupied');
 
         const forbiddenCollaborators = /Snapshot|Nostr|Arweave/;
         assert(!forbiddenCollaborators.test(overlapSource), 'H4. core/SpatialOverlap.js has no dependency on Snapshot machinery, Nostr, or Arweave');
         assert(!forbiddenCollaborators.test(policySource), 'H5. core/SpatialAllocationPolicy.js has no dependency on Snapshot machinery, Nostr, or Arweave');
-        assert(!forbiddenCollaborators.test(placeSource), 'H6. application/PlacePublicationUseCase.js has no dependency on Snapshot machinery, Nostr, or Arweave in its own placement logic');
+        assert(!forbiddenCollaborators.test(placeSource), 'H6. application/placement/PlacePublicationUseCase.js has no dependency on Snapshot machinery, Nostr, or Arweave in its own placement logic');
 
         const noNewOrphanVocabulary = /\borphan(ed)?\b|\bisOrphaned\b|\bplacementOrphaned\b|\bUNPUBLISHED_PLACEMENT\b|\bSTALE_PUBLICATION\b/i;
         assert(!noNewOrphanVocabulary.test(overlapSource), 'H7. core/SpatialOverlap.js introduces no orphan-lifecycle vocabulary');

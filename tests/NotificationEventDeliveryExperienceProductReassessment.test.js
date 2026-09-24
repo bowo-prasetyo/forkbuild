@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import NotificationHistoryPanel from '../ui/components/NotificationHistoryPanel.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import {
@@ -10,11 +10,11 @@ import {
     notificationDeduplicationIdentity,
     describeNotificationDeduplicationPolicy
 } from '../core/NotificationDeduplicationPolicy.js';
-import { GetRecipientNotificationEventsUseCase } from '../application/GetRecipientNotificationEventsUseCase.js';
+import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -291,7 +291,7 @@ async function runTests() {
             'C3. A retried/re-delivered construction of the identical logical event resolves to EXISTING, never a duplicate row — this is the store recognizing "nothing new happened," not a failure.');
 
         // C4 — a delivery/sink failure never undoes the already-persisted
-        // Commentary (reconfirms application/PublicationCommentaryNotificationProducer.js's own documented behavior).
+        // Commentary (reconfirms application/publication/commentary/PublicationCommentaryNotificationProducer.js's own documented behavior).
         const throwingProducer = new PublicationCommentaryNotificationProducer(
             new AddPublicationCommentaryUseCase(backend.commentaryStore, bob, backend.canCommentOnPublicationUseCase),
             backend.discoveryProvider,
@@ -474,7 +474,7 @@ async function runTests() {
         assert(!overclaimWords.test(userFacingText),
             'F1. No user-facing string in the Notification History panel overclaims beyond the plain event fact (no "verified"/"authentic"/"trusted"/"confirmed"/"accepted"/"guaranteed"/"official").');
 
-        const producerSource = codeOnlyLines(await rawSource('application/PublicationCommentaryNotificationProducer.js'));
+        const producerSource = codeOnlyLines(await rawSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js'));
         assert(!/title|message|icon|url/i.test(producerSource.replace(/\/\/.*$/gm, '')),
             'F2. The producer still writes no title/message/icon/url — no presentational or reinterpreted field exists to accidentally overclaim in the first place (0.9.275\'s own restraint, reconfirmed).');
 
@@ -557,9 +557,9 @@ async function runTests() {
             'core/NotificationEvent.js',
             'core/NotificationDeduplicationPolicy.js',
             'storage/NotificationEventStore.js',
-            'application/PublicationCommentaryNotificationProducer.js',
-            'application/GetRecipientNotificationEventsUseCase.js',
-            'application/WorldNavigationSession.js'
+            'application/publication/commentary/PublicationCommentaryNotificationProducer.js',
+            'application/chat/GetRecipientNotificationEventsUseCase.js',
+            'application/world/WorldNavigationSession.js'
         ]);
         assert(untouchedDiff === '',
             `I1. The immutable-fact/policy/persistence/producer/query-boundary layer is completely unmodified by this milestone. Found: ${untouchedDiff || '(none)'}.`);

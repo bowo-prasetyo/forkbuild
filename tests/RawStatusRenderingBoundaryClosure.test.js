@@ -1,14 +1,15 @@
 import { readFile, readdir } from 'node:fs/promises';
+import { applicationFiles } from './support/ApplicationFiles.js';
 import { execSync } from 'node:child_process';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import WorldLocationBrowser from '../ui/components/WorldLocationBrowser.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
-import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../application/WorldEncounterMaterialInspectionView.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
 import { TrustStatus } from '../core/TrustObservation.js';
-import { describeTrustStatus } from '../application/AvatarPresenceLabels.js';
-import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
+import { describeTrustStatus } from '../application/avatar/AvatarPresenceLabels.js';
+import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.521 — Close Remaining Raw Status Rendering Boundaries.
@@ -39,7 +40,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // FINDING 1'S FIX: reuse, not reinvent. WorldEncounterCanvas.js already
 // defines describeMaterialLoadStatusLabel()/
 // describeMaterialVerificationStatusLabel() (0.9.519) as thin wrappers
-// around application/WorldEncounterMaterialInspectionView.js's own pure
+// around application/worldEncounter/WorldEncounterMaterialInspectionView.js's own pure
 // functions, used by the SELECTION-driven Material/Verification panel.
 // This milestone wires the SAME two methods into the DISCOVERY-driven
 // panel's identical two fields — no new view file, no new vocabulary, and
@@ -53,7 +54,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //
 // FINDING 2'S FIX: NOT what 0.9.520's own recommended follow-up assumed.
 // 0.9.520 Section D8e observed that describeTrustStatus()
-// (application/AvatarPresenceLabels.js) already exists for the identical
+// (application/avatar/AvatarPresenceLabels.js) already exists for the identical
 // TrustStatus enum and is simply unused at WorldLocationBrowser.js's own
 // call site — and its own Section I recommended routing through it.
 // Section B, below, is why this milestone does NOT do that:
@@ -180,7 +181,7 @@ async function run() {
     {
         // B1. Finding 1's own enum: WorldEncounterMaterialVerificationStatus
         // genuinely can render the bare word "VERIFIED", and the codebase's
-        // own established meaning (application/WorldEncounterMaterialVerification.js's
+        // own established meaning (application/worldEncounter/WorldEncounterMaterialVerification.js's
         // header) is IDENTITY CORRESPONDENCE, never authorship/ownership/
         // general trustworthiness — exactly what the SELECTION panel's
         // pre-existing label ("Confirmed to match the selected encounter")
@@ -202,14 +203,14 @@ async function run() {
         check(trustObservationSource.includes("VALID: 'VALID',                       // integrity + signature + authorization all hold"),
             'B2c. VALID\'s own documented meaning is a compound fact (integrity + signature + authorization), never a generic "trustworthy" claim');
 
-        const navigationSessionSource = await source('application/WorldNavigationSession.js');
+        const navigationSessionSource = await source('application/world/WorldNavigationSession.js');
         check(navigationSessionSource.includes('trust: this._lookupTrustObservation(placementInfo)'),
             'B2d. inspectDocument() populates `trust` from _lookupTrustObservation() — confirmed live, not assumed');
         check(navigationSessionSource.includes("o.subjectType === 'placement-record' && o.subjectId === placementInfo.placementId"),
             'B2e. that lookup is scoped to subjectType \'placement-record\' — this really is a per-placement-record TrustObservation, never a general Wanderer/session-wide trust verdict');
 
         // B3. The rejected alternative, live-confirmed: describeTrustStatus()
-        // (application/AvatarPresenceLabels.js) maps VALID to the word
+        // (application/avatar/AvatarPresenceLabels.js) maps VALID to the word
         // "Trusted" — a genuine overclaim word, not a hypothetical concern.
         check(describeTrustStatus(TrustStatus.VALID) === 'Trusted',
             'B3a. confirms describeTrustStatus(VALID) === "Trusted" — the exact reason this milestone does not reuse it for Finding 2');
@@ -427,7 +428,7 @@ async function run() {
         check(materialInspectionUI.passed, `G2. tests/WorldEncounterMaterialInspectionUI.test.js still passes live — this milestone's Discovery-panel wiring reuses materialInspection's own methods without touching that panel's own orchestration: ${materialInspectionUI.output.slice(0, 500)}`);
 
         // G3. tests/WorldLocationBrowser.test.js is NOT re-executed live here
-        // — it pulls in application/SpatialCameraController.js -> renderer/
+        // — it pulls in application/world/SpatialCameraController.js -> renderer/
         // (a real 'three' dependency, loaded only via tests.html's own
         // browser import map), so it cannot run under plain `node` in this
         // sandbox regardless of this milestone's own changes; confirmed live,
@@ -446,10 +447,10 @@ async function run() {
         const locationBrowserTestSource = await source('tests/WorldLocationBrowser.test.js');
         check(locationBrowserTestSource.includes("inspected.trust === null"),
             'G3. tests/WorldLocationBrowser.test.js\'s own only trust-related assertion is data-level (trust === null) — it never asserts on rendered template text, so this milestone\'s wording change cannot disturb it');
-        const preFixNavSource = sourceAtCommit(PRE_FIX_COMMIT, 'application/WorldNavigationSession.js');
-        const currentNavSource = await source('application/WorldNavigationSession.js');
+        const preFixNavSource = sourceAtCommit(PRE_FIX_COMMIT, 'application/world/WorldNavigationSession.js');
+        const currentNavSource = await source('application/world/WorldNavigationSession.js');
         check(preFixNavSource === currentNavSource,
-            'G3b. application/WorldNavigationSession.js (inspectDocument()\'s own file, and what tests/WorldLocationBrowser.test.js actually exercises) is byte-identical to the pre-fix commit');
+            'G3b. application/world/WorldNavigationSession.js (inspectDocument()\'s own file, and what tests/WorldLocationBrowser.test.js actually exercises) is byte-identical to the pre-fix commit');
 
         // G4. 0.9.520's own file (ProductIntegrityBoundaryClosureAudit.test.js)
         // is deliberately NOT re-executed here as a pass/fail gate. It is a
@@ -506,20 +507,20 @@ async function run() {
         // H2. No enum/core changes: core/TrustObservation.js and the
         // application/WorldEncounterMaterial{Loading,Verification}.js enum
         // sources are byte-identical to the pre-fix commit.
-        for (const enumFile of ['core/TrustObservation.js', 'application/WorldEncounterMaterialLoading.js', 'application/WorldEncounterMaterialVerification.js', 'application/WorldEncounterMaterialInspection.js', 'application/DecentralizedWorldEncounterLeadResolution.js']) {
+        for (const enumFile of ['core/TrustObservation.js', 'application/worldEncounter/WorldEncounterMaterialLoading.js', 'application/worldEncounter/WorldEncounterMaterialVerification.js', 'application/worldEncounter/WorldEncounterMaterialInspection.js', 'application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js']) {
             const current = await source(enumFile);
             const preFix = sourceAtCommit(PRE_FIX_COMMIT, enumFile);
             check(current === preFix, `H2. ${enumFile} is byte-identical to its pre-fix version — no enum/core/domain change`);
         }
 
-        // H3. No new trust model: application/AvatarPresenceLabels.js
+        // H3. No new trust model: application/avatar/AvatarPresenceLabels.js
         // (the file 0.9.520 pointed at) is untouched — this milestone adds
         // a new, separate, narrower function rather than editing that
         // shared one.
-        const avatarPresenceLabelsCurrent = await source('application/AvatarPresenceLabels.js');
-        const avatarPresenceLabelsPreFix = sourceAtCommit(PRE_FIX_COMMIT, 'application/AvatarPresenceLabels.js');
+        const avatarPresenceLabelsCurrent = await source('application/avatar/AvatarPresenceLabels.js');
+        const avatarPresenceLabelsPreFix = sourceAtCommit(PRE_FIX_COMMIT, 'application/avatar/AvatarPresenceLabels.js');
         check(avatarPresenceLabelsCurrent === avatarPresenceLabelsPreFix,
-            'H3. application/AvatarPresenceLabels.js (describeTrustStatus\'s own file) is byte-identical to its pre-fix version — no change to the pre-existing avatar-presence vocabulary');
+            'H3. application/avatar/AvatarPresenceLabels.js (describeTrustStatus\'s own file) is byte-identical to its pre-fix version — no change to the pre-existing avatar-presence vocabulary');
 
         // H4. Deliberate exclusions — named, not silently dropped.
         const EXCLUDED = [
@@ -543,9 +544,9 @@ async function run() {
         // "TrustView" from appearing anywhere at all: this milestone's own
         // header comment legitimately names it, in prose, as the
         // abstraction deliberately NOT built.
-        const applicationFiles = await readdir(new URL('application/', SOURCE_ROOT));
-        check(!applicationFiles.some((f) => /trustview/i.test(f)),
-            `H6a. no application/*TrustView*.js file was created, found: ${JSON.stringify(applicationFiles.filter((f) => /trustview/i.test(f)))}`);
+        const applicationFileNames = applicationFiles().map((file) => file.split('/').pop());
+        check(!applicationFileNames.some((f) => /trustview/i.test(f)),
+            `H6a. no application/*TrustView*.js file was created, found: ${JSON.stringify(applicationFileNames.filter((f) => /trustview/i.test(f)))}`);
         check(!(await source('ui/components/WorldLocationBrowser.js')).includes("from '") || !/import\s*\{[^}]*\}\s*from\s*['"][^'"]*[Tt]rust[Vv]iew/.test(await source('ui/components/WorldLocationBrowser.js')),
             'H6b. WorldLocationBrowser.js imports no module named *TrustView*');
         check(WorldLocationBrowser.methods.describeInspectedTrustStatusLabel.name === 'describeInspectedTrustStatusLabel',
@@ -555,7 +556,7 @@ async function run() {
         check(testsHtmlSource.includes('./tests/RawStatusRenderingBoundaryClosure.test.js'),
             'H7. this milestone\'s own test file is registered in tests.html');
 
-        console.log('✓ Section H: production changes are confined to exactly the two named presentation/template call sites; no enum/core/domain file is touched; application/AvatarPresenceLabels.js (the pre-existing, unreused humanizer) is untouched; no new "TrustView" abstraction; every exclusion honored; this test is registered in tests.html.');
+        console.log('✓ Section H: production changes are confined to exactly the two named presentation/template call sites; no enum/core/domain file is touched; application/avatar/AvatarPresenceLabels.js (the pre-existing, unreused humanizer) is untouched; no new "TrustView" abstraction; every exclusion honored; this test is registered in tests.html.');
     }
 
     console.log(`\n✅ All Raw Status Rendering Boundary Closure checks passed (${assertionCount} assertions).\n`);

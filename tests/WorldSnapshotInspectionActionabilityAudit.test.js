@@ -1,20 +1,20 @@
 import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { registerPeerWorldSource } from '../peer/PeerWorldDiscoveryLifecycleBridge.js';
 import { derivePeerWorldOrigin } from '../peer/PeerWorldDataIngress.js';
 import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource,
     materializedSnapshotWorldOrigin
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterSelectionOutcomeStatus } from '../application/WorldEncounterSelectionOutcome.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterSelectionOutcomeStatus } from '../application/worldEncounter/WorldEncounterSelectionOutcome.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Document } from '../core/Document.js';
@@ -302,7 +302,7 @@ function extractComputedBody(source, name, nextName) {
 
 async function run() {
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-    const snapshotInspectionSource = await readFile(new URL('../application/WorldSnapshotInspection.js', import.meta.url), 'utf8');
+    const snapshotInspectionSource = await readFile(new URL('../application/snapshot/WorldSnapshotInspection.js', import.meta.url), 'utf8');
 
     // ---------------------------------------------------------------
     // Section A — existing action inventory.
@@ -415,7 +415,7 @@ async function run() {
         // still holds unmodified.
         const codeOnly = stripLineComments(snapshotInspectionSource);
         assert(!/fetch\(|localStorage|WorldDiscoverySourceRegistry|registry\.|deriveWorldEncounters\(|resolveSnapshotWorldPlacement\(|resolveSnapshotWorldPositionClaim\(|registerMaterializedSnapshotWorldSource\(|unregisterMaterializedSnapshotWorldSource\(/.test(codeOnly),
-            '4. application/WorldSnapshotInspection.js still performs no I/O, no registry access, and no re-invocation of any upstream resolution/placement/registration/unregistration function');
+            '4. application/snapshot/WorldSnapshotInspection.js still performs no I/O, no registry access, and no re-invocation of any upstream resolution/placement/registration/unregistration function');
 
         unmountCanvas(canvas);
         console.log('✓ Section B: facts -> descriptor -> UI stays observation-only — reading Snapshot inspection, repeatedly, never mutates the registry and never triggers an additional material load');
@@ -581,7 +581,7 @@ async function run() {
         // one Snapshot-aware branch (routing `snapshot:*` origins to the
         // EXISTING materialSources.local slot) and introduces no
         // materialSources.snapshot slot of its own.
-        const loadingSource = await readFile(new URL('../application/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
+        const loadingSource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
         assert(!/materialSources\.snapshot/.test(stripLineComments(loadingSource)), '7. no materialSources.snapshot slot exists in the loading module\'s own executable code (prose explaining why it was deliberately NOT introduced is exempt)');
 
         unmountCanvas(canvas);

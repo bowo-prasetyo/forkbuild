@@ -2,11 +2,11 @@ import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { LoadFailureReason } from '../application/LoadFailureReason.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { ForkFailureReason } from '../application/ForkFailureReason.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { LoadFailureReason } from '../application/document/LoadFailureReason.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { ForkFailureReason } from '../application/document/ForkFailureReason.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
@@ -19,13 +19,13 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
 import { PublicationSort, PUBLICATION_SORT_LABELS } from '../core/PublicationSort.js';
 import { computeAmbiguousPublishedDateIds } from '../core/PublicationDateAmbiguity.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.575 — Repository Search & Result Semantics Product Reassessment.
@@ -89,7 +89,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //
 // Same structural constraint 0.9.574's own file stated and 0.9.574
 // Section D4 relied on: this file deliberately avoids importing
-// application/WorldNavigationSession.js (which pulls in
+// application/world/WorldNavigationSession.js (which pulls in
 // renderer/RenderWorldViewUseCase.js, and transitively `three`) so it
 // can run under this repo's plain `node tests/*.test.js` sweep. Explore
 // currency/identity is therefore cited from prior live proof
@@ -152,7 +152,7 @@ function publishMinimalDocument(storage, title = 'Atlas', author = 'alice') {
 }
 
 // The exact real composition ui/components/PublicationCatalog.js itself
-// builds via application/CreateDiscoveryUseCase.js#execute().
+// builds via application/discovery/CreateDiscoveryUseCase.js#execute().
 function makeRepositoryDiscoveryProvider(storage, decentralizedDiscoveryProvider) {
     const localDiscoveryProvider = new LocalDiscoveryProvider(storage);
     return decentralizedDiscoveryProvider
@@ -309,8 +309,8 @@ async function main() {
         // no `new Publication(...)` construction of its own — it only
         // ever filters and sorts what discoveryProvider.list() already
         // handed it.
-        const useCaseSource = await readSource('application/SearchPublicationsUseCase.js');
-        assert(!/new Publication\(/.test(useCaseSource), 'C3. application/SearchPublicationsUseCase.js never constructs a Publication itself — search can only return what admission already produced.');
+        const useCaseSource = await readSource('application/publication/SearchPublicationsUseCase.js');
+        assert(!/new Publication\(/.test(useCaseSource), 'C3. application/publication/SearchPublicationsUseCase.js never constructs a Publication itself — search can only return what admission already produced.');
 
         // C4. Cross-checked against Section B1's shared-documentId case:
         // two results with the identical documentId/contentHash/title/
@@ -570,7 +570,7 @@ async function main() {
     {
         const [sortSource, useCaseSource, toolbarSource] = await Promise.all([
             readSource('core/PublicationSort.js'),
-            readSource('application/SearchPublicationsUseCase.js'),
+            readSource('application/publication/SearchPublicationsUseCase.js'),
             readSource('ui/components/PublicationCatalogToolbar.js')
         ]);
         assert(!/setInterval|setTimeout/.test(useCaseSource), 'I1. No auto-refresh/polling timer exists in the search use case.');

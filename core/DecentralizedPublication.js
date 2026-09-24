@@ -40,7 +40,7 @@ import { Signature, SignatureType } from './Signature.js';
 // Verifying a DecentralizedPublication's signature proves who chose to
 // publish this particular content reference. It proves nothing about
 // whether the referenced bytes are trustworthy, well-formed, or even
-// retrievable — that is exactly what application/PublicationResolver.js
+// retrievable — that is exactly what application/publication/PublicationResolver.js
 // checks next, in the same "never: retrieve -> trust" order every
 // exchange class in this codebase already follows (see e.g. application/
 // BlueprintAttributionExchange.js's own four-step discipline). This

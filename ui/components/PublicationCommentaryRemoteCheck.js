@@ -7,7 +7,7 @@
 //
 // This component fetches, and nothing else: it calls the app-wide
 // `refreshPublicationCommentaryCommand` (ui/main.js — see
-// application/RefreshPublicationCommentaryCommandComposition.js), which
+// application/publication/commentary/RefreshPublicationCommentaryCommandComposition.js), which
 // imports whatever Nostr/Arweave hold into the SAME local store the host
 // section already reads. It then emits `refreshed` so the host re-reads
 // its own list the way it already does after posting — it never renders

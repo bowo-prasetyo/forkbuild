@@ -1,34 +1,34 @@
 import { ref, reactive, computed, inject } from 'vue';
-import { PublicationObservationArchive } from '../../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../../application/publication/observationArchive/PublicationObservationArchive.js';
 import {
     importPublicationObservationArchive,
     PublicationObservationArchiveImportOutcome
-} from '../../application/PublicationObservationArchiveExport.js';
+} from '../../application/publication/observationArchive/PublicationObservationArchiveExport.js';
 import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js';
+} from '../../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetail
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.js';
+} from '../../application/claimSnapshotReconciliation/candidate/EvidenceDetailView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState.js';
+} from '../../application/claimSnapshotReconciliation/leaderboard/ComparisonState.js';
 import {
     ReconciliationCandidateLeaderboardEvidenceKind,
     ReconciliationCandidateLeaderboardReplicaRelation,
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter.js';
+} from '../../application/claimSnapshotReconciliation/leaderboard/EvidenceFilter.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetail
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetailView.js';
+} from '../../application/claimSnapshotReconciliation/candidate/FilteredEvidenceDetailView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.js';
+} from '../../application/claimSnapshotReconciliation/leaderboard/EvidenceExport.js';
 import {
     ReconciliationCandidateLeaderboardEvidenceImportOutcome,
     importPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport,
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport
-} from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.js';
+} from '../../application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js';
 import ReconciliationCandidateLeaderboardTable from '../components/ReconciliationCandidateLeaderboardTable.js';
 
 // 0.8.181 — Explicit Peer Archive Leaderboard Comparison.

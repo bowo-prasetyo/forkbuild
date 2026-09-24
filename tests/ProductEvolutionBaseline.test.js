@@ -124,9 +124,9 @@ async function runTests() {
         // A6. Undo/redo — reachable (0.9.210/0.9.211, reconfirmed
         // 0.9.212/0.9.216). WorldNavigationSession still exposes real
         // undo()/redo() methods gated on a real CommandHistory.
-        const navSession = await rawSource('application/WorldNavigationSession.js');
+        const navSession = await rawSource('application/world/WorldNavigationSession.js');
         assert(/\bundo\(\)\s*\{/.test(navSession) && /\bredo\(\)\s*\{/.test(navSession),
-            'A6. application/WorldNavigationSession.js still exposes undo()/redo() (0.9.210/0.9.211).');
+            'A6. application/world/WorldNavigationSession.js still exposes undo()/redo() (0.9.210/0.9.211).');
 
         // A7. Publication workflow — COMPLETE, forward and reverse
         // (0.9.196 Section D, closed 0.9.203). OwnPublicationPanel.js
@@ -139,8 +139,8 @@ async function runTests() {
         // 0.9.216 observed (no file download/clipboard/drag-and-drop)
         // still holds, and PublicationSnapshotTransferPackage.js is
         // still the one shared schema both directions use.
-        assert(await sourceExists('application/PublicationSnapshotTransferPackage.js'),
-            'A8a. application/PublicationSnapshotTransferPackage.js still exists as the one shared Snapshot transfer schema (0.9.216).');
+        assert(await sourceExists('application/snapshot/PublicationSnapshotTransferPackage.js'),
+            'A8a. application/snapshot/PublicationSnapshotTransferPackage.js still exists as the one shared Snapshot transfer schema (0.9.216).');
         assert(ownPublicationPanel.includes('PublicationSnapshotTransferPackage') || ownPublicationPanel.toLowerCase().includes('export'),
             'A8b. ui/components/OwnPublicationPanel.js still carries the Snapshot export path (0.9.215).');
 
@@ -177,11 +177,11 @@ async function runTests() {
         // still share the exact precondition: each still calls
         // _publishChange() and THEN _publishLockChange() in the same
         // synchronous chain.
-        const identityUseCase = await rawSource('application/IdentityUseCase.js');
+        const identityUseCase = await rawSource('application/identity/IdentityUseCase.js');
         const affectedMethods = ['authenticate', 'endSession', 'changePassphrase', 'revokeIdentity', 'declareSuccessor'];
         for (const method of affectedMethods) {
             const methodMatch = identityUseCase.match(new RegExp(`\\b${method}\\s*\\([^)]*\\)\\s*\\{([\\s\\S]*?)\\n    \\}`, 'm'));
-            assert(methodMatch, `B1a. application/IdentityUseCase.js still defines ${method}().`);
+            assert(methodMatch, `B1a. application/identity/IdentityUseCase.js still defines ${method}().`);
             const body = methodMatch[1];
             assert(body.includes('_publishChange()') && body.includes('_publishLockChange('),
                 `B1b. ${method}() still calls both _publishChange() and _publishLockChange() in sequence — the DEFERRED precondition 0.9.220 characterized is unchanged.`);
@@ -203,15 +203,15 @@ async function runTests() {
         // ui/components/GroupsPanel.js was on this list until the
         // Editor dead-code cleanup deleted it.
         const obsoleteConfirmed = [
-            'application/CreatePublicationSnapshotPlacementCatalogUseCase.js',
-            'application/CreatePublicationAnchorCatalogUseCase.js',
-            'application/CreatePlacementRegistryUseCase.js'
+            'application/snapshot/placement/CreatePublicationSnapshotPlacementCatalogUseCase.js',
+            'application/anchoring/CreatePublicationAnchorCatalogUseCase.js',
+            'application/placement/CreatePlacementRegistryUseCase.js'
         ];
         const obsoleteCandidate = [
-            'application/CreateSpatialIndexUseCase.js',
-            'application/CreateSpatialDiscoveryUseCase.js',
-            'application/CreateDecentralizedSpatialDiscoveryUseCase.js',
-            'application/CreateWorldViewStreamingUseCase.js'
+            'application/world/CreateSpatialIndexUseCase.js',
+            'application/discovery/CreateSpatialDiscoveryUseCase.js',
+            'application/discovery/CreateDecentralizedSpatialDiscoveryUseCase.js',
+            'application/world/CreateWorldViewStreamingUseCase.js'
         ];
         for (const path of [...obsoleteConfirmed, ...obsoleteCandidate]) {
             assert(await sourceExists(path), `B3a. ${path} still exists — classification only, nothing deleted (0.9.216/0.9.219 Recommendation).`);
@@ -257,9 +257,9 @@ async function runTests() {
         // merge concept, and the Editor's only multi-party path remains
         // fork-then-diverge into a NEW Document lineage (0.5.9's own
         // "Edit a Copy"), never shared live editing of the one Document.
-        const saveDocumentUseCase = await rawSource('application/SaveDocumentUseCase.js');
+        const saveDocumentUseCase = await rawSource('application/document/SaveDocumentUseCase.js');
         assert(!/\block\b|\bmerge\b|\bCRDT\b|operational.transform/i.test(saveDocumentUseCase),
-            'C1. application/SaveDocumentUseCase.js still names no session-lock, merge, or CRDT/OT concept — concurrent live editing of one Document by two identities is genuinely unaddressed, not merely unaudited.');
+            'C1. application/document/SaveDocumentUseCase.js still names no session-lock, merge, or CRDT/OT concept — concurrent live editing of one Document by two identities is genuinely unaddressed, not merely unaudited.');
 
         // C2. Asynchronous commentary/annotation on a Publication.
         // Adjacent, already-built capability: ChatView.js/ConversationsView.js

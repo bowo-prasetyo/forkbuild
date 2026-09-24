@@ -1,27 +1,27 @@
-import { PeerSnapshotMaterializationOutcome } from '../../../application/PeerSnapshotMaterializationOutcome.js';
+import { PeerSnapshotMaterializationOutcome } from '../../../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 import {
     describePeerMaterializationAttempt, describePeerMaterializationButtonLabel
-} from '../../../application/SnapshotPeerMaterializationView.js';
+} from '../../../application/snapshot/materialization/SnapshotPeerMaterializationView.js';
 import { PEER_MATERIALIZATION_BADGE_CLASSES, PEER_POSSESSION_BADGE_CLASSES, shortId } from './presentation.js';
-import { SnapshotPeerMaterializationUiState } from '../../../application/SnapshotPeerMaterializationUiState.js';
+import { SnapshotPeerMaterializationUiState } from '../../../application/snapshot/materialization/SnapshotPeerMaterializationUiState.js';
 import {
     describePeerPossessionAttempt, describePeerPossessionButtonLabel
-} from '../../../application/SnapshotPeerPossessionView.js';
-import { SnapshotPeerPossessionUiState } from '../../../application/SnapshotPeerPossessionUiState.js';
+} from '../../../application/snapshot/possession/SnapshotPeerPossessionView.js';
+import { SnapshotPeerPossessionUiState } from '../../../application/snapshot/possession/SnapshotPeerPossessionUiState.js';
 import {
     appendSnapshotPeerPossessionObservationHistoryEntry, latestSnapshotPeerPossessionObservationsByPeer
-} from '../../../application/SnapshotPeerPossessionObservationHistory.js';
+} from '../../../application/snapshot/possession/SnapshotPeerPossessionObservationHistory.js';
 import {
     describeSnapshotPeerPossessionComparison, describeSnapshotPeerPossessionStateLabel,
     describeSnapshotPeerPossessionObservationHistory
-} from '../../../application/SnapshotPeerPossessionComparisonView.js';
+} from '../../../application/snapshot/possession/SnapshotPeerPossessionComparisonView.js';
 import {
     createSnapshotMaterializationSourceSelection
-} from '../../../application/SnapshotMaterializationSourceSelection.js';
-import { SnapshotMaterializationSourceKind } from '../../../application/SnapshotMaterializationSourceKind.js';
+} from '../../../application/snapshot/materialization/SnapshotMaterializationSourceSelection.js';
+import { SnapshotMaterializationSourceKind } from '../../../application/snapshot/materialization/SnapshotMaterializationSourceKind.js';
 import {
     describeSnapshotPeerPossessionObservationDetails
-} from '../../../application/SnapshotPeerPossessionObservationDetailView.js';
+} from '../../../application/snapshot/possession/SnapshotPeerPossessionObservationDetailView.js';
 
 // Snapshot exchange with peers: asking one peer for a snapshot, checking
 // whether one or several peers hold it (with a comparison and its history),

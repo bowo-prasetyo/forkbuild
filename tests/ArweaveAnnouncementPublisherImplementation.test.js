@@ -2,12 +2,12 @@ import { readFile } from 'node:fs/promises';
 
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { executePublicationDistribution } from '../application/PublicationDistributionExecutor.js';
-import { composePublicationDistributionRuntime } from '../application/PublicationDistributionRuntimeComposition.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
+import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
 
 // 0.9.428 — Arweave Announcement Publisher Implementation.
 //
@@ -296,7 +296,7 @@ async function run() {
     // causes no Content or Proof/Anchor side effects.
     // ---------------------------------------------------------------
     {
-        const publisherSource = await readFile(new URL('../application/ArweaveAnnouncementPublisher.js', import.meta.url), 'utf8');
+        const publisherSource = await readFile(new URL('../application/arweave/ArweaveAnnouncementPublisher.js', import.meta.url), 'utf8');
         const codeOnly = (text) => text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         const code = codeOnly(publisherSource);
 

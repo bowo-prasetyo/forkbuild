@@ -128,23 +128,23 @@ async function run() {
             { area: 'World / Wanderer (exploration, avatar presence)', evidence: ['core/World.js', 'presence/AvatarPresenceBroadcastProvider.js', 'ui/components/WandererMarker.js'], classification: 'COMPLETE' },
             { area: 'Vehicles', evidence: ['ui/components/VehicleInteractionPrompt.js'], classification: 'COMPLETE', note: 'wired live in WorldView.js' },
             { area: 'Editor (document creation & editing)', evidence: ['core/Document.js', 'ui/views/EditorView.js'], classification: 'COMPLETE' },
-            { area: 'Local Publication (publish)', evidence: ['publisher/Publication.js', 'application/PublishDocumentUseCase.js'], classification: 'COMPLETE' },
-            { area: 'Federated Repository (peer publication exchange & resolution)', evidence: ['application/AutoConnectKnownPeersUseCase.js', 'application/ResolvePublicationUseCase.js'], classification: 'COMPLETE' },
-            { area: 'Decentralized Publication Discovery', evidence: ['application/NostrPublicationDiscoveryPublisher.js', 'content/ArweaveContentStore.js'], classification: 'COMPLETE' },
-            { area: 'Decentralized Distribution (material + discovery announce)', evidence: ['application/PublicationDistributionCommand.js', 'application/PublicationDistributionOrchestrator.js'], classification: 'COMPLETE' },
-            { area: 'Snapshot (creation, distribution, discovery, recovery, placement)', evidence: ['application/CreateSnapshotPlacementOrchestratorUseCase.js', 'application/NostrSnapshotDiscoveryQueryService.js', 'application/ResolveSelectedSnapshotCommand.js'], classification: 'COMPLETE' },
-            { area: 'Publication Commentary', evidence: ['core/PublicationCommentary.js', 'application/AddPublicationCommentaryUseCase.js'], classification: 'COMPLETE' },
-            { area: 'Place Naming (claim, persist, publish, discover, adopt)', evidence: ['core/PlaceNamingClaim.js', 'core/PlaceNamingView.js', 'application/NostrPlaceNamingDiscoverySource.js'], classification: 'COMPLETE' },
+            { area: 'Local Publication (publish)', evidence: ['publisher/Publication.js', 'application/publication/PublishDocumentUseCase.js'], classification: 'COMPLETE' },
+            { area: 'Federated Repository (peer publication exchange & resolution)', evidence: ['application/peer/AutoConnectKnownPeersUseCase.js', 'application/publication/ResolvePublicationUseCase.js'], classification: 'COMPLETE' },
+            { area: 'Decentralized Publication Discovery', evidence: ['application/nostr/NostrPublicationDiscoveryPublisher.js', 'content/ArweaveContentStore.js'], classification: 'COMPLETE' },
+            { area: 'Decentralized Distribution (material + discovery announce)', evidence: ['application/publication/distribution/PublicationDistributionCommand.js', 'application/publication/distribution/PublicationDistributionOrchestrator.js'], classification: 'COMPLETE' },
+            { area: 'Snapshot (creation, distribution, discovery, recovery, placement)', evidence: ['application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js', 'application/nostr/NostrSnapshotDiscoveryQueryService.js', 'application/snapshot/ResolveSelectedSnapshotCommand.js'], classification: 'COMPLETE' },
+            { area: 'Publication Commentary', evidence: ['core/PublicationCommentary.js', 'application/publication/commentary/AddPublicationCommentaryUseCase.js'], classification: 'COMPLETE' },
+            { area: 'Place Naming (claim, persist, publish, discover, adopt)', evidence: ['core/PlaceNamingClaim.js', 'core/PlaceNamingView.js', 'application/placeNaming/NostrPlaceNamingDiscoverySource.js'], classification: 'COMPLETE' },
             { area: 'Collaboration', evidence: ['collaboration/CollaborationSession.js'], classification: 'COMPLETE', note: 'STOP since 0.9.241, reconfirmed 0.9.383/0.9.392; not expanded here' },
-            { area: 'Notifications & history', evidence: ['storage/NotificationEventStore.js', 'application/GetRecipientNotificationEventsUseCase.js'], classification: 'COMPLETE', note: 'durable history only — delivery/unread/read deliberately absent, reconfirmed 0.9.383 Section F' },
+            { area: 'Notifications & history', evidence: ['storage/NotificationEventStore.js', 'application/chat/GetRecipientNotificationEventsUseCase.js'], classification: 'COMPLETE', note: 'durable history only — delivery/unread/read deliberately absent, reconfirmed 0.9.383 Section F' },
             { area: 'Provider Preferences (content provider)', evidence: ['core/RoleProviderPreference.js', 'ui/views/ContentProviderSettingsView.js'], classification: 'COMPLETE' },
             { area: 'Infrastructure Configuration (Arweave / Nostr / STUN / Rendezvous)', evidence: ['core/ArweaveGatewayConfiguration.js', 'core/NostrRelayConfiguration.js', 'core/IceServerConfiguration.js', 'core/RendezvousConfiguration.js'], classification: 'COMPLETE', note: '0.9.385-0.9.392 arc' },
             { area: 'TURN relay configuration', evidence: ['core/IceServerConfiguration.js'], classification: 'DEFERRED', note: 'technically functional (0.9.390/0.9.391 live-proven), deferred for a semantic/product reason (which of several non-equivalent things it would mean, and credential-storage safety), not a technical gap' },
-            { area: 'IPFS placement/pinning', evidence: ['application/IpfsRemotePublicationCoordinator.js'], classification: 'COMPLETE', note: 'gated by a real external prerequisite (a hosted pinning endpoint), not the default path' },
-            { area: 'Bitcoin anchoring', evidence: ['application/CreateBitcoinAnchorPublisherUseCase.js'], classification: 'COMPLETE' },
-            { area: 'Base anchoring', evidence: ['application/BlockchainKind.js'], classification: 'DEFERRED', note: 'BlockchainKind.BASE remains named, reserved, unimplemented' },
+            { area: 'IPFS placement/pinning', evidence: ['application/ipfs/IpfsRemotePublicationCoordinator.js'], classification: 'COMPLETE', note: 'gated by a real external prerequisite (a hosted pinning endpoint), not the default path' },
+            { area: 'Bitcoin anchoring', evidence: ['application/anchoring/bitcoin/CreateBitcoinAnchorPublisherUseCase.js'], classification: 'COMPLETE' },
+            { area: 'Base anchoring', evidence: ['application/anchoring/BlockchainKind.js'], classification: 'DEFERRED', note: 'BlockchainKind.BASE remains named, reserved, unimplemented' },
             { area: 'Reconciliation (candidate production, workspace, claim authoring/export, leaderboard, evidence export comparison)', evidence: ['ui/views/ReconciliationCandidateLeaderboardView.js', 'ui/views/ReconciliationWorkspaceView.js', 'ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js', 'ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js'], classification: 'COMPLETE', note: '0.9.400-0.9.403 closed both entry points; 0.9.405-0.9.413 closed the whole arc, STABLE_STOP' },
-            { area: 'Reconciliation-decision analytics/history family (agreement, evolution, divergence, correspondence, verification, timeline, statistics)', evidence: ['application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js'], classification: 'PARKED', note: 'THIS MILESTONE\'S OWN Section C centerpiece — see below' }
+            { area: 'Reconciliation-decision analytics/history family (agreement, evolution, divergence, correspondence, verification, timeline, statistics)', evidence: ['application/claimSnapshotReconciliation/decision/History.js'], classification: 'PARKED', note: 'THIS MILESTONE\'S OWN Section C centerpiece — see below' }
         ];
         const CLASSIFICATIONS = Object.freeze(['COMPLETE', 'DEFERRED', 'INTERNAL', 'PARKED', 'BROKEN']);
         for (const row of inventory) {
@@ -316,30 +316,30 @@ async function run() {
         // this section extends, rather than contradicts or duplicates,
         // that prior finding.
         const twelveFrom413 = [
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimelineView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatisticsView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryExchange.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimelineView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryExchange.js'
+            'application/claimSnapshotReconciliation/decision/History.js',
+            'application/claimSnapshotReconciliation/decision/HistoryTimelineView.js',
+            'application/claimSnapshotReconciliation/decision/HistoryStatisticsView.js',
+            'application/claimSnapshotReconciliation/decision/HistoryDifference.js',
+            'application/claimSnapshotReconciliation/decision/HistorySynchronization.js',
+            'application/claimSnapshotReconciliation/decision/HistoryExchange.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/History.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistoryTimelineView.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistoryDifference.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistorySynchronization.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistoryExchange.js'
         ];
         const unreachedSet = new Set(unreached);
         assert(twelveFrom413.every((f) => unreachedSet.has(f)), n('C10. all eleven of 0.9.413\'s own twelve named files (the twelfth, HistoryView.js, reconfirmed separately below) remain members of this fresh fifty-eight-file set'));
-        assert(unreachedSet.has('application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js'), n('C10b. the twelfth file (HistoryView.js) is also confirmed a member'));
+        assert(unreachedSet.has('application/claimSnapshotReconciliation/decision/HistoryView.js'), n('C10b. the twelfth file (HistoryView.js) is also confirmed a member'));
 
         // The underlying DATA is not missing — the archive's own real,
         // shared append-only store is built through this family's own
         // producer functions (0.9.413 Section F4's finding, reconfirmed
         // fresh here rather than trusted from that file's own header).
-        const archiveSource = await readSource('application/PublicationObservationArchive.js');
+        const archiveSource = await readSource('application/publication/observationArchive/PublicationObservationArchive.js');
         assert(
-            archiveSource.includes("from './PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js'") &&
-            archiveSource.includes("from './PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js'"),
+            archiveSource.includes("from '../../claimSnapshotReconciliation/decision/History.js'") &&
+            archiveSource.includes("from '../../claimSnapshotReconciliation/revalidationObservation/History.js'"),
             n('C11. PublicationObservationArchive.js — the same shared archive the Leaderboard and Workspace both read/write live (Section E below) — imports its append functions directly from this family; the underlying reconciliation-decision data is genuinely persisted, only the timeline/statistics/agreement/evolution/divergence READ surfaces over it have no UI')
         );
 
@@ -407,14 +407,14 @@ async function run() {
         // reference/publisher-association records, Leaderboard claim
         // history, AND reconciliation-decision history — not five
         // separate, disconnected archives that merely COULD be unified.
-        const archiveSource = await readSource('application/PublicationObservationArchive.js');
+        const archiveSource = await readSource('application/publication/observationArchive/PublicationObservationArchive.js');
         const spannedFamilies = [
-            "from './IpfsPublicationRecordHistory.js'",
-            "from './BitcoinAnchorConfirmationObservationHistory.js'",
-            "from './BaseTransactionInclusionObservationHistory.js'",
-            "from './PublicationReferenceRecordHistory.js'",
-            "from './LeaderboardClaimHistory.js'",
-            "from './PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js'"
+            "from '../../ipfs/IpfsPublicationRecordHistory.js'",
+            "from '../../anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js'",
+            "from '../../anchoring/base/BaseTransactionInclusionObservationHistory.js'",
+            "from '../PublicationReferenceRecordHistory.js'",
+            "from '../../leaderboard/LeaderboardClaimHistory.js'",
+            "from '../../claimSnapshotReconciliation/decision/History.js'"
         ];
         for (const marker of spannedFamilies) {
             assert(archiveSource.includes(marker), n(`E1. PublicationObservationArchive.js genuinely imports ${marker} — this is one real, already-shared archive across six distinct product arcs, not six isolated stores merely capable of being unified`));
@@ -481,7 +481,7 @@ async function run() {
             { candidate: 'A dedicated UI over the 58-file reconciliation-decision analytics family', category: 'DEFER', evidence: 'Section C/D — pre-existing, tested, PARKED; no user journey (Section B) currently needs it; would be architecture-led, not product-led (see Section G)' },
             { candidate: 'TURN bring-your-own relay configuration', category: 'DEFER', evidence: 'Section A — reconfirmed technically functional but semantically undecided (0.9.390/0.9.391), unchanged since' },
             { candidate: 'Base anchoring', category: 'DEFER', evidence: 'Section A — deliberately reserved, no new evidence this milestone changes that' },
-            { candidate: 'Proactive decentralized Repository search/crawling', category: 'DEFER', evidence: '0.9.383 Section C5, reconfirmed absent from application/SearchPublicationsUseCase.js (still synchronous)' },
+            { candidate: 'Proactive decentralized Repository search/crawling', category: 'DEFER', evidence: '0.9.383 Section C5, reconfirmed absent from application/publication/SearchPublicationsUseCase.js (still synchronous)' },
             { candidate: 'A new, currently-unnamed product domain', category: 'NEW_PRODUCT_DOMAIN', evidence: 'NOT FOUND — Section A\'s twenty-area inventory and Section D\'s reachability sweep surface nothing outside the product\'s existing eighteen non-parked areas' },
             { candidate: 'The whole-product plateau itself', category: 'STABLE_STOP', evidence: 'Sections A-E collectively: 17/20 areas COMPLETE, 2 deliberately DEFERRED (reconfirmed, not reopened), 1 PARKED (classified, not manufactured into work), zero contextual-entry-missing or genuinely-user-blocked routes (Section D), and every cross-arc boundary Section E actually checked is either already bridged or confirmed not needed' }
         ];

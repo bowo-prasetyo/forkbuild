@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
-import { GetRecipientNotificationEventsUseCase } from '../application/GetRecipientNotificationEventsUseCase.js';
+import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 // 0.9.283 — Recipient Notification Query Boundary.
@@ -13,7 +13,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 // with recipient identity already embedded in every record, but no
 // application-layer capability that answers "what notifications belong to
 // the current identity." This file exercises
-// application/GetRecipientNotificationEventsUseCase.js, the query
+// application/chat/GetRecipientNotificationEventsUseCase.js, the query
 // boundary that closes exactly that gap:
 //
 //   Section A — Authenticated recipient: a notification addressed to the
@@ -278,9 +278,9 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const { PublicationCommentaryStore } = await import('../storage/PublicationCommentaryStore.js');
-        const { AddPublicationCommentaryUseCase } = await import('../application/AddPublicationCommentaryUseCase.js');
-        const { CanCommentOnPublicationUseCase } = await import('../application/CanCommentOnPublicationUseCase.js');
-        const { PublicationCommentaryNotificationProducer } = await import('../application/PublicationCommentaryNotificationProducer.js');
+        const { AddPublicationCommentaryUseCase } = await import('../application/publication/commentary/AddPublicationCommentaryUseCase.js');
+        const { CanCommentOnPublicationUseCase } = await import('../application/publication/CanCommentOnPublicationUseCase.js');
+        const { PublicationCommentaryNotificationProducer } = await import('../application/publication/commentary/PublicationCommentaryNotificationProducer.js');
 
         const publisher = makeIdentity('Publisher');
         const publisherId = publisher.getSigningIdentity().id;
@@ -307,12 +307,12 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const gitDiffStat = execSync(
-            'git diff --stat HEAD -- core/NotificationEvent.js core/NotificationDeduplicationPolicy.js storage/NotificationEventStore.js application/PublicationCommentaryNotificationProducer.js identity/resolveSigningIdentityId.js 2>/dev/null || true',
+            'git diff --stat HEAD -- core/NotificationEvent.js core/NotificationDeduplicationPolicy.js storage/NotificationEventStore.js application/publication/commentary/PublicationCommentaryNotificationProducer.js identity/resolveSigningIdentityId.js 2>/dev/null || true',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         assert(gitDiffStat === '', `L1. no pre-existing production file this milestone depends on was modified. Found: ${gitDiffStat || '(none)'}.`);
 
-        const useCaseSource = readFileSync(new URL('../application/GetRecipientNotificationEventsUseCase.js', import.meta.url), 'utf8');
+        const useCaseSource = readFileSync(new URL('../application/chat/GetRecipientNotificationEventsUseCase.js', import.meta.url), 'utf8');
         const codeOnly = useCaseSource
             .split('\n')
             .filter((line) => !line.trim().startsWith('//'))

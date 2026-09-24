@@ -25,7 +25,7 @@ import { DomainEvent } from '../core/events/Event.js';
 // 0.2.90 — Structure Placement & World Instances. A StructurePlacement
 // (core/StructurePlacement.js) is rendered by resolving its documentId
 // FRESH, every add, through `structureResolver`
-// (application/StructureDocumentResolver.js) — never a snapshot copied
+// (application/editor/StructureDocumentResolver.js) — never a snapshot copied
 // into the World at placement time. This is what makes "edit the
 // referenced Document, every placement reflects it on next load" true
 // without any synchronization machinery: there is only ever one
@@ -37,7 +37,7 @@ import { DomainEvent } from '../core/events/Event.js';
 // same Document placed twice (House at A, House at B) would otherwise
 // mint the SAME brick ids twice into a registry keyed by brick id alone.
 // 0.2.91 gives PickingService its OWN second raycast against this
-// registry instead (application/RenderWorldUseCase.js wires
+// registry instead (application/world/RenderWorldUseCase.js wires
 // placementMeshRegistry in alongside meshRegistry) — a placed
 // structure's individual bricks are still never individually pickable,
 // but the WHOLE instance now is, resolved via mesh uuid -> placementId
@@ -45,7 +45,7 @@ import { DomainEvent } from '../core/events/Event.js';
 //
 // `transformMath` composes a placement's rotation with each of its
 // bricks' local positions — injected (mirrors TransformGizmoController's
-// own transformMath injection in application/RenderWorldUseCase.js /
+// own transformMath injection in application/world/RenderWorldUseCase.js /
 // RenderWorldViewUseCase.js) rather than imported, because renderer/
 // must never depend on application/ (see RenderWorldUseCase.js's own
 // header). A placement with rotation 0 (the common case) never needs it
@@ -112,7 +112,7 @@ export class WorldRenderer {
         return this._meshRegistry;
     }
 
-    // 0.2.91 — read by application/RenderWorldUseCase.js to construct
+    // 0.2.91 — read by application/world/RenderWorldUseCase.js to construct
     // PickingService with a second, placement-aware mesh source, exactly
     // the way meshRegistry already is.
     get placementMeshRegistry() {
@@ -366,7 +366,7 @@ export class WorldRenderer {
     // carries its own worldId (core/AnimalDecoration.js) — unlike
     // _onStructurePlacementAdded() above, this needs no pre-populated
     // lookup table to know which document's layout offset applies, so a
-    // LIVE add (application/WorldNavigationSession.js#
+    // LIVE add (application/world/WorldNavigationSession.js#
     // decorateNearestReleasedAnimalHere(), executed against an
     // ALREADY-loaded document) renders correctly the moment the command
     // commits, not only for a decoration present at addWorld()'s own
@@ -466,7 +466,7 @@ export class WorldRenderer {
     // pickRich() raycast EXCLUSIVELY against meshRegistry.getAllMeshes(),
     // never the raw scene graph (see its own header). An orphaned mesh
     // is therefore permanently unpickable and, since collision
-    // (application/AvatarMovementConstraint.js) reads
+    // (application/avatar/AvatarMovementConstraint.js) reads
     // WorldNavigationSession's own _loadedDocuments — a completely
     // separate structure this class never touches — an orphan is
     // exactly a visible-but-unselectable-and-uncollidable ghost: solid

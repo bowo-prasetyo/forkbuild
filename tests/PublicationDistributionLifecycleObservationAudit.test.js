@@ -2,11 +2,11 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.432 — Multi-Substrate Distribution Lifecycle Observation Audit.
@@ -61,10 +61,10 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // BRIEF NAMED: fan-out, multi-select, automatic publication, fallback,
 // retries, an append-only history system, aggregate success states,
 // provider ranking, provider health, a generalized substrate abstraction,
-// and any change to `application/PublicationDistributionLifecycleStore.js`,
-// `application/PublicationDistributionLifecycle.js`,
-// `application/PublicationDistributionLifecycleTransition.js`,
-// `application/PublicationDistributionCommand.js`, or
+// and any change to `application/publication/distribution/PublicationDistributionLifecycleStore.js`,
+// `application/publication/distribution/PublicationDistributionLifecycle.js`,
+// `application/publication/distribution/PublicationDistributionLifecycleTransition.js`,
+// `application/publication/distribution/PublicationDistributionCommand.js`, or
 // `ui/components/WorldEncounterCanvas.js` — every one of those files is
 // only ever READ by this audit, never written.
 
@@ -163,7 +163,7 @@ async function run() {
     // own header, never assumed.
     // ===============================================================
     {
-        const storeSource = await source('application/PublicationDistributionLifecycleStore.js');
+        const storeSource = await source('application/publication/distribution/PublicationDistributionLifecycleStore.js');
         const storeProse = flattenComments(storeSource);
 
         assert(/the most recently remembered lifecycle description for this publication/i.test(storeProse), n('A1. the store\'s own header states its meaning explicitly: "the most recently remembered lifecycle description for this publication" — a LATEST-VALUE cache, never phrased as a complete historical set'));
@@ -202,7 +202,7 @@ async function run() {
     // identity needed to distinguish two substrate observations?
     // ===============================================================
     {
-        const storeSource = await source('application/PublicationDistributionLifecycleStore.js');
+        const storeSource = await source('application/publication/distribution/PublicationDistributionLifecycleStore.js');
         assert(/KEYED BY `publication\.id` — NEVER BY A DISTRIBUTION-DIMENSION IDENTITY/.test(storeSource), n('B1. the store\'s own header settles the key space explicitly: publication identity ALONE — "not material uri, not discovery uri, not relay origin, not a discovery tag, not a Nostr event id"'));
 
         // Live proof the collision is exactly (and only) `publicationId`:
@@ -238,7 +238,7 @@ async function run() {
             // alone — it never reads or folds in anything from the
             // section it replaces. Confirmed from that file's own source,
             // never merely inferred from the collision's own symptom.
-            const transitionSource = codeOnly(await source('application/PublicationDistributionLifecycleTransition.js'));
+            const transitionSource = codeOnly(await source('application/publication/distribution/PublicationDistributionLifecycleTransition.js'));
             const buildDiscoverySectionStart = transitionSource.indexOf('function buildDiscoverySection');
             const buildDiscoverySectionEnd = transitionSource.indexOf('\n}', buildDiscoverySectionStart) + 2;
             const buildDiscoverySectionBody = transitionSource.slice(buildDiscoverySectionStart, buildDiscoverySectionEnd);
@@ -262,7 +262,7 @@ async function run() {
         // guess) is `discoveryProvider` itself — the very string
         // `executePublicationDistributionCommand()` already accepts and
         // forwards, unread, per 0.9.430's own amendment.
-        const commandSource = await source('application/PublicationDistributionCommand.js');
+        const commandSource = await source('application/publication/distribution/PublicationDistributionCommand.js');
         assert(/discoveryProvider/.test(commandSource), n('B7. `discoveryProvider` (\'nostr\'|\'arweave\') already exists as an explicit, caller-supplied argument at exactly the call site (`executePublicationDistributionCommand`) that already reads the fresh result and already calls `lifecycleStore.set()` — the minimum additional identity this audit is looking for was already flowing past the exact seam that needs it, before this milestone, unused for this purpose'));
         // AMENDED BY 0.9.433 — Concurrent Discovery Observation Preservation.
         // B8 originally confirmed this as a genuine, still-open gap:
@@ -522,7 +522,7 @@ async function run() {
     // object — confirmed from their own source, never assumed.
     // ===============================================================
     {
-        const commandSource = codeOnly(await source('application/PublicationDistributionCommand.js'));
+        const commandSource = codeOnly(await source('application/publication/distribution/PublicationDistributionCommand.js'));
         assert(/lifecycleStore\.get\([^)]*\)\s*\|\|\s*BASELINE_LIFECYCLE/.test(commandSource), n('H1. PublicationDistributionCommand.js reads lifecycleStore.get() and falls back to a single-object BASELINE_LIFECYCLE — it would break (or silently misbehave) if get() ever returned an array instead of an object, since it immediately reads `.material.state` off whatever get() returns'));
         assert(/\.material\.state\s*===\s*PublicationDistributionState\.PRESENT/.test(commandSource), n('H2. ...confirmed precisely: the very next line reads `.material.state` directly off the get() result, which requires a single object, never a collection'));
 
@@ -530,7 +530,7 @@ async function run() {
         assert(/this\.distributionLifecycleStore\.get\(publicationId\)/.test(canvasSource), n('H3. WorldEncounterCanvas.js also calls store.get(publicationId) directly'));
         assert(/return this\.distributionLifecycle \? this\.distributionLifecycle\.material\.state/.test(canvasSource), n('H4. ...and its own computed property reads `.material.state` off the stored value with a ternary null-check, never a `.map()`/`.find()`/array-index operation — an unambiguous single-object expectation'));
 
-        const restorerSource = codeOnly(await source('application/PublicationDistributionLifecycleRestorer.js'));
+        const restorerSource = codeOnly(await source('application/publication/distribution/PublicationDistributionLifecycleRestorer.js'));
         assert(/this\._store\.set\(publicationId, lifecycle\)/.test(restorerSource), n('H5. PublicationDistributionLifecycleRestorer.js calls store.set() with a single lifecycle value it loaded from persistence — it neither knows nor needs to know about a per-provider shape'));
 
         // Every real consumer this audit could find is enumerated
@@ -539,13 +539,13 @@ async function run() {
         // fully-audited set of callers, all compatible with an ADDITIVE
         // change (a new accessor alongside get()/set()), none compatible
         // with a BREAKING change (get()/set() themselves changing shape).
-        const persistenceBridgeSource = codeOnly(await source('application/PublicationDistributionLifecyclePersistenceBridge.js'));
+        const persistenceBridgeSource = codeOnly(await source('application/publication/distribution/PublicationDistributionLifecyclePersistenceBridge.js'));
         assert(/store\.subscribe/.test(persistenceBridgeSource), n('H6. PublicationDistributionLifecyclePersistenceBridge.js only ever calls store.subscribe() (never get()/set() on the store itself) — it forwards whatever lifecycle value it is notified with, verbatim, to persistence.save(), so it is compatible with either shape as long as subscribe()\'s own (publicationId, lifecycle) signature is unchanged'));
 
-        console.log('✓ Section H: every real production consumer of this store (PublicationDistributionCommand.js, WorldEncounterCanvas.js, PublicationDistributionLifecycleRestorer.js) reads get()/set() as returning/accepting exactly one lifecycle object, confirmed from each one\'s own source — the smallest compatibility-preserving seam is therefore an ADDITIVE accessor alongside the existing one (as Section C\'s own prototype already demonstrates), never a change to get()/set()\'s own existing return/parameter shape. This mirrors a real, already-existing precedent in this codebase: application/LocalPublicationSnapshotPlacementCatalog.js keeps its own single-item get(placementId) completely unchanged while separately offering findByPublicationId(publicationId), an additive list accessor beside it — the same shape this section\'s own evidence points to here');
+        console.log('✓ Section H: every real production consumer of this store (PublicationDistributionCommand.js, WorldEncounterCanvas.js, PublicationDistributionLifecycleRestorer.js) reads get()/set() as returning/accepting exactly one lifecycle object, confirmed from each one\'s own source — the smallest compatibility-preserving seam is therefore an ADDITIVE accessor alongside the existing one (as Section C\'s own prototype already demonstrates), never a change to get()/set()\'s own existing return/parameter shape. This mirrors a real, already-existing precedent in this codebase: application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js keeps its own single-item get(placementId) completely unchanged while separately offering findByPublicationId(publicationId), an additive list accessor beside it — the same shape this section\'s own evidence points to here');
 
         // Confirm that precedent is real, not asserted from memory.
-        const placementCatalogSource = await source('application/LocalPublicationSnapshotPlacementCatalog.js');
+        const placementCatalogSource = await source('application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js');
         assert(/get\(placementId\)/.test(placementCatalogSource) && /findByPublicationId\(publicationId\)/.test(placementCatalogSource), n('H7. the cited precedent is confirmed live: LocalPublicationSnapshotPlacementCatalog.js genuinely exposes both a single-item get() and a separate, additive findByPublicationId() list accessor, side by side'));
     }
 
@@ -557,11 +557,11 @@ async function run() {
     // ===============================================================
     {
         const lifecycleStoreConsumers = [
-            'application/PublicationDistributionCommand.js',
-            'application/PublicationDistributionLifecycleHydration.js',
-            'application/PublicationDistributionLifecyclePersistence.js',
-            'application/PublicationDistributionLifecyclePersistenceBridge.js',
-            'application/PublicationDistributionLifecycleRestorer.js',
+            'application/publication/distribution/PublicationDistributionCommand.js',
+            'application/publication/distribution/PublicationDistributionLifecycleHydration.js',
+            'application/publication/distribution/PublicationDistributionLifecyclePersistence.js',
+            'application/publication/distribution/PublicationDistributionLifecyclePersistenceBridge.js',
+            'application/publication/distribution/PublicationDistributionLifecycleRestorer.js',
             'ui/components/WorldEncounterCanvas.js',
             'ui/main.js'
         ];
@@ -574,8 +574,8 @@ async function run() {
         // Announcement/Discovery lifecycle store at all.
         const placementFiles = [
             'core/PublicationSnapshotPlacement.js',
-            'application/LocalPublicationSnapshotPlacementCatalog.js',
-            'application/AddPublicationSnapshotPlacementUseCase.js'
+            'application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js',
+            'application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js'
         ];
         for (const file of placementFiles) {
             const code = await source(file).catch(() => '');
@@ -585,9 +585,9 @@ async function run() {
 
         // Proof/Anchor (Arweave-as-Proof) likewise never references it.
         const anchorFiles = [
-            'application/CreateArweaveAnchorPublisherUseCase.js',
-            'application/CreateArweaveAnchorProofVerifierUseCase.js',
-            'application/CreateArweaveAnchorEvidenceViewUseCase.js'
+            'application/anchoring/CreateArweaveAnchorPublisherUseCase.js',
+            'application/anchoring/CreateArweaveAnchorProofVerifierUseCase.js',
+            'application/anchoring/CreateArweaveAnchorEvidenceViewUseCase.js'
         ];
         for (const file of anchorFiles) {
             const code = await source(file);
@@ -597,10 +597,10 @@ async function run() {
         // And the reverse direction: the lifecycle store family itself
         // never reaches into placement or anchor code.
         const lifecycleFamilyFiles = [
-            'application/PublicationDistributionLifecycleStore.js',
-            'application/PublicationDistributionLifecycle.js',
-            'application/PublicationDistributionLifecycleTransition.js',
-            'application/PublicationDistributionCommand.js'
+            'application/publication/distribution/PublicationDistributionLifecycleStore.js',
+            'application/publication/distribution/PublicationDistributionLifecycle.js',
+            'application/publication/distribution/PublicationDistributionLifecycleTransition.js',
+            'application/publication/distribution/PublicationDistributionCommand.js'
         ];
         for (const file of lifecycleFamilyFiles) {
             const code = await source(file);
@@ -672,7 +672,7 @@ Every piece of evidence needed to justify a narrowly-scoped 0.9.433 is now
 in hand, and none of it required guessing an API in advance: the minimal
 shape is (1) thread \`discoveryProvider\` into
 \`recordPublicationDistributionResult()\` in
-\`application/PublicationDistributionCommand.js\`, (2) record each PRESENT
+\`application/publication/distribution/PublicationDistributionCommand.js\`, (2) record each PRESENT
 discovery fact keyed by (publicationId, discoveryProvider) in a small,
 additive structure inside \`PublicationDistributionLifecycleStore.js\` —
 never replacing its existing per-publication get()/set()/subscribe()

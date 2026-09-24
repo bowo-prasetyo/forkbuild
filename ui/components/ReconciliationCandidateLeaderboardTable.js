@@ -91,7 +91,7 @@ import ReconciliationCandidateEvidenceDetailPanel from './ReconciliationCandidat
 // that row's own six counts, rendered by
 // `ReconciliationCandidateEvidenceDetailPanel.js`. The detail data itself
 // comes from a SECOND, independent prop — `evidenceDetail`, shaped like
-// `application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.js`'s
+// `application/claimSnapshotReconciliation/candidate/EvidenceDetailView.js`'s
 // (0.8.182) own `{ candidateCount, candidates }` result — never derived from
 // `page` or from this component's own displayed counts; see that file's own
 // header for why the two are two independent readings of the identical

@@ -8,7 +8,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryDistributionEnvelope } from '../core/PublicationCommentaryDistributionEnvelope.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
 
 import {
     PublicationCommentaryDeliveryStatus,
@@ -20,32 +20,32 @@ import {
 // The two REAL, UNMODIFIED Arweave transport primitives this audit's own
 // flagship composes — never a Commentary-flavored file, never touched by
 // this milestone.
-import { createArweaveTaggedTransactionUpload } from '../application/ArweaveTaggedTransactionUpload.js';
+import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 
 // The real, unmodified LOCATOR-shaped Arweave discovery/announcement class
 // this audit deliberately never uses to carry Commentary — reconfirmed inert
 // for this job in Section A/C, exactly as 0.9.625 already found live.
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
 
 // The existing Nostr Commentary substrate adapter (0.9.628) — imported ONLY
 // to prove, live, side by side, that it and this milestone's own composed
 // Arweave substrate satisfy the IDENTICAL contract shape (Section J); never
 // modified, never used to carry a single byte in this file.
-import { PublicationCommentaryNostrDistribution } from '../application/PublicationCommentaryNostrDistribution.js';
+import { PublicationCommentaryNostrDistribution } from '../application/publication/commentary/PublicationCommentaryNostrDistribution.js';
 
 // The real substrate-selection precedent this audit's own Section B/J
 // measures against — 'nostr' | 'arweave', selection never fan-out.
-import { composePublicationDistributionRuntime } from '../application/PublicationDistributionRuntimeComposition.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
+import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 
 // The real Snapshot distribution composition/selection precedent this
 // audit's own Section B measures against.
 import {
     SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES
-} from '../application/SnapshotDistributionContentBackendSelection.js';
+} from '../application/snapshot/SnapshotDistributionContentBackendSelection.js';
 
 // The existing WebRTC peer exchange, read-only here, to reconfirm it still
 // knows nothing of Arweave (Section K, the same guard 0.9.627 Section H
@@ -75,15 +75,15 @@ import {
 // substrate-selection experience?
 //
 // THE HEADLINE FINDING, verified live below: Arweave's own two
-// DISCOVERY-SPECIFIC classes (`application/ArweaveAnnouncementPublisher.js`,
-// `application/ArweaveGraphqlDiscoveryQueryService.js`) remain exactly as
+// DISCOVERY-SPECIFIC classes (`application/arweave/ArweaveAnnouncementPublisher.js`,
+// `application/arweave/ArweaveGraphqlDiscoveryQueryService.js`) remain exactly as
 // ARCHITECTURAL_MISMATCH for Commentary as Nostr's own discovery-specific
 // classes were in 0.9.627 — both are LOCATOR-envelope-only and never touch a
 // Commentary envelope here either (0.9.625 Section D already proved
 // `ArweaveAnnouncementPublisher#publish()` resolves `null` for a real signed
 // Commentary envelope; reconfirmed live in Section C, below). But one layer
 // BELOW them, two already-existing, already-production-wired primitives —
-// `application/ArweaveTaggedTransactionUpload.js` (write: sign + tag +
+// `application/arweave/ArweaveTaggedTransactionUpload.js` (write: sign + tag +
 // broadcast, opaque `material` in, `{ id }` out) and `content/
 // ArweaveContentStore.js` (read: `get()`, opaque bytes back by transaction
 // id) — compose into a substrate that duck-type-conforms to 0.9.626's own
@@ -214,8 +214,8 @@ function fakeArweaveSigner(label) {
 // ArweaveContentStore.js#put()'s own upload, and application/
 // ArweaveTaggedTransactionUpload.js's own uploadTaggedTransaction()), and
 // `GET <gatewayUrl>/<transaction-id>` (content/ArweaveContentStore.js#get(),
-// application/ArweaveWorldEncounterMaterialResolver.js#retrieveByUri(), and
-// application/ArweaveGraphqlDiscoveryQueryService.js's own per-candidate
+// application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js#retrieveByUri(), and
+// application/arweave/ArweaveGraphqlDiscoveryQueryService.js's own per-candidate
 // fetch — three independent files this codebase already implements the
 // identical GET against; see Section A). `mineDelayTicks` lets a single
 // test simulate a transaction that the gateway has ACCEPTED (a real `OK`-
@@ -223,7 +223,7 @@ function fakeArweaveSigner(label) {
 // Section E measures — never a simulation artifact invented for this file
 // alone, since a real gateway's own accept-before-mine behavior is exactly
 // what every write-side Arweave class in this codebase already excludes
-// verifying (see application/ArweaveTaggedTransactionUpload.js's own
+// verifying (see application/arweave/ArweaveTaggedTransactionUpload.js's own
 // header, "Verifying that a published transaction later confirms on
 // Arweave").
 function makeSharedFakeGateway({ declineUpload = false, mineDelayTicks = 0 } = {}) {
@@ -277,7 +277,7 @@ const ARWEAVE_TRANSACTION_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 // `publish(envelopeJson)`/`retrieve(locator)`, the shape 0.9.626's own
 // contract describes. `publish()` feeds the envelope's OWN full JSON as
 // `material` into `uploadTaggedTransaction` — the identical function every
-// EXISTING caller of that file (application/ArweaveAnnouncementPublisher.js)
+// EXISTING caller of that file (application/arweave/ArweaveAnnouncementPublisher.js)
 // only ever feeds a LOCATOR envelope's JSON to; this is the first time this
 // codebase has fed it a full, opaque Commentary payload instead (see
 // Section F). `retrieve()` reuses the real, unmodified `ArweaveContentStore#
@@ -321,7 +321,7 @@ class ComposedArweaveTransportCommentarySubstrate {
     // used only by Section M's own product-journey test. Filters this
     // gateway's own stored transactions by this instance's own tag/value —
     // a TEST-ONLY stand-in for the small, currently-PRIVATE tag-search
-    // capability `application/ArweaveGraphqlDiscoveryQueryService.js`
+    // capability `application/arweave/ArweaveGraphqlDiscoveryQueryService.js`
     // already implements against a real GraphQL endpoint (see that file's
     // own `_searchAnnouncementTransactionIds()`, and Section F, below, for
     // why this capability is not currently reusable standalone the way
@@ -389,10 +389,10 @@ async function run() {
         assert(typeof contentStore.put === 'function' && typeof contentStore.get === 'function',
             n('content/ArweaveContentStore.js — a full, real content/ContentStore.js implementation — already exposes both a write (put) and a read (get) primitive over Arweave, the genuinely two-way capability neither locator-only class above has'));
 
-        // The raw write primitive: application/ArweaveTaggedTransactionUpload.js.
+        // The raw write primitive: application/arweave/ArweaveTaggedTransactionUpload.js.
         const uploadTaggedTransaction = createArweaveTaggedTransactionUpload({ signer: fakeSigner, gatewayUrl: 'https://fake.example', fetchImpl: gateway.fetchImpl });
         assert(typeof uploadTaggedTransaction === 'function',
-            n('application/ArweaveTaggedTransactionUpload.js — one layer below ArweaveAnnouncementPublisher, the same layer 0.9.627 Section A found for Nostr\'s own raw transport primitives — already produces a real, usable write function today, already production-wired (ArweaveAnnouncementPublisher itself is the one existing caller)'));
+            n('application/arweave/ArweaveTaggedTransactionUpload.js — one layer below ArweaveAnnouncementPublisher, the same layer 0.9.627 Section A found for Nostr\'s own raw transport primitives — already produces a real, usable write function today, already production-wired (ArweaveAnnouncementPublisher itself is the one existing caller)'));
 
         // Composed together, do the two raw primitives already
         // duck-type-conform to 0.9.626's own contract? Live proof.
@@ -436,10 +436,10 @@ async function run() {
     // ===============================================================
     {
         // Snapshot's own composition: read the real source, live.
-        const snapshotCompositionSource = codeOnly(await rawSource('application/SnapshotDistributionRuntimeComposition.js'));
+        const snapshotCompositionSource = codeOnly(await rawSource('application/snapshot/SnapshotDistributionRuntimeComposition.js'));
         assert(/import\s*\{\s*ArweaveContentStore\s*\}/.test(snapshotCompositionSource)
             && /import\s*\{\s*NostrSnapshotDiscoveryPublisher\s*\}/.test(snapshotCompositionSource),
-            n('application/SnapshotDistributionRuntimeComposition.js imports exactly ArweaveContentStore (content) and NostrSnapshotDiscoveryPublisher (discovery/announcement) — confirmed by reading its real, current source'));
+            n('application/snapshot/SnapshotDistributionRuntimeComposition.js imports exactly ArweaveContentStore (content) and NostrSnapshotDiscoveryPublisher (discovery/announcement) — confirmed by reading its real, current source'));
         // AMENDED — a later, separately-scoped milestone (Announcement/
         // Discovery Provider Selection, extended to the Snapshot and Place
         // Naming families) gave SnapshotDistributionRuntimeComposition.js
@@ -450,10 +450,10 @@ async function run() {
         // is now a real, selectable import there, mirroring
         // ArweaveAnnouncementPublisher's own role one family over.
         assert(/import\s*\{\s*ArweaveSnapshotDiscoveryPublisher\s*\}/.test(snapshotCompositionSource),
-            n('application/SnapshotDistributionRuntimeComposition.js now also imports ArweaveSnapshotDiscoveryPublisher — Snapshot\'s own WRITE-side discovery/announcement gained the identical "nostr" | "arweave" selection Publication\'s own composition (below) already had'));
+            n('application/snapshot/SnapshotDistributionRuntimeComposition.js now also imports ArweaveSnapshotDiscoveryPublisher — Snapshot\'s own WRITE-side discovery/announcement gained the identical "nostr" | "arweave" selection Publication\'s own composition (below) already had'));
 
         assert(JSON.stringify(SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES) === JSON.stringify(['ipfs', 'ar']),
-            n('Snapshot Distribution\'s own real, live, user-choosable axis (application/SnapshotDistributionContentBackendSelection.js#SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES) is CONTENT BACKEND — ipfs or ar — never a Nostr-vs-Arweave DISCOVERY substrate choice'));
+            n('Snapshot Distribution\'s own real, live, user-choosable axis (application/snapshot/SnapshotDistributionContentBackendSelection.js#SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES) is CONTENT BACKEND — ipfs or ar — never a Nostr-vs-Arweave DISCOVERY substrate choice'));
 
         // Publication's own composition: the real 'nostr'|'arweave'
         // discoveryProvider selection, live.
@@ -479,7 +479,7 @@ async function run() {
         }
         assert(threwForUnknownProvider, n('an unrecognized discoveryProvider throws synchronously — selection, never a silent third option'));
 
-        console.log('✓ B: at the time this audit was originally written, the requesting brief\'s own framing ("Snapshot distribution already lets users choose Nostr or Arweave") did not match this codebase\'s real wiring — Snapshot Distribution\'s only live, choosable axis was CONTENT BACKEND (ipfs/ar), with discovery/announcement Nostr-only, hardcoded. A later, separately-scoped milestone closed exactly that gap, extending Publication\'s own "exactly one of \'nostr\'|\'arweave\', never fan-out" composePublicationDistributionRuntime() precedent to application/SnapshotDistributionRuntimeComposition.js — Snapshot distribution now has both axes: CONTENT BACKEND (ipfs/ar) and, independently, an announcement/discovery substrate choice, resolved at composition time from a shared ANNOUNCEMENT_AND_DISCOVERY role preference (ui/main.js). Commentary\'s own precedent below is unaffected by this update — Publication\'s composition remains the shape it always mirrored.');
+        console.log('✓ B: at the time this audit was originally written, the requesting brief\'s own framing ("Snapshot distribution already lets users choose Nostr or Arweave") did not match this codebase\'s real wiring — Snapshot Distribution\'s only live, choosable axis was CONTENT BACKEND (ipfs/ar), with discovery/announcement Nostr-only, hardcoded. A later, separately-scoped milestone closed exactly that gap, extending Publication\'s own "exactly one of \'nostr\'|\'arweave\', never fan-out" composePublicationDistributionRuntime() precedent to application/snapshot/SnapshotDistributionRuntimeComposition.js — Snapshot distribution now has both axes: CONTENT BACKEND (ipfs/ar) and, independently, an announcement/discovery substrate choice, resolved at composition time from a shared ANNOUNCEMENT_AND_DISCOVERY role preference (ui/main.js). Commentary\'s own precedent below is unaffected by this update — Publication\'s composition remains the shape it always mirrored.');
     }
 
     // ===============================================================
@@ -606,9 +606,9 @@ async function run() {
     // Section E — Arweave durability semantics.
     // ===============================================================
     {
-        const uploaderHeader = await rawSource('application/ArweaveTaggedTransactionUpload.js');
+        const uploaderHeader = await rawSource('application/arweave/ArweaveTaggedTransactionUpload.js');
         assert(/Verifying that a published transaction later confirms on Arweave/.test(uploaderHeader),
-            n('the exact, pre-existing sentence this SEMANTIC_GAP rests on is really in the codebase: application/ArweaveTaggedTransactionUpload.js\'s own header excludes "Verifying that a published transaction later confirms on Arweave. A successful call means only \'the gateway accepted this for broadcast\'"'));
+            n('the exact, pre-existing sentence this SEMANTIC_GAP rests on is really in the codebase: application/arweave/ArweaveTaggedTransactionUpload.js\'s own header excludes "Verifying that a published transaction later confirms on Arweave. A successful call means only \'the gateway accepted this for broadcast\'"'));
         const contentStoreHeader = await rawSource('content/ArweaveContentStore.js');
         assert(/THROWS ContentUnavailableError FOR EVERY NETWORK-SHAPED/.test(contentStoreHeader),
             n('content/ArweaveContentStore.js\'s own header confirms get() throws ContentUnavailableError for EVERY network-shaped failure (a non-2xx response, a transport failure, a timeout) — it never distinguishes "not yet mined," "never broadcast," and "gateway unreachable" from one another; confirmed structurally here, then live, below'));
@@ -670,9 +670,9 @@ async function run() {
         // The full discovery-specific class remains ARCHITECTURAL_MISMATCH
         // — it is hard-coupled to the LOCATOR envelope decode, never
         // opaque like the raw transport layer.
-        const queryServiceSource = codeOnly(await rawSource('application/ArweaveGraphqlDiscoveryQueryService.js'));
+        const queryServiceSource = codeOnly(await rawSource('application/arweave/ArweaveGraphqlDiscoveryQueryService.js'));
         assert(/parseDecentralizedDiscoveryEnvelope/.test(queryServiceSource),
-            n('application/ArweaveGraphqlDiscoveryQueryService.js#search() decodes every candidate strictly through parseDecentralizedDiscoveryEnvelope() — a LOCATOR-envelope parser — never returning opaque bytes a Commentary-carrying candidate could use'));
+            n('application/arweave/ArweaveGraphqlDiscoveryQueryService.js#search() decodes every candidate strictly through parseDecentralizedDiscoveryEnvelope() — a LOCATOR-envelope parser — never returning opaque bytes a Commentary-carrying candidate could use'));
 
         // The underlying tag-search capability (GraphQL, content-agnostic
         // in principle) is real but NOT independently reusable — a genuine,
@@ -692,8 +692,8 @@ async function run() {
         try {
             standaloneTagSearchExport = execSync('grep -rlE "export function.*[Tt]agged?[Tt]ransaction(Id)?s?[Ss]earch|export function.*[Gg]raphql.*[Ss]earch" application arweave --include="*.js" || true', { cwd: SOURCE_ROOT.pathname }).toString().trim();
         } catch { /* zero hits */ }
-        assert(standaloneTagSearchExport === 'application/ArweaveTaggedTransactionSearch.js',
-            n(`exactly one standalone "search Arweave transactions by tag, return ids" function is now exported, by 0.9.631's own application/ArweaveTaggedTransactionSearch.js — found: ${standaloneTagSearchExport || 'none'}; this CONCRETE_PRODUCT_GAP is CLOSED, one milestone after this audit named it, never by this audit itself`));
+        assert(standaloneTagSearchExport === 'application/arweave/ArweaveTaggedTransactionSearch.js',
+            n(`exactly one standalone "search Arweave transactions by tag, return ids" function is now exported, by 0.9.631's own application/arweave/ArweaveTaggedTransactionSearch.js — found: ${standaloneTagSearchExport || 'none'}; this CONCRETE_PRODUCT_GAP is CLOSED, one milestone after this audit named it, never by this audit itself`));
 
         // Does Commentary need a second discovery system, or can it reuse
         // the already-precedented "one substrate stores AND is tagged"
@@ -834,9 +834,9 @@ async function run() {
         assert(admitted === true && bobStore.getById(reconstructed.commentaryId) !== null,
             n('ADMITTED succeeds regardless — storage/PublicationCommentaryStore.js#save() performs no Publication-existence check of any kind, over Arweave transport exactly as it already does for WebRTC and Nostr'));
 
-        const exchangeSource = await rawSource('application/PublicationCommentaryDistributionExchange.js');
+        const exchangeSource = await rawSource('application/publication/commentary/PublicationCommentaryDistributionExchange.js');
         assert(!/^\s*import[^\n]*CanCommentOnPublicationUseCase/m.test(exchangeSource),
-            n('application/PublicationCommentaryDistributionExchange.js still never imports CanCommentOnPublicationUseCase.js — reconfirmed live, the same separation 0.9.627 Section F already verified'));
+            n('application/publication/commentary/PublicationCommentaryDistributionExchange.js still never imports CanCommentOnPublicationUseCase.js — reconfirmed live, the same separation 0.9.627 Section F already verified'));
 
         console.log('✓ H: a Commentary naming a publicationId the receiving device has no local record of is verified and ADMITTED exactly the same as any other, over Arweave — the Commentary is never discarded merely because the Publication is temporarily or permanently unavailable locally.');
     }
@@ -888,7 +888,7 @@ async function run() {
             queryImpl: async () => []
         });
         assert(describesConformingPublicationCommentaryAsynchronousDeliverySubstrate(nostrDistribution) === true,
-            n('the real, unmodified, production Nostr Commentary substrate (application/PublicationCommentaryNostrDistribution.js) conforms to the contract'));
+            n('the real, unmodified, production Nostr Commentary substrate (application/publication/commentary/PublicationCommentaryNostrDistribution.js) conforms to the contract'));
 
         const gateway = makeSharedFakeGateway();
         const arweaveComposition = makeComposition({ gateway, signer: fakeArweaveSigner('j'), discoveryTag: '0.9.630-j' });
@@ -920,9 +920,9 @@ async function run() {
         // Publication's own real selection precedent (Section B),
         // reconfirmed here as the correct pattern to extend, never
         // Snapshot's.
-        const compositionSource = await rawSource('application/PublicationDistributionRuntimeComposition.js');
+        const compositionSource = await rawSource('application/publication/distribution/PublicationDistributionRuntimeComposition.js');
         assert(/SELECTION, NEVER FAN-OUT/.test(compositionSource),
-            n('application/PublicationDistributionRuntimeComposition.js\'s own header still states its own invariant in exactly those words — the precedent a future Commentary substrate-selection composition would extend, never loosen'));
+            n('application/publication/distribution/PublicationDistributionRuntimeComposition.js\'s own header still states its own invariant in exactly those words — the precedent a future Commentary substrate-selection composition would extend, never loosen'));
 
         // Guard: this milestone builds no such composition itself.
         assert(typeof globalThis.composePublicationCommentaryDistributionRuntime === 'undefined',
@@ -981,7 +981,7 @@ async function run() {
             n('the SAME commentaryId, retrieved from two different Arweave transactions, still admits exactly once — the store\'s own existing commentaryId semantics absorb duplicate transport-layer transactions exactly as they already absorb duplicate Nostr events'));
 
         // Local Commentary / WebRTC / Arweave independence.
-        const peerExchangeSource = await rawSource('application/PublicationCommentaryDistributionPeerExchange.js');
+        const peerExchangeSource = await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js');
         assert(!/Arweave/i.test(peerExchangeSource),
             n('the existing WebRTC peer exchange class still imports and references nothing Arweave-shaped — the live-dissemination path remains entirely unaware of this audit, exactly as it already was unaware of 0.9.627/0.9.628\'s own Nostr work'));
 

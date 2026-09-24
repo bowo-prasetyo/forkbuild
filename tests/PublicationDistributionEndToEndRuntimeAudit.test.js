@@ -1,16 +1,16 @@
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
-import { createArweavePublicationDistributionRuntimeAdapter } from '../application/ArweavePublicationDistributionRuntimeAdapter.js';
-import { createNostrPublicationDistributionRuntimeAdapter } from '../application/NostrPublicationDistributionRuntimeAdapter.js';
-import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js';
-import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { executePublicationDistribution } from '../application/PublicationDistributionExecutor.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { createArweavePublicationDistributionRuntimeAdapter } from '../application/arweave/ArweavePublicationDistributionRuntimeAdapter.js';
+import { createNostrPublicationDistributionRuntimeAdapter } from '../application/nostr/NostrPublicationDistributionRuntimeAdapter.js';
+import { createPublicationDistributionRuntimeProvider } from '../application/publication/distribution/PublicationDistributionRuntimeProvider.js';
+import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -328,7 +328,7 @@ async function run() {
         // `transaction` field as an opaque blob it only ever
         // JSON.stringifies. See Section H, below, for the full boundary
         // audit this line item only spot-checks.
-        const uploaderSource = await readFile(new URL('../application/ArweavePublicationMaterialUploader.js', import.meta.url), 'utf8');
+        const uploaderSource = await readFile(new URL('../application/arweave/ArweavePublicationMaterialUploader.js', import.meta.url), 'utf8');
         assert(!/data_root|crypto\.subtle|format:\s*2/.test(uploaderSource), 'A7. the Arweave DISTRIBUTION layer (application/) never itself constructs a transaction or computes data_root — that stays inside the host adapter');
 
         // A8 — single-chunk enforcement remains intact (still, end to end).
@@ -417,11 +417,11 @@ async function run() {
     // The audit brief asked for both directions: "Arweave succeeds, Nostr
     // fails" AND "Arweave fails, Nostr succeeds." Only the first is
     // actually reachable by this codebase's own design, and that is
-    // correct, not a gap: application/PublicationDistributionDescriptor.js
+    // correct, not a gap: application/publication/distribution/PublicationDistributionDescriptor.js
     // (0.9.44) builds a Nostr discovery envelope whose own `uri` field IS
     // the Arweave materialUri — a Nostr event announces WHERE material
     // already lives, so it cannot meaningfully exist before material does.
-    // application/PublicationDistributionExecutor.js's own "stop-on-failure
+    // application/publication/distribution/PublicationDistributionExecutor.js's own "stop-on-failure
     // ordering" (0.9.49) already encodes this: the Nostr publish step is
     // never reached at all unless the Arweave upload step already produced
     // a materialUri. This section proves both halves of that asymmetry
@@ -527,7 +527,7 @@ async function run() {
     {
         // D1 — a wallet-rejection-shaped failure now surfaces its own
         // (sanitized) cause instead of collapsing into the generic notice
-        // — see application/DistributionErrorMessageSanitizer.js, wired
+        // — see application/publication/distribution/DistributionErrorMessageSanitizer.js, wired
         // into this surface's catch block alongside EditorView's own.
         const lifecycleStore = new PublicationDistributionLifecycleMemoryStore();
         const publication = signedPublication({ id: 'pub-e2e-audit-d1', documentId: 'doc-e2e-audit-d1' });
@@ -548,7 +548,7 @@ async function run() {
         ctx.distributeSelectedPublication();
         await waitForSettled(ctx);
 
-        assert(ctx.distributionError === 'ArweaveInjectedProviderSigner: wallet extension rejected sign() — User rejected the request.', 'D1. a real wallet rejection now surfaces the sanitized underlying cause — the exact, actionable case application/DistributionErrorMessageSanitizer.js\'s own header names as the primary motivation');
+        assert(ctx.distributionError === 'ArweaveInjectedProviderSigner: wallet extension rejected sign() — User rejected the request.', 'D1. a real wallet rejection now surfaces the sanitized underlying cause — the exact, actionable case application/publication/distribution/DistributionErrorMessageSanitizer.js\'s own header names as the primary motivation');
         assert(ctx.distributionMaterialState === PublicationDistributionState.ABSENT, 'D1. no phantom PRESENT state appears for a leg that genuinely rejected');
         assert(lifecycleStore.get(publication.id) === null, 'D1. the lifecycle store stays untouched — a rejection is not silently reinterpreted as a partial success');
 
@@ -665,7 +665,7 @@ async function run() {
     // in the distribution layer migrated into this host-side file?
     //
     // Answer, confirmed structurally rather than merely asserted:
-    // application/ArweavePublicationMaterialUploader.js's OWN header
+    // application/arweave/ArweavePublicationMaterialUploader.js's OWN header
     // (0.9.45, unmodified by 0.9.121) already documents "Delegating
     // 'construct, sign'... to the signer" as ITS OWN, pre-existing design
     // choice — the uploader treats `signer.sign()`'s own `transaction`
@@ -686,7 +686,7 @@ async function run() {
     // ===================================================================
     {
         const { readFile } = await import('node:fs/promises');
-        const uploaderSource = await readFile(new URL('../application/ArweavePublicationMaterialUploader.js', import.meta.url), 'utf8');
+        const uploaderSource = await readFile(new URL('../application/arweave/ArweavePublicationMaterialUploader.js', import.meta.url), 'utf8');
         const uploaderFlattened = uploaderSource.split('\n').map((line) => line.replace(/^\s*\/\/\s?/, '')).join(' ').replace(/\s+/g, ' ');
         assert(/Delegating "construct, sign" entirely to an injected/.test(uploaderFlattened), 'H. the Arweave DISTRIBUTION layer\'s own header already documents delegating transaction construction to the signer — this predates ArweaveInjectedProviderSigner.js by three milestones (0.9.45 vs 0.9.121)');
         assert(/completely opaque, POSTing it unread/.test(uploaderFlattened) && /unread and uninterpreted/.test(uploaderFlattened), 'H. the uploader treats the signer\'s transaction as opaque — it never reads data_root/format/tags for meaning, confirming it never duplicates what the host adapter builds');
@@ -704,7 +704,7 @@ async function run() {
         assert(/computeSingleChunkMerkleData/.test(arweaveCodeOnly), 'H. (sanity) the one piece of real Arweave protocol math this file performs is exactly the single-leaf Merkle computation named in this section\'s own header');
         assert(!/RSA|deepHash|jwsSign/i.test(arweaveCodeOnly), 'H. no RSA-PSS signing or deep-hash computation exists in the host adapter\'s own CODE — everything requiring the wallet\'s own private key stays inside injectedProvider.sign()');
 
-        console.log('✓ Section H: ArweaveInjectedProviderSigner\'s transaction construction fulfills a contract application/ArweavePublicationMaterialUploader.js already, deliberately, pushed outward at 0.9.45 — no protocol logic has migrated out of the distribution layer; only the wallet\'s own private-key signing stays genuinely delegated');
+        console.log('✓ Section H: ArweaveInjectedProviderSigner\'s transaction construction fulfills a contract application/arweave/ArweavePublicationMaterialUploader.js already, deliberately, pushed outward at 0.9.45 — no protocol logic has migrated out of the distribution layer; only the wallet\'s own private-key signing stays genuinely delegated');
     }
 
     console.log('\nAll PublicationDistributionEndToEndRuntimeAudit tests passed.');

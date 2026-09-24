@@ -8,7 +8,7 @@ import { SPECIES_PRESET } from './WildlifeTileMesh.js';
 // knows how to turn a closed vocabulary value into actual Three.js
 // geometry, and nothing else — no opinion on WHERE an animal is (that's
 // renderer/AnimalVisual.js's job), WHICH animals currently exist
-// (application/AnimalRuntimeInstances.js's job), or whether one should
+// (application/world/AnimalRuntimeInstances.js's job), or whether one should
 // be visible right now (renderer/AnimalFieldRenderer.js's job).
 //
 // REUSES renderer/WildlifeTileMesh.js's OWN SPECIES_PRESET, NEVER A

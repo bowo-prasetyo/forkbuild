@@ -45,7 +45,7 @@ async function runTests() {
     {
         // Case-insensitive, matching this codebase's own raw-string
         // comparison convention (e.g.
-        // application/AvatarMovementController.js#_setKey).
+        // application/avatar/AvatarMovementController.js#_setKey).
         const fact = deriveAvatarVehicleBrakingInputFact({ type: 'BrakeDown' });
         assert(fact.brakeRequested === true, '2. type comparison is case-insensitive');
     }

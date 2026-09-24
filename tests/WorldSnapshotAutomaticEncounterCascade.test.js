@@ -1,22 +1,22 @@
 import { readFile } from 'node:fs/promises';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/AutomaticSnapshotEncounterCascadeOutcome.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotCandidateMaterializationOutcome } from '../application/SnapshotCandidateMaterializationOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { registerMaterializedSnapshotWorldSource } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/snapshot/AutomaticSnapshotEncounterCascadeOutcome.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotCandidateMaterializationOutcome } from '../application/snapshot/materialization/SnapshotCandidateMaterializationOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { registerMaterializedSnapshotWorldSource } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { assembleWorldDiscoveryInputs } from '../core/WorldDiscoverySourceAssembly.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
@@ -34,7 +34,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // downstream ever moved on its own. This milestone composes the ALREADY-
 // PROVEN resolve -> verify -> materialize -> place -> register chain
 // (0.9.152 through 0.9.172) into one orchestration seam,
-// `application/AutomaticSnapshotEncounterCascade.js`, that
+// `application/snapshot/AutomaticSnapshotEncounterCascade.js`, that
 // `ui/views/WorldView.js` now feeds with `WorldSnapshotDiscoveryMonitor`'s
 // own `lastResult` on every observation tick. No existing operation is
 // replaced; the existing explicit Resolve/Materialize/Place/Register
@@ -215,7 +215,7 @@ function placementInfoFor(placementRegistry, publicationId) {
 // AutomaticSnapshotEncounterCascade needs beyond resolve/materialize —
 // `resolvePlacementInfo`/`findPublicationById` — from a plain
 // { publicationId -> { publication, placementRegistry } } world model,
-// exactly mirroring what `application/WorldNavigationSession.js`'s own
+// exactly mirroring what `application/world/WorldNavigationSession.js`'s own
 // 0.9.187 `getPlacementInfoForPublication()`/`findPublicationById()`
 // methods do internally, without depending on that (large) class here.
 function makeWorldModel() {
@@ -673,7 +673,7 @@ async function runTests() {
         assert(resolution.outcome === DecentralizedSnapshotResolutionOutcome.RESOLVED, '1. the manual resolve command still works, unmodified');
         const materialization = await host.materializeSelectedSnapshotCommand(resolution);
         assert(materialization.outcome === StoreSnapshotContentOutcome.STORED, '2. the manual materialize command still works, unmodified');
-        const { resolveSnapshotWorldPlacement } = await import('../application/SnapshotWorldPlacement.js');
+        const { resolveSnapshotWorldPlacement } = await import('../application/snapshot/placement/SnapshotWorldPlacement.js');
         const placement = resolveSnapshotWorldPlacement(materialization, placementInfo);
         assert(placement.outcome === SnapshotWorldPlacementOutcome.PLACED, '3. the manual placement function still works, unmodified');
         const registration = registerMaterializedSnapshotWorldSource(registry, placement, publication);
@@ -686,7 +686,7 @@ async function runTests() {
     // Section N — structural sweep.
     // ---------------------------------------------------------------
     {
-        const source = await codeOnlySource('application/AutomaticSnapshotEncounterCascade.js');
+        const source = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
         assert(!source.includes('claimedPosition'), '1. the cascade never reads a candidate\'s own claimedPosition — a publisher claim is never promoted to World authority');
         assert(!/WorldEncounterCanvas|render|Renderer|mesh|Scene|Camera/i.test(source), '2. the cascade contains no rendering-specific logic of any kind — it stops at World registration');
         assert(!/rank|score|trust|preference|nearest/i.test(source), '3. the cascade introduces no ranking/trust/provider-scoring/nearest-preference vocabulary');
@@ -696,7 +696,7 @@ async function runTests() {
         const outcomeKeys = Object.keys(AutomaticSnapshotEncounterCascadeOutcome);
         // UPDATED 0.9.193 — Automatic Snapshot Session-Lifetime Guard added
         // its own one new value, SUPPRESSED, alongside 0.9.187's own
-        // INELIGIBLE (see application/AutomaticSnapshotEncounterCascadeOutcome.js's
+        // INELIGIBLE (see application/snapshot/AutomaticSnapshotEncounterCascadeOutcome.js's
         // own header) — every OTHER outcome remains an existing,
         // already-tested vocabulary forwarded verbatim, exactly as before.
         assert(outcomeKeys.length === 2 && outcomeKeys.includes('INELIGIBLE') && outcomeKeys.includes('SUPPRESSED'), '6. AutomaticSnapshotEncounterCascadeOutcome carries exactly its own two new values (INELIGIBLE, 0.9.187; SUPPRESSED, 0.9.193) — every other outcome is an existing, already-tested vocabulary forwarded verbatim');
@@ -798,7 +798,7 @@ async function runTests() {
     // used.
     // ---------------------------------------------------------------
     {
-        const { WorldNavigationSession } = await import('../application/WorldNavigationSession.js');
+        const { WorldNavigationSession } = await import('../application/world/WorldNavigationSession.js');
         const publicationId = 'session-wired-pub';
         const publication = new Publication({ id: publicationId, title: 'Session Wired' });
         const discoveryProvider = { findById: (id) => (id === publicationId ? publication : null) };

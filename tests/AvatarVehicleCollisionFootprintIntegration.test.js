@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
-import { AvatarTreeConstraint } from '../application/AvatarTreeConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
+import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
 import { VehicleType } from '../core/VehicleType.js';
 import {
     AvatarMovementCapabilityKind,
@@ -12,8 +12,8 @@ import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -27,7 +27,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // carries a `collisionRadius` (core/AvatarVehicleMovementCapability.js,
 // 0.9.88) that reaches the SAME existing tree-collision pipeline
 // (core/AvatarTreeCollisionQuery.js -> core/AvatarTreeMovement.js ->
-// application/AvatarTreeConstraint.js -> application/AvatarMovementController.js)
+// application/avatar/AvatarTreeConstraint.js -> application/avatar/AvatarMovementController.js)
 // every other movement capability already reaches — never a second
 // collision system, never a rectangular or oriented footprint, never a
 // vehicle-specific movement controller.
@@ -378,7 +378,7 @@ async function runTests() {
     // core/AvatarVehicleMovementCapability.js's own "AERIAL_VEHICLE Is Now
     // A Real, Supported Capability" header), and this section's own
     // AvatarMovementController — the ON-FOOT pipeline, never
-    // application/AvatarVehicleMovementController.js's own dedicated
+    // application/avatar/AvatarVehicleMovementController.js's own dedicated
     // altitude/hover-aware tick() — has no altitude concept of any kind.
     // A DRONE capability driven through THIS pipeline therefore collides
     // with a real tree exactly like any other vehicle here, at its own
@@ -413,8 +413,8 @@ async function runTests() {
             '../core/AvatarVehicleMovementCapability.js',
             '../core/AvatarTreeCollisionQuery.js',
             '../core/AvatarTreeMovement.js',
-            '../application/AvatarTreeConstraint.js',
-            '../application/AvatarMovementController.js'
+            '../application/avatar/AvatarTreeConstraint.js',
+            '../application/avatar/AvatarMovementController.js'
         ];
         const forbidden = [
             'BicycleCollisionController', 'CarCollisionController', 'MotorcycleCollisionController',

@@ -1,16 +1,16 @@
 import { readFile } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -271,9 +271,9 @@ async function runTests() {
         const code = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         const forbiddenConstruction = [
             "from '../../content/ArweaveContentStore.js'",
-            "from '../../application/NostrSnapshotDiscoveryPublisher.js'",
-            "from '../../application/SnapshotDistributionCommand.js'",
-            "from '../../application/SnapshotDistributionRuntimeComposition.js'",
+            "from '../../application/nostr/NostrSnapshotDiscoveryPublisher.js'",
+            "from '../../application/snapshot/SnapshotDistributionCommand.js'",
+            "from '../../application/snapshot/SnapshotDistributionRuntimeComposition.js'",
             'new ArweaveContentStore(', 'new NostrSnapshotDiscoveryPublisher(',
             'executeSnapshotDistributionCommand(', 'composeSnapshotDistributionRuntime(',
             'window.arweaveWallet', 'window.nostr', 'WebSocket'
@@ -381,7 +381,7 @@ async function runTests() {
 
         assert(publishCalls === 0, '19. an Arweave placement failure means discoveryPublisher.publish() is never even attempted');
         assert(ctx.snapshotDistributionError === 'ArweaveContentStore: Arweave gateway',
-            '20. a genuine placement rejection now surfaces the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js');
+            '20. a genuine placement rejection now surfaces the sanitized underlying cause — see application/publication/distribution/DistributionErrorMessageSanitizer.js');
         assert(ctx.snapshotDistributionResult === null, '21. a failed call never fabricates a partial result');
 
         console.log('✓ Section F: a placement failure prevents any announcement attempt and leaves no fabricated result');
@@ -488,7 +488,7 @@ async function runTests() {
     // Section J — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sessionCode = await codeOnlySource('application/WorldNavigationSession.js');
+        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
         assert(sessionCode.includes('getPublicationForDocument(documentId)'),
             '34. WorldNavigationSession.js exposes getPublicationForDocument()');
 

@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 
 // 0.9.150 — Snapshot Candidate Discovery Command.
 // See docs/Roadmap.md, "0.9.150 — Snapshot Candidate Discovery Command,"
@@ -161,7 +161,7 @@ async function runTests() {
     // Section G — no attribution/trust/ranking vocabulary of any kind.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/DiscoverSnapshotCandidatesCommand.js', import.meta.url);
+        const sourceUrl = new URL('../application/snapshot/DiscoverSnapshotCandidatesCommand.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -200,7 +200,7 @@ async function runTests() {
     // Section I — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/DiscoverSnapshotCandidatesCommand.js', import.meta.url);
+        const sourceUrl = new URL('../application/snapshot/DiscoverSnapshotCandidatesCommand.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

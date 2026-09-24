@@ -1,9 +1,9 @@
-import { describePublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardClaimSnapshotAssociation } from '../application/PublisherLeaderboardClaimSnapshotAssociationView.js';
-import { describePublisherLeaderboardClaimSnapshotCorrespondence } from '../application/PublisherLeaderboardClaimSnapshotCorrespondenceView.js';
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { describePublisherLeaderboardClaimSnapshotAssociation } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotAssociationView.js';
+import { describePublisherLeaderboardClaimSnapshotCorrespondence } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceView.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
@@ -258,7 +258,7 @@ async function run() {
     // mutation, determinism, vocabulary, network access.
     // ---------------------------------------------------------------
     {
-        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/PublisherLeaderboardClaimSnapshotCorrespondenceView.js', import.meta.url), 'utf8');
+        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceView.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
         assert(importLines.length === 2, '33. this file has exactly two imports');
         assert(importLines.some((line) => line.includes("from './LeaderboardClaimRecord.js'")), '34. imports LeaderboardClaimRecord (0.8.123, UNCHANGED)');

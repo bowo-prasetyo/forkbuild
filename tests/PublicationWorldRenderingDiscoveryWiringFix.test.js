@@ -8,17 +8,17 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
-import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { LoadPublishedWorldSessionUseCase } from '../application/LoadPublishedWorldSessionUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
+import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { LoadPublishedWorldSessionUseCase } from '../application/publication/LoadPublishedWorldSessionUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Publication } from '../publisher/Publication.js';
 import { World } from '../core/World.js';
@@ -33,8 +33,8 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 //
 // TYPE: production wiring fix, following 0.9.600's own precedent
 // (PublicationFirstPlacementActionWiringFix.test.js). PRODUCTION
-// CHANGES: application/CreateWorldViewUseCase.js and
-// application/WorldNavigationSession.js — see both files' own 0.9.605
+// CHANGES: application/world/CreateWorldViewUseCase.js and
+// application/world/WorldNavigationSession.js — see both files' own 0.9.605
 // comments.
 //
 // 0.9.602/0.9.603/0.9.604 audited this gap from three angles and each
@@ -130,7 +130,7 @@ function seedRepositoryAdmittedPublication(decentralizedProvider, { id, document
     return publication;
 }
 
-// Builds every collaborator application/CreateWorldViewUseCase.js
+// Builds every collaborator application/world/CreateWorldViewUseCase.js
 // itself now builds (post-0.9.605), in the SAME shape and the SAME
 // order, then constructs a real, unmodified WorldNavigationSession over
 // them — never a stand-in class. Section A separately proves the real
@@ -147,7 +147,7 @@ function buildHarness(storage, { decentralizedPublicationDiscoveryProvider = nul
         : discoveryProvider;
     const spatialIndexProvider = new LocalSpatialIndexProvider(storage);
     // THE PRODUCTION CHANGE (i): publicationActionDiscoveryProvider, not
-    // the narrow discoveryProvider — see application/CreateWorldViewUseCase.js's
+    // the narrow discoveryProvider — see application/world/CreateWorldViewUseCase.js's
     // own 0.9.605 comment.
     const worldLayoutProvider = new LocalWorldLayoutProvider(spatialIndexProvider, publicationActionDiscoveryProvider);
     const placementRegistry = new LocalPlacementRegistry(storage, spatialIndexProvider);
@@ -197,17 +197,17 @@ async function run() {
     // each identified as the smallest sufficient change.
     // ===============================================================
     {
-        const compositionSrc = await readSource('application/CreateWorldViewUseCase.js');
+        const compositionSrc = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(compositionSrc),
-            'A1. application/CreateWorldViewUseCase.js constructs worldLayoutProvider from publicationActionDiscoveryProvider — the ONE-argument substitution 0.9.604 Section D/K proved necessary and sufficient.');
+            'A1. application/world/CreateWorldViewUseCase.js constructs worldLayoutProvider from publicationActionDiscoveryProvider — the ONE-argument substitution 0.9.604 Section D/K proved necessary and sufficient.');
         assert(/const loadPublishedWorldSessionUseCase = new LoadPublishedWorldSessionUseCase\(/.test(compositionSrc),
-            'A2. application/CreateWorldViewUseCase.js now constructs LoadPublishedWorldSessionUseCase — the material bridge 0.9.603 proved was already a fully-built, already-tested class needing exactly one new call site.');
+            'A2. application/world/CreateWorldViewUseCase.js now constructs LoadPublishedWorldSessionUseCase — the material bridge 0.9.603 proved was already a fully-built, already-tested class needing exactly one new call site.');
         assert(/loadPublishedWorldSessionUseCase,\s*\n\s*worldLayoutProvider,/.test(compositionSrc),
             'A3. That instance is threaded into WorldNavigationSession\'s own constructor call — never left unused.');
         assert(!/new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*discoveryProvider\s*\);/.test(compositionSrc),
             'A4. The OLD, narrow wiring no longer appears anywhere in this file — replaced, not duplicated alongside a second worldLayoutProvider.');
 
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
         assert(/loadPublishedWorldSessionUseCase = null,/.test(sessionSrc),
             'A5. WorldNavigationSession accepts loadPublishedWorldSessionUseCase as a new, OPTIONAL constructor parameter — a caller that never wires one (every pre-0.9.605 caller/test) gets no fallback, exactly the same degrade-gracefully posture every other optional collaborator in this class already follows.');
         assert(/_resolveWorldDocument\(documentId\)/.test(sessionSrc) && /_resolvePublicationMaterial\(documentId\)/.test(sessionSrc),
@@ -386,7 +386,7 @@ async function run() {
         assert(harness.session.getPublicationIdForDocument(collisionDocId) === null,
             'D3. fork-policy (getPublicationIdForDocument -> _findPublications -> the narrow discoveryProvider) does not know collisionDocId — 0.9.605\'s widening of worldLayoutProvider/the material fallback is a COMPLETELY SEPARATE constructor argument/code path from the one _findPublications() reads.');
 
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0])
             && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),
@@ -399,9 +399,9 @@ async function run() {
     // Section E — Placement semantics untouched.
     // ===============================================================
     {
-        const placeSrc = await readSource('application/PlacePublicationUseCase.js');
-        const moveSrc = await readSource('application/MoveWorldPlacementUseCase.js');
-        const removeSrc = await readSource('application/RemoveWorldPlacementUseCase.js');
+        const placeSrc = await readSource('application/placement/PlacePublicationUseCase.js');
+        const moveSrc = await readSource('application/placement/MoveWorldPlacementUseCase.js');
+        const removeSrc = await readSource('application/placement/RemoveWorldPlacementUseCase.js');
         assert(!/claimedPosition/.test(placeSrc), 'E1. PlacePublicationUseCase.js still never reads claimedPosition — position comes from the caller\'s own explicit argument.');
         assert(/PlacementRecord/.test(placeSrc) && /this\._spatialIndexProvider\.add\(placement\)/.test(placeSrc),
             'E2. Placement still authors a real WorldPlacement + PlacementRecord — this milestone added no second code path that could manufacture one.');
@@ -525,19 +525,19 @@ CLOSURE — 0.9.605
 WHAT SHIPPED: exactly the two seams 0.9.603/0.9.604 each identified as
 the smallest sufficient production change —
 
-  (i)  application/CreateWorldViewUseCase.js: worldLayoutProvider is now
+  (i)  application/world/CreateWorldViewUseCase.js: worldLayoutProvider is now
        built from publicationActionDiscoveryProvider, not the narrow
        discoveryProvider. discoveryProvider itself — fork-policy's own
        choke point — is untouched.
 
-  (ii) application/WorldNavigationSession.js: _loadWorld() now falls
+  (ii) application/world/WorldNavigationSession.js: _loadWorld() now falls
        back to LoadPublishedWorldSessionUseCase (via _resolveWorldDocument()/
        _resolvePublicationMaterial()) when, and only when, the ordinary
        local storage[documentId] lookup finds nothing. LoadPublicationDocumentUseCase
        is still tried first, unconditionally, for every documentId.
 
 NO NEW CLASS, NO NEW STORAGE NAMESPACE, NO NEW ADAPTER. Both seams reuse
-collaborators application/CreateWorldViewUseCase.js already built for
+collaborators application/world/CreateWorldViewUseCase.js already built for
 other callers (publicationActionDiscoveryProvider for placement actions
 since 0.9.597/0.9.600; LoadPublishedWorldSessionUseCase already existing
 and already tested since well before this arc began).

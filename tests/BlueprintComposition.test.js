@@ -4,15 +4,15 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CopyStructureIntoDocumentUseCase } from '../application/CopyStructureIntoDocumentUseCase.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CopyStructureIntoDocumentUseCase } from '../application/editor/CopyStructureIntoDocumentUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
 // 0.4.0 — Structure Composition & Blueprint Library.

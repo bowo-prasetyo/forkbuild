@@ -30,7 +30,7 @@ import { deriveEditorEntryContext } from './EditorEntryContext.js';
 //   Focus (noun, THIS file) — "show me information about this thing."
 //   Go    (verb, pre-existing) — moves the 3D camera. Every
 //          `focusLocation()`/`focusCollaborator()`/`focusPlace()`
-//          method on application/WorldNavigationSession.js already
+//          method on application/world/WorldNavigationSession.js already
 //          means this, and — deliberately — NONE of them are renamed
 //          by this milestone. ui/components/LocationsPanel.js and
 //          ui/components/GeographicPlacePanel.js already have their own
@@ -47,7 +47,7 @@ import { deriveEditorEntryContext } from './EditorEntryContext.js';
 // A WorldFocusContext never calls any of the Go/Map verbs itself — it
 // only describes ENOUGH for a host (ui/views/WorldView.js) to offer
 // them as buttons. See deriveWorldFocusContext()'s own header for the
-// derivation, and application/WorldNavigationSession.js#getFocusContext()
+// derivation, and application/world/WorldNavigationSession.js#getFocusContext()
 // for the one place raw World state is gathered and handed to it.
 export const WorldFocusKind = Object.freeze({
     REGION: 'region',
@@ -248,7 +248,7 @@ function formatGeographicPlaceSummary(place) {
 
 // The one place a WorldFocusContext is ever built. Pure: no session, no
 // store, no World mutation, no camera movement — every input is a plain
-// value the caller (application/WorldNavigationSession.js#getFocusContext())
+// value the caller (application/world/WorldNavigationSession.js#getFocusContext())
 // already has lying around from its own existing collections
 // (_collectRegions(), getGeographicPlaceDirectory(), etc.), the exact
 // same "gather, then derive" shape core/WorldWelcomeContext.js#
@@ -339,7 +339,7 @@ export function deriveWorldFocusContext({
                 description: entity.description || '',
                 position, distance: roundedDistance, direction, regionPath, geographicPlace,
                 availableActions: [WorldFocusAction.GO, WorldFocusAction.MAP, WorldFocusAction.NAMES, WorldFocusAction.EDIT_COPY],
-                // _collectRegions() (application/WorldNavigationSession.js)
+                // _collectRegions() (application/world/WorldNavigationSession.js)
                 // calls this field `worldId`, not `documentId` — same
                 // value (a WorldRegion's owning Document/World identity
                 // are the same id throughout this codebase), tolerated

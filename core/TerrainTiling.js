@@ -18,7 +18,7 @@
 // deliberate visual-coherence choice.
 export const TERRAIN_TILE_SIZE = 40;
 
-// A little beyond application/WorldNavigationSession.js's own
+// A little beyond application/world/WorldNavigationSession.js's own
 // STREAMING_RADIUS (150, for published document content) so the ground
 // itself is never the thing that runs out first.
 export const DEFAULT_STREAMING_RADIUS = 160;

@@ -1,6 +1,6 @@
 // 0.6.2 — Editor UX Consolidation.
 //
-// EditorSession#repeatSelection() (application/RepeatSelectionUseCase.js)
+// EditorSession#repeatSelection() (application/editor/RepeatSelectionUseCase.js)
 // has existed, fully wired and fully tested, since 0.4.9 — this is the
 // UI entry point 0.4.9 never built for it. Deliberately styled and
 // shaped like ui/components/AlignmentPanel.js right next to it (inline

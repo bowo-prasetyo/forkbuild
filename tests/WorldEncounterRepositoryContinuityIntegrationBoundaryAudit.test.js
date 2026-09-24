@@ -4,15 +4,15 @@ import { execSync } from 'node:child_process';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { PeerWorldEncounterMaterialSource } from '../application/PeerWorldEncounterMaterialSource.js';
+import { PeerWorldEncounterMaterialSource } from '../application/worldEncounter/PeerWorldEncounterMaterialSource.js';
 import {
     PeerWorldEncounterMaterialMessageKind,
     toWorldEncounterMaterialResponseMessage
-} from '../application/PeerWorldEncounterMaterialProtocol.js';
+} from '../application/worldEncounter/PeerWorldEncounterMaterialProtocol.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';

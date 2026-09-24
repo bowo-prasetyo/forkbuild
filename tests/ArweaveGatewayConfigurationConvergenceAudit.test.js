@@ -5,10 +5,10 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/ArweaveWorldEncounterMaterialResolver.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
-import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
+import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
+import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js';
 
 // 0.9.365 — Arweave Gateway Configuration Convergence Audit.
 //
@@ -150,16 +150,16 @@ async function run() {
         const storeSource = await source('storage/ArweaveGatewayConfigurationStore.js');
         const mainSource = await source('ui/main.js');
         const contentStoreSource = await source('content/ArweaveContentStore.js');
-        const resolverSource = await source('application/ArweaveWorldEncounterMaterialResolver.js');
-        const uploaderSource = await source('application/ArweavePublicationMaterialUploader.js');
-        const pubDistConfigSource = await source('application/PublicationDistributionRuntimeConfiguration.js');
-        const pubDistProviderSource = await source('application/PublicationDistributionConfigurationProvider.js');
+        const resolverSource = await source('application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js');
+        const uploaderSource = await source('application/arweave/ArweavePublicationMaterialUploader.js');
+        const pubDistConfigSource = await source('application/publication/distribution/PublicationDistributionRuntimeConfiguration.js');
+        const pubDistProviderSource = await source('application/publication/distribution/PublicationDistributionConfigurationProvider.js');
         const otherFiles = [
             ['content/ArweaveContentStore.js', contentStoreSource],
-            ['application/ArweaveWorldEncounterMaterialResolver.js', resolverSource],
-            ['application/ArweavePublicationMaterialUploader.js', uploaderSource],
-            ['application/PublicationDistributionRuntimeConfiguration.js', pubDistConfigSource],
-            ['application/PublicationDistributionConfigurationProvider.js', pubDistProviderSource]
+            ['application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js', resolverSource],
+            ['application/arweave/ArweavePublicationMaterialUploader.js', uploaderSource],
+            ['application/publication/distribution/PublicationDistributionRuntimeConfiguration.js', pubDistConfigSource],
+            ['application/publication/distribution/PublicationDistributionConfigurationProvider.js', pubDistProviderSource]
         ];
 
         assert(configSource.includes('export class ArweaveGatewayConfiguration '), 'A1. core/ArweaveGatewayConfiguration.js is the one place the value object is defined');
@@ -304,10 +304,10 @@ async function run() {
         // Structural: none of the write-path composition/configuration
         // files reference the retrieval configuration boundary by name.
         const writePathFiles = [
-            'application/SnapshotDistributionRuntimeComposition.js',
-            'application/PublicationDistributionRuntimeConfiguration.js',
-            'application/PublicationDistributionConfigurationProvider.js',
-            'application/ArweavePublicationMaterialUploader.js'
+            'application/snapshot/SnapshotDistributionRuntimeComposition.js',
+            'application/publication/distribution/PublicationDistributionRuntimeConfiguration.js',
+            'application/publication/distribution/PublicationDistributionConfigurationProvider.js',
+            'application/arweave/ArweavePublicationMaterialUploader.js'
         ];
         for (const path of writePathFiles) {
             const src = await source(path);

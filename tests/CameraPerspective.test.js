@@ -1,13 +1,13 @@
 import { CameraPerspective, isValidCameraPerspective, computeCameraFraming } from '../core/CameraPerspective.js';
-import { SpatialCameraController } from '../application/SpatialCameraController.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.3.2 — Avatar & Camera Experience: Camera Perspective.
 //
@@ -23,7 +23,7 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 // machinery — every perspective framing still reaches the renderer
 // through the SAME SpatialCameraController#applyFraming() every other
 // camera-focus caller in this codebase already uses (application/
-// CameraFocusAnimator.js's own glide, application/WorldNavigationSession.js#
+// CameraFocusAnimator.js's own glide, application/world/WorldNavigationSession.js#
 // focusLocation()/focusCollaborator()) — no second camera-movement
 // mechanism. And a perspective is purely LOCAL UI/navigation state:
 // never persisted, never signed, never broadcast to any collaborator.

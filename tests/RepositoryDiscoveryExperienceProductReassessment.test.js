@@ -8,9 +8,9 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
-import { FindPublicationUseCase } from '../application/FindPublicationUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
+import { FindPublicationUseCase } from '../application/publication/FindPublicationUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
 import { groupPublications, GroupBy } from '../core/PublicationGrouping.js';
 import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../core/PublicationDateAmbiguity.js';
@@ -136,7 +136,7 @@ function knowPublicationsLocally(storageProvider, publications) {
 // tests/PublicationListCommentaryParity.test.js's own makeBackend()
 // already established, extended here with loadPublicationDocumentUseCase
 // (needed for Section C's description-search check) and searchPublicationsUseCase
-// itself — the exact composition application/CreateDiscoveryUseCase.js
+// itself — the exact composition application/discovery/CreateDiscoveryUseCase.js
 // builds for Repository/Author, reproduced rather than imported so this
 // file can substitute an in-memory storage backend per scenario.
 function makeBackend() {
@@ -360,7 +360,7 @@ async function main() {
         // C4. VERIFICATION is a concept SearchPublicationsUseCase never
         // touches — confirmed against its own source, not merely by
         // absence of a failing case.
-        const searchSource = await codeOnlySource('application/SearchPublicationsUseCase.js');
+        const searchSource = await codeOnlySource('application/publication/SearchPublicationsUseCase.js');
         assert(!/verif|trust|signature\.valid|MaterialInspection/i.test(searchSource),
             '24. LIVE: SearchPublicationsUseCase.js carries no verification/trust vocabulary at all — a search RESULT is never, itself, a verification outcome (see Section F).');
 

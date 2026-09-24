@@ -11,7 +11,7 @@
 // This is deliberately NOT a second copy of core/AvatarMovementState.js.
 // AvatarMovementState is a per-tick snapshot of "what axis is currently
 // being asked for," rebuilt fresh every tick from whatever keys are
-// physically down right now (see application/AvatarMovementController.js
+// physically down right now (see application/avatar/AvatarMovementController.js
 // #_currentMovementState()). AvatarContinuousMovementIntent answers a
 // different, longer-lived question — "should FORWARD (or BACKWARD) keep
 // being asked for even after the key that started it is released" — and

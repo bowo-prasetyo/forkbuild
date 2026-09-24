@@ -24,7 +24,7 @@ import { FriendshipAction, isValidFriendshipAction, FRIENDSHIP_ACTION_SEQUENCE }
 //                      note below — and, one layer up, required to
 //                      equal the identity the SENDING connection
 //                      already proved during 0.2.49 authentication
-//                      (application/FriendRelationshipUseCase.js's own
+//                      (application/identity/FriendRelationshipUseCase.js's own
 //                      ingestion boundary), so a signature this valid
 //                      can never arrive from a connection authenticated
 //                      as someone else.
@@ -61,7 +61,7 @@ import { FriendshipAction, isValidFriendshipAction, FRIENDSHIP_ACTION_SEQUENCE }
 //                      string of the specific REQUEST advertisement
 //                      this action answers or ends. REQUIRED for those
 //                      four, never optional — see
-//                      application/FriendRelationshipUseCase.js's own
+//                      application/identity/FriendRelationshipUseCase.js's own
 //                      ingestion boundary, which refuses to apply any
 //                      of them unless `inResponseTo` matches the
 //                      REQUEST this replica actually has on file for
@@ -106,7 +106,7 @@ export function toFriendshipAdvertisement({ actorIdentity, subjectIdentity, acti
 }
 
 // A defensive shape check applied at the ingestion boundary — see
-// application/FriendRelationshipUseCase.js. Nothing arriving over a
+// application/identity/FriendRelationshipUseCase.js. Nothing arriving over a
 // peer connection is trusted structurally, let alone authoritatively;
 // a malformed message is simply discarded, the same failure-isolation
 // posture every other `isValid*Advertisement()` in this codebase
@@ -118,7 +118,7 @@ export function toFriendshipAdvertisement({ actorIdentity, subjectIdentity, acti
 // `sequence === FRIENDSHIP_ACTION_SEQUENCE[action]` above it. Whether
 // the referenced signature actually matches a REQUEST this replica
 // holds is a STATEFUL question this function has no way to answer —
-// that check lives in application/FriendRelationshipUseCase.js's own
+// that check lives in application/identity/FriendRelationshipUseCase.js's own
 // ingestion boundary, the same division of labor `sequence`'s own
 // shape-only check already establishes here.
 export function isValidFriendshipAdvertisement(value) {

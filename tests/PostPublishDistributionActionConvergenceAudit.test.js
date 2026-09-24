@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -18,7 +18,7 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.378 — Post-Publish Distribution Action Convergence Audit.
@@ -396,7 +396,7 @@ const OWN_PUBLICATION_SURFACE = {
     genericErrorMessage: 'Publication distribution could not be completed.',
     // OwnPublicationPanel now also runs a raw failure's own message through
     // sanitizeDistributionErrorMessage(), matching EditorView's own
-    // convention above — see application/DistributionErrorMessageSanitizer.js.
+    // convention above — see application/publication/distribution/DistributionErrorMessageSanitizer.js.
     expectedFailureMessage: (rawMessage) => sanitizeDistributionErrorMessage(rawMessage) || 'Publication distribution could not be completed.'
 };
 
@@ -411,7 +411,7 @@ const WORLD_ENCOUNTER_SURFACE = {
     executing: (ctx) => ctx.distributionExecuting,
     error: (ctx) => ctx.distributionError,
     // WorldEncounterCanvas stores no result of its own — see
-    // application/PublicationDistributionCommand.js's own header and
+    // application/publication/distribution/PublicationDistributionCommand.js's own header and
     // tests/PostPublishDistributionConvergenceAudit.test.js's own
     // identical WORLD_ENCOUNTER_SURFACE adapter. Success is observed
     // through the shared lifecycle store instead (Sections A/F below).
@@ -419,7 +419,7 @@ const WORLD_ENCOUNTER_SURFACE = {
     genericErrorMessage: 'Distribution could not be completed.',
     // WorldEncounterCanvas now also runs a raw failure's own message through
     // sanitizeDistributionErrorMessage(), matching EditorView's own
-    // convention above — see application/DistributionErrorMessageSanitizer.js.
+    // convention above — see application/publication/distribution/DistributionErrorMessageSanitizer.js.
     expectedFailureMessage: (rawMessage) => sanitizeDistributionErrorMessage(rawMessage) || 'Distribution could not be completed.'
 };
 
@@ -753,12 +753,12 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const forbiddenImports = [
-            "'../../application/PublicationDistributionOrchestrator.js'",
-            "'../../application/PublicationDistributionExecutor.js'",
-            "'../../application/PublicationDistributionLifecycleStore.js'",
-            "'../../application/PublicationDistributionLifecycle.js'",
-            "'../../application/PublicationDistributionCommand.js'",
-            "'../../application/PublicationDistributionCommandComposition.js'"
+            "'../../application/publication/distribution/PublicationDistributionOrchestrator.js'",
+            "'../../application/publication/distribution/PublicationDistributionExecutor.js'",
+            "'../../application/publication/distribution/PublicationDistributionLifecycleStore.js'",
+            "'../../application/publication/distribution/PublicationDistributionLifecycle.js'",
+            "'../../application/publication/distribution/PublicationDistributionCommand.js'",
+            "'../../application/publication/distribution/PublicationDistributionCommandComposition.js'"
         ];
         const toolbarRaw = await readSource('ui/components/Toolbar.js');
         for (const term of forbiddenImports) {

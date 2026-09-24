@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
@@ -12,32 +12,32 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { License, LicenseId } from '../core/License.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { describePublicationDistributionResult } from '../application/PublicationDistributionResult.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
+import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import {
     inspectWorldEncounterMaterial
-} from '../application/WorldEncounterMaterialInspection.js';
+} from '../application/worldEncounter/WorldEncounterMaterialInspection.js';
 import {
     WorldEncounterMaterialVerificationStatus,
     WorldEncounterMaterialVerifier
-} from '../application/WorldEncounterMaterialVerification.js';
+} from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import {
     PublicationMaterialProvenanceOrigin,
     describePublicationMaterialProvenanceFromInspection
-} from '../application/PublicationMaterialProvenance.js';
-import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
+} from '../application/publication/distribution/PublicationMaterialProvenance.js';
+import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.533 — Publication Lifecycle Seam Product Reassessment.
@@ -125,7 +125,7 @@ class InMemoryStorageProvider extends StorageProvider {
 // Publishes a real, minimal one-brick Document through the SAME
 // PublishDocumentUseCase/LocalPublisherProvider pair every real Editor
 // publish and World View fork already goes through (see
-// application/PublishDocumentUseCase.js's own header, "WorldNavigation
+// application/publication/PublishDocumentUseCase.js's own header, "WorldNavigation
 // Session.publishDocument calls this same class with a duck-typed
 // { document } stand-in for documentManager") — never a hand-rolled
 // substitute. `identityProvider: null` exercises the legacy,
@@ -592,7 +592,7 @@ async function main() {
         // body never references a discovery provider or catalog at all
         // — the two subsystems are structurally disjoint, not merely
         // coincidentally unaffected in this one test run.
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
         const focusDocumentBody = sessionSrc.match(/focusDocument\(documentId, \{ setActive = true \} = \{\}\) \{([\s\S]*?)\n {4}\}/);
         assert(focusDocumentBody && !/discoveryProvider|DiscoveryProvider/.test(focusDocumentBody[1]),
             '2. focusDocument()\'s own body never references a discovery provider — structurally incapable of touching Repository catalog state.');

@@ -254,7 +254,7 @@ async function run() {
     // discovery.
     // ===============================================================
     {
-        const searchCode = await readSource('application/SearchPublicationsUseCase.js');
+        const searchCode = await readSource('application/publication/SearchPublicationsUseCase.js');
         const isSynchronousNoNetwork = !/Arweave|Nostr|Ipfs|fetch\(|WebSocket/i.test(searchCode) && !/async execute/.test(searchCode);
         const evidence = {
             currentSource: isSynchronousNoNetwork,
@@ -263,7 +263,7 @@ async function run() {
             currentTests: await sourceExists('tests/ProactivePublicationDiscoveryProductDirectionAudit.test.js'),
             currentUserRequirement: false
         };
-        assert(evidence.currentSource, n('F1. current source: application/SearchPublicationsUseCase.js is still synchronous with no network collaborator today'));
+        assert(evidence.currentSource, n('F1. current source: application/publication/SearchPublicationsUseCase.js is still synchronous with no network collaborator today'));
         assert(evidence.currentProductionCallers, n('F1. current production callers: discovery/LocalDiscoveryProvider.js exists and is used only for the REACTIVE paths (a Publication the user already has a reference to), never a proactive sweep'));
         assert(evidence.currentTests, n('F1. current tests: a dedicated seam-audit file already exists for this exact candidate — it documents the seam, it does not build the feature'));
 
@@ -317,13 +317,13 @@ async function run() {
         const notificationEventCode = await readSource('core/NotificationEvent.js');
         const evidence = {
             currentSource: !/deliveredAt\s*=|seenAt\s*=|readAt\s*=/.test(notificationEventCode),
-            currentProductionCallers: await sourceExists('application/GetRecipientNotificationEventsUseCase.js'),
+            currentProductionCallers: await sourceExists('application/chat/GetRecipientNotificationEventsUseCase.js'),
             currentUIReachability: await sourceExists('ui/components/NotificationHistoryPanel.js'),
             currentTests: grepFiles('NotificationDeduplicationPolicy', 'tests/*.test.js').length,
             currentUserRequirement: false
         };
         assert(evidence.currentSource, n('H1. current source: core/NotificationEvent.js still carries no delivered/seen/read field today'));
-        assert(evidence.currentProductionCallers, n('H1. current production callers: application/GetRecipientNotificationEventsUseCase.js exists and is the real, working, authenticated-retrieval path'));
+        assert(evidence.currentProductionCallers, n('H1. current production callers: application/chat/GetRecipientNotificationEventsUseCase.js exists and is the real, working, authenticated-retrieval path'));
         assert(evidence.currentUIReachability, n('H1. current UI reachability: ui/components/NotificationHistoryPanel.js is mounted and reachable today — the existing durable-history journey works, it is simply not push delivery'));
 
         const candidate = evaluateCandidate({
@@ -346,7 +346,7 @@ async function run() {
         const richnessHits = grepFiles('PlaceNamingAlias|PlaceNamingHierarchy|PlaceNamingNamespace', 'core/*.js application/*.js ui/**/*.js');
         const evidence = {
             currentSource: await sourceExists('core/PlaceNamingClaim.js') && await sourceExists('core/PlaceNamingView.js'),
-            currentProductionCallers: await sourceExists('application/NostrPlaceNamingDiscoverySource.js'),
+            currentProductionCallers: await sourceExists('application/placeNaming/NostrPlaceNamingDiscoverySource.js'),
             currentUIReachability: await sourceExists('ui/components/PlaceNamingPanel.js'),
             currentTests: richnessHits.length,
             currentUserRequirement: false

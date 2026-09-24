@@ -21,7 +21,7 @@ import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
 //      current configuration / Save / Clear
 //      │
 //      ▼
-//   application/SetTurnServerConfigurationUseCase.js (Save)   (this same milestone)
+//   application/settings/SetTurnServerConfigurationUseCase.js (Save)   (this same milestone)
 //   storage/TurnServerConfigurationStore.js#clear() (Clear)   (0.9.454, unmodified)
 //      │
 //      ▼

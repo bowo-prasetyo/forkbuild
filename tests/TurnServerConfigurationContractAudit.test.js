@@ -401,7 +401,7 @@ async function run() {
         console.log('    urls:       one or more turn:/turns: URL strings, sharing ONE credential pair (never a list of independently-credentialed servers — that is option 5, deferred)');
         console.log('    username / credential: required non-empty strings, the user\'s own operator-issued values, entered and owned by the user');
         console.log('  Persisted as a SINGLE optional override (storage/TurnServerConfigurationStore.js, mirroring IceServerConfigurationStore.js\'s own save()/get()/clear(), "absence stays meaningful" rule, one-for-one)');
-        console.log('  Written through application/SetTurnServerConfigurationUseCase.js, mirroring SetIceServerConfigurationUseCase.js\'s own construct-then-save shape exactly');
+        console.log('  Written through application/settings/SetTurnServerConfigurationUseCase.js, mirroring SetIceServerConfigurationUseCase.js\'s own construct-then-save shape exactly');
         console.log('  Composition: appended into the SAME merged array ui/main.js already builds via fetchIceServers({ fallback: resolvedIceServers }) before the one existing peerConnectionProvider.setIceServers(...) call — not a second mechanism');
         console.log('✓ Section F: every piece of this contract is proven, live, against real (or realistically prototyped) code — never asserted in prose alone.');
     }
@@ -436,7 +436,7 @@ async function run() {
         console.log('  - TURN discovery, a generic InfrastructureEndpointConfiguration abstraction, any Settings UI, any composition-root wiring, and any production-code change of any kind — this milestone remains test-only');
         console.log('');
         console.log('FORWARD PLAN, concrete and minimal, mirroring the STUN arc\'s own two-milestone scope (0.9.386 shipped core+store+UI+wiring together; 0.9.387 was its own convergence audit) rather than the seven-milestone arc this session\'s own initial proposal sketched:');
-        console.log('  0.9.454 — core/TurnServerConfiguration.js, storage/TurnServerConfigurationStore.js, application/SetTurnServerConfigurationUseCase.js, and a Settings UI + ui/main.js composition, built to Section F\'s own contract exactly.');
+        console.log('  0.9.454 — core/TurnServerConfiguration.js, storage/TurnServerConfigurationStore.js, application/settings/SetTurnServerConfigurationUseCase.js, and a Settings UI + ui/main.js composition, built to Section F\'s own contract exactly.');
         console.log('  0.9.455 — its own lifecycle & convergence audit, mirroring 0.9.387\'s own shape for STUN.');
         console.log('  (separate, later, not number-assigned here) — the failover/resilience arc, its own product-decision audit first, exactly as 0.9.390 itself required, only after 0.9.454/0.9.455 converge.');
         assert(true, n('H1. the forward plan is recorded as exactly two concrete next milestones plus one explicitly deferred, unscheduled arc — never a speculative multi-milestone roadmap invented ahead of the work it describes'));

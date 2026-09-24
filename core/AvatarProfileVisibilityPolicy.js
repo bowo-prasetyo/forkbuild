@@ -16,7 +16,7 @@ import { PresenceVisibility, isValidPresenceVisibility } from './PresenceVisibil
 // class deliberately minimal ("no FRIENDS/LOCAL/HIDDEN tier yet... there
 // is still no live profile-sharing configuration surface anywhere in the
 // running app for a richer policy to hang off of"). That surface now
-// exists (application/AvatarProfileVisibilityUseCase.js,
+// exists (application/avatar/AvatarProfileVisibilityUseCase.js,
 // ui/views/AvatarSettingsView.js's own "Profile Visibility" section), so
 // this class grows the EXACT same PUBLIC/FRIENDS/LOCAL/HIDDEN vocabulary
 // core/PresenceVisibility.js already defined, reusing that same closed

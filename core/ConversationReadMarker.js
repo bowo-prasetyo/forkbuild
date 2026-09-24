@@ -12,7 +12,7 @@
 // Local Note About What THIS Device Has Seen, Never A Receipt Sent To
 // Anyone" (0.2.70) — this class is never signed, never sent to the
 // peer, never carried over `peer/PeerMessageBus.js`, and never read by
-// `application/ChatUseCase.js`'s own ingestion boundary. It exists
+// `application/chat/ChatUseCase.js`'s own ingestion boundary. It exists
 // purely so THIS device's own UI can compute an unread count; the other
 // participant has no way to know, and no way to find out, that a
 // message here was ever marked read. Read receipts — a signed,

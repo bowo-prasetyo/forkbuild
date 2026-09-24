@@ -1,28 +1,28 @@
 import { readFile, readdir } from 'node:fs/promises';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/AutomaticSnapshotEncounterCascadeOutcome.js';
-import { AutomaticSnapshotEncounterRetentionReconciliation } from '../application/AutomaticSnapshotEncounterRetentionReconciliation.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/snapshot/AutomaticSnapshotEncounterCascadeOutcome.js';
+import { AutomaticSnapshotEncounterRetentionReconciliation } from '../application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import {
     registerMaterializedSnapshotWorldSource,
     materializedSnapshotWorldOrigin
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { assembleWorldDiscoveryInputs } from '../core/WorldDiscoverySourceAssembly.js';
 import { deriveWorldEncounters, WorldEncounterKind } from '../core/WorldEncounter.js';
-import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource, derivePeerWorldOrigin } from '../peer/PeerWorldDataIngress.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
@@ -450,9 +450,9 @@ async function runTests() {
         // NO MANUAL UI ACTION: the automatic path never references the
         // manual UI component at all — structurally confirmed against the
         // exact files this run just exercised.
-        const cascadeSource = await codeOnlySource('application/AutomaticSnapshotEncounterCascade.js');
-        const monitorSource = await codeOnlySource('application/WorldSnapshotDiscoveryMonitor.js');
-        const reconciliationSource = await codeOnlySource('application/AutomaticSnapshotEncounterRetentionReconciliation.js');
+        const cascadeSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
+        const monitorSource = await codeOnlySource('application/snapshot/WorldSnapshotDiscoveryMonitor.js');
+        const reconciliationSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js');
         for (const [name, source] of [['AutomaticSnapshotEncounterCascade.js', cascadeSource], ['WorldSnapshotDiscoveryMonitor.js', monitorSource], ['AutomaticSnapshotEncounterRetentionReconciliation.js', reconciliationSource]]) {
             assert(!/OwnPublicationPanel/.test(source), `5. ${name} never references OwnPublicationPanel.js — no manual UI action is reachable from, or required by, the automatic path`);
         }
@@ -562,9 +562,9 @@ async function runTests() {
             // constructor never accepts one, confirmed structurally below
             // against the class's own source rather than merely its own
             // documented parameter list.
-            const reconciliationSource = await codeOnlySource('application/AutomaticSnapshotEncounterRetentionReconciliation.js');
+            const reconciliationSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js');
             for (const forbidden of ['discoverSnapshotCandidatesCommand', 'resolveSelectedSnapshotCommand', 'materializeSelectedSnapshotCommand', 'AutomaticSnapshotEncounterCascade', 'WorldSnapshotDiscoveryMonitor', 'DiscoverSnapshotCandidatesCommand']) {
-                assert(!reconciliationSource.includes(forbidden), `1. application/AutomaticSnapshotEncounterRetentionReconciliation.js never references "${forbidden}" — reconcile() cannot rediscover or cascade because it holds no path to either, not merely because it chooses not to call one`);
+                assert(!reconciliationSource.includes(forbidden), `1. application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js never references "${forbidden}" — reconcile() cannot rediscover or cascade because it holds no path to either, not merely because it chooses not to call one`);
             }
         }
 
@@ -760,7 +760,7 @@ async function runTests() {
 
         // The cascade's own processing identity is publicationId:contentHash
         // — never the Nostr event id, never the origin string itself.
-        const cascadeSource = await codeOnlySource('application/AutomaticSnapshotEncounterCascade.js');
+        const cascadeSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
         assert(cascadeSource.includes('${publicationId}:${contentHash}'), '6. the cascade\'s own idempotency key is publicationId:contentHash — never a Nostr event id or the World origin string');
         assert(!/eventId|nostrEvent/i.test(cascadeSource), '7. the cascade never references a Nostr event id under any name — it has no way to, and no reason to');
 
@@ -861,10 +861,10 @@ async function runTests() {
 
         // G2. The World source boundary itself — core/WorldEncounter.js,
         // core/WorldDiscoverySource.js, core/WorldDiscoverySourceAssembly.js,
-        // application/WorldDiscoverySourceRegistry.js — never imports
+        // application/discovery/WorldDiscoverySourceRegistry.js — never imports
         // acquisition machinery either. This is the seam Snapshot
         // registration writes THROUGH, never a seam that reaches back.
-        const boundaryFiles = ['core/WorldEncounter.js', 'core/WorldDiscoverySource.js', 'core/WorldDiscoverySourceAssembly.js', 'application/WorldDiscoverySourceRegistry.js'];
+        const boundaryFiles = ['core/WorldEncounter.js', 'core/WorldDiscoverySource.js', 'core/WorldDiscoverySourceAssembly.js', 'application/discovery/WorldDiscoverySourceRegistry.js'];
         for (const file of boundaryFiles) {
             const source = await codeOnlySource(file);
             assert(!/from ['"](\.\.\/)*nostr\//.test(source) && !/from ['"](\.\.\/)*arweave\//.test(source), `4. ${file} never imports nostr/ or arweave/`);
@@ -887,7 +887,7 @@ async function runTests() {
         // depend on the World source boundary (registry/bridge) — that is
         // the correct, one-directional dependency — but never on the
         // rendering layer above it.
-        for (const file of ['application/AutomaticSnapshotEncounterCascade.js', 'application/AutomaticSnapshotEncounterRetentionReconciliation.js', 'application/MaterializedSnapshotWorldDiscoveryBridge.js', 'application/WorldSnapshotDiscoveryMonitor.js']) {
+        for (const file of ['application/snapshot/AutomaticSnapshotEncounterCascade.js', 'application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js', 'application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js', 'application/snapshot/WorldSnapshotDiscoveryMonitor.js']) {
             const source = await codeOnlySource(file);
             for (const renderingName of ['WorldEncounterCanvas', 'WorldEncounterMarker', 'ui/components/', 'ui/views/']) {
                 assert(!source.includes(renderingName), `8. ${file} never references ${renderingName} — the Snapshot subsystem depends downward on the World source boundary, never upward into rendering`);
@@ -906,7 +906,7 @@ async function runTests() {
     {
         // H1. No `automatic` field/flag anywhere in the source shape, the
         // registry, or the registration bridge.
-        for (const file of ['core/WorldDiscoverySource.js', 'application/WorldDiscoverySourceRegistry.js', 'application/MaterializedSnapshotWorldDiscoveryBridge.js']) {
+        for (const file of ['core/WorldDiscoverySource.js', 'application/discovery/WorldDiscoverySourceRegistry.js', 'application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js']) {
             const source = await codeOnlySource(file);
             assert(!/\bautomatic\b/i.test(source), `1. ${file} never mentions "automatic" in its own code — the distinction lives nowhere in the data shape`);
         }
@@ -914,8 +914,8 @@ async function runTests() {
         // H2. Exactly two call sites for each of register/unregister,
         // system-wide — one automatic, one manual, distinguished only by
         // WHICH CODE calls the shared primitive.
-        const registerCallers = ['application/AutomaticSnapshotEncounterCascade.js', 'ui/components/OwnPublicationPanel.js'];
-        const unregisterCallers = ['application/AutomaticSnapshotEncounterRetentionReconciliation.js', 'ui/components/worldEncounterCanvas/materialAndDistributionMethods.js'];
+        const registerCallers = ['application/snapshot/AutomaticSnapshotEncounterCascade.js', 'ui/components/OwnPublicationPanel.js'];
+        const unregisterCallers = ['application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js', 'ui/components/worldEncounterCanvas/materialAndDistributionMethods.js'];
         for (const file of registerCallers) {
             const source = await codeOnlySource(file);
             assert(/(?<![a-zA-Z])registerMaterializedSnapshotWorldSource\(/.test(source), `2. ${file} calls registerMaterializedSnapshotWorldSource() directly`);
@@ -935,7 +935,7 @@ async function runTests() {
         ];
         let registerCallSites = 0, unregisterCallSites = 0;
         for (const file of allJsFiles) {
-            if (file === 'application/MaterializedSnapshotWorldDiscoveryBridge.js') continue;
+            if (file === 'application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js') continue;
             const source = await codeOnlySource(file);
             if (/(?<![a-zA-Z])registerMaterializedSnapshotWorldSource\(/.test(source)) registerCallSites += 1;
             if (/unregisterMaterializedSnapshotWorldSource\(/.test(source)) unregisterCallSites += 1;
@@ -977,9 +977,9 @@ async function runTests() {
         for (const [name, source] of [['content/LocalContentStore.js', localContentStoreSource], ['content/ArweaveContentStore.js', arweaveContentStoreSource]]) {
             assert(!/\bdelete\(|\bremove\(/.test(source), `7. ${name} exposes no delete()/remove() method — material deletion is not a capability this pipeline has, automatic or manual`);
         }
-        const publisherSource = await codeOnlySource('application/NostrSnapshotDiscoveryPublisher.js');
-        assert(!/withdraw|retract/i.test(publisherSource), '8. application/NostrSnapshotDiscoveryPublisher.js exposes no withdraw()/retract() method — Nostr withdrawal is not a capability this pipeline has');
-        assert(!/deletePublication/i.test(await codeOnlySource('application/MaterializedSnapshotWorldDiscoveryBridge.js') + await codeOnlySource('application/AutomaticSnapshotEncounterRetentionReconciliation.js')), '9. neither the registration bridge nor automatic retention ever deletes a Publication — that capability does not exist here');
+        const publisherSource = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryPublisher.js');
+        assert(!/withdraw|retract/i.test(publisherSource), '8. application/nostr/NostrSnapshotDiscoveryPublisher.js exposes no withdraw()/retract() method — Nostr withdrawal is not a capability this pipeline has');
+        assert(!/deletePublication/i.test(await codeOnlySource('application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js') + await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js')), '9. neither the registration bridge nor automatic retention ever deletes a Publication — that capability does not exist here');
 
         console.log('✓ Section H: no `automatic` field exists anywhere in the World source shape/registry/bridge — automatic and manual registration/unregistration remain distinguishable ONLY by which code called the shared primitive, producing byte-for-byte identical WorldDiscoverySource shapes either way — and material deletion, Publication deletion, and Nostr withdrawal are confirmed absent as concepts anywhere in this pipeline, not merely distinguished from unregistration');
     }
@@ -1029,12 +1029,12 @@ async function runTests() {
         // anywhere in the automatic pipeline's own source — a structural
         // sweep, not just this one behavioral proof.
         const pipelineFiles = [
-            'application/AutomaticSnapshotEncounterCascade.js',
-            'application/AutomaticSnapshotEncounterRetentionReconciliation.js',
-            'application/AutomaticSnapshotEncounterRetentionPolicy.js',
-            'application/WorldSnapshotDiscoveryMonitor.js',
-            'application/MaterializedSnapshotWorldDiscoveryBridge.js',
-            'application/WorldDiscoverySourceRegistry.js'
+            'application/snapshot/AutomaticSnapshotEncounterCascade.js',
+            'application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js',
+            'application/snapshot/AutomaticSnapshotEncounterRetentionPolicy.js',
+            'application/snapshot/WorldSnapshotDiscoveryMonitor.js',
+            'application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js',
+            'application/discovery/WorldDiscoverySourceRegistry.js'
         ];
         for (const file of pipelineFiles) {
             const source = await codeOnlySource(file);
@@ -1079,13 +1079,13 @@ async function runTests() {
         // own settlement), never a recurring cadence of any kind; see
         // this file's own "Deliberately excluded," below.
         const pipelineFiles = [
-            'application/WorldSnapshotDiscoveryMonitor.js',
-            'application/AutomaticSnapshotEncounterCascade.js',
-            'application/AutomaticSnapshotEncounterRetentionPolicy.js',
-            'application/AutomaticSnapshotEncounterRetentionReconciliation.js',
-            'application/DiscoverSnapshotCandidatesCommand.js',
-            'application/ResolveSelectedSnapshotCommand.js',
-            'application/MaterializeSelectedSnapshotCommand.js'
+            'application/snapshot/WorldSnapshotDiscoveryMonitor.js',
+            'application/snapshot/AutomaticSnapshotEncounterCascade.js',
+            'application/snapshot/AutomaticSnapshotEncounterRetentionPolicy.js',
+            'application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js',
+            'application/snapshot/DiscoverSnapshotCandidatesCommand.js',
+            'application/snapshot/ResolveSelectedSnapshotCommand.js',
+            'application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js'
         ];
         for (const file of pipelineFiles) {
             const source = await codeOnlySource(file);
@@ -1095,12 +1095,12 @@ async function runTests() {
         // exactly the documented per-call timeout guard shape (a single
         // `setTimeout()` racing a `reject()`), never a SECOND `setInterval()`
         // masquerading as one, and never more than that one guard each.
-        for (const file of ['application/NostrSnapshotDiscoveryQueryService.js', 'application/NostrSnapshotDiscoveryPublisher.js']) {
+        for (const file of ['application/nostr/NostrSnapshotDiscoveryQueryService.js', 'application/nostr/NostrSnapshotDiscoveryPublisher.js']) {
             const source = await codeOnlySource(file);
             assert(!/setInterval\(|\.subscribe\(|requestAnimationFrame\(/.test(source), `5. ${file} owns no recurring cadence of any kind`);
             // The per-call network timeout guard is the shared utils/withTimeout.js.
             const timeoutCount = (source.match(/setTimeout\(/g) || []).length;
-            assert(timeoutCount === 0 && source.includes("from '../utils/withTimeout.js'"), `6. ${file} owns no setTimeout() of its own — its single per-call network timeout guard is utils/withTimeout.js, never a second, cadence-shaped timer — got ${timeoutCount}`);
+            assert(timeoutCount === 0 && source.includes("from '../../utils/withTimeout.js'"), `6. ${file} owns no setTimeout() of its own — its single per-call network timeout guard is utils/withTimeout.js, never a second, cadence-shaped timer — got ${timeoutCount}`);
         }
 
         console.log('✓ Section J: ui/views/WorldView.js still declares exactly three intervals total, discovery observation and retention reconciliation both fire from inside the SAME refreshSpatialUI() function body, and no Snapshot-automatic application file owns a timer, subscription, or animation-frame loop of its own — one spatial cadence, never a second, Snapshot-specific one');
@@ -1185,7 +1185,7 @@ async function runTests() {
 
         // K4. No trust, ownership, or visibility vocabulary anywhere in
         // the files this section's own claims are actually about.
-        const noTrustFiles = ['application/AutomaticSnapshotEncounterCascade.js', 'application/MaterializedSnapshotWorldDiscoveryBridge.js', 'application/WorldDiscoverySourceRegistry.js'];
+        const noTrustFiles = ['application/snapshot/AutomaticSnapshotEncounterCascade.js', 'application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js', 'application/discovery/WorldDiscoverySourceRegistry.js'];
         for (const file of noTrustFiles) {
             const source = await codeOnlySource(file);
             assert(!/\btrust(ed)?\b/i.test(source), `4. ${file} contains no trust vocabulary — successful verification never becomes trust`);
@@ -1203,8 +1203,8 @@ async function runTests() {
             assert(Object.keys(source.placements[0]).sort().join(',') === ['position', 'publicationId'].sort().join(','), `5. the registered placement entry carries exactly { publicationId, position } — got keys ${JSON.stringify(Object.keys(source.placements[0]))} — registration grants no ownership/authority field of its own`);
         }
         // Retention never touches rendering/visibility.
-        const reconciliationSource = await codeOnlySource('application/AutomaticSnapshotEncounterRetentionReconciliation.js');
-        assert(!/WorldEncounterCanvas|visib|camera|viewport|render/i.test(reconciliationSource), '6. application/AutomaticSnapshotEncounterRetentionReconciliation.js contains no rendering/visibility vocabulary of any kind — retention decides World-registry membership only, never what is currently on screen');
+        const reconciliationSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js');
+        assert(!/WorldEncounterCanvas|visib|camera|viewport|render/i.test(reconciliationSource), '6. application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js contains no rendering/visibility vocabulary of any kind — retention decides World-registry membership only, never what is currently on screen');
 
         console.log('✓ Section K: World placement remains authoritative over a claimed position even in direct conflict; discovery order never becomes ranking (X-then-Y and Y-then-X converge identically); identical content under different Publications never becomes deduplication; and no trust, ownership, or visibility vocabulary exists in the files this pipeline actually mutates');
     }
@@ -1223,13 +1223,13 @@ async function runTests() {
         // merely the one or two files each earlier section already swept
         // for its own narrower reason.
         const wholeAutomaticPipeline = [
-            'application/WorldSnapshotDiscoveryMonitor.js',
-            'application/DiscoverSnapshotCandidatesCommand.js',
-            'application/AutomaticSnapshotEncounterCascade.js',
-            'application/AutomaticSnapshotEncounterCascadeOutcome.js',
-            'application/AutomaticSnapshotEncounterRetentionPolicy.js',
-            'application/AutomaticSnapshotEncounterRetentionReconciliation.js',
-            'application/MaterializedSnapshotWorldDiscoveryBridge.js'
+            'application/snapshot/WorldSnapshotDiscoveryMonitor.js',
+            'application/snapshot/DiscoverSnapshotCandidatesCommand.js',
+            'application/snapshot/AutomaticSnapshotEncounterCascade.js',
+            'application/snapshot/AutomaticSnapshotEncounterCascadeOutcome.js',
+            'application/snapshot/AutomaticSnapshotEncounterRetentionPolicy.js',
+            'application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js',
+            'application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js'
         ];
         const forbiddenBeyondBoundary = [
             'ownership', 'adopt', 'merge', 'trust', 'conflict', 'synchroniz', 'withdrawal', 'acceptance'
@@ -1251,8 +1251,8 @@ async function runTests() {
         // nothing that reaches past it (no rendering import — already
         // proven structurally in Section G's own G4, reconfirmed here as
         // this section's own closing fact rather than borrowed from it).
-        const registrySource = await codeOnlySource('application/WorldDiscoverySourceRegistry.js');
-        assert(!/WorldEncounterCanvas|WorldEncounterMarker/.test(registrySource), '2. application/WorldDiscoverySourceRegistry.js itself never imports a rendering component — it is a pure membership store, exactly the "ordinary World source registry" the boundary statement names, and nothing past it belongs to this subsystem');
+        const registrySource = await codeOnlySource('application/discovery/WorldDiscoverySourceRegistry.js');
+        assert(!/WorldEncounterCanvas|WorldEncounterMarker/.test(registrySource), '2. application/discovery/WorldDiscoverySourceRegistry.js itself never imports a rendering component — it is a pure membership store, exactly the "ordinary World source registry" the boundary statement names, and nothing past it belongs to this subsystem');
 
         console.log(`✓ Section L: the autonomous Snapshot machinery ends exactly at — "${BOUNDARY_STATEMENT}" — and a vocabulary sweep across the complete automatic pipeline (discovery, cascade, retention policy, retention reconciliation, registration bridge) confirms acceptance, ownership, merge/adopt, trust, synchronization, conflict resolution, and withdrawal semantics are not implicitly part of this subsystem — they exist nowhere in its own source`);
     }

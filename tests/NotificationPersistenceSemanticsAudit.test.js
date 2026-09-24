@@ -4,12 +4,12 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import {
     PublicationCommentaryNotificationProducer,
     PUBLICATION_COMMENTED_EVENT_TYPE
-} from '../application/PublicationCommentaryNotificationProducer.js';
+} from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { ChatOutboxEntry } from '../core/ChatOutboxEntry.js';
 import { toChatMessage, deriveConversationId } from '../core/ChatMessage.js';
@@ -74,7 +74,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 //               "reconstructible" collapse into "safe to regenerate,"
 //               "deduplicated," or "exactly once"? Proven live, not
 //               argued in prose.
-//   Section G — ChatOutbox comparison: `application/ChatOutbox.js` used
+//   Section G — ChatOutbox comparison: `application/chat/ChatOutbox.js` used
 //               strictly as a durable-delivery PRECEDENT, with a direct
 //               structural diff proving which of its properties do not,
 //               and structurally cannot yet, belong to NotificationEvent.
@@ -413,7 +413,7 @@ async function runTests() {
     // (the Publication's own publisherIdentity). This section proves
     // core/NotificationEvent.js ALREADY permits this at the domain-model
     // level (a capability), while
-    // application/PublicationCommentaryNotificationProducer.js never
+    // application/publication/commentary/PublicationCommentaryNotificationProducer.js never
     // reaches it (a reachability gap) — the same
     // capability-vs-reachability distinction 0.9.271's own audit already
     // used for Place Naming.
@@ -707,7 +707,7 @@ async function runTests() {
         const event = produced[0];
 
         // A real ChatOutboxEntry, constructed the same way
-        // application/ChatOutbox.js#enqueue() constructs one, to
+        // application/chat/ChatOutbox.js#enqueue() constructs one, to
         // compare against.
         const bobId = bob.getSigningIdentity().id;
         const aliceId = alice.getSigningIdentity().id;
@@ -825,7 +825,7 @@ async function runTests() {
             {
                 finding: 'Delivery queue required',
                 classification: 'SEPARATE_FUTURE_SEAM',
-                rationale: 'Per Section G: delivery-job vocabulary (state, TTL, sender anchoring) is deliberately absent from NotificationEvent and application/ChatOutbox.js remains the only genuine delivery precedent in this codebase. A delivery queue, if ever built for notifications, is a distinct architectural seam from "does a NotificationEvent durably exist," not a sub-question of it.'
+                rationale: 'Per Section G: delivery-job vocabulary (state, TTL, sender anchoring) is deliberately absent from NotificationEvent and application/chat/ChatOutbox.js remains the only genuine delivery precedent in this codebase. A delivery queue, if ever built for notifications, is a distinct architectural seam from "does a NotificationEvent durably exist," not a sub-question of it.'
             }
         ];
 
@@ -853,7 +853,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const gitDiffStat = execSync(
-            'git diff --stat HEAD -- application/PublicationCommentaryNotificationProducer.js application/AddPublicationCommentaryUseCase.js storage/PublicationCommentaryStore.js core/PublicationCommentary.js core/NotificationEvent.js application/ChatOutbox.js core/ChatOutboxEntry.js 2>/dev/null || true',
+            'git diff --stat HEAD -- application/publication/commentary/PublicationCommentaryNotificationProducer.js application/publication/commentary/AddPublicationCommentaryUseCase.js storage/PublicationCommentaryStore.js core/PublicationCommentary.js core/NotificationEvent.js application/chat/ChatOutbox.js core/ChatOutboxEntry.js 2>/dev/null || true',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         assert(gitDiffStat === '', `I1. no production file this audit examines — the producer, the wrapped use case, the Commentary store/domain, NotificationEvent itself, or the ChatOutbox precedent — was modified by this test-only milestone. Found: ${gitDiffStat || '(none)'}.`);

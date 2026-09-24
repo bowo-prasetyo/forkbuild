@@ -1,4 +1,4 @@
-import { LICENSE_OPTIONS } from '../../application/LicenseLabels.js';
+import { LICENSE_OPTIONS } from '../../application/document/LicenseLabels.js';
 import { License, LicenseId } from '../../core/License.js';
 
 // 0.2.21: the Document Properties editor — title/description/license,

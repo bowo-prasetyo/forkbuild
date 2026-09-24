@@ -6,22 +6,22 @@ import { BitcoinAnchorTransactionBroadcaster } from '../anchoring/BitcoinAnchorT
 import { BitcoinAnchorConfirmationObserver } from '../anchoring/BitcoinAnchorConfirmationObserver.js';
 import { BitcoinWalletConnection } from '../anchoring/BitcoinWalletConnection.js';
 import { BitcoinInjectedProviderWalletAdapter } from '../anchoring/BitcoinInjectedProviderWalletAdapter.js';
-import { BitcoinAnchorFundingObservationState } from '../application/BitcoinAnchorFundingObservationState.js';
-import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/BitcoinAnchorTransactionConstructionCoordinator.js';
-import { BitcoinAnchorTransactionConstructionState } from '../application/BitcoinAnchorTransactionConstructionState.js';
-import { BitcoinAnchorTransactionReviewCoordinator } from '../application/BitcoinAnchorTransactionReviewCoordinator.js';
-import { BitcoinAnchorReviewedSigningCoordinator } from '../application/BitcoinAnchorReviewedSigningCoordinator.js';
-import { BitcoinAnchorReviewedSigningState } from '../application/BitcoinAnchorReviewedSigningState.js';
-import { BitcoinAnchorSignedPsbtFinalizationCoordinator } from '../application/BitcoinAnchorSignedPsbtFinalizationCoordinator.js';
-import { BitcoinAnchorSignedPsbtFinalizationState } from '../application/BitcoinAnchorSignedPsbtFinalizationState.js';
-import { BitcoinAnchorBroadcastCoordinator } from '../application/BitcoinAnchorBroadcastCoordinator.js';
-import { BitcoinAnchorBroadcastState } from '../application/BitcoinAnchorBroadcastState.js';
-import { BitcoinAnchorConfirmationCoordinator } from '../application/BitcoinAnchorConfirmationCoordinator.js';
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
-import { appendBitcoinAnchorConfirmationObservationHistoryEntry, latestBitcoinAnchorConfirmationObservation } from '../application/BitcoinAnchorConfirmationObservationHistory.js';
-import { describeBitcoinAnchorConfirmationObservationHistoryDetails } from '../application/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
-import { BitcoinAnchorProofReconciliationView } from '../application/BitcoinAnchorProofReconciliationView.js';
-import { BitcoinAnchorContentProofState } from '../application/BitcoinAnchorContentProofState.js';
+import { BitcoinAnchorFundingObservationState } from '../application/anchoring/bitcoin/BitcoinAnchorFundingObservationState.js';
+import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionCoordinator.js';
+import { BitcoinAnchorTransactionConstructionState } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js';
+import { BitcoinAnchorTransactionReviewCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionReviewCoordinator.js';
+import { BitcoinAnchorReviewedSigningCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningCoordinator.js';
+import { BitcoinAnchorReviewedSigningState } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningState.js';
+import { BitcoinAnchorSignedPsbtFinalizationCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationCoordinator.js';
+import { BitcoinAnchorSignedPsbtFinalizationState } from '../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationState.js';
+import { BitcoinAnchorBroadcastCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastCoordinator.js';
+import { BitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { BitcoinAnchorConfirmationCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationCoordinator.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
+import { appendBitcoinAnchorConfirmationObservationHistoryEntry, latestBitcoinAnchorConfirmationObservation } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js';
+import { describeBitcoinAnchorConfirmationObservationHistoryDetails } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
+import { BitcoinAnchorProofReconciliationView } from '../application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js';
+import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
 
 // 0.8.65 — Explicit Bitcoin Anchor Confirmation UI.
 //
@@ -439,7 +439,7 @@ async function run() {
     // transaction, via the REAL end-to-end pipeline — observe funding,
     // construct, review, connect a wallet, sign, finalize, and broadcast.
     // Returns the exact `{ state: BROADCASTED, broadcasted: true, txid,
-    // reason: null }` shape application/BitcoinAnchorBroadcastCoordinator.js
+    // reason: null }` shape application/anchoring/bitcoin/BitcoinAnchorBroadcastCoordinator.js
     // itself produces, alongside `broadcasterCalls` for sanity checks.
     async function buildRealBroadcastedTransaction() {
         const builder = new BitcoinAnchorTransactionBuilder({ network: 'mainnet', feeRateSatsPerVByte: 1 });
@@ -614,7 +614,7 @@ async function run() {
         // obtained from a real broadcast outcome, is refused unless
         // `broadcasted: true` accompanies it — the coordinator has no way
         // to independently verify provenance beyond this caller-contract
-        // check, exactly as application/BitcoinAnchorBroadcastCoordinator.js's
+        // check, exactly as application/anchoring/bitcoin/BitcoinAnchorBroadcastCoordinator.js's
         // own `finalized` check has no way to independently verify a
         // `rawTransaction` beyond requiring `finalized: true`.
         const arbitraryTxid = 'c'.repeat(64);

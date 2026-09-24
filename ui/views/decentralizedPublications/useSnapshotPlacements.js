@@ -1,35 +1,35 @@
-import { snapshotPlacementView } from '../../../application/SnapshotPlacementView.js';
+import { snapshotPlacementView } from '../../../application/snapshot/placement/SnapshotPlacementView.js';
 import {
     derivePublicationSnapshotPlacementConvergence
-} from '../../../application/PublicationSnapshotPlacementConvergence.js';
+} from '../../../application/snapshot/placement/PublicationSnapshotPlacementConvergence.js';
 import {
     publicationSnapshotPlacementConvergenceView
-} from '../../../application/PublicationSnapshotPlacementConvergenceView.js';
-import { createResolutionObservation } from '../../../application/SnapshotPlacementResolutionObservation.js';
+} from '../../../application/snapshot/placement/PublicationSnapshotPlacementConvergenceView.js';
+import { createResolutionObservation } from '../../../application/snapshot/placement/SnapshotPlacementResolutionObservation.js';
 import {
     deriveSnapshotPlacementLifecycle, describeSnapshotPlacementLifecycleNote
-} from '../../../application/SnapshotPlacementLifecycleView.js';
+} from '../../../application/snapshot/placement/SnapshotPlacementLifecycleView.js';
 import {
     PLACEMENT_BADGE_CLASSES, PLACEMENT_MATERIALIZATION_BADGE_CLASSES, PLACEMENT_CREATION_BADGE_CLASSES,
     humanizeStorageType
 } from './presentation.js';
 import {
     SnapshotPlacementMaterializationOutcome
-} from '../../../application/SnapshotPlacementMaterializationOutcome.js';
+} from '../../../application/snapshot/placement/SnapshotPlacementMaterializationOutcome.js';
 import {
     describePlacementMaterializationAttempt, describePlacementMaterializationButtonLabel
-} from '../../../application/SnapshotPlacementMaterializationView.js';
+} from '../../../application/snapshot/placement/SnapshotPlacementMaterializationView.js';
 import {
     SnapshotPlacementMaterializationUiState
-} from '../../../application/SnapshotPlacementMaterializationUiState.js';
-import { publicationSnapshotPlacementDetailView } from '../../../application/PublicationSnapshotPlacementDetailView.js';
-import { describePlacementKnowledge } from '../../../application/PublicationSnapshotPlacementKnowledgeView.js';
-import { SnapshotPlacementCreationOutcome } from '../../../application/SnapshotPlacementCreationOutcome.js';
+} from '../../../application/snapshot/placement/SnapshotPlacementMaterializationUiState.js';
+import { publicationSnapshotPlacementDetailView } from '../../../application/snapshot/placement/PublicationSnapshotPlacementDetailView.js';
+import { describePlacementKnowledge } from '../../../application/snapshot/placement/PublicationSnapshotPlacementKnowledgeView.js';
+import { SnapshotPlacementCreationOutcome } from '../../../application/snapshot/placement/SnapshotPlacementCreationOutcome.js';
 import {
     describeCreationAttempt as describePlacementCreationAttempt,
     describeCreationButtonLabel as describePlacementCreationButtonLabel
-} from '../../../application/SnapshotPlacementCreationView.js';
-import { SnapshotPlacementCreationUiState } from '../../../application/SnapshotPlacementCreationUiState.js';
+} from '../../../application/snapshot/placement/SnapshotPlacementCreationView.js';
+import { SnapshotPlacementCreationUiState } from '../../../application/snapshot/placement/SnapshotPlacementCreationUiState.js';
 
 // Snapshot placements for one entry: loading known placements, resolving,
 // inspecting, creating and materializing them. Resolving never materializes;

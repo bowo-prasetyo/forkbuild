@@ -11,16 +11,16 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { CreateEditorContextUseCase } from '../application/CreateEditorContextUseCase.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { WorldFocusKind, deriveWorldFocusContext } from '../core/WorldFocusContext.js';
 import {
     EditorEntryContext,

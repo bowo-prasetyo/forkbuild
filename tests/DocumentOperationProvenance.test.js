@@ -9,17 +9,17 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { DocumentCommandPropagationUseCase } from '../application/DocumentCommandPropagationUseCase.js';
-import { RemoteDocumentOperationApplicationUseCase, DocumentOperationApplicationOutcome } from '../application/RemoteDocumentOperationApplicationUseCase.js';
+import { DocumentCommandPropagationUseCase } from '../application/document/DocumentCommandPropagationUseCase.js';
+import { RemoteDocumentOperationApplicationUseCase, DocumentOperationApplicationOutcome } from '../application/document/RemoteDocumentOperationApplicationUseCase.js';
 import { CausalGapStatus } from '../core/DocumentOperationCausalGapDetector.js';
-import { DocumentOperationCausalGapObservationUseCase } from '../application/DocumentOperationCausalGapObservationUseCase.js';
-import { DocumentOperationRecoveryUseCase } from '../application/DocumentOperationRecoveryUseCase.js';
+import { DocumentOperationCausalGapObservationUseCase } from '../application/document/DocumentOperationCausalGapObservationUseCase.js';
+import { DocumentOperationRecoveryUseCase } from '../application/document/DocumentOperationRecoveryUseCase.js';
 import { DocumentOperationProvenance, isDocumentOperationProvenance } from '../core/DocumentOperationProvenance.js';
 
 // 0.9.231 — Recovered Operation Provenance Boundary.
@@ -43,7 +43,7 @@ import { DocumentOperationProvenance, isDocumentOperationProvenance } from '../c
 // operation buffering, delayed/automatic application, causal reordering,
 // automatic replay, rollback, history rewriting, conflict resolution,
 // CRDT, OT, synchronized undo, an offline queue, retry, or a convergence
-// guarantee. `application/CommandHistory.js` is UNTOUCHED by this
+// guarantee. `application/editor/CommandHistory.js` is UNTOUCHED by this
 // milestone.
 
 class InMemoryStorageProvider extends StorageProvider {
@@ -93,7 +93,7 @@ async function connectAndAuthenticate(network, addressA, deviceA, addressB, devi
 }
 
 // A full replica stack — propagation, gap observation, and recovery —
-// wired exactly the way application/EditorSession.js wires them in
+// wired exactly the way application/editor/EditorSession.js wires them in
 // production: recovery's own onOperationReceived() feed attached to gap
 // observation, gap observation's own onGapObserved() feed attached to
 // recovery, but recovery NEVER attached to a

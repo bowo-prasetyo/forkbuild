@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
-import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
+import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -313,7 +313,7 @@ async function run() {
     // Section I — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/PublicationDistributionCommand.js', import.meta.url);
+        const sourceUrl = new URL('../application/publication/distribution/PublicationDistributionCommand.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -347,10 +347,10 @@ async function run() {
             assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `42. code must never use "${term}" — no execution-state/scheduling/UI vocabulary at this boundary`);
         }
 
-        const orchestratorSource = await readFile(new URL('../application/PublicationDistributionOrchestrator.js', import.meta.url), 'utf8');
+        const orchestratorSource = await readFile(new URL('../application/publication/distribution/PublicationDistributionOrchestrator.js', import.meta.url), 'utf8');
         assert(!orchestratorSource.includes('PublicationDistributionCommand'), '43. the 0.9.58 orchestrator itself is never modified to know about this command');
 
-        const storeSource = await readFile(new URL('../application/PublicationDistributionLifecycleStore.js', import.meta.url), 'utf8');
+        const storeSource = await readFile(new URL('../application/publication/distribution/PublicationDistributionLifecycleStore.js', import.meta.url), 'utf8');
         assert(!storeSource.includes('PublicationDistributionCommand'), '44. the 0.9.52/0.9.53 store itself is never modified to know about this command');
 
         console.log('✓ Architectural regression: no re-implemented construction/sequencing/lifecycle logic, no UI/persistence imports, no forbidden vocabulary, exactly two exports (0.9.444)');

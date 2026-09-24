@@ -5,10 +5,10 @@ import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ArweaveGatewayFailoverContentStore } from '../content/ArweaveGatewayFailoverContentStore.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/ArweaveWorldEncounterMaterialResolver.js';
-import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { composeArweaveDecentralizedWorldEncounterMaterialSource } from '../application/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
+import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
+import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { composeArweaveDecentralizedWorldEncounterMaterialSource } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
 
 // 0.9.440 — Arweave Gateway Read Failover.
 //
@@ -22,10 +22,10 @@ import { composeArweaveDecentralizedWorldEncounterMaterialSource } from '../appl
 //     `gatewayUrls` (a non-empty, ordered array) — never both — with the
 //     single-string shape remaining exactly a one-element list.
 //   content/ArweaveGatewayFailoverContentStore.js /
-//   application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js —
+//   application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js —
 //     the two new ordered-failover read collaborators.
-//   application/DiscoverSnapshotRuntimeComposition.js /
-//   application/DecentralizedWorldEncounterMaterialRuntimeComposition.js —
+//   application/snapshot/DiscoverSnapshotRuntimeComposition.js /
+//   application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js —
 //     updated to build the failover collaborator only when more than one
 //     gateway is configured, byte-for-byte unchanged otherwise.
 //   ui/main.js — the two retrieval composition call sites now receive the
@@ -368,8 +368,8 @@ async function run() {
         // Nostr/Bitcoin composition files never import either new class —
         // this milestone touches Arweave read/retrieval only.
         const nostrSources = await Promise.all([
-            source('application/NostrPublicationDiscoveryPublisher.js'),
-            source('application/NostrDiscoveryQueryService.js')
+            source('application/nostr/NostrPublicationDiscoveryPublisher.js'),
+            source('application/nostr/NostrDiscoveryQueryService.js')
         ]);
         for (const src of nostrSources) {
             assert(!src.includes('ArweaveGatewayFailover'), 'I5. no Nostr composition file references either new Arweave failover class');

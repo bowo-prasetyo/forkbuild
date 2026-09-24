@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
-import { compareSnapshotWorldPublications, WorldSnapshotContentComparison } from '../application/WorldSnapshotComparison.js';
+import { compareSnapshotWorldPublications, WorldSnapshotContentComparison } from '../application/snapshot/WorldSnapshotComparison.js';
 
 // 0.9.181 — World Snapshot Comparison.
 //
 // Unit coverage for the one new pure module this milestone introduces:
-// `application/WorldSnapshotComparison.js`. See that file's own header for
+// `application/snapshot/WorldSnapshotComparison.js`. See that file's own header for
 // the full rationale — in particular why this comparison is deliberately
 // source-family agnostic (it reads only `publicationId`/`contentHash`, off
 // of whatever descriptor it's handed, never a `sourceFamily`/`kind`), and
@@ -211,7 +211,7 @@ function run() {
     // Section K — structural audit.
     // ---------------------------------------------------------------
     return (async () => {
-        const source = await readFile(new URL('../application/WorldSnapshotComparison.js', import.meta.url), 'utf8');
+        const source = await readFile(new URL('../application/snapshot/WorldSnapshotComparison.js', import.meta.url), 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(!/fetch\(|localStorage|WebRTC|WorldDiscoverySourceRegistry|registry\.|deriveWorldEncounters\(|resolveSnapshotWorldPlacement\(|resolveSnapshotWorldPositionClaim\(|registerMaterializedSnapshotWorldSource\(|unregisterMaterializedSnapshotWorldSource\(/.test(codeOnly),

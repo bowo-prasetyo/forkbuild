@@ -70,7 +70,7 @@ const TXID_PATTERN = /^[0-9a-f]{64}$/i;
 //
 // Throwing is tolerated as a last resort — publish() catches it and
 // reports the `unavailable` form, never the definite-rejection form —
-// mirroring exactly how application/ExternalAnchorVerifier.js already
+// mirroring exactly how application/anchoring/ExternalAnchorVerifier.js already
 // treats a throwing proofVerifier. See docs/Principles.md, "Broadcast
 // Acceptance Is Not Anchor Validity (0.8.9)."
 //
@@ -88,7 +88,7 @@ const TXID_PATTERN = /^[0-9a-f]{64}$/i;
 // means only "the network accepted this transaction for broadcast" — it
 // says nothing about confirmation. The resulting PublicationAnchor, the
 // moment it is created, independently reports PROOF_UNAVAILABLE from
-// application/ExternalAnchorVerifier.js until the transaction actually
+// application/anchoring/ExternalAnchorVerifier.js until the transaction actually
 // confirms — at which point the SAME anchor, unchanged, reports VALID.
 // See tests/BitcoinAnchorCreationAdapter.test.js's own lifecycle section.
 export class BitcoinAnchorPublisher {

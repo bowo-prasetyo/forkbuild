@@ -1,26 +1,27 @@
 import { readFile } from 'node:fs/promises';
+import { applicationPath } from './support/ApplicationFiles.js';
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License } from '../core/License.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
 import {
     PUBLICATION_CONTENT_KIND,
     validatePublicationContent,
     PublicationContentError
-} from '../application/PublicationContentValidator.js';
-import { createPublicationContentKind } from '../application/PublicationContentKind.js';
+} from '../application/publication/PublicationContentValidator.js';
+import { createPublicationContentKind } from '../application/publication/PublicationContentKind.js';
 
 import { BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
-import { createBlueprintAttributionPublicationKind } from '../application/BlueprintAttributionPublicationKind.js';
-import { PLACE_NAMING_CLAIM_PUBLICATION_KIND } from '../application/PlaceNamingClaimPublication.js';
-import { createPlaceNamingClaimPublicationKind } from '../application/PlaceNamingClaimPublicationKind.js';
+import { createBlueprintAttributionPublicationKind } from '../application/blueprint/BlueprintAttributionPublicationKind.js';
+import { PLACE_NAMING_CLAIM_PUBLICATION_KIND } from '../application/placeNaming/PlaceNamingClaimPublication.js';
+import { createPlaceNamingClaimPublicationKind } from '../application/placeNaming/PlaceNamingClaimPublicationKind.js';
 
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -203,7 +204,7 @@ async function run() {
     // Never once does this section call PublicationResolver from inside
     // the gossip path — exactly the separation application/
     // PublicationPeerExchange.js's own header insists on ("it NEVER calls
-    // application/PublicationResolver.js").
+    // application/publication/PublicationResolver.js").
     // ===============================================================
     let flagshipResolved;
     {
@@ -279,8 +280,8 @@ async function run() {
         // Structural confirmation that this convergence is real, not
         // coincidental: neither transport class was touched to make this
         // work, and neither one knows what a Publication even is.
-        const peerExchangeSource = await readSource('application/PublicationPeerExchange.js');
-        const exchangeSource = await readSource('application/PublicationExchange.js');
+        const peerExchangeSource = await readSource('application/publication/PublicationPeerExchange.js');
+        const exchangeSource = await readSource('application/publication/PublicationExchange.js');
         assert(!/publisher\/Publication\.js|PUBLICATION_CONTENT_KIND|forkbuild\.publication/.test(peerExchangeSource + exchangeSource),
             '17. neither PublicationExchange.js nor PublicationPeerExchange.js was modified to special-case Publication content — both remain completely content-kind-agnostic, confirmed by source, not merely by this run\'s behavior.');
     }
@@ -478,14 +479,14 @@ async function run() {
         // brief named as explicitly out of scope.
         const suspiciousNames = ['DecentralizedPublicationStore', 'PublicationContentStore', 'RepositoryPublicationStore'];
         for (const name of suspiciousNames) {
-            assert(!(await sourceExists(`application/${name}.js`)), `1. application/${name}.js does not exist — no new persistence authority has been introduced for decentralized-origin Publication content.`);
+            assert(applicationPath(name) === null, `1. application/${name}.js does not exist — no new persistence authority has been introduced for decentralized-origin Publication content.`);
         }
 
         // E2. The plugin itself, checked directly: no `store` key at all —
         // unlike the other two kind plugins, which both accept one.
-        const kindSource = await readSource('application/PublicationContentKind.js');
+        const kindSource = await readSource('application/publication/PublicationContentKind.js');
         assert(!/store\s*[:(]/.test(kindSource.replace(/\/\/.*$/gm, '')),
-            '2. application/PublicationContentKind.js defines no `store` capability anywhere in its own code (comments excluded) — resolving through this plugin can only ever answer "what does this locator resolve to," never persist anything as a side effect.');
+            '2. application/publication/PublicationContentKind.js defines no `store` capability anywhere in its own code (comments excluded) — resolving through this plugin can only ever answer "what does this locator resolve to," never persist anything as a side effect.');
 
         // E3. Reconfirmed at runtime: a kindPlugin built by this factory
         // genuinely has no store function for PublicationResolver to even
@@ -494,7 +495,7 @@ async function run() {
         const plugin = createPublicationContentKind({ verifier });
         assert(typeof plugin.store === 'undefined', '3. the constructed plugin has no `store` property at all — PublicationResolver\'s own optional step 10 is structurally a no-op for this content kind.');
     }
-    console.log('✓ Section E: no DecentralizedPublicationStore/PublicationContentStore/RepositoryPublicationStore has been introduced, and application/PublicationContentKind.js itself carries no `store` capability at all — checked in source and confirmed at runtime. This remains transport/resolution only, exactly as scoped.');
+    console.log('✓ Section E: no DecentralizedPublicationStore/PublicationContentStore/RepositoryPublicationStore has been introduced, and application/publication/PublicationContentKind.js itself carries no `store` capability at all — checked in source and confirmed at runtime. This remains transport/resolution only, exactly as scoped.');
 
     // ===============================================================
     // Section F — Local vs. decentralized identity: a decentralized
@@ -532,12 +533,12 @@ async function run() {
     {
         // G1. Repository's own files never reference this content kind.
         const repositoryFacingFiles = [
-            'application/SearchPublicationsUseCase.js',
+            'application/publication/SearchPublicationsUseCase.js',
             'ui/components/PublicationCatalog.js',
             'ui/components/PublicationCard.js',
             'discovery/DiscoveryProvider.js',
             'discovery/LocalDiscoveryProvider.js',
-            'application/CreatePublicationCatalogUseCase.js'
+            'application/publication/CreatePublicationCatalogUseCase.js'
         ];
         for (const file of repositoryFacingFiles) {
             if (!(await sourceExists(file))) continue;
@@ -548,22 +549,22 @@ async function run() {
 
         // G2. The reverse holds too: PublicationContentKind.js itself
         // never imports anything Repository-shaped.
-        const kindSource = await readSource('application/PublicationContentKind.js');
-        const validatorSource = await readSource('application/PublicationContentValidator.js');
+        const kindSource = await readSource('application/publication/PublicationContentKind.js');
+        const validatorSource = await readSource('application/publication/PublicationContentValidator.js');
         assert(!/SearchPublicationsUseCase|DiscoveryProvider|PublicationCatalog\.js|CreatePublicationCatalogUseCase/.test(kindSource + validatorSource),
-            '2. application/PublicationContentKind.js and application/PublicationContentValidator.js import nothing Repository-shaped — this content kind is usable entirely independently of Repository, exactly what makes it a transport seam rather than a Repository-specific implementation.');
+            '2. application/publication/PublicationContentKind.js and application/publication/PublicationContentValidator.js import nothing Repository-shaped — this content kind is usable entirely independently of Repository, exactly what makes it a transport seam rather than a Repository-specific implementation.');
 
         // G3. At the time this audit was written, only
         // tests/PublicationContentKind.test.js and this audit file itself
         // referenced the new symbols outside application/ — confirmed
         // directly rather than assumed from G1/G2 alone. 0.9.333 closed
         // this milestone's own Section H gap by adding exactly ONE more
-        // reference: application/CreatePublicationDisplayKindRegistryUseCase.js,
+        // reference: application/publication/CreatePublicationDisplayKindRegistryUseCase.js,
         // the Publications Center's own generic display-kind registry —
         // named here explicitly as the one intended, non-Repository
         // exception, never silently widened to permit anything else.
         const nonTestHits = grepFiles('PublicationContentKind|PUBLICATION_CONTENT_KIND', ['application', 'ui', 'discovery'])
-            .filter((f) => !f.startsWith('application/PublicationContentKind.js') && !f.startsWith('application/PublicationContentValidator.js') && !f.startsWith('application/CreatePublicationDisplayKindRegistryUseCase.js'));
+            .filter((f) => !f.startsWith('application/publication/PublicationContentKind.js') && !f.startsWith('application/publication/PublicationContentValidator.js') && !f.startsWith('application/publication/CreatePublicationDisplayKindRegistryUseCase.js'));
         assert(nonTestHits.length === 0, `3. no file under application/, ui/, or discovery/ other than the two files this content kind is defined in, plus the Publications Center's own display-kind registry (0.9.333), references it at all (found: ${nonTestHits.join(', ') || 'none'}).`);
     }
     console.log('✓ Section G: no Repository coupling in either direction — Repository\'s own search/catalog/discovery files never mention this content kind, and this content kind never imports anything Repository-shaped. It is usable, and tested, entirely on its own.');
@@ -580,13 +581,13 @@ async function run() {
     // rot into a false claim.
     // ===============================================================
     {
-        const registrySource = await readSource('application/CreatePublicationDisplayKindRegistryUseCase.js');
+        const registrySource = await readSource('application/publication/CreatePublicationDisplayKindRegistryUseCase.js');
         assert(registrySource.includes('createBlueprintAttributionPublicationKind') && registrySource.includes('createPlaceNamingClaimPublicationKind'),
             '1. the Publications Center\'s own display-kind registry still wires the two kinds that existed before this milestone, unchanged.');
         assert(registrySource.includes('createPublicationContentKind'),
-            '2. as of 0.9.333, application/CreatePublicationDisplayKindRegistryUseCase.js DOES register forkbuild.publication — composed via createPublicationContentKind(), exactly the way createBlueprintAttributionPublicationKind()/createPlaceNamingClaimPublicationKind() already were. A cataloged, decentralized-origin Publication can now be DISPLAYED by the Publications Center, closing the one gap this audit named. See tests/PublicationDisplayKindIntegration.test.js for the full display-path flagship this milestone\'s own successor built.');
+            '2. as of 0.9.333, application/publication/CreatePublicationDisplayKindRegistryUseCase.js DOES register forkbuild.publication — composed via createPublicationContentKind(), exactly the way createBlueprintAttributionPublicationKind()/createPlaceNamingClaimPublicationKind() already were. A cataloged, decentralized-origin Publication can now be DISPLAYED by the Publications Center, closing the one gap this audit named. See tests/PublicationDisplayKindIntegration.test.js for the full display-path flagship this milestone\'s own successor built.');
     }
-    console.log('✓ Section H: the one gap this audit named at the time — application/CreatePublicationDisplayKindRegistryUseCase.js not yet knowing forkbuild.publication existed — is closed as of 0.9.333, the Publications Center\'s own display-kind registry gaining a third entry, composed identically to the first two. Transport, resolution, AND display now all converge cleanly.');
+    console.log('✓ Section H: the one gap this audit named at the time — application/publication/CreatePublicationDisplayKindRegistryUseCase.js not yet knowing forkbuild.publication existed — is closed as of 0.9.333, the Publications Center\'s own display-kind registry gaining a third entry, composed identically to the first two. Transport, resolution, AND display now all converge cleanly.');
 
     // ===============================================================
     // Section I — Final verdict and production-change guard.
@@ -619,7 +620,7 @@ async function run() {
         // Publication transport/resolution — see this file's own 0.9.597
         // amendment, above, for the full rationale.
         const expectedLaterMilestoneFiles = new Set([
-            'application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js',
+            'application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js',
             'ui/components/PublicationCard.js', 'ui/components/PublicationList.js'
         ]);
         const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
@@ -653,7 +654,7 @@ async function run() {
 'this milestone\'s own governing invariant holds, checked from source and from a real end-to-end run through the\n' +
 'unmodified transport classes, not merely asserted. No production code is touched here — this remains, per its own\n' +
 'Type, a test-only convergence audit. What comes after, per Section H, is narrower than a Repository milestone:\n' +
-'wiring forkbuild.publication into application/CreatePublicationDisplayKindRegistryUseCase.js so a decentralized-\n' +
+'wiring forkbuild.publication into application/publication/CreatePublicationDisplayKindRegistryUseCase.js so a decentralized-\n' +
 'origin Publication can actually be SEEN in the Publications Center — still, deliberately, before any milestone\n' +
 'touches Repository, Search, or Repository-facing UI.\n');
 

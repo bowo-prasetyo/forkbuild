@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { PublicationDistributionLifecyclePersistence } from '../application/PublicationDistributionLifecyclePersistence.js';
-import { transitionPublicationDistributionLifecycle } from '../application/PublicationDistributionLifecycleTransition.js';
-import { describePublicationDistributionLifecycle } from '../application/PublicationDistributionLifecycle.js';
-import { executePublicationDistribution } from '../application/PublicationDistributionExecutor.js';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
+import { PublicationDistributionLifecyclePersistence } from '../application/publication/distribution/PublicationDistributionLifecyclePersistence.js';
+import { transitionPublicationDistributionLifecycle } from '../application/publication/distribution/PublicationDistributionLifecycleTransition.js';
+import { describePublicationDistributionLifecycle } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -408,13 +408,13 @@ async function run() {
     // choice of its own, no automatic persistence hook, no clock.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/PublicationDistributionLifecyclePersistence.js', import.meta.url);
+        const sourceUrl = new URL('../application/publication/distribution/PublicationDistributionLifecyclePersistence.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(!codeOnly.includes("from './PublicationDistributionLifecycleStore"), '46. never imports the 0.9.52/0.9.53 memory store module');
         assert(!codeOnly.includes("from './PublicationDistributionLifecycleTransition"), '47. never imports the 0.9.51 transition module');
-        assert(!codeOnly.includes("from './PublicationDistributionResult"), '48. never imports the 0.9.48 result module');
+        assert(!codeOnly.includes("from '../../PublicationDistributionResult"), '48. never imports the 0.9.48 result module');
         assert(!codeOnly.includes("from './PublicationDistributionExecutor"), '49. never imports the 0.9.49 execution module');
         assert(!codeOnly.includes('ArweavePublicationMaterialUploader') && !codeOnly.includes('NostrPublicationDiscoveryPublisher') && !codeOnly.includes('PublicationDistributionDescriptor') && !codeOnly.includes('PublicationDistributionRuntimeComposition'), '50. never imports any of the four collaborator/execution files');
         assert(!codeOnly.includes("from '../storage/") && !codeOnly.includes('StorageProvider') && !codeOnly.includes('localStorage') && !codeOnly.includes('indexedDB') && !codeOnly.includes('IndexedDB'), '51. never imports or references any concrete storage technology of its own — the persistence implementation is purely injected');

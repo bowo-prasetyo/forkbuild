@@ -12,7 +12,7 @@ import { VehicleType } from '../core/VehicleType.js';
 import { deriveProximityTier, distanceXZ, WorldSpatialProximityTier } from '../core/WorldSpatialAnchor.js';
 import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
 import { DEFAULT_POSITION_QUANTUM, DEFAULT_RADIUS_QUANTUM } from '../core/PlaceFingerprint.js';
-import { DEFAULT_PLACE_NAMING_DISCOVERY_PROXIMITY_RADIUS } from '../application/PlaceNamingDiscoveryMonitor.js';
+import { DEFAULT_PLACE_NAMING_DISCOVERY_PROXIMITY_RADIUS } from '../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
 import { DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS } from '../core/GeographicPlaceNavigation.js';
 import { Position } from '../core/Position.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
@@ -110,11 +110,11 @@ async function main() {
         record('NEAR_DISTANCE(tier boundary)', extractConstant(anchorSrc, 'NEAR_DISTANCE'), 'world-length', 'core/WorldSpatialAnchor.js');
         record('MID_DISTANCE(tier boundary)', extractConstant(anchorSrc, 'MID_DISTANCE'), 'world-length', 'core/WorldSpatialAnchor.js');
         record('DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS', DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS, 'world-length', 'core/GeographicPlaceNavigation.js');
-        record('DEFAULT_PLACE_NAMING_DISCOVERY_PROXIMITY_RADIUS', DEFAULT_PLACE_NAMING_DISCOVERY_PROXIMITY_RADIUS, 'world-length', 'application/PlaceNamingDiscoveryMonitor.js');
+        record('DEFAULT_PLACE_NAMING_DISCOVERY_PROXIMITY_RADIUS', DEFAULT_PLACE_NAMING_DISCOVERY_PROXIMITY_RADIUS, 'world-length', 'application/placeNaming/PlaceNamingDiscoveryMonitor.js');
         record('DEFAULT_POSITION_QUANTUM', DEFAULT_POSITION_QUANTUM, 'world-length', 'core/PlaceFingerprint.js');
         record('CURATION_PROXIMITY_RADIUS', extractConstant(curationSrc, 'CURATION_PROXIMITY_RADIUS'), 'world-length', 'core/WorldCurationContext.js');
         record('WELCOME_CONTEXT_RADIUS', extractConstant(welcomeSrc, 'WELCOME_CONTEXT_RADIUS'), 'world-length', 'core/WorldWelcomeContext.js');
-        record('DEFAULT_EXPLORE_RADIUS', extractConstant(navigationSessionSrc, 'DEFAULT_EXPLORE_RADIUS'), 'world-length', 'application/WorldNavigationSession.js');
+        record('DEFAULT_EXPLORE_RADIUS', extractConstant(navigationSessionSrc, 'DEFAULT_EXPLORE_RADIUS'), 'world-length', 'application/world/WorldNavigationSession.js');
         record('GRID_SPACING', extractConstant(gridPlacementSrc, 'GRID_SPACING'), 'world-length', 'core/DeterministicGridPlacement.js');
 
         // world-length / time

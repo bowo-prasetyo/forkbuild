@@ -1,11 +1,11 @@
 import { PresenceVisibility, isValidPresenceVisibility } from '../core/PresenceVisibility.js';
 import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
-import { PresenceVisibilityUseCase } from '../application/PresenceVisibilityUseCase.js';
-import { CreatePresenceVisibilityUseCase } from '../application/CreatePresenceVisibilityUseCase.js';
-import { CreateAvatarPresenceSessionUseCase } from '../application/CreateAvatarPresenceSessionUseCase.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { PresenceVisibilityUseCase } from '../application/presence/PresenceVisibilityUseCase.js';
+import { CreatePresenceVisibilityUseCase } from '../application/presence/CreatePresenceVisibilityUseCase.js';
+import { CreateAvatarPresenceSessionUseCase } from '../application/avatar/CreateAvatarPresenceSessionUseCase.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
@@ -16,11 +16,11 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -32,8 +32,8 @@ import { License, LicenseId } from '../core/License.js';
 //
 //   Section A: core/PresenceVisibility.js
 //   Section B: core/PresenceVisibilityPolicy.js
-//   Section C: application/PresenceVisibilityUseCase.js
-//   Section D: application/CreatePresenceVisibilityUseCase.js / CreateAvatarPresenceSessionUseCase.js wiring
+//   Section C: application/presence/PresenceVisibilityUseCase.js
+//   Section D: application/presence/CreatePresenceVisibilityUseCase.js / CreateAvatarPresenceSessionUseCase.js wiring
 //   Section E: WorldNavigationSession publish gating
 //   Section F: FLAGSHIP — Alice controls her own visibility; Bob only
 //              ever sees what Alice actually chose to advertise
@@ -189,7 +189,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — application/PresenceVisibilityUseCase.js
+    // Section C — application/presence/PresenceVisibilityUseCase.js
     // -------------------------------------------------------------
     {
         const storage = new InMemoryStorageProvider();

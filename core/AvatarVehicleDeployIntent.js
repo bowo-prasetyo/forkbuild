@@ -42,5 +42,5 @@ export function deriveAvatarVehicleDeployIntent({ deployRequested = false } = {}
 // (see this file's own header); the actual deploy transition; store (its
 // own mirror-image file, core/AvatarVehicleStoreIntent.js); id minting or
 // VehicleInstance construction (an application-layer job — see
-// application/AvatarVehicleInteractionController.js); keyboard input
+// application/avatar/AvatarVehicleInteractionController.js); keyboard input
 // handling; rendering; persistence; networking; randomness; the clock.

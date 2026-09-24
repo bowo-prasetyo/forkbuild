@@ -1,8 +1,8 @@
-import { IpfsRemotePublicationCoordinator } from '../application/IpfsRemotePublicationCoordinator.js';
-import { IpfsRemotePublicationState, isValidIpfsRemotePublicationState } from '../application/IpfsRemotePublicationState.js';
-import { describeIpfsRemotePublication, describeIpfsRemotePublicationStateLabel, describeIpfsRemotePublishingConfiguration } from '../application/IpfsRemotePublicationView.js';
-import { IpfsRemotePublishingConfiguration } from '../application/IpfsRemotePublishingConfiguration.js';
-import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/CreateIpfsRemotePublicationCoordinatorUseCase.js';
+import { IpfsRemotePublicationCoordinator } from '../application/ipfs/IpfsRemotePublicationCoordinator.js';
+import { IpfsRemotePublicationState, isValidIpfsRemotePublicationState } from '../application/ipfs/IpfsRemotePublicationState.js';
+import { describeIpfsRemotePublication, describeIpfsRemotePublicationStateLabel, describeIpfsRemotePublishingConfiguration } from '../application/ipfs/IpfsRemotePublicationView.js';
+import { IpfsRemotePublishingConfiguration } from '../application/ipfs/IpfsRemotePublishingConfiguration.js';
+import { CreateIpfsRemotePublicationCoordinatorUseCase } from '../application/ipfs/CreateIpfsRemotePublicationCoordinatorUseCase.js';
 import { HttpPinningProvider } from '../content/HttpPinningProvider.js';
 
 // 0.8.68 — Explicit Remote IPFS Publishing Configuration & UX.
@@ -41,7 +41,7 @@ import { HttpPinningProvider } from '../content/HttpPinningProvider.js';
 //              the newly configured endpoint, not a stale one.
 //   Section I: the view is a pure, stateless projection; IDLE by
 //              default; never exposes a credential.
-//   Section J: application/IpfsRemotePublishingConfiguration.js is
+//   Section J: application/ipfs/IpfsRemotePublishingConfiguration.js is
 //              ephemeral — no persistence methods, no way to read a
 //              credential back out except through its own getter.
 //   Section K: the state vocabulary and every view carry no forbidden
@@ -261,7 +261,7 @@ async function run() {
     console.log('✓ Section I: the view is a pure, stateless projection; IDLE by default; never exposes a credential');
 
     // ---------------------------------------------------------------
-    // Section J — application/IpfsRemotePublishingConfiguration.js is
+    // Section J — application/ipfs/IpfsRemotePublishingConfiguration.js is
     // ephemeral: no persistence methods, no way to read a credential
     // back out except through its own getter, and it validates its one
     // required field.

@@ -70,7 +70,7 @@ function hipRoofMeshFactory(width, depth, height) {
 // DEFAULT_STAIR_STEP_COUNT rather than a locally hardcoded `4` — the
 // SAME constant that file's own stepped walkable-surface profile reads,
 // so the treads rendered here and the treads an avatar actually climbs
-// (application/AvatarStepConstraint.js) can never quietly disagree on
+// (application/avatar/AvatarStepConstraint.js) can never quietly disagree on
 // how many there are. The value itself is unchanged (4), so this is
 // pixel-identical to every stair already rendered before this milestone.
 function stairMeshFactory(width, height, depth, steps = DEFAULT_STAIR_STEP_COUNT) {

@@ -2,10 +2,10 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -26,7 +26,7 @@ import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileG
 // 0.9.288's own Section E named SIX UI surfaces holding a full
 // `Publication` object at render time yet carrying zero commentary
 // vocabulary. 0.9.289 wired the first (PublicationCard.js, via a NEW
-// standalone composition, application/CreatePublicationCommentaryUseCase.js).
+// standalone composition, application/publication/commentary/CreatePublicationCommentaryUseCase.js).
 // This milestone wires the second — ui/components/WorldEncounterCanvas.js,
 // the component 0.9.290's own Section K named "a real 0.9.291 candidate" —
 // through NEITHER a new composition NOR 0.9.289's app-wide one, but by
@@ -101,7 +101,7 @@ function makeDocument(title, author) {
 // delegate to (via WorldNavigationSession, 0.9.248) — reproduced here with
 // an injectable (in-memory) storage backend, the same reason
 // tests/OtherPublicationCommentaryEntryPoint.test.js's own makeBackend()
-// reproduces application/CreatePublicationCommentaryUseCase.js's own
+// reproduces application/publication/commentary/CreatePublicationCommentaryUseCase.js's own
 // composition one file over. Either root wraps the identical, unmodified
 // application layer, and this file's own Section K proves WorldEncounterCanvas.js
 // constructs neither.
@@ -624,11 +624,11 @@ async function runTests() {
         const forbidden = [
             "from '../../core/PublicationCommentary.js'",
             "from '../../storage/PublicationCommentaryStore.js'",
-            "from '../../application/GetPublicationCommentariesUseCase.js'",
-            "from '../../application/AddPublicationCommentaryUseCase.js'",
-            "from '../../application/CanCommentOnPublicationUseCase.js'",
-            "from '../../application/PublicationCommentaryNotificationProducer.js'",
-            "from '../../application/CreatePublicationCommentaryUseCase.js'",
+            "from '../../application/publication/commentary/GetPublicationCommentariesUseCase.js'",
+            "from '../../application/publication/commentary/AddPublicationCommentaryUseCase.js'",
+            "from '../../application/publication/CanCommentOnPublicationUseCase.js'",
+            "from '../../application/publication/commentary/PublicationCommentaryNotificationProducer.js'",
+            "from '../../application/publication/commentary/CreatePublicationCommentaryUseCase.js'",
             'new PublicationCommentary(', 'new PublicationCommentaryStore(',
             'new GetPublicationCommentariesUseCase(', 'new AddPublicationCommentaryUseCase(',
             'new CanCommentOnPublicationUseCase(', 'new PublicationCommentaryNotificationProducer(',
@@ -670,14 +670,14 @@ async function runTests() {
                sectionCode.includes('refreshCommentaries()') && sectionCode.includes('submitCommentary()'),
             '51. PublicationCard.js still offers its 0.9.289 commentary toggle, with read/submit now in the shared PublicationCommentarySection.js it mounts');
 
-        const worldViewSessionCompositionCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
+        const worldViewSessionCompositionCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
         assert(worldViewSessionCompositionCode.includes('new PublicationCommentaryStore(storageProvider)') &&
                worldViewSessionCompositionCode.includes('new PublicationCommentaryNotificationProducer('),
             '52. CreateWorldViewUseCase.js still composes its own, independent commentary path, unmodified by this milestone');
 
-        const appWideCompositionCode = await codeOnlySource('application/CreatePublicationCommentaryUseCase.js');
+        const appWideCompositionCode = await codeOnlySource('application/publication/commentary/CreatePublicationCommentaryUseCase.js');
         assert(appWideCompositionCode.includes('new CanCommentOnPublicationUseCase(discoveryProvider)'),
-            '53. application/CreatePublicationCommentaryUseCase.js (0.9.289\'s own app-wide root) stays unmodified by this milestone');
+            '53. application/publication/commentary/CreatePublicationCommentaryUseCase.js (0.9.289\'s own app-wide root) stays unmodified by this milestone');
 
         const stillUnwiredSurfaces = [
             'ui/components/PublicationCatalog.js',

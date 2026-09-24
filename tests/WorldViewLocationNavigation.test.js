@@ -3,22 +3,22 @@ import { Position } from '../core/Position.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { SpatialCameraController } from '../application/SpatialCameraController.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
 import { WorldLocation } from '../core/WorldLocation.js';
 import { WorldLocationKind, isValidWorldLocationKind } from '../core/WorldLocationKind.js';
-import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from '../application/WorldLocationDirectory.js';
-import { CameraFocusAnimator } from '../application/CameraFocusAnimator.js';
+import { WorldLocationDirectory, ORIGIN_LOCATION_ID } from '../application/world/WorldLocationDirectory.js';
+import { CameraFocusAnimator } from '../application/editor/CameraFocusAnimator.js';
 import { Publication } from '../publisher/Publication.js';
 import { computeCompassHeading, resolveCompassLabel } from '../core/CompassHeading.js';
 
@@ -37,12 +37,12 @@ import { computeCompassHeading, resolveCompassLabel } from '../core/CompassHeadi
 //   Section B: core/CompassHeading.js — the pure, reused-convention
 //              heading computation, including its "no meaningful
 //              heading" null case.
-//   Section C: application/CameraFocusAnimator.js — pure interpolation:
+//   Section C: application/editor/CameraFocusAnimator.js — pure interpolation:
 //              from/to/duration/elapsed always produce the SAME
 //              framing, the path never jumps straight to the target
 //              before the duration elapses, and it clamps cleanly
 //              outside [0, duration].
-//   Section D: application/WorldLocationDirectory.js — Origin always
+//   Section D: application/world/WorldLocationDirectory.js — Origin always
 //              first, one entry per StructurePlacement, correct
 //              world-space position (placement + containing document's
 //              own layout offset), and find() agreeing with list().
@@ -173,7 +173,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section C: application/CameraFocusAnimator.js
+    // Section C: application/editor/CameraFocusAnimator.js
     // -------------------------------------------------------------
     {
         const from = { position: { x: 0, y: 0, z: 0 }, target: { x: 0, y: 0, z: 0 } };
@@ -211,7 +211,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section D: application/WorldLocationDirectory.js (isolated)
+    // Section D: application/world/WorldLocationDirectory.js (isolated)
     // -------------------------------------------------------------
     {
         const placement = new StructurePlacement({
@@ -457,8 +457,8 @@ async function run() {
 
     console.log('✓ Section A: core/WorldLocation.js + core/WorldLocationKind.js — closed vocabulary, invalid kinds rejected');
     console.log('✓ Section B: core/CompassHeading.js — pure heading computation, reused yaw convention, null when meaningless');
-    console.log('✓ Section C: application/CameraFocusAnimator.js — deterministic interpolation, clamped, never jumps mid-path');
-    console.log('✓ Section D: application/WorldLocationDirectory.js — Origin-first, correct world-space positions, find() agrees with list()');
+    console.log('✓ Section C: application/editor/CameraFocusAnimator.js — deterministic interpolation, clamped, never jumps mid-path');
+    console.log('✓ Section D: application/world/WorldLocationDirectory.js — Origin-first, correct world-space positions, find() agrees with list()');
     console.log('✓ Section E: FLAGSHIP — two replicas agree on locations, Focus/Home glide deterministically, compass reads correctly, zero document/placement/history mutation');
 
     console.log('\nAll World View Location & Navigation tests passed.');

@@ -13,14 +13,14 @@ import {
     DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL
 } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { createArweaveTaggedTransactionUpload } from '../application/ArweaveTaggedTransactionUpload.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 // 0.9.497 — Arweave Snapshot Discovery Capability Boundary Audit.
@@ -34,7 +34,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 // SnapshotDiscoveryEnvelope.js`) as-is — every candidate it would produce
 // gets silently, permanently discarded. That audit recommended building an
 // `ArweaveSnapshotDiscoveryPublisher`/`ArweaveSnapshotDiscoveryQueryService`
-// pair instead, mirroring `application/NostrSnapshotDiscoveryPublisher.js`/
+// pair instead, mirroring `application/nostr/NostrSnapshotDiscoveryPublisher.js`/
 // `NostrSnapshotDiscoveryQueryService.js` one substrate over. Before
 // building that pair, THIS milestone asks the question that recommendation
 // left open: can Arweave legitimately carry `SnapshotDiscoveryEnvelope`
@@ -85,11 +85,11 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //   themselves.** This audit proves the capability boundary these two
 //   files would sit inside; building them is the next milestone (0.9.498/
 //   0.9.499) this audit's own verdict recommends.
-// - **Any change to `application/ArweaveAnnouncementPublisher.js`,
-//   `application/ArweaveGraphqlDiscoveryQueryService.js`, `application/
+// - **Any change to `application/arweave/ArweaveAnnouncementPublisher.js`,
+//   `application/arweave/ArweaveGraphqlDiscoveryQueryService.js`, `application/
 //   ArweaveTaggedTransactionUpload.js`, `content/ArweaveContentStore.js`,
 //   `core/SnapshotDiscoveryEnvelope.js`, `core/DecentralizedDiscoveryEnvelope.js`,
-//   or `application/DecentralizedSnapshotResolver.js`.** Every one is read
+//   or `application/snapshot/DecentralizedSnapshotResolver.js`.** Every one is read
 //   only, and driven only through its own already-public contract.
 // - **Composition-root wiring of any kind.** See 0.9.496's own scope note
 //   — that remains 0.9.500's own, later, question, and only once the pair
@@ -258,7 +258,7 @@ async function run() {
         announcementUploadResult = await uploadTaggedTransaction(material, { name: 'ForkBuild-Snapshot-Discovery-Tag', value: 'identity-audit-tag' });
 
         check(announcementUploadResult !== null && announcementUploadResult.id === ANNOUNCEMENT_TX_ID, 'E1. sanity: the announcement transaction was accepted with its own distinct id');
-        check(announcementUploadResult.id !== CONTENT_TX_ID, 'E2. announcement transaction id ≠ content transaction id — two distinct Arweave transactions for one Snapshot, exactly as application/ArweaveAnnouncementPublisher.js\'s own header already establishes for the OTHER vocabulary (content upload and announcement are always separate transactions)');
+        check(announcementUploadResult.id !== CONTENT_TX_ID, 'E2. announcement transaction id ≠ content transaction id — two distinct Arweave transactions for one Snapshot, exactly as application/arweave/ArweaveAnnouncementPublisher.js\'s own header already establishes for the OTHER vocabulary (content upload and announcement are always separate transactions)');
         check(announcementUploadResult.id !== contentReference.hash, 'E3. announcement transaction id ≠ contentHash');
         check(contentReference.hash !== CONTENT_TX_ID, 'E4. contentHash ≠ content transaction id (restated live, alongside the other two, as one three-way check)');
         check(announcementGatewayPostBody.data === material, 'E5. sanity: the exact envelope JSON reached the announcement transaction, unmangled');
@@ -306,7 +306,7 @@ async function run() {
         // its own explicit finding: uploadTaggedTransaction(material, tag)
         // accepted Snapshot envelope JSON with ZERO awareness of what
         // vocabulary that JSON belongs to.
-        check(announcementUploadResult !== null, 'G1. application/ArweaveTaggedTransactionUpload.js\'s own uploadTaggedTransaction() is ENVELOPE-AGNOSTIC — it already accepted a Snapshot Discovery Envelope\'s own material in Section E with no change of any kind; this primitive needs no new version for the Snapshot vocabulary');
+        check(announcementUploadResult !== null, 'G1. application/arweave/ArweaveTaggedTransactionUpload.js\'s own uploadTaggedTransaction() is ENVELOPE-AGNOSTIC — it already accepted a Snapshot Discovery Envelope\'s own material in Section E with no change of any kind; this primitive needs no new version for the Snapshot vocabulary');
 
         // G2 — the existing HIGH-LEVEL publisher, by contrast, is
         // genuinely, structurally incapable: it re-validates through
@@ -318,14 +318,14 @@ async function run() {
         const existingPublisher = new ArweaveAnnouncementPublisher({ discoveryTag: 'g-section-tag', uploadTaggedTransaction: passthroughUpload });
         const rejected = await existingPublisher.publish(snapshotAnnouncementEnvelope);
 
-        check(rejected === null, 'G2. THE FINDING: application/ArweaveAnnouncementPublisher.js#publish(), handed a real, well-formed SnapshotDiscoveryEnvelope, returns null — describeDecentralizedDiscoveryEnvelope() rejects it (wrong protocol, no kind/objectId)');
+        check(rejected === null, 'G2. THE FINDING: application/arweave/ArweaveAnnouncementPublisher.js#publish(), handed a real, well-formed SnapshotDiscoveryEnvelope, returns null — describeDecentralizedDiscoveryEnvelope() rejects it (wrong protocol, no kind/objectId)');
         check(highLevelUploadCalls === 0, 'G3. the rejection happens BEFORE uploadTaggedTransaction is ever consulted — no wasted network activity, but also no path to success by retrying');
 
-        const announcementPublisherSource = await readFile(new URL('../application/ArweaveAnnouncementPublisher.js', import.meta.url), 'utf8');
-        check(announcementPublisherSource.includes("import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';"), 'G4. confirmed from source: this file\'s ONE envelope import is hardcoded to the Decentralized vocabulary');
+        const announcementPublisherSource = await readFile(new URL('../application/arweave/ArweaveAnnouncementPublisher.js', import.meta.url), 'utf8');
+        check(announcementPublisherSource.includes("import { describeDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';"), 'G4. confirmed from source: this file\'s ONE envelope import is hardcoded to the Decentralized vocabulary');
         check(!announcementPublisherSource.includes('SnapshotDiscoveryEnvelope'), 'G5. and never imports or mentions core/SnapshotDiscoveryEnvelope.js at all');
 
-        console.log('✓ Section G: a narrow, NEW ArweaveSnapshotDiscoveryPublisher is genuinely justified — not an adapter manufactured to make types line up. The shared, generic uploadTaggedTransaction primitive (G1) needs no change; only a thin, Snapshot-vocabulary-specific publisher validating via describeSnapshotDiscoveryEnvelope() is missing — the identical "one shared low-level primitive, two vocabulary-specific publishers" shape application/NostrPublicationDiscoveryPublisher.js/NostrSnapshotDiscoveryPublisher.js already both hold over ONE shared publishImpl contract, one substrate over.');
+        console.log('✓ Section G: a narrow, NEW ArweaveSnapshotDiscoveryPublisher is genuinely justified — not an adapter manufactured to make types line up. The shared, generic uploadTaggedTransaction primitive (G1) needs no change; only a thin, Snapshot-vocabulary-specific publisher validating via describeSnapshotDiscoveryEnvelope() is missing — the identical "one shared low-level primitive, two vocabulary-specific publishers" shape application/nostr/NostrPublicationDiscoveryPublisher.js/NostrSnapshotDiscoveryPublisher.js already both hold over ONE shared publishImpl contract, one substrate over.');
     }
 
     // ===============================================================
@@ -352,8 +352,8 @@ async function run() {
         check(graphqlCalls === 1 && gatewayCalls === 1, 'H1. sanity: the GraphQL step and the per-candidate gateway fetch both ran exactly once, as the class already documents');
         check(candidatesFromExistingService.length === 0, 'H2. THE FINDING: fed a real, well-formed SnapshotDiscoveryEnvelope\'s own JSON as the gateway response, ArweaveGraphqlDiscoveryQueryService#search() reports ZERO candidates — parseDecentralizedDiscoveryEnvelope() silently rejects it (wrong protocol, no kind/objectId), and the finding transaction is dropped rather than reported malformed');
 
-        const graphqlServiceSource = await readFile(new URL('../application/ArweaveGraphqlDiscoveryQueryService.js', import.meta.url), 'utf8');
-        check(graphqlServiceSource.includes("import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';"), 'H3. confirmed from source: this file\'s ONE envelope import is hardcoded to the Decentralized vocabulary');
+        const graphqlServiceSource = await readFile(new URL('../application/arweave/ArweaveGraphqlDiscoveryQueryService.js', import.meta.url), 'utf8');
+        check(graphqlServiceSource.includes("import { parseDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';"), 'H3. confirmed from source: this file\'s ONE envelope import is hardcoded to the Decentralized vocabulary');
         check(!graphqlServiceSource.includes('SnapshotDiscoveryEnvelope'), 'H4. and never imports or mentions core/SnapshotDiscoveryEnvelope.js at all');
 
         // Symmetric check — the incompatibility runs both ways, not just
@@ -364,7 +364,7 @@ async function run() {
         check(parseSnapshotDiscoveryEnvelope(JSON.stringify(decentralizedEnvelope)) === null, 'H6. a real DecentralizedDiscoveryEnvelope\'s own JSON fails parseSnapshotDiscoveryEnvelope() identically (no contentHash/locator) — the incompatibility is symmetric, not a one-sided gap that a single-direction fix could paper over');
         check(parseDecentralizedDiscoveryEnvelope(JSON.stringify(snapshotAnnouncementEnvelope)) === null, 'H7. and, restated the other way: the Snapshot envelope\'s own JSON fails parseDecentralizedDiscoveryEnvelope() identically (no kind/objectId)');
 
-        console.log('✓ Section H: a separate ArweaveSnapshotDiscoveryQueryService is the correct, justified shape — generalizing ArweaveGraphqlDiscoveryQueryService.js in place would mean branching its own already-proven, production Publication/Avatar contract on envelope shape, risking exactly the kind of silent regression 0.9.489-0.9.495 spent seven milestones hardening against. The GraphQL-tag-search + per-candidate gateway-read PATTERN is what carries over; the parse call at the end reads core/SnapshotDiscoveryEnvelope.js instead — the identical "standalone class, never a shared DecentralizedDiscoveryQueryService subclass" restraint application/NostrSnapshotDiscoveryQueryService.js\'s own header already holds for Nostr.');
+        console.log('✓ Section H: a separate ArweaveSnapshotDiscoveryQueryService is the correct, justified shape — generalizing ArweaveGraphqlDiscoveryQueryService.js in place would mean branching its own already-proven, production Publication/Avatar contract on envelope shape, risking exactly the kind of silent regression 0.9.489-0.9.495 spent seven milestones hardening against. The GraphQL-tag-search + per-candidate gateway-read PATTERN is what carries over; the parse call at the end reads core/SnapshotDiscoveryEnvelope.js instead — the identical "standalone class, never a shared DecentralizedDiscoveryQueryService subclass" restraint application/nostr/NostrSnapshotDiscoveryQueryService.js\'s own header already holds for Nostr.');
     }
 
     // ===============================================================
@@ -432,7 +432,7 @@ async function run() {
         console.log('');
         console.log('  content/ArweaveContentStore.js already produces a legitimate, independently-verifiable contentHash for Snapshot');
         console.log('  material (Section C) at a locator (Section D) the existing, UNMODIFIED DecentralizedSnapshotResolver already resolves');
-        console.log('  and verifies correctly (Section F). application/ArweaveTaggedTransactionUpload.js\'s own generic upload primitive');
+        console.log('  and verifies correctly (Section F). application/arweave/ArweaveTaggedTransactionUpload.js\'s own generic upload primitive');
         console.log('  already carries that envelope\'s own JSON with zero change (Section G). None of this requires touching');
         console.log('  ArweaveAnnouncementPublisher.js or ArweaveGraphqlDiscoveryQueryService.js — both are confirmed GENUINELY, not merely');
         console.log('  conventionally, incompatible with the Snapshot vocabulary (Sections G/H, symmetric both ways), so a narrow');

@@ -6,14 +6,14 @@ import { StructurePlacement } from '../core/StructurePlacement.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateEditorContextUseCase } from '../application/CreateEditorContextUseCase.js';
-import { PlacementPositionService } from '../application/PlacementPositionService.js';
-import { StructureDocumentResolver } from '../application/StructureDocumentResolver.js';
-import { StructurePlacementValidator } from '../application/StructurePlacementValidator.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
+import { PlacementPositionService } from '../application/editor/PlacementPositionService.js';
+import { StructureDocumentResolver } from '../application/editor/StructureDocumentResolver.js';
+import { StructurePlacementValidator } from '../application/editor/StructurePlacementValidator.js';
 import { StructurePlacementTool } from '../application/tools/StructurePlacementTool.js';
-import { StructurePreviewUseCase } from '../application/StructurePreviewUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { StructurePreviewUseCase } from '../application/editor/StructurePreviewUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -27,7 +27,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //      raycasting in tests/StructureRelativeFaceSnappingRendering.test.js
 //      — this file stays renderer-free, per that audit's own Section F
 //      note on why PickingService integration lives separately).
-//   2. application/PlacementPositionService.js#calculateStructureStack()
+//   2. application/editor/PlacementPositionService.js#calculateStructureStack()
 //      generalizes calculateStack()'s per-axis half-extent math from
 //      BrickDefinition dimensions to SpatialBounds sizes, and
 //      application/tools/StructurePlacementTool.js#onPointerMove() now

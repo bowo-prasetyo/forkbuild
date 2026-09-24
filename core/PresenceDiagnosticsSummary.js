@@ -25,7 +25,7 @@ import { TrustStatus } from './TrustObservation.js';
 //
 // A record only ever appears in `knownPresences` at all once it has
 // been ACCEPTED at least once (see
-// application/PresenceTrustBoundary.js) — so "conflicting"/
+// application/presence/PresenceTrustBoundary.js) — so "conflicting"/
 // "unavailable" here always describe an avatar this replica is still
 // legitimately watching, never one that was never trusted in the
 // first place (those never enter the store to begin with, and so

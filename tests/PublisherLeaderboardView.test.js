@@ -1,16 +1,16 @@
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { BlockchainKind } from '../application/BlockchainKind.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { describePublisherRankingPolicy, describePublisherRanking, reconstructPublisherRanking } from '../application/PublisherRankingPolicy.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { describePublisherRankingPolicy, describePublisherRanking, reconstructPublisherRanking } from '../application/leaderboard/PublisherRankingPolicy.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import {
     describePublisherLeaderboard,
     reconstructPublisherLeaderboard
-} from '../application/PublisherLeaderboardView.js';
+} from '../application/leaderboard/PublisherLeaderboardView.js';
 
 // 0.8.113 — Explicit Publisher Leaderboard Projection.
 //

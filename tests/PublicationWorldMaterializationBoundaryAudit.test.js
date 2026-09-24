@@ -7,16 +7,16 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { LoadPublishedWorldSessionUseCase } from '../application/LoadPublishedWorldSessionUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { LoadPublishedWorldSessionUseCase } from '../application/publication/LoadPublishedWorldSessionUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { registerMaterializedSnapshotWorldSource } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { registerMaterializedSnapshotWorldSource } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldPlacement } from '../core/WorldPlacement.js';
@@ -257,7 +257,7 @@ async function run() {
     // ===============================================================
     {
         // Deliberately NOT a new class invented by this audit. This is
-        // application/LoadPublishedWorldSessionUseCase.js — a real,
+        // application/publication/LoadPublishedWorldSessionUseCase.js — a real,
         // already-existing, already-tested production class (see this
         // section's own D3 below) — composed with the SAME contentStore
         // this audit's Section A already materialized bytes into, and
@@ -275,7 +275,7 @@ async function run() {
             'D1. The adapter resolves the flagship Publication\'s VERIFIED, content-hash-addressed bytes into a real World whose id matches the Publication\'s own documentId — the material bridge this audit set out to locate, built ENTIRELY from an already-existing class.');
         assert(session.getPublication() === flagship.publication, 'D2. The resulting session carries the exact same Publication reference — no re-fetch, no re-description.');
         assert(session.capabilities.canEdit === false && session.capabilities.canSave === false,
-            'D3. PublishedWorldSession\'s own read-only capability boundary (application/PublishedWorldSession.js) applies automatically — this bridge produces a VIEW, never a mutable, independently-editable copy.');
+            'D3. PublishedWorldSession\'s own read-only capability boundary (application/publication/PublishedWorldSession.js) applies automatically — this bridge produces a VIEW, never a mutable, independently-editable copy.');
 
         // THE ZERO-COPY CLAIM, LIVE-PROVEN: storage[documentId] (the bare
         // key, never the `content:` prefix) is untouched by this entire
@@ -288,11 +288,11 @@ async function run() {
         // Confirm this class is real, existing, ALREADY tested
         // elsewhere — not invented by, or exercised for the first time
         // by, this audit.
-        const loadPublishedSrc = await readSource('application/LoadPublishedWorldSessionUseCase.js');
+        const loadPublishedSrc = await readSource('application/publication/LoadPublishedWorldSessionUseCase.js');
         assert(/pipeline enforces snapshot integrity before the document enters/.test(loadPublishedSrc),
             'D5. Sanity: the exact same production file this audit imported and exercised live, unmodified.');
 
-        console.log('✓ D — the material bridge the brief asked this audit to look for is not a missing capability that needs inventing: application/LoadPublishedWorldSessionUseCase.js, composed with the SAME contentStore any composition root already builds, already IS that bridge — a read-through adapter, never a copy, never a second source of truth, live-proven end to end (D1-D4).');
+        console.log('✓ D — the material bridge the brief asked this audit to look for is not a missing capability that needs inventing: application/publication/LoadPublishedWorldSessionUseCase.js, composed with the SAME contentStore any composition root already builds, already IS that bridge — a read-through adapter, never a copy, never a second source of truth, live-proven end to end (D1-D4).');
     }
 
     // ===============================================================
@@ -300,9 +300,9 @@ async function run() {
     // this adapter needs. Zero new collaborators, only a new call.
     // ===============================================================
     {
-        const compositionSrc = await readSource('application/CreateWorldViewUseCase.js');
+        const compositionSrc = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(/const contentStore = new LocalContentStore\(storageProvider\);/.test(compositionSrc),
-            'E1. application/CreateWorldViewUseCase.js already constructs a LocalContentStore, at composition time, unconditionally — Section D\'s own adapter needs no NEW content-hash store of its own.');
+            'E1. application/world/CreateWorldViewUseCase.js already constructs a LocalContentStore, at composition time, unconditionally — Section D\'s own adapter needs no NEW content-hash store of its own.');
         assert(/contentStore\s*\n\s*\};/.test(compositionSrc) || /contentStore\s*$/m.test(compositionSrc),
             'E2. That SAME contentStore is already returned/exposed from execute() (with the comment "Expose the spatial index and content store so the application layer can construct spatial use cases for the UI to consume") — it is not private, internal-only state a bridge would have to newly thread through.');
         assert(/LoadPublishedWorldSessionUseCase/.test(compositionSrc),
@@ -319,9 +319,9 @@ async function run() {
         // here for this one.)
         const mainSrc = await readSource('ui/main.js');
         assert(!/LoadPublishedWorldSessionUseCase/.test(mainSrc),
-            'E4. RECONFIRMED: ui/main.js — the app\'s own real composition root — never constructs application/LoadPublishedWorldSessionUseCase.js either. The class exists, is tested (Section D5, and tests/PublishedWorld.test.js/DecentralizedContent.test.js/ForkPublishedWorld.test.js), and needs no new collaborator per Section E1/E2 — it is simply never called from the one composition root that matters.');
+            'E4. RECONFIRMED: ui/main.js — the app\'s own real composition root — never constructs application/publication/LoadPublishedWorldSessionUseCase.js either. The class exists, is tested (Section D5, and tests/PublishedWorld.test.js/DecentralizedContent.test.js/ForkPublishedWorld.test.js), and needs no new collaborator per Section E1/E2 — it is simply never called from the one composition root that matters.');
 
-        console.log('✓ E — the SMALLEST existing-capability path the brief\'s own central question asks for is now precisely named: no new class, no new collaborator, no new storage. Wiring `_loadWorld()` (application/WorldNavigationSession.js) to fall back to Section D\'s own adapter — using the discoveryProvider and contentStore this ONE composition root already builds — when storage[documentId] comes back empty, is the entire remaining gap. This audit does not perform that wiring (a production change, outside its own test-only remit) — it establishes, live, that doing so requires assembling existing pieces, never inventing a new mechanism.');
+        console.log('✓ E — the SMALLEST existing-capability path the brief\'s own central question asks for is now precisely named: no new class, no new collaborator, no new storage. Wiring `_loadWorld()` (application/world/WorldNavigationSession.js) to fall back to Section D\'s own adapter — using the discoveryProvider and contentStore this ONE composition root already builds — when storage[documentId] comes back empty, is the entire remaining gap. This audit does not perform that wiring (a production change, outside its own test-only remit) — it establishes, live, that doing so requires assembling existing pieces, never inventing a new mechanism.');
     }
 
     // ===============================================================
@@ -396,12 +396,12 @@ async function run() {
             let threw = null;
             try { makeAdapter(storage).execute(publication); } catch (e) { threw = e; }
             assert(threw !== null && /hash mismatch/.test(threw.message),
-                'F4. [hash mismatch] refused BEFORE any deserialization is attempted (application/LoadPublishedWorldSessionUseCase.js checks contentReference.verify(bytes) strictly before JSON.parse/deserialize) — reconfirms the brief\'s own explicit requirement, live: a hash mismatch must not become renderable merely because the documentId/content lookup itself succeeded. It did succeed here (F4-sanity); the SEPARATE hash check is still what gates rendering.');
+                'F4. [hash mismatch] refused BEFORE any deserialization is attempted (application/publication/LoadPublishedWorldSessionUseCase.js checks contentReference.verify(bytes) strictly before JSON.parse/deserialize) — reconfirms the brief\'s own explicit requirement, live: a hash mismatch must not become renderable merely because the documentId/content lookup itself succeeded. It did succeed here (F4-sanity); the SEPARATE hash check is still what gates rendering.');
         }
 
         // Cross-check: the SAME strict-verify-before-store discipline
         // already exists one layer over, in the acquisition pipeline
-        // itself (application/StoreSnapshotContentUseCase.js) — this
+        // itself (application/snapshot/materialization/StoreSnapshotContentUseCase.js) — this
         // audit's adapter is not the only place this boundary is
         // enforced; it is enforced wherever bytes cross a trust
         // boundary in this codebase.
@@ -410,7 +410,7 @@ async function run() {
             const bytes = serializedDocumentBytes('f5-doc');
             const result = await storeSnapshotContentUseCase.execute({ contentHash: 'd'.repeat(64), bytes });
             assert(result.outcome === StoreSnapshotContentOutcome.HASH_MISMATCH && result.contentReference === null,
-                'F5. RECONFIRMED one layer up: application/StoreSnapshotContentUseCase.js — the ONE place this codebase ever turns claimed bytes into local possession — already refuses a hash mismatch before anything is ever stored. This audit\'s own Section D/F adapter inherits, never duplicates, this discipline.');
+                'F5. RECONFIRMED one layer up: application/snapshot/materialization/StoreSnapshotContentUseCase.js — the ONE place this codebase ever turns claimed bytes into local possession — already refuses a hash mismatch before anything is ever stored. This audit\'s own Section D/F adapter inherits, never duplicates, this discipline.');
         }
 
         console.log(`
@@ -509,10 +509,10 @@ async function run() {
     // verify -> accept -> render, never discover -> render.
     // ===============================================================
     {
-        const storeSrc = await readSource('application/StoreSnapshotContentUseCase.js');
+        const storeSrc = await readSource('application/snapshot/materialization/StoreSnapshotContentUseCase.js');
         assert(/if \(!reference\.verify\(bytes\)\)/.test(storeSrc) && /return \{ outcome: StoreSnapshotContentOutcome\.HASH_MISMATCH/.test(storeSrc),
-            'I1. application/StoreSnapshotContentUseCase.js — the ONE boundary every explicit acquisition source (PACKAGE/PLACEMENT/PEER) shares — verifies before ever calling localContentStore.put(). ACQUIRE never bypasses VERIFY.');
-        const loadPublishedSrc = await readSource('application/LoadPublishedWorldSessionUseCase.js');
+            'I1. application/snapshot/materialization/StoreSnapshotContentUseCase.js — the ONE boundary every explicit acquisition source (PACKAGE/PLACEMENT/PEER) shares — verifies before ever calling localContentStore.put(). ACQUIRE never bypasses VERIFY.');
+        const loadPublishedSrc = await readSource('application/publication/LoadPublishedWorldSessionUseCase.js');
         const bytesIndex = loadPublishedSrc.indexOf('this._contentStore.get(publication.contentReference)');
         const verifyIndex = loadPublishedSrc.indexOf('publication.contentReference.verify(bytes)');
         const parseIndex = loadPublishedSrc.indexOf('JSON.parse(bytes)');
@@ -528,12 +528,12 @@ async function run() {
     // Section J — Regression / no production changes.
     // ===============================================================
     {
-        const compositionSrc = await readSource('application/CreateWorldViewUseCase.js');
+        const compositionSrc = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(compositionSrc),
             'J1. UPDATED BY 0.9.605: production composition now wires worldLayoutProvider to publicationActionDiscoveryProvider (the discovery-side bridge, Section G\'s own (i)) — this audit\'s own PRODUCTION CHANGES: none applied only at the time it was written; 0.9.605 is the milestone that actually performed the wiring both this file and 0.9.604 identified as the smallest sufficient change.');
         assert(/LoadPublishedWorldSessionUseCase/.test(compositionSrc),
             'J2. UPDATED BY 0.9.605: the material bridge (Section G\'s own (ii)) is now ALSO wired into the actual composition root, exactly as this section\'s own Section E closing paragraph specified — never a new class, never a new collaborator, only the one new call site (WorldNavigationSession#_loadWorld()\'s own fallback) this audit already named.');
-        const placePublicationSrc = await readSource('application/PlacePublicationUseCase.js');
+        const placePublicationSrc = await readSource('application/placement/PlacePublicationUseCase.js');
         assert(!/publication\.author/.test(placePublicationSrc),
             'J3. RECONFIRMED (0.9.601/0.9.602): PlacePublicationUseCase.js still never reads publication.author.');
 
@@ -570,13 +570,13 @@ work" left open. Section D proves, live, that application/
 LoadPublishedWorldSessionUseCase.js — already existing, already tested
 (tests/PublishedWorld.test.js, tests/DecentralizedContent.test.js,
 tests/ForkPublishedWorld.test.js) — composed with the SAME contentStore
-application/CreateWorldViewUseCase.js already constructs (Section E1-E2),
+application/world/CreateWorldViewUseCase.js already constructs (Section E1-E2),
 already IS the material bridge: a read-through adapter, never a copy
 into a second storage[documentId] entry (Section D4), that correctly
 distinguishes all four material states (Section F: verified, missing,
 malformed, hash-mismatch — only the first renders) through the SAME
 verify-then-accept discipline already enforced one layer up in
-application/StoreSnapshotContentUseCase.js (Section F5/I1-I3), and that
+application/snapshot/materialization/StoreSnapshotContentUseCase.js (Section F5/I1-I3), and that
 never conflates contentHash with documentId (Section B).
 
 CLASSIFICATION: BOTH_BRIDGES_REQUIRED, UNCHANGED FROM 0.9.602's OWN
@@ -591,9 +591,9 @@ CONCLUSION IN SUBSTANCE, BUT NARROWED IN SCOPE ON THE MATERIAL SIDE:
       the sense of new mechanism design; it is ALREADY a fully-built,
       already-tested class (LoadPublishedWorldSessionUseCase) that
       needs exactly one new call site: _loadWorld()/updateSpatialView()
-      (application/WorldNavigationSession.js) falling back to it, using
+      (application/world/WorldNavigationSession.js) falling back to it, using
       collaborators (discoveryProvider, contentStore) the ONE real
-      composition root (application/CreateWorldViewUseCase.js) already
+      composition root (application/world/CreateWorldViewUseCase.js) already
       builds and already exposes, when storage[documentId] comes back
       empty for a document whose Publication carries a contentReference.
 

@@ -7,38 +7,38 @@ import { World } from '../core/World.js';
 import { Group } from '../core/Group.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { SnapMath } from '../core/SnapMath.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { SpatialEditingService } from '../application/SpatialEditingService.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { SpatialEditingService } from '../application/editor/SpatialEditingService.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { CopySelectionUseCase } from '../application/CopySelectionUseCase.js';
-import { PasteClipboardUseCase } from '../application/PasteClipboardUseCase.js';
-import { RepeatSelectionUseCase } from '../application/RepeatSelectionUseCase.js';
-import { RepetitionMath } from '../application/RepetitionMath.js';
-import { CreateStructureFromSelectionUseCase } from '../application/CreateStructureFromSelectionUseCase.js';
-import { CopyStructureIntoDocumentUseCase } from '../application/CopyStructureIntoDocumentUseCase.js';
-import { ExportBlueprintUseCase } from '../application/ExportBlueprintUseCase.js';
-import { ImportBlueprintUseCase } from '../application/ImportBlueprintUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { EditorContext } from '../application/EditorContext.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { ReplayDocumentUseCase } from '../application/ReplayDocumentUseCase.js';
-import { RestoreHistoryStateUseCase } from '../application/RestoreHistoryStateUseCase.js';
+import { CopySelectionUseCase } from '../application/editor/CopySelectionUseCase.js';
+import { PasteClipboardUseCase } from '../application/editor/PasteClipboardUseCase.js';
+import { RepeatSelectionUseCase } from '../application/editor/RepeatSelectionUseCase.js';
+import { RepetitionMath } from '../application/editor/RepetitionMath.js';
+import { CreateStructureFromSelectionUseCase } from '../application/editor/CreateStructureFromSelectionUseCase.js';
+import { CopyStructureIntoDocumentUseCase } from '../application/editor/CopyStructureIntoDocumentUseCase.js';
+import { ExportBlueprintUseCase } from '../application/blueprint/ExportBlueprintUseCase.js';
+import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprintUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { EditorContext } from '../application/editor/EditorContext.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
+import { RestoreHistoryStateUseCase } from '../application/document/RestoreHistoryStateUseCase.js';
 import { WorldPosition } from '../core/WorldPosition.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 
 // 0.4.9 — Alignment, Snapping & Repetition.
 //
-// Grid-DELTA snapping (application/TransformSnap.js) and selection
-// alignment/distribution (application/TransformAlignment.js) already
+// Grid-DELTA snapping (application/editor/TransformSnap.js) and selection
+// alignment/distribution (application/editor/TransformAlignment.js) already
 // shipped in 0.1.47/0.1.48 — this milestone's own design conversation
 // confirmed both exist and left them untouched. Two genuine gaps
 // remained: (1) no way to snap a selection's ABSOLUTE position onto the
@@ -143,7 +143,7 @@ function createWorldWithBricks(specs, worldId, buildingId) {
     // Rotation + snapping: a rotated brick's coordinate can arrive as
     // 1.9999999999999998 rather than exactly 2 (the exact float
     // core/SelectionTransformValidator.js's own header cites from
-    // application/TransformMath.js's sin/cos output) — snapping that
+    // application/editor/TransformMath.js's sin/cos output) — snapping that
     // value must still land cleanly on the grid line, not on some
     // drifted neighbor.
     const driftedFromRotation = 1.9999999999999998;
@@ -394,7 +394,7 @@ function createWorldWithBricks(specs, worldId, buildingId) {
 // 7. Collaboration — world-sync reconstructs the SAME repetition
 // ---------------------------------------------------------------------
 //
-// application/WorldCommandPropagationUseCase.js's own contract (see its
+// application/document/WorldCommandPropagationUseCase.js's own contract (see its
 // own header): the sender calls command.toJSON() exactly once, right
 // after a real local execute(); the receiver reconstructs the command
 // via CommandRegistry.fromJSON() and calls command.execute({ world })

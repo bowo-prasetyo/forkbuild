@@ -5,14 +5,14 @@ import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import {
     buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag
 } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { buildPlaceNamingClaimPublication } from '../application/PlaceNamingClaimPublication.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
+import { buildPlaceNamingClaimPublication } from '../application/placeNaming/PlaceNamingClaimPublication.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -168,13 +168,13 @@ async function runTests() {
     // other's own machinery.
     // ===============================================================
     {
-        const useCaseSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimUseCase.js'));
+        const useCaseSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js'));
         assert(useCaseSource.includes('this._store.save(claim)'),
             'A1. PlaceNamingClaimUseCase#publish() still ends its own write with a single call to the local store\'s save() — the entire persistence side effect of publishing.');
         assert(!/Nostr|relay|WebSocket|fetch\(/i.test(useCaseSource),
             'A2. PlaceNamingClaimUseCase.js — the local-publish path — imports and mentions nothing Nostr/relay/network-shaped anywhere in its own code.');
 
-        const sourceSource = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoverySource.js'));
+        const sourceSource = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoverySource.js'));
         assert(!/LocalPlaceNamingClaimStore|PlaceNamingClaimUseCase|PlaceNamingClaimExchange/.test(sourceSource),
             'A3. NostrPlaceNamingDiscoverySource.js — the decentralized-discovery path — imports nothing from the local-publish/store/exchange family; it only ever reads a relay.');
 
@@ -198,7 +198,7 @@ async function runTests() {
     // production caller path into it.
     // ===============================================================
     {
-        const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
         const publishIdx = sessionSource.indexOf('publishPlaceNamingClaim(regionId, name) {');
         const publishBody = sessionSource.slice(publishIdx, publishIdx + 400);
         assert(publishIdx > -1 && publishBody.includes('return this._placeNamingClaimUseCase.publish('),
@@ -210,8 +210,8 @@ async function runTests() {
 
         const constructionSites = grepFiles('new PlaceNamingClaim(', ['application', 'ui', 'identity', 'core'])
             .filter((f) => f !== 'core/PlaceNamingClaim.js');
-        assert(constructionSites.length === 1 && constructionSites[0] === 'application/PlaceNamingClaimUseCase.js',
-            `B3. Across the whole production codebase, "new PlaceNamingClaim(" appears in exactly one file — application/PlaceNamingClaimUseCase.js#publish() — the ONE real producer (found: ${constructionSites.join(', ') || 'none'}). The other consumer of the class, PlaceNamingClaimExchange#importClaim(), deliberately rehydrates an EXISTING claim via PlaceNamingClaim.fromJSON() instead — it never authors a new one, exactly the "distributes claims; never establishes truth" boundary that file's own header states.`);
+        assert(constructionSites.length === 1 && constructionSites[0] === 'application/placeNaming/PlaceNamingClaimUseCase.js',
+            `B3. Across the whole production codebase, "new PlaceNamingClaim(" appears in exactly one file — application/placeNaming/PlaceNamingClaimUseCase.js#publish() — the ONE real producer (found: ${constructionSites.join(', ') || 'none'}). The other consumer of the class, PlaceNamingClaimExchange#importClaim(), deliberately rehydrates an EXISTING claim via PlaceNamingClaim.fromJSON() instead — it never authors a new one, exactly the "distributes claims; never establishes truth" boundary that file's own header states.`);
 
         console.log('✓ B: PlaceNamingClaimUseCase#publish() is confirmed as the one semantic producer of a locally-authored naming claim, reached through exactly one UI door (PlaceNamingPanel -> WorldNavigationSession#publishPlaceNamingClaim() -> publish()) — there is no second, parallel producer anywhere in this codebase to route a future network write through instead of this one.');
     }
@@ -226,12 +226,12 @@ async function runTests() {
     {
         const PLACE_NAMING_FAMILY = [
             'core/PlaceNamingClaim.js', 'core/PlaceNamingDiscoveryEnvelope.js', 'core/PlaceNamingProximitySelection.js',
-            'core/PlaceNamingView.js', 'application/PlaceNamingClaimExchange.js', 'application/PlaceNamingClaimPublication.js',
-            'application/PlaceNamingClaimPublicationKind.js', 'application/PlaceNamingClaimPublicationValidator.js',
-            'application/PlaceNamingClaimUseCase.js', 'application/PlaceNamingDiscoveryMonitor.js',
-            'application/PlaceNamingDiscoveryQueryService.js', 'application/PlaceNamingDiscoveryRuntimeComposition.js',
-            'application/NostrPlaceNamingDiscoverySource.js', 'application/LocalPlaceNamingPublicationLog.js',
-            'application/LocalPlaceNamingClaimStore.js', 'application/DiscoverPlaceNamingClaimsCommand.js'
+            'core/PlaceNamingView.js', 'application/placeNaming/PlaceNamingClaimExchange.js', 'application/placeNaming/PlaceNamingClaimPublication.js',
+            'application/placeNaming/PlaceNamingClaimPublicationKind.js', 'application/placeNaming/PlaceNamingClaimPublicationValidator.js',
+            'application/placeNaming/PlaceNamingClaimUseCase.js', 'application/placeNaming/PlaceNamingDiscoveryMonitor.js',
+            'application/placeNaming/PlaceNamingDiscoveryQueryService.js', 'application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js',
+            'application/placeNaming/NostrPlaceNamingDiscoverySource.js', 'application/placeNaming/LocalPlaceNamingPublicationLog.js',
+            'application/placeNaming/LocalPlaceNamingClaimStore.js', 'application/placeNaming/DiscoverPlaceNamingClaimsCommand.js'
         ];
         for (const path of PLACE_NAMING_FAMILY) {
             assert(await sourceExists(path), `C1. ${path} still exists — the family this sweep covers is the real, current one, not a stale list.`);
@@ -248,7 +248,7 @@ async function runTests() {
         assert(violations.length === 0,
             `C2. Zero relay-write vocabulary anywhere across all ${PLACE_NAMING_FAMILY.length} Place Naming family files' own CODE (comments excluded) — not merely the one file 0.9.271 Section G1 checked (violations: ${violations.join('; ') || 'none'}).`);
 
-        assert(await sourceExists('application/NostrSnapshotDiscoveryPublisher.js') === true,
+        assert(await sourceExists('application/nostr/NostrSnapshotDiscoveryPublisher.js') === true,
             'C3. The sibling domain (Snapshot discovery) DOES have a real Nostr write-side publisher class — confirming a write-side counterpart is an established, precedented shape in this codebase, not a novel idea.');
         // UPDATED AT 0.9.316 — a historical fact, not a live gap check.
         // At the time this audit ran, no corresponding class existed
@@ -262,8 +262,8 @@ async function runTests() {
         // prior record rather than pretend it never made the claim"
         // discipline this codebase already holds for a milestone that
         // closes a gap a numerically earlier one identified.
-        assert(await sourceExists('application/NostrPlaceNamingDiscoveryPublisher.js') === true,
-            'C4. 0.9.316 has since built application/NostrPlaceNamingDiscoveryPublisher.js — the write-side counterpart 0.9.254\'s own header named and deferred, and this very audit (Section J) classified MISSING_DOMAIN_CAPABILITY, is no longer missing. See tests/PlaceNamingClaimPublication.test.js for 0.9.316\'s own proof.');
+        assert(await sourceExists('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js') === true,
+            'C4. 0.9.316 has since built application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js — the write-side counterpart 0.9.254\'s own header named and deferred, and this very audit (Section J) classified MISSING_DOMAIN_CAPABILITY, is no longer missing. See tests/PlaceNamingClaimPublication.test.js for 0.9.316\'s own proof.');
 
         console.log('✓ C: extended past 0.9.271 Section G1\'s own single-file check, zero relay-write vocabulary exists anywhere across the full 16-file Place Naming family (0.9.316\'s own new publisher file is deliberately outside this 16-file list, and carries its own regression coverage instead). A NostrPlaceNamingDiscoveryPublisher class did not exist at the time of this audit — 0.9.316 has since built it, closing exactly the gap this section documented.');
     }
@@ -304,8 +304,8 @@ async function runTests() {
         // own original close already predicted.
         const productionHits = grepFiles('buildPlaceNamingDiscoveryEnvelope', ['application', 'ui', 'server', 'identity', 'core'])
             .filter((f) => f !== 'core/PlaceNamingDiscoveryEnvelope.js');
-        assert(productionHits.length === 1 && productionHits[0] === 'application/NostrPlaceNamingDiscoveryPublisher.js',
-            `D4. buildPlaceNamingDiscoveryEnvelope() now has exactly one production call site — application/NostrPlaceNamingDiscoveryPublisher.js, built at 0.9.316 (found: ${productionHits.join(', ') || 'none'}). At the time of this audit it had zero; the wire format itself needed no change to gain its first real caller.`);
+        assert(productionHits.length === 1 && productionHits[0] === 'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js',
+            `D4. buildPlaceNamingDiscoveryEnvelope() now has exactly one production call site — application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js, built at 0.9.316 (found: ${productionHits.join(', ') || 'none'}). At the time of this audit it had zero; the wire format itself needed no change to gain its first real caller.`);
 
         console.log('✓ D: the wire contract a Place Naming publisher would need already existed in full at the time of this audit — buildPlaceNamingDiscoveryEnvelope()/derivePlaceNamingDiscoveryTag(), built at 0.9.253 explicitly for this role, proven live to round-trip through the exact parser discovery already uses. 0.9.316 has since given it its first production caller, exactly as this section predicted, with no change to the wire format itself.');
     }
@@ -428,7 +428,7 @@ async function runTests() {
     // sharing mechanism, not an incidental backup format nor a stopgap.
     // ===============================================================
     {
-        const exchangeSource = await rawSource('application/PlaceNamingClaimExchange.js');
+        const exchangeSource = await rawSource('application/placeNaming/PlaceNamingClaimExchange.js');
         assert(exchangeSource.includes("Alice's claim --export--> Publication --import--> Bob's claim store"),
             'G1. PlaceNamingClaimExchange.js\'s own header still states its purpose as exactly this cross-replica sharing diagram — export/import was designed AS the sharing mechanism, not discovered as a side effect of something else.');
         assert(/deliberately protocol-independent/i.test(exchangeSource),
@@ -463,7 +463,7 @@ async function runTests() {
         assert(compositionSource.includes('NostrPlaceNamingDiscoverySource'),
             'H1. ui/main.js\'s own real composition root already wires Nostr, and only Nostr, as this domain\'s discovery substrate — this audit is not proposing a new provider, only asking whether the existing one\'s read side should gain a write side.');
 
-        const snapshotPublisherSource = await rawSource('application/NostrSnapshotDiscoveryPublisher.js');
+        const snapshotPublisherSource = await rawSource('application/nostr/NostrSnapshotDiscoveryPublisher.js');
         assert(snapshotPublisherSource.includes('publishImpl') && snapshotPublisherSource.includes('discoveryTag'),
             'H2. The exact sibling precedent (NostrSnapshotDiscoveryPublisher, 0.9.133) takes an injected publishImpl and a discoveryTag, builds a { kind, tags, content } event template from an already-described envelope, and returns { published, relayUrl, id } | null — a well-precedented, already-proven shape a mirrored Place Naming counterpart would follow, not a novel design.');
         assert(snapshotPublisherSource.includes('never imports') || snapshotPublisherSource.includes('never opens a'),
@@ -477,7 +477,7 @@ async function runTests() {
     // publisher's own contract would and would not need to introduce.
     // ===============================================================
     {
-        const snapshotPublisherSource = await rawSource('application/NostrSnapshotDiscoveryPublisher.js');
+        const snapshotPublisherSource = await rawSource('application/nostr/NostrSnapshotDiscoveryPublisher.js');
         assert(snapshotPublisherSource.includes('MALFORMED INPUT DEGRADES TO `null`'),
             'I1. The sibling\'s own contract already distinguishes exactly three outcomes — malformed candidate or a definite relay decline both degrade to null, a genuine transport/signing failure propagates as a rejection — with no PUBLISHED/CONFIRMED lifecycle, no retry policy, and no delivery-tracking state of any kind.');
         assert(snapshotPublisherSource.includes('A SIMPLE PUBLICATION RESULT, NEVER TRUST OR VERIFICATION SEMANTICS'),

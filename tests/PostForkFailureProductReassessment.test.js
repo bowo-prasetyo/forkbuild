@@ -4,13 +4,13 @@ import { execSync } from 'node:child_process';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License, LicenseId } from '../core/License.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { ForkFailureReason } from '../application/ForkFailureReason.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { ForkFailureReason } from '../application/document/ForkFailureReason.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { Document } from '../core/Document.js';
 import { World } from '../core/World.js';
@@ -90,7 +90,7 @@ async function grepCodeOnlyFiles(pattern, dirs) {
 }
 
 const PRODUCTION_DIRS = ['application', 'ui', 'core', 'publisher', 'discovery', 'storage', 'content'];
-const FORK_FAILURE_FILES = ['application/ForkFailureReason.js', 'application/ForkDocumentUseCase.js', 'ui/components/ForkFailureDialog.js'];
+const FORK_FAILURE_FILES = ['application/document/ForkFailureReason.js', 'application/document/ForkDocumentUseCase.js', 'ui/components/ForkFailureDialog.js'];
 
 // -----------------------------------------------------------------
 // Harness — the SAME lightweight collaborators
@@ -282,7 +282,7 @@ async function run() {
         // lookup is storageProvider.load() — a synchronous, local,
         // in-process call. It reaches storage/LocalStorageProvider.js's
         // own window.localStorage in production, never a network fetch.
-        const forkUseCaseSource = await codeOnlySource('application/ForkDocumentUseCase.js');
+        const forkUseCaseSource = await codeOnlySource('application/document/ForkDocumentUseCase.js');
         assert(!/fetch\(|await |Promise/.test(forkUseCaseSource),
             '2. ForkDocumentUseCase.js performs no async I/O of any kind — execute() is fully synchronous, confirming C1/D\'s live result is architectural, not a coincidence of this test\'s own setup.');
         actionabilityEvidence.retryMaterial = 'NOT_JUSTIFIED — no transient condition exists to retry against (see Section D).';

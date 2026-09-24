@@ -1,8 +1,8 @@
-import { describePublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardClaimSnapshotAssociation } from '../application/PublisherLeaderboardClaimSnapshotAssociationView.js';
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { describePublisherLeaderboardClaimSnapshotAssociation } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotAssociationView.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
@@ -223,7 +223,7 @@ async function run() {
     // determinism, vocabulary, network access.
     // ---------------------------------------------------------------
     {
-        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/PublisherLeaderboardClaimSnapshotAssociationView.js', import.meta.url), 'utf8');
+        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/PublisherLeaderboardClaimSnapshotAssociationView.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
         assert(!importLines.some((line) => line.includes('PublicationObservationArchive')), '34. this file never imports PublicationObservationArchive — no archive reconstruction anywhere in it');
         // Strip full-line comments before checking the ACTUAL CODE — the

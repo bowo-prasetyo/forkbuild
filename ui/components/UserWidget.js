@@ -3,7 +3,7 @@ import LoginModal from './LoginModal.js';
 
 // 0.2.46: reads the same AuthenticationSession every other subsystem
 // can now ask about, rather than inferring "logged in" from currentUser()
-// alone — see application/IdentityUseCase.js.
+// alone — see application/identity/IdentityUseCase.js.
 //
 // 0.2.47: "logged in" and "unlocked" can now disagree — a protected
 // identity's vault can idle-lock while its AuthenticationSession is

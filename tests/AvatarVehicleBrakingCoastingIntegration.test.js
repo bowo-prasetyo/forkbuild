@@ -2,14 +2,14 @@ import { readFile } from 'node:fs/promises';
 import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 import { resolveMovementSpeed } from '../core/AvatarMovementAccelerationSimulation.js';
 import { AvatarMovementState } from '../core/AvatarMovementState.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -24,7 +24,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // core/AvatarMovementAccelerationSimulation.js#resolveMovementSpeed()'s
 // own new `braking`/`brakingRequested` parameters, threaded through
 // core/AvatarMovementSimulation.js#simulateAvatarMovement() and
-// application/AvatarMovementController.js's own new `_resolvedBraking()`
+// application/avatar/AvatarMovementController.js's own new `_resolvedBraking()`
 // seam — while proving real, key-driven controller behavior is
 // completely untouched, since nothing yet sets `brakingRequested` true
 // anywhere in that real pipeline.
@@ -374,7 +374,7 @@ async function runTests() {
     // a stronger reason than it is now — `_currentMovementState()` had
     // no source for `brakingRequested` at all, so it was UNCONDITIONALLY
     // false. 0.9.95 (core/AvatarVehicleBrakingIntent.js +
-    // application/AvatarMovementController.js's own new
+    // application/avatar/AvatarMovementController.js's own new
     // `setVehicleBrakingIntent()`/`_resolvedBrakingRequested()`) gives it
     // a real source — but that source is a dedicated method call, never
     // a keyboard key. The scenario below calls ONLY `keyDown('w')`/
@@ -423,16 +423,16 @@ async function runTests() {
     // Section J — architectural regression
     // -------------------------------------------------------------
     {
-        const controllerSource = await readFile(new URL('../application/AvatarMovementController.js', import.meta.url), 'utf8');
+        const controllerSource = await readFile(new URL('../application/avatar/AvatarMovementController.js', import.meta.url), 'utf8');
         const controllerCodeOnly = controllerSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(!/\bBICYCLE\b|\bMOTORCYCLE\b|\bCAR\b|\bDRONE\b/.test(controllerCodeOnly),
-            '26. application/AvatarMovementController.js never references BICYCLE/MOTORCYCLE/CAR/DRONE — it knows only about a resolved capability\'s own generic braking.braking number');
+            '26. application/avatar/AvatarMovementController.js never references BICYCLE/MOTORCYCLE/CAR/DRONE — it knows only about a resolved capability\'s own generic braking.braking number');
         assert(!controllerCodeOnly.includes('AvatarMovementBrakingKind') && !/\bbraking\.kind\b/.test(controllerCodeOnly),
-            '27. application/AvatarMovementController.js never reads AvatarMovementBrakingCapability\'s own .kind — the bare braking rate alone already carries the distinction');
+            '27. application/avatar/AvatarMovementController.js never reads AvatarMovementBrakingCapability\'s own .kind — the bare braking rate alone already carries the distinction');
         assert(controllerCodeOnly.includes('_resolvedBraking'),
-            '28. application/AvatarMovementController.js exposes the _resolvedBraking() seam this milestone adds');
-        // 29. AS OF 0.9.92, `application/AvatarMovementController.js`
+            '28. application/avatar/AvatarMovementController.js exposes the _resolvedBraking() seam this milestone adds');
+        // 29. AS OF 0.9.92, `application/avatar/AvatarMovementController.js`
         // never set `movementState.brakingRequested` anywhere — this
         // exact assertion (`!controllerCodeOnly.includes('brakingRequested')`)
         // was this suite's own proof of that. 0.9.95
@@ -449,7 +449,7 @@ async function runTests() {
         // KEYBOARD key drives braking — which stays completely true
         // after 0.9.95.
         assert(controllerCodeOnly.includes('_resolvedBrakingRequested') && controllerCodeOnly.includes('setVehicleBrakingIntent'),
-            '29. application/AvatarMovementController.js gained a genuine brakingRequested source in 0.9.95 (_resolvedBrakingRequested()/setVehicleBrakingIntent()) — see tests/AvatarVehicleBrakingIntentControllerIntegration.test.js for full coverage of that seam');
+            '29. application/avatar/AvatarMovementController.js gained a genuine brakingRequested source in 0.9.95 (_resolvedBrakingRequested()/setVehicleBrakingIntent()) — see tests/AvatarVehicleBrakingIntentControllerIntegration.test.js for full coverage of that seam');
         assert(!/setBrakingRequested/.test(controllerCodeOnly),
             '30. no keyboard-facing setter literally named setBrakingRequested was added — 0.9.95\'s own setVehicleBrakingIntent() takes an already-resolved AvatarVehicleBrakingIntent value, never a raw key or boolean');
         assert(!/case\s+'[^']*':\s*this\._keys\.brak/i.test(controllerCodeOnly),

@@ -341,7 +341,7 @@ export class World {
 
     // -----------------------------------------------------------------
     // World Animal Decorations (0.9.702) — explicit, persistent World
-    // content. Unlike application/AnimalRuntimeInstances.js's own
+    // content. Unlike application/world/AnimalRuntimeInstances.js's own
     // session-local, ephemeral released AnimalPresence, an
     // AnimalDecoration IS stored World state — the same "IS the stored
     // state" distinction the World Landmarks section above already

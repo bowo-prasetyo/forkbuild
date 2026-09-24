@@ -118,9 +118,9 @@ async function runTests() {
         // rather than trusted from either prior milestone's own header.
         const domain = await rawSource('core/PublicationCommentary.js');
         const store = await rawSource('storage/PublicationCommentaryStore.js');
-        const addUseCase = await rawSource('application/AddPublicationCommentaryUseCase.js');
-        const getUseCase = await rawSource('application/GetPublicationCommentariesUseCase.js');
-        const navSession = await rawSource('application/WorldNavigationSession.js');
+        const addUseCase = await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
+        const getUseCase = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
+        const navSession = await rawSource('application/world/WorldNavigationSession.js');
         const panel = await rawSource('ui/components/OwnPublicationPanel.js');
 
         assert(/publicationId/.test(domain) && !/\bdocumentId\b/.test(codeOnlyLines(domain)),
@@ -128,12 +128,12 @@ async function runTests() {
         assert(store.includes('export class PublicationCommentaryStore') && store.includes("const COMMENTARY_STORE_KEY = 'publication-commentary:entries';"),
             'A3b. storage/PublicationCommentaryStore.js still persists under the same single, unchanged key (0.9.243).');
         assert(addUseCase.includes('resolveSigningIdentityId(this._identityProvider)'),
-            'A3c. application/AddPublicationCommentaryUseCase.js still resolves authorship from the identity infrastructure, never caller input (0.9.245).');
+            'A3c. application/publication/commentary/AddPublicationCommentaryUseCase.js still resolves authorship from the identity infrastructure, never caller input (0.9.245).');
         assert(/constructor\s*\(\s*store\s*\)/.test(getUseCase),
-            'A3d. application/GetPublicationCommentariesUseCase.js still takes only a store — the read side stays thinner than the write side (0.9.247).');
+            'A3d. application/publication/commentary/GetPublicationCommentariesUseCase.js still takes only a store — the read side stays thinner than the write side (0.9.247).');
         assert(navSession.includes('return this._getPublicationCommentariesUseCase.execute({ publicationId });') &&
                navSession.includes('return this._addPublicationCommentaryUseCase.execute({ publicationId, content, commentaryId, createdAt });'),
-            'A3e. application/WorldNavigationSession.js still delegates both commentary methods entirely to the injected use cases (0.9.248; commentaryId/createdAt passthrough added 0.9.542, still pure delegation).');
+            'A3e. application/world/WorldNavigationSession.js still delegates both commentary methods entirely to the injected use cases (0.9.248; commentaryId/createdAt passthrough added 0.9.542, still pure delegation).');
 
         // A4. 0.9.251's own count closure, re-verified fresh: rendered
         // directly from the existing array, no new state/use case.
@@ -162,7 +162,7 @@ async function runTests() {
         // cheap signal per area rather than a full re-derivation.
         const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
-        const createWorldView = await rawSource('application/CreateWorldViewUseCase.js');
+        const createWorldView = await rawSource('application/world/CreateWorldViewUseCase.js');
         const mainJs = await rawSource('ui/main.js');
 
         assert(/new\s+EditorSession\s*\(/.test(editorView), 'B1. Editor still constructs a real EditorSession.');
@@ -201,10 +201,10 @@ async function runTests() {
         // enough (0.9.251) to make the gap concrete: is that capability
         // actually reachable for a Publication that is NOT the viewer's
         // own — i.e. from Discovery?
-        const canComment = await rawSource('application/CanCommentOnPublicationUseCase.js');
+        const canComment = await rawSource('application/publication/CanCommentOnPublicationUseCase.js');
         assert(canComment.includes('ANY authenticated identity may comment on ANY Publication') || /publication\s*=\s*this\._discoveryProvider\.findById\(publicationId\)/.test(canComment),
-            'B12a. application/CanCommentOnPublicationUseCase.js still enforces no ownership restriction — only "does this Publication resolve" (0.9.246, unchanged).');
-        const navSession = await rawSource('application/WorldNavigationSession.js');
+            'B12a. application/publication/CanCommentOnPublicationUseCase.js still enforces no ownership restriction — only "does this Publication resolve" (0.9.246, unchanged).');
+        const navSession = await rawSource('application/world/WorldNavigationSession.js');
         const getCommentaryMethod = navSession.match(/getPublicationCommentaries\(publicationId\) \{[\s\S]*?\n    \}/)[0];
         assert(!/isOwn|owner|myIdentityId/i.test(getCommentaryMethod),
             'B12b. WorldNavigationSession#getPublicationCommentaries() still takes a bare publicationId with no "is this mine" check of its own.');
@@ -308,7 +308,7 @@ async function runTests() {
         // C6. Synchronization — still one-shot reads only, no
         // subscription/polling/websocket vocabulary in the real read
         // methods.
-        const getUseCase = await rawSource('application/GetPublicationCommentariesUseCase.js');
+        const getUseCase = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
         const panel = await rawSource('ui/components/OwnPublicationPanel.js');
         const refreshMethod = panel.match(/refreshPublicationCommentaries\(\) \{[\s\S]*?\n        \},/);
         assert(refreshMethod, 'C6a. refreshPublicationCommentaries() still exists in its expected shape.');
@@ -409,8 +409,8 @@ async function runTests() {
         // vocabulary is real and rendered — but in WorldEncounterCanvas,
         // never in OwnPublicationPanel, which instead only shows the
         // most recent single distribute-click's own result.
-        assert(await sourceExists('application/PublicationDistributionLifecycle.js'),
-            'D5a. application/PublicationDistributionLifecycle.js exists as a real distribution-lifecycle domain concept.');
+        assert(await sourceExists('application/publication/distribution/PublicationDistributionLifecycle.js'),
+            'D5a. application/publication/distribution/PublicationDistributionLifecycle.js exists as a real distribution-lifecycle domain concept.');
         const worldEncounterCanvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldEncounterCanvas.includes('PublicationDistributionLifecycle') || worldEncounterCanvas.includes('PublicationDistributionState'),
             'D5b. ui/components/WorldEncounterCanvas.js renders PublicationDistributionLifecycle/PublicationDistributionState vocabulary — a real lifecycle view exists.');

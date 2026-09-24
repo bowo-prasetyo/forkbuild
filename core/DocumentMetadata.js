@@ -23,7 +23,7 @@ export class DocumentMetadata {
         // 0.2.81: independent of parentDocumentId — a fork of a
         // PUBLISHED WORLD (ForkPublishedWorldUseCase/DocumentCloneService)
         // sets parentDocumentId; a fork of a LIBRARY STRUCTURE
-        // (application/ForkStructureUseCase.js) sets parentStructureId
+        // (application/editor/ForkStructureUseCase.js) sets parentStructureId
         // instead. A document can carry either, both (if that ever
         // becomes a real flow), or neither — they are two different
         // provenance questions ("what document was this cloned from" vs
@@ -38,7 +38,7 @@ export class DocumentMetadata {
         // LocalIdentityProvider.js#sign(), "Honest about what it is:
         // an attribution stamp, not a proof"). That was fine when
         // nothing consulted it except display. It stops being fine the
-        // moment `application/WorldAuthorizationService.js` needs to
+        // moment `application/identity/WorldAuthorizationService.js` needs to
         // answer "does this viewer OWN this Document" as an actual
         // authorization decision — two people who both typed the
         // display name "Alice" would otherwise both look like the
@@ -46,7 +46,7 @@ export class DocumentMetadata {
         // stated with the strength authorization actually needs: the
         // did:key identity (identity/Ed25519.js) of whoever held the
         // signing key at save time, when that key was available at
-        // all (see application/CreateDocumentManagerUseCase.js,
+        // all (see application/document/CreateDocumentManagerUseCase.js,
         // ForkDocumentUseCase.js, ForkPublishedWorldUseCase.js,
         // ForkStructureUseCase.js — the four sites that set `author`
         // now also set this alongside it). Never a REPLACEMENT for

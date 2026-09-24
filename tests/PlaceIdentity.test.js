@@ -14,13 +14,13 @@ import { World } from '../core/World.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStore.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 
 // 0.5.4 — Place Identity & Geographic Claim Resolution.
 //
@@ -52,7 +52,7 @@ import { WorldNavigationSession } from '../application/WorldNavigationSession.js
 // Section D: core/GeographicPlaceResolution.js — cross-region combined
 //            ranking, never touching a WorldRegion or a single-region
 //            naming view
-// Section E: application/WorldNavigationSession.js wiring — graceful
+// Section E: application/world/WorldNavigationSession.js wiring — graceful
 //            degradation with nothing loaded/wired
 // Section F: regression — WorldRegion/PlaceNamingClaim/single-region
 //            PlaceNamingView completely unchanged by this milestone
@@ -83,7 +83,7 @@ function makeIdentity(label) {
 }
 
 // One fully independent replica's own naming-claim backend, mirroring
-// application/CreateWorldPlaceNamingUseCase.js's own wiring exactly, plus
+// application/placeNaming/CreateWorldPlaceNamingUseCase.js's own wiring exactly, plus
 // a WorldNavigationSession built with nothing else but that backend and
 // whichever World documents this test hands it directly into
 // `_loadedDocuments` — bypassing the full persistence stack entirely,
@@ -321,7 +321,7 @@ async function run() {
     console.log('✓ Section D: core/GeographicPlaceResolution.js — cross-region combined ranking, regions never merged or mutated');
 
     // -------------------------------------------------------------
-    // Section E: application/WorldNavigationSession.js wiring
+    // Section E: application/world/WorldNavigationSession.js wiring
     // -------------------------------------------------------------
     {
         // Nothing loaded, nothing wired at all -> graceful empties, never a throw.
@@ -355,7 +355,7 @@ async function run() {
         const unknownView = noClaimsSession.getGeographicNamingView('does-not-exist');
         assert(unknownView.regions.length === 0 && unknownView.namingView.length === 0, '47. an unknown regionId is [], never a partial or thrown result');
     }
-    console.log('✓ Section E: application/WorldNavigationSession.js — graceful degradation with nothing loaded/wired, correct delegation once regions ARE loaded');
+    console.log('✓ Section E: application/world/WorldNavigationSession.js — graceful degradation with nothing loaded/wired, correct delegation once regions ARE loaded');
 
     // -------------------------------------------------------------
     // Section F: regression — 0.5.0/0.5.2 behavior completely unchanged

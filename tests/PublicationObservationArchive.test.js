@@ -1,12 +1,12 @@
 import { computeContentHash } from '../serializer/contentHash.js';
-import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/IpfsPublicationRecord.js';
-import { IpfsPublicationContentVerificationCoordinatorState } from '../application/IpfsPublicationContentVerificationCoordinatorState.js';
-import { BitcoinAnchorBroadcastState } from '../application/BitcoinAnchorBroadcastState.js';
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
-import { BitcoinAnchorContentProofState } from '../application/BitcoinAnchorContentProofState.js';
-import { PublicationObservationTimelineDomain, PublicationObservationTimelineEntryKind } from '../application/PublicationObservationTimelineView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { describePublicationObservationArchive } from '../application/PublicationObservationArchiveView.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
+import { IpfsPublicationContentVerificationCoordinatorState } from '../application/ipfs/IpfsPublicationContentVerificationCoordinatorState.js';
+import { BitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
+import { PublicationObservationTimelineDomain, PublicationObservationTimelineEntryKind } from '../application/publication/observationArchive/PublicationObservationTimelineView.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { describePublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveView.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 

@@ -2,9 +2,9 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { DocumentManifest } from '../application/DocumentManifest.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { DocumentManifest } from '../application/document/DocumentManifest.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
@@ -425,10 +425,10 @@ async function run() {
     // file's own header, not only asserted here.
     // ===============================================================
     {
-        const useCaseSource = await rawSource('application/SaveDocumentUseCase.js');
+        const useCaseSource = await rawSource('application/document/SaveDocumentUseCase.js');
         const useCaseCodeOnly = useCaseSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/try\s*\{/.test(useCaseCodeOnly),
-            n('H1. application/SaveDocumentUseCase.js still contains no try/catch anywhere — 0.9.653 did not touch it, matching Section I\'s own production-change guard below.'));
+            n('H1. application/document/SaveDocumentUseCase.js still contains no try/catch anywhere — 0.9.653 did not touch it, matching Section I\'s own production-change guard below.'));
         const useCaseHeaderProse = useCaseSource.split('\n')
             .map((line) => line.replace(/^\s*\/\/\s?/, ''))
             .join(' ')
@@ -473,7 +473,7 @@ async function run() {
             }
         } catch { /* git unavailable, or the 0.9.653 commit does not exist yet at test-authoring time */ }
 
-        const EXPECTED = new Set(['ui/components/Toolbar.js', 'ui/views/EditorView.js', 'application/SaveDocumentUseCase.js']);
+        const EXPECTED = new Set(['ui/components/Toolbar.js', 'ui/views/EditorView.js', 'application/document/SaveDocumentUseCase.js']);
         const unexpected = productionTouched.filter((f) => !EXPECTED.has(f));
         assert(unexpected.length === 0,
             n(`I. the 0.9.653 commit touches no production file outside the two Save entry points and SaveDocumentUseCase.js's own documentation-only header addition — found unexpected: ${JSON.stringify(unexpected)}`));

@@ -10,7 +10,7 @@ import { createId } from '../core/createId.js';
 // unscheduled). Satisfies the exact same peer/PeerConnectionProvider.js
 // contract peer/LocalPeerConnectionProvider.js already does —
 // `connect(remoteAddress)` / `onIncomingConnection()` / `dispose()` — so
-// application/ConnectToPeerUseCase.js and application/
+// application/peer/ConnectToPeerUseCase.js and application/
 // DiscoverPeersUseCase.js needed NO changes to their own logic to drive a
 // real transport instead of an in-process one.
 //
@@ -121,7 +121,7 @@ export class WebRtcPeerConnectionProvider extends PeerConnectionProvider {
     // header for why there is no ambient incoming-connection channel for
     // this provider. Implemented (rather than left throwing) so callers
     // that generically call `.listen()` against ANY peer/
-    // PeerConnectionProvider.js — application/ConnectToPeerUseCase.js's own
+    // PeerConnectionProvider.js — application/peer/ConnectToPeerUseCase.js's own
     // `listen()` among them — keep working unchanged; it simply never has
     // anything to report for this transport.
     onIncomingConnection(callback) {

@@ -101,10 +101,10 @@ async function run() {
         const INVENTORY = Object.freeze([
             { id: 1, kind: 'USER_VISIBLE_INVARIANT', statement: 'editing a published Document snapshot never mutates it directly — the edit lazily forks it (0.2.20)', citedIn: 'tests/ForkOnEdit.test.js' },
             { id: 2, kind: 'USER_VISIBLE_INVARIANT', statement: 'a CC BY-ND licensed publication\'s fork action is actually blocked, not merely discouraged (core/License.js forkAllowed)', citedIn: 'tests/Licensing.test.js' },
-            { id: 3, kind: 'DOMAIN_INVARIANT', statement: 'a PublicationReferenceRecord rejects a self-reference (sourcePublicationIdentity.sameAs(referencedPublicationIdentity))', citedIn: 'application/PublicationReferenceRecord.js' },
-            { id: 4, kind: 'DOMAIN_INVARIANT', statement: 'publisher/publication association is stated only by an explicit PublisherPublicationAssociationRecord a person caused to exist — never inferred from shared contentHash or wallet (0.8.78/0.8.108)', citedIn: 'application/PublisherPublicationAssociationRecord.js' },
-            { id: 5, kind: 'PERSISTENCE_INVARIANT', statement: 'a tampered/corrupted recovery checkpoint (contentHash mismatch) is rejected and actually discarded from the recovery store, not merely flagged', citedIn: 'application/CheckRecoveryUseCase.js' },
-            { id: 6, kind: 'PERSISTENCE_INVARIANT', statement: 'PublisherPublicationAssociationRecordHistory is append-only — never mutated, never deduplicated, even for an identical re-association', citedIn: 'application/PublisherPublicationAssociationRecordHistory.js' },
+            { id: 3, kind: 'DOMAIN_INVARIANT', statement: 'a PublicationReferenceRecord rejects a self-reference (sourcePublicationIdentity.sameAs(referencedPublicationIdentity))', citedIn: 'application/publication/PublicationReferenceRecord.js' },
+            { id: 4, kind: 'DOMAIN_INVARIANT', statement: 'publisher/publication association is stated only by an explicit PublisherPublicationAssociationRecord a person caused to exist — never inferred from shared contentHash or wallet (0.8.78/0.8.108)', citedIn: 'application/publisher/PublisherPublicationAssociationRecord.js' },
+            { id: 5, kind: 'PERSISTENCE_INVARIANT', statement: 'a tampered/corrupted recovery checkpoint (contentHash mismatch) is rejected and actually discarded from the recovery store, not merely flagged', citedIn: 'application/document/CheckRecoveryUseCase.js' },
+            { id: 6, kind: 'PERSISTENCE_INVARIANT', statement: 'PublisherPublicationAssociationRecordHistory is append-only — never mutated, never deduplicated, even for an identical re-association', citedIn: 'application/publisher/PublisherPublicationAssociationRecordHistory.js' },
             { id: 7, kind: 'INTEGRATION_CONTRACT', statement: 'a signature\'s own signer must match identityJson.id — a valid signature from the wrong identity is never accepted as authorization', citedIn: 'identity/LocalAuthorizationVerifier.js' },
             { id: 8, kind: 'INTEGRATION_CONTRACT', statement: 'a revoked device authorization reads as revoked once its revocation timestamp has passed — never as still-authorized', citedIn: 'identity/LocalIdentityProvider.js' },
             { id: 9, kind: 'ARCHITECTURAL_INVARIANT', statement: 'core/ never imports application/, renderer/, or ui/ — the dependency direction runs strictly one way', citedIn: 'docs/Architecture.md (opening statement of the core/ section)' },
@@ -198,7 +198,7 @@ async function run() {
         // with `instanceof`, at construction, before the object exists —
         // enforcement lives at the primitive, not at whichever use case
         // happens to call it correctly today.
-        const assocSource = await source('application/PublisherPublicationAssociationRecord.js');
+        const assocSource = await source('application/publisher/PublisherPublicationAssociationRecord.js');
         assert(assocSource.includes('!(publisherIdentity instanceof PublisherIdentityRecord)') &&
             assocSource.includes('!(publicationIdentity instanceof BlockchainPublicationIdentity)'),
             n('C1. PublisherPublicationAssociationRecord enforces both its own type invariants AT CONSTRUCTION, upstream — a caller cannot construct an invalid association even by accident, regardless of which use case calls it'));
@@ -247,7 +247,7 @@ async function run() {
         // D1. THE CORRECTION. This milestone's own requesting brief
         // offered "duplicate durable association must never occur" as an
         // illustrative example of a negative-space invariant. Read
-        // directly against application/PublisherPublicationAssociationRecord.js
+        // directly against application/publisher/PublisherPublicationAssociationRecord.js
         // and its own test file, this is FALSE for this product, by
         // deliberate, documented design: re-associating the identical
         // publisher/publication pair a second time is explicitly
@@ -255,9 +255,9 @@ async function run() {
         // and tests/PublisherPublicationAssociationRecord.test.js's own
         // assertions 41/42, verified here directly rather than trusted
         // from the brief that suggested it.
-        const assocSource = await source('application/PublisherPublicationAssociationRecord.js');
+        const assocSource = await source('application/publisher/PublisherPublicationAssociationRecord.js');
         assert(assocSource.includes('NEVER DEDUPLICATED'),
-            n('D1. application/PublisherPublicationAssociationRecord.js\'s own header explicitly documents "NEVER DEDUPLICATED" — a duplicate association is a documented, intentional outcome, never a defect'));
+            n('D1. application/publisher/PublisherPublicationAssociationRecord.js\'s own header explicitly documents "NEVER DEDUPLICATED" — a duplicate association is a documented, intentional outcome, never a defect'));
         const assocTestSource = await source('tests/PublisherPublicationAssociationRecord.test.js');
         assert(assocTestSource.includes('adds a THIRD, independent entry — never collapsed into one'),
             n('D1. ...and tests/PublisherPublicationAssociationRecord.test.js\'s own assertion 41 proves it live: re-associating an identical pair produces a THIRD independent record, not a rejection or a merge — the requesting brief\'s own suggested example does not survive contact with this codebase\'s actual design and is corrected here rather than accepted uncritically'));
@@ -265,8 +265,8 @@ async function run() {
         // D2. Genuine "must never" invariants that DO hold, each cited
         // against real source, standing in contrast to D1's correction.
         const mustNeverInvariants = [
-            { statement: 'a self-referencing PublicationReferenceRecord must never construct', file: 'application/PublicationReferenceRecord.js', marker: 'sameAs' },
-            { statement: 'a tampered recovery checkpoint must never be accepted as current', file: 'application/CheckRecoveryUseCase.js', marker: 'contentHash' },
+            { statement: 'a self-referencing PublicationReferenceRecord must never construct', file: 'application/publication/PublicationReferenceRecord.js', marker: 'sameAs' },
+            { statement: 'a tampered recovery checkpoint must never be accepted as current', file: 'application/document/CheckRecoveryUseCase.js', marker: 'contentHash' },
             { statement: 'a dedup collision with disagreeing shared fields must never resolve as MATCH', file: 'core/NotificationDeduplicationPolicy.js', marker: 'CONFLICT' },
             { statement: 'a signature from the wrong signer must never authorize', file: 'identity/LocalAuthorizationVerifier.js', marker: 'signer' },
             { statement: 'core/ must never import application/, renderer/, or ui/', file: 'docs/Architecture.md', marker: 'Never imports' }
@@ -348,7 +348,7 @@ async function run() {
         const trials = [
             {
                 id: 1, invariant: 9, productionFile: 'core/CausalStamp.js',
-                change: 'added `import { TransformMath } from \'../application/TransformMath.js\';` — a real, syntactically legal, semantically inert (TransformMath is never referenced) upward import',
+                change: 'added `import { TransformMath } from \'../application/editor/TransformMath.js\';` — a real, syntactically legal, semantically inert (TransformMath is never referenced) upward import',
                 designatedGuard: 'none (Section B4)',
                 outcome: 'NOT_CAUGHT — none of the seven test files that directly exercise core/CausalStamp.js (tests/CrossArcProductEvolutionReassessment.test.js, DecentralizedReplication.test.js, DiscoveryDiagnosticsSummary.test.js, HistoricalPlacementReplicationBoundaryAudit.test.js, PostPlacementProductEvolutionReassessment.test.js, StableProductBaselineAudit.test.js, TrustDiscoveryHardening.test.js) failed because of it; the one file among the seven that DID fail (DiscoveryDiagnosticsSummary.test.js) failed identically before the mutation was ever applied, for the same pre-existing, unrelated `three` package resolution gap 0.9.393/0.9.394 already named',
                 classification: 'GENUINE_GAP'
@@ -361,7 +361,7 @@ async function run() {
                 classification: 'PROTECTED'
             },
             {
-                id: 3, invariant: 4, productionFile: 'application/PublisherPublicationAssociationRecord.js',
+                id: 3, invariant: 4, productionFile: 'application/publisher/PublisherPublicationAssociationRecord.js',
                 change: 'the `publisherIdentity instanceof PublisherIdentityRecord` guard condition replaced with the literal `false`, so the type-check throw can never fire',
                 designatedGuard: 'tests/PublisherPublicationAssociationRecord.test.js',
                 outcome: 'CAUGHT — failed immediately at assertion 17 ("a missing publisherIdentity throws rather than constructing a partial association"); assertion 18\'s own dedicated raw-object rejection would have failed identically had execution continued past 17',
@@ -533,7 +533,7 @@ async function run() {
         assert(productionTouched.length === 0,
             n(`I. No file outside tests/, tests.html, or docs/ remains added or modified by this milestone (found: ${productionTouched.join(', ') || 'none'}) — every one of Section F's four live trials (three real source mutations, one full-suite comparison) was reverted via git checkout during this milestone's own authoring, before the next trial began.`));
 
-        console.log(`✓ I: Production guard holds. Every source mutation from Section F (core/CausalStamp.js, core/NotificationDeduplicationPolicy.js, application/PublisherPublicationAssociationRecord.js) was reverted before the next trial began — zero production code remains added or modified (changed files: ${changedFiles.join(', ') || 'none detected'}).`);
+        console.log(`✓ I: Production guard holds. Every source mutation from Section F (core/CausalStamp.js, core/NotificationDeduplicationPolicy.js, application/publisher/PublisherPublicationAssociationRecord.js) was reverted before the next trial began — zero production code remains added or modified (changed files: ${changedFiles.join(', ') || 'none detected'}).`);
     }
 
     // ===============================================================
@@ -555,7 +555,7 @@ async function run() {
 '\n' +
 'THE CORRECTION THIS MILESTONE MADE TO ITS OWN REQUESTING BRIEF. "Duplicate durable association must never\n' +
 'occur" was offered as an illustrative negative-space example. Checked directly against\n' +
-'application/PublisherPublicationAssociationRecord.js and its own test file, this is FALSE for this product by\n' +
+'application/publisher/PublisherPublicationAssociationRecord.js and its own test file, this is FALSE for this product by\n' +
 'deliberate, documented design — re-association is explicitly never deduplicated. Corrected in Section D rather\n' +
 'than accepted uncritically, matching this codebase\'s own established willingness to push back on an assumption\n' +
 'with direct evidence.\n' +

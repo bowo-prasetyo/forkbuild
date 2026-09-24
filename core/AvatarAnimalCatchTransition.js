@@ -31,7 +31,7 @@ import { isNonEmptyString } from '../utils/typeGuards.js';
 // Every other combination — no CATCH intent, or no animal resolved (the
 // caller found nothing in range) — leaves `inventory` exactly as it was
 // and reports `caught: false`. `caught` exists so a caller (ordinarily
-// application/AvatarAnimalInteractionController.js) knows WHETHER to
+// application/avatar/AvatarAnimalInteractionController.js) knows WHETHER to
 // also remove the animal from the world — this function has no world
 // awareness of its own and never performs that removal itself, the same
 // "decide, never perform the real-world effect" split every transition
@@ -81,7 +81,7 @@ export function deriveAvatarAnimalCatchTransition({
 
 // Deliberately not yet: comparing animalId against a resolved target
 // (see this file's own header); removing the animal from any runtime
-// store (application/AnimalRuntimeInstances.js's own job); release (its
+// store (application/world/AnimalRuntimeInstances.js's own job); release (its
 // own mirror-image file, core/AvatarAnimalReleaseTransition.js); a
 // taming difficulty, escape chance, or cooldown of any kind; capacity
 // limits; avatar movement; collision; keyboard input; rendering;

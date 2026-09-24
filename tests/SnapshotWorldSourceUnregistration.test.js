@@ -1,20 +1,20 @@
 import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { registerPeerWorldSource, unregisterPeerWorldSource } from '../peer/PeerWorldDiscoveryLifecycleBridge.js';
 import { derivePeerWorldOrigin } from '../peer/PeerWorldDataIngress.js';
 import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource,
     materializedSnapshotWorldOrigin
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterSelectionOutcomeStatus } from '../application/WorldEncounterSelectionOutcome.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterSelectionOutcomeStatus } from '../application/worldEncounter/WorldEncounterSelectionOutcome.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Document } from '../core/Document.js';
@@ -198,7 +198,7 @@ function unmountCanvas(ctx) { WorldEncounterCanvas.beforeUnmount.call(ctx); }
 
 async function run() {
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-    const bridgeSource = await readFile(new URL('../application/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
+    const bridgeSource = await readFile(new URL('../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
 
     // ---------------------------------------------------------------
     // Section A — direct bridge behavior.
@@ -615,7 +615,7 @@ async function run() {
         // No new registry — the ONE existing WorldDiscoverySourceRegistry
         // import in WorldEncounterCanvas.js is still the projection module
         // alone; the canvas itself never imports the registry class.
-        assert(!canvasCodeOnly.includes("from '../../application/WorldDiscoverySourceRegistry.js'"),
+        assert(!canvasCodeOnly.includes("from '../../application/discovery/WorldDiscoverySourceRegistry.js'"),
             '2. WorldEncounterCanvas.js still never imports the WorldDiscoverySourceRegistry class itself — it depends only on the registry instance it is handed as a prop');
 
         // No new Snapshot identity — materializedSnapshotWorldOrigin() is
@@ -650,9 +650,9 @@ async function run() {
         // The registry itself was not modified by this milestone (its own
         // "plain absence, never a tombstone" semantics are reused
         // verbatim, unchanged).
-        const registrySource = await readFile(new URL('../application/WorldDiscoverySourceRegistry.js', import.meta.url), 'utf8');
+        const registrySource = await readFile(new URL('../application/discovery/WorldDiscoverySourceRegistry.js', import.meta.url), 'utf8');
         assert(!/SnapshotLifecycle|STALE\b|EXPIRED\b|unregisterSelectedSnapshot/.test(registrySource),
-            '7. application/WorldDiscoverySourceRegistry.js carries no reference to this milestone\'s own UI action or any new lifecycle vocabulary — its existing setSource()/removeSource() semantics are reused verbatim');
+            '7. application/discovery/WorldDiscoverySourceRegistry.js carries no reference to this milestone\'s own UI action or any new lifecycle vocabulary — its existing setSource()/removeSource() semantics are reused verbatim');
 
         console.log('✓ Section J: no new lifecycle enum, no new registry, no new Snapshot identity, no automatic unregister (explicit Wanderer click alone), no material/Publication deletion, no Nostr/Arweave action, and no fallback/ranking/deduplication vocabulary exists anywhere in this milestone\'s own two touched files');
         console.log('\n✅ All Snapshot World Source Unregistration checks passed.');

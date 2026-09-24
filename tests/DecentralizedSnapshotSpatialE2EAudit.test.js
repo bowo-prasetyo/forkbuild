@@ -1,28 +1,28 @@
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { resolveSnapshotWorldPositionClaim } from '../application/SnapshotWorldPositionClaim.js';
-import { SnapshotWorldPositionClaimOutcome } from '../application/SnapshotWorldPositionClaimOutcome.js';
-import { resolveSnapshotWorldPlacement } from '../application/SnapshotWorldPlacement.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
+import { resolveSnapshotWorldPositionClaim } from '../application/snapshot/placement/SnapshotWorldPositionClaim.js';
+import { SnapshotWorldPositionClaimOutcome } from '../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
+import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import {
     registerMaterializedSnapshotWorldSource,
     materializedSnapshotWorldOrigin
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { SnapshotCandidateMaterializationOutcome } from '../application/SnapshotCandidateMaterializationOutcome.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeWorldFromDiscoveryRegistry } from '../application/WorldDiscoveryRegistryProjection.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { SnapshotCandidateMaterializationOutcome } from '../application/snapshot/materialization/SnapshotCandidateMaterializationOutcome.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
@@ -111,7 +111,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // DELIBERATELY NOT SOLVED HERE — MULTIPLE CLAIMS FOR ONE PUBLICATION.
 // Nothing in this codebase reconciles, ranks, timestamps, or trusts among
 // several announcements naming the SAME Publication with DIFFERENT
-// claimed positions — `application/SnapshotWorldPositionClaim.js`'s own
+// claimed positions — `application/snapshot/placement/SnapshotWorldPositionClaim.js`'s own
 // header already names this "deliberately excluded," and this audit does
 // not change that. Section F's own final assertions merely document, as
 // an observed fact rather than a gap this milestone attempts to close,
@@ -217,7 +217,7 @@ function makeNostrNetwork() {
 // NostrSnapshotDiscoveryQueryService pair, a real DecentralizedSnapshotResolver,
 // and a real local materialization boundary writing into the SAME
 // `storageProvider` the receiver's own Publication(s) already live in —
-// so `application/LocalWorldEncounterMaterialSource.js` can later find
+// so `application/worldEncounter/LocalWorldEncounterMaterialSource.js` can later find
 // both.
 function makeHost(storageProvider, discoveryTag) {
     const gateway = makeFakeArweaveGateway();
@@ -245,7 +245,7 @@ function makeHost(storageProvider, discoveryTag) {
 // Places real bytes on the (fake-backed) Arweave store and genuinely
 // announces them over the (fake-backed) Nostr network — optionally
 // carrying a publisher's own position claim, exactly as
-// application/SnapshotDistributionCommand.js's own real callers already
+// application/snapshot/SnapshotDistributionCommand.js's own real callers already
 // do.
 async function placeAndAnnounce(host, bytes, { publicationId, claimedPosition } = {}) {
     const reference = await host.arweaveStore.put(bytes);
@@ -926,9 +926,9 @@ async function run() {
         // import Nostr machinery of any kind.
         const { readFile } = await import('node:fs/promises');
         const filesInChain = [
-            '../application/WorldDiscoverySourceRegistry.js',
-            '../application/WorldDiscoveryRegistryProjection.js',
-            '../application/WorldEncounterIntegration.js',
+            '../application/discovery/WorldDiscoverySourceRegistry.js',
+            '../application/discovery/WorldDiscoveryRegistryProjection.js',
+            '../application/worldEncounter/WorldEncounterIntegration.js',
             '../core/WorldEncounter.js',
             '../ui/components/WorldEncounterCanvas.js',
             '../ui/components/WorldEncounterMarker.js'
@@ -996,7 +996,7 @@ async function run() {
 
         const registry = new WorldDiscoverySourceRegistry();
         // Register the LOCAL Publication directly under the 'local'
-        // origin, exactly as application/WorldDiscoveryRuntimeBootstrap.js's
+        // origin, exactly as application/discovery/WorldDiscoveryRuntimeBootstrap.js's
         // own real local-origin registration eventually would.
         registry.setSource({ origin: 'local', publications: [localPublication], avatars: [], placements: [{ publicationId: localPublication.id, position: { x: 5, y: 0, z: 5 } }] });
 

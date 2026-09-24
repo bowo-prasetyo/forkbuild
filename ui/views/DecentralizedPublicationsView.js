@@ -1,46 +1,46 @@
 import { reactive, ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
-import { resolveSavedProviderDefault } from '../../application/SavedProviderDefaultChoice.js';
-import { PublicationResolutionOutcome } from '../../application/PublicationResolutionOutcome.js';
-import { resolvePublicationView, describePublicationOutcome, describeRetrieval } from '../../application/PublicationResolutionView.js';
+import { resolveSavedProviderDefault } from '../../application/settings/SavedProviderDefaultChoice.js';
+import { PublicationResolutionOutcome } from '../../application/publication/PublicationResolutionOutcome.js';
+import { resolvePublicationView, describePublicationOutcome, describeRetrieval } from '../../application/publication/PublicationResolutionView.js';
 import { Publication } from '../../publisher/Publication.js';
-import { publicationEvidenceView, describeKnownEvidenceCount } from '../../application/PublicationEvidenceView.js';
-import { derivePublicationEvidenceConvergence } from '../../application/PublicationEvidenceConvergence.js';
-import { publicationEvidenceConvergenceView } from '../../application/PublicationEvidenceConvergenceView.js';
-import { describeKnownPlacementCount } from '../../application/SnapshotPlacementView.js';
-import { IpfsRemotePublicationState } from '../../application/IpfsRemotePublicationState.js';
+import { publicationEvidenceView, describeKnownEvidenceCount } from '../../application/publication/evidence/PublicationEvidenceView.js';
+import { derivePublicationEvidenceConvergence } from '../../application/publication/evidence/PublicationEvidenceConvergence.js';
+import { publicationEvidenceConvergenceView } from '../../application/publication/evidence/PublicationEvidenceConvergenceView.js';
+import { describeKnownPlacementCount } from '../../application/snapshot/placement/SnapshotPlacementView.js';
+import { IpfsRemotePublicationState } from '../../application/ipfs/IpfsRemotePublicationState.js';
 import {
     IpfsPublicationObservationTimelineEntryKind
-} from '../../application/IpfsPublicationObservationTimelineView.js';
-import { describePublicationDecentralization, describeDecentralizationRelationshipContrast } from '../../application/PublicationDecentralizationView.js';
-import { describePublicationReplicaKnowledge } from '../../application/PublicationReplicaKnowledgeView.js';
-import { describePublicationReplicaKnowledgeDetail, describeAcquisitionBreakdown } from '../../application/PublicationReplicaKnowledgeDetailView.js';
-import { describeSnapshotStateInspection } from '../../application/SnapshotStateInspectionView.js';
-import { SnapshotPlacementRelationship } from '../../application/SnapshotPlacementRelationship.js';
-import { BitcoinAnchorTransactionConstructionState } from '../../application/BitcoinAnchorTransactionConstructionState.js';
-import { BitcoinAnchorReviewedSigningState } from '../../application/BitcoinAnchorReviewedSigningState.js';
-import { BitcoinAnchorSignedPsbtFinalizationState } from '../../application/BitcoinAnchorSignedPsbtFinalizationState.js';
-import { BitcoinAnchorBroadcastState } from '../../application/BitcoinAnchorBroadcastState.js';
+} from '../../application/ipfs/IpfsPublicationObservationTimelineView.js';
+import { describePublicationDecentralization, describeDecentralizationRelationshipContrast } from '../../application/publication/PublicationDecentralizationView.js';
+import { describePublicationReplicaKnowledge } from '../../application/publication/replica/PublicationReplicaKnowledgeView.js';
+import { describePublicationReplicaKnowledgeDetail, describeAcquisitionBreakdown } from '../../application/publication/replica/PublicationReplicaKnowledgeDetailView.js';
+import { describeSnapshotStateInspection } from '../../application/snapshot/SnapshotStateInspectionView.js';
+import { SnapshotPlacementRelationship } from '../../application/snapshot/placement/SnapshotPlacementRelationship.js';
+import { BitcoinAnchorTransactionConstructionState } from '../../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js';
+import { BitcoinAnchorReviewedSigningState } from '../../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningState.js';
+import { BitcoinAnchorSignedPsbtFinalizationState } from '../../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationState.js';
+import { BitcoinAnchorBroadcastState } from '../../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
 import {
     PublicationObservationTimelineDomain, PublicationObservationTimelineEntryKind
-} from '../../application/PublicationObservationTimelineView.js';
+} from '../../application/publication/observationArchive/PublicationObservationTimelineView.js';
 import {
     PublicationObservationArchiveFingerprintComparisonResult
-} from '../../application/PublicationObservationArchiveFingerprintComparison.js';
+} from '../../application/publication/observationArchive/PublicationObservationArchiveFingerprintComparison.js';
 import { LocalStoragePublicationObservationArchive } from '../../storage/LocalStoragePublicationObservationArchive.js';
 // Publisher achievement profile/badges/statistics live on
 // ui/views/LeaderboardHubView.js; this page keeps only the
 // publisher-association lookups below.
-import { PublicationObservationArchiveImportOutcome } from '../../application/PublicationObservationArchiveExport.js';
+import { PublicationObservationArchiveImportOutcome } from '../../application/publication/observationArchive/PublicationObservationArchiveExport.js';
 import {
     PublicationObservationArchiveInspectionOutcome
-} from '../../application/PublicationObservationArchiveInspection.js';
-import { BaseNetworkObservationState } from '../../application/BaseNetworkObservationState.js';
-import { BasePublicationTransactionPlanState } from '../../application/BasePublicationTransactionPlanState.js';
-import { BaseReviewedSigningState } from '../../application/BaseReviewedSigningState.js';
-import { BaseSignedTransactionFinalizationState } from '../../application/BaseSignedTransactionFinalizationState.js';
-import { BaseTransactionBroadcastState } from '../../application/BaseTransactionBroadcastState.js';
-import { BaseTransactionInclusionObservationState } from '../../application/BaseTransactionInclusionObservationState.js';
+} from '../../application/publication/observationArchive/PublicationObservationArchiveInspection.js';
+import { BaseNetworkObservationState } from '../../application/anchoring/base/BaseNetworkObservationState.js';
+import { BasePublicationTransactionPlanState } from '../../application/anchoring/base/BasePublicationTransactionPlanState.js';
+import { BaseReviewedSigningState } from '../../application/anchoring/base/BaseReviewedSigningState.js';
+import { BaseSignedTransactionFinalizationState } from '../../application/anchoring/base/BaseSignedTransactionFinalizationState.js';
+import { BaseTransactionBroadcastState } from '../../application/anchoring/base/BaseTransactionBroadcastState.js';
+import { BaseTransactionInclusionObservationState } from '../../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 import {
     humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, OUTCOME_BADGE_CLASSES,
@@ -348,7 +348,7 @@ export default {
                 preferredPlacementCreationAttempt: null,
                 // Remote IPFS publishing: the configuration exists only in
                 // memory until the page closes (see
-                // application/IpfsRemotePublishingConfiguration.js); the draft
+                // application/ipfs/IpfsRemotePublishingConfiguration.js); the draft
                 // holds unsubmitted form fields. A new configuration clears the
                 // previous publication outcome.
                 ipfsRemotePublishingConfiguration: null,

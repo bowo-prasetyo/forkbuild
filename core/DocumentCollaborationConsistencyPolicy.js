@@ -7,7 +7,7 @@
 // out-of-order delivery — against the real, unmodified `broadcastCommand()`/
 // `onOperationReceived()`/`apply()`/`attachToPropagation()` chain, never a
 // hand-rolled substitute. That audit produced real evidence, not a
-// hypothesis: `application/CommandHistory.js` orders strictly by arrival,
+// hypothesis: `application/editor/CommandHistory.js` orders strictly by arrival,
 // never by causal or send-time order; whether two operations converge is a
 // property of the COMMAND's own semantics (delta vs. absolute-set), never
 // merely of whether they touch the same object; a replica that never
@@ -45,7 +45,7 @@
 // `NOT_READY` operation applied immediately could silently and
 // permanently diverge a replica the moment a missing predecessor later
 // executed out of order), and 0.9.237 closed it in actual behavior:
-// `application/DocumentOperationDeferralUseCase.js` now retains a
+// `application/document/DocumentOperationDeferralUseCase.js` now retains a
 // `NOT_READY` operation instead of applying it, and releases it — through
 // the SAME `apply()` chokepoint, still called synchronously — only once
 // its named causal predecessors have genuinely executed. `IMMEDIATE` was
@@ -164,7 +164,7 @@ export const RemoteApplicationTiming = Object.freeze({
     // remote operation is applied only once every causal predecessor it
     // names has actually EXECUTED on this replica (not merely been
     // RECEIVED, RECORDED, or — 0.9.231's own distinction — RECOVERED).
-    // `application/DocumentOperationDeferralUseCase.js` is 0.9.237's own
+    // `application/document/DocumentOperationDeferralUseCase.js` is 0.9.237's own
     // mechanism for this guarantee (retain-and-release through the same
     // `apply()` chokepoint, gated by `core/DocumentOperationApplicationReadiness.js
     // #evaluateApplicationReadiness()`), but this enum member names the
@@ -181,7 +181,7 @@ export const RemoteApplicationTiming = Object.freeze({
 export const HistoryOrderingBasis = Object.freeze({
     // 0.9.225 Section B: reversed delivery of the identical operation pair
     // lands in the reverse `CommandHistory` position from forward
-    // delivery. `CommandHistory#execute()` (application/CommandHistory.js)
+    // delivery. `CommandHistory#execute()` (application/editor/CommandHistory.js)
     // has no concept of causal time, send time, or logical clock — it
     // only ever knows "what was executed on THIS replica, and in what
     // sequence."

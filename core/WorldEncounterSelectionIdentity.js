@@ -33,7 +33,7 @@ import { WorldEncounterKind, deriveWorldEncounters } from './WorldEncounter.js';
 //              [{ kind, objectId, origin }, ...]
 //                                │
 //                                ▼
-//         application/WorldEncounterSelectionResolution.js   (THIS
+//         application/worldEncounter/WorldEncounterSelectionResolution.js   (THIS
 //              milestone — matches an existing { kind, objectId }
 //              selection against this list; see that file's own header)
 //
@@ -79,7 +79,7 @@ import { WorldEncounterKind, deriveWorldEncounters } from './WorldEncounter.js';
 // only that source's own contribution, never a cross-source total. A
 // caller wanting the combined, origin-blind reading this codebase has
 // always shown (title, signed status, combined anchor/placement counts)
-// still has it, unchanged, via `application/WorldEncounterIntegration.js`
+// still has it, unchanged, via `application/worldEncounter/WorldEncounterIntegration.js`
 // (0.9.8) — this file is an entirely separate, parallel answer to a
 // different question ("which source?"), never a replacement for the
 // existing one ("what does the World look like?").
@@ -89,7 +89,7 @@ import { WorldEncounterKind, deriveWorldEncounters } from './WorldEncounter.js';
 // names two selection identities for it, one per origin, in source order.
 // It never deduplicates them down to one, never picks "the first," "the
 // local one," or "the most recent" — see
-// `application/WorldEncounterSelectionResolution.js`'s own header for why
+// `application/worldEncounter/WorldEncounterSelectionResolution.js`'s own header for why
 // surfacing every candidate, rather than guessing one, is this milestone's
 // entire point.
 //
@@ -130,7 +130,7 @@ import { WorldEncounterKind, deriveWorldEncounters } from './WorldEncounter.js';
 // - **Loading or interpreting the material a selection identity names.**
 //   A `WorldEncounterSelectionIdentity` is a name, never the thing named.
 // - **Matching an existing `{ kind, objectId }` UI selection against this
-//   list.** That is `application/WorldEncounterSelectionResolution.js`'s
+//   list.** That is `application/worldEncounter/WorldEncounterSelectionResolution.js`'s
 //   own job, immediately below this file in the diagram above.
 
 function isDescribedSource(source) {

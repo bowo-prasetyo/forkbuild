@@ -2,16 +2,16 @@ import { readFile } from 'node:fs/promises';
 import {
     composeArweaveDecentralizedWorldEncounterMaterialSource,
     composeWorldEncounterMaterialSources
-} from '../application/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/ArweaveWorldEncounterMaterialResolver.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
+import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
 import {
     loadWorldEncounterMaterial,
     WorldEncounterMaterialLoadStatus
-} from '../application/WorldEncounterMaterialLoading.js';
-import { loadWorldEncounterMaterialFromResolvedLead } from '../application/DecentralizedWorldEncounterLeadAwareMaterialLoading.js';
-import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/DecentralizedWorldDiscoveryLeadRegistry.js';
-import { resolveDecentralizedWorldEncounterLeadFromRegistry, DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
-import { deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes } from '../application/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js';
+} from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { loadWorldEncounterMaterialFromResolvedLead } from '../application/worldEncounter/DecentralizedWorldEncounterLeadAwareMaterialLoading.js';
+import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { resolveDecentralizedWorldEncounterLeadFromRegistry, DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
+import { deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes } from '../application/discovery/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js';
 import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 
@@ -248,7 +248,7 @@ async function run() {
         });
         assert(associations.length === 1, '21. the envelope\'s declared uri matches exactly the one registered lead, producing one association');
 
-        // 5. Resolution — application/DecentralizedWorldEncounterLeadResolution.js
+        // 5. Resolution — application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js
         //    (0.9.28, unmodified). requestedMaterial names WHAT is wanted;
         //    resolution decides WHICH currently-known lead, if any, the
         //    supplied evidence connects it to.
@@ -286,7 +286,7 @@ async function run() {
         });
         const materialSources = composeWorldEncounterMaterialSources({ arweaveResolverOptions: { fetchImpl: gateway.fetchImpl } });
 
-        // 8. Loading — application/DecentralizedWorldEncounterLeadAwareMaterialLoading.js
+        // 8. Loading — application/worldEncounter/DecentralizedWorldEncounterLeadAwareMaterialLoading.js
         //    (0.9.34, unmodified), fed this milestone's own composed
         //    materialSources.decentralized.
         const result = await loadWorldEncounterMaterialFromResolvedLead({
@@ -309,7 +309,7 @@ async function run() {
     // Section H — architectural regression.
     // ---------------------------------------------------------------
     {
-        const path = '../application/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
+        const path = '../application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
         const fullSource = await readFile(new URL(path, import.meta.url), 'utf8');
         const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -329,10 +329,10 @@ async function run() {
             assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `43. code must never use "${term}" — composition only, no trust/verification vocabulary`);
         }
 
-        const loadingBoundarySource = await readFile(new URL('../application/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
+        const loadingBoundarySource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
         assert(!loadingBoundarySource.includes('DecentralizedWorldEncounterMaterialRuntimeComposition'), '44. the 0.9.21 loading boundary itself is never modified to know about this composition file');
 
-        const leadAwareBoundarySource = await readFile(new URL('../application/DecentralizedWorldEncounterLeadAwareMaterialLoading.js', import.meta.url), 'utf8');
+        const leadAwareBoundarySource = await readFile(new URL('../application/worldEncounter/DecentralizedWorldEncounterLeadAwareMaterialLoading.js', import.meta.url), 'utf8');
         assert(!leadAwareBoundarySource.includes('DecentralizedWorldEncounterMaterialRuntimeComposition'), '45. the 0.9.34 lead-aware loading boundary itself is never modified to know about this composition file');
         assert(typeof loadWorldEncounterMaterialFromResolvedLead === 'function', '46. 0.9.34\'s own entry point is still directly importable, unmodified');
 

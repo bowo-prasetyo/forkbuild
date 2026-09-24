@@ -17,7 +17,7 @@ import { describeSpatialActivity } from '../../core/WorldSpatialAnchor.js';
 // file rather than two.
 //
 // buildSpatialCollaboratorRows() joins
-// application/WorldNavigationSession.js#getWorldSpatialPresenceRoster()'s
+// application/world/WorldNavigationSession.js#getWorldSpatialPresenceRoster()'s
 // own device-level roster (unmodified) into ONE row per identity — the
 // same device-aggregation-is-per-ROW rule WorldMembersPanel's own
 // header already establishes for the coarser 0.2.98 roster. A row's
@@ -25,7 +25,7 @@ import { describeSpatialActivity } from '../../core/WorldSpatialAnchor.js';
 // identity's own live devices (BUILDING beats merely WALKING, exactly
 // "Bob is editing on his Desktop even though his Tablet is merely
 // watching" — the identical precedent
-// application/WorldPresenceUseCase.js#getRoster() already set for its
+// application/presence/WorldPresenceUseCase.js#getRoster() already set for its
 // own EXPLORING/EDITING pair, applied to this richer vocabulary), and
 // `primaryDeviceId` is that SAME device's own id — the one a "Follow"
 // click focuses (see ui/views/WorldView.js). A pure function: no Vue,
@@ -70,7 +70,7 @@ export function buildSpatialCollaboratorRows(spatialRoster, { resolveDisplayName
             const device = mostNoteworthyDevice(group.devices);
             // 0.3.1 — "what is this identity's most-noteworthy device
             // actually pointing at" (e.g. "House"), resolved entirely by
-            // the caller (see application/WorldNavigationSession.js#
+            // the caller (see application/world/WorldNavigationSession.js#
             // _resolveSpatialContextualLabel()) — this function stays as
             // pure as it always was, never reaching into a World itself.
             const contextualLabel = typeof resolveSelectionLabel === 'function' ? resolveSelectionLabel(device.selection) : null;

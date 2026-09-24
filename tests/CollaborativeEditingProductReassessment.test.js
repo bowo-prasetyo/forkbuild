@@ -11,25 +11,25 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { RenameGroupCommand } from '../application/commands/RenameGroupCommand.js';
 import {
     DocumentCommandPropagationUseCase,
     DocumentOperationRejectionReason
-} from '../application/DocumentCommandPropagationUseCase.js';
+} from '../application/document/DocumentCommandPropagationUseCase.js';
 import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
-import { DocumentOperationCausalGapObservationUseCase } from '../application/DocumentOperationCausalGapObservationUseCase.js';
-import { DocumentOperationRecoveryUseCase } from '../application/DocumentOperationRecoveryUseCase.js';
-import { RecoveredOperationReplayUseCase } from '../application/RecoveredOperationReplayUseCase.js';
+import { DocumentOperationCausalGapObservationUseCase } from '../application/document/DocumentOperationCausalGapObservationUseCase.js';
+import { DocumentOperationRecoveryUseCase } from '../application/document/DocumentOperationRecoveryUseCase.js';
+import { RecoveredOperationReplayUseCase } from '../application/document/RecoveredOperationReplayUseCase.js';
 import {
     DocumentOperationDeferralUseCase,
     DocumentOperationDeferralOutcome
-} from '../application/DocumentOperationDeferralUseCase.js';
+} from '../application/document/DocumentOperationDeferralUseCase.js';
 import {
     DOCUMENT_COLLABORATION_CONSISTENCY_POLICY,
     RemoteApplicationTiming,
@@ -42,8 +42,8 @@ import {
     LocalUndoPropagation
 } from '../core/DocumentCollaborationConsistencyPolicy.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { editorViewFiles } from './support/SourceFileGroups.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { editorViewFiles, peerConnectionsViewSource } from './support/SourceFileGroups.js';
 
 // 0.9.545 — Collaborative Editing Product Reassessment.
 //
@@ -256,25 +256,25 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
-        const editorSession = await rawSource('application/EditorSession.js');
-        const propagation = await rawSource('application/DocumentCommandPropagationUseCase.js');
-        const publishUseCase = await rawSource('application/PublishDocumentUseCase.js');
+        const editorSession = await rawSource('application/editor/EditorSession.js');
+        const propagation = await rawSource('application/document/DocumentCommandPropagationUseCase.js');
+        const publishUseCase = await rawSource('application/publication/PublishDocumentUseCase.js');
 
         assert(/new\s+EditorSession\s*\(/.test(editorView),
             'A1. OPEN — ui/views/EditorView.js still constructs the real EditorSession composition root.');
         assert(propagation.includes('PeerLifecycleState.AUTHENTICATED'),
-            'A2. JOIN — application/DocumentCommandPropagationUseCase.js still gates every incoming operation on the connection having reached AUTHENTICATED.');
-        const commandHistorySource = await rawSource('application/CommandHistory.js');
+            'A2. JOIN — application/document/DocumentCommandPropagationUseCase.js still gates every incoming operation on the connection having reached AUTHENTICATED.');
+        const commandHistorySource = await rawSource('application/editor/CommandHistory.js');
         assert(/command\.execute\(this\._context\)/.test(commandHistorySource),
-            'A3. EDIT — application/CommandHistory.js still executes every command directly against the real World it was constructed with — the one local-mutation chokepoint.');
+            'A3. EDIT — application/editor/CommandHistory.js still executes every command directly against the real World it was constructed with — the one local-mutation chokepoint.');
         assert(editorSession.includes('this._documentOperationDeferral.attachToPropagation('),
-            'A4. RECEIVE REMOTE — application/EditorSession.js still attaches DocumentOperationDeferralUseCase directly to the propagation feed as the real application chokepoint.');
-        const registrySource = await rawSource('application/ConnectedPeerRegistry.js');
+            'A4. RECEIVE REMOTE — application/editor/EditorSession.js still attaches DocumentOperationDeferralUseCase directly to the propagation feed as the real application chokepoint.');
+        const registrySource = await rawSource('application/peer/ConnectedPeerRegistry.js');
         assert(/transportState === PeerConnectionState\.CLOSED \|\| transportState === PeerConnectionState\.FAILED/.test(codeOnlyLines(registrySource)),
-            'A5. LEAVE/REJOIN — application/ConnectedPeerRegistry.js still removes a peer automatically the moment its own transport reaches CLOSED/FAILED, with no separate cleanup call required.');
-        assert(publishUseCase.includes('PublishDocumentUseCase'), 'A6a. (sanity) the loaded source is genuinely application/PublishDocumentUseCase.js.');
+            'A5. LEAVE/REJOIN — application/peer/ConnectedPeerRegistry.js still removes a peer automatically the moment its own transport reaches CLOSED/FAILED, with no separate cleanup call required.');
+        assert(publishUseCase.includes('PublishDocumentUseCase'), 'A6a. (sanity) the loaded source is genuinely application/publication/PublishDocumentUseCase.js.');
         assert(!/peerMessageBus|connectedPeerRegistry|DocumentCommandPropagation/.test(publishUseCase),
-            'A6. SAVE/PUBLISH — application/PublishDocumentUseCase.js still names none of the collaboration wire\'s own vocabulary — publishing remains a separate entry point from live editing, exactly as 0.2.3\'s own header first drew that line.');
+            'A6. SAVE/PUBLISH — application/publication/PublishDocumentUseCase.js still names none of the collaboration wire\'s own vocabulary — publishing remains a separate entry point from live editing, exactly as 0.2.3\'s own header first drew that line.');
 
         console.log('✓ A: All six real production entry points this milestone\'s own brief named — open (1), join (2), edit (3), receive-remote (4), leave/rejoin (5), save/publish (6) — still hold their one representative wiring signal in the real, unmodified source. Nothing regressed since 0.9.241.');
     }
@@ -296,19 +296,19 @@ async function runTests() {
         // change Y") describes the SECOND one while naming "the Editor" —
         // the first genuinely absent case, this reassessment's own real
         // finding, verified fresh below rather than assumed either way.
-        const documentPropagationSource = await rawSource('application/DocumentCommandPropagationUseCase.js');
-        const worldPropagationSource = await rawSource('application/WorldCommandPropagationUseCase.js');
-        const worldMembershipSource = await rawSource('application/WorldMembershipUseCase.js');
+        const documentPropagationSource = await rawSource('application/document/DocumentCommandPropagationUseCase.js');
+        const worldPropagationSource = await rawSource('application/document/WorldCommandPropagationUseCase.js');
+        const worldMembershipSource = await rawSource('application/identity/WorldMembershipUseCase.js');
         // codeOnlyLines() strips comments first — DocumentCommandPropagationUseCase.js's
         // own header/step-4 PROSE names "resolveWorldEditGrant" twice, always
         // to say it is deliberately absent from this file's own CODE; a
         // plain substring search would be fooled by that same prose.
         assert(!codeOnlyLines(documentPropagationSource).includes('resolveWorldEditGrant'),
-            'B1a. application/DocumentCommandPropagationUseCase.js (the Editor\'s Structure-Document surface) still accepts no resolveWorldEditGrant collaborator in its own CODE — EDIT there is ownership(+device)-only.');
+            'B1a. application/document/DocumentCommandPropagationUseCase.js (the Editor\'s Structure-Document surface) still accepts no resolveWorldEditGrant collaborator in its own CODE — EDIT there is ownership(+device)-only.');
         assert(codeOnlyLines(worldPropagationSource).includes('resolveWorldEditGrant'),
-            'B1b. application/WorldCommandPropagationUseCase.js (the World\'s own shared-Document surface) still accepts resolveWorldEditGrant in its own CODE — genuine multi-owner EDIT access is a real, SEPARATE, already-shipped capability.');
+            'B1b. application/document/WorldCommandPropagationUseCase.js (the World\'s own shared-Document surface) still accepts resolveWorldEditGrant in its own CODE — genuine multi-owner EDIT access is a real, SEPARATE, already-shipped capability.');
         assert(worldMembershipSource.includes('grantEdit(') && worldMembershipSource.includes('hasActiveGrant('),
-            'B1c. application/WorldMembershipUseCase.js still exposes grantEdit()/hasActiveGrant() as the real backing mechanism for that separate surface\'s multi-owner grants.');
+            'B1c. application/identity/WorldMembershipUseCase.js still exposes grantEdit()/hasActiveGrant() as the real backing mechanism for that separate surface\'s multi-owner grants.');
 
         // B2. Direct, fresh re-confirmation (not a full flagship replay —
         // DocumentCollaborationBoundary Section C already owns that) that
@@ -343,12 +343,12 @@ async function runTests() {
         // two independently-generated identity spaces — never conflated
         // anywhere in the real collaboration chain.
         const collaborationChainFiles = [
-            'application/EditorSession.js',
-            'application/DocumentCommandPropagationUseCase.js',
-            'application/DocumentOperationDeferralUseCase.js',
-            'application/DocumentOperationCausalGapObservationUseCase.js',
-            'application/DocumentOperationRecoveryUseCase.js',
-            'application/RecoveredOperationReplayUseCase.js',
+            'application/editor/EditorSession.js',
+            'application/document/DocumentCommandPropagationUseCase.js',
+            'application/document/DocumentOperationDeferralUseCase.js',
+            'application/document/DocumentOperationCausalGapObservationUseCase.js',
+            'application/document/DocumentOperationRecoveryUseCase.js',
+            'application/document/RecoveredOperationReplayUseCase.js',
             'core/DocumentOperationCausality.js',
             'core/DocumentCollaborationConsistencyPolicy.js'
         ];
@@ -501,11 +501,11 @@ async function runTests() {
         // collaboration-wire vocabulary.
         const publisherProviderSource = await rawSource('publisher/LocalPublisherProvider.js');
         const publicationSource = await rawSource('publisher/Publication.js');
-        const publishUseCaseSource = await rawSource('application/PublishDocumentUseCase.js');
+        const publishUseCaseSource = await rawSource('application/publication/PublishDocumentUseCase.js');
         const wireVocabulary = /peerMessageBus|connectedPeerRegistry|DocumentCommandPropagation|CollaborationSession|CollaborationEnvelope/;
         assert(!wireVocabulary.test(publisherProviderSource), 'E3a. publisher/LocalPublisherProvider.js references none of the collaboration wire\'s own vocabulary.');
         assert(!wireVocabulary.test(publicationSource), 'E3b. publisher/Publication.js references none of the collaboration wire\'s own vocabulary.');
-        assert(!wireVocabulary.test(publishUseCaseSource), 'E3c. application/PublishDocumentUseCase.js references none of the collaboration wire\'s own vocabulary — publishing never broadcasts anything to a collaborator, and nothing a collaborator does over the wire can reach the publish path.');
+        assert(!wireVocabulary.test(publishUseCaseSource), 'E3c. application/publication/PublishDocumentUseCase.js references none of the collaboration wire\'s own vocabulary — publishing never broadcasts anything to a collaborator, and nothing a collaborator does over the wire can reach the publish path.');
 
         console.log('✓ E: publicationId is always freshly minted, per publish, at the one real production call site (E1) — including when content is byte-identical to a previous publish (E1). A Publication\'s own stored snapshot is immutable: a real, subsequent edit to the live Document never reaches it (E2a/E2e), and each new publish gets its own new identity and its own new snapshot rather than rewriting an old one (E2b-d). Publishing is structurally isolated from the entire collaboration wire in both directions (E3).');
     }
@@ -543,9 +543,9 @@ async function runTests() {
         await wait(60);
         assert(brickX(bobReplica.doc) === 1, 'F3. Bob never received op2 while offline — his own document is completely untouched.');
         assert(!!opId2, 'F3b. Broadcasting with zero connected peers still returns an operationId and never throws.');
-        const propagationSource = await rawSource('application/DocumentCommandPropagationUseCase.js');
+        const propagationSource = await rawSource('application/document/DocumentCommandPropagationUseCase.js');
         assert(!/\bqueue\b|\boutbox\b|storeAndForward|\bbacklog\b/i.test(codeOnlyLines(propagationSource)),
-            'F3c. application/DocumentCommandPropagationUseCase.js\'s own CODE still names no queue/outbox/store-and-forward vocabulary — an operation that reaches zero peers is simply gone, never buffered for a later reconnect.');
+            'F3c. application/document/DocumentCommandPropagationUseCase.js\'s own CODE still names no queue/outbox/store-and-forward vocabulary — an operation that reaches zero peers is simply gone, never buffered for a later reconnect.');
 
         // F4/F5. Bob REJOINS on a fresh connection.
         const { peerA: peerA2, peerB: peerB2 } = await connectAndAuthenticate(network, 'alice-f545-2', aliceDevice, 'bob-f545-2', bobDevice);
@@ -738,7 +738,7 @@ async function runTests() {
         } catch { /* zero hits */ }
         assert(hits === '', `I1. ui/ still contains zero references to EDIT-authorization/causal-eligibility/readiness decision vocabulary (WorldAccessLevel/evaluateApplicationEligibility/evaluateApplicationReadiness/resolveSigningIdentityId) — found in: ${hits || 'nothing'}. The UI observes and forwards collaboration state; it never re-decides it.`);
 
-        const peerConnectionsView = await rawSource('ui/views/PeerConnectionsView.js');
+        const peerConnectionsView = peerConnectionsViewSource();
         assert(peerConnectionsView.includes('PeerLifecycleState') && !peerConnectionsView.includes('WorldAccessLevel'),
             'I2. ui/views/PeerConnectionsView.js reads PeerLifecycleState (for connection/authentication BADGES and display copy) but imports no WorldAccessLevel at all — lifecycle display is not the same code path as an edit-authorization decision, and this file never blends the two.');
 

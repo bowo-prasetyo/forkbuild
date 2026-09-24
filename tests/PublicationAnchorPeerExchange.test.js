@@ -1,8 +1,8 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -13,11 +13,11 @@ import {
     toPublicationAnchorRequestMessage,
     toPublicationAnchorResponseMessage,
     isValidPublicationAnchorPeerMessage
-} from '../application/PublicationAnchorPeerProtocol.js';
-import { PublicationAnchorPeerExchange } from '../application/PublicationAnchorPeerExchange.js';
+} from '../application/anchoring/PublicationAnchorPeerProtocol.js';
+import { PublicationAnchorPeerExchange } from '../application/anchoring/PublicationAnchorPeerExchange.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.8.4 — External Anchor Publication Over Peers.
@@ -26,7 +26,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //   Section A: PublicationAnchorPeerProtocol — the ANNOUNCE/REQUEST/
 //              RESPONSE wire shapes, pure data, structural validity only
 //   Section B: PublicationAnchorExchange — the new signature-checking
-//              import boundary application/AddPublicationAnchorUseCase.js
+//              import boundary application/anchoring/AddPublicationAnchorUseCase.js
 //              (0.8.2) deliberately left unbuilt: validate -> construct ->
 //              verify SIGNATURE -> catalog, never a proof check; plus
 //              findByPublicationId() (0.8.5)
@@ -55,7 +55,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //              crosses the wire.
 //   Section E: FLAGSHIP — Alice, Bob, and Carol over real, live,
 //              authenticated connections (peer/LocalPeerConnectionProvider
-//              .js + application/ConnectToPeerUseCase.js, unmodified).
+//              .js + application/peer/ConnectToPeerUseCase.js, unmodified).
 //              Alice signs one anchor; Bob receives and catalogs it, then
 //              relays it onward; Carol receives it from Bob, never from
 //              Alice directly. All three hold the IDENTICAL claim. Bob's
@@ -391,7 +391,7 @@ async function run() {
             '27. the RESPONSE\'s own anchor envelope carries no verification result of any kind — only the signed claim itself, same restraint as ANNOUNCE');
 
         // An anchor cataloged some OTHER way than this exchange's own
-        // importAnchor() (application/AddPublicationAnchorUseCase.js
+        // importAnchor() (application/anchoring/AddPublicationAnchorUseCase.js
         // tolerates an unsigned one) is silently SKIPPED when building a
         // RESPONSE — never breaks the reply for a genuinely exportable
         // sibling naming the same publicationId.

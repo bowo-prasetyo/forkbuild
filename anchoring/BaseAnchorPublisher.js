@@ -1,4 +1,4 @@
-import { BaseReviewedSigningState } from '../application/BaseReviewedSigningState.js';
+import { BaseReviewedSigningState } from '../application/anchoring/base/BaseReviewedSigningState.js';
 
 // 0.9.470 — Review-Preserving Base Anchor Publisher.
 //
@@ -26,16 +26,16 @@ import { BaseReviewedSigningState } from '../application/BaseReviewedSigningStat
 //   BaseAnchorPublisher.publish(publicationId, {                (THIS FILE)
 //       contentHash, wallet, plan, reviewedTransaction, archive })
 //           │
-//           ├── application/BaseReviewedSigningCoordinator.js#sign()
+//           ├── application/anchoring/base/BaseReviewedSigningCoordinator.js#sign()
 //           │   (UNCHANGED — the exact 0.8.93 review-gated signing path)
 //           ├── base/BaseSignedTransactionFinalizer.js#finalize()
 //           │   (UNCHANGED — independent cryptographic verification)
 //           ├── base/BaseTransactionBroadcaster.js#broadcast()
 //           │   (UNCHANGED)
-//           ├── application/CreateBaseAnchorPublicationRecordUseCase.js
+//           ├── application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js
 //           │   (UNCHANGED — durable local Base publication identity)
 //           ▼
-//   application/CreatePublicationAnchorUseCase.js#execute()   (UNCHANGED —
+//   application/anchoring/CreatePublicationAnchorUseCase.js#execute()   (UNCHANGED —
 //           │                                                  0.8.8's own
 //           │                                                  generic,
 //           │                                                  signer/
@@ -45,7 +45,7 @@ import { BaseReviewedSigningState } from '../application/BaseReviewedSigningStat
 //   { published: true, locator: 'base:<txid>', proof: { txid, network },
 //     anchor, archive }
 //
-// NOT REGISTERED IN application/ExternalAnchorPublisherRegistry.js — A
+// NOT REGISTERED IN application/anchoring/ExternalAnchorPublisherRegistry.js — A
 // DELIBERATE DEPARTURE FROM THE GENERIC ONE-CLICK ANCHOR SEAM, NOT AN
 // OVERSIGHT. That registry's own contract — `publish(contentHash)`, a
 // single bare argument — exists for `anchoring/BitcoinAnchorPublisher.js`
@@ -64,13 +64,13 @@ import { BaseReviewedSigningState } from '../application/BaseReviewedSigningStat
 // new, small affordance," never the `v-for="anchorType in
 // availableAnchorTypes"` grid. This class's own `publish()` signature
 // reflects that finding directly — it takes the exact reviewed inputs
-// `application/BaseReviewedSigningCoordinator.js#sign()` already requires,
+// `application/anchoring/base/BaseReviewedSigningCoordinator.js#sign()` already requires,
 // never a bare `contentHash`. Wiring a real UI affordance that calls it is
 // the next, separately sized integration milestone.
 //
 // NEVER CONSTRUCTS A PLAN. `base/BasePublicationTransactionPlanner.js`
 // already exists, is already RPC-priced, and is already reachable from
-// `ui/main.js` via `application/BasePublicationTransactionPlanCoordinator.js`
+// `ui/main.js` via `application/anchoring/base/BasePublicationTransactionPlanCoordinator.js`
 // — reusing it, not reimplementing it, is what keeps this class the
 // "smallest adapter necessary." A caller constructs `plan` exactly as the
 // existing Base Publication Transaction UI section already does today,
@@ -88,7 +88,7 @@ import { BaseReviewedSigningState } from '../application/BaseReviewedSigningStat
 // today.
 //
 // CONTENT-HASH FIDELITY IS CHECKED BEFORE ANY WALLET IS EVER CONSULTED.
-// `application/CreatePublicationAnchorUseCase.js` derives its own
+// `application/anchoring/CreatePublicationAnchorUseCase.js` derives its own
 // `contentHash` from the looked-up publication's `contentReference.hash` —
 // it never trusts a caller-supplied one. This class closes the one gap
 // that leaves open: nothing otherwise stops a caller from handing it a
@@ -100,10 +100,10 @@ import { BaseReviewedSigningState } from '../application/BaseReviewedSigningStat
 // violation, before `wallet.signTransaction()` is ever reached. This is a
 // second, independent check, never a re-decode of `plan.data` — reusing
 // `reviewedTransaction`'s own already-produced field rather than importing
-// `application/BasePublicationCommitmentEncoding.js` a second time here.
+// `application/anchoring/base/BasePublicationCommitmentEncoding.js` a second time here.
 //
 // NO SIGNING CAPABILITY OF ITS OWN, AND NEVER A REMEMBERED WALLET. Exactly
-// `application/BaseReviewedSigningCoordinator.js`'s own restraint, held
+// `application/anchoring/base/BaseReviewedSigningCoordinator.js`'s own restraint, held
 // here one layer up: `wallet` is a required, explicit argument on every
 // `publish()` call, never held across calls. This class imports neither
 // `base/BaseTransactionSigner.js` nor `base/BaseReviewedTransactionSigner.js`
@@ -163,7 +163,7 @@ export class BaseAnchorPublisher {
     // Identity metadata only — mirroring `anchoring/BitcoinAnchorPublisher.js`
     // and `anchoring/BaseProofVerifier.js`'s own identical `anchorType`
     // getter. Never consulted by any registry: see this file's own header,
-    // "NOT REGISTERED IN application/ExternalAnchorPublisherRegistry.js."
+    // "NOT REGISTERED IN application/anchoring/ExternalAnchorPublisherRegistry.js."
     get anchorType() { return 'base'; }
 
     // Resolves to exactly one of:
@@ -171,9 +171,9 @@ export class BaseAnchorPublisher {
     //   { published: true, locator: 'base:<txid>', proof: { txid, network },
     //     anchor, archive }
     //       — anchor: the cataloged, signed core/PublicationAnchor.js
-    //         instance `application/CreatePublicationAnchorUseCase.js`
+    //         instance `application/anchoring/CreatePublicationAnchorUseCase.js`
     //         itself returns.
-    //       — archive: a NEW application/PublicationObservationArchive.js,
+    //       — archive: a NEW application/publication/observationArchive/PublicationObservationArchive.js,
     //         holding the newly minted application/
     //         BaseAnchorPublicationRecord.js — never a mutation of the
     //         `archive` this call was given.
@@ -193,7 +193,7 @@ export class BaseAnchorPublisher {
     // `reviewedTransaction` whose own `contentHash` does not match it (see
     // this file's own header, "CONTENT-HASH FIDELITY"). Every other
     // caller-contract violation (a missing `plan` or `reviewedTransaction`)
-    // is `application/BaseReviewedSigningCoordinator.js#sign()`'s own,
+    // is `application/anchoring/base/BaseReviewedSigningCoordinator.js#sign()`'s own,
     // reused verbatim rather than duplicated here.
     async publish(publicationId, { contentHash, wallet, plan, reviewedTransaction, archive } = {}) {
         if (typeof contentHash !== 'string' || !contentHash.trim()) {
@@ -212,7 +212,7 @@ export class BaseAnchorPublisher {
             // DECLINED (a wallet refusal, or a stale-plan mismatch caught
             // before the wallet was ever asked) or FAILED (an unacceptable
             // signer result) — both a definite no; see
-            // application/BaseReviewedSigningCoordinator.js's own header on
+            // application/anchoring/base/BaseReviewedSigningCoordinator.js's own header on
             // why DECLINED alone already covers two distinct refusals.
             return { published: false, reason: signResult.reason };
         }

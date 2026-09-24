@@ -351,7 +351,7 @@ async function run() {
             'tests/PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js',
             'ui/views/DecentralizedPublicationsView.js',
             // AMENDED BY 0.9.506:
-            'application/SnapshotDistributionContentBackendSelection.js',
+            'application/snapshot/SnapshotDistributionContentBackendSelection.js',
             'tests/SnapshotDistributionContentBackendSelectionIntegrationAudit.test.js',
             'tests/SnapshotContentStorageChoiceCapabilityBoundaryAudit.test.js',
             'tests/SnapshotDistributionRuntimeComposition.test.js',

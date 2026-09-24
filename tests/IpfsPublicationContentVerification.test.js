@@ -1,9 +1,9 @@
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { IpfsPublicationRecord, IpfsPublicationMethod, isValidIpfsPublicationMethod } from '../application/IpfsPublicationRecord.js';
-import { IpfsPublicationContentVerifier } from '../application/IpfsPublicationContentVerifier.js';
-import { IpfsPublicationContentVerificationState, isValidIpfsPublicationContentVerificationState } from '../application/IpfsPublicationContentVerificationState.js';
-import { CreateIpfsPublicationContentVerifierUseCase } from '../application/CreateIpfsPublicationContentVerifierUseCase.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod, isValidIpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
+import { IpfsPublicationContentVerifier } from '../application/ipfs/IpfsPublicationContentVerifier.js';
+import { IpfsPublicationContentVerificationState, isValidIpfsPublicationContentVerificationState } from '../application/ipfs/IpfsPublicationContentVerificationState.js';
+import { CreateIpfsPublicationContentVerifierUseCase } from '../application/ipfs/CreateIpfsPublicationContentVerifierUseCase.js';
 
 // 0.8.69 — IPFS Publication Record & Content-Identity Binding.
 //

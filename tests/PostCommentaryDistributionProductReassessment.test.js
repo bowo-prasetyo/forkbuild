@@ -12,10 +12,10 @@ import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStor
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { Publication } from '../publisher/Publication.js';
 
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
-import { PublicationCommentaryDistributionPeerExchange } from '../application/PublicationCommentaryDistributionPeerExchange.js';
-import { CreatePublicationCommentaryUseCase } from '../application/CreatePublicationCommentaryUseCase.js';
-import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryDistributionPeerExchange } from '../application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js';
+import { CreatePublicationCommentaryUseCase } from '../application/publication/commentary/CreatePublicationCommentaryUseCase.js';
+import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.9.622 — Post-Commentary-Distribution Product Reassessment.
@@ -71,7 +71,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //               re-sorted by createdAt — reconfirming, under a
 //               condition distribution specifically introduces (network
 //               jitter), the exact "insertion order, never re-sorted"
-//               contract application/GetPublicationCommentariesUseCase.js
+//               contract application/publication/commentary/GetPublicationCommentariesUseCase.js
 //               and ui/components/PublicationCard.js already document.
 //               No sort is added — none is owed.
 //   Section E — THE FLAGSHIP FINDING: the notification promise
@@ -102,7 +102,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 // Distribution Closure Audit, documenting a gap this file's own Section E
 // named that was actually closed two milestones earlier, by 0.9.623 —
 // Wire Remote Commentary Arrival into Local Notifications
-// (application/PublicationCommentaryRemoteNotificationBridge.js, wired in
+// (application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js, wired in
 // ui/main.js), left unamended at the time per this codebase's own
 // established convention (see e.g. 0.9.620's own amendment of tests/
 // PublicationCommentaryCrossDeviceProductClosureAudit.test.js) until this
@@ -394,13 +394,13 @@ async function run() {
     // ===============================================================
     {
         const mainSource = codeOnly(await rawSource('ui/main.js'));
-        const peerExchangeSource = codeOnly(await rawSource('application/PublicationCommentaryDistributionPeerExchange.js'));
+        const peerExchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js'));
         assert(/onCommentaryReceived\(callback\)/.test(peerExchangeSource),
-            n('the capability to observe a newly-arrived Commentary locally already exists — application/PublicationCommentaryDistributionPeerExchange.js#onCommentaryReceived(), built at 0.9.618'));
+            n('the capability to observe a newly-arrived Commentary locally already exists — application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js#onCommentaryReceived(), built at 0.9.618'));
 
         // AMENDED BY 0.9.629 — see this file's own header note, above.
         // grepFiles matches raw file text, comments included, so
-        // application/PublicationCommentaryRemoteNotificationBridge.js
+        // application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js
         // appears here purely because its own header comment QUOTES
         // `onCommentaryReceived()` (see that file's own line "The
         // intended call shape is `peerExchange.onCommentaryReceived(...)`
@@ -411,12 +411,12 @@ async function run() {
         assert(productionCallSites.length === 2
             && productionCallSites.some((file) => file.includes('ui/main.js'))
             && productionCallSites.some((file) => file.includes('PublicationCommentaryRemoteNotificationBridge.js')),
-            n(`exactly one production call site now subscribes to it — ui/main.js's own real subscription (0.9.623) — found: ${productionCallSites.join(', ') || 'none'}; the second file matched is application/PublicationCommentaryRemoteNotificationBridge.js's own header comment naming the intended call shape, not a real call site (see codeOnly() check immediately below)`));
-        const bridgeSourceStripped = codeOnly(await rawSource('application/PublicationCommentaryRemoteNotificationBridge.js'));
+            n(`exactly one production call site now subscribes to it — ui/main.js's own real subscription (0.9.623) — found: ${productionCallSites.join(', ') || 'none'}; the second file matched is application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js's own header comment naming the intended call shape, not a real call site (see codeOnly() check immediately below)`));
+        const bridgeSourceStripped = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js'));
         assert(!/\.onCommentaryReceived\(/.test(bridgeSourceStripped),
-            n('with comments stripped, application/PublicationCommentaryRemoteNotificationBridge.js itself never calls .onCommentaryReceived() — it is an adapter CALLED BY a subscription, never the subscriber itself; see that file\'s own header, "an adapter, never a second producer"'));
+            n('with comments stripped, application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js itself never calls .onCommentaryReceived() — it is an adapter CALLED BY a subscription, never the subscriber itself; see that file\'s own header, "an adapter, never a second producer"'));
         assert(/onCommentaryReceived/.test(mainSource),
-            n('ui/main.js itself — the one composition root that wires publicationCommentaryDistributionPeerExchange at all — now reads this event (0.9.623) and feeds every result into application/PublicationCommentaryRemoteNotificationBridge.js#handleCommentaryReceived()'));
+            n('ui/main.js itself — the one composition root that wires publicationCommentaryDistributionPeerExchange at all — now reads this event (0.9.623) and feeds every result into application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js#handleCommentaryReceived()'));
 
         // The product-level fact this asymmetry produces, restated from
         // what is ALREADY live-proven rather than re-derived: 0.9.621's
@@ -431,17 +431,17 @@ async function run() {
         // actually matters to a real user, since
         // core/PublicationCommentaryNotificationProducer.js's own
         // recipient is always `publication.publisherIdentity.id`.
-        const notificationProducerSource = codeOnly(await rawSource('application/PublicationCommentaryNotificationProducer.js'));
-        assert(/EVERY SUCCESSFUL COMMENTARY PRODUCES A NOTIFICATION/.test(await rawSource('application/PublicationCommentaryNotificationProducer.js')),
+        const notificationProducerSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js'));
+        assert(/EVERY SUCCESSFUL COMMENTARY PRODUCES A NOTIFICATION/.test(await rawSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js')),
             n('the product\'s OWN documented promise, unconditionally, for the local path: "every successful commentary produces a notification — including self-commentary"'));
         assert(/notificationSink/.test(notificationProducerSource) && !/importCommentaryEnvelope|PublicationCommentaryDistributionPeerExchange/.test(notificationProducerSource),
             n('that promise\'s own implementation has exactly one entry point (AddPublicationCommentaryUseCase.execute(), reached only from LOCAL creation) — the distribution import path (importCommentaryEnvelope) is a second, independent way the SAME store gains a new row, and this producer never wraps or observes it'));
 
         console.log(
-            '✓ E (AMENDED BY 0.9.629): at the time this audit originally ran, two Commentaries about the same Publication — one authored locally, one delivered remotely by exactly the capability 0.9.617-0.9.621 built — produced two DIFFERENT publisher-facing outcomes; the remote one produced silence. 0.9.623 closed exactly that gap: ui/main.js now subscribes to onCommentaryReceived() and feeds every result into application/PublicationCommentaryRemoteNotificationBridge.js, which produces the IDENTICAL publication.commented NotificationEvent shape 0.9.275 already defined for local creation, through the identical notificationEventStore.save() sink — gated on isNew and on this replica\'s own identity actually being the resolved Publication\'s publisher, exactly this section\'s own original recommendation.'
+            '✓ E (AMENDED BY 0.9.629): at the time this audit originally ran, two Commentaries about the same Publication — one authored locally, one delivered remotely by exactly the capability 0.9.617-0.9.621 built — produced two DIFFERENT publisher-facing outcomes; the remote one produced silence. 0.9.623 closed exactly that gap: ui/main.js now subscribes to onCommentaryReceived() and feeds every result into application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js, which produces the IDENTICAL publication.commented NotificationEvent shape 0.9.275 already defined for local creation, through the identical notificationEventStore.save() sink — gated on isNew and on this replica\'s own identity actually being the resolved Publication\'s publisher, exactly this section\'s own original recommendation.'
         );
         console.log(
-            'Classification (AMENDED BY 0.9.629): RESOLVED — was CONCRETE_PRODUCT_GAP at 0.9.622, closed by 0.9.623\'s own narrowly-scoped wiring (never "distributed notifications" — Notification still never travels the network; see application/PublicationCommentaryRemoteNotificationBridge.js\'s own header). See tests/PublicationCommentaryNostrAsynchronousDistributionClosureAudit.test.js (0.9.629) Section G for live confirmation that this same bridge now also serves the Nostr arrival path, never a second, transport-specific notification mechanism.'
+            'Classification (AMENDED BY 0.9.629): RESOLVED — was CONCRETE_PRODUCT_GAP at 0.9.622, closed by 0.9.623\'s own narrowly-scoped wiring (never "distributed notifications" — Notification still never travels the network; see application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js\'s own header). See tests/PublicationCommentaryNostrAsynchronousDistributionClosureAudit.test.js (0.9.629) Section G for live confirmation that this same bridge now also serves the Nostr arrival path, never a second, transport-specific notification mechanism.'
         );
     }
 
@@ -449,8 +449,8 @@ async function run() {
     // Section F — offline/disconnected creation: product promise check.
     // ===============================================================
     {
-        const peerExchangeSource = codeOnly(await rawSource('application/PublicationCommentaryDistributionPeerExchange.js'));
-        assert(/zero connected peers is never an error/i.test(await rawSource('application/PublicationCommentaryDistributionPeerExchange.js')),
+        const peerExchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js'));
+        assert(/zero connected peers is never an error/i.test(await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js')),
             n('the capability\'s own documentation is explicit: an announce with no listeners is a no-op, never a failure, and never a promise that it will be retried'));
         assert(!/queue|retry|Retry|Queue/.test(peerExchangeSource),
             n('no queue or retry vocabulary exists anywhere in the distribution capability\'s own source — offline-created Commentary is never silently promoted into a delivery guarantee'));
@@ -464,10 +464,10 @@ async function run() {
     // Section G — authorization/trust semantics.
     // ===============================================================
     {
-        const exchangeSource = codeOnly(await rawSource('application/PublicationCommentaryDistributionExchange.js'));
-        const peerExchangeSource = codeOnly(await rawSource('application/PublicationCommentaryDistributionPeerExchange.js'));
+        const exchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionExchange.js'));
+        const peerExchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js'));
         assert(!/publisherIdentity/.test(exchangeSource) && !/CanCommentOnPublicationUseCase/.test(exchangeSource),
-            n('application/PublicationCommentaryDistributionExchange.js never reads a Publication\'s own publisherIdentity and never consults commenting authorization — a signed Commentary establishes only "this identity said this," never "this identity owns this Publication"'));
+            n('application/publication/commentary/PublicationCommentaryDistributionExchange.js never reads a Publication\'s own publisherIdentity and never consults commenting authorization — a signed Commentary establishes only "this identity said this," never "this identity owns this Publication"'));
         assert(!/publisherIdentity/.test(peerExchangeSource) && !/CanCommentOnPublicationUseCase/.test(peerExchangeSource),
             n('the peer transport layer holds the identical restraint one file over'));
 

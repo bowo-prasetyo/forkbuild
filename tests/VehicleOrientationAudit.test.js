@@ -4,9 +4,9 @@ import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeadin
 import { VehicleInstance, vehicleInstanceFromPresence } from '../core/VehicleInstance.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { VehiclePresence } from '../core/VehiclePresence.js';
-import { VehicleRuntimeInstances } from '../application/VehicleRuntimeInstances.js';
-import { AvatarVehicleMovementController, isMovableVehicleType } from '../application/AvatarVehicleMovementController.js';
-import { AvatarMovementConstraint } from '../application/AvatarMovementConstraint.js';
+import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
+import { AvatarVehicleMovementController, isMovableVehicleType } from '../application/avatar/AvatarVehicleMovementController.js';
+import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
 import { World } from '../core/World.js';
@@ -19,17 +19,17 @@ import { VehicleVisual } from '../renderer/VehicleVisual.js';
 import { VehicleFieldRenderer } from '../renderer/VehicleFieldRenderer.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.124 — Vehicle Orientation Audit.
 //
 // 0.9.123 (core/VehicleMovementHeading.js, core/VehicleInstance.js,
-// application/VehicleRuntimeInstances.js, application/AvatarVehicleMovementController.js,
+// application/world/VehicleRuntimeInstances.js, application/avatar/AvatarVehicleMovementController.js,
 // renderer/VehicleVisual.js, renderer/VehicleFieldRenderer.js) gave a
 // mounted vehicle a second runtime fact, `heading`, alongside `position`.
 // This milestone is the audit 0.9.118/0.9.120 already established as this
@@ -768,7 +768,7 @@ async function runTests() {
         const orientationFiles = [
             '../core/VehicleInstance.js',
             '../core/VehicleMovementHeading.js',
-            '../application/VehicleRuntimeInstances.js',
+            '../application/world/VehicleRuntimeInstances.js',
             '../renderer/VehicleVisual.js',
             '../renderer/VehicleFieldRenderer.js'
         ];
@@ -795,30 +795,30 @@ async function runTests() {
         }
     }
     {
-        // application/AvatarVehicleMovementController.js legitimately
+        // application/avatar/AvatarVehicleMovementController.js legitimately
         // reuses capability.steering.steeringRate for the AVATAR's own
         // pre-existing facing (rotationY) — that is 0.9.94's own,
         // untouched feature, not a regression. What must NEVER appear is
         // a heading-vs-steering coupling in the OTHER direction: heading
         // driving rotationY, or rotationY being read to COMPUTE heading.
-        const controllerCode = await sourceOf('../application/AvatarVehicleMovementController.js');
+        const controllerCode = await sourceOf('../application/avatar/AvatarVehicleMovementController.js');
         assert(!controllerCode.includes('resolveVehicleHeadingFromMovement({ dx: currentRotationY'),
             '78. heading is never derived FROM rotationY/steering — only from the realized (dx, dz) position delta');
         assert(!controllerCode.includes('setHeading(vehicleId, result.rotationY)') && !controllerCode.includes('setHeading(vehicleId, currentRotationY)'),
             '79. setHeading() is never called with the steering rotationY value directly — only with resolveVehicleHeadingFromMovement()\'s own output');
     }
     {
-        // application/WorldNavigationSession.js — the ONE place both
+        // application/world/WorldNavigationSession.js — the ONE place both
         // facts (heading and rotationY) are read in the same frame —
         // never wires the vehicle's own heading into the avatar's
         // rotation. The avatar's rotation while mounted comes ONLY from
         // `moved.rotationY` (steering); `moved.vehicleInstance.heading`
         // is never read there at all.
-        const sessionCode = await sourceOf('../application/WorldNavigationSession.js');
+        const sessionCode = await sourceOf('../application/world/WorldNavigationSession.js');
         assert(sessionCode.includes('rotation: { y: moved.rotationY }'),
             '80. sanity: the avatar\'s own rotation while riding still comes from moved.rotationY, exactly as before 0.9.123');
         assert(!sessionCode.includes('moved.vehicleInstance.heading') && !sessionCode.includes('vehicleInstance.heading'),
-            '81. THE EXCLUSION ITSELF: application/WorldNavigationSession.js never reads a mounted vehicle\'s own .heading to drive the avatar\'s rotation — heading and the avatar\'s own facing stay two entirely independent facts');
+            '81. THE EXCLUSION ITSELF: application/world/WorldNavigationSession.js never reads a mounted vehicle\'s own .heading to drive the avatar\'s rotation — heading and the avatar\'s own facing stay two entirely independent facts');
     }
     {
         // A closed vocabulary for steering intent (NONE/LEFT/RIGHT, or
@@ -828,7 +828,7 @@ async function runTests() {
         // still define none of it, and still never will (see
         // tests/VehicleSteeringIntegrationAudit.test.js's own Section E,
         // "no steering field needs to be added to VehicleInstance").
-        // application/AvatarVehicleMovementController.js is the ONE
+        // application/avatar/AvatarVehicleMovementController.js is the ONE
         // exception, by explicit, later design — 0.9.127 (Vehicle
         // Steering Integration Audit) is the milestone this orientation
         // audit's own header already named as this line's own future
@@ -849,7 +849,7 @@ async function runTests() {
         // that milestone introduced no new movable vehicle type. 0.9.668
         // later added MOTORCYCLE, 0.9.669 added CAR, and the Aerial
         // Movement Pipeline milestone added DRONE
-        // (application/AvatarVehicleMovementController.js) — all four
+        // (application/avatar/AvatarVehicleMovementController.js) — all four
         // are movable now.
         for (const type of [VehicleType.BICYCLE, VehicleType.MOTORCYCLE, VehicleType.CAR, VehicleType.DRONE]) {
             assert(isMovableVehicleType(type) === true, `83.${type} sanity: ${type} is movable`);

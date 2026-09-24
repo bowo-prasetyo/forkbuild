@@ -54,8 +54,8 @@ import { Signature, SignatureType } from './Signature.js';
 // Exactly like core/BlueprintAttribution.js, a BlueprintLineageClaim
 // carries fingerprints it is ABOUT, but is never stored inside
 // core/Structure.js#toJSON(), never touches undo/redo, and is never
-// written by application/ExportBlueprintUseCase.js's own portable
-// Structure package on its own — see application/BlueprintPackage.js's
+// written by application/blueprint/ExportBlueprintUseCase.js's own portable
+// Structure package on its own — see application/blueprint/BlueprintPackage.js's
 // own 0.6.8 header for the same "travels alongside, never becomes part
 // of" bundling convenience 0.6.6 already established for attributions.
 export const BLUEPRINT_LINEAGE_CLAIM_KIND = 'forkbuild.blueprint-lineage-claim';

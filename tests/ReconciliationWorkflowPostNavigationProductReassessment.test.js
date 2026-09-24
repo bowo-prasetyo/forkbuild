@@ -207,7 +207,7 @@ async function run() {
         // sides — not merely "both mention evidence export."
         const leaderboardImportSpec = leaderboardSource.match(/import\s*\{[^}]*\}\s*from\s*'([^']*EvidenceExport\.js)'/s);
         assert(
-            leaderboardImportSpec && leaderboardImportSpec[1] === '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.js',
+            leaderboardImportSpec && leaderboardImportSpec[1] === '../../application/claimSnapshotReconciliation/leaderboard/EvidenceExport.js',
             n('D1. the Leaderboard\'s own evidence EXPORT producer resolves to the real, dedicated application-layer file')
         );
         const leaderboardImportedFormatSpec = leaderboardSource.match(/import\s*\{[^}]*\}\s*from\s*'([^']*EvidenceImport\.js)'/s);

@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeWorldFromDiscoverySources } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeWorldFromDiscoverySources } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import {
     bootstrapWorldDiscoveryRuntime,
     WORLD_DISCOVERY_PEER_PROTOCOL
-} from '../application/WorldDiscoveryRuntimeBootstrap.js';
+} from '../application/discovery/WorldDiscoveryRuntimeBootstrap.js';
 
 // 0.9.14 — World Discovery Runtime Bootstrap.
 //
@@ -36,7 +36,7 @@ import {
 // Section G: an already-constructed registry, when supplied, is reused —
 //            never silently replaced by a second instance.
 // Section H: architectural regression sweep of
-//            application/WorldDiscoveryRuntimeBootstrap.js's own source.
+//            application/discovery/WorldDiscoveryRuntimeBootstrap.js's own source.
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -72,7 +72,7 @@ function fakeConnectedPeerRegistry() {
             listeners.add(callback);
             return () => listeners.delete(callback);
         },
-        // Test-only: stands in for application/ConnectedPeerRegistry.js's
+        // Test-only: stands in for application/peer/ConnectedPeerRegistry.js's
         // own add()/_remove() calling _publishChange() with the full
         // current list.
         setPeers(nextPeers) {
@@ -162,7 +162,7 @@ async function run() {
 
         assert(registry.listSources().some((s) => s.origin === 'peer:did:key:zPeerA'), '8. peer A is registered after its message arrives');
 
-        // Exactly application/ConnectedPeer.js's own documented behavior:
+        // Exactly application/peer/ConnectedPeer.js's own documented behavior:
         // remoteIdentity is discarded the moment the connection closes,
         // BEFORE connectedPeerRegistry's own onChange fires.
         peerA.remoteIdentity = null;
@@ -270,7 +270,7 @@ async function run() {
     // Section H — architectural regression sweep.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/WorldDiscoveryRuntimeBootstrap.js', import.meta.url);
+        const sourceUrl = new URL('../application/discovery/WorldDiscoveryRuntimeBootstrap.js', import.meta.url);
         const fullSource = await readFile(sourceUrl, 'utf8');
         const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

@@ -6,20 +6,20 @@ import { Position } from '../core/Position.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStore.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { PlaceNamingDiscoveryMonitor } from '../application/PlaceNamingDiscoveryMonitor.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
+import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.261 — Nearby Place Naming Navigation Lifecycle Audit.
@@ -271,7 +271,7 @@ function makeRelay(initialHandler = () => []) {
 // precision, which tests/PlaceNamingEndToEndLifecycleAudit.test.js's own
 // Section B already covers exhaustively. A large, fixed radius keeps
 // every claim below "nearby" regardless of a World's own internal
-// multi-document layout offsets (application/WorldNavigationSession.js
+// multi-document layout offsets (application/world/WorldNavigationSession.js
 // #getDocumentPosition()), which this file never needs to reproduce.
 const LARGE_PROXIMITY_RADIUS = 1_000_000;
 
@@ -474,7 +474,7 @@ async function runTests() {
     //      "broader discovery scope," per this milestone's own brief) —
     //      both claims ARE discovered and presented, each correctly
     //      carrying its own worldId. But `session.focusLocation(regionId)`
-    //      itself (application/WorldLocationDirectory.js#find()) takes
+    //      itself (application/world/WorldLocationDirectory.js#find()) takes
     //      NO worldId parameter — it is a plain id lookup. So when two
     //      SIMULTANEOUSLY loaded Worlds genuinely share one regionId,
     //      navigating either claim's row resolves to the SAME single
@@ -559,7 +559,7 @@ async function runTests() {
             '24. navigating "Old River" ALSO succeeds — the cross-check equally finds world-B\'s own region-1, ALSO genuinely loaded; the cross-check\'s own question ("does a matching region exist") is honestly true for both rows.');
 
         // THE DISCOVERED BOUNDARY: focusLocation(regionId) itself has no
-        // worldId parameter (application/WorldLocationDirectory.js#find()
+        // worldId parameter (application/world/WorldLocationDirectory.js#find()
         // is a plain `location.id === locationId` lookup, first match
         // across every loaded document). With BOTH world-A's and
         // world-B's own 'region-1' loaded at once, that lookup can only

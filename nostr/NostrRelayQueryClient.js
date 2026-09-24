@@ -3,8 +3,8 @@ const DEFAULT_TIMEOUT_MS = 8000;
 // 0.9.147 — Decentralized Discovery Relay Query Client.
 //
 // docs/Roadmap.md's own 0.9.110 and 0.9.142 comments each name the
-// identical, still-open gap: `application/NostrDiscoveryQueryService.js`
-// (0.9.31) and `application/NostrSnapshotDiscoveryQueryService.js` (0.9.133)
+// identical, still-open gap: `application/nostr/NostrDiscoveryQueryService.js`
+// (0.9.31) and `application/nostr/NostrSnapshotDiscoveryQueryService.js` (0.9.133)
 // both require an injected `queryImpl: (relayUrl, filter) => Promise<events>`
 // with no ambient default, and nothing in this codebase has ever supplied
 // one — `ui/main.js` gracefully resolves `nostr: null` / `resolver: null`
@@ -25,8 +25,8 @@ const DEFAULT_TIMEOUT_MS = 8000;
 //        │
 //        │   queryImpl(relayUrl, filter) -> Promise<Array<event>>
 //        ▼
-//   application/NostrDiscoveryQueryService.js          (0.9.31, unmodified)
-//   application/NostrSnapshotDiscoveryQueryService.js   (0.9.133, unmodified)
+//   application/nostr/NostrDiscoveryQueryService.js          (0.9.31, unmodified)
+//   application/nostr/NostrSnapshotDiscoveryQueryService.js   (0.9.133, unmodified)
 //
 // A `queryImpl` PRODUCER, NEVER A THIRD DISCOVERY SERVICE. This file has no
 // idea a `DecentralizedDiscoveryEnvelope`, a `SnapshotDiscoveryEnvelope`, a
@@ -47,7 +47,7 @@ const DEFAULT_TIMEOUT_MS = 8000;
 // THE EXACT `queryImpl` SHAPE BOTH QUERY SERVICES ALREADY DOCUMENT, NOTHING
 // MORE. `createNostrRelayQueryClient()` returns a function of exactly
 // `(relayUrl, filter) => Promise<events>` — the identical signature
-// `application/NostrDiscoveryQueryService.js`'s own header names for
+// `application/nostr/NostrDiscoveryQueryService.js`'s own header names for
 // `queryImpl`. A caller hands that function straight through as
 // `nostrQueryImpl` (0.9.110's own composition) or
 // `nostrSnapshotDiscoveryQueryServiceOptions.queryImpl` (0.9.142's own),

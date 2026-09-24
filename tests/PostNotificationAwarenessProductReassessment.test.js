@@ -4,10 +4,10 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
-import { GetRecipientNotificationEventsUseCase } from '../application/GetRecipientNotificationEventsUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
+import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -159,8 +159,8 @@ const NOTIFICATION_ARC_FILES = [
     'core/NotificationEvent.js',
     'core/NotificationDeduplicationPolicy.js',
     'storage/NotificationEventStore.js',
-    'application/PublicationCommentaryNotificationProducer.js',
-    'application/GetRecipientNotificationEventsUseCase.js',
+    'application/publication/commentary/PublicationCommentaryNotificationProducer.js',
+    'application/chat/GetRecipientNotificationEventsUseCase.js',
     'ui/components/NotificationHistoryPanel.js'
 ];
 
@@ -174,25 +174,25 @@ async function runTests() {
     {
         const sources = {};
         for (const path of NOTIFICATION_ARC_FILES) sources[path] = await rawSource(path);
-        const composition = await rawSource('application/CreateWorldViewUseCase.js');
+        const composition = await rawSource('application/world/CreateWorldViewUseCase.js');
 
         assert(sources['core/NotificationEvent.js'].includes('export class NotificationEvent')
             && !codeOnlyLines(sources['core/NotificationEvent.js']).match(/\bset\s+\w+\(/),
             'A1. NotificationEvent remains an immutable domain-neutral fact.');
-        assert(sources['application/PublicationCommentaryNotificationProducer.js'].includes('export class PublicationCommentaryNotificationProducer'),
+        assert(sources['application/publication/commentary/PublicationCommentaryNotificationProducer.js'].includes('export class PublicationCommentaryNotificationProducer'),
             'A2. The Commentary producer still exists, unmodified in name.');
         assert(sources['core/NotificationDeduplicationPolicy.js'].includes('export function classifyNotificationCollision'),
             'A3. The adopted deduplication policy still exists.');
         assert(sources['storage/NotificationEventStore.js'].includes('export class NotificationEventStore'),
             'A4. The durable event store still exists.');
-        assert(sources['application/GetRecipientNotificationEventsUseCase.js'].includes('resolveSigningIdentityId'),
+        assert(sources['application/chat/GetRecipientNotificationEventsUseCase.js'].includes('resolveSigningIdentityId'),
             'A5. The recipient query still resolves the CURRENT authenticated identity only.');
         assert(sources['ui/components/NotificationHistoryPanel.js'].includes("name: 'NotificationHistoryPanel'"),
             'A6. The Notification History UI still exists.');
 
         // A7. Two real production construction sites for the producer —
         // CreateWorldViewUseCase.js (0.9.285, WorldView's own commentary)
-        // and application/CreatePublicationCommentaryUseCase.js (0.9.289,
+        // and application/publication/commentary/CreatePublicationCommentaryUseCase.js (0.9.289,
         // the app-wide "other publication" write path 0.9.305 already
         // confirmed feeds PublicationCard.js via ui/main.js's own
         // provide()). Both write into the SAME window.localStorage key
@@ -220,7 +220,7 @@ async function runTests() {
         // class. The event TYPE vocabulary is still singular regardless
         // of how many places wire the producer.
         const producerSites = await grepCount('new NotificationEvent(', ['application']);
-        assert(producerSites === 1, `B1. Exactly one file constructs a NotificationEvent (found ${producerSites}) — application/PublicationCommentaryNotificationProducer.js alone, reused by both composition roots.`);
+        assert(producerSites === 1, `B1. Exactly one file constructs a NotificationEvent (found ${producerSites}) — application/publication/commentary/PublicationCommentaryNotificationProducer.js alone, reused by both composition roots.`);
 
         const readerSites = await grepCount('new GetRecipientNotificationEventsUseCase(', ['application', 'ui']);
         assert(readerSites === 1, `B2. Exactly one production call site constructs GetRecipientNotificationEventsUseCase (found ${readerSites}) — the WRITE side gained a second composition root at 0.9.289, but the READ side did not; this asymmetry is exactly what Section C's own evidence turns on.`);
@@ -245,7 +245,7 @@ async function runTests() {
     // ===============================================================
     {
         // C1. The WRITE side (producing a notification) is genuinely
-        // app-wide since 0.9.289 — application/CreatePublicationCommentaryUseCase.js
+        // app-wide since 0.9.289 — application/publication/commentary/CreatePublicationCommentaryUseCase.js
         // is constructed ONCE, at module scope, in ui/main.js, and its
         // two commands are app.provide()'d globally, reaching
         // PublicationCard.js (0.9.305's own confirmed wiring) from any

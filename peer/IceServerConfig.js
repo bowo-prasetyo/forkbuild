@@ -62,7 +62,7 @@
 // fast once and then apparently stalls the next time — means this
 // network's path to Metered's infrastructure is not reliably
 // well-behaved even when it isn't outright blackholed, and
-// application/PeerSessionManager.js's own createInvitation() has no
+// application/peer/PeerSessionManager.js's own createInvitation() has no
 // tolerance for that: it waits for EVERY configured ICE server to
 // either produce a candidate or a hard error (iceGatheringState ===
 // 'complete', no trickle ICE — see SIGNAL_TIMEOUT_MS's own comment),

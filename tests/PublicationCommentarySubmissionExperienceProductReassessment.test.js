@@ -7,11 +7,11 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -52,8 +52,8 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // production fix — creating a second, visible, genuinely duplicate
 // PublicationCommentary record, never recognized as the SAME attempt.
 //
-// THE FIX (application/WorldNavigationSession.js,
-// application/CreatePublicationCommentaryUseCase.js, ui/views/WorldView.js,
+// THE FIX (application/world/WorldNavigationSession.js,
+// application/publication/commentary/CreatePublicationCommentaryUseCase.js, ui/views/WorldView.js,
 // and the three UI components) wires the commentaryId/createdAt
 // AddPublicationCommentaryUseCase already accepted (0.9.244, unmodified)
 // all the way through: each of the three UI components now tracks
@@ -135,7 +135,7 @@ function makeDocument(title, author) {
 
 // The real write/read stack every real UI surface reaches through
 // (WorldNavigationSession for OwnPublicationPanel/WorldEncounterCanvas,
-// application/CreatePublicationCommentaryUseCase.js for PublicationCard)
+// application/publication/commentary/CreatePublicationCommentaryUseCase.js for PublicationCard)
 // — reproduced here with an injectable notificationSink so an ambiguous
 // (persisted-but-reported-as-failed) submission can be exercised live,
 // exactly the shape 0.9.275/0.9.541 already established this failure

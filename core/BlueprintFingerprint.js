@@ -62,7 +62,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //     THAT milestone is what decides whether it participates.
 //   - creation timestamp, library location, usage history, source
 //     library, local author identity — none of these are even fields
-//     on `core/Structure.js` or `application/BlueprintPackage.js`'s own
+//     on `core/Structure.js` or `application/blueprint/BlueprintPackage.js`'s own
 //     wire shape; there is nothing here to exclude so much as nothing
 //     here to ever have included by accident.
 //

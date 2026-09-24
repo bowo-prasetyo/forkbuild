@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { executeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommand.js';
+import { executeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommand.js';
 
 // 0.9.111 — World View Decentralized Publication Retrieval.
 // See docs/Roadmap.md, "0.9.111 — World View Decentralized Publication
@@ -99,7 +99,7 @@ async function runTests() {
     // Section D — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/DiscoverWorldEncounterPublicationCommand.js', import.meta.url);
+        const sourceUrl = new URL('../application/worldEncounter/DiscoverWorldEncounterPublicationCommand.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

@@ -1,15 +1,15 @@
-import { BaseTransactionInclusionObservationState } from '../application/BaseTransactionInclusionObservationState.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
-import { describePublicationObservationArchive } from '../application/PublicationObservationArchiveView.js';
-import { describePublicationObservationArchiveDifference } from '../application/PublicationObservationArchiveDifference.js';
-import { fingerprintPublicationObservationArchive } from '../application/PublicationObservationArchiveFingerprint.js';
-import { inspectPublicationObservationArchive, PublicationObservationArchiveInspectionOutcome } from '../application/PublicationObservationArchiveInspection.js';
+import { BaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
+import { describePublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveView.js';
+import { describePublicationObservationArchiveDifference } from '../application/publication/observationArchive/PublicationObservationArchiveDifference.js';
+import { fingerprintPublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveFingerprint.js';
+import { inspectPublicationObservationArchive, PublicationObservationArchiveInspectionOutcome } from '../application/publication/observationArchive/PublicationObservationArchiveInspection.js';
 import {
     exportPublicationObservationArchive,
     importPublicationObservationArchive,
     PublicationObservationArchiveImportOutcome
-} from '../application/PublicationObservationArchiveExport.js';
+} from '../application/publication/observationArchive/PublicationObservationArchiveExport.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 
@@ -253,7 +253,7 @@ async function run() {
     // 0.8.104's own publicationReferenceRecords collection, to 7 by
     // 0.8.108's own publisherPublicationAssociationRecords collection, and
     // twice more since (to 9, then to 10 — see
-    // application/PublicationObservationArchive.js's own header for the
+    // application/publication/observationArchive/PublicationObservationArchive.js's own header for the
     // two later collections each bump backs; 0.9.393 found this
     // assertion had gone stale at "8," uncaught because nothing re-ran
     // this guard until 0.9.393's own full-suite execution) — this section
@@ -262,7 +262,7 @@ async function run() {
     // under whatever the CURRENT schema is.
     // ---------------------------------------------------------------
     {
-        assert(PublicationObservationArchive.SCHEMA_VERSION === 10, '35. SCHEMA_VERSION is now 10 (bumped to 4 by 0.8.97, to 5 by 0.8.99, to 6 by 0.8.104, to 7 by 0.8.108, to 8 by 0.8.130, then to 9 and 10 by two later milestones — see application/PublicationObservationArchive.js\'s own header)');
+        assert(PublicationObservationArchive.SCHEMA_VERSION === 10, '35. SCHEMA_VERSION is now 10 (bumped to 4 by 0.8.97, to 5 by 0.8.99, to 6 by 0.8.104, to 7 by 0.8.108, to 8 by 0.8.130, then to 9 and 10 by two later milestones — see application/publication/observationArchive/PublicationObservationArchive.js\'s own header)');
 
         let archive = PublicationObservationArchive.empty();
         archive = archive.appendBaseTransactionInclusionObservation(TXID_H, included({ txid: TXID_H, blockNumber: 1, confirmationCount: 1, observedAt: new Date('2026-08-05T00:00:00Z') }));

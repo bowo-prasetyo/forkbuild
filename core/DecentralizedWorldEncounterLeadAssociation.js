@@ -31,14 +31,14 @@ import { isNonEmptyString } from '../utils/typeGuards.js';
 //        decentralizedWorldEncounterLeadAssociationMatchesLead()
 //                    │
 //                    ▼
-//   application/DecentralizedWorldEncounterLeadResolution.js   (THIS
+//   application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js   (THIS
 //        milestone — matches a requested { kind, objectId } against
 //        currently-known leads via this evidence; see that file's own
 //        header)
 //
 // AN ASSOCIATION NAMES TWO IDENTITIES TOGETHER — A LEAD'S OWN TRIPLE, AND
 // A MATERIAL'S OWN PAIR. `{ origin, discoveryTag, uri }` is exactly the
-// composite key `application/DecentralizedWorldDiscoveryLeadRegistry.js`
+// composite key `application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js`
 // (0.9.26) already uses to identify one lead's own slot, reused verbatim
 // rather than reinvented. `{ kind, objectId }` is exactly
 // `core/WorldEncounter.js`'s own (0.9.0) two-field material identity,
@@ -52,7 +52,7 @@ import { isNonEmptyString } from '../utils/typeGuards.js';
 // related" — it says nothing about which object. `uri` tells a caller
 // where bytes might be retrieved from — it says nothing about what those
 // bytes, once fetched, would turn out to be. Neither this file nor
-// `application/DecentralizedWorldEncounterLeadResolution.js` ever reads a
+// `application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js` ever reads a
 // lead's own `discoveryTag` or `uri` to INFER a `kind`/`objectId` — an
 // association is always a separate, explicit fact a caller supplies, not
 // a computation this file performs over a lead's own fields. This is the
@@ -117,7 +117,7 @@ import { isNonEmptyString } from '../utils/typeGuards.js';
 //   produces evidence to store in it.
 // - **Choosing between two or more matching associations, or between two
 //   or more leads a resolution matches.** See
-//   `application/DecentralizedWorldEncounterLeadResolution.js`'s own
+//   `application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js`'s own
 //   header — that file's own `AMBIGUOUS` status exists precisely so this
 //   file never has to.
 // - **Signature verification or any trust decision about a lead, a
@@ -154,7 +154,7 @@ export function describeDecentralizedWorldEncounterLeadAssociation(candidate) {
 
 // Pure. `true` only when `association`'s own `origin`/`discoveryTag`/`uri`
 // fields structurally match `lead`'s own same-named fields exactly — the
-// one comparison `application/DecentralizedWorldEncounterLeadResolution.js`
+// one comparison `application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js`
 // needs to tell whether a piece of evidence names a lead that is currently
 // known at all. Never throws — a missing or malformed `association` or
 // `lead` simply returns `false`.

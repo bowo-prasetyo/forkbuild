@@ -10,15 +10,15 @@ import { IceServerConfigurationStore } from '../storage/IceServerConfigurationSt
 import { TurnServerConfigurationStore } from '../storage/TurnServerConfigurationStore.js';
 import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
-import { SetArweaveGatewayConfigurationUseCase } from '../application/SetArweaveGatewayConfigurationUseCase.js';
-import { SetIpfsGatewayConfigurationUseCase } from '../application/SetIpfsGatewayConfigurationUseCase.js';
-import { SetIpfsNodeConfigurationUseCase } from '../application/SetIpfsNodeConfigurationUseCase.js';
-import { SetBitcoinEsploraConfigurationUseCase } from '../application/SetBitcoinEsploraConfigurationUseCase.js';
-import { SetNostrRelayConfigurationUseCase } from '../application/SetNostrRelayConfigurationUseCase.js';
-import { SetIceServerConfigurationUseCase } from '../application/SetIceServerConfigurationUseCase.js';
-import { SetTurnServerConfigurationUseCase } from '../application/SetTurnServerConfigurationUseCase.js';
-import { SetRendezvousConfigurationUseCase } from '../application/SetRendezvousConfigurationUseCase.js';
-import { SetRoleProviderPreferenceUseCase } from '../application/SetRoleProviderPreferenceUseCase.js';
+import { SetArweaveGatewayConfigurationUseCase } from '../application/settings/SetArweaveGatewayConfigurationUseCase.js';
+import { SetIpfsGatewayConfigurationUseCase } from '../application/settings/SetIpfsGatewayConfigurationUseCase.js';
+import { SetIpfsNodeConfigurationUseCase } from '../application/settings/SetIpfsNodeConfigurationUseCase.js';
+import { SetBitcoinEsploraConfigurationUseCase } from '../application/settings/SetBitcoinEsploraConfigurationUseCase.js';
+import { SetNostrRelayConfigurationUseCase } from '../application/settings/SetNostrRelayConfigurationUseCase.js';
+import { SetIceServerConfigurationUseCase } from '../application/settings/SetIceServerConfigurationUseCase.js';
+import { SetTurnServerConfigurationUseCase } from '../application/settings/SetTurnServerConfigurationUseCase.js';
+import { SetRendezvousConfigurationUseCase } from '../application/settings/SetRendezvousConfigurationUseCase.js';
+import { SetRoleProviderPreferenceUseCase } from '../application/settings/SetRoleProviderPreferenceUseCase.js';
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { splitNonEmptyLines } from '../utils/splitNonEmptyLines.js';
 

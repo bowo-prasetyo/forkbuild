@@ -4,24 +4,24 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import PublisherPerformanceLeaderboardView from '../ui/views/PublisherPerformanceLeaderboardView.js';
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublicationReferenceRecordUseCase } from '../application/CreatePublicationReferenceRecordUseCase.js';
-import { reconstructDistinctPublisherIdentifiers } from '../application/PublisherAssociationView.js';
-import { reconstructPublisherAchievementStatistics } from '../application/PublisherAchievementStatisticsView.js';
-import { describePublisherRankingPolicy, reconstructPublisherRanking } from '../application/PublisherRankingPolicy.js';
-import { reconstructPublisherLeaderboard } from '../application/PublisherLeaderboardView.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
+import { reconstructDistinctPublisherIdentifiers } from '../application/publisher/PublisherAssociationView.js';
+import { reconstructPublisherAchievementStatistics } from '../application/achievement/PublisherAchievementStatisticsView.js';
+import { describePublisherRankingPolicy, reconstructPublisherRanking } from '../application/leaderboard/PublisherRankingPolicy.js';
+import { reconstructPublisherLeaderboard } from '../application/leaderboard/PublisherLeaderboardView.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.418 — Publisher Performance Leaderboard UI/Ranking Convergence Audit.
 //
 // Type: test-only audit. No production file touched.
 //
-// 0.9.417 made application/PublisherRankingPolicy.js (0.8.112) and
-// application/PublisherLeaderboardView.js (0.8.113), both UNCHANGED,
+// 0.9.417 made application/leaderboard/PublisherRankingPolicy.js (0.8.112) and
+// application/leaderboard/PublisherLeaderboardView.js (0.8.113), both UNCHANGED,
 // reachable through one new view, one new route, and one contextual entry
 // point. That milestone's own test (tests/PublisherPerformanceLeaderboardUi
 // .test.js) already proved its own ten sections at its own moment of

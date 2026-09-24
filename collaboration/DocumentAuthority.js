@@ -1,4 +1,4 @@
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { PlacementValidator } from '../core/PlacementValidator.js';
 import { CollaborationEnvelope } from '../core/CollaborationEnvelope.js';
 

@@ -7,17 +7,17 @@ import { surfaceCategoryAt, SURFACE_CATEGORY } from '../core/TerrainSurface.js';
 import { LAKE_SURFACE_HEIGHT, isRiverAt } from '../core/Hydrology.js';
 import { AVATAR_COLLISION_HEIGHT, AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
 import { DEFAULT_MAX_WALKING_DEPTH, isWalkableWaterDepth, waterDepthSpeedFactor } from '../core/AvatarWaterWalkability.js';
-import { AvatarWaterConstraint } from '../application/AvatarWaterConstraint.js';
-import { AvatarTerrainConstraint } from '../application/AvatarTerrainConstraint.js';
-import { AvatarMovementConstraint } from '../application/AvatarMovementConstraint.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarWaterConstraint } from '../application/avatar/AvatarWaterConstraint.js';
+import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
+import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -31,11 +31,11 @@ import { Position } from '../core/Position.js';
 // the real lakebed under a walkable depth limit, walking slows with
 // depth, movement beyond the limit is blocked — and 0.9.634 installed
 // exactly that, for real: core/AvatarWaterWalkability.js (pure depth/
-// speed math), application/AvatarWaterConstraint.js (the application-
+// speed math), application/avatar/AvatarWaterConstraint.js (the application-
 // layer half), a fifth append-only constraint slot in
-// application/AvatarMovementController.js, a waterSpeedFactor multiplier
+// application/avatar/AvatarMovementController.js, a waterSpeedFactor multiplier
 // in core/AvatarMovementSimulation.js, and a depth-aware
-// withGroundElevation() in application/RenderWorldViewUseCase.js.
+// withGroundElevation() in application/world/RenderWorldViewUseCase.js.
 //
 // This is a test-only, decision-oriented CLOSURE audit (no production
 // code changes) asking whether the whole shallow-water arc — 0.9.613
@@ -182,7 +182,7 @@ async function run() {
     assert(midShallowDepth > 0 && midShallowDepth < DEFAULT_MAX_WALKING_DEPTH,
         `setup: the mid-shallow coordinate is genuinely wet and genuinely under DEFAULT_MAX_WALKING_DEPTH (depth ${midShallowDepth.toFixed(4)})`);
 
-    const renderWorldViewSource = await readSource('application/RenderWorldViewUseCase.js');
+    const renderWorldViewSource = await readSource('application/world/RenderWorldViewUseCase.js');
     function extractFunctionBody(source, startMarker) {
         const start = source.indexOf(startMarker);
         if (start === -1) return null;
@@ -199,7 +199,7 @@ async function run() {
         return null;
     }
     const withGroundElevationBody = extractFunctionBody(renderWorldViewSource, 'function withGroundElevation(position) {');
-    assert(withGroundElevationBody !== null, '1. application/RenderWorldViewUseCase.js#withGroundElevation() is located and extracted from its real, current source text');
+    assert(withGroundElevationBody !== null, '1. application/world/RenderWorldViewUseCase.js#withGroundElevation() is located and extracted from its real, current source text');
     const buildWithGroundElevation = new Function(
         'renderer', 'surfaceCategoryAtFn', 'SURFACE_CATEGORY_ENUM', 'LAKE_SURFACE_HEIGHT_VAL', 'SEED_VAL', 'MAX_WALKING_DEPTH_VAL',
         `const surfaceCategoryAt = surfaceCategoryAtFn, SURFACE_CATEGORY = SURFACE_CATEGORY_ENUM, LAKE_SURFACE_HEIGHT = LAKE_SURFACE_HEIGHT_VAL, DEFAULT_WORLD_SEED = SEED_VAL, DEFAULT_MAX_WALKING_DEPTH = MAX_WALKING_DEPTH_VAL;\n${withGroundElevationBody}\nreturn withGroundElevation;`
@@ -224,7 +224,7 @@ async function run() {
 
         // A control file, chosen deliberately for having NOTHING to do
         // with water, that imports the same Three.js-backed renderer
-        // chain (application/RenderWorldViewUseCase.js -> renderer/
+        // chain (application/world/RenderWorldViewUseCase.js -> renderer/
         // Renderer.js -> 'three') that 0.9.613's and 0.9.616's own
         // river-rendering sections additionally import
         // (renderer/WaterTileMesh.js -> 'three') on top of the pure
@@ -501,9 +501,9 @@ async function run() {
             '34. the intervening deep sample is genuinely the real deep depth, not clamped or altered by having been reached via a longer sequence');
 
         const files = [
-            'core/AvatarWaterWalkability.js', 'application/AvatarWaterConstraint.js',
+            'core/AvatarWaterWalkability.js', 'application/avatar/AvatarWaterConstraint.js',
             'core/AvatarPresence.js', 'core/AvatarMovementState.js', 'core/AvatarAnimationState.js',
-            'application/AvatarMovementController.js', 'application/AvatarPresenceSession.js'
+            'application/avatar/AvatarMovementController.js', 'application/avatar/AvatarPresenceSession.js'
         ];
         for (const file of files) {
             const src = codeOnly(await readSource(file));
@@ -523,7 +523,7 @@ async function run() {
         // terrain (slope) before water (depth) before step (height)
         // before tree — each constraint only ever operates on whatever
         // position the PREVIOUS one already resolved.
-        const controllerSource = codeOnly(await readSource('application/AvatarMovementController.js'));
+        const controllerSource = codeOnly(await readSource('application/avatar/AvatarMovementController.js'));
         const tickStart = controllerSource.indexOf('tick(deltaSeconds) {');
         // `.apply(` specifically — this file also READS
         // `this._stepConstraint`/`this._waterConstraint` earlier in
@@ -611,7 +611,7 @@ async function run() {
     // silently converted into a new ground constraint.
     // -------------------------------------------------------------
     {
-        const waterConstraintSource = codeOnly(await readSource('application/AvatarWaterConstraint.js'));
+        const waterConstraintSource = codeOnly(await readSource('application/avatar/AvatarWaterConstraint.js'));
         assert(!/depthAt\([^)]*\)\s*\{[^}]*\.y/.test(waterConstraintSource.replace(/\n/g, ' ')),
             '43. structural: depthAt(x, z) takes no y parameter at all, and its own body never reads a `.y` field — jump height cannot influence the depth computation, by construction');
 
@@ -793,7 +793,7 @@ async function run() {
         // No NECK/CHEST/TORSO/WAIST geometry exists anywhere in this
         // codebase, currently — reconfirming 0.9.633's own Section C
         // finding is still true, not merely a 0.9.633 snapshot.
-        const geometryFiles = ['core/AvatarCollision.js', 'application/AvatarWaterConstraint.js', 'core/AvatarWaterWalkability.js', 'core/CameraPerspective.js'];
+        const geometryFiles = ['core/AvatarCollision.js', 'application/avatar/AvatarWaterConstraint.js', 'core/AvatarWaterWalkability.js', 'core/CameraPerspective.js'];
         for (const file of geometryFiles) {
             const src = codeOnly(await readSource(file));
             assert(!/\bNECK\b|\bCHEST\b|\bTORSO\b|\bWAIST\b/.test(src), `63. ${file} still defines no NECK/CHEST/TORSO/WAIST body-segment constant`);

@@ -9,13 +9,13 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { WorldMembershipUseCase } from '../application/WorldMembershipUseCase.js';
-import { WorldAuthorizationService } from '../application/WorldAuthorizationService.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { WorldMembershipUseCase } from '../application/identity/WorldMembershipUseCase.js';
+import { WorldAuthorizationService } from '../application/identity/WorldAuthorizationService.js';
 import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
-import { WorldSpatialPresenceUseCase } from '../application/WorldSpatialPresenceUseCase.js';
+import { WorldSpatialPresenceUseCase } from '../application/presence/WorldSpatialPresenceUseCase.js';
 import { WorldSpatialSelection } from '../core/WorldSpatialSelection.js';
 import { WorldSpatialActivity, deriveWorldSpatialActivity } from '../core/WorldSpatialActivity.js';
 import { CommandRegistry } from '../application/commands/CommandRegistry.js';
@@ -23,9 +23,9 @@ import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js'
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { SetStructurePlacementTransformCommand } from '../application/commands/SetStructurePlacementTransformCommand.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { WorldCommandPropagationUseCase } from '../application/WorldCommandPropagationUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { WorldCommandPropagationUseCase } from '../application/document/WorldCommandPropagationUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.3.5 — Collaborative Building Session.
 //

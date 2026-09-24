@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import {
     describeLocalWorldDiscoverySource,
     describeWorldFromDiscoverySources
-} from '../application/WorldEncounterIntegration.js';
+} from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 
@@ -225,7 +225,7 @@ function connectedPeerOf(identityId) {
 //     file is membership only, never a second projection algorithm.
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../application/WorldDiscoverySourceRegistry.js', import.meta.url);
+    const sourceUrl = new URL('../application/discovery/WorldDiscoverySourceRegistry.js', import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource
         .split('\n')

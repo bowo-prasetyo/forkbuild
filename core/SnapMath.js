@@ -1,7 +1,7 @@
 // Pure grid-snapping math (0.4.9) — deterministic rounding of an
 // ABSOLUTE world coordinate to the nearest multiple of a grid size.
 //
-// Distinct from application/TransformSnap.js, which snaps a GESTURE
+// Distinct from application/editor/TransformSnap.js, which snaps a GESTURE
 // DELTA against a live drag/keyboard origin (that module's own header).
 // This module snaps a real position — the primitive
 // "land this selection on the construction grid" needs

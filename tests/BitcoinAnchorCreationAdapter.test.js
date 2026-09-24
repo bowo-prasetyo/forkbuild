@@ -1,11 +1,11 @@
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { CreatePublicationAnchorUseCase } from '../application/CreatePublicationAnchorUseCase.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { CreatePublicationAnchorUseCase } from '../application/anchoring/CreatePublicationAnchorUseCase.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
 import { BitcoinAnchorPublisher } from '../anchoring/BitcoinAnchorPublisher.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -24,7 +24,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //
 //   Section A: flagship — Alice's publisher broadcasts her publication's
 //              contentHash to a fake Bitcoin network; the resulting
-//              evidence feeds application/CreatePublicationAnchorUseCase.js
+//              evidence feeds application/anchoring/CreatePublicationAnchorUseCase.js
 //              (0.8.8, unchanged) to create a real, signed PublicationAnchor.
 //              Bob — with none of Alice's publisher or broadcaster state,
 //              only the anchor envelope and his own proofVerifier pointed

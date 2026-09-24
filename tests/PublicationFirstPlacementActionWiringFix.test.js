@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
-import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
+import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
@@ -20,11 +20,11 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 // 0.9.600 — Publication First-Placement Action Wiring Fix.
 //
 // TYPE: implementation, verified live. PRODUCTION CHANGES:
-//   - application/CreateWorldViewUseCase.js: placePublicationUseCase is now
+//   - application/world/CreateWorldViewUseCase.js: placePublicationUseCase is now
 //     constructed with publicationActionDiscoveryProvider instead of the
 //     narrow discoveryProvider, and the SAME instance is now also handed
 //     to WorldNavigationSession.
-//   - application/WorldNavigationSession.js: accepts an optional
+//   - application/world/WorldNavigationSession.js: accepts an optional
 //     placePublicationUseCase collaborator and exposes a new,
 //     publicationId-keyed placePublication(publicationId, position)
 //     method that delegates directly to it.
@@ -40,7 +40,7 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 // FirstPublicationPlacementCapabilityBoundaryAudit.test.js (0.9.599,
 // Section H) named: PlacePublicationUseCase already, unconditionally,
 // supported creating a Publication's first placement — the ONLY thing
-// missing was that application/CreateWorldViewUseCase.js constructed it
+// missing was that application/world/CreateWorldViewUseCase.js constructed it
 // with the narrow discoveryProvider, which cannot resolve a
 // Repository-admitted-only Publication. Sections below verify each of
 // the requesting brief's own lettered acceptance criteria (A-G) against
@@ -78,7 +78,7 @@ if (typeof globalThis.window === 'undefined') {
 }
 
 // Builds a real WorldNavigationSession wired EXACTLY the way
-// application/CreateWorldViewUseCase.js wires it after this milestone's
+// application/world/CreateWorldViewUseCase.js wires it after this milestone's
 // own fix: publicationActionDiscoveryProvider (narrow discoveryProvider
 // composed with decentralizedPublicationDiscoveryProvider, when one is
 // supplied) is what placePublicationUseCase is constructed with, while
@@ -132,15 +132,15 @@ async function run() {
     // Section A — the wiring fix itself, confirmed in real source.
     // ===============================================================
     {
-        const composition = await readSource('application/CreateWorldViewUseCase.js');
+        const composition = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(/new PlacePublicationUseCase\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider,/.test(composition),
-            'A1. application/CreateWorldViewUseCase.js now constructs PlacePublicationUseCase with publicationActionDiscoveryProvider, not the narrow discoveryProvider.');
+            'A1. application/world/CreateWorldViewUseCase.js now constructs PlacePublicationUseCase with publicationActionDiscoveryProvider, not the narrow discoveryProvider.');
         const sessionCtorIndex = composition.indexOf('const session = new WorldNavigationSession({');
         const placePublicationUseCaseArgIndex = composition.indexOf('placePublicationUseCase,', sessionCtorIndex);
         assert(sessionCtorIndex !== -1 && placePublicationUseCaseArgIndex !== -1,
             'A2/A3. The SAME placePublicationUseCase instance PublishDocumentUseCase already uses is now ALSO handed to WorldNavigationSession\'s own constructor call.');
 
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
         assert(/placePublicationUseCase = null,/.test(sessionSrc),
             'A4. WorldNavigationSession accepts an optional placePublicationUseCase collaborator.');
         assert(/placePublication\(publicationId, position\) \{/.test(sessionSrc),
@@ -222,7 +222,7 @@ async function run() {
         assert(session.findPublicationById(p1.id) === p1,
             'D2. WorldNavigationSession#findPublicationById() (0.9.597) resolves to the SAME exact instance placePublication() itself resolves through.');
 
-        const placePublicationSrc = await readSource('application/PlacePublicationUseCase.js');
+        const placePublicationSrc = await readSource('application/placement/PlacePublicationUseCase.js');
         assert(!/claimedPosition/.test(placePublicationSrc), 'D3. PlacePublicationUseCase.js never references claimedPosition — reconfirms 0.9.599 Section E.');
         assert(!/publication\.author/.test(placePublicationSrc), 'D4. PlacePublicationUseCase.js never reads publication.author — reconfirms 0.9.599 Section A2/D3.');
 
@@ -235,7 +235,7 @@ async function run() {
     // narrow as before; only the placement action path changed.
     // ===============================================================
     {
-        const composition = await readSource('application/CreateWorldViewUseCase.js');
+        const composition = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(composition),
             'E1. UPDATED BY 0.9.605 (Wire Publication Discovery into World Rendering): worldLayoutProvider is now built from publicationActionDiscoveryProvider — at the time this milestone (0.9.600) was written it was still the plain, narrow discoveryProvider; that later, separate widening is this file\'s own Section E4/fork-policy boundary unaffected.');
 
@@ -248,7 +248,7 @@ async function run() {
             'E2. Live: the narrow discoveryProvider — what fork-policy/_findPublications() still reads (world-layout was separately widened by 0.9.605, unrelated to this fork-policy boundary) — genuinely cannot see a Repository-admitted-only Publication.');
         // _isKnownPublication()/_checkForkPolicy() both key off _findPublications(documentId),
         // which reads _discoveryProvider (narrow) — confirmed structurally in WorldNavigationSession.js.
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),
             'E4. _findPublications() — the shared choke point behind fork-policy — reads ONLY this._discoveryProvider, never this._publicationActionDiscoveryProvider. This milestone never touches that boundary.');

@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue';
-import { WorldViewPrimaryMode } from '../../../application/WorldViewNavigationState.js';
+import { WorldViewPrimaryMode } from '../../../application/world/WorldViewNavigationState.js';
 
 // The Welcome panel: opened once per World per session, framed as an arrival
 // or a return, with suggestions to explore.

@@ -19,7 +19,7 @@ import { DEFAULT_ICE_SERVERS } from '../../peer/IceServerConfig.js';
 //      current override / Save / Reset to Defaults
 //      │
 //      ▼
-//   application/SetIceServerConfigurationUseCase.js (Save)   (this same milestone)
+//   application/settings/SetIceServerConfigurationUseCase.js (Save)   (this same milestone)
 //   storage/IceServerConfigurationStore.js#clear() (Reset to Defaults)   (this same milestone, unmodified)
 //      │
 //      ▼

@@ -3,12 +3,12 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { describePublisherRankingPolicy, reconstructPublisherRanking } from '../application/PublisherRankingPolicy.js';
-import { reconstructPublisherLeaderboard } from '../application/PublisherLeaderboardView.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { describePublisherRankingPolicy, reconstructPublisherRanking } from '../application/leaderboard/PublisherRankingPolicy.js';
+import { reconstructPublisherLeaderboard } from '../application/leaderboard/PublisherLeaderboardView.js';
 import PublisherPerformanceLeaderboardView from '../ui/views/PublisherPerformanceLeaderboardView.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
@@ -142,7 +142,7 @@ async function run() {
     const publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
     const performanceViewSource = await readSource('ui/views/PublisherPerformanceLeaderboardView.js');
     const reconciliationViewSource = await readSource('ui/views/ReconciliationCandidateLeaderboardView.js');
-    const archiveSource = await readSource('application/PublicationObservationArchive.js');
+    const archiveSource = await readSource('application/publication/observationArchive/PublicationObservationArchive.js');
     // AMENDED — Leaderboard Hub Consolidation. The contextual link to
     // /publisher-leaderboard (and three siblings) moved off the
     // Publications page onto this new hub page, itself reached by one
@@ -159,30 +159,30 @@ async function run() {
         stages.push({
             stage: 'Existing publisher/publication data',
             complete: archiveSource.includes('publisherPublicationAssociationRecords'),
-            evidence: 'application/PublicationObservationArchive.js exposes a real publisherPublicationAssociationRecords collection'
+            evidence: 'application/publication/observationArchive/PublicationObservationArchive.js exposes a real publisherPublicationAssociationRecords collection'
         });
 
-        const policySource = await readSource('application/PublisherRankingPolicy.js');
+        const policySource = await readSource('application/leaderboard/PublisherRankingPolicy.js');
         stages.push({
             stage: 'PublisherRankingPolicy',
             complete: policySource.includes('export function describePublisherRankingPolicy')
                 && policySource.includes('export function describePublisherRanking')
                 && policySource.includes('export function reconstructPublisherRanking'),
-            evidence: 'application/PublisherRankingPolicy.js (0.8.112) exports policy, computation, and archive-reading entry point'
+            evidence: 'application/leaderboard/PublisherRankingPolicy.js (0.8.112) exports policy, computation, and archive-reading entry point'
         });
 
-        const leaderboardViewSource = await readSource('application/PublisherLeaderboardView.js');
+        const leaderboardViewSource = await readSource('application/leaderboard/PublisherLeaderboardView.js');
         stages.push({
             stage: 'PublisherLeaderboardView',
             complete: leaderboardViewSource.includes("from './PublisherRankingPolicy.js'")
                 && leaderboardViewSource.includes('export function reconstructPublisherLeaderboard'),
-            evidence: 'application/PublisherLeaderboardView.js (0.8.113) composes PublisherRankingPolicy.js, never a second ranking engine'
+            evidence: 'application/leaderboard/PublisherLeaderboardView.js (0.8.113) composes PublisherRankingPolicy.js, never a second ranking engine'
         });
 
         stages.push({
             stage: 'PublisherPerformanceLeaderboardView',
-            complete: performanceViewSource.includes("from '../../application/PublisherLeaderboardView.js'")
-                && !performanceViewSource.includes("from '../../application/PublisherRankingPolicy.js'"),
+            complete: performanceViewSource.includes("from '../../application/leaderboard/PublisherLeaderboardView.js'")
+                && !performanceViewSource.includes("from '../../application/leaderboard/PublisherRankingPolicy.js'"),
             evidence: '0.9.418 Section B already proved (and this reassessment reconfirms) the view reaches the ranking chain only transitively, through PublisherLeaderboardView.js'
         });
 
@@ -280,7 +280,7 @@ async function run() {
         const candidateAdditions = [
             { field: 'publisher avatar/display name', classification: 'NICE_TO_HAVE_ENHANCEMENT', reason: 'publisherId alone is already a real, self-declared identity string — legible, if plain' },
             { field: 'badge count / achievement-kind breakdown', classification: 'NICE_TO_HAVE_ENHANCEMENT', reason: 'already available one layer down on PublisherAchievementStatisticsView.js\'s own richer result (0.8.111); the leaderboard\'s own five columns are a deliberate, smaller presentation projection, not a missing fact' },
-            { field: 'blockchain/chain distribution per publisher', classification: 'NICE_TO_HAVE_ENHANCEMENT', reason: 'the ranking policy itself deliberately never reads chain distribution (application/PublisherRankingPolicy.js\'s own header) — surfacing it on the table would not change or explain a single rank' },
+            { field: 'blockchain/chain distribution per publisher', classification: 'NICE_TO_HAVE_ENHANCEMENT', reason: 'the ranking policy itself deliberately never reads chain distribution (application/leaderboard/PublisherRankingPolicy.js\'s own header) — surfacing it on the table would not change or explain a single rank' },
             { field: 'timestamp of most recent achievement', classification: 'NICE_TO_HAVE_ENHANCEMENT', reason: 'not one of the three declared ranking criteria; absence does not prevent understanding why a row is ordered where it is' },
             { field: 'ranking policy version / criteria order', classification: 'REQUIRED_TO_UNDERSTAND_RANKING', reason: 'already present — the page\'s own summary line states "Publisher Ranking Policy v{version}" and the column order itself mirrors the declared criteria order' },
             { field: 'what is being ranked (label)', classification: 'REQUIRED_TO_UNDERSTAND_RANKING', reason: 'already present — Section B\'s own live check confirms the page name, heading, and copy all state it' }
@@ -397,12 +397,12 @@ async function run() {
         // one this milestone reassesses. Confirmed fresh that exposing THIS
         // leaderboard creates no new obligation toward that family.
         const applicationFiles = listFiles(['application']);
-        const claimSnapshotFamily = applicationFiles.filter((f) => path.basename(f).startsWith('PublisherLeaderboardClaimSnapshot'));
+        const claimSnapshotFamily = applicationFiles.filter((f) => path.basename(f).startsWith('PublisherLeaderboardClaimSnapshot') || f.startsWith('application/claimSnapshotReconciliation/'));
         assert(claimSnapshotFamily.length > 10, n(`F1. a large PublisherLeaderboardClaimSnapshot* reconciliation-analytics family genuinely exists in application/ (found ${claimSnapshotFamily.length} files) — a real, substantial parked surface, not a hypothetical one`));
 
         assert(!performanceViewSource.includes('PublisherLeaderboardClaimSnapshot'), n('F2. PublisherPerformanceLeaderboardView.js — the new, reachable surface — imports or references none of that family by name'));
-        const rankingPolicySource = await readSource('application/PublisherRankingPolicy.js');
-        const leaderboardViewSource = await readSource('application/PublisherLeaderboardView.js');
+        const rankingPolicySource = await readSource('application/leaderboard/PublisherRankingPolicy.js');
+        const leaderboardViewSource = await readSource('application/leaderboard/PublisherLeaderboardView.js');
         assert(!rankingPolicySource.includes('PublisherLeaderboardClaimSnapshot') && !leaderboardViewSource.includes('PublisherLeaderboardClaimSnapshot'), n('F3. neither PublisherRankingPolicy.js nor PublisherLeaderboardView.js — the two production files behind the new surface — reference that family either'));
 
         // Reverse direction: does any file in that large family import the
@@ -448,8 +448,8 @@ async function run() {
         for (const [label, pattern] of CROSS_ARC_PATTERNS) {
             assert(!pattern.test(performanceViewCode), n(`G1. PublisherPerformanceLeaderboardView.js's own script/template region (comments stripped) contains no ${label} vocabulary or import`));
         }
-        const rankingPolicySource = codeOnly(await readSource('application/PublisherRankingPolicy.js'));
-        const leaderboardViewSource = codeOnly(await readSource('application/PublisherLeaderboardView.js'));
+        const rankingPolicySource = codeOnly(await readSource('application/leaderboard/PublisherRankingPolicy.js'));
+        const leaderboardViewSource = codeOnly(await readSource('application/leaderboard/PublisherLeaderboardView.js'));
         for (const [label, pattern] of CROSS_ARC_PATTERNS) {
             assert(!pattern.test(rankingPolicySource) && !pattern.test(leaderboardViewSource), n(`G2. neither PublisherRankingPolicy.js nor PublisherLeaderboardView.js (comments stripped) contains ${label} vocabulary or an import from that domain`));
         }
@@ -466,7 +466,7 @@ async function run() {
         // read ONLY the two archive getters they've always read, never a
         // reconciliation-specific collection.
         assert(performanceViewSource.includes('PublicationObservationArchive'), n('G3. the one real shared dependency is the archive class itself — the single durable fact store this whole application already has'));
-        const rankingPolicyRaw = await readSource('application/PublisherRankingPolicy.js');
+        const rankingPolicyRaw = await readSource('application/leaderboard/PublisherRankingPolicy.js');
         assert(!/\.reconciliationDecisionRecords\b/.test(rankingPolicyRaw), n('G4. PublisherRankingPolicy.js never reads the archive\'s own reconciliationDecisionRecords collection — the ranking universe stays exactly publisherPublicationAssociationRecords + achievement statistics, never reconciliation-decision facts, confirming the shared archive dependency did not quietly widen the ranking\'s own data source'));
 
         console.log('\n=== SECTION G: CROSS-ARC INTERACTION ===');
@@ -534,7 +534,7 @@ async function run() {
         ];
         const scanDirs = ['ui', 'application', 'core'];
         // Comments are stripped first: this codebase's own convention
-        // (e.g. application/PublisherRankingPolicy.js's own header, "NO
+        // (e.g. application/leaderboard/PublisherRankingPolicy.js's own header, "NO
         // SCORE, NO POINTS... NO REPUTATION") is to explicitly NAME
         // excluded concepts in prose precisely to rule them out — a bare
         // textual match on that prose would wrongly flag the very

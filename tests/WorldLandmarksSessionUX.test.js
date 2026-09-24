@@ -2,18 +2,18 @@ import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldAuthorizationService } from '../application/WorldAuthorizationService.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldAuthorizationService } from '../application/identity/WorldAuthorizationService.js';
 import { CommandHistoryEvent } from '../application/events/CommandHistoryEvent.js';
 
 // 0.3.7 — World Landmarks & Personal Waypoints — Session/UI integration.

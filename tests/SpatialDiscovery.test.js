@@ -14,15 +14,15 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalSpatialDiscoveryProvider } from '../discovery/LocalSpatialDiscoveryProvider.js';
 import { LocalContentResolver } from '../discovery/LocalContentResolver.js';
-import { DiscoverWorldAreaUseCase } from '../application/DiscoverWorldAreaUseCase.js';
-import { ResolvePublicationUseCase } from '../application/ResolvePublicationUseCase.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { DiscoverWorldAreaUseCase } from '../application/discovery/DiscoverWorldAreaUseCase.js';
+import { ResolvePublicationUseCase } from '../application/publication/ResolvePublicationUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { PublishedWorldSession } from '../application/PublishedWorldSession.js';
+import { PublishedWorldSession } from '../application/publication/PublishedWorldSession.js';
 
 // ---------------------------------------------------------------------
 // Helpers

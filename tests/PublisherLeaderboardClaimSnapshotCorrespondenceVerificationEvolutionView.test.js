@@ -1,10 +1,10 @@
-import { describePublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardClaimEvolution } from '../application/PublisherLeaderboardClaimEvolutionView.js';
-import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerification } from '../application/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js';
-import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolution } from '../application/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolutionView.js';
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { describePublisherLeaderboardClaimEvolution } from '../application/leaderboard/PublisherLeaderboardClaimEvolutionView.js';
+import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerification } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js';
+import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolution } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolutionView.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -270,7 +270,7 @@ async function run() {
     // vocabulary, network access.
     // ---------------------------------------------------------------
     {
-        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolutionView.js', import.meta.url), 'utf8');
+        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationEvolutionView.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
         assert(importLines.length === 2, '42. this file has exactly two imports');
         assert(importLines.some((line) => line.includes("from './PublisherLeaderboardClaimEvolutionView.js'")), '43. imports 0.8.133\'s own claim evolution view');

@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { WorldEncounterMaterialSignatureVerifier } from '../application/WorldEncounterMaterialSignatureVerifier.js';
+import { WorldEncounterMaterialSignatureVerifier } from '../application/worldEncounter/WorldEncounterMaterialSignatureVerifier.js';
 import {
     verifyWorldEncounterMaterial,
     WorldEncounterMaterialVerificationStatus,
     WorldEncounterMaterialVerifier
-} from '../application/WorldEncounterMaterialVerification.js';
+} from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { Publication } from '../publisher/Publication.js';
 
@@ -367,7 +367,7 @@ function signedPublication(identityProvider, overrides = {}) {
 //     know about this file.
 // ---------------------------------------------------------------------
 {
-    const path = '../application/WorldEncounterMaterialSignatureVerifier.js';
+    const path = '../application/worldEncounter/WorldEncounterMaterialSignatureVerifier.js';
     const sourceUrl = new URL(path, import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -386,10 +386,10 @@ function signedPublication(identityProvider, overrides = {}) {
         assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `35. code must never use "${term}" — no trust/ranking vocabulary at this boundary`);
     }
 
-    const boundarySource = await readFile(new URL('../application/WorldEncounterMaterialVerification.js', import.meta.url), 'utf8');
+    const boundarySource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialVerification.js', import.meta.url), 'utf8');
     assert(!boundarySource.includes('WorldEncounterMaterialSignatureVerifier'), '36. the 0.9.37 verification boundary is never modified to know about this concrete verifier');
 
-    const identityVerifierSource = await readFile(new URL('../application/WorldEncounterMaterialIdentityVerifier.js', import.meta.url), 'utf8');
+    const identityVerifierSource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialIdentityVerifier.js', import.meta.url), 'utf8');
     assert(!identityVerifierSource.includes('WorldEncounterMaterialSignatureVerifier'), '37. 0.9.38\'s own structural verifier is never modified to know about this file');
 
     console.log('✓ Architectural regression: no structural re-checking, no trust vocabulary, no network/storage/signing access, boundary files untouched');

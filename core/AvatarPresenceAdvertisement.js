@@ -21,7 +21,7 @@ import { SignatureType } from './Signature.js';
 //     (this wire shape, produced fresh from an AvatarPresence every
 //     time, never AvatarPresence itself): see
 //     getAvatarPresenceSigningDescriptor() below and
-//     application/PresenceSigning.js. A receiver's trust policy
+//     application/presence/PresenceSigning.js. A receiver's trust policy
 //     (core/PresenceTrustPolicy.js) decides whether an advertisement
 //     missing that field is tolerated at all.
 //
@@ -47,7 +47,7 @@ export function toAvatarPresenceAdvertisement(presence) {
 }
 
 // A defensive shape check applied at the ingestion boundary — see
-// application/LocalPresenceStore.js. Nothing arriving over a
+// application/presence/LocalPresenceStore.js. Nothing arriving over a
 // broadcast transport is trusted structurally, let alone
 // authoritatively; a malformed message is simply discarded, the same
 // failure-isolation posture the rest of this codebase already applies

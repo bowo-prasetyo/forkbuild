@@ -8,9 +8,9 @@ import { DEFAULT_PUBLICATION_TTL_MS } from '../peer/RendezvousPublication.js';
 import { LocalRendezvousNetwork } from '../peer/LocalRendezvousNetwork.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 
@@ -37,7 +37,7 @@ import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 //   Authentication           "This connection actually belongs to Bob."
 //
 // Only the third is authoritative — see peer/PeerAuthenticationSession.js
-// and application/ConnectToPeerUseCase.js's own headers, both completely
+// and application/peer/ConnectToPeerUseCase.js's own headers, both completely
 // unmodified by this milestone. This audit's own job is narrower: prove
 // the first two steps compose into something safe to run WITHOUT a human
 // initiating each attempt, using nothing already-public methods don't
@@ -52,7 +52,7 @@ import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 //   B — Discoverability semantics: what "Be Discoverable" actually grants
 //       — a short-lived, exact-identityId-only, at-most-one-connection
 //       publication, never a standing or browsable listing.
-//   C — The connection-initiation seam: application/FindPeerUseCase.js's
+//   C — The connection-initiation seam: application/peer/FindPeerUseCase.js's
 //       own search()/connect(), already the exact path "Find Someone"
 //       uses today — a pure application-layer composition, zero
 //       peer/transport change required.
@@ -100,7 +100,7 @@ class InMemoryStorageProvider extends StorageProvider {
 }
 
 // A device: a real identity, a real ConnectToPeerUseCase (and therefore a
-// real application/ConnectedPeerRegistry.js), over an in-process
+// real application/peer/ConnectedPeerRegistry.js), over an in-process
 // peer/LocalPeerConnectionProvider.js — exactly the "real production code,
 // no mocked transport" shape tests/DistributedPeerRendezvous.test.js and
 // tests/PeerPublicationConnectionSyncBoundaryAudit.test.js already
@@ -119,10 +119,10 @@ function makeDevice(label, network) {
 }
 
 // An honestly-labeled stand-in for the WebRTC-signaling-specific chrome of
-// application/PeerSessionManager.js — never for discovery, rendezvous, or
+// application/peer/PeerSessionManager.js — never for discovery, rendezvous, or
 // authentication, which this file exercises through real, unmodified
-// application/FindPeerUseCase.js against a real, live
-// application/ConnectToPeerUseCase.js. Same technique
+// application/peer/FindPeerUseCase.js against a real, live
+// application/peer/ConnectToPeerUseCase.js. Same technique
 // tests/DistributedPeerRendezvous.test.js already uses for exactly the
 // same reason: peer/LocalPeerConnectionProvider.js has no createOffer() —
 // connections it makes are instant, in-process pairs, so there is no
@@ -145,7 +145,7 @@ function makeFakeSessionManager(connect, discoveryProvider) {
 // Publishes `device` as reachable, directly through the real, unmodified
 // peer/RendezvousDiscoveryProvider.js#publish() — the actual "Be
 // Discoverable" backend — over `network`. Bypasses
-// application/PeerSessionManager.js#publishSelf() only because THAT
+// application/peer/PeerSessionManager.js#publishSelf() only because THAT
 // method's own job (creating a real WebRTC offer) is orthogonal to, and
 // already proven separately from, what this audit examines: whether an
 // already-published identity can be found and connected to automatically.
@@ -168,9 +168,9 @@ function isAlreadyConnected(registry, identityId) {
 // the role tests/PeerPublicationConnectionSyncBoundaryAudit.test.js's own
 // `wireConnectionTimeSync()` played for connection-time Publication sync.
 // Built from nothing but already-public methods on
-// application/PeerRelationshipUseCase.js (getRelationships), THIS
-// milestone's own application/FindPeerUseCase.js (search/connect,
-// completely unmodified), and application/ConnectedPeerRegistry.js (list) —
+// application/peer/PeerRelationshipUseCase.js (getRelationships), THIS
+// milestone's own application/peer/FindPeerUseCase.js (search/connect,
+// completely unmodified), and application/peer/ConnectedPeerRegistry.js (list) —
 // no new class, no new store, no wire-format change, no peer/transport
 // file touched.
 //
@@ -299,11 +299,11 @@ async function run() {
     // layer composition, identical to the existing "Find Someone" path.
     // =======================================================================
     {
-        const findPeerSource = await readSource('application/FindPeerUseCase.js');
+        const findPeerSource = await readSource('application/peer/FindPeerUseCase.js');
         assert(/connectToDiscovered/.test(findPeerSource),
-            '1. application/FindPeerUseCase.js#connect() already delegates to peerSessionManager.connectToDiscovered() — the exact path this milestone would reuse, not extend.');
+            '1. application/peer/FindPeerUseCase.js#connect() already delegates to peerSessionManager.connectToDiscovered() — the exact path this milestone would reuse, not extend.');
         assert(!/RTCPeerConnection|DataChannel|WebSocket/.test(findPeerSource),
-            '2. application/FindPeerUseCase.js contains no transport-level code of its own — the seam this audit examines lives entirely at the application layer.');
+            '2. application/peer/FindPeerUseCase.js contains no transport-level code of its own — the seam this audit examines lives entirely at the application layer.');
 
         // Live: the test-side-only coordinator above, built from nothing
         // but already-public methods, successfully authenticates a known,
@@ -325,7 +325,7 @@ async function run() {
 
         bob.transport.dispose(); alice.transport.dispose();
     }
-    console.log('✓ Section C: the smallest seam this milestone would need already exists, unmodified, as application/FindPeerUseCase.js#search()/#connect() — the identical path a human\'s "Find Someone" click already walks today. Composing it into an automatic attempt requires no peer/transport change and no new connection protocol.');
+    console.log('✓ Section C: the smallest seam this milestone would need already exists, unmodified, as application/peer/FindPeerUseCase.js#search()/#connect() — the identical path a human\'s "Find Someone" click already walks today. Composing it into an automatic attempt requires no peer/transport change and no new connection protocol.');
 
     // =======================================================================
     // Section D — Opt-in enforcement, proven along all three axes.
@@ -401,7 +401,7 @@ async function run() {
 
         // ...and an AUTOMATIC attempt through this milestone's own
         // coordinator hit the exact SAME rejection path, unmodified,
-        // because both call the identical application/FindPeerUseCase.js#connect().
+        // because both call the identical application/peer/FindPeerUseCase.js#connect().
         await attemptKnownPeerAutoConnect(alice.relationships, aliceFind, alice.connect.registry);
         await wait();
         assert(rejected && rejected.actualIdentityId === charlie.id && rejected.expectedIdentityId === bob.id,
@@ -412,7 +412,7 @@ async function run() {
         unsubscribe();
         bob.transport.dispose(); charlie.transport.dispose(); alice.transport.dispose();
     }
-    console.log('✓ Section E: a manual "Find Someone" attempt and an automatic known-peer attempt run through the literal same application/FindPeerUseCase.js#connect() call, the same application/ConnectToPeerUseCase.js authentication gate, and the same onCandidateRejected signal — proven here against the identical malicious/mislabeled-candidate scenario this codebase already defends against manually. There is, and needs to be, only one connection protocol.');
+    console.log('✓ Section E: a manual "Find Someone" attempt and an automatic known-peer attempt run through the literal same application/peer/FindPeerUseCase.js#connect() call, the same application/peer/ConnectToPeerUseCase.js authentication gate, and the same onCandidateRejected signal — proven here against the identical malicious/mislabeled-candidate scenario this codebase already defends against manually. There is, and needs to be, only one connection protocol.');
 
     // =======================================================================
     // Section F — FLAGSHIP (negative). Deduplication is a real, live-
@@ -420,9 +420,9 @@ async function run() {
     // existing read, never a new store.
     // =======================================================================
     {
-        const registrySource = await readSource('application/ConnectedPeerRegistry.js');
+        const registrySource = await readSource('application/peer/ConnectedPeerRegistry.js');
         assert(!/identityId/.test(registrySource),
-            '1. application/ConnectedPeerRegistry.js itself has no concept of identityId at all — it keys purely by connectionId (confirmed by source) — so nothing in the registry itself stops two independent authenticated connections to the SAME remote identity from coexisting.');
+            '1. application/peer/ConnectedPeerRegistry.js itself has no concept of identityId at all — it keys purely by connectionId (confirmed by source) — so nothing in the registry itself stops two independent authenticated connections to the SAME remote identity from coexisting.');
 
         const network = new LocalRendezvousNetwork();
         const peerNetwork = new LocalPeerNetwork();
@@ -451,11 +451,11 @@ async function run() {
         await attemptKnownPeerAutoConnect(alice.relationships, aliceFind, alice.connect.registry, { dedupe: false });
         await wait();
         const afterNaive = alice.connect.registry.list().filter((p) => p.remoteIdentity && p.remoteIdentity.identityId === bob.id && p.getLifecycleState() === PeerLifecycleState.AUTHENTICATED);
-        assert(afterNaive.length === 2, '2. GAP, REPRODUCED LIVE: without an explicit "already connected" check, automatic connection opens a genuine SECOND, independent authenticated ConnectedPeer/connectionId to a peer alice was already talking to — application/ConnectToPeerUseCase.js#connect() has, and needs, no opinion about what else is already in the registry; nothing today prevents this on its own.');
+        assert(afterNaive.length === 2, '2. GAP, REPRODUCED LIVE: without an explicit "already connected" check, automatic connection opens a genuine SECOND, independent authenticated ConnectedPeer/connectionId to a peer alice was already talking to — application/peer/ConnectToPeerUseCase.js#connect() has, and needs, no opinion about what else is already in the registry; nothing today prevents this on its own.');
 
         // The fix costs nothing new: reusing application/
         // ConnectedPeerRegistry.js#list() — a read this codebase already
-        // has, the exact same one application/PeerPresenceUseCase.js#
+        // has, the exact same one application/presence/PeerPresenceUseCase.js#
         // isIdentityOnline() already builds on — closes it completely.
         for (const peer of afterNaive) { peer.close(); }
         await wait();
@@ -476,7 +476,7 @@ async function run() {
 
         bob.transport.dispose(); alice.transport.dispose();
     }
-    console.log('✓ Section F: FLAGSHIP (negative) — unlike 0.9.341\'s own Section E (where existing catalog idempotency already made repeated observation safe with no new work), deduplication for CONNECTIONS is a genuine, live-reproduced gap: application/ConnectedPeerRegistry.js has no identityId concept at all, so an automatic coordinator that does not explicitly check "is this identity already connected?" first WILL open duplicate authenticated sessions to the same known peer. The fix requires no new store: reusing registry.list() — the exact read application/PeerPresenceUseCase.js#isIdentityOnline() already performs for an unrelated purpose — closes it completely. Any 0.9.345 implementation MUST perform this check; it does not come for free.');
+    console.log('✓ Section F: FLAGSHIP (negative) — unlike 0.9.341\'s own Section E (where existing catalog idempotency already made repeated observation safe with no new work), deduplication for CONNECTIONS is a genuine, live-reproduced gap: application/peer/ConnectedPeerRegistry.js has no identityId concept at all, so an automatic coordinator that does not explicitly check "is this identity already connected?" first WILL open duplicate authenticated sessions to the same known peer. The fix requires no new store: reusing registry.list() — the exact read application/presence/PeerPresenceUseCase.js#isIdentityOnline() already performs for an unrelated purpose — closes it completely. Any 0.9.345 implementation MUST perform this check; it does not come for free.');
 
     // =======================================================================
     // Section G — Failure isolation: one identity's failed/rejected/
@@ -553,7 +553,7 @@ async function run() {
 
         const unpublishSource = await readSource('peer/RendezvousDiscoveryProvider.js');
         assert(!/ConnectedPeerRegistry/.test(unpublishSource),
-            '3. peer/RendezvousDiscoveryProvider.js (unpublish()\'s own file) imports or references application/ConnectedPeerRegistry.js nowhere at all — it is architecturally INCAPABLE of tearing down a live session, not merely observed not to.');
+            '3. peer/RendezvousDiscoveryProvider.js (unpublish()\'s own file) imports or references application/peer/ConnectedPeerRegistry.js nowhere at all — it is architecturally INCAPABLE of tearing down a live session, not merely observed not to.');
         const bootstrapSource = await readSource('peer/DiscoveryBootstrap.js');
         assert(!/ConnectedPeerRegistry/.test(bootstrapSource),
             '4. the same holds one layer up, at peer/DiscoveryBootstrap.js#unpublishFromAll().');
@@ -587,7 +587,7 @@ async function run() {
 
         alice.transport.dispose();
     }
-    console.log('✓ Section H: "Disable Be Discoverable" and "disconnect me" are, and remain, two different acts. Withdrawing discoverability blocks a FRESH automatic connection lookup immediately (live-proven) and never tears down an already-authenticated session (confirmed structurally: unpublish()\'s own files — peer/RendezvousDiscoveryProvider.js, peer/DiscoveryBootstrap.js — never reference application/ConnectedPeerRegistry.js at all). The one honest caveat this audit surfaces rather than glosses over: a discovery provider that already cached a candidate before it was withdrawn keeps offering that stale copy until its own TTL naturally lapses — real, live-demonstrated, and squarely a 0.9.345 design constraint, not a hypothetical edge case.');
+    console.log('✓ Section H: "Disable Be Discoverable" and "disconnect me" are, and remain, two different acts. Withdrawing discoverability blocks a FRESH automatic connection lookup immediately (live-proven) and never tears down an already-authenticated session (confirmed structurally: unpublish()\'s own files — peer/RendezvousDiscoveryProvider.js, peer/DiscoveryBootstrap.js — never reference application/peer/ConnectedPeerRegistry.js at all). The one honest caveat this audit surfaces rather than glosses over: a discovery provider that already cached a candidate before it was withdrawn keeps offering that stale copy until its own TTL naturally lapses — real, live-demonstrated, and squarely a 0.9.345 design constraint, not a hypothetical edge case.');
 
     // =======================================================================
     // Section I — The rendezvous privacy boundary: necessary connection
@@ -663,7 +663,7 @@ Decision matrix:
 | Discoverability later disabled                      | Blocks FUTURE attempts only — Section H |
 | Existing authenticated session, discoverability disabled | Untouched — Section H |
 | Content/material transfer on auto-connection        | N/A — out of scope; would remain 0.9.342/0.9.343's own unmodified boundary |
-| Publication metadata sync after auto-connection     | Falls out for free, unmodified — application/PublicationPeerConnectionSync.js |
+| Publication metadata sync after auto-connection     | Falls out for free, unmodified — application/publication/PublicationPeerConnectionSync.js |
 | Public directory browsing of discoverable identities | Structurally absent — Section A/I |
 | Rendezvous-operator visibility into a device's Known Peers list | New, real exposure introduced by AUTOMATING lookup — Section I |
 `);
@@ -671,7 +671,7 @@ Decision matrix:
     console.log('\nAll Known-Peer Auto-Connection Boundary Audit tests passed.');
     console.log(
         '\nVerdict: CLEAR_SEAM — PROCEED, WITH TWO NAMED CONSTRAINTS.\n' +
-        '  The seam itself is real and small: application/FindPeerUseCase.js#search()/#connect(), completely\n' +
+        '  The seam itself is real and small: application/peer/FindPeerUseCase.js#search()/#connect(), completely\n' +
         '  unmodified, already IS the exact path this feature needs (Section C), it converges with manual\n' +
         '  connection on one protocol (Section E), and eligibility already falls out structurally from what a\n' +
         '  coordinator would have to iterate over — Known Peers only, checked against a currently-live\n' +
@@ -681,9 +681,9 @@ Decision matrix:
         '  Two things this audit found are NOT already solved by existing infrastructure, and a 0.9.345\n' +
         '  implementation must own explicitly rather than assume:\n' +
         '\n' +
-        '  1. DEDUPLICATION (Section F, flagship). application/ConnectedPeerRegistry.js has no identityId\n' +
+        '  1. DEDUPLICATION (Section F, flagship). application/peer/ConnectedPeerRegistry.js has no identityId\n' +
         '     concept — an automatic coordinator MUST check "is this identity already connected?" (reusing\n' +
-        '     registry.list(), the same read application/PeerPresenceUseCase.js#isIdentityOnline() already\n' +
+        '     registry.list(), the same read application/presence/PeerPresenceUseCase.js#isIdentityOnline() already\n' +
         '     performs) before every attempt. No new store is needed, but the check itself does not come free.\n' +
         '\n' +
         '  2. POLLING DISCIPLINE (Section I). This codebase already ships one real, always-on default\n' +
@@ -696,8 +696,8 @@ Decision matrix:
         '\n' +
         '  Recommended next step (0.9.345): a small, narrowly-scoped application-layer coordinator — NOT a\n' +
         '  generic "AutoConnectManager" accreting ranking/scheduling/backoff/health-tracking responsibilities —\n' +
-        '  composed the same way application/PeerReconnectionUseCase.js already composes\n' +
-        '  application/PeerSessionManager.js and application/PeerRelationshipUseCase.js: for each\n' +
+        '  composed the same way application/peer/PeerReconnectionUseCase.js already composes\n' +
+        '  application/peer/PeerSessionManager.js and application/peer/PeerRelationshipUseCase.js: for each\n' +
         '  PeerRelationshipUseCase#getRelationship, skip if already connected (constraint 1 above), otherwise\n' +
         '  FindPeerUseCase#search()+#connect() unmodified, under an explicit, bounded trigger (constraint 2\n' +
         '  above) rather than a background interval with no upper bound. Content/material transfer stays\n' +

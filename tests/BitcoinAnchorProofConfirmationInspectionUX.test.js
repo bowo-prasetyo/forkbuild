@@ -1,15 +1,15 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { BitcoinAnchorConfirmationObserver } from '../anchoring/BitcoinAnchorConfirmationObserver.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
-import { BitcoinAnchorProofReconciliationView } from '../application/BitcoinAnchorProofReconciliationView.js';
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
-import { BitcoinAnchorContentProofState } from '../application/BitcoinAnchorContentProofState.js';
-import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/BitcoinAnchorConfirmationObservationHistory.js';
+import { BitcoinAnchorProofReconciliationView } from '../application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
+import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js';
 import {
     describeBitcoinAnchorConfirmationObservationHistoryDetails,
     describeBitcoinAnchorConfirmationObservationDetail
-} from '../application/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
-import { describeBitcoinAnchorContentProofStateLabel, describeBitcoinAnchorContentProof } from '../application/BitcoinAnchorContentProofView.js';
+} from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
+import { describeBitcoinAnchorContentProofStateLabel, describeBitcoinAnchorContentProof } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofView.js';
 
 // 0.8.57 — Bitcoin Anchor Proof & Confirmation Inspection UI.
 //
@@ -28,7 +28,7 @@ import { describeBitcoinAnchorContentProofStateLabel, describeBitcoinAnchorConte
 // promise.
 //
 // The one new file this milestone adds to `application/` —
-// application/BitcoinAnchorContentProofView.js — is exercised directly in
+// application/anchoring/bitcoin/BitcoinAnchorContentProofView.js — is exercised directly in
 // Section D; everything else in this file drives the REAL, unchanged
 // 0.8.54/0.8.55/0.8.56 classes exactly the way ui/views/
 // DecentralizedPublicationsView.js#reconcileBitcoinAnchor() does.
@@ -44,7 +44,7 @@ import { describeBitcoinAnchorContentProofStateLabel, describeBitcoinAnchorConte
 //   Section C: the confirmation history and the content-proof observation
 //              stay genuinely separate — appending confirmation
 //              observations never touches, needs, or reads contentProof.
-//   Section D: application/BitcoinAnchorContentProofView.js names all
+//   Section D: application/anchoring/bitcoin/BitcoinAnchorContentProofView.js names all
 //              three content-proof states honestly, and adds no field
 //              beyond `stateLabel`.
 //   Section E: no confidence/reliability/score/status/valid/healthy field
@@ -284,7 +284,7 @@ async function run() {
     console.log('✓ Section C: confirmation history and content-proof observation stay genuinely separate — no unified "Bitcoin Anchor History"');
 
     // ---------------------------------------------------------------
-    // Section D — application/BitcoinAnchorContentProofView.js names all
+    // Section D — application/anchoring/bitcoin/BitcoinAnchorContentProofView.js names all
     // three content-proof states honestly.
     // ---------------------------------------------------------------
     {
@@ -301,7 +301,7 @@ async function run() {
             '32. describeBitcoinAnchorContentProof() adds exactly one new field — stateLabel — and nothing else');
         assert(Object.isFrozen(projected), '33. the projected result is frozen');
     }
-    console.log('✓ Section D: application/BitcoinAnchorContentProofView.js names all three states honestly, and adds no field beyond stateLabel');
+    console.log('✓ Section D: application/anchoring/bitcoin/BitcoinAnchorContentProofView.js names all three states honestly, and adds no field beyond stateLabel');
 
     // ---------------------------------------------------------------
     // Section E — no confidence/reliability/score/status field anywhere.

@@ -1,5 +1,5 @@
-import { describeWorldEncounterSelectionOutcomeFromRegistry } from '../../../application/WorldEncounterSelectionOutcome.js';
-import { inspectWorldEncounterMaterial } from '../../../application/WorldEncounterMaterialInspection.js';
+import { describeWorldEncounterSelectionOutcomeFromRegistry } from '../../../application/worldEncounter/WorldEncounterSelectionOutcome.js';
+import { inspectWorldEncounterMaterial } from '../../../application/worldEncounter/WorldEncounterMaterialInspection.js';
 import { resolvedEncounterSelectionsEqual } from './selectionOutcomeMethods.js';
 
 // WorldEncounterCanvas methods: snapshot content views and comparison selection.

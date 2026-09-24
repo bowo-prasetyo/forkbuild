@@ -7,16 +7,16 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { WorldPosition } from '../core/WorldPosition.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
-import { ReplayDocumentUseCase } from '../application/ReplayDocumentUseCase.js';
-import { RestoreHistoryStateUseCase } from '../application/RestoreHistoryStateUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
+import { RestoreHistoryStateUseCase } from '../application/document/RestoreHistoryStateUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
@@ -170,7 +170,7 @@ async function run() {
         const firstEntryId = timeline[0].id;
 
         // "previewSelectedHistoryEntry()". CommandHistory's own cursor is
-        // a command COUNT (see application/CommandHistory.js#getCursor()),
+        // a command COUNT (see application/editor/CommandHistory.js#getCursor()),
         // one past an entry's own 0-based index — resolving entry 0 (the
         // first PlaceBrickCommand) means "with that one command's own
         // effect included," i.e. cursor 1, never cursor 0 (the empty
@@ -272,7 +272,7 @@ async function run() {
         assert(resolveCursorById(nav, doc.world.id, selectedId) === 2, 'an undone-but-remembered entry still resolves — nothing changed yet');
 
         // ...then a NEW command executes, which (CommandHistory's own
-        // linear-history invariant — see application/CommandHistory.js's
+        // linear-history invariant — see application/editor/CommandHistory.js's
         // own header) clears the redo branch entirely. The originally
         // selected entry is now really gone, not merely moved.
         history.execute(new PlaceBrickCommand({ worldId: world.id, buildingId, definitionId: 'core:cube', position: new Position(9, 0.5, 0) }));

@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
 
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 // 0.9.142 — World View Snapshot Discovery Command.
@@ -335,11 +335,11 @@ async function run() {
     // Section I — architectural regression.
     // ---------------------------------------------------------------
     {
-        const code = await codeOnlySource('application/DiscoverSnapshotRuntimeComposition.js');
+        const code = await codeOnlySource('application/snapshot/DiscoverSnapshotRuntimeComposition.js');
 
         const browserApiTerms = ['window.', 'navigator.', 'WebSocket', 'fetch('];
         for (const term of browserApiTerms) {
-            assert(!code.includes(term), `21. application/DiscoverSnapshotRuntimeComposition.js never references '${term}' — no browser API of any kind`);
+            assert(!code.includes(term), `21. application/snapshot/DiscoverSnapshotRuntimeComposition.js never references '${term}' — no browser API of any kind`);
         }
 
         assert(!code.includes('executeDiscoverSnapshotCommand'), '22. never imports or calls the command itself — composition only, never orchestration');
@@ -347,7 +347,7 @@ async function run() {
 
         const forbiddenCouplingTerms = ['DecentralizedWorldDiscoveryQuery', 'ArweaveGraphqlDiscoveryQueryService', 'NostrDiscoveryQueryService(', 'PublicationDistribution', 'NostrSnapshotDiscoveryPublisher', 'SnapshotPlacementStoreRegistry'];
         for (const term of forbiddenCouplingTerms) {
-            assert(!code.includes(term), `24. application/DiscoverSnapshotRuntimeComposition.js never references '${term}' — no coupling to Publication discovery, Snapshot distribution, or a store registry`);
+            assert(!code.includes(term), `24. application/snapshot/DiscoverSnapshotRuntimeComposition.js never references '${term}' — no coupling to Publication discovery, Snapshot distribution, or a store registry`);
         }
 
         const forbiddenVocabTerms = ['retry', 'cache', 'dedup', 'trust', 'reputation', 'ranking', 'scoring', 'attribut'];
@@ -355,11 +355,11 @@ async function run() {
             assert(!code.toLowerCase().includes(term), `25. code must never use "${term}" — composition only, no execution/state/trust/attribution vocabulary`);
         }
 
-        const resolverSource = await codeOnlySource('application/DecentralizedSnapshotResolver.js');
+        const resolverSource = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
         assert(!resolverSource.includes('DiscoverSnapshotRuntimeComposition'), '26. the 0.9.134 resolver itself is never modified to know about this composition file');
-        const queryServiceSource = await codeOnlySource('application/NostrSnapshotDiscoveryQueryService.js');
+        const queryServiceSource = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         assert(!queryServiceSource.includes('DiscoverSnapshotRuntimeComposition'), '27. the 0.9.133 query service itself is never modified to know about this composition file');
-        const commandSource = await codeOnlySource('application/DiscoverSnapshotCommand.js');
+        const commandSource = await codeOnlySource('application/snapshot/DiscoverSnapshotCommand.js');
         assert(!commandSource.includes('DiscoverSnapshotRuntimeComposition'), '28. the 0.9.142 command itself is never modified to know about this composition file — it remains completely decoupled from it');
 
         console.log('✓ Section I: architectural regression — no browser API, no orchestration entry point, no summary availability flag, no coupling to Publication discovery or Snapshot distribution');

@@ -1,10 +1,10 @@
-import { derivePublicationSnapshotPlacementConvergence } from '../application/PublicationSnapshotPlacementConvergence.js';
+import { derivePublicationSnapshotPlacementConvergence } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergence.js';
 import {
     publicationSnapshotPlacementConvergenceView, describeSnapshotPlacementRelationship, describeSnapshotPlacementContentGroupCount
-} from '../application/PublicationSnapshotPlacementConvergenceView.js';
-import { SnapshotPlacementRelationship } from '../application/SnapshotPlacementRelationship.js';
-import { createResolutionObservation } from '../application/SnapshotPlacementResolutionObservation.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
+} from '../application/snapshot/placement/PublicationSnapshotPlacementConvergenceView.js';
+import { SnapshotPlacementRelationship } from '../application/snapshot/placement/SnapshotPlacementRelationship.js';
+import { createResolutionObservation } from '../application/snapshot/placement/SnapshotPlacementResolutionObservation.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
 
 // 0.8.23 — Multi-Placement Convergence & Relationship UX.
 //

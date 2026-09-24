@@ -14,7 +14,7 @@ startup:
 
 BrickRegistry is a catalog, not just a lookup: get(id), has(id),
 getAll(), getByCategory(category), search(tags), groupByCategory().
-The Brick Palette (application/PaletteUseCase.js) is built entirely on
+The Brick Palette (application/editor/PaletteUseCase.js) is built entirely on
 getAll()/groupByCategory() today; getByCategory() and search() exist
 for when a caller needs grouping/filtering by a single category or tag
 set directly. (PaletteUseCase's own getDefinitions()/
@@ -59,7 +59,7 @@ Palette UI with ui/components/BuildLibraryPanel.js — a single "Build
 Library" panel that tabs between Bricks and Structures, adds a
 same-tab text search over name/category/tags on top of
 groupByCategory()'s existing grouping, and renders a small rendered
-preview per definition via application/LibraryPreviewService.js
+preview per definition via application/editor/LibraryPreviewService.js
 (reusing the exact BrickRenderer/ThreeBrickFactory mesh pipeline every
 brick already renders with, never a hand-drawn icon set). Nothing
 about BrickRegistry, BrickDefinition, or PaletteUseCase changed —

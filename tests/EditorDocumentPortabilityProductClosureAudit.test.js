@@ -19,15 +19,15 @@ import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { DocumentManifest } from '../application/DocumentManifest.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { ExportDocumentUseCase } from '../application/ExportDocumentUseCase.js';
-import { ImportDocumentUseCase } from '../application/ImportDocumentUseCase.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { DocumentManifest } from '../application/document/DocumentManifest.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { ExportDocumentUseCase } from '../application/document/ExportDocumentUseCase.js';
+import { ImportDocumentUseCase } from '../application/document/ImportDocumentUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
 
@@ -252,12 +252,12 @@ async function run() {
         let editorSessionImportFailed = false;
         let editorSessionImportError = '';
         try {
-            execSync('node -e "import(\'./application/EditorSession.js\')"', { cwd: SOURCE_ROOT.pathname, stdio: 'pipe' });
+            execSync('node -e "import(\'./application/editor/EditorSession.js\')"', { cwd: SOURCE_ROOT.pathname, stdio: 'pipe' });
         } catch (err) {
             editorSessionImportFailed = true;
             editorSessionImportError = String(err.stderr || err.message);
         }
-        assert(editorSessionImportFailed, n('CONFIRMED LIVE (not assumed from 0.9.641/642\'s own header comments): importing application/EditorSession.js under plain `node`, right now, in this repository, fails'));
+        assert(editorSessionImportFailed, n('CONFIRMED LIVE (not assumed from 0.9.641/642\'s own header comments): importing application/editor/EditorSession.js under plain `node`, right now, in this repository, fails'));
         assert(/three/.test(editorSessionImportError), n('...specifically because of the unresolvable \'three\' package — confirmed from the actual error text, not guessed'));
 
         // What IS runnable, and IS run, above: ExportDocumentUseCase,
@@ -272,7 +272,7 @@ async function run() {
         // verified instead by exact structural proof against real source,
         // the same standard 0.9.641 Section H / 0.9.642 Section K already
         // established and that Section F/K below reconfirm and extend.
-        const editorSessionSource = codeOnly(await rawSource('application/EditorSession.js'));
+        const editorSessionSource = codeOnly(await rawSource('application/editor/EditorSession.js'));
         assert(/exportDocument\(\)\s*\{[\s\S]*?this\._exportDocumentUseCase\.execute\(this\._documentManager\.document\)/.test(editorSessionSource),
             n('EditorSession.exportDocument() delegates straight to this._exportDocumentUseCase.execute() — the exact class this section just ran live'));
         assert(/importDocument\(json\)\s*\{[\s\S]*?this\._importDocumentUseCase\.execute\(json\)/.test(editorSessionSource),
@@ -455,7 +455,7 @@ async function run() {
         // identity rule in the first place (0.9.640 Section D), exercised
         // here as part of THIS audit's own collision-safety proof rather
         // than only cited from the earlier one.
-        const manifestSource = await rawSource('application/DocumentManifest.js');
+        const manifestSource = await rawSource('application/document/DocumentManifest.js');
         const manifestKey = manifestSource.match(/MANIFEST_KEY = '([^']+)'/)[1];
 
         const storageProvider2 = new InMemoryStorageProvider();
@@ -646,7 +646,7 @@ async function run() {
 
         // Scope discipline: no NEW migration machinery was needed or
         // used — same restraint 0.9.642 Section F already held.
-        const useCaseSource = codeOnly(await rawSource('application/ImportDocumentUseCase.js'));
+        const useCaseSource = codeOnly(await rawSource('application/document/ImportDocumentUseCase.js'));
         assert(!/DocumentSchemaMigrator/.test(useCaseSource),
             n('ImportDocumentUseCase itself still never references DocumentSchemaMigrator directly — migration is inherited for free from DocumentSerializer.deserialize(), no new machinery was added for this audit to find'));
 
@@ -658,11 +658,11 @@ async function run() {
     // ===============================================================
     {
         // Export: observational. Structural + runtime proof, consolidated.
-        const exportSource = codeOnly(await rawSource('application/ExportDocumentUseCase.js'));
+        const exportSource = codeOnly(await rawSource('application/document/ExportDocumentUseCase.js'));
         assert(!/storageProvider|StorageProvider|DocumentManifest/i.test(exportSource), n('ExportDocumentUseCase has no reference to any StorageProvider or DocumentManifest'));
-        const importSource = codeOnly(await rawSource('application/ImportDocumentUseCase.js'));
+        const importSource = codeOnly(await rawSource('application/document/ImportDocumentUseCase.js'));
         assert(!/storageProvider|StorageProvider|DocumentManifest/i.test(importSource), n('ImportDocumentUseCase has no reference to any StorageProvider or DocumentManifest either'));
-        const saveSource = codeOnly(await rawSource('application/SaveDocumentUseCase.js'));
+        const saveSource = codeOnly(await rawSource('application/document/SaveDocumentUseCase.js'));
         assert(/this\._storageProvider\.save\(/.test(saveSource), n('SaveDocumentUseCase — and only SaveDocumentUseCase, of the three — actually calls storageProvider.save()'));
 
         const probe = new InMemoryStorageProvider();
@@ -712,9 +712,9 @@ async function run() {
         // Whole-file sweep of the core Export/Import composition — same
         // standard 0.9.640 Section E already applied.
         const files = [
-            'application/ExportDocumentUseCase.js',
-            'application/ImportDocumentUseCase.js',
-            'application/DocumentCloneService.js',
+            'application/document/ExportDocumentUseCase.js',
+            'application/document/ImportDocumentUseCase.js',
+            'application/document/DocumentCloneService.js',
             'serializer/DocumentSerializer.js',
             'serializer/DocumentValidator.js',
             'serializer/DocumentSchemaMigrator.js'
@@ -732,7 +732,7 @@ async function run() {
         // publisher/discovery/peer/etc. for its OTHER features), but
         // specifically the two delegation methods this milestone's
         // journey actually calls.
-        const editorSessionSource = codeOnly(await rawSource('application/EditorSession.js'));
+        const editorSessionSource = codeOnly(await rawSource('application/editor/EditorSession.js'));
         const exportMethodMatch = editorSessionSource.match(/exportDocument\(\)\s*\{[\s\S]*?\n {4}\}/);
         const importMethodMatch = editorSessionSource.match(/importDocument\(json\)\s*\{[\s\S]*?\n {4}\}/);
         assert(exportMethodMatch !== null && importMethodMatch !== null, n('both EditorSession.exportDocument() and EditorSession.importDocument() are found, in isolation, in real source'));
@@ -809,7 +809,7 @@ async function run() {
         const buildLibrarySource = await rawSource('ui/components/BuildLibraryPanel.js');
         assert(/triggerImportBlueprint/.test(buildLibrarySource) && /onImportBlueprintFileChosen/.test(buildLibrarySource),
             n('BuildLibraryPanel.js\'s own, pre-existing "Import Blueprint" file input machinery (triggerImportBlueprint/onImportBlueprintFileChosen) is untouched and textually distinct from Toolbar.js\'s document-Import machinery'));
-        assert(!/importFileInput/.test(await rawSource('application/EditorSession.js')),
+        assert(!/importFileInput/.test(await rawSource('application/editor/EditorSession.js')),
             n('EditorSession.js itself has no shared "importFileInput"-shaped state — Blueprint import and Document import remain two independent UI-layer concerns, never unified into one code path at the session layer either'));
 
         console.log('✓ J: Save, Load, New, Fork, and Publish all still work exactly as before — run live here, not merely re-read — and Toolbar.js\'s pre-existing emits/actions remain present alongside Export/Import rather than replaced by them. The OTHER existing import surface (Blueprint import) remains a fully separate component and file input, confirmed never merged with document Import at either the UI or session layer.');
@@ -864,11 +864,11 @@ async function run() {
         // amendment for 0.9.644 (see this file's own header) is
         // deliberately NOT test-only — 0.9.644 is a scoped production bug
         // fix — so the guard now asserts the NARROWER thing that still
-        // matters: application/DocumentCloneService.js is the ONLY
+        // matters: application/document/DocumentCloneService.js is the ONLY
         // production file 0.9.644 touches. No scope creep into
         // ImportDocumentUseCase, Group, World, or anywhere else.
         // -----------------------------------------------------------
-        const EXPECTED_PRODUCTION_CHANGE = 'application/DocumentCloneService.js';
+        const EXPECTED_PRODUCTION_CHANGE = 'application/document/DocumentCloneService.js';
         const changedNonTestFiles = execSync(
             'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)tests.html"',
             { cwd: SOURCE_ROOT.pathname }
@@ -890,7 +890,7 @@ async function run() {
         assert(!/^\s*function\s+exportDocument\s*\(|^\s*function\s+importDocument\s*\(/m.test(ownSource),
             n('no top-level exportDocument()/importDocument() production-shaped function is defined either — simulateUIImport() in Section F is a local test helper that calls the real ImportDocumentUseCase, never a production-shaped reimplementation of it'));
 
-        console.log('✓ K: every user-facing claim in the brief\'s own checklist is confirmed from real source — Export downloads a real file, Import opens the real native file picker, success reaches the Editor, parse-level and document-level errors are genuinely distinct messages, and a successful import never silently overwrites because Save remains a separate, explicit, never-auto-triggered action. The only production file touched anywhere in this repository is application/DocumentCloneService.js (0.9.644\'s own scoped fix); this file itself still defines no production-shaped Export/Import class or function.');
+        console.log('✓ K: every user-facing claim in the brief\'s own checklist is confirmed from real source — Export downloads a real file, Import opens the real native file picker, success reaches the Editor, parse-level and document-level errors are genuinely distinct messages, and a successful import never silently overwrites because Save remains a separate, explicit, never-auto-triggered action. The only production file touched anywhere in this repository is application/document/DocumentCloneService.js (0.9.644\'s own scoped fix); this file itself still defines no production-shaped Export/Import class or function.');
     }
 
     // ===============================================================

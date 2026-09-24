@@ -8,22 +8,22 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateEditorContextUseCase } from '../application/CreateEditorContextUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
-import { EditorActionContext } from '../application/EditorActionContext.js';
+import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { EditorActionContext } from '../application/editor/EditorActionContext.js';
 
 // 0.9.661 — Add Editor Selection Focus Action.
 //
 // TYPE: narrow production feature (one EditorActionRegistry action, one
 // SelectionInspector button) + focused closure audit. PRODUCTION CHANGES:
-// application/EditorActionRegistry.js (+`selection.focus`, Selection
+// application/editor/EditorActionRegistry.js (+`selection.focus`, Selection
 // category) and ui/components/SelectionInspector.js (+one actions-row
 // button) — see Section G's own production-change guard for the exact
 // diff this milestone produced. tests/EditorSelectedBrickCameraFocusBoundaryAudit.test.js
@@ -276,7 +276,7 @@ async function run() {
             n('G1. selection.focus is registered under the "Selection" category — one registry entry, no second command system'));
 
         const registrySource = await import('node:fs/promises').then((m) =>
-            m.readFile(path.join(SOURCE_ROOT, 'application/EditorActionRegistry.js'), 'utf8'));
+            m.readFile(path.join(SOURCE_ROOT, 'application/editor/EditorActionRegistry.js'), 'utf8'));
         const focusBlockMatch = registrySource.match(/id: 'selection\.focus'[\s\S]*?execute: \(\) => \{[\s\S]*?\n        \}\)/);
         assert(focusBlockMatch !== null, n('G2. selection.focus\'s definition block is found in the real registry source'));
         const focusBlock = focusBlockMatch[0];
@@ -304,7 +304,7 @@ async function run() {
             changedFiles = [];
         }
         const allowedNonTestFiles = new Set([
-            'application/EditorActionRegistry.js',
+            'application/editor/EditorActionRegistry.js',
             'ui/components/SelectionInspector.js',
             'docs/user/ControlsReference.md'
         ]);
@@ -350,7 +350,7 @@ async function run() {
     // ===============================================================
     {
         const registrySource = await import('node:fs/promises').then((m) =>
-            m.readFile(path.join(SOURCE_ROOT, 'application/EditorActionRegistry.js'), 'utf8'));
+            m.readFile(path.join(SOURCE_ROOT, 'application/editor/EditorActionRegistry.js'), 'utf8'));
         assert(!registrySource.includes('CameraFocusAnimator'),
             n('I1. no animator is imported or introduced anywhere in the registry'));
 

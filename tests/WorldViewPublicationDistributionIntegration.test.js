@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionLifecyclePersistence } from '../application/PublicationDistributionLifecyclePersistence.js';
-import { PublicationDistributionLifecyclePersistenceBridge } from '../application/PublicationDistributionLifecyclePersistenceBridge.js';
-import { PublicationDistributionLifecycleRestorer } from '../application/PublicationDistributionLifecycleRestorer.js';
-import { hydratePublicationDistributionLifecycles } from '../application/PublicationDistributionLifecycleHydration.js';
-import { describePublicationDistributionLifecycle, PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionLifecyclePersistence } from '../application/publication/distribution/PublicationDistributionLifecyclePersistence.js';
+import { PublicationDistributionLifecyclePersistenceBridge } from '../application/publication/distribution/PublicationDistributionLifecyclePersistenceBridge.js';
+import { PublicationDistributionLifecycleRestorer } from '../application/publication/distribution/PublicationDistributionLifecycleRestorer.js';
+import { hydratePublicationDistributionLifecycles } from '../application/publication/distribution/PublicationDistributionLifecycleHydration.js';
+import { describePublicationDistributionLifecycle, PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { worldEncounterCanvasFiles, worldViewSourceWithTemplate } from './support/SourceFileGroups.js';
 
 // 0.9.100 — Publication Distribution World View Integration.
 //
@@ -337,15 +337,15 @@ async function runTests() {
         const mainSource = await readFile(mainSourceUrl, 'utf8');
         const mainCodeOnly = mainSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(mainCodeOnly.includes("import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';"),
+        assert(mainCodeOnly.includes("import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';"),
             '22. ui/main.js imports the existing, unmodified PublicationDistributionLifecycleMemoryStore — never a second store');
-        assert(mainCodeOnly.includes("import { PublicationDistributionLifecyclePersistence } from '../application/PublicationDistributionLifecyclePersistence.js';"),
+        assert(mainCodeOnly.includes("import { PublicationDistributionLifecyclePersistence } from '../application/publication/distribution/PublicationDistributionLifecyclePersistence.js';"),
             '23. ...and the existing PublicationDistributionLifecyclePersistence');
-        assert(mainCodeOnly.includes("import { PublicationDistributionLifecyclePersistenceBridge } from '../application/PublicationDistributionLifecyclePersistenceBridge.js';"),
+        assert(mainCodeOnly.includes("import { PublicationDistributionLifecyclePersistenceBridge } from '../application/publication/distribution/PublicationDistributionLifecyclePersistenceBridge.js';"),
             '24. ...and the existing PublicationDistributionLifecyclePersistenceBridge');
-        assert(mainCodeOnly.includes("import { PublicationDistributionLifecycleRestorer } from '../application/PublicationDistributionLifecycleRestorer.js';"),
+        assert(mainCodeOnly.includes("import { PublicationDistributionLifecycleRestorer } from '../application/publication/distribution/PublicationDistributionLifecycleRestorer.js';"),
             '25. ...and the existing PublicationDistributionLifecycleRestorer');
-        assert(mainCodeOnly.includes("import { hydratePublicationDistributionLifecycles } from '../application/PublicationDistributionLifecycleHydration.js';"),
+        assert(mainCodeOnly.includes("import { hydratePublicationDistributionLifecycles } from '../application/publication/distribution/PublicationDistributionLifecycleHydration.js';"),
             '26. ...and the existing hydratePublicationDistributionLifecycles()');
 
         assert(mainCodeOnly.includes('new PublicationDistributionLifecycleMemoryStore(')
@@ -373,8 +373,7 @@ async function runTests() {
     // Section J — architectural regression: ui/views/WorldView.js
     // -------------------------------------------------------------
     {
-        const viewSourceUrl = new URL('../ui/views/WorldView.js', import.meta.url);
-        const viewSource = await readFile(viewSourceUrl, 'utf8');
+        const viewSource = worldViewSourceWithTemplate();
         const viewCodeOnly = viewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(viewCodeOnly.includes("inject('publicationDistributionLifecycleStore', null)"),

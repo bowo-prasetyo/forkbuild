@@ -9,8 +9,8 @@ import { createId } from '../core/createId.js';
 // over an ordinary WebSocket, satisfying the exact same PUBLISH/LOOKUP/
 // REMOVE contract peer/LocalRendezvousNetwork.js already proved out
 // in-process. Everything above this class — peer/RendezvousDiscoveryProvider.js,
-// peer/DiscoveryBootstrap.js, application/FindPeerUseCase.js,
-// application/PeerSessionManager.js — needed ZERO changes beyond the
+// peer/DiscoveryBootstrap.js, application/peer/FindPeerUseCase.js,
+// application/peer/PeerSessionManager.js — needed ZERO changes beyond the
 // contract already becoming async in 0.2.66 (see peer/RendezvousTransport.js's
 // own header); this class is a drop-in alternative to
 // peer/LocalRendezvousNetwork.js, nothing more.

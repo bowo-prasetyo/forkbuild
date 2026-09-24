@@ -12,7 +12,7 @@ import {
     PUBLICATION_COMMENTARY_DISTRIBUTION_KIND
 } from '../core/PublicationCommentaryDistributionEnvelope.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
 
 import {
     describeDecentralizedDiscoveryEnvelope,
@@ -22,8 +22,8 @@ import {
     describeSnapshotDiscoveryEnvelope,
     SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL
 } from '../core/SnapshotDiscoveryEnvelope.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 
 // 0.9.625 — Publication Commentary Persistent Distribution Boundary Audit.
 //
@@ -43,7 +43,7 @@ import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncement
 // the device it was created on, the real application does it, and a remote
 // arrival now produces a local notification — all over ONE transport, the
 // existing authenticated WebRTC peer connection
-// (application/PublicationCommentaryDistributionPeerExchange.js). A
+// (application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js). A
 // follow-up proposal asks whether Commentary should ALSO travel over Nostr
 // (an existing announcement/discovery substrate) and Arweave (an existing
 // durable-storage substrate), reasoning that both already carry comparable
@@ -125,7 +125,7 @@ import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncement
 // reason 0.9.626-0.9.628 built a NEW family rather than reusing either;
 // Section H's own product-requirement census is scoped to nostr/, arweave/,
 // and replication/ directories specifically (never application/), and
-// remains literally true — application/PublicationCommentaryNostrDistribution.js
+// remains literally true — application/publication/commentary/PublicationCommentaryNostrDistribution.js
 // itself never imports storage/PublicationCommentaryStore.js, exactly like
 // every raw nostr/ transport primitive it composes (see that file's own
 // header, "an opaque envelope carrier, never a second Commentary
@@ -189,7 +189,7 @@ function makeIdentity(label) {
 }
 
 // A real, signed Commentary distribution envelope — the exact production
-// artifact application/PublicationCommentaryDistributionPeerExchange.js
+// artifact application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js
 // already announces to peers, built here through the same real
 // exchange/exportCommentary() path production code uses, never hand-rolled.
 function signedCommentaryEnvelopeJson(authorProvider, overrides = {}) {
@@ -251,14 +251,14 @@ async function run() {
     // Section B — Nostr substrate census.
     // ===============================================================
     {
-        const publisherSource = codeOnly(await rawSource('application/NostrPublicationDiscoveryPublisher.js'));
+        const publisherSource = codeOnly(await rawSource('application/nostr/NostrPublicationDiscoveryPublisher.js'));
         assert(/describeDecentralizedDiscoveryEnvelope/.test(publisherSource),
-            n('application/NostrPublicationDiscoveryPublisher.js re-validates its own envelope argument through core/DecentralizedDiscoveryEnvelope.js\'s own describeDecentralizedDiscoveryEnvelope() before ever touching a relay — it never builds its own announcement shape'));
+            n('application/nostr/NostrPublicationDiscoveryPublisher.js re-validates its own envelope argument through core/DecentralizedDiscoveryEnvelope.js\'s own describeDecentralizedDiscoveryEnvelope() before ever touching a relay — it never builds its own announcement shape'));
         assert(/content:\s*JSON\.stringify\(described\)/.test(publisherSource),
             n('the ENTIRE described envelope becomes a Nostr event\'s own `content` — but that envelope\'s own five fields (protocol/version/kind/objectId/uri) are themselves a LOCATOR, never the underlying material — Publication announcement, not Publication delivery'));
-        const snapshotDiscoverySource = codeOnly(await rawSource('application/NostrSnapshotDiscoveryPublisher.js'));
+        const snapshotDiscoverySource = codeOnly(await rawSource('application/nostr/NostrSnapshotDiscoveryPublisher.js'));
         assert(/describeSnapshotDiscoveryEnvelope/.test(snapshotDiscoverySource),
-            n('the Snapshot-flavored sibling (application/NostrSnapshotDiscoveryPublisher.js) holds the identical restraint for core/SnapshotDiscoveryEnvelope.js\'s own contentHash/locator/storage shape — also a locator, never Snapshot bytes'));
+            n('the Snapshot-flavored sibling (application/nostr/NostrSnapshotDiscoveryPublisher.js) holds the identical restraint for core/SnapshotDiscoveryEnvelope.js\'s own contentHash/locator/storage shape — also a locator, never Snapshot bytes'));
 
         // Live proof that this substrate's own role is exactly
         // "announce a locator," constructed against the real class —
@@ -283,12 +283,12 @@ async function run() {
     // Section C — Arweave substrate census: two independent roles.
     // ===============================================================
     {
-        const announcementSource = codeOnly(await rawSource('application/ArweaveAnnouncementPublisher.js'));
+        const announcementSource = codeOnly(await rawSource('application/arweave/ArweaveAnnouncementPublisher.js'));
         assert(/describeDecentralizedDiscoveryEnvelope/.test(announcementSource),
-            n('application/ArweaveAnnouncementPublisher.js re-validates through the SAME core/DecentralizedDiscoveryEnvelope.js validator NostrPublicationDiscoveryPublisher uses — one protocol envelope, ridden by two substrate publishers, per that file\'s own header'));
-        assert(/two distinct Arweave transactions/.test(await rawSource('application/ArweaveAnnouncementPublisher.js')),
-            n('that same header is explicit that an ANNOUNCEMENT transaction (this class) and a CONTENT transaction (application/ArweavePublicationMaterialUploader.js, a completely separate class) for the same Publication remain two distinct Arweave transactions — Arweave-as-storage and Arweave-as-announcement are never conflated into one role merely because both use the same substrate'));
-        const uploaderSource = await rawSource('application/ArweavePublicationMaterialUploader.js');
+            n('application/arweave/ArweaveAnnouncementPublisher.js re-validates through the SAME core/DecentralizedDiscoveryEnvelope.js validator NostrPublicationDiscoveryPublisher uses — one protocol envelope, ridden by two substrate publishers, per that file\'s own header'));
+        assert(/two distinct Arweave transactions/.test(await rawSource('application/arweave/ArweaveAnnouncementPublisher.js')),
+            n('that same header is explicit that an ANNOUNCEMENT transaction (this class) and a CONTENT transaction (application/arweave/ArweavePublicationMaterialUploader.js, a completely separate class) for the same Publication remain two distinct Arweave transactions — Arweave-as-storage and Arweave-as-announcement are never conflated into one role merely because both use the same substrate'));
+        const uploaderSource = await rawSource('application/arweave/ArweavePublicationMaterialUploader.js');
         assert(!/describeDecentralizedDiscoveryEnvelope|discoveryTag/.test(codeOnly(uploaderSource)),
             n('confirmed structurally: the content-storage uploader never validates or attaches a discovery envelope/tag of its own — that is entirely ArweaveAnnouncementPublisher\'s own, separate job'));
 
@@ -323,7 +323,7 @@ async function run() {
             && typeof commentaryEnvelopeJson.commentaryId === 'string'
             && typeof commentaryEnvelopeJson.content === 'string'
             && commentaryEnvelopeJson.signature && typeof commentaryEnvelopeJson.signature === 'object',
-            n('setup: a REAL, signed PublicationCommentaryDistributionEnvelope — the exact bytes application/PublicationCommentaryDistributionPeerExchange.js already announces to peers today — carries commentaryId/publicationId/authorIdentityId/content/createdAt plus a REQUIRED signature; it has no `protocol`, `objectId`, or `uri` field of any kind'));
+            n('setup: a REAL, signed PublicationCommentaryDistributionEnvelope — the exact bytes application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js already announces to peers today — carries commentaryId/publicationId/authorIdentityId/content/createdAt plus a REQUIRED signature; it has no `protocol`, `objectId`, or `uri` field of any kind'));
 
         // D1. The real, unmodified Publication discovery-envelope
         // validator, fed this envelope's own real wire JSON.
@@ -397,11 +397,11 @@ async function run() {
     // Section F — announcement-of-a-locator vs. delivery-of-content.
     // ===============================================================
     {
-        const peerExchangeSource = await rawSource('application/PublicationCommentaryDistributionPeerExchange.js');
+        const peerExchangeSource = await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js');
         assert(/kind:\s*MESSAGE_KIND_ANNOUNCE,\s*envelope\s*\}/.test(codeOnly(peerExchangeSource)) || /message\s*=\s*\{\s*kind:\s*MESSAGE_KIND_ANNOUNCE,\s*envelope\s*\}/.test(codeOnly(peerExchangeSource)),
-            n('application/PublicationCommentaryDistributionPeerExchange.js#announce() sends the FULL envelope — commentary content included — directly over the peer message bus; the receiving peer\'s own _handleIncoming() calls importCommentaryEnvelope() on that SAME payload with no separate fetch step. Content IS delivered, not merely located.'));
+            n('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js#announce() sends the FULL envelope — commentary content included — directly over the peer message bus; the receiving peer\'s own _handleIncoming() calls importCommentaryEnvelope() on that SAME payload with no separate fetch step. Content IS delivered, not merely located.'));
 
-        assert(/describeDecentralizedDiscoveryEnvelope|describeSnapshotDiscoveryEnvelope/.test(codeOnly(await rawSource('application/NostrPublicationDiscoveryPublisher.js')))
+        assert(/describeDecentralizedDiscoveryEnvelope|describeSnapshotDiscoveryEnvelope/.test(codeOnly(await rawSource('application/nostr/NostrPublicationDiscoveryPublisher.js')))
             && /uri/.test(await rawSource('core/DecentralizedDiscoveryEnvelope.js')),
             n('by contrast, reconfirmed from Sections B/C: the existing Nostr/Arweave discovery substrate, as built, only ever transports a LOCATOR (`uri`, or `contentHash`/`locator`/`storage`) — never the bytes it points at. A consumer of a discovered envelope still has a SEPARATE retrieval step ahead of it (fetching the Arweave transaction the uri names, or asking a peer for content matching a discovered contentHash) before it has anything to verify or store.'));
 
@@ -425,17 +425,17 @@ async function run() {
         assert(commentaryNostrFiles.length === 2
             && commentaryNostrFiles.some((f) => f.includes('PublicationCommentaryNostrDistribution.js'))
             && commentaryNostrFiles.some((f) => f.includes('DiscoverPublicationCommentaryFromNostrUseCase.js')),
-            n(`exactly the two Nostr-flavored Commentary files 0.9.628 built now exist — application/PublicationCommentaryNostrDistribution.js (the adapter) and application/DiscoverPublicationCommentaryFromNostrUseCase.js (the admission boundary) — found: ${commentaryNostrFiles.join(', ') || 'none'}`));
-        const discoveryPublisherSource = codeOnly(await rawSource('application/NostrPublicationDiscoveryPublisher.js'));
-        const discoveryQueryServiceSource = codeOnly(await rawSource('application/NostrDiscoveryQueryService.js'));
+            n(`exactly the two Nostr-flavored Commentary files 0.9.628 built now exist — application/publication/commentary/PublicationCommentaryNostrDistribution.js (the adapter) and application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js (the admission boundary) — found: ${commentaryNostrFiles.join(', ') || 'none'}`));
+        const discoveryPublisherSource = codeOnly(await rawSource('application/nostr/NostrPublicationDiscoveryPublisher.js'));
+        const discoveryQueryServiceSource = codeOnly(await rawSource('application/nostr/NostrDiscoveryQueryService.js'));
         assert(!/Commentary/.test(discoveryPublisherSource) && !/Commentary/.test(discoveryQueryServiceSource),
-            n('neither existing discovery-specific Nostr class (application/NostrPublicationDiscoveryPublisher.js, application/NostrDiscoveryQueryService.js) gained, references, or was repurposed toward any Commentary vocabulary — 0.9.628 built a genuinely new family instead, exactly this audit\'s own Section D/G/I recommendation'));
+            n('neither existing discovery-specific Nostr class (application/nostr/NostrPublicationDiscoveryPublisher.js, application/nostr/NostrDiscoveryQueryService.js) gained, references, or was repurposed toward any Commentary vocabulary — 0.9.628 built a genuinely new family instead, exactly this audit\'s own Section D/G/I recommendation'));
         // AMENDED AGAIN BY 0.9.631 — Publication Commentary Arweave
         // Asynchronous Distribution built exactly the Arweave counterpart
         // 0.9.628 already built for Nostr, following this same audit's own
         // Section D/G/I recommendation one substrate over: application/
         // PublicationCommentaryArweaveDistribution.js (the adapter) and
-        // application/DiscoverPublicationCommentaryFromArweaveUseCase.js
+        // application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js
         // (the admission boundary) — a genuinely new family, never a
         // repurposing of ArweaveAnnouncementPublisher/
         // ArweaveGraphqlDiscoveryQueryService.
@@ -445,15 +445,15 @@ async function run() {
             && commentaryArweaveFiles.some((f) => f.includes('PublicationCommentaryArweaveDistribution.js'))
             && commentaryArweaveFiles.some((f) => f.includes('DiscoverPublicationCommentaryFromArweaveUseCase.js')),
             n(`exactly the two Arweave-flavored Commentary files 0.9.631 built now exist — found: ${commentaryArweaveFiles.join(', ') || 'none'}`));
-        const arweaveAnnouncementSource = codeOnly(await rawSource('application/ArweaveAnnouncementPublisher.js'));
-        const arweaveQueryServiceSource = codeOnly(await rawSource('application/ArweaveGraphqlDiscoveryQueryService.js'));
+        const arweaveAnnouncementSource = codeOnly(await rawSource('application/arweave/ArweaveAnnouncementPublisher.js'));
+        const arweaveQueryServiceSource = codeOnly(await rawSource('application/arweave/ArweaveGraphqlDiscoveryQueryService.js'));
         assert(!/Commentary/.test(arweaveAnnouncementSource) && !/Commentary/.test(arweaveQueryServiceSource),
-            n('neither existing discovery-specific Arweave class (application/ArweaveAnnouncementPublisher.js, application/ArweaveGraphqlDiscoveryQueryService.js) gained, references, or was repurposed toward any Commentary vocabulary — 0.9.631 built a genuinely new family instead, exactly this audit\'s own Section D/G/I recommendation, one substrate over'));
+            n('neither existing discovery-specific Arweave class (application/arweave/ArweaveAnnouncementPublisher.js, application/arweave/ArweaveGraphqlDiscoveryQueryService.js) gained, references, or was repurposed toward any Commentary vocabulary — 0.9.631 built a genuinely new family instead, exactly this audit\'s own Section D/G/I recommendation, one substrate over'));
 
-        const peerExchangeHeader = await rawSource('application/PublicationCommentaryDistributionPeerExchange.js');
+        const peerExchangeHeader = await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js');
         const peerExchangeFlat = peerExchangeHeader.replace(/\r?\n/g, ' ').replace(/\/\/ ?/g, '');
         assert(peerExchangeFlat.includes('REQUEST/RESPONSE pair (find every commentary a peer knows about a publicationId, for a late-joining replica) is exactly the kind of seam a LATER, separately-scoped milestone could add'),
-            n('the ONE forward-reference this codebase\'s own source already names for Commentary\'s next distribution step is a peer REQUEST/RESPONSE protocol (find every commentary a peer knows about a publicationId, for a late-joining replica) — modeled explicitly on application/PublicationAnchorPeerProtocol.js\'s own 0.8.5 precedent. That forward-reference names a PEER extension, never Nostr or Arweave.'));
+            n('the ONE forward-reference this codebase\'s own source already names for Commentary\'s next distribution step is a peer REQUEST/RESPONSE protocol (find every commentary a peer knows about a publicationId, for a late-joining replica) — modeled explicitly on application/anchoring/PublicationAnchorPeerProtocol.js\'s own 0.8.5 precedent. That forward-reference names a PEER extension, never Nostr or Arweave.'));
 
         console.log('✓ G (AMENDED BY 0.9.629): at the time this audit originally ran, a Nostr/Arweave-flavored Commentary distribution capability was not a wiring gap in something that already existed (0.9.619\'s own pattern) — it would need an entirely new envelope, publisher, and query-service family, mirroring Publication/Snapshot\'s own multi-file pattern from scratch. 0.9.626-0.9.628 built exactly that NEW family for Nostr (never Arweave, still untouched) — a substrate-neutral delivery contract (0.9.626), a test-proven raw-transport composition (0.9.627), and a real, permanent, production-wired adapter plus admission boundary (0.9.628) — reusing the EXISTING 0.9.618 envelope unmodified rather than inventing a second one, since Section D\'s own finding was that Commentary needed no second envelope, only a substrate that could carry the existing one. The one extension this codebase\'s own source anticipated for Commentary BEYOND Nostr remains a peer-based request/response protocol; Arweave remains exactly as untouched by Commentary as this audit originally measured.');
     }
@@ -509,7 +509,7 @@ async function run() {
     // Section I — fan-out policy: SELECTION, NEVER FAN-OUT.
     // ===============================================================
     {
-        const compositionSource = await rawSource('application/PublicationDistributionRuntimeComposition.js');
+        const compositionSource = await rawSource('application/publication/distribution/PublicationDistributionRuntimeComposition.js');
         assert(/SELECTION, NEVER FAN-OUT/.test(compositionSource),
             n('the ONE file in this codebase that already names Nostr and Arweave together for Publication distribution states its own governing invariant in its own header title: "SELECTION, NEVER FAN-OUT"'));
         assert(/no `runtime\.publishers` array, no automatic "announce to every configured\s*\/\/ substrate," and no failover/.test(compositionSource),
@@ -520,9 +520,9 @@ async function run() {
             && !/Promise\.all/.test(compositionCode),
             n('reconfirmed structurally: discoveryProvider is a closed, mutually-exclusive `if`/`else if` — never a Promise.all across substrates, never an array of substrates iterated'));
 
-        const snapshotBackendSource = codeOnly(await rawSource('application/SnapshotDistributionContentBackendSelection.js'));
+        const snapshotBackendSource = codeOnly(await rawSource('application/snapshot/SnapshotDistributionContentBackendSelection.js'));
         assert(!/Promise\.all|forEach.*publish|every configured/i.test(snapshotBackendSource),
-            n('the parallel Snapshot-side selection file (application/SnapshotDistributionContentBackendSelection.js) holds the identical restraint — SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES names what COULD be chosen; nothing in this codebase iterates it and distributes to all of them automatically'));
+            n('the parallel Snapshot-side selection file (application/snapshot/SnapshotDistributionContentBackendSelection.js) holds the identical restraint — SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES names what COULD be chosen; nothing in this codebase iterates it and distributes to all of them automatically'));
 
         console.log('✓ I: the existing, already-live precedent for every substrate this codebase has ever given Publication or Snapshot is explicit, single-substrate, person/caller-initiated selection — never automatic multi-substrate fan-out. If Commentary ever gains a Nostr and/or Arweave seam, this is the precedent to extend, not a new policy to invent: "Create Commentary" must never silently become "announce to WebRTC peers AND Nostr AND Arweave" without an explicit choice, exactly as Publication/Snapshot already refuse to do that for themselves today.');
     }

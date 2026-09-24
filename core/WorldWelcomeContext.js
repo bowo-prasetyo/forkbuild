@@ -117,7 +117,7 @@ export class WorldWelcomeContext {
         currentRegionPath = [],
         // 0.5.6 — Geographic Place Navigation & Arrival. Already
         // distance-filtered/sorted rows from
-        // application/WorldNavigationSession.js#getNearbyGeographicPlaces()
+        // application/world/WorldNavigationSession.js#getNearbyGeographicPlaces()
         // — `{ fingerprintKey, displayName, distance, direction,
         // descriptionCount, worldCount, authorCount, position }`.
         // Optional and empty by default, so every caller that predates
@@ -284,7 +284,7 @@ export class WorldWelcomeContext {
 //   - regions: optional array of WorldRegion instances (0.5.0) — omit
 //     for byte-identical pre-0.5.0 behavior
 //   - nearbyGeographicPlaces: optional, ALREADY resolved/sorted rows
-//     (0.5.6) — see application/WorldNavigationSession.js#
+//     (0.5.6) — see application/world/WorldNavigationSession.js#
 //     getNearbyGeographicPlaces(), the one place that resolution
 //     happens; this function does no filtering or sorting of its own,
 //     it only carries the array through. Omit for byte-identical
@@ -380,7 +380,7 @@ export function deriveWorldWelcomeContext({
                     // Carried through, unfiltered, so a "Follow" action
                     // built from a suggestion/row can call
                     // focusCollaborator(deviceId) directly — see
-                    // application/WorldNavigationSession.js#_getPresentCollaborators().
+                    // application/world/WorldNavigationSession.js#_getPresentCollaborators().
                     deviceId: collab.deviceId,
                     distance: Math.round(distance * 10) / 10
                 });

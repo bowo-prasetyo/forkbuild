@@ -4,10 +4,10 @@ import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
-import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/RoleAwareProviderResolver.js';
-import { ResolvePreferredRoleProviderUseCase } from '../application/ResolvePreferredRoleProviderUseCase.js';
-import { SetRoleProviderPreferenceUseCase } from '../application/SetRoleProviderPreferenceUseCase.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
+import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
+import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';
+import { SetRoleProviderPreferenceUseCase } from '../application/settings/SetRoleProviderPreferenceUseCase.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
@@ -124,7 +124,7 @@ class InMemoryStorageProvider extends StorageProvider {
 
 // A minimal stand-in satisfying RoleAwareProviderResolver's own
 // `get(providerKey)` shape requirement — the identical "anything exposing
-// get()" contract application/RoleAwareProviderResolver.js's own header
+// get()" contract application/settings/RoleAwareProviderResolver.js's own header
 // already documents for a role with no real keyed registry (Discovery).
 // Never registered with anything; used only where a role's own registry
 // is structurally required by the resolver's constructor but not what
@@ -147,9 +147,9 @@ async function run() {
 
         const chainFiles = [
             'core/RoleProviderRole.js', 'core/RoleProviderPreference.js',
-            'storage/RoleProviderPreferenceStore.js', 'application/RoleAwareProviderResolver.js',
-            'application/ResolvePreferredRoleProviderUseCase.js', 'application/SetRoleProviderPreferenceUseCase.js',
-            'application/RoleProviderPreferenceSettingsView.js', 'application/PreferredSnapshotPlacementCreationCoordinator.js',
+            'storage/RoleProviderPreferenceStore.js', 'application/settings/RoleAwareProviderResolver.js',
+            'application/settings/ResolvePreferredRoleProviderUseCase.js', 'application/settings/SetRoleProviderPreferenceUseCase.js',
+            'application/settings/RoleProviderPreferenceSettingsView.js', 'application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js',
             'ui/views/ContentProviderSettingsView.js', 'ui/views/DecentralizedPublicationsView.js'
         ];
         for (const f of chainFiles) {
@@ -222,7 +222,7 @@ async function run() {
 
         // The external discovery-query composition — the one seam with a
         // genuine second real substrate (Nostr alongside Arweave).
-        const compositionSource = await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
+        const compositionSource = await source('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(/EACH CONFIGURED SERVICE IS QUERIED INDEPENDENTLY, NEVER COMBINED OR\s*\n\/\/ RANKED/.test(compositionSource),
             '9. the composition root\'s own header still states, unchanged, that every configured discovery ' +
             'service is queried independently — never combined, never ranked, never narrowed to one');
@@ -238,8 +238,8 @@ async function run() {
         // name are membership stores for already-produced data, never a
         // "plugin registers itself, keyed by its own identity" registry —
         // re-confirmed fresh, not carried over from 0.9.292's own reading.
-        const leadRegistrySource = await source('application/DecentralizedWorldDiscoveryLeadRegistry.js');
-        const sourceRegistrySource = await source('application/WorldDiscoverySourceRegistry.js');
+        const leadRegistrySource = await source('application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js');
+        const sourceRegistrySource = await source('application/discovery/WorldDiscoverySourceRegistry.js');
         assert(!/\bregister\s*\(/.test(leadRegistrySource) && !/\bregister\s*\(/.test(sourceRegistrySource),
             '11. neither DecentralizedWorldDiscoveryLeadRegistry.js nor WorldDiscoverySourceRegistry.js defines ' +
             'a register() method — still no "plugin names its own key" Discovery registry exists anywhere');
@@ -257,9 +257,9 @@ async function run() {
         // Classification, per the brief's own five-way vocabulary:
         const discoveryClassification = {
             'discovery/LocalDiscoveryProvider.js (this replica\'s own local index)': 'NO_SELECTION',
-            'application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js (Nostr+Arweave query)': 'APPLICATION_CHOOSES',
-            'application/DecentralizedWorldDiscoveryLeadRegistry.js (lead membership store)': 'INTERNAL',
-            'application/WorldDiscoverySourceRegistry.js (source membership store)': 'INTERNAL'
+            'application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js (Nostr+Arweave query)': 'APPLICATION_CHOOSES',
+            'application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js (lead membership store)': 'INTERNAL',
+            'application/discovery/WorldDiscoverySourceRegistry.js (source membership store)': 'INTERNAL'
         };
         discoveryUserChoosesSeams = Object.values(discoveryClassification).filter((v) => v === 'USER_CHOOSES').length;
         assert(discoveryUserChoosesSeams === 0,
@@ -287,7 +287,7 @@ async function run() {
         // Confirm Base still ships NO verify half and NO anchor publisher
         // — RESERVED, per BlockchainKind's own 0.8.89 header, never a
         // signal that Base capability exists.
-        const blockchainKindSource = await source('application/BlockchainKind.js');
+        const blockchainKindSource = await source('application/anchoring/BlockchainKind.js');
         assert(/BASE:\s*'base'/.test(blockchainKindSource) && /RESERVED/.test(blockchainKindSource),
             '15. BlockchainKind still names BASE only as RESERVED vocabulary, not shipped capability');
         assert(!allProductionFiles.some((f) => /BaseProofVerifier|BaseAnchorPublisher/.test(f)),
@@ -318,7 +318,7 @@ async function run() {
         // creation-time list — still exactly one entry in real production
         // wiring, because exactly one publisher/verifier pair is ever
         // registered (Sections above). A list of one is not a choice.
-        assert(/availableAnchorTypes\(\)/.test(await source('application/PublicationAnchorCreationCoordinator.js')),
+        assert(/availableAnchorTypes\(\)/.test(await source('application/anchoring/PublicationAnchorCreationCoordinator.js')),
             '21. PublicationAnchorCreationCoordinator still exposes availableAnchorTypes() as the creation-time ' +
             'seam a preference would need a second real option to matter at');
 
@@ -445,7 +445,7 @@ async function run() {
         // one invariant every milestone in this arc held. Confirmed by
         // source, not inference: the coordinator behind the per-storage
         // buttons never imports the preference machinery.
-        const coordinatorSource = await source('application/SnapshotPlacementCreationCoordinator.js');
+        const coordinatorSource = await source('application/snapshot/placement/SnapshotPlacementCreationCoordinator.js');
         assert(!/RoleProviderPreference/.test(coordinatorSource),
             '35. SnapshotPlacementCreationCoordinator.js (the explicit Local/IPFS buttons\' own coordinator) ' +
             'still never imports any RoleProviderPreference-family class — an explicit choice stays authoritative');
@@ -480,10 +480,10 @@ async function run() {
         // the composition root rather than inside it.
         const storeConstructions = allTexts.filter(([f, s]) => /new RoleProviderPreferenceStore\(/.test(s));
         assert(storeConstructions.length === 1
-            && storeConstructions[0][0] === 'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
+            && storeConstructions[0][0] === 'application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
             '37a. exactly one textual construction site exists in production — a default parameter inside the ' +
             'composition use case, not ui/main.js itself');
-        const compositionUseCaseSource = await source('application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js');
+        const compositionUseCaseSource = await source('application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js');
         assert(/preferenceStore = new RoleProviderPreferenceStore\(\)/.test(compositionUseCaseSource),
             '37b. that one site is a default parameter, satisfied only when no caller supplies its own store');
         const uiMainSource = await source('ui/main.js');
@@ -495,7 +495,7 @@ async function run() {
 
         // 3. .save() on the store is called from exactly one file.
         const saveCallers = allTexts.filter(([, s]) => /\.save\(\s*preference\s*\)|preferenceStore\.save\(/.test(s));
-        assert(saveCallers.length === 1 && saveCallers[0][0] === 'application/SetRoleProviderPreferenceUseCase.js',
+        assert(saveCallers.length === 1 && saveCallers[0][0] === 'application/settings/SetRoleProviderPreferenceUseCase.js',
             '38. RoleProviderPreferenceStore#save() is still called from exactly one production file — no view ' +
             'writes a preference directly, bypassing the use case');
 
@@ -508,9 +508,9 @@ async function run() {
 
         // 5. No fallback/ranking/health-check vocabulary inside the
         // preference chain's own code (comments excluded).
-        const chainFiles = ['storage/RoleProviderPreferenceStore.js', 'application/RoleAwareProviderResolver.js',
-            'application/ResolvePreferredRoleProviderUseCase.js', 'application/SetRoleProviderPreferenceUseCase.js',
-            'application/PreferredSnapshotPlacementCreationCoordinator.js', 'core/RoleProviderPreference.js'];
+        const chainFiles = ['storage/RoleProviderPreferenceStore.js', 'application/settings/RoleAwareProviderResolver.js',
+            'application/settings/ResolvePreferredRoleProviderUseCase.js', 'application/settings/SetRoleProviderPreferenceUseCase.js',
+            'application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js', 'core/RoleProviderPreference.js'];
         const chainCode = (await Promise.all(chainFiles.map((f) => source(f))))
             .join('\n').split('\n').filter((line) => !/^\s*\/\//.test(line.trim())).join('\n');
         assert(!/fallback|rank(ing)?\(|healthCheck|isAvailable\(|ping\(/i.test(chainCode),

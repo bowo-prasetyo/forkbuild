@@ -61,7 +61,7 @@
 // missing: a notification could name a `publicationId` in its own payload
 // but offered no way to reach it. This panel reads ONLY
 // `event.payload.publicationId` — the same well-known field name
-// `application/PublicationCommentaryNotificationProducer.js` already
+// `application/publication/commentary/PublicationCommentaryNotificationProducer.js` already
 // writes — never `event.eventType`, so `notificationPublicationId()`
 // below stays exactly as eventType-agnostic as `notificationDetails()`
 // above; a future producer that also addresses a Publication under that

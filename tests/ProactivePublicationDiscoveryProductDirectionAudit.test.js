@@ -3,23 +3,23 @@ import { readFile } from 'node:fs/promises';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License, LicenseId } from '../core/License.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { CreateDiscoveryUseCase } from '../application/CreateDiscoveryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscoveryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQueryService.js';
-import { queryDecentralizedWorldDiscovery } from '../application/DecentralizedWorldDiscoveryQuery.js';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
+import { queryDecentralizedWorldDiscovery } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 
 // 0.9.351 — Proactive Publication Discovery Product Direction Audit.
@@ -86,7 +86,7 @@ function wait(ms = 20) {
 }
 
 // Same posture as tests/FederatedRepositoryProductReassessment.test.js:
-// application/CreateDiscoveryUseCase.js constructs a real
+// application/discovery/CreateDiscoveryUseCase.js constructs a real
 // storage/LocalStorageProvider.js, which reads window.localStorage — a
 // minimal in-memory shim, installed ONLY when no window already exists.
 if (typeof globalThis.window === 'undefined') {
@@ -210,7 +210,7 @@ async function run() {
         assert(Array.isArray(result.items) && result.items.length === 0,
             '2. with nothing accumulated, search finds nothing — confirming search answers "what has this replica already accumulated," not "what exists."');
 
-        const searchSource = await readSource('application/SearchPublicationsUseCase.js');
+        const searchSource = await readSource('application/publication/SearchPublicationsUseCase.js');
         assert(!/nostr|peer\/|fetch\(|WebSocket|RTCPeerConnection/i.test(searchSource.split('\n').filter((l) => /^\s*import\b/.test(l)).join('\n')),
             '3. SearchPublicationsUseCase.js imports no network collaborator of any kind.');
     }
@@ -277,7 +277,7 @@ async function run() {
     {
         // 1. The write side exists and was just proven live in Section B.
         assert(typeof NostrPublicationDiscoveryPublisher === 'function',
-            '1. application/NostrPublicationDiscoveryPublisher.js exists (write side, live-proven in Section B).');
+            '1. application/nostr/NostrPublicationDiscoveryPublisher.js exists (write side, live-proven in Section B).');
 
         // 2. The read side ALSO already exists — a real, generic Nostr
         // query service, proven here by actually reading back Section
@@ -294,7 +294,7 @@ async function run() {
         const queryService = new NostrDiscoveryQueryService({ queryImpl: relay.queryImpl });
         const leads = await queryDecentralizedWorldDiscovery(queryService, 'forkbuild-expectation-campaign');
         assert(Array.isArray(leads) && leads.length === 1,
-            '2. application/NostrDiscoveryQueryService.js + application/DecentralizedWorldDiscoveryQuery.js — the SAME read-side machinery already proven for Snapshot/PlaceNaming — genuinely reads Section B\'s announcement back, live, off a real relay round trip.');
+            '2. application/nostr/NostrDiscoveryQueryService.js + application/discovery/DecentralizedWorldDiscoveryQuery.js — the SAME read-side machinery already proven for Snapshot/PlaceNaming — genuinely reads Section B\'s announcement back, live, off a real relay round trip.');
         const [lead] = leads;
         assert(lead.uri === sectionBEnvelope.uri, '3. the lead carries the correct material uri Section B actually announced.');
 
@@ -303,7 +303,7 @@ async function run() {
         // own validated shape is exactly { origin, discoveryTag, uri,
         // storage } — objectId is read by the Nostr adapter internally to
         // parse the wire event, then DISCARDED before the lead is built
-        // (application/NostrDiscoveryQueryService.js's own candidates are
+        // (application/nostr/NostrDiscoveryQueryService.js's own candidates are
         // bare { uri, storage } pairs) — checked directly against the
         // live lead, not merely read from a comment.
         assert(Object.keys(lead).sort().join(',') === 'discoveryTag,origin,storage,uri',
@@ -315,12 +315,12 @@ async function run() {
         // (just proven live, above) but is wired into exactly ONE narrow
         // pathway — World View's own known-objectId World Encounter
         // lookup — never into Repository's own composition root.
-        const snapshotQuerySource = await readSource('application/NostrSnapshotDiscoveryQueryService.js');
+        const snapshotQuerySource = await readSource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         assert(snapshotQuerySource.includes('class NostrSnapshotDiscoveryQueryService'),
-            '5. Snapshot already has its OWN dedicated read-side query service (application/NostrSnapshotDiscoveryQueryService.js).');
-        const placeNamingQuerySource = await readSource('application/PlaceNamingDiscoveryQueryService.js');
+            '5. Snapshot already has its OWN dedicated read-side query service (application/nostr/NostrSnapshotDiscoveryQueryService.js).');
+        const placeNamingQuerySource = await readSource('application/placeNaming/PlaceNamingDiscoveryQueryService.js');
         assert(placeNamingQuerySource.includes('class PlaceNamingDiscoveryQueryService'),
-            '6. Place Naming ALSO already has its own read-side query service (application/PlaceNamingDiscoveryQueryService.js).');
+            '6. Place Naming ALSO already has its own read-side query service (application/placeNaming/PlaceNamingDiscoveryQueryService.js).');
         const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
         assert(/discoverSnapshotCandidatesCommand|discoverSnapshotCommand/.test(ownPanelSource),
             '7. Snapshot\'s read-side query service is wired into a real UI browsing surface (ui/components/OwnPublicationPanel.js).');
@@ -328,9 +328,9 @@ async function run() {
         // 4b. The one place a Publication-kind Nostr query service IS
         // actually composed in production: World View's own known-objectId
         // World Encounter discovery, confirmed by its real import.
-        const worldEncounterDiscoveryCompositionSource = await readSource('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
-        assert(worldEncounterDiscoveryCompositionSource.includes("import { NostrDiscoveryQueryService } from './NostrDiscoveryQueryService.js'"),
-            '8a. application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js DOES compose a real NostrDiscoveryQueryService for Publication/Avatar kinds — the read side genuinely exists in production, not merely proven in this test\'s own fake relay.');
+        const worldEncounterDiscoveryCompositionSource = await readSource('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
+        assert(worldEncounterDiscoveryCompositionSource.includes("import { NostrDiscoveryQueryService } from '../nostr/NostrDiscoveryQueryService.js'"),
+            '8a. application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js DOES compose a real NostrDiscoveryQueryService for Publication/Avatar kinds — the read side genuinely exists in production, not merely proven in this test\'s own fake relay.');
 
         // 4c. But its results are never admitted into the SAME
         // decentralizedPublicationDiscoveryProvider Repository search
@@ -365,7 +365,7 @@ async function run() {
         // 5. discoveryTag is an APP-WIDE CONFIGURED value, not derived
         // from title/author/documentId — confirmed structurally against
         // the real constructor, which requires the CALLER to supply it.
-        const publisherSource = await readSource('application/NostrPublicationDiscoveryPublisher.js');
+        const publisherSource = await readSource('application/nostr/NostrPublicationDiscoveryPublisher.js');
         assert(publisherSource.includes("if (typeof discoveryTag !== 'string' || discoveryTag.length === 0)"),
             '10. discoveryTag is a required constructor argument the caller supplies — never derived from the Publication\'s own title, author, or documentId.');
     }
@@ -401,8 +401,8 @@ async function run() {
         // explicitly forbids assuming, checked as an absence rather than
         // merely never having been proposed.
         const discoveryFiles = ['discovery/CompositeDiscoveryProvider.js', 'discovery/LocalDiscoveryProvider.js',
-            'discovery/DecentralizedPublicationDiscoveryProvider.js', 'application/CreateDiscoveryUseCase.js',
-            'application/SearchPublicationsUseCase.js'];
+            'discovery/DecentralizedPublicationDiscoveryProvider.js', 'application/discovery/CreateDiscoveryUseCase.js',
+            'application/publication/SearchPublicationsUseCase.js'];
         for (const file of discoveryFiles) {
             const source = await readSource(file);
             assert(!/crawl|indexer|spider|background.?fetch/i.test(source),
@@ -550,7 +550,7 @@ async function run() {
     {
         assert(NostrDiscoveryQueryService.DEFAULT_RELAY_URL === 'wss://relay.damus.io',
             '1. a real relay query targets one specific relay by default — no fan-out across multiple relays exists.');
-        const queryServiceSource = await readSource('application/NostrDiscoveryQueryService.js');
+        const queryServiceSource = await readSource('application/nostr/NostrDiscoveryQueryService.js');
         assert(queryServiceSource.includes('DEFAULT_TIMEOUT_MS = 8000'),
             '2. a real relay query carries an 8-second default timeout PER CALL — a network-integrated Repository search would inherit an up-to-8-second stall per query, per relay, for every keystroke-driven search unless deliberately debounced.');
         assert(queryServiceSource.includes('DEFAULT_MAX_RESULTS = 20'),
@@ -563,7 +563,7 @@ async function run() {
         assert(!/partial|pending|incomplete|stale/i.test(pageSource),
             '5. core/PublicationPage.js carries no partial/pending/incomplete/stale flag — Repository search today has no vocabulary for "these results might still be growing."');
 
-        const searchSource = await readSource('application/SearchPublicationsUseCase.js');
+        const searchSource = await readSource('application/publication/SearchPublicationsUseCase.js');
         assert(!/^\s*async execute/m.test(searchSource),
             '6. SearchPublicationsUseCase.execute() is declared synchronously — confirmed again here, from the performance angle: adding a network hop would mean this method could no longer keep its own current, synchronous, deterministic contract at all, for every caller, not only a network-aware one.');
     }
@@ -618,16 +618,16 @@ async function run() {
     // ===============================================================
     {
         const checklist = [
-            { item: 'network calls into Repository', proof: async () => !/Nostr|peer\/|fetch\(|WebSocket/i.test((await readSource('application/CreateDiscoveryUseCase.js'))) },
-            { item: 'asynchronous Repository search', proof: async () => !/^\s*async execute/m.test(await readSource('application/SearchPublicationsUseCase.js')) },
+            { item: 'network calls into Repository', proof: async () => !/Nostr|peer\/|fetch\(|WebSocket/i.test((await readSource('application/discovery/CreateDiscoveryUseCase.js'))) },
+            { item: 'asynchronous Repository search', proof: async () => !/^\s*async execute/m.test(await readSource('application/publication/SearchPublicationsUseCase.js')) },
             { item: 'new search lifecycle semantics', proof: async () => !/signal|cancel|abort/i.test(await readSource('core/PublicationQuery.js')) },
             { item: 'caching', proof: async () => !/cache/i.test(await readSource('discovery/CompositeDiscoveryProvider.js')) },
             { item: 'remote result types', proof: async () => !/source:|origin:|provenance:/i.test((await readSource('discovery/CompositeDiscoveryProvider.js')).slice((await readSource('discovery/CompositeDiscoveryProvider.js')).indexOf('export class'))) },
             { item: 'deduplication', proof: async () => !/dedup|deduplicat/i.test((await readSource('discovery/CompositeDiscoveryProvider.js')).slice((await readSource('discovery/CompositeDiscoveryProvider.js')).indexOf('export class'))) },
             { item: 'source attribution', proof: async () => !('source' in new Publication({ documentId: 'x', title: 'x', author: 'x', providerId: 'x', contentHash: 'x', schemaVersion: 3, license: new License({ id: LicenseId.CC0_1_0 }), contentReference: new ContentReference({ hash: 'x', algorithm: 'fnv1a-32', mediaType: 'application/json', size: 1 }), publisherIdentity: null, signature: null })) },
             { item: 'freshness', proof: async () => !/stale|freshness|ttl|expires/i.test(await readSource('discovery/DecentralizedPublicationDiscoveryProvider.js')) },
-            { item: 'cancellation', proof: async () => !/cancel|abort/i.test(await readSource('application/SearchPublicationsUseCase.js')) },
-            { item: 'error aggregation', proof: async () => !/AggregateError|errors:\s*\[/i.test(await readSource('application/SearchPublicationsUseCase.js')) }
+            { item: 'cancellation', proof: async () => !/cancel|abort/i.test(await readSource('application/publication/SearchPublicationsUseCase.js')) },
+            { item: 'error aggregation', proof: async () => !/AggregateError|errors:\s*\[/i.test(await readSource('application/publication/SearchPublicationsUseCase.js')) }
         ];
         let missingCount = 0;
         for (const entry of checklist) {

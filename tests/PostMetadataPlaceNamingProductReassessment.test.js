@@ -5,12 +5,12 @@ import { namingView as deriveNamingView, rankClaimsByName } from '../core/PlaceN
 import {
     buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope
 } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, buildPlaceNamingClaimPublication } from '../application/PlaceNamingClaimPublication.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStore.js';
+import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, buildPlaceNamingClaimPublication } from '../application/placeNaming/PlaceNamingClaimPublication.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -206,7 +206,7 @@ async function runTests() {
             assert(await sourceExists(file), `A1. ${file} still exists as the authoritative record for its own stage of the pipeline.`);
         }
 
-        const exchangeSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimExchange.js'));
+        const exchangeSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js'));
         const validateIdx = exchangeSource.indexOf('validatePlaceNamingClaimPublication(pkg)');
         const constructIdx = exchangeSource.indexOf('PlaceNamingClaim.fromJSON(pkg.claim)');
         const verifyIdx = exchangeSource.indexOf('this._verifier.verifyPlaceNamingClaim(');
@@ -307,9 +307,9 @@ async function runTests() {
         // either.
         const callSiteCounts = new Map();
         for (const file of [
-            'application/PlaceNamingClaimUseCase.js',
-            'application/PlaceNamingClaimPublicationKind.js',
-            'application/PlaceNamingClaimExchange.js'
+            'application/placeNaming/PlaceNamingClaimUseCase.js',
+            'application/placeNaming/PlaceNamingClaimPublicationKind.js',
+            'application/placeNaming/PlaceNamingClaimExchange.js'
         ]) {
             const code = codeOnlyLines(await rawSource(file));
             const matches = code.match(/verifyPlaceNamingClaim\(/g) || [];
@@ -342,7 +342,7 @@ async function runTests() {
         // a new claim about what that vocabulary means to a viewer — not
         // a metadata field sitting on data already flowing to the row the
         // way createdAt was.
-        assert(!uiVerifyHits && callSiteCounts.get('application/PlaceNamingClaimExchange.js') === 1,
+        assert(!uiVerifyHits && callSiteCounts.get('application/placeNaming/PlaceNamingClaimExchange.js') === 1,
             'B5. sanity restated: the read-only call this section just made (B2) is NOT reachable from any existing session/UI boundary — it required constructing a bare LocalAuthorizationVerifier directly, exactly as a NEW capability would need to.');
 
         console.log('✓ B: the verifier already returns a stable, meaningful, non-boolean result ("signature -> existing verification boundary -> meaningful result," never "signature bytes -> display") — LIVE-PROVEN to distinguish tampering from impersonation from validity with distinct reasons. But every real call site remains bound to a mutating operation, and no non-mutating path from UI to that result exists anywhere in this codebase. Signature presentation is classified a NEW verification/UI capability, not a missing metadata field — exactly the distinction this milestone\'s own brief drew.');
@@ -354,7 +354,7 @@ async function runTests() {
     // adopted"?
     // ---------------------------------------------------------------
     {
-        const useCaseSource = await rawSource('application/PlaceNamingClaimUseCase.js');
+        const useCaseSource = await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js');
         const useCaseCode = codeOnlyLines(useCaseSource);
         assert(useCaseCode.includes('existing.authorIdentityId !== authorIdentityId') && useCaseCode.includes('return false'),
             'C1. PlaceNamingClaimUseCase#retract() still gates removal on authorship, unchanged since 0.5.2/0.9.265.');
@@ -374,8 +374,8 @@ async function runTests() {
         // C3. None of the five candidate meanings the brief lists has ANY
         // implementation anywhere in the Place Naming layer — checked
         // individually rather than assumed collectively absent.
-        const storeSource = codeOnlyLines(await rawSource('application/LocalPlaceNamingClaimStore.js'));
-        const exchangeSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimExchange.js'));
+        const storeSource = codeOnlyLines(await rawSource('application/placeNaming/LocalPlaceNamingClaimStore.js'));
+        const exchangeSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js'));
         const claimSource = codeOnlyLines(await rawSource('core/PlaceNamingClaim.js'));
         const combined = `${useCaseCode}\n${storeSource}\n${exchangeSource}\n${claimSource}`;
         const candidateVocabulary = [
@@ -457,18 +457,18 @@ async function runTests() {
     // propagates, and no product requirement demands that it should.
     // ---------------------------------------------------------------
     {
-        const nostrSource = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoverySource.js'));
+        const nostrSource = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoverySource.js'));
         assert(!/publishEvent|sendEvent|broadcast|\.publish\(/i.test(nostrSource),
-            'E1. application/NostrPlaceNamingDiscoverySource.js still contains no publish/send/broadcast call of any kind — read-only, unchanged.');
+            'E1. application/placeNaming/NostrPlaceNamingDiscoverySource.js still contains no publish/send/broadcast call of any kind — read-only, unchanged.');
 
-        const exchangeSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimExchange.js'));
+        const exchangeSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js'));
         const importClaimBody = exchangeSource.slice(exchangeSource.indexOf('importClaim(pkg)'), exchangeSource.indexOf('importClaim(pkg)') + 700);
         assert(!/publish|broadcast|gossip|relay|nostr/i.test(importClaimBody),
             'E2. importClaim()\'s own body still contains no publish/broadcast/gossip/relay reference of any kind.');
 
         // E3. No "propagate my adoption" vocabulary exists anywhere in the
         // Place Naming layer — checked directly rather than assumed.
-        const useCaseSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimUseCase.js'));
+        const useCaseSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js'));
         const combined = `${nostrSource}\n${exchangeSource}\n${useCaseSource}`;
         for (const term of ['announceAdoption', 'propagateAdoption', 'syncAdoption', 'broadcastAdoption', 'shareAdoption']) {
             assert(!new RegExp(term, 'i').test(combined), `E3. No "${term}" vocabulary exists anywhere in the Place Naming layer.`);

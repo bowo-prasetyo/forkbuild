@@ -15,16 +15,16 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { validatePublicationSnapshotPlacement, PublicationSnapshotPlacementError } from '../application/PublicationSnapshotPlacementValidator.js';
-import { CreatePublicationSnapshotPlacementUseCase } from '../application/CreatePublicationSnapshotPlacementUseCase.js';
-import { AddPublicationSnapshotPlacementUseCase } from '../application/AddPublicationSnapshotPlacementUseCase.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { CreateExternalSnapshotPlacementUseCase } from '../application/CreateExternalSnapshotPlacementUseCase.js';
-import { SnapshotPlacementCreationOutcome } from '../application/SnapshotPlacementCreationOutcome.js';
-import { SnapshotPlacementResolver } from '../application/SnapshotPlacementResolver.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { validatePublicationSnapshotPlacement, PublicationSnapshotPlacementError } from '../application/snapshot/placement/PublicationSnapshotPlacementValidator.js';
+import { CreatePublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js';
+import { AddPublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { CreateExternalSnapshotPlacementUseCase } from '../application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js';
+import { SnapshotPlacementCreationOutcome } from '../application/snapshot/placement/SnapshotPlacementCreationOutcome.js';
+import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
 
 // 0.8.18 — Decentralized Snapshot Placement Foundation.
 //
@@ -121,7 +121,7 @@ function makeFakeIpfsNode(network) {
 
 // A single-publication world: Alice publishes locally, and the returned
 // collaborators are exactly what a real composition root would wire
-// through application/CreateSnapshotPlacementOrchestratorUseCase.js.
+// through application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js.
 function publishLocally(title = 'Placement Test') {
     const storage = new InMemoryStorageProvider();
     const alice = makeIdentity('alice');
@@ -240,7 +240,7 @@ async function run() {
         assert(threw, '20. an unregistered storage name throws');
 
         // Corrupt the locally stored snapshot bytes so the integrity
-        // check fails, mirroring application/ResolvePublicationUseCase.js's
+        // check fails, mirroring application/publication/ResolvePublicationUseCase.js's
         // own identical refusal.
         const record = storage.load('forkbuild-publications').find((r) => r.id === publication.id);
         storage.save('snapshot:' + publication.id, { ...storage.load('snapshot:' + publication.id), tampered: true });

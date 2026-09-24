@@ -1,4 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises';
+import { applicationFiles } from './support/ApplicationFiles.js';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -107,7 +108,7 @@ async function run() {
     // on the latter, never the former.
     // ===============================================================
     {
-        const recordSrc = await source('application/BaseAnchorPublicationRecord.js');
+        const recordSrc = await source('application/anchoring/base/BaseAnchorPublicationRecord.js');
         assert(/constructor\(\{ contentHash, txid, network, createdAt \} = \{\}\)/.test(recordSrc),
             n('A1. BaseAnchorPublicationRecord\'s own constructor destructures exactly { contentHash, txid, network, createdAt } — no publicationId, no anchorType, no proof, no locator'));
         assert(!/publicationId/.test(codeOnly(recordSrc)), n('A2. no code in BaseAnchorPublicationRecord.js mentions publicationId at all — this is a genuinely different identity shape than PublicationAnchor, not a renamed subset'));
@@ -119,16 +120,16 @@ async function run() {
         assert(/anchorType/.test(anchorSrc) && !/anchorType/.test(codeOnly(recordSrc)),
             n('A5. anchorType — the field a ProofVerifier is keyed and dispatched by — exists on PublicationAnchor and nowhere in BaseAnchorPublicationRecord'));
 
-        const verifierSrc = await source('application/ExternalAnchorVerifier.js');
+        const verifierSrc = await source('application/anchoring/ExternalAnchorVerifier.js');
         assert(/resolvedProofVerifier\.verify\(anchor\.proof, \{/.test(verifierSrc),
-            n('A6. application/ExternalAnchorVerifier.js calls verify() with anchor.proof drawn from a constructed PublicationAnchor instance — a hypothetical BaseProofVerifier would be handed THIS envelope\'s own proof, never a BaseAnchorPublicationRecord'));
+            n('A6. application/anchoring/ExternalAnchorVerifier.js calls verify() with anchor.proof drawn from a constructed PublicationAnchor instance — a hypothetical BaseProofVerifier would be handed THIS envelope\'s own proof, never a BaseAnchorPublicationRecord'));
 
         // A7. The same separation already holds for Bitcoin and Arweave —
         // confirming this is the established pattern a Base implementation
         // would follow, not a novel design question this audit invents.
-        const bitcoinRecordExists = await sourceExists('application/BitcoinAnchorPublicationRecord.js');
-        assert(bitcoinRecordExists, n('A7. application/BitcoinAnchorPublicationRecord.js exists as Bitcoin\'s own, separate publication-identity class, confirming the same anchor-record/PublicationAnchor split already holds one chain over'));
-        const bitcoinRecordSrc = await source('application/BitcoinAnchorPublicationRecord.js');
+        const bitcoinRecordExists = await sourceExists('application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js');
+        assert(bitcoinRecordExists, n('A7. application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js exists as Bitcoin\'s own, separate publication-identity class, confirming the same anchor-record/PublicationAnchor split already holds one chain over'));
+        const bitcoinRecordSrc = await source('application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js');
         assert(!/anchorType/.test(codeOnly(bitcoinRecordSrc)), n('A8. BitcoinAnchorPublicationRecord.js likewise carries no anchorType field — the split is a codebase-wide convention, not a Base-specific gap'));
 
         console.log('✓ Section A: a Base publication\'s own durable identity record and the separate, older PublicationAnchor envelope a ProofVerifier actually inspects are confirmed as two distinct shapes with no field-level overlap on anchorType/publicationId — exactly as already true for Bitcoin, and never conflated by this audit.');
@@ -237,7 +238,7 @@ async function run() {
     // authorship/ownership, the precedent a Base verifier would follow.
     // ===============================================================
     {
-        const encodingSrc = await source('application/BasePublicationCommitmentEncoding.js');
+        const encodingSrc = await source('application/anchoring/base/BasePublicationCommitmentEncoding.js');
         assert(/export function decodeBasePublicationCommitment\(data\) \{/.test(encodingSrc), n('E1. decodeBasePublicationCommitment() already exists — the exact decode step a BaseProofVerifier would need, requiring no new encoding design'));
         assert(/return data\.slice\(2\)\.toLowerCase\(\);/.test(encodingSrc), n('E2. it is a pure, one-line, symmetric inverse of encodeBasePublicationCommitment() — case-normalized, matching how anchoring/BitcoinOpReturnProofVerifier.js\'s own contentHash comparison also normalizes to lowercase'));
         assert(/SYMMETRIC AND LOSSLESS/.test(encodingSrc), n('E3. the file\'s own header documents this symmetry as deliberate, not incidental'));
@@ -260,7 +261,7 @@ async function run() {
     // "payload independently readable."
     // ===============================================================
     {
-        const useCaseSrc = await source('application/CreateBaseAnchorPublicationRecordUseCase.js');
+        const useCaseSrc = await source('application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js');
         assert(/CALL THIS AT SUCCESSFUL FINALIZATION, NEVER EARLIER/.test(useCaseSrc), n('F1. a BaseAnchorPublicationRecord is minted at FINALIZATION — before broadcast is even attempted, let alone confirmed — confirming "this pipeline produced a record" and "this transaction is independently verifiable on-chain" are already, structurally, two different moments'));
         assert(/THE TRANSACTION IDENTITY COMES FROM THE FINALIZED ARTIFACT, NEVER FROM\s*\n\/\/ THE BROADCASTER OR AN RPC LOOKUP/.test(useCaseSrc), n('F2. the record\'s own txid is a locally-computed hash, never an RPC-confirmed fact — reinforcing that record creation and independent verifiability are not the same claim'));
 
@@ -270,7 +271,7 @@ async function run() {
         // F4. Inclusion (Section F3) and payload (Section D) are two
         // separate reads today — Bitcoin/Arweave get both from one call
         // (Sections B5/C5); Base does not.
-        assert(!/fetchTransactionReceipt/.test(codeOnly(await source('application/BasePublicationCommitmentEncoding.js'))), n('F4. confirmed structurally: nothing already wires inclusion observation (fetchTransactionReceipt) to payload decoding (decodeBasePublicationCommitment) — they are two separate existing capabilities, never yet joined into one verification call the way Bitcoin\'s and Arweave\'s own single reads already are'));
+        assert(!/fetchTransactionReceipt/.test(codeOnly(await source('application/anchoring/base/BasePublicationCommitmentEncoding.js'))), n('F4. confirmed structurally: nothing already wires inclusion observation (fetchTransactionReceipt) to payload decoding (decodeBasePublicationCommitment) — they are two separate existing capabilities, never yet joined into one verification call the way Bitcoin\'s and Arweave\'s own single reads already are'));
 
         console.log('✓ Section F: this codebase already treats "a record was minted," "a transaction was broadcast," and "a transaction was included" as three separate, honestly-distinguished facts — never conflating any of them with "independently verifiable." A future BaseProofVerifier inherits that same discipline for free; it does not need to invent it.');
     }
@@ -300,21 +301,21 @@ async function run() {
     // the confirmed absence of any Base equivalent.
     // ===============================================================
     {
-        assert(/register\(proofVerifier\) \{/.test(await source('application/ExternalProofVerifierRegistry.js')), n('H1. ExternalProofVerifierRegistry#register() exists and keys purely by the plugin\'s own anchorType — a future BaseProofVerifier would register through this exact, unmodified method'));
+        assert(/register\(proofVerifier\) \{/.test(await source('application/anchoring/ExternalProofVerifierRegistry.js')), n('H1. ExternalProofVerifierRegistry#register() exists and keys purely by the plugin\'s own anchorType — a future BaseProofVerifier would register through this exact, unmodified method'));
 
-        const bitcoinUseCase = await source('application/CreateBitcoinAnchorProofVerifierUseCase.js');
-        const arweaveUseCase = await source('application/CreateArweaveAnchorProofVerifierUseCase.js');
+        const bitcoinUseCase = await source('application/anchoring/bitcoin/CreateBitcoinAnchorProofVerifierUseCase.js');
+        const arweaveUseCase = await source('application/anchoring/CreateArweaveAnchorProofVerifierUseCase.js');
         assert(/export class CreateBitcoinAnchorProofVerifierUseCase \{/.test(bitcoinUseCase) && /export class CreateArweaveAnchorProofVerifierUseCase \{/.test(arweaveUseCase),
             n('H2. both existing chains follow the identical "Create*AnchorProofVerifierUseCase — a thin composition-root wrapper constructing one concrete verifier" shape — the pattern a CreateBaseAnchorProofVerifierUseCase would mirror'));
 
         assert(!(await sourceExists('anchoring/BaseProofVerifier.js')), n('H3a. anchoring/BaseProofVerifier.js does not exist'));
         assert(!(await sourceExists('anchoring/BaseOpReturnProofVerifier.js')), n('H3b. no alternately-named Base ProofVerifier file exists either'));
-        assert(!(await sourceExists('application/CreateBaseAnchorProofVerifierUseCase.js')), n('H3c. no CreateBaseAnchorProofVerifierUseCase.js exists — reconfirming 0.9.460 Section K4\'s own finding still holds against current source'));
+        assert(!(await sourceExists('application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js')), n('H3c. no CreateBaseAnchorProofVerifierUseCase.js exists — reconfirming 0.9.460 Section K4\'s own finding still holds against current source'));
 
         // H4. Zero changes needed to the shared pipeline itself for a
         // future Base implementation to plug in.
-        const externalAnchorVerifierSrc = codeOnly(await source('application/ExternalAnchorVerifier.js'));
-        const registrySrc = codeOnly(await source('application/ExternalProofVerifierRegistry.js'));
+        const externalAnchorVerifierSrc = codeOnly(await source('application/anchoring/ExternalAnchorVerifier.js'));
+        const registrySrc = codeOnly(await source('application/anchoring/ExternalProofVerifierRegistry.js'));
         const anchorSrc = codeOnly(await source('core/PublicationAnchor.js'));
         for (const [label, src] of [['ExternalAnchorVerifier.js', externalAnchorVerifierSrc], ['ExternalProofVerifierRegistry.js', registrySrc], ['core/PublicationAnchor.js', anchorSrc]]) {
             assert(!/bitcoin|arweave|base(?!Line)/i.test(src), n(`H4[${label}]. this shared pipeline file names no concrete chain at all (Bitcoin, Arweave, or Base) — a future BaseProofVerifier needs zero change to it, the identical seam Bitcoin's and Arweave's own additions already proved out`));
@@ -330,9 +331,8 @@ async function run() {
     // ===============================================================
     {
         const baseDirFiles = (await readdir(path.join(SOURCE_ROOT, 'base'))).filter((f) => f.endsWith('.js')).map((f) => `base/${f}`);
-        const baseAppFiles = (await readdir(path.join(SOURCE_ROOT, 'application')))
-            .filter((f) => (f.startsWith('Base') || f.startsWith('CreateBase')) && f.endsWith('.js'))
-            .map((f) => `application/${f}`);
+        const baseAppFiles = applicationFiles()
+            .filter((f) => /\/(Create)?Base[^/]*$/.test(f));
         const allBaseFiles = [...baseDirFiles, ...baseAppFiles];
         assert(allBaseFiles.length >= 50, n(`I1. a full-surface scan covers ${allBaseFiles.length} real Base-named files (12 base/*.js plus ${baseAppFiles.length} application/Base*.js and application/CreateBase*.js) — wider than 0.9.460 Section K7's own twelve-file scope`));
 

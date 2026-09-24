@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeWorldFromDiscoverySources } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeWorldFromDiscoverySources } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import {
     registerPeerWorldSource,
     unregisterPeerWorldSource

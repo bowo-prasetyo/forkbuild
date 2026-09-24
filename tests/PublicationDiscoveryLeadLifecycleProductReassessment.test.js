@@ -2,22 +2,22 @@ import { readFile } from 'node:fs/promises';
 
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/LocalSnapshotCandidateDiscoveryQueryService.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { ArweaveSnapshotDiscoveryQueryService } from '../application/ArweaveSnapshotDiscoveryQueryService.js';
-import { SnapshotCandidateDiscoveryQueryService } from '../application/SnapshotCandidateDiscoveryQueryService.js';
-import { composeSnapshotCandidateDiscoveryRuntime } from '../application/SnapshotCandidateDiscoveryRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
+import { SnapshotCandidateDiscoveryQueryService } from '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
+import { composeSnapshotCandidateDiscoveryRuntime } from '../application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
-import { resolveDecentralizedWorldEncounterLead } from '../application/DecentralizedWorldEncounterLeadResolution.js';
+import { resolveDecentralizedWorldEncounterLead } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
-import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../application/SnapshotOutcomeInspectionView.js';
+import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../application/snapshot/SnapshotOutcomeInspectionView.js';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
@@ -79,7 +79,7 @@ class InMemoryStorageProvider extends StorageProvider {
 
 // A real Arweave-shaped CONTENT gateway (put()/get() bytes) — separate
 // from the DISCOVERY gateway below, exactly as content/
-// ArweaveContentStore.js and application/ArweaveSnapshotDiscoveryQueryService.js
+// ArweaveContentStore.js and application/arweave/ArweaveSnapshotDiscoveryQueryService.js
 // remain two independent substrates in production.
 function makeFakeArweaveContentGateway() {
     const network = new Map();
@@ -295,11 +295,11 @@ async function run() {
         // structurally distinct, not merely distinct by naming
         // convention.
         const candidateFamilyFiles = [
-            'application/SnapshotCandidateDiscoveryQueryService.js',
-            'application/LocalSnapshotCandidateDiscoveryQueryService.js',
-            'application/NostrSnapshotDiscoveryQueryService.js',
-            'application/ArweaveSnapshotDiscoveryQueryService.js',
-            'application/DecentralizedSnapshotResolver.js'
+            'application/snapshot/SnapshotCandidateDiscoveryQueryService.js',
+            'application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js',
+            'application/nostr/NostrSnapshotDiscoveryQueryService.js',
+            'application/arweave/ArweaveSnapshotDiscoveryQueryService.js',
+            'application/snapshot/DecentralizedSnapshotResolver.js'
         ];
         // Checked against CODE only (comments may legitimately discuss the
         // relationship between the two vocabularies, as
@@ -310,7 +310,7 @@ async function run() {
             const code = await codeOnlySource(file);
             assert(!/import[^;]*DecentralizedWorldDiscoveryLead/.test(code), `A2. ${file} never IMPORTS the search-index lead vocabulary (may still mention it in a comment)`);
         }
-        const leadModuleAndSiblings = ['core/DecentralizedWorldDiscoveryLead.js', 'application/DecentralizedWorldEncounterLeadResolution.js', 'application/DecentralizedWorldEncounterLeadSelection.js'];
+        const leadModuleAndSiblings = ['core/DecentralizedWorldDiscoveryLead.js', 'application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js', 'application/worldEncounter/DecentralizedWorldEncounterLeadSelection.js'];
         for (const file of leadModuleAndSiblings) {
             const code = await codeOnlySource(file);
             assert(!/import[^;]*(SnapshotCandidateDiscoveryQueryService|DecentralizedSnapshotResolver)/.test(code), `A2b. ${file} never IMPORTS the walking-triggered Snapshot candidate vocabulary`);
@@ -413,7 +413,7 @@ async function run() {
         assert(collided.length === 1, 'B4. the SAME storage+contentHash+locator triple, reported by two different sources, collapses to exactly one candidate — this is the one case that IS the same claim');
         assert(collided[0].publicationId === 'pub-b-nostr-claim' || collided[0].publicationId === 'pub-b-local-claim', 'B5. the surviving candidate keeps whichever source\'s own metadata arrived first in source order, never a merge of both');
     }
-    console.log('✓ Section B: candidate multiplicity is preserved exactly along the lines core/PublicationSnapshotPlacement.js and application/SnapshotCandidateDiscoveryQueryService.js already establish (storage+contentHash+locator identity, contentHash-sharing across unrelated Publications preserved, publicationId never part of the dedup key) — reconfirms 0.9.150/0.9.485/0.9.500 with fresh, real, hash-derived data.');
+    console.log('✓ Section B: candidate multiplicity is preserved exactly along the lines core/PublicationSnapshotPlacement.js and application/snapshot/SnapshotCandidateDiscoveryQueryService.js already establish (storage+contentHash+locator identity, contentHash-sharing across unrelated Publications preserved, publicationId never part of the dedup key) — reconfirms 0.9.150/0.9.485/0.9.500 with fresh, real, hash-derived data.');
 
     // ===============================================================
     // SECTION C — Discovery does not silently become verification.
@@ -528,7 +528,7 @@ async function run() {
         assert(mismatchResult.candidates.length === 1, 'E7. no fallback candidate is fabricated or appended');
         assert(mismatchResult.bytes === null, 'E8. no bytes are exposed for a candidate that failed verification');
     }
-    console.log('✓ Section E: every resolution failure mode (STORE_UNAVAILABLE, CONTENT_UNAVAILABLE, CONTENT_HASH_MISMATCH) reports the exact candidate object handed in, by reference — a failed resolution never mutates, replaces, or upgrades the candidate it was asked to resolve. Reconfirms application/DecentralizedSnapshotResolver.js\'s own 0.9.134/0.9.152 contract with an explicit reference-identity check no prior test asserted this directly.');
+    console.log('✓ Section E: every resolution failure mode (STORE_UNAVAILABLE, CONTENT_UNAVAILABLE, CONTENT_HASH_MISMATCH) reports the exact candidate object handed in, by reference — a failed resolution never mutates, replaces, or upgrades the candidate it was asked to resolve. Reconfirms application/snapshot/DecentralizedSnapshotResolver.js\'s own 0.9.134/0.9.152 contract with an explicit reference-identity check no prior test asserted this directly.');
 
     // ===============================================================
     // SECTION F — Multi-source convergence stays failure-isolated,
@@ -542,7 +542,7 @@ async function run() {
         const localRef = await place(world, localBytes);
         addLocalPlacement(world, { publicationId: 'pub-f', reference: localRef, id: 'placement-f-local' });
 
-        // Peer: application/PublicationSnapshotPlacementPeerExchange.js's
+        // Peer: application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js's
         // own, already-production passive ANNOUNCE path (0.9.483/0.9.484)
         // delivers a peer-originated placement into this SAME catalog —
         // the catalog itself carries no origin field (0.9.485's own
@@ -603,7 +603,7 @@ async function run() {
             assert(!('source' in candidate) && !('origin' in candidate), 'F6. no candidate carries a source/origin field — downstream code (resolution, verification) cannot even ask which substrate a candidate came from, let alone prefer one');
         }
     }
-    console.log('✓ Section F: Local + Peer (via the shared placement catalog, per 0.9.483/0.9.484\'s own already-production passive path) + Nostr + Arweave converge through Promise.allSettled() exactly as application/SnapshotCandidateDiscoveryQueryService.js already guarantees — failure-isolated, arrival-ordered (never re-ranked), non-fallback, and source-blind. Reconfirms 0.9.485/0.9.500 with all four origins in the SAME call, including one genuinely broken fifth source neither prior audit exercised.');
+    console.log('✓ Section F: Local + Peer (via the shared placement catalog, per 0.9.483/0.9.484\'s own already-production passive path) + Nostr + Arweave converge through Promise.allSettled() exactly as application/snapshot/SnapshotCandidateDiscoveryQueryService.js already guarantees — failure-isolated, arrival-ordered (never re-ranked), non-fallback, and source-blind. Reconfirms 0.9.485/0.9.500 with all four origins in the SAME call, including one genuinely broken fifth source neither prior audit exercised.');
 
     // ===============================================================
     // SECTION G — Walking-triggered discovery: movement is merely a
@@ -638,7 +638,7 @@ async function run() {
         // Structural: the monitor never imports resolution, verification,
         // materialization, or placement — movement decides WHEN to ask,
         // never WHAT the answer means.
-        const monitorCode = await codeOnlySource('application/WorldSnapshotDiscoveryMonitor.js');
+        const monitorCode = await codeOnlySource('application/snapshot/WorldSnapshotDiscoveryMonitor.js');
         for (const forbidden of ['DecentralizedSnapshotResolver', 'ContentReference', 'SnapshotPlacementResolver', 'MaterializeSnapshot', 'registerMaterializedSnapshot', 'WorldEncounter']) {
             assert(!monitorCode.includes(forbidden), `G5. WorldSnapshotDiscoveryMonitor.js's own CODE never references ${forbidden} — movement triggers discovery only, never resolution/verification/materialization/placement/encounter semantics (its own header comment may still discuss the boundary in prose)`);
         }
@@ -725,7 +725,7 @@ async function run() {
             // already strips them for structural checks elsewhere.
             const template = templateMatch[1].replace(/<!--[\s\S]*?-->/g, '');
             assert(!forbiddenPattern.test(template), `I2. ${file}'s own ACTUALLY-RENDERED template markup (HTML comments excluded) contains no accidental trust/ownership/preference claim (trusted/authentic/official/owned/recommended/"best snapshot"/preferred)`);
-            assert(!/\bverified\b/i.test(template), `I3. ${file}'s own actually-rendered template never uses the bare word "verified" — see application/SnapshotOutcomeInspectionView.js's own 0.9.528 "Confirmed to match" discipline instead`);
+            assert(!/\bverified\b/i.test(template), `I3. ${file}'s own actually-rendered template never uses the bare word "verified" — see application/snapshot/SnapshotOutcomeInspectionView.js's own 0.9.528 "Confirmed to match" discipline instead`);
         }
 
         // The actual label vocabulary a candidate's own lifecycle renders

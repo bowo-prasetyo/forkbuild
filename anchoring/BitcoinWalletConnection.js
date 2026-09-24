@@ -1,4 +1,4 @@
-import { BitcoinWalletConnectionState } from '../application/BitcoinWalletConnectionState.js';
+import { BitcoinWalletConnectionState } from '../application/anchoring/bitcoin/BitcoinWalletConnectionState.js';
 
 // 0.8.58 — Explicit Bitcoin Wallet Connection & Signing UX.
 //
@@ -46,7 +46,7 @@ import { BitcoinWalletConnectionState } from '../application/BitcoinWalletConnec
 // nothing else in this codebase, discards it.
 //
 // A NARROW, EXPLICIT CONNECTION LIFECYCLE — NOTHING GUESSED AT. See
-// application/BitcoinWalletConnectionState.js for the full vocabulary
+// application/anchoring/bitcoin/BitcoinWalletConnectionState.js for the full vocabulary
 // (DISCONNECTED / CONNECTING / CONNECTED / UNAVAILABLE) this class reports
 // its own `.status` through.
 //

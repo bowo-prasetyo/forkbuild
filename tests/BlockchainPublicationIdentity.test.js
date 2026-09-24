@@ -1,6 +1,6 @@
-import { BlockchainKind, isValidBlockchainKind } from '../application/BlockchainKind.js';
-import { BlockchainPublicationIdentity } from '../application/BlockchainPublicationIdentity.js';
-import { BitcoinAnchorPublicationRecord } from '../application/BitcoinAnchorPublicationRecord.js';
+import { BlockchainKind, isValidBlockchainKind } from '../application/anchoring/BlockchainKind.js';
+import { BlockchainPublicationIdentity } from '../application/anchoring/BlockchainPublicationIdentity.js';
+import { BitcoinAnchorPublicationRecord } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js';
 
 // 0.8.89 — Multi-Blockchain Publication Domain Boundary.
 //
@@ -10,7 +10,7 @@ import { BitcoinAnchorPublicationRecord } from '../application/BitcoinAnchorPubl
 // NEVER the same publication, because `blockchain` is always part of
 // their identity. Nothing in this file constructs a real Base publisher,
 // signer, or broadcaster — Base has no implementation yet (see
-// application/BlockchainKind.js's own header) — this file only proves
+// application/anchoring/BlockchainKind.js's own header) — this file only proves
 // that the shared, chain-independent identity SHAPE this milestone
 // introduces already refuses to conflate two chains, before a second
 // chain's own concrete implementation ever exists.

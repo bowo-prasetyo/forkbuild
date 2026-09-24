@@ -4,18 +4,18 @@ import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
-import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/RoleAwareProviderResolver.js';
+import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { ExternalProofVerifierRegistry } from '../application/ExternalProofVerifierRegistry.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { ExternalProofVerifierRegistry } from '../application/anchoring/ExternalProofVerifierRegistry.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
-import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
 
 // 0.9.295 — Role-Aware Provider Resolution Boundary.
 // See docs/Roadmap.md, "0.9.295 — Role-Aware Provider Resolution
-// Boundary," and application/RoleAwareProviderResolver.js's own header for
+// Boundary," and application/settings/RoleAwareProviderResolver.js's own header for
 // the full model this milestone builds on (0.9.293's RoleProviderPreference,
 // 0.9.294's RoleProviderPreferenceStore).
 //
@@ -453,7 +453,7 @@ async function run() {
     // its two named collaborators.
     // ===============================================================
     {
-        const resolverSource = await source('application/RoleAwareProviderResolver.js');
+        const resolverSource = await source('application/settings/RoleAwareProviderResolver.js');
         const importLines = resolverSource.split('\n').filter((line) => /^import\b/.test(line));
         assert(importLines.length === 2, `L1. exactly two imports — RoleProviderRole and RoleProviderPreferenceStore (found ${importLines.length})`);
         const forbiddenImportPattern = /^import\b[^\n]*from\s*['"][^'"]*(nostr|arweave|ipfs|bitcoin|anchoring|content\/|discovery\/|base\/|ui\/)[^'"]*['"]/im;
@@ -469,7 +469,7 @@ async function run() {
     // unknown role is a programming error, never a resolution outcome.
     //
     // UPDATED by 0.9.297 — Role Provider Preference Application Boundary
-    // — application/ResolvePreferredRoleProviderUseCase.js is now a
+    // — application/settings/ResolvePreferredRoleProviderUseCase.js is now a
     // second, legitimate reference: it reads a RoleProviderPreference
     // directly from the store AND delegates resolution to THIS resolver's
     // own resolve(). UPDATED AGAIN by 0.9.299 — Content Creation Provider
@@ -484,7 +484,7 @@ async function run() {
     // stay exactly as before this milestone — only Content placement
     // CREATION now has a real, live path to this resolver. UPDATED AGAIN
     // by 0.9.301 — Preferred Content Provider Placement Trigger —
-    // application/SnapshotPlacementCreationView.js now imports
+    // application/snapshot/placement/SnapshotPlacementCreationView.js now imports
     // RoleProviderResolutionStatus from this same file so its own
     // describeCreationAttempt() can name a PROVIDER_NOT_FOUND result
     // honestly (see that file's own 0.9.301 header); it reads the
@@ -496,19 +496,19 @@ async function run() {
     {
         const allProductionFiles = await repoWideProductionFiles();
         // UPDATED by 0.9.302 — Content Provider Preference Settings Entry
-        // Point. application/SetRoleProviderPreferenceUseCase.js's own
+        // Point. application/settings/SetRoleProviderPreferenceUseCase.js's own
         // header names RoleAwareProviderResolver in prose only (explaining
         // why the WRITE-side use case deliberately has no such dependency)
         // — it never imports or references the class in actual code, see
         // Section J's own sweep above for that stronger check.
         const KNOWN_RESOLVER_FILES = new Set([
-            'application/RoleAwareProviderResolver.js',
-            'application/ResolvePreferredRoleProviderUseCase.js',
-            'application/PreferredSnapshotPlacementCreationCoordinator.js',
-            'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
-            'application/SnapshotPlacementCreationView.js',
-            'application/SnapshotPlacementCreationUiState.js',
-            'application/SetRoleProviderPreferenceUseCase.js'
+            'application/settings/RoleAwareProviderResolver.js',
+            'application/settings/ResolvePreferredRoleProviderUseCase.js',
+            'application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js',
+            'application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
+            'application/snapshot/placement/SnapshotPlacementCreationView.js',
+            'application/snapshot/placement/SnapshotPlacementCreationUiState.js',
+            'application/settings/SetRoleProviderPreferenceUseCase.js'
         ]);
         let hits = 0;
         const hitFiles = [];
@@ -519,7 +519,7 @@ async function run() {
                 hitFiles.push(file);
             }
         }
-        assert(hits === KNOWN_RESOLVER_FILES.size && hitFiles.every((f) => KNOWN_RESOLVER_FILES.has(f)), `M1. only application/RoleAwareProviderResolver.js, its 0.9.297 application-boundary consumer, the 0.9.299 Content creation seam, and the 0.9.302 settings write use case (in prose only) mention RoleAwareProviderResolver in production source (found ${hits}: ${hitFiles.join(', ')}) — no OTHER composition root wires it in, so existing publication distribution, Snapshot distribution, discovery, material loading, and anchoring paths behave exactly as before this milestone`);
+        assert(hits === KNOWN_RESOLVER_FILES.size && hitFiles.every((f) => KNOWN_RESOLVER_FILES.has(f)), `M1. only application/settings/RoleAwareProviderResolver.js, its 0.9.297 application-boundary consumer, the 0.9.299 Content creation seam, and the 0.9.302 settings write use case (in prose only) mention RoleAwareProviderResolver in production source (found ${hits}: ${hitFiles.join(', ')}) — no OTHER composition root wires it in, so existing publication distribution, Snapshot distribution, discovery, material loading, and anchoring paths behave exactly as before this milestone`);
         for (const file of hitFiles) {
             assert(KNOWN_RESOLVER_FILES.has(file), `M1b. "${file}" is not one of the known legitimate references to RoleAwareProviderResolver`);
         }

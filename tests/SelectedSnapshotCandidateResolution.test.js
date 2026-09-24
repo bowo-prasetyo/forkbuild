@@ -3,12 +3,12 @@ import { readFile } from 'node:fs/promises';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
@@ -371,7 +371,7 @@ async function run() {
         const result = await resolver.resolveCandidate(candidate, { storeRegistry: registry });
         assert(result.candidates.length === 1 && result.candidates[0] === candidate, '8a. the result names exactly the one candidate supplied — never a set to choose among');
 
-        const resolverCode = await codeOnlySource('application/DecentralizedSnapshotResolver.js');
+        const resolverCode = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
         assert((resolverCode.match(/this\._queryService\.search\(/g) || []).length === 1,
             '8b. queryService.search() is still called from exactly one place (resolve()\'s own DISCOVERY step) — resolveCandidate() never calls it');
 
@@ -391,8 +391,8 @@ async function run() {
         assert(!('attribution' in result), '9a. the result carries no attribution field of any kind');
         assert(result.outcome !== 'MATCH' && result.outcome !== 'NO_MATCH', '9b. the outcome is never MATCH/NO_MATCH — that vocabulary belongs to SnapshotPublicationAttribution alone');
 
-        const resolverCode = await codeOnlySource('application/DecentralizedSnapshotResolver.js');
-        const commandCode = await codeOnlySource('application/ResolveSelectedSnapshotCommand.js');
+        const resolverCode = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
+        const commandCode = await codeOnlySource('application/snapshot/ResolveSelectedSnapshotCommand.js');
         for (const code of [resolverCode, commandCode]) {
             assert(!/\bMATCH\b|\bNO_MATCH\b|\bATTRIBUTION\b/.test(code), '9c. neither file references the uppercase MATCH/NO_MATCH/ATTRIBUTION outcome vocabulary — that belongs to SnapshotPublicationAttribution alone (lowercase prose like "does not match" is unaffected)');
         }
@@ -562,14 +562,14 @@ async function run() {
     // Section M — architectural regression.
     // ---------------------------------------------------------------
     {
-        const resolverCode = await codeOnlySource('application/DecentralizedSnapshotResolver.js');
+        const resolverCode = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
         assert((resolverCode.match(/new ContentReference\(/g) || []).length === 1,
             '35. exactly ONE place constructs a ContentReference for retrieval — resolve() delegates to resolveCandidate() rather than duplicating that logic');
         assert((resolverCode.match(/\.verify\(bytes\)/g) || []).length === 1,
             '36. exactly ONE verification call site exists — one actual candidate->retrieval->verification path, never two');
         assert((resolverCode.match(/async resolveCandidate\(/g) || []).length === 1, '37. resolveCandidate() is defined exactly once');
 
-        const commandCode = await codeOnlySource('application/ResolveSelectedSnapshotCommand.js');
+        const commandCode = await codeOnlySource('application/snapshot/ResolveSelectedSnapshotCommand.js');
         assert(!/^import /m.test(commandCode), '38. ResolveSelectedSnapshotCommand.js imports nothing — no resolver class, no ContentStore, no query service');
         assert(!/new ArweaveContentStore|new NostrSnapshotDiscoveryQueryService|new DecentralizedSnapshotResolver|executeDiscoverSnapshotCommand|executeDiscoverSnapshotCandidatesCommand/.test(commandCode),
             '39. ResolveSelectedSnapshotCommand.js never constructs infrastructure or calls the other discovery/resolution commands');

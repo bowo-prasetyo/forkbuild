@@ -1,16 +1,16 @@
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND } from '../core/BlueprintAttribution.js';
-import { LocalBlueprintAttributionStore } from '../application/LocalBlueprintAttributionStore.js';
-import { createBlueprintAttributionPublicationKind } from '../application/BlueprintAttributionPublicationKind.js';
+import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
+import { createBlueprintAttributionPublicationKind } from '../application/blueprint/BlueprintAttributionPublicationKind.js';
 
 // 0.7.2 — Decentralized Publication Discovery & Catalog.
 //
@@ -24,7 +24,7 @@ import { createBlueprintAttributionPublicationKind } from '../application/Bluepr
 //              is not yet locally available still catalogs cleanly, and
 //              stays cataloged, unchanged, across a
 //              CONTENT_UNAVAILABLE -> RESOLVED transition driven entirely
-//              by application/PublicationResolver.js, never by the
+//              by application/publication/PublicationResolver.js, never by the
 //              catalog itself
 //
 // See docs/Principles.md, "Discovery Is Not Resolution (0.7.2)."

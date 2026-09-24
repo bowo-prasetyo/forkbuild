@@ -2,19 +2,19 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-import { orchestratePublicationDistribution } from '../application/PublicationDistributionOrchestrator.js';
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { composePublicationDistributionRuntime } from '../application/PublicationDistributionRuntimeComposition.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { orchestratePublicationDistribution } from '../application/publication/distribution/PublicationDistributionOrchestrator.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.430 — Announcement/Discovery Provider Selection Reachability.
 //
 // 0.9.429's own audit found the exact seam this milestone closes:
-// `application/PublicationDistributionRuntimeComposition.js`'s own
+// `application/publication/distribution/PublicationDistributionRuntimeComposition.js`'s own
 // `discoveryProvider: 'nostr' | 'arweave'` selection (0.9.428) was real,
 // correct, and completely unreachable from any real caller — every
 // production click silently distributed on Nostr. This milestone threads
@@ -384,7 +384,7 @@ async function run() {
         // The composition-root binding itself: arweaveAnnouncementPublisherOptions
         // is forwarded verbatim, never spread into or reconstructed from
         // individual fields, at the one seam this milestone touches.
-        const compositionCode = codeOnly(await source('application/PublicationDistributionCommandComposition.js'));
+        const compositionCode = codeOnly(await source('application/publication/distribution/PublicationDistributionCommandComposition.js'));
         assert(/arweaveAnnouncementPublisherOptions,/.test(compositionCode) && !/\.\.\.arweaveAnnouncementPublisherOptions/.test(compositionCode),
             n('F3. PublicationDistributionCommandComposition.js forwards arweaveAnnouncementPublisherOptions as one opaque value, never destructured or spread into individual fields'));
 
@@ -430,9 +430,9 @@ async function run() {
         // validation, too — never duplicated at any of the layers this
         // milestone threaded discoveryProvider through.
         for (const file of [
-            'application/PublicationDistributionOrchestrator.js',
-            'application/PublicationDistributionCommand.js',
-            'application/PublicationDistributionCommandComposition.js'
+            'application/publication/distribution/PublicationDistributionOrchestrator.js',
+            'application/publication/distribution/PublicationDistributionCommand.js',
+            'application/publication/distribution/PublicationDistributionCommandComposition.js'
         ]) {
             const code = codeOnly(await source(file));
             assert(!/unrecognized discoveryProvider/.test(code),

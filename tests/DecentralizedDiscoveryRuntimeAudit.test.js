@@ -1,29 +1,29 @@
 import { readFile } from 'node:fs/promises';
 
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
-import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQueryService.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
     composeDecentralizedWorldEncounterMaterialDiscoveryRuntime
-} from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
-import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';
-import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/DecentralizedWorldDiscoveryLeadRegistry.js';
-import { queryDecentralizedWorldDiscoveryIntoRegistry } from '../application/DecentralizedWorldDiscoveryQueryRegistryBridge.js';
-import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
-import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
-import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { resolveSnapshotPublicationAttribution } from '../application/SnapshotPublicationAttribution.js';
-import { SnapshotPublicationAttributionOutcome } from '../application/SnapshotPublicationAttributionOutcome.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
+import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { queryDecentralizedWorldDiscoveryIntoRegistry } from '../application/discovery/DecentralizedWorldDiscoveryQueryRegistryBridge.js';
+import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
+import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { resolveSnapshotPublicationAttribution } from '../application/snapshot/SnapshotPublicationAttribution.js';
+import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -481,8 +481,8 @@ async function run() {
         // Structural confirmation: neither query service's own file imports
         // the other's envelope module — the separation is architectural,
         // not merely a fixture coincidence.
-        const worldServiceCode = await codeOnlySource('application/NostrDiscoveryQueryService.js');
-        const snapshotServiceCode = await codeOnlySource('application/NostrSnapshotDiscoveryQueryService.js');
+        const worldServiceCode = await codeOnlySource('application/nostr/NostrDiscoveryQueryService.js');
+        const snapshotServiceCode = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         assert(!worldServiceCode.includes('SnapshotDiscoveryEnvelope'), 'C4. NostrDiscoveryQueryService never imports the Snapshot envelope module');
         assert(!snapshotServiceCode.includes('DecentralizedDiscoveryEnvelope'), 'C5. NostrSnapshotDiscoveryQueryService never imports the Decentralized (World Material) envelope module');
 
@@ -797,7 +797,7 @@ async function run() {
         // carries no attribution vocabulary of its own; only verified
         // Snapshot bytes ever reach MATCH/NO_MATCH.
         {
-            const registryCode = await codeOnlySource('application/DecentralizedWorldDiscoveryLeadRegistry.js');
+            const registryCode = await codeOnlySource('application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js');
             const leadCode = await codeOnlySource('core/DecentralizedWorldDiscoveryLead.js');
             assert(!/\bMATCH\b|\bNO_MATCH\b|ATTRIBUT/i.test(registryCode), 'G4. the lead registry never references MATCH/NO_MATCH or any form of ATTRIBUTION');
             assert(!/\bMATCH\b|\bNO_MATCH\b|ATTRIBUT/i.test(leadCode), 'G5. a lead\'s own description carries no attribution vocabulary either — a lead stays a rumor about a location, never a verdict');

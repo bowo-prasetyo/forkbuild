@@ -1,15 +1,15 @@
 import { CameraPerspective } from '../core/CameraPerspective.js';
-import { SpatialCameraController } from '../application/SpatialCameraController.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { ORIGIN_LOCATION_ID } from '../application/WorldLocationDirectory.js';
+import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { ORIGIN_LOCATION_ID } from '../application/world/WorldLocationDirectory.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { AvatarPresence } from '../core/AvatarPresence.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.3.2 — Avatar & Camera Experience: fixing the "Control My Avatar"
 // checkbox reset bug.

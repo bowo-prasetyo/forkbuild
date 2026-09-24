@@ -4,7 +4,7 @@ export const WorldOperationOutcome = Object.freeze({
     // Executed cleanly, and its effect is currently present in the World.
     APPLIED: 'APPLIED',
     // Ordered in (it passed every authorization/idempotency check
-    // application/WorldCommandPropagationUseCase.js already runs) but,
+    // application/document/WorldCommandPropagationUseCase.js already runs) but,
     // at its canonical position in the log, its own execute()
     // precondition was not satisfied — see this file's own header,
     // "Delete vs. modify." NOT a rejection: the operation was
@@ -50,7 +50,7 @@ export const WorldOperationOutcome = Object.freeze({
 // based"). The convergence guarantee comes entirely from WHEN and in
 // WHAT SEQUENCE those two already-existing methods get invoked, which
 // is exactly why every Command in this codebase already being safely
-// re-executable after undo() (application/CommandHistory.js's own
+// re-executable after undo() (application/editor/CommandHistory.js's own
 // redo() already depends on this) is what makes this resolver correct,
 // not a new requirement it imposes.
 //
@@ -87,7 +87,7 @@ export const WorldOperationOutcome = Object.freeze({
 // already does for a completely different object type. Idempotent per
 // operationId: recording or applying the same operationId twice is a
 // no-op the second time, the same defense-in-depth
-// application/WorldCommandPropagationUseCase.js's own ReplayGuard check
+// application/document/WorldCommandPropagationUseCase.js's own ReplayGuard check
 // already provides one layer up — this class never assumes it is the
 // only thing standing between a retransmit and a double-apply.
 export class WorldConflictResolver {
@@ -143,7 +143,7 @@ export class WorldConflictResolver {
 
         const tail = log.slice(index);
         // Undo the tail, LIFO (most-recently-applied first) — exactly
-        // application/CommandHistory.js's own undo() ordering, applied
+        // application/editor/CommandHistory.js's own undo() ordering, applied
         // here across possibly more than one command. Entries already
         // SUPERSEDED (applied === false) have no effect currently
         // present in the World and are skipped, never undone.

@@ -12,19 +12,19 @@ import {
     buildBlueprintPackage,
     BLUEPRINT_KIND,
     CURRENT_SCHEMA_VERSION as BLUEPRINT_SCHEMA_VERSION
-} from '../application/BlueprintPackage.js';
-import { validateBlueprintPackage, BlueprintPackageError } from '../application/BlueprintImportValidator.js';
-import { ExportBlueprintUseCase } from '../application/ExportBlueprintUseCase.js';
-import { ImportBlueprintUseCase } from '../application/ImportBlueprintUseCase.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { derivePublicationEvidenceConvergence } from '../application/PublicationEvidenceConvergence.js';
+} from '../application/blueprint/BlueprintPackage.js';
+import { validateBlueprintPackage, BlueprintPackageError } from '../application/blueprint/BlueprintImportValidator.js';
+import { ExportBlueprintUseCase } from '../application/blueprint/ExportBlueprintUseCase.js';
+import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprintUseCase.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { derivePublicationEvidenceConvergence } from '../application/publication/evidence/PublicationEvidenceConvergence.js';
 import {
     ImportPackageAnchorsUseCase,
     PackageAnchorImportReason
-} from '../application/ImportPackageAnchorsUseCase.js';
+} from '../application/anchoring/ImportPackageAnchorsUseCase.js';
 
 // 0.8.7 — External Evidence Import & Publication Package Integration.
 //
@@ -43,10 +43,10 @@ import {
 //
 // `anchors` never becomes part of the Structure, never gets ranked,
 // deduplicated by anything but the anchor's own id, or silently trusted —
-// see application/BlueprintPackage.js's own header for why no separate
+// see application/blueprint/BlueprintPackage.js's own header for why no separate
 // PublicationPackage container was introduced, and application/
 // ImportPackageAnchorsUseCase.js's own header for why package import
-// reuses application/PublicationAnchorExchange.js's existing validate ->
+// reuses application/anchoring/PublicationAnchorExchange.js's existing validate ->
 // construct -> verify SIGNATURE -> catalog boundary rather than building
 // a second one.
 //
@@ -204,7 +204,7 @@ async function run() {
 
         // ImportBlueprintUseCase is UNCHANGED by this milestone — it still
         // only ever returns a Structure; reading pkg.anchors back out is
-        // application/ImportPackageAnchorsUseCase.js's own job (Section C).
+        // application/anchoring/ImportPackageAnchorsUseCase.js's own job (Section C).
         const rebuiltStructure = new ImportBlueprintUseCase().execute(bundledPkg);
         assert(rebuiltStructure instanceof Structure && rebuiltStructure.name === structure.name,
             '12. ImportBlueprintUseCase still only ever returns a Structure, unaffected by bundled anchors');
@@ -369,7 +369,7 @@ async function run() {
         assert(bob.catalog.has(bitcoinAnchor.id), '4. the anchor is genuinely in Bob\'s own catalog');
 
         // Before any verification: derive evidence convergence over what
-        // Bob's catalog now knows — application/PublicationEvidenceConvergence.js
+        // Bob's catalog now knows — application/publication/evidence/PublicationEvidenceConvergence.js
         // (0.8.6), completely unchanged by this milestone.
         const knownAnchors = bob.catalog.findByPublicationId('pub-flagship');
         const convergence = derivePublicationEvidenceConvergence({

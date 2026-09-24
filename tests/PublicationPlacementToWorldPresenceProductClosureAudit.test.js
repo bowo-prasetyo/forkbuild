@@ -8,18 +8,18 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
-import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { LoadPublishedWorldSessionUseCase } from '../application/LoadPublishedWorldSessionUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
+import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { LoadPublishedWorldSessionUseCase } from '../application/publication/LoadPublishedWorldSessionUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { SpatialCameraController } from '../application/SpatialCameraController.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Publication } from '../publisher/Publication.js';
 import { World } from '../core/World.js';
@@ -143,7 +143,7 @@ function seedRepositoryAdmittedPublication(decentralizedProvider, { id, document
     return publication;
 }
 
-// Builds every collaborator application/CreateWorldViewUseCase.js
+// Builds every collaborator application/world/CreateWorldViewUseCase.js
 // itself builds (post-0.9.605), in the SAME shape and order, over a
 // real, unmodified WorldNavigationSession — reused verbatim from
 // tests/PublicationWorldRenderingDiscoveryWiringFix.test.js's own
@@ -279,7 +279,7 @@ async function run() {
     // to a PlacementRecord; claimedPosition stays inert.
     // ===============================================================
     {
-        const placeSrc = await readSource('application/PlacePublicationUseCase.js');
+        const placeSrc = await readSource('application/placement/PlacePublicationUseCase.js');
         assert(!/claimedPosition/.test(placeSrc),
             'C1. PlacePublicationUseCase.js never reads claimedPosition — position is only ever the caller\'s own explicit argument.');
 
@@ -361,7 +361,7 @@ async function run() {
         // Row 4 — placed, material unavailable: discoverable/positioned
         // (spatial index has nothing to say about material), but
         // _loadWorld() refuses, and — critically — updateSpatialView()'s
-        // own try/catch (application/WorldNavigationSession.js) is what
+        // own try/catch (application/world/WorldNavigationSession.js) is what
         // turns that refusal into the "Unavailable" UI signal
         // (ui/views/WorldView.js's own failedWorlds section), never a
         // silent success.
@@ -612,7 +612,7 @@ async function run() {
         assert(harness.session.isDocumentPublished(localPub.documentId) === true,
             'H2. Still correctly marked published via _isKnownPublication()/_findPublications() (the narrow, unwidened discoveryProvider) — fork-policy\'s own choke point, unchanged.');
 
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),
             'H3. Source-reconfirmed: fork-policy\'s own _findPublications() still reads only the narrow discoveryProvider — this audit touched nothing.');
@@ -692,7 +692,7 @@ async function run() {
         // _resolvePlacementRecord() -> _findPublications() -> the narrow,
         // unwidened discoveryProvider (Section H3's own source check) —
         // the SAME choke point fork-policy uses, and the SAME one
-        // application/WorldNavigationSession.js's own placePublication()
+        // application/world/WorldNavigationSession.js's own placePublication()
         // header (immediately above movePlacement()) documents as a
         // DELIBERATE boundary, citing 0.9.596's own fork-policy rationale.
         {
@@ -731,7 +731,7 @@ async function run() {
         record('K-PlacementsListActions', 'FUTURE_OPTION',
             'OwnPublicationPanel\'s multi-placement list (0.9.308) is read-only per row (no per-row navigate/remove) — already recorded as deliberate future scope in that milestone\'s own header. Reconfirmed still true; not this audit\'s to promote into a requirement.');
         record('K-MoveRemoveDocumentIdScope', 'EXPECTED_BOUNDARY',
-            'LIVE-CONFIRMED (Section J9/J10): getPlacementInfo()/movePlacement()/removePlacement() cannot reach a Repository-admitted-only Publication\'s own placement, even within a single session — they resolve documentId->publication through the narrow discoveryProvider (_findPublications()), never publicationActionDiscoveryProvider. application/WorldNavigationSession.js\'s own placePublication() header documents this as DELIBERATE, citing 0.9.596\'s fork-policy rationale, and 0.9.595\'s own commit message already flagged the read-side half of this exact limit for OwnPublicationPanel. Sharpened here: it also blocks PlacementInfoPanel\'s Move/Remove UI (J7) for such a placement. Pre-existing, already-documented, not introduced by this audit — recorded precisely rather than silently assumed fixed by 0.9.605.');
+            'LIVE-CONFIRMED (Section J9/J10): getPlacementInfo()/movePlacement()/removePlacement() cannot reach a Repository-admitted-only Publication\'s own placement, even within a single session — they resolve documentId->publication through the narrow discoveryProvider (_findPublications()), never publicationActionDiscoveryProvider. application/world/WorldNavigationSession.js\'s own placePublication() header documents this as DELIBERATE, citing 0.9.596\'s fork-policy rationale, and 0.9.595\'s own commit message already flagged the read-side half of this exact limit for OwnPublicationPanel. Sharpened here: it also blocks PlacementInfoPanel\'s Move/Remove UI (J7) for such a placement. Pre-existing, already-documented, not introduced by this audit — recorded precisely rather than silently assumed fixed by 0.9.605.');
         record('K-F', 'ARCHITECTURAL_GAP',
             'Section F: a durable PlacementRecord survives a real session boundary; the Publication it points to does not, because publicationId->documentId/material resolution depends entirely on a non-persisted, in-memory discovery accumulator (DecentralizedPublicationDiscoveryProvider), and WorldPlacement deliberately carries no documentId of its own to fall back on. The Publication vanishes from every World-presence UI signal with no error, no "Unavailable" badge — worse than a genuine material failure, which at least surfaces honestly (Section D4/J4). Fixing this durably requires either persisting Repository admission or widening what a placement/PlacementRecord itself durably carries — both are storage-shape changes, i.e., architectural, not a wiring seam like 0.9.603-0.9.605\'s own fixes.');
         record('K-Cosmetic', 'COSMETIC',

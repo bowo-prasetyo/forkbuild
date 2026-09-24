@@ -1,15 +1,16 @@
 import { readFile } from 'node:fs/promises';
+import { worldViewSourceWithTemplate } from './support/SourceFileGroups.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
-import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
-import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
+import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
     composeDecentralizedWorldEncounterMaterialDiscoveryRuntime
-} from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
 
 // 0.9.110 — Decentralized Material Retrieval Runtime Composition.
 //
@@ -329,7 +330,7 @@ async function runTests() {
     // Section F — architectural sweep
     // -------------------------------------------------------------
     {
-        const compositionUrl = new URL('../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js', import.meta.url);
+        const compositionUrl = new URL('../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js', import.meta.url);
         const compositionSource = await readFile(compositionUrl, 'utf8');
         const compositionCodeOnly = compositionSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -337,7 +338,7 @@ async function runTests() {
             '22. the composition imports the existing, unmodified inspectWorldEncounterMaterial() — never a second inspection algorithm');
         assert(/import\s*\{\s*resolveDecentralizedWorldEncounterLeadFromRegistry/.test(compositionCodeOnly),
             '23. the composition imports the existing, unmodified resolution boundary — never re-implementing UNAVAILABLE/RESOLVED/AMBIGUOUS itself');
-        assert(compositionCodeOnly.includes("import { queryDecentralizedWorldDiscoveryIntoRegistry } from './DecentralizedWorldDiscoveryQueryRegistryBridge.js';"),
+        assert(compositionCodeOnly.includes("import { queryDecentralizedWorldDiscoveryIntoRegistry } from '../discovery/DecentralizedWorldDiscoveryQueryRegistryBridge.js';"),
             '24. the composition imports the existing, unmodified query→registry bridge — never writing its own registry.setLead() loop from scratch');
         assert(!/verifyIdentity\s*\(|\.signature\s*===|Ed25519|verifyPublication\s*\(/.test(compositionCodeOnly),
             '25. the composition never reads a signature or calls a cryptographic verifier itself — that stays entirely inside the injected verifier');
@@ -347,7 +348,7 @@ async function runTests() {
         const mainUrl = new URL('../ui/main.js', import.meta.url);
         const mainSource = await readFile(mainUrl, 'utf8');
         const mainCodeOnly = mainSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-        assert(/from '\.\.\/application\/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition\.js';/.test(mainCodeOnly)
+        assert(/from '\.\.\/application\/worldEncounter\/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition\.js';/.test(mainCodeOnly)
             && mainCodeOnly.includes('composeDecentralizedWorldEncounterMaterialDiscoveryServices(')
             && mainCodeOnly.includes('composeDecentralizedWorldEncounterMaterialDiscoveryRuntime('),
             '27. ui/main.js imports and actually calls the new composition root');
@@ -357,8 +358,7 @@ async function runTests() {
             && !/worldEncounterMaterialSources\s*=\s*Object\.freeze\(\{/.test(mainCodeOnly),
             "29. ui/main.js reads worldEncounterMaterialSources (including its new .decentralized slot) straight off the composition root's own materialSources — never a second object literal shaping it by hand");
 
-        const viewUrl = new URL('../ui/views/WorldView.js', import.meta.url);
-        const viewSource = await readFile(viewUrl, 'utf8');
+        const viewSource = worldViewSourceWithTemplate();
         const viewCodeOnly = viewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(viewCodeOnly.includes("inject('worldDiscoveryLeadRegistry', null)"),
             '30. WorldView.js injects worldDiscoveryLeadRegistry, defaulting to null — never throwing when absent');

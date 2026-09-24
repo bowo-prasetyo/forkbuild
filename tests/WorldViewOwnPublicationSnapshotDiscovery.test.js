@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -17,7 +17,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // 0.9.140 gave `OwnPublicationPanel` a "Distribute Snapshot" action
 // reachable with zero connected peers and an empty World Encounters
 // panel. This milestone adds the missing other half — "Discover
-// Snapshot" — reaching `application/DecentralizedSnapshotResolver.js`
+// Snapshot" — reaching `application/snapshot/DecentralizedSnapshotResolver.js`
 // (0.9.134), which has existed, fully tested, since before Snapshot
 // distribution itself was ever wired into the UI, but has never been
 // reachable outside its own test suite.
@@ -173,10 +173,10 @@ async function runTests() {
         const code = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         const forbiddenConstruction = [
             "from '../../content/ArweaveContentStore.js'",
-            "from '../../application/NostrSnapshotDiscoveryQueryService.js'",
-            "from '../../application/DecentralizedSnapshotResolver.js'",
-            "from '../../application/DiscoverSnapshotCommand.js'",
-            "from '../../application/DiscoverSnapshotRuntimeComposition.js'",
+            "from '../../application/nostr/NostrSnapshotDiscoveryQueryService.js'",
+            "from '../../application/snapshot/DecentralizedSnapshotResolver.js'",
+            "from '../../application/snapshot/DiscoverSnapshotCommand.js'",
+            "from '../../application/snapshot/DiscoverSnapshotRuntimeComposition.js'",
             'new ArweaveContentStore(', 'new NostrSnapshotDiscoveryQueryService(', 'new DecentralizedSnapshotResolver(',
             'executeDiscoverSnapshotCommand(', 'composeDiscoverSnapshotRuntime(',
             'window.arweaveWallet', 'window.nostr', 'WebSocket'

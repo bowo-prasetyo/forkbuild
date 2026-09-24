@@ -1,13 +1,13 @@
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
-import { BitcoinAnchorBroadcastState } from '../application/BitcoinAnchorBroadcastState.js';
-import { BitcoinAnchorContentProofState } from '../application/BitcoinAnchorContentProofState.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { reconstructBitcoinAnchorDurableEvidence } from '../application/BitcoinAnchorDurableEvidenceView.js';
-import { describeBitcoinAnchorObservationArchive } from '../application/BitcoinAnchorObservationArchiveView.js';
-import { composeBitcoinAnchorObservationEvidence } from '../application/BitcoinAnchorObservationEvidence.js';
-import { describeBitcoinAnchorObservationEvidence } from '../application/BitcoinAnchorObservationEvidenceView.js';
-import { observeBitcoinAnchorChainPlacementChanges } from '../application/BitcoinAnchorChainPlacementObserver.js';
-import { analyzeBitcoinAnchorObservationConsistency } from '../application/BitcoinAnchorObservationConsistencyAnalyzer.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { reconstructBitcoinAnchorDurableEvidence } from '../application/anchoring/bitcoin/BitcoinAnchorDurableEvidenceView.js';
+import { describeBitcoinAnchorObservationArchive } from '../application/anchoring/bitcoin/BitcoinAnchorObservationArchiveView.js';
+import { composeBitcoinAnchorObservationEvidence } from '../application/anchoring/bitcoin/BitcoinAnchorObservationEvidence.js';
+import { describeBitcoinAnchorObservationEvidence } from '../application/anchoring/bitcoin/BitcoinAnchorObservationEvidenceView.js';
+import { observeBitcoinAnchorChainPlacementChanges } from '../application/anchoring/bitcoin/BitcoinAnchorChainPlacementObserver.js';
+import { analyzeBitcoinAnchorObservationConsistency } from '../application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyAnalyzer.js';
 
 // 0.8.79 — Durable Bitcoin Anchor Evidence Restoration & Historical
 // Inspection.
@@ -168,7 +168,7 @@ async function run() {
         assert(postReloadA.consistencyFindings.count === 1 && postReloadB.consistencyFindings.count === 2, '21. each anchor\'s own restored consistency findings are scoped to its own history length');
 
         // The persisted JSON itself never carries a derived section — only
-        // the raw, durable facts application/PublicationObservationArchive.js
+        // the raw, durable facts application/publication/observationArchive/PublicationObservationArchive.js
         // already knows how to hold.
         assert(!('chainPlacementObservations' in persistedJson), '22. the persisted archive JSON never stores chain-placement observations');
         assert(!('consistencyFindings' in persistedJson), '23. the persisted archive JSON never stores consistency findings');

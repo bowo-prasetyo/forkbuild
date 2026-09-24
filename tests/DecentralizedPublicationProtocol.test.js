@@ -7,16 +7,16 @@ import { ContentReference } from '../core/ContentReference.js';
 import {
     validateDecentralizedPublication,
     DecentralizedPublicationError
-} from '../application/DecentralizedPublicationValidator.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
+} from '../application/publication/DecentralizedPublicationValidator.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
-import { LocalBlueprintAttributionStore } from '../application/LocalBlueprintAttributionStore.js';
-import { createBlueprintAttributionPublicationKind } from '../application/BlueprintAttributionPublicationKind.js';
+import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
+import { createBlueprintAttributionPublicationKind } from '../application/blueprint/BlueprintAttributionPublicationKind.js';
 
 // 0.7.0 — Decentralized Publication Protocol & Content Addressing.
 //
@@ -177,7 +177,7 @@ async function run() {
     // 0.7.1 made publish()/resolve() async (a real network-backed
     // ContentStore cannot be synchronous) and made resolve() return a
     // structured `{ outcome, content, publication, reason }` instead of
-    // throwing per step — see application/PublicationResolutionOutcome.js.
+    // throwing per step — see application/publication/PublicationResolutionOutcome.js.
     // Every assertion below exercises that current shape; tests/
     // IpfsPublicationResolution.test.js covers the same discipline
     // against content/IpfsContentStore.js specifically, including the

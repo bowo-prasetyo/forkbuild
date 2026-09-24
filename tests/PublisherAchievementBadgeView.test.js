@@ -1,20 +1,20 @@
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { BlockchainKind } from '../application/BlockchainKind.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { AchievementKind } from '../application/AchievementEvent.js';
-import { describeAchievementBadges, reconstructAchievementBadges } from '../application/AchievementBadgeView.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { AchievementKind } from '../application/achievement/AchievementEvent.js';
+import { describeAchievementBadges, reconstructAchievementBadges } from '../application/achievement/AchievementBadgeView.js';
 import {
     describePublisherAchievementProfile,
     reconstructPublisherAchievementProfile
-} from '../application/PublisherAchievementProfileView.js';
+} from '../application/achievement/PublisherAchievementProfileView.js';
 import {
     describePublisherAchievementBadges,
     reconstructPublisherAchievementBadges
-} from '../application/PublisherAchievementBadgeView.js';
+} from '../application/achievement/PublisherAchievementBadgeView.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 
@@ -221,8 +221,8 @@ async function run() {
         const identityA = archive.bitcoinAnchorPublicationRecords[0].toBlockchainPublicationIdentity();
         archive = associationUseCase.execute(archive, { publisherId: 'Alice', publicationIdentity: identityA, createdAt: new Date('2026-05-02T00:00:00Z') });
 
-        const { PublicationReferenceRecord } = await import('../application/PublicationReferenceRecord.js');
-        const { BlockchainPublicationIdentity } = await import('../application/BlockchainPublicationIdentity.js');
+        const { PublicationReferenceRecord } = await import('../application/publication/PublicationReferenceRecord.js');
+        const { BlockchainPublicationIdentity } = await import('../application/anchoring/BlockchainPublicationIdentity.js');
         const someoneElse = new BlockchainPublicationIdentity({ blockchain: BlockchainKind.BITCOIN, contentHash: 'e-other', chainReference: 'e-other-ref', createdAt: new Date('2026-05-01T00:00:00Z') });
         archive = archive.appendPublicationReferenceRecord(new PublicationReferenceRecord({
             sourcePublicationIdentity: identityA,

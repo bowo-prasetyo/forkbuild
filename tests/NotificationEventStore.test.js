@@ -426,7 +426,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const gitDiffStat = execSync(
-            'git diff --stat HEAD -- core/NotificationEvent.js core/NotificationDeduplicationPolicy.js storage/StorageProvider.js storage/LocalStorageProvider.js application/PublicationCommentaryNotificationProducer.js 2>/dev/null || true',
+            'git diff --stat HEAD -- core/NotificationEvent.js core/NotificationDeduplicationPolicy.js storage/StorageProvider.js storage/LocalStorageProvider.js application/publication/commentary/PublicationCommentaryNotificationProducer.js 2>/dev/null || true',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         assert(gitDiffStat === '', `N1. no pre-existing production file this milestone depends on was modified. Found: ${gitDiffStat || '(none)'}.`);

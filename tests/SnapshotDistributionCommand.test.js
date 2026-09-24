@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
 
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 // 0.9.136 — Snapshot Distribution Command.
@@ -18,7 +18,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 // NostrSnapshotDiscoveryPublisher.js`), and retrieval (`application/
 // DecentralizedSnapshotResolver.js`) — but nothing sequenced placement
 // and discovery into one call for a caller who merely wants to
-// distribute a Snapshot. `application/SnapshotDistributionCommand.js` is
+// distribute a Snapshot. `application/snapshot/SnapshotDistributionCommand.js` is
 // that seam. This file proves it holds:
 //
 //   Section CONTRACT — one direct check per statement below:
@@ -152,12 +152,12 @@ async function run() {
     // full architectural boundary this supersedes), exactly the same
     // "composable, not composed" -> "now composed" transition the
     // Publication family's own 0.9.103/0.9.121 milestones already made for
-    // application/PublicationDistributionCommand.js. This section now
+    // application/publication/distribution/PublicationDistributionCommand.js. This section now
     // records that later fact instead of re-asserting the superseded one.
     {
         const uiMainCode = await codeOnlySource('ui/main.js');
         assert(uiMainCode.includes('executeSnapshotDistributionCommand('), '2a. ui/main.js now calls executeSnapshotDistributionCommand() directly, wired by 0.9.138 — World View Snapshot Distribution Action');
-        console.log('✓ 2. application/SnapshotDistributionCommand.js is a plain, constructible collaborator, wired into ui/main.js by 0.9.138');
+        console.log('✓ 2. application/snapshot/SnapshotDistributionCommand.js is a plain, constructible collaborator, wired into ui/main.js by 0.9.138');
     }
 
     // 3 — contentStore.put() is called strictly before
@@ -278,24 +278,24 @@ async function run() {
     // 8, 9, 10 — structural: no wallet/browser API, no Arweave
     // transaction construction, no Nostr event construction.
     {
-        const code = await codeOnlySource('application/SnapshotDistributionCommand.js');
+        const code = await codeOnlySource('application/snapshot/SnapshotDistributionCommand.js');
 
         const walletBrowserTerms = ['wallet', 'fetch(', 'WebSocket', 'window.', 'navigator.'];
         for (const term of walletBrowserTerms) {
-            assert(!code.includes(term), `8. application/SnapshotDistributionCommand.js never references '${term}' — no direct wallet/browser API`);
+            assert(!code.includes(term), `8. application/snapshot/SnapshotDistributionCommand.js never references '${term}' — no direct wallet/browser API`);
         }
 
         const arweaveTermsForbidden = ['ArweaveContentStore', 'signer.sign', 'transaction', 'gatewayUrl'];
         for (const term of arweaveTermsForbidden) {
-            assert(!code.includes(term), `9. application/SnapshotDistributionCommand.js never references '${term}' — no direct Arweave transaction construction`);
+            assert(!code.includes(term), `9. application/snapshot/SnapshotDistributionCommand.js never references '${term}' — no direct Arweave transaction construction`);
         }
 
         const nostrTermsForbidden = ['NostrSnapshotDiscoveryPublisher', 'relayUrl', 'eventTemplate', 'kind:', 'tags:'];
         for (const term of nostrTermsForbidden) {
-            assert(!code.includes(term), `10. application/SnapshotDistributionCommand.js never references '${term}' — no direct Nostr protocol handling`);
+            assert(!code.includes(term), `10. application/snapshot/SnapshotDistributionCommand.js never references '${term}' — no direct Nostr protocol handling`);
         }
 
-        console.log('✓ 8, 9, 10. application/SnapshotDistributionCommand.js contains no wallet/browser API, no Arweave transaction construction, and no Nostr protocol handling — every one of those stays inside the injected collaborators');
+        console.log('✓ 8, 9, 10. application/snapshot/SnapshotDistributionCommand.js contains no wallet/browser API, no Arweave transaction construction, and no Nostr protocol handling — every one of those stays inside the injected collaborators');
     }
 
     // ===============================================================

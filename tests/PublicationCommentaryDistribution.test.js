@@ -11,13 +11,13 @@ import {
     PublicationCommentaryStore,
     PublicationCommentaryConflictError
 } from '../storage/PublicationCommentaryStore.js';
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
-import { PublicationCommentaryDistributionPeerExchange } from '../application/PublicationCommentaryDistributionPeerExchange.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryDistributionPeerExchange } from '../application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 import { readFile } from 'node:fs/promises';
@@ -36,7 +36,7 @@ import { readFile } from 'node:fs/promises';
 // verifyPublicationCommentaryDistributionEnvelope()), and reuse — never
 // reinvention — of the EXISTING storage/PublicationCommentaryStore.js
 // for arrival dedup, announced over the EXISTING peer transport
-// (peer/PeerMessageBus.js + application/ConnectedPeerRegistry.js).
+// (peer/PeerMessageBus.js + application/peer/ConnectedPeerRegistry.js).
 //
 //   Section A — envelope creation, from a real, already-in-hand
 //               PublicationCommentary.
@@ -457,7 +457,7 @@ async function run() {
     // Section M — Notification remains a local, downstream concern.
     // -------------------------------------------------------------
     {
-        for (const file of ['application/PublicationCommentaryDistributionExchange.js', 'application/PublicationCommentaryDistributionPeerExchange.js', 'core/PublicationCommentaryDistributionEnvelope.js']) {
+        for (const file of ['application/publication/commentary/PublicationCommentaryDistributionExchange.js', 'application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js', 'core/PublicationCommentaryDistributionEnvelope.js']) {
             const src = codeOnly(await rawSource(file));
             assert(!/NotificationEvent|NotificationEventStore/.test(src),
                 `46. ${file} never imports or mentions NotificationEvent/NotificationEventStore — distribution stays structurally incapable of doing Notification's own job`);

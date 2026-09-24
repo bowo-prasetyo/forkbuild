@@ -2,17 +2,17 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License } from '../core/License.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
 import {
     PUBLICATION_CONTENT_KIND,
     validatePublicationContent,
     PublicationContentError
-} from '../application/PublicationContentValidator.js';
-import { createPublicationContentKind } from '../application/PublicationContentKind.js';
+} from '../application/publication/PublicationContentValidator.js';
+import { createPublicationContentKind } from '../application/publication/PublicationContentKind.js';
 
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
-import { createBlueprintAttributionPublicationKind } from '../application/BlueprintAttributionPublicationKind.js';
+import { createBlueprintAttributionPublicationKind } from '../application/blueprint/BlueprintAttributionPublicationKind.js';
 
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -57,7 +57,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //   Section F: tamper detection — content mutated after publish fails
 //              CONTENT_HASH_MISMATCH, the same discipline every other
 //              content kind in this pipeline already gets for free from
-//              application/PublicationResolver.js itself
+//              application/publication/PublicationResolver.js itself
 //
 // See docs/Roadmap.md, 0.9.330 and 0.9.331.
 
@@ -303,7 +303,7 @@ async function run() {
 
     // ---------------------------------------------------------------
     // Section F — tamper detection, inherited for free from
-    // application/PublicationResolver.js's own pipeline
+    // application/publication/PublicationResolver.js's own pipeline
     // ---------------------------------------------------------------
     {
         const alice = makeIdentity('Alice');
@@ -327,7 +327,7 @@ async function run() {
 
         assert(result.outcome === PublicationResolutionOutcome.CONTENT_HASH_MISMATCH, '27. tampering with the stored Publication bytes is caught as a hash mismatch, never silently accepted');
         assert(result.content === null, '28. no content is ever returned on a failed resolution');
-        console.log('✓ Section F: content tampering is caught by application/PublicationResolver.js\'s own existing pipeline — this content kind adds no new trust');
+        console.log('✓ Section F: content tampering is caught by application/publication/PublicationResolver.js\'s own existing pipeline — this content kind adds no new trust');
     }
 
     console.log('\nAll Publication Content Kind tests passed.');

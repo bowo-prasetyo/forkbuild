@@ -1,9 +1,10 @@
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
+import { applicationFiles } from './support/ApplicationFiles.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -18,13 +19,13 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.290 — Publication Commentary Cross-Surface Convergence Audit.
 //
 // 0.9.289 gave Publication Commentary a SECOND independent composition
-// root (application/CreatePublicationCommentaryUseCase.js) alongside the
-// original one (application/CreateWorldViewUseCase.js), so the SAME
+// root (application/publication/commentary/CreatePublicationCommentaryUseCase.js) alongside the
+// original one (application/world/CreateWorldViewUseCase.js), so the SAME
 // domain capability is now reachable from two UI contexts —
 // OwnPublicationPanel.js (through WorldNavigationSession) and
 // PublicationCard.js (through the new, app-wide composition) — with two
@@ -102,7 +103,7 @@ function makeDocument(title, author) {
 // controls exactly what is shared and what is not.
 // ---------------------------------------------------------------------
 
-// Mirrors application/CreateWorldViewUseCase.js's own 0.9.248/0.9.285
+// Mirrors application/world/CreateWorldViewUseCase.js's own 0.9.248/0.9.285
 // commentary + notification wiring — the composition
 // OwnPublicationPanel.js reaches through WorldNavigationSession.
 function buildWorldViewCommentaryRoot({ storageProvider, identityProvider, notificationSink }) {
@@ -133,7 +134,7 @@ function buildWorldViewCommentaryRoot({ storageProvider, identityProvider, notif
     };
 }
 
-// Mirrors application/CreatePublicationCommentaryUseCase.js's own
+// Mirrors application/publication/commentary/CreatePublicationCommentaryUseCase.js's own
 // composition, verbatim — PublicationCard.js's own composition root.
 function buildPublicationCardCommentaryRoot({ storageProvider, identityProvider, notificationSink }) {
     const discoveryProvider = new LocalDiscoveryProvider(storageProvider);
@@ -346,13 +347,13 @@ async function runTests() {
         // absent from every file in the commentary composition/UI chain.
         const forbiddenNames = ['addOwnPublicationCommentary', 'addOtherPublicationCommentary', 'getOwnPublicationCommentaries', 'getOtherPublicationCommentaries'];
         for (const file of [
-            'application/CreateWorldViewUseCase.js',
-            'application/CreatePublicationCommentaryUseCase.js',
-            'ui/views/WorldView.js',
+            'application/world/CreateWorldViewUseCase.js',
+            'application/publication/commentary/CreatePublicationCommentaryUseCase.js',
+            'ui/views/WorldView.js', ...worldViewTemplateFiles(),
             'ui/components/OwnPublicationPanel.js',
             'ui/components/PublicationCard.js',
             'ui/components/PublicationCommentarySection.js',
-            'application/WorldNavigationSession.js',
+            'application/world/WorldNavigationSession.js',
             'ui/main.js'
         ]) {
             const code = await codeOnlySource(file);
@@ -372,8 +373,8 @@ async function runTests() {
     // constructed mutable state)?
     // ---------------------------------------------------------------
     {
-        const worldViewSource = await rawSource('application/CreateWorldViewUseCase.js');
-        const cardSource = await rawSource('application/CreatePublicationCommentaryUseCase.js');
+        const worldViewSource = await rawSource('application/world/CreateWorldViewUseCase.js');
+        const cardSource = await rawSource('application/publication/commentary/CreatePublicationCommentaryUseCase.js');
 
         function countOccurrences(source, needle) {
             return source.split(needle).length - 1;
@@ -424,10 +425,10 @@ async function runTests() {
             LocalDiscoveryProvider: 'discovery/LocalDiscoveryProvider.js',
             PublicationCommentaryStore: 'storage/PublicationCommentaryStore.js',
             NotificationEventStore: 'storage/NotificationEventStore.js',
-            CanCommentOnPublicationUseCase: 'application/CanCommentOnPublicationUseCase.js',
-            GetPublicationCommentariesUseCase: 'application/GetPublicationCommentariesUseCase.js',
-            AddPublicationCommentaryUseCase: 'application/AddPublicationCommentaryUseCase.js',
-            PublicationCommentaryNotificationProducer: 'application/PublicationCommentaryNotificationProducer.js'
+            CanCommentOnPublicationUseCase: 'application/publication/CanCommentOnPublicationUseCase.js',
+            GetPublicationCommentariesUseCase: 'application/publication/commentary/GetPublicationCommentariesUseCase.js',
+            AddPublicationCommentaryUseCase: 'application/publication/commentary/AddPublicationCommentaryUseCase.js',
+            PublicationCommentaryNotificationProducer: 'application/publication/commentary/PublicationCommentaryNotificationProducer.js'
         };
 
         const dangerousStatePattern = /=\s*(new (Map|Set|WeakMap|WeakSet)\(|\[\]|\{\}|setInterval|setTimeout)/;
@@ -527,12 +528,9 @@ async function runTests() {
         // does, everywhere in the codebase.
         const fs = await import('node:fs/promises');
         const path = await import('node:path');
-        const applicationDir = new URL('../application/', import.meta.url);
-        const files = await fs.readdir(applicationDir);
         let constructorSites = 0;
-        for (const file of files) {
-            if (!file.endsWith('.js')) continue;
-            const code = await codeOnlySource(`application/${file}`);
+        for (const file of applicationFiles()) {
+            const code = await codeOnlySource(file);
             const matches = code.match(/new NotificationEvent\(/g);
             if (matches) constructorSites += matches.length;
         }
@@ -819,7 +817,7 @@ async function runTests() {
                viewCode.includes(':addPublicationCommentaryCommand="addPublicationCommentaryCommand"'),
             '63. WorldView.js still wires its own commentary commands onto OwnPublicationPanel, unmodified');
 
-        const compositionCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
+        const compositionCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
         assert(compositionCode.includes('new PublicationCommentaryStore(storageProvider)') &&
                compositionCode.includes('new PublicationCommentaryNotificationProducer('),
             '64. CreateWorldViewUseCase.js still composes its own, independent commentary path, unmodified by this audit');
@@ -833,9 +831,9 @@ async function runTests() {
         // (mirroring OwnPublicationPanel's own real call shape, since
         // this class-level regression test has no WorldNavigationSession
         // to mount), and Alice's own recipient query — the exact
-        // application/GetRecipientNotificationEventsUseCase.js class
+        // application/chat/GetRecipientNotificationEventsUseCase.js class
         // Notification History reads through — sees it.
-        const { GetRecipientNotificationEventsUseCase } = await import('../application/GetRecipientNotificationEventsUseCase.js');
+        const { GetRecipientNotificationEventsUseCase } = await import('../application/chat/GetRecipientNotificationEventsUseCase.js');
         const { identityProvider, publisherProvider, worldViewRoot } = makeTwoSurfaceApp();
         identityProvider.login('alice');
         const publication = publisherProvider.publish(makeDocument('Section J', 'alice'), identityProvider);
@@ -928,7 +926,7 @@ async function runTests() {
         const cardOnlyCode = await codeOnlySource('ui/components/PublicationCard.js');
         const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
         const cardCode = cardOnlyCode + '\n' + sectionCode;
-        const compositionCode = await codeOnlySource('application/CreatePublicationCommentaryUseCase.js');
+        const compositionCode = await codeOnlySource('application/publication/commentary/CreatePublicationCommentaryUseCase.js');
         const mainCode = await codeOnlySource('ui/main.js');
         const combined = cardCode + '\n' + compositionCode;
 
@@ -959,7 +957,7 @@ async function runTests() {
         // 10. Lifecycle coupling between cards.
         assert(typeof PublicationCard.data === 'function' && typeof PublicationCommentarySection.data === 'function', '81. commentary state is still declared through Vue\'s own per-instance data() factory, never a shared object literal');
         // 11. New Commentary vocabulary (forbidden class names from 0.9.289's own brief).
-        for (const file of ['application/CreatePublicationCommentaryUseCase.js', 'ui/components/PublicationCard.js', 'ui/components/PublicationCommentarySection.js', 'ui/main.js']) {
+        for (const file of ['application/publication/commentary/CreatePublicationCommentaryUseCase.js', 'ui/components/PublicationCard.js', 'ui/components/PublicationCommentarySection.js', 'ui/main.js']) {
             const code = await codeOnlySource(file);
             assert(!code.includes('OtherPublicationCommentaryUseCase') && !code.includes('AddCommentToOtherPublicationUseCase'),
                 `82. ${file} introduces neither forbidden Commentary use case name`);

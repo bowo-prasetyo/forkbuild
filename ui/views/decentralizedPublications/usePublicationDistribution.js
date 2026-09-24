@@ -16,7 +16,7 @@ export function usePublicationDistribution({
     const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
     // Eligible, registered Content backends for snapshot distribution
     // ('ipfs'/'ar'; 'local' is never eligible, see
-    // application/SnapshotDistributionContentBackendSelection.js). Read
+    // application/snapshot/SnapshotDistributionContentBackendSelection.js). Read
     // once: the registry is filled at startup.
     const snapshotDistributionAvailableStorageTypesCommand = inject('snapshotDistributionAvailableStorageTypes', null);
     // Saved provider preferences, used only to seed each entry's picker

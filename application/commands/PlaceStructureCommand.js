@@ -15,7 +15,7 @@ import { Command } from './Command.js';
 // elsewhere creates a brand new placement identity, which is correct.
 //
 // Completely ignorant of collision: PlacementValidator-equivalent
-// checking (application/StructurePlacementValidator.js) is the caller's
+// checking (application/editor/StructurePlacementValidator.js) is the caller's
 // job (application/tools/StructurePlacementTool.js), exactly like
 // PlacementTool never asks PlaceBrickCommand to validate itself.
 export class PlaceStructureCommand extends Command {

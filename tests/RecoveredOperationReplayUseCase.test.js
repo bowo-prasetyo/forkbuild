@@ -10,21 +10,21 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { DocumentCommandPropagationUseCase } from '../application/DocumentCommandPropagationUseCase.js';
+import { DocumentCommandPropagationUseCase } from '../application/document/DocumentCommandPropagationUseCase.js';
 import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
-import { DocumentOperationCausalGapObservationUseCase } from '../application/DocumentOperationCausalGapObservationUseCase.js';
-import { DocumentOperationRecoveryUseCase } from '../application/DocumentOperationRecoveryUseCase.js';
+import { DocumentOperationCausalGapObservationUseCase } from '../application/document/DocumentOperationCausalGapObservationUseCase.js';
+import { DocumentOperationRecoveryUseCase } from '../application/document/DocumentOperationRecoveryUseCase.js';
 import { DocumentOperationProvenance } from '../core/DocumentOperationProvenance.js';
 import {
     RecoveredOperationReplayUseCase,
     DocumentOperationReplayOutcome
-} from '../application/RecoveredOperationReplayUseCase.js';
+} from '../application/document/RecoveredOperationReplayUseCase.js';
 import { evaluateApplicationReadiness, DocumentOperationApplicationReadiness } from '../core/DocumentOperationApplicationReadiness.js';
 
 // 0.9.236 — Recovered Operation Replay Boundary.
@@ -33,7 +33,7 @@ import { evaluateApplicationReadiness, DocumentOperationApplicationReadiness } f
 // operation stays inert (RECOVERED, never EXECUTED) until a caller
 // explicitly calls RecoveredOperationReplayUseCase#replay() — and that
 // call is the ONLY way it can ever change document state. See that
-// class's own header in application/RecoveredOperationReplayUseCase.js
+// class's own header in application/document/RecoveredOperationReplayUseCase.js
 // for the full reasoning.
 
 class InMemoryStorageProvider extends StorageProvider {
@@ -100,7 +100,7 @@ function brickX(document) {
 }
 
 // A recovery-capable full stack, wired exactly the way
-// application/EditorSession.js wires them: recovery's own feed attaches to
+// application/editor/EditorSession.js wires them: recovery's own feed attaches to
 // gap observation AND (0.9.236) to a RecoveredOperationReplayUseCase —
 // never to RemoteDocumentOperationApplicationUseCase for the recovered
 // feed itself. Mirrors tests/CausalReadinessEnforcementDecisionAudit.test.js's

@@ -11,15 +11,15 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { AutosaveScheduler } from '../application/AutosaveScheduler.js';
-import { AutosaveDocumentUseCase } from '../application/AutosaveDocumentUseCase.js';
-import { CheckRecoveryUseCase } from '../application/CheckRecoveryUseCase.js';
-import { RecoverDocumentUseCase } from '../application/RecoverDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { AutosaveScheduler } from '../application/document/AutosaveScheduler.js';
+import { AutosaveDocumentUseCase } from '../application/document/AutosaveDocumentUseCase.js';
+import { CheckRecoveryUseCase } from '../application/document/CheckRecoveryUseCase.js';
+import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentUseCase.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
 
@@ -34,7 +34,7 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 // anywhere in this view).
 //
 // THE FIX, deliberately the narrowest one available: AutosaveScheduler
-// gains one new method, flush() (application/AutosaveScheduler.js),
+// gains one new method, flush() (application/document/AutosaveScheduler.js),
 // called from EditorView.js's own onBeforeUnmount() immediately before
 // the existing stop() call. flush() fires the SAME AutosaveDocumentUseCase
 // checkpoint stop() would otherwise let go unfired — never a Save, never
@@ -187,7 +187,7 @@ async function run() {
         // A2 — the production default delay is untouched; flush() is a
         // pure addition, not a reimplementation of the debounce.
         assert(AutosaveScheduler.DEFAULT_DELAY_MS === 2000, 'A2. AutosaveScheduler.DEFAULT_DELAY_MS is still 2000ms — no shorter default debounce was introduced.');
-        const schedulerSource = await readSource('application/AutosaveScheduler.js');
+        const schedulerSource = await readSource('application/document/AutosaveScheduler.js');
         assert(/_schedule\(\) \{\s*this\.cancel\(\);\s*this\._timer = this\._setTimeout\(/.test(schedulerSource),
             'A2b. _schedule()\'s own real body is unchanged — one timer, cancel-then-reschedule, no second scheduling path.');
         assert((schedulerSource.match(/_setTimeout\(/g) || []).length === 1,
@@ -510,12 +510,12 @@ async function run() {
     //    citation: the flush() path adds no new dependency at all.
     // ---------------------------------------------------------------
     {
-        const schedulerSource = await readSource('application/AutosaveScheduler.js');
+        const schedulerSource = await readSource('application/document/AutosaveScheduler.js');
         assert(!/peer|collaboration|Propagation|EventBus/i.test(schedulerSource.replace(/\/\/.*$/gm, '')),
-            'H1. application/AutosaveScheduler.js (flush() included) imports and references nothing from peer/collaboration machinery, and constructs no EventBus of its own — its only imports are DocumentManager itself (a type import, unused by flush()).');
-        const autosaveUseCaseSource = await readSource('application/AutosaveDocumentUseCase.js');
+            'H1. application/document/AutosaveScheduler.js (flush() included) imports and references nothing from peer/collaboration machinery, and constructs no EventBus of its own — its only imports are DocumentManager itself (a type import, unused by flush()).');
+        const autosaveUseCaseSource = await readSource('application/document/AutosaveDocumentUseCase.js');
         assert(!/peer|collaboration|Propagation/i.test(autosaveUseCaseSource.replace(/\/\/.*$/gm, '')),
-            'H2. application/AutosaveDocumentUseCase.js — the SAME collaborator flush() calls — is completely unmodified by this milestone and still has zero collaboration-related references.');
+            'H2. application/document/AutosaveDocumentUseCase.js — the SAME collaborator flush() calls — is completely unmodified by this milestone and still has zero collaboration-related references.');
         // H3. Live confirmation alongside the structural one: flushing
         // never touches documentCommandPropagation/peerMessageBus at
         // all — there is no such collaborator passed into

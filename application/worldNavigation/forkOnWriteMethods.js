@@ -1,4 +1,4 @@
-import { CommandHistory } from '../CommandHistory.js';
+import { CommandHistory } from '../editor/CommandHistory.js';
 import { License } from '../../core/License.js';
 import { SpatialSelectionState } from '../spatial-state/SpatialSelectionState.js';
 import { SpatialHoverState } from '../spatial-state/SpatialHoverState.js';

@@ -1,4 +1,4 @@
-import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../../application/AvatarPresenceLabels.js';
+import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../../application/avatar/AvatarPresenceLabels.js';
 
 // 0.2.39 — the World Entity Interaction & Selection design doc's own
 // mockup, verbatim in what it shows AND in what it deliberately never

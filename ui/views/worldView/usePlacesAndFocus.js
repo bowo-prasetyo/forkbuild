@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { WorldViewPrimaryMode } from '../../../application/WorldViewNavigationState.js';
+import { WorldViewPrimaryMode } from '../../../application/world/WorldViewNavigationState.js';
 import { geographicPlaceLocationId } from '../../../core/GeographicPlaceNavigation.js';
 import { WorldFocusKind } from '../../../core/WorldFocusContext.js';
 import { withReturnWorld, editorEntryContextToQuery } from '../../../core/EditorEntryContext.js';

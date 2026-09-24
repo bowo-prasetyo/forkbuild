@@ -1,15 +1,15 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
-import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../application/WorldEncounterMaterialInspectionView.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
 import { TrustStatus } from '../core/TrustObservation.js';
-import { describeTrustStatus } from '../application/AvatarPresenceLabels.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { describeVerificationOutcome } from '../application/PublicationEvidenceView.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { describePublicationOutcome } from '../application/PublicationResolutionView.js';
+import { describeTrustStatus } from '../application/avatar/AvatarPresenceLabels.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { describeVerificationOutcome } from '../application/publication/evidence/PublicationEvidenceView.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { describePublicationOutcome } from '../application/publication/PublicationResolutionView.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.520 — Product Integrity Boundary Closure Audit.
@@ -144,7 +144,7 @@ async function run() {
         check(/\bid\s*=\s*createId\(\)/.test(publicationSource) && publicationSource.includes('contentHash = null'),
             'B1. publisher/Publication.js still constructs `id` (publicationId) and `contentHash` as two separate constructor fields — never one merged identifier');
 
-        const discoverySource = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const discoverySource = await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         check(discoverySource.includes('uri: envelope.uri,') && discoverySource.includes('announcementId'),
             'B2. a discovered candidate\'s own claimed material location (uri) and the transaction id that carried the announcement (announcementId) stay two separate fields');
 
@@ -152,15 +152,15 @@ async function run() {
         check(decentralizedViewSource.includes('<dt>Locator</dt>') && decentralizedViewSource.includes('<dt>Transaction</dt>') && decentralizedViewSource.includes('<dt>Content hash</dt>'),
             'B3. Locator (material location) / Transaction (anchor proof) / Content hash stay three separately-labeled fields on the Publication Center\'s own detail view');
 
-        const inspectionSource = await source('application/WorldEncounterMaterialInspection.js');
+        const inspectionSource = await source('application/worldEncounter/WorldEncounterMaterialInspection.js');
         check(inspectionSource.includes('resolvedSelection.objectId') || inspectionSource.includes('objectId'),
             'B4. World Encounter material inspection routes on `resolvedSelection.objectId` (the Publication identity a Wanderer selected) — never re-derives or substitutes a contentHash for it');
         check(!/contentHash\s*=\s*resolvedSelection\.objectId|objectId\s*=\s*.*contentHash/.test(inspectionSource),
             'B4b. objectId and contentHash are never assigned into one another inside the World Encounter inspection boundary');
 
-        const evidenceViewSource = await source('application/PublicationEvidenceView.js');
+        const evidenceViewSource = await source('application/publication/evidence/PublicationEvidenceView.js');
         check(!OVERCLAIM_WORDS.test(evidenceViewSource.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n').match(/return `[^`]*`/g)?.join(' ') || ''),
-            'B5. sanity — application/PublicationEvidenceView.js\'s own returned label strings carry no ownership/authorship/trust word (re-checked structurally, independent of 0.9.519\'s own per-outcome assertions)');
+            'B5. sanity — application/publication/evidence/PublicationEvidenceView.js\'s own returned label strings carry no ownership/authorship/trust word (re-checked structurally, independent of 0.9.519\'s own per-outcome assertions)');
 
         console.log('✓ Section B: Publication identity stays coherent across Editor (id/contentHash) -> Discovery (uri/announcementId) -> Anchor (Locator/Transaction/Content hash) -> World Encounter (objectId) — no surface substitutes one artifact for another.');
     }
@@ -198,7 +198,7 @@ async function run() {
         check(arweaveAnchorPublisherSource.includes("get anchorType() { return 'arweave'; }"),
             "C2b. the Arweave ANCHOR's own anchorType is the long form 'arweave' — deliberately a different string literal for the same real-world network");
 
-        const anchorUseCaseSource = await source('application/CreateExternalPublicationAnchorUseCase.js');
+        const anchorUseCaseSource = await source('application/anchoring/CreateExternalPublicationAnchorUseCase.js');
         const codeOnlyAnchor = anchorUseCaseSource.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
         const executeMatch = codeOnlyAnchor.match(/async execute\(([^)]*)\)/);
         check(Boolean(executeMatch) && !/storage|discoveryProvider/.test(executeMatch[1]),
@@ -326,7 +326,7 @@ async function run() {
         check(TrustStatus.VALID === 'VALID',
             'D8d. inspected.trust.status genuinely CAN render the bare word "VALID" — a claim-shaped word for what core/TrustObservation.js\'s own header calls a "purely DESCRIPTIVE" fact (integrity + signature + authorization), never general trustworthiness');
         check(describeTrustStatus(TrustStatus.VALID) === 'Trusted',
-            'D8e. a humanizer for this EXACT enum (describeTrustStatus, application/AvatarPresenceLabels.js) already exists elsewhere in this codebase, unused at WorldLocationBrowser.js\'s own call site');
+            'D8e. a humanizer for this EXACT enum (describeTrustStatus, application/avatar/AvatarPresenceLabels.js) already exists elsewhere in this codebase, unused at WorldLocationBrowser.js\'s own call site');
         const locationBrowserSource = await source('ui/components/WorldLocationBrowser.js');
         check(!locationBrowserSource.includes('describeTrustStatus'),
             'D8f. confirms ui/components/WorldLocationBrowser.js genuinely does not import or call describeTrustStatus anywhere — this is a real, current gap, not a stale finding');
@@ -335,8 +335,8 @@ async function run() {
         // live, for a representative sample rather than merely asserted:
         // its backing enum values are plain, lowercase, factual tokens,
         // never a claim word.
-        const decentralizedOutcomeSource = await source('application/DecentralizedSnapshotResolutionOutcome.js');
-        const registrationOutcomeSource = await source('application/SnapshotWorldRegistrationOutcome.js');
+        const decentralizedOutcomeSource = await source('application/snapshot/DecentralizedSnapshotResolutionOutcome.js');
+        const registrationOutcomeSource = await source('application/snapshot/placement/SnapshotWorldRegistrationOutcome.js');
         // Checked against the actual VALUE tokens only (the quoted string
         // literals themselves) — never the surrounding prose, which uses
         // "own" constantly as a possessive determiner throughout this
@@ -418,7 +418,7 @@ async function run() {
         // cross-substrate fallback (e.g. never silently trying IPFS
         // because Arweave failed). "No implicit fallback merely because
         // another provider happens to be available."
-        const failoverSource = await source('application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js');
+        const failoverSource = await source('application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js');
         check(failoverSource.includes("throw new Error('ArweaveGatewayFailoverWorldEncounterMaterialResolver: a non-empty gatewayUrls array is required')"),
             'F2a. the failover resolver requires an explicit, caller-supplied gatewayUrls array — it never invents or discovers additional gateways, and never reaches for a different storage backend, on its own');
         check(failoverSource.includes("get storage() { return 'ar'; }"),
@@ -481,7 +481,7 @@ async function run() {
         console.log('    Finding 2 — ui/components/WorldLocationBrowser.js, the World Location Browser\'s Inspect panel:');
         console.log('    raw interpolation of inspected.trust.status (core/TrustObservation.js\'s TrustStatus enum, can');
         console.log('    render the bare word "VALID"), even though a humanizer for this exact enum already exists');
-        console.log('    (describeTrustStatus, application/AvatarPresenceLabels.js) and is simply not imported here.');
+        console.log('    (describeTrustStatus, application/avatar/AvatarPresenceLabels.js) and is simply not imported here.');
         console.log('    RECOMMENDED FOLLOW-UP (not this milestone, per its own zero-production-change guard): a single');
         console.log('    small milestone routing both call sites through their already-existing (Finding 2) or already-');
         console.log('    adjacent (Finding 1) humanizing view functions — the same shape of fix 0.9.519 already made for');

@@ -3,20 +3,20 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
@@ -30,16 +30,16 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 // to live-prove whether admission into `decentralizedPublicationDiscoveryProvider`
 // actually reaches `getPublicationForDocument()` in a real session — never
 // assumed from a comment.
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
@@ -385,13 +385,13 @@ async function run() {
         assert(addCalls === 1, n('B2. AMENDED BY 0.9.595 — live proof of the closure: this inspection reaches the identical AVAILABLE+VERIFIED condition admitToRepositoryDiscovery() checks, and admitToRepositoryDiscovery() IS now called on the observer-local path — the real, injected decentralizedPublicationDiscoveryProvider.add() was invoked exactly once.'));
 
         // This is the EXACT provider WorldNavigationSession's own
-        // discoveryProvider (application/CreateDiscoveryUseCase.js) is
+        // discoveryProvider (application/discovery/CreateDiscoveryUseCase.js) is
         // composed from at application startup — findByDocumentId here IS
         // the same predicate WorldNavigationSession#getPublicationForDocument()
         // (the one input ui/components/OwnPublicationPanel.js's own
         // `publication` prop is keyed on) relies on.
         assert(decentralizedPublicationDiscoveryProvider.findByDocumentId(env.publication.documentId).length === 1,
-            n('B3. AMENDED BY 0.9.595 — live proof of the actual consequence: findByDocumentId(documentId) — the exact method application/WorldNavigationSession.js#_findPublications() calls — now returns exactly this Publication for its own documentId, on the SAME provider instance a running app shares between WorldEncounterCanvas and WorldNavigationSession.'));
+            n('B3. AMENDED BY 0.9.595 — live proof of the actual consequence: findByDocumentId(documentId) — the exact method application/world/WorldNavigationSession.js#_findPublications() calls — now returns exactly this Publication for its own documentId, on the SAME provider instance a running app shares between WorldEncounterCanvas and WorldNavigationSession.'));
 
         const searchUseCase = new SearchPublicationsUseCase(decentralizedPublicationDiscoveryProvider);
         const results = searchUseCase.execute({});
@@ -402,7 +402,7 @@ async function run() {
         // Trace the structural bridge itself in real, unmodified source,
         // confirming B2/B3 are not an artifact of this test's own fixture
         // but a real property of the wiring between these three files.
-        const worldNavSrc = await source('application/WorldNavigationSession.js');
+        const worldNavSrc = await source('application/world/WorldNavigationSession.js');
         // B5 AMENDED BY 0.9.597 — Publication Action Provider Continuity
         // Fix. At the time this audit was written, getPublicationForDocument()
         // was a thin wrapper over _resolvePublicationForPlacement() (and
@@ -418,7 +418,7 @@ async function run() {
         // unamended: _findPublications()/`this._discoveryProvider` — the
         // fork-policy/_isKnownPublication() choke point — is untouched.
         assert(/getPublicationForDocument\(documentId\) \{\s*\n\s*if \(!this\._publicationActionDiscoveryProvider/.test(worldNavSrc),
-            n('B5. AMENDED BY 0.9.597 — application/WorldNavigationSession.js#getPublicationForDocument() — the sole input to OwnPublicationPanel\'s own `publication` prop, per ui/views/WorldView.js — now resolves through its own, separate `_publicationActionDiscoveryProvider`, confirmed in real source, rather than delegating to _resolvePublicationForPlacement()/`_discoveryProvider`.'));
+            n('B5. AMENDED BY 0.9.597 — application/world/WorldNavigationSession.js#getPublicationForDocument() — the sole input to OwnPublicationPanel\'s own `publication` prop, per ui/views/WorldView.js — now resolves through its own, separate `_publicationActionDiscoveryProvider`, confirmed in real source, rather than delegating to _resolvePublicationForPlacement()/`_discoveryProvider`.'));
         assert(/_findPublications\(documentId\) \{\s*\n\s*if \(!this\._discoveryProvider \|\| typeof this\._discoveryProvider\.findByDocumentId !== 'function'\) \{\s*\n\s*return \[\];\s*\n\s*\}\s*\n\s*return this\._discoveryProvider\.findByDocumentId\(documentId\) \|\| \[\];/.test(worldNavSrc),
             n('B6. ...which itself resolves entirely through `this._discoveryProvider.findByDocumentId(documentId)` — confirmed in real source — the SAME predicate B3 just proved returns empty for an observer-local-only encounter.'));
         const worldViewSrc = (await Promise.all(worldViewFiles().map((file) => source(file)))).join('\n');
@@ -456,7 +456,7 @@ async function run() {
         const contentStore = new LocalContentStore(storage);
         const publisher = new LocalPublisherProvider(storage, contentStore);
         // This is WorldNavigationSession's OWN discoveryProvider — a plain
-        // LocalDiscoveryProvider, exactly what application/CreateWorldViewUseCase.js#execute()
+        // LocalDiscoveryProvider, exactly what application/world/CreateWorldViewUseCase.js#execute()
         // itself unconditionally constructs (source-confirmed BW-5, below)
         // — never the app-wide decentralizedPublicationDiscoveryProvider.
         const sessionDiscoveryProvider = new LocalDiscoveryProvider(storage);
@@ -504,7 +504,7 @@ async function run() {
             n('BW-3. Sanity check on BW-2: the SAME session DOES resolve a Publication once it exists in ITS OWN discoveryProvider — confirming BW-2\'s null was about provider identity, never about getPublicationForDocument() being broken or this fixture being malformed.'));
 
         // Source-confirm WHY: at the time this section was written,
-        // application/CreateWorldViewUseCase.js#execute() — the one place
+        // application/world/CreateWorldViewUseCase.js#execute() — the one place
         // a real app ever builds a WorldNavigationSession (via
         // ui/views/WorldView.js) — had no parameter to receive
         // decentralizedPublicationDiscoveryProvider at all, and
@@ -520,9 +520,9 @@ async function run() {
         // point), byte for byte as before 0.9.597. What changed is only
         // that CreateWorldViewUseCase.js NOW HAS the parameter this
         // section originally found missing.
-        const createWorldViewSrc = await source('application/CreateWorldViewUseCase.js');
+        const createWorldViewSrc = await source('application/world/CreateWorldViewUseCase.js');
         assert(/decentralizedPublicationDiscoveryProvider\s*=\s*null/.test(createWorldViewSrc),
-            n('BW-4. AMENDED BY 0.9.597 — application/CreateWorldViewUseCase.js now HAS an optional decentralizedPublicationDiscoveryProvider parameter, confirmed in real source — this is exactly the missing route this section originally documented.'));
+            n('BW-4. AMENDED BY 0.9.597 — application/world/CreateWorldViewUseCase.js now HAS an optional decentralizedPublicationDiscoveryProvider parameter, confirmed in real source — this is exactly the missing route this section originally documented.'));
         assert(/const discoveryProvider = new LocalDiscoveryProvider\(storageProvider\);/.test(createWorldViewSrc),
             n('BW-5. UNCHANGED BY 0.9.597 — CreateWorldViewUseCase.js still unconditionally constructs its own, fresh LocalDiscoveryProvider for `discoveryProvider` — the exact instance WorldNavigationSession\'s own constructor still receives as `discoveryProvider` (fork-policy/world-layout/placement resolution) — confirmed in real source. 0.9.597 adds a SEPARATE `publicationActionDiscoveryProvider` alongside it; it never replaces this one.'));
         assert(/publicationActionDiscoveryProvider\s*=\s*decentralizedPublicationDiscoveryProvider/.test(createWorldViewSrc),
@@ -573,12 +573,12 @@ async function run() {
     // Section D — retention.
     // ===============================================================
     {
-        const encounterStoreSrc = await source('application/ObserverLocalEncounterStore.js');
-        assert(!/StorageProvider/.test(encounterStoreSrc.replace(/\/\/.*$/gm, '')), n('D1. application/ObserverLocalEncounterStore.js\'s own executable code (comments stripped) never references StorageProvider — zero persistence, confirmed in real source.'));
+        const encounterStoreSrc = await source('application/worldEncounter/ObserverLocalEncounterStore.js');
+        assert(!/StorageProvider/.test(encounterStoreSrc.replace(/\/\/.*$/gm, '')), n('D1. application/worldEncounter/ObserverLocalEncounterStore.js\'s own executable code (comments stripped) never references StorageProvider — zero persistence, confirmed in real source.'));
 
         const localDiscoverySrc = await source('discovery/LocalDiscoveryProvider.js');
         assert(/constructor\(storageProvider\)/.test(localDiscoverySrc) && /this\._storageProvider\.load\(/.test(localDiscoverySrc),
-            n('D2. By contrast, discovery/LocalDiscoveryProvider.js — one half of the Repository\'s own discoveryProvider — reads/writes through an injected storageProvider (persistent, application/CreateDiscoveryUseCase.js wires it to a real LocalStorageProvider) — confirmed in real source.'));
+            n('D2. By contrast, discovery/LocalDiscoveryProvider.js — one half of the Repository\'s own discoveryProvider — reads/writes through an injected storageProvider (persistent, application/discovery/CreateDiscoveryUseCase.js wires it to a real LocalStorageProvider) — confirmed in real source.'));
 
         const notificationStoreSrc = await source('storage/NotificationEventStore.js');
         assert(/constructor\(storageProvider = new LocalStorageProvider\(\)\)/.test(notificationStoreSrc) || /new LocalStorageProvider\(\)/.test(notificationStoreSrc),
@@ -612,7 +612,7 @@ async function run() {
         // NAMES a new kind — excluded from the producer census on that basis.
         const producerHits = eventTypeHits.filter((l) => !l.includes('core/NotificationEvent.js') && !/^\s*\/\//.test(l.split(':').slice(2).join(':').trim()));
         assert(producerHits.length === 1 && producerHits[0].includes('PublicationCommentaryNotificationProducer.js'),
-            n(`E2. A whole-repository sweep of application/ and core/ finds exactly ONE producer naming a real eventType in production code, in application/PublicationCommentaryNotificationProducer.js — no discovery/encounter-shaped NotificationEvent kind exists anywhere today (found producer hits: ${JSON.stringify(producerHits)}; core/NotificationEvent.js's own toJSON() echo excluded as the class definition itself, not a producer).`));
+            n(`E2. A whole-repository sweep of application/ and core/ finds exactly ONE producer naming a real eventType in production code, in application/publication/commentary/PublicationCommentaryNotificationProducer.js — no discovery/encounter-shaped NotificationEvent kind exists anywhere today (found producer hits: ${JSON.stringify(producerHits)}; core/NotificationEvent.js's own toJSON() echo excluded as the class definition itself, not a producer).`));
 
         // Live: run the full discover->verify->encounter pipeline against
         // a real, fresh NotificationEventStore and confirm it produces
@@ -688,9 +688,9 @@ async function run() {
     // (not persistence) is this codebase's own established pattern.
     // ===============================================================
     {
-        const registrySrc = await source('application/WorldDiscoverySourceRegistry.js');
+        const registrySrc = await source('application/discovery/WorldDiscoverySourceRegistry.js');
         assert(/Persisting the current source set to a `?StorageProvider`?/.test(registrySrc) || /StorageProvider/.test(registrySrc) === false || /persist/i.test(registrySrc),
-            n('H1. application/WorldDiscoverySourceRegistry.js — the SAME app-wide runtime registry WorldEncounterCanvas already subscribes to for every OTHER World fact — documents its own deliberate non-persistence, confirmed in real source.'));
+            n('H1. application/discovery/WorldDiscoverySourceRegistry.js — the SAME app-wide runtime registry WorldEncounterCanvas already subscribes to for every OTHER World fact — documents its own deliberate non-persistence, confirmed in real source.'));
         assert(!/import .*StorageProvider/.test(registrySrc), n('H2. ...and, like ObserverLocalEncounterStore (Section D1), never actually imports a StorageProvider — the pattern is not unique to observer-local encounters.'));
 
         console.log('✓ Section H: non-persistence of live, position-derived World facts is an established, repeated pattern in this codebase (WorldDiscoverySourceRegistry, ObserverLocalEncounterStore alike) — re-walking to the same spot re-derives the fact via the real, unmodified discovery/resolution/verification pipeline (Section A), rather than this codebase ever restoring a client-persisted record of it. This weighs directly against Possibility B (a new persistent "discovered" list) in the CLASSIFICATION below: the codebase\'s own convention answers retention by re-deriving, not by storing an observation.');
@@ -772,8 +772,8 @@ async function run() {
     // ===============================================================
     {
         const expectedChangedProductionFiles = new Set([
-            'application/CreateWorldViewUseCase.js',
-            'application/WorldNavigationSession.js',
+            'application/world/CreateWorldViewUseCase.js',
+            'application/world/WorldNavigationSession.js',
             'ui/views/WorldView.js'
         ]);
         const changedProductionFiles = execSync('git status --porcelain -- core/ application/ ui/ discovery/ placement/ storage/', { cwd: SOURCE_ROOT })
@@ -796,7 +796,7 @@ async function run() {
     console.log('CONTINUITY_GAP_CONFIRMED — the same vocabulary tests/WorldEncounterRepositoryContinuityBoundaryAudit.test.js (0.9.473) used for the structurally identical gap in this component\'s OTHER (primary/registered) encounter family, closed one milestone later by 0.9.474\'s own admitToRepositoryDiscovery() call. Today, an observer-local encounter genuinely supports perception (a real marker), understanding (a real Material/Verification inspection, 0.9.554), and Open/Fork/Explore/Comment on the underlying Publication (0.9.558, Section A) — but Section B proves, live, that the one structural route toward this application\'s OWN existing placement-capable surface (OwnPublicationPanel, reached via Explore -> WorldNavigationSession#getPublicationForDocument()) is closed, because that call resolves entirely through discoveryProvider.findByDocumentId(), which is never populated for this path (0.9.553/0.9.554/0.9.558 each deliberately withheld admitToRepositoryDiscovery() here, on grounds that were correct in each milestone\'s own narrower scope, but none of the three measured this specific downstream cost). Per the requesting brief\'s own Possibility A: Repository (discovery/LocalDiscoveryProvider.js + discovery/DecentralizedPublicationDiscoveryProvider.js) is ALREADY persistent (Section D2) and ALREADY has a working search/open/place-adjacent surface for anything admitted to it (0.9.474/0.9.585) — the missing piece is narrower than "build a new collection surface": it is exactly the one call 0.9.474 already built, tested, and proved safe for the sibling encounter family, never yet extended to this one. Sections D/H additionally establish that no new persistence mechanism is warranted for RETENTION: this codebase\'s own established pattern (WorldDiscoverySourceRegistry, ObserverLocalEncounterStore alike) is to re-derive a live, position-based World fact by walking back to it through the real pipeline, never to persist an observation client-side — recommending a new "discovered" list here would cut against that pattern, not extend it. Section E establishes no new NotificationEvent kind is warranted either: this pipeline is observably silent today, and nothing here is closer to "an awareness-worthy fact happened while you were elsewhere" than to "you are standing right where the missing action already lives" — a navigation/action-seam problem, not a reminder problem.\n\nRECOMMENDATION for a SEPARATE, later, narrowly-scoped implementation milestone (0.9.595 in this sequence, not built by this audit): extend the EXISTING, unmodified admitToRepositoryDiscovery(loading, verification) call — already used identically by refreshMaterialInspection()/refreshComparisonMaterialInspection() — to refreshObserverLocalEncounterInspection() too, gated on the SAME AVAILABLE+VERIFIED condition observerLocalEncounterActionablePublication already computes read-only (0.9.558). No new store, no new persistence layer, no new NotificationEvent kind, no new UI surface, and no automatic placement of any kind — Repository admission makes a Publication FINDABLE and OPENABLE; the explicit, human "Place Materialized Snapshot"/"Register Placed Snapshot" click inside OwnPublicationPanel (0.9.159/0.9.160), unmodified by this recommendation, remains the sole authority that ever produces a PlacementRecord, preserving the 0.9.551 invariant this audit reconfirmed live in Section C/J: discovery is never authority. A smaller, separate friction Section B also surfaced but does NOT classify as blocking — OwnPublicationPanel\'s own "Place Materialized Snapshot" reads from its own independent Discover/Resolve/Materialize workflow rather than the observer-local encounter\'s already-materialized bytes, so even after Repository admission a Wanderer placing P would re-run discovery once more inside that panel — is named here as a candidate for a future, separate milestone\'s own consideration, not something this audit\'s own recommendation is scoped to fix.');
 
     console.log('\n=== PARTIALLY CLOSED BY 0.9.595 ===');
-    console.log('The RECOMMENDATION above is now implemented, verbatim: refreshObserverLocalEncounterInspection() (ui/components/WorldEncounterCanvas.js) now calls admitToRepositoryDiscovery(result.loading, result.verification) in its own .then() callback, unconditionally, mirroring refreshMaterialInspection() exactly — no new store, no new persistence layer, no new NotificationEvent kind, no new UI surface, and no automatic placement. Section B above is amended in place (assertions B2-B4) to prove admission itself now happens live; Sections C/F/G/H, unamended, are reconfirmed live to prove nothing else this audit found moved. Section B-Wiring is NEW: it live-proves, against a real WorldNavigationSession (not merely an isolated provider instance), that this admission does NOT reach OwnPublicationPanel — WorldNavigationSession\'s own discoveryProvider is a structurally separate LocalDiscoveryProvider instance, application/CreateWorldViewUseCase.js#execute() has no parameter to receive the decentralized provider at all, and no other file rewires this afterward. This is a genuine, pre-existing limit this milestone\'s own recommendation did not anticipate (its own original Section B prose asserted the opposite, uncontested and unproven) — it equally affects the ALREADY-SHIPPED primary/registered encounter family\'s own 0.9.474 admission call, which this audit also newly confirms (Section B-Wiring\'s own BW-4/BW-5/BW-6). What 0.9.595 DOES close: Repository search visibility, automatically, without requiring the Wanderer to place P first (the flagship\'s own J5-J6). What it deliberately leaves open, as a separate, later, not-yet-scoped decision: composing WorldNavigationSession\'s own discoveryProvider the same way CreateDiscoveryUseCase.js already composes its own (via the existing, unmodified CompositeDiscoveryProvider) — see ui/components/WorldEncounterCanvas.js\'s own "0.9.595" header, "A KNOWN, PRE-EXISTING LIMIT," for the full account. See tests/AdmitVerifiedObserverLocalPublicationsIntoRepositoryDiscoveryAudit.test.js for the dedicated flagship proof of exactly what this closure does and does not enable, and docs/Roadmap.md\'s own 0.9.595 entry.');
+    console.log('The RECOMMENDATION above is now implemented, verbatim: refreshObserverLocalEncounterInspection() (ui/components/WorldEncounterCanvas.js) now calls admitToRepositoryDiscovery(result.loading, result.verification) in its own .then() callback, unconditionally, mirroring refreshMaterialInspection() exactly — no new store, no new persistence layer, no new NotificationEvent kind, no new UI surface, and no automatic placement. Section B above is amended in place (assertions B2-B4) to prove admission itself now happens live; Sections C/F/G/H, unamended, are reconfirmed live to prove nothing else this audit found moved. Section B-Wiring is NEW: it live-proves, against a real WorldNavigationSession (not merely an isolated provider instance), that this admission does NOT reach OwnPublicationPanel — WorldNavigationSession\'s own discoveryProvider is a structurally separate LocalDiscoveryProvider instance, application/world/CreateWorldViewUseCase.js#execute() has no parameter to receive the decentralized provider at all, and no other file rewires this afterward. This is a genuine, pre-existing limit this milestone\'s own recommendation did not anticipate (its own original Section B prose asserted the opposite, uncontested and unproven) — it equally affects the ALREADY-SHIPPED primary/registered encounter family\'s own 0.9.474 admission call, which this audit also newly confirms (Section B-Wiring\'s own BW-4/BW-5/BW-6). What 0.9.595 DOES close: Repository search visibility, automatically, without requiring the Wanderer to place P first (the flagship\'s own J5-J6). What it deliberately leaves open, as a separate, later, not-yet-scoped decision: composing WorldNavigationSession\'s own discoveryProvider the same way CreateDiscoveryUseCase.js already composes its own (via the existing, unmodified CompositeDiscoveryProvider) — see ui/components/WorldEncounterCanvas.js\'s own "0.9.595" header, "A KNOWN, PRE-EXISTING LIMIT," for the full account. See tests/AdmitVerifiedObserverLocalPublicationsIntoRepositoryDiscoveryAudit.test.js for the dedicated flagship proof of exactly what this closure does and does not enable, and docs/Roadmap.md\'s own 0.9.595 entry.');
 
     console.log(`\n✅ All DiscoveredUnplacedPublicationActionabilityProductBoundaryAudit tests passed (${assertionCount} assertions).`);
 }

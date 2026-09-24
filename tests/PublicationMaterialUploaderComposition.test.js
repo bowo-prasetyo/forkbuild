@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
-import { composePublicationMaterialUploader } from '../application/PublicationMaterialUploaderComposition.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { ContentStorePublicationMaterialUploader } from '../application/ContentStorePublicationMaterialUploader.js';
+import { composePublicationMaterialUploader } from '../application/publication/distribution/PublicationMaterialUploaderComposition.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { ContentStorePublicationMaterialUploader } from '../application/publication/distribution/ContentStorePublicationMaterialUploader.js';
 
 // 0.9.670 — Publication Material Uploader Composition.
-// See application/PublicationMaterialUploaderComposition.js's own header
+// See application/publication/distribution/PublicationMaterialUploaderComposition.js's own header
 // for the full report this closes: "Distribute Publication" always
 // uploaded a Publication's material to Arweave, unconditionally, even when
 // Nostr was the chosen Announcement/Discovery substrate — this file is the
@@ -214,7 +214,7 @@ async function run() {
     // Section H — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/PublicationMaterialUploaderComposition.js', import.meta.url);
+        const sourceUrl = new URL('../application/publication/distribution/PublicationMaterialUploaderComposition.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

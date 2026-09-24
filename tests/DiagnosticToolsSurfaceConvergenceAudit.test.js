@@ -1,23 +1,24 @@
 import { readFile } from 'node:fs/promises';
+import { applicationFiles } from './support/ApplicationFiles.js';
 import { readdirSync } from 'node:fs';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { SnapshotWorldPositionClaimOutcome } from '../application/SnapshotWorldPositionClaimOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotCandidateMaterializationOutcome } from '../application/SnapshotCandidateMaterializationOutcome.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { SnapshotWorldPositionClaimOutcome } from '../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotCandidateMaterializationOutcome } from '../application/snapshot/materialization/SnapshotCandidateMaterializationOutcome.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -562,7 +563,7 @@ async function runTests() {
         });
         failCtx.discoverSnapshotCandidates();
         await flushMicrotasks();
-        assert(failCtx.snapshotCandidateDiscoveryError === 'section-e2-boom', 'E2.1. DISCOVER genuinely fails and now surfaces the underlying (sanitized) error text rather than a generic notice — see application/DistributionErrorMessageSanitizer.js');
+        assert(failCtx.snapshotCandidateDiscoveryError === 'section-e2-boom', 'E2.1. DISCOVER genuinely fails and now surfaces the underlying (sanitized) error text rather than a generic notice — see application/publication/distribution/DistributionErrorMessageSanitizer.js');
         assert(failCtx.snapshotCandidateDiscoveryResult === null, 'E2.2. a failed discovery never silently produces a result');
         const errorRef = failCtx.snapshotCandidateDiscoveryError;
 
@@ -745,7 +746,7 @@ async function runTests() {
 
         let diagnosticAppFiles = [];
         try {
-            diagnosticAppFiles = readdirSync(new URL('application/', SOURCE_ROOT)).filter((name) => /diagnostic/i.test(name));
+            diagnosticAppFiles = applicationFiles().filter((file) => /diagnostic/i.test(file.split('/').pop()));
         } catch { /* ignore — best-effort */ }
         assert(diagnosticAppFiles.length === 0, `J2. no application/ file names itself after "diagnostic" (found: ${diagnosticAppFiles.join(', ')})`);
 

@@ -1,13 +1,13 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { AddPublicationAnchorUseCase } from '../application/AddPublicationAnchorUseCase.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { AnchorVerificationLifecycleState } from '../application/AnchorVerificationLifecycleState.js';
-import { createVerificationObservation } from '../application/PublicationAnchorVerificationObservation.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { AddPublicationAnchorUseCase } from '../application/anchoring/AddPublicationAnchorUseCase.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { AnchorVerificationLifecycleState } from '../application/anchoring/AnchorVerificationLifecycleState.js';
+import { createVerificationObservation } from '../application/anchoring/PublicationAnchorVerificationObservation.js';
 import {
     deriveAnchorVerificationLifecycle, describeAnchorVerificationLifecycleNote
-} from '../application/PublicationAnchorVerificationLifecycleView.js';
+} from '../application/anchoring/PublicationAnchorVerificationLifecycleView.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -42,7 +42,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //              external state — idempotent while nothing changes,
 //              immediately reflects a real change, never a cached
 //              verdict.
-//   Section F: application/PublicationAnchorVerificationLifecycleView.js
+//   Section F: application/anchoring/PublicationAnchorVerificationLifecycleView.js
 //              and application/
 //              PublicationAnchorVerificationObservation.js exercised
 //              directly as pure functions, covering every application/
@@ -423,7 +423,7 @@ async function run() {
         assert(observation.observedAt instanceof Date, '44. observedAt defaults to a real Date when omitted');
         assert(Object.isFrozen(observation), '45. a verification observation is immutable once created');
     }
-    console.log('✓ Section F: application/PublicationAnchorVerificationLifecycleView.js and application/PublicationAnchorVerificationObservation.js exercised directly as pure functions, covering every AnchorVerificationOutcome value');
+    console.log('✓ Section F: application/anchoring/PublicationAnchorVerificationLifecycleView.js and application/anchoring/PublicationAnchorVerificationObservation.js exercised directly as pure functions, covering every AnchorVerificationOutcome value');
 
     console.log('\nAll External Anchor Lifecycle & Stale Evidence Semantics tests passed.');
 }

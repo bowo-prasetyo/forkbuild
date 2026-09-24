@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { transitionPublicationDistributionLifecycle } from '../application/PublicationDistributionLifecycleTransition.js';
-import { describePublicationDistributionLifecycle, PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { describePublicationDistributionResult } from '../application/PublicationDistributionResult.js';
-import { executePublicationDistribution } from '../application/PublicationDistributionExecutor.js';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
+import { transitionPublicationDistributionLifecycle } from '../application/publication/distribution/PublicationDistributionLifecycleTransition.js';
+import { describePublicationDistributionLifecycle, PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
+import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -293,12 +293,12 @@ async function run() {
     // Section I — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/PublicationDistributionLifecycleTransition.js', import.meta.url);
+        const sourceUrl = new URL('../application/publication/distribution/PublicationDistributionLifecycleTransition.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(codeOnly.includes("from './PublicationDistributionLifecycle.js'"), '45. imports PublicationDistributionState from the 0.9.50 lifecycle file, its one deliberate dependency');
-        assert(!codeOnly.includes("from './PublicationDistributionResult"), '46. never imports the 0.9.48 result module');
+        assert(!codeOnly.includes("from '../../PublicationDistributionResult"), '46. never imports the 0.9.48 result module');
         assert(!codeOnly.includes("from './PublicationDistributionExecutor"), '47. never imports the 0.9.49 execution module');
         assert(!codeOnly.includes('ArweavePublicationMaterialUploader') && !codeOnly.includes('NostrPublicationDiscoveryPublisher') && !codeOnly.includes('PublicationDistributionDescriptor') && !codeOnly.includes('PublicationDistributionRuntimeComposition'), '48. never imports any of the four collaborator/execution files');
         assert(!/\bfetch\(/.test(codeOnly), '49. never calls fetch(...) — no network access of its own');
@@ -316,10 +316,10 @@ async function run() {
 
         assert(!codeOnly.includes("'ABSENT'") && !codeOnly.includes('"ABSENT"'), '56. this file never writes a literal ABSENT string of its own — state is only ever read via PublicationDistributionState.ABSENT or copied through unchanged from current');
 
-        const lifecycleSource = await readFile(new URL('../application/PublicationDistributionLifecycle.js', import.meta.url), 'utf8');
+        const lifecycleSource = await readFile(new URL('../application/publication/distribution/PublicationDistributionLifecycle.js', import.meta.url), 'utf8');
         assert(!lifecycleSource.includes('PublicationDistributionLifecycleTransition'), '57. the 0.9.50 lifecycle file itself is never modified to know about this transition file');
 
-        const resultSource = await readFile(new URL('../application/PublicationDistributionResult.js', import.meta.url), 'utf8');
+        const resultSource = await readFile(new URL('../application/publication/distribution/PublicationDistributionResult.js', import.meta.url), 'utf8');
         assert(!resultSource.includes('PublicationDistributionLifecycleTransition'), '58. the 0.9.48 result file itself is never modified to know about this transition file');
 
         console.log('✓ Architectural regression: no execution/collaborator imports, no I/O, no clock, no PENDING/FAILED/WITHDRAWN vocabulary, no existing file modified');

@@ -6,18 +6,18 @@ import { Position } from '../core/Position.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStore.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
 import {
     buildPlaceNamingClaimPublication, CURRENT_SCHEMA_VERSION, PLACE_NAMING_CLAIM_PUBLICATION_KIND
-} from '../application/PlaceNamingClaimPublication.js';
+} from '../application/placeNaming/PlaceNamingClaimPublication.js';
 import {
     validatePlaceNamingClaimPublication, PlaceNamingClaimPublicationError
-} from '../application/PlaceNamingClaimPublicationValidator.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+} from '../application/placeNaming/PlaceNamingClaimPublicationValidator.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 
 // 0.5.3 — Decentralized Place Name Exchange.
 //
@@ -98,7 +98,7 @@ function publishedClaim(useCase, worldId, regionId, name) {
 
 async function run() {
     // -------------------------------------------------------------
-    // Section A: application/PlaceNamingClaimPublication.js
+    // Section A: application/placeNaming/PlaceNamingClaimPublication.js
     // -------------------------------------------------------------
     {
         expectThrows(() => buildPlaceNamingClaimPublication(null),
@@ -129,10 +129,10 @@ async function run() {
         // Validating a well-formed package never throws.
         validatePlaceNamingClaimPublication(pkg);
     }
-    console.log('✓ Section A: application/PlaceNamingClaimPublication.js — envelope shape & determinism');
+    console.log('✓ Section A: application/placeNaming/PlaceNamingClaimPublication.js — envelope shape & determinism');
 
     // -------------------------------------------------------------
-    // Section B: application/PlaceNamingClaimPublicationValidator.js
+    // Section B: application/placeNaming/PlaceNamingClaimPublicationValidator.js
     // -------------------------------------------------------------
     {
         const alice = makeIdentity('Alice');
@@ -166,10 +166,10 @@ async function run() {
             '18. rejection is a PlaceNamingClaimPublicationError');
         assert(err instanceof PlaceNamingClaimPublicationError, '19. confirmed: PlaceNamingClaimPublicationError');
     }
-    console.log('✓ Section B: application/PlaceNamingClaimPublicationValidator.js — every malformed-package rejection');
+    console.log('✓ Section B: application/placeNaming/PlaceNamingClaimPublicationValidator.js — every malformed-package rejection');
 
     // -------------------------------------------------------------
-    // Section C: application/LocalPlaceNamingPublicationLog.js
+    // Section C: application/placeNaming/LocalPlaceNamingPublicationLog.js
     // -------------------------------------------------------------
     {
         const storage = new InMemoryStorageProvider();
@@ -192,10 +192,10 @@ async function run() {
         // Isolated per World.
         assert(log.getReceivedAt('w2', 'claim-1') === null, '23. a receipt for w1 never leaks into w2');
     }
-    console.log('✓ Section C: application/LocalPlaceNamingPublicationLog.js — first-seen-wins, per-World isolation');
+    console.log('✓ Section C: application/placeNaming/LocalPlaceNamingPublicationLog.js — first-seen-wins, per-World isolation');
 
     // -------------------------------------------------------------
-    // Section D: application/PlaceNamingClaimExchange.js
+    // Section D: application/placeNaming/PlaceNamingClaimExchange.js
     // -------------------------------------------------------------
     {
         const alice = makeIdentity('Alice');
@@ -251,10 +251,10 @@ async function run() {
         assert(JSON.stringify(pkg) === JSON.stringify(exportAgain),
             '34. PlaceNamingClaimExchange#exportClaim() is deterministic');
     }
-    console.log('✓ Section D: application/PlaceNamingClaimExchange.js — export/import, idempotent dedup, tamper/impersonation rejection');
+    console.log('✓ Section D: application/placeNaming/PlaceNamingClaimExchange.js — export/import, idempotent dedup, tamper/impersonation rejection');
 
     // -------------------------------------------------------------
-    // Section E: application/WorldNavigationSession.js wiring
+    // Section E: application/world/WorldNavigationSession.js wiring
     // -------------------------------------------------------------
     {
         const bareSession = new WorldNavigationSession({ registry: null });
@@ -263,7 +263,7 @@ async function run() {
         expectThrows(() => bareSession.importPlaceNamingClaim({}),
             '36. importPlaceNamingClaim() throws cleanly when exchange is not wired');
     }
-    console.log('✓ Section E: application/WorldNavigationSession.js — graceful degradation with nothing wired (delegation itself is exercised end-to-end in Section G)');
+    console.log('✓ Section E: application/world/WorldNavigationSession.js — graceful degradation with nothing wired (delegation itself is exercised end-to-end in Section G)');
 
     // -------------------------------------------------------------
     // Section F: regression — 0.5.2's own model is untouched

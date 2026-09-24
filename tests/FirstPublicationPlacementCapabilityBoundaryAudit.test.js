@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
@@ -106,7 +106,7 @@ if (typeof globalThis.window === 'undefined') {
 }
 
 // Builds the exact placement-relevant subset of what
-// application/CreateWorldViewUseCase.js#execute() itself constructs, so
+// application/world/CreateWorldViewUseCase.js#execute() itself constructs, so
 // Section C-Wiring's own "narrow vs. composite discoveryProvider" finding
 // is a fact about the real composition root, not this test's own
 // invention. `discoveryProviderForPlacement` lets Section C-Wiring swap
@@ -134,7 +134,7 @@ async function run() {
     // Section A — Inventory: which component owns what.
     // ===============================================================
     {
-        const placePublicationSrc = await readSource('application/PlacePublicationUseCase.js');
+        const placePublicationSrc = await readSource('application/placement/PlacePublicationUseCase.js');
         const placementRecordSrc = await readSource('core/PlacementRecord.js');
         const localRegistrySrc = await readSource('placement/LocalPlacementRegistry.js');
         const worldNavSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
@@ -226,7 +226,7 @@ async function run() {
         let threw = null;
         try { productionWiredUseCase.execute(publicationId, { x: 3, y: 0, z: 3 }); } catch (e) { threw = e; }
         assert(threw !== null && /not found/.test(threw.message),
-            'C2. LIVE PROOF: the EXACT PlacePublicationUseCase instance application/CreateWorldViewUseCase.js constructs today — given the identical publicationId a real observer-local encounter would produce — THROWS "not found." This is possibility #3 from the requesting brief (technically supports it, but no production caller\'s own wiring can reach a Repository-admitted-only Publication), not possibility #2 (a deliberate domain rejection of first placement).');
+            'C2. LIVE PROOF: the EXACT PlacePublicationUseCase instance application/world/CreateWorldViewUseCase.js constructs today — given the identical publicationId a real observer-local encounter would produce — THROWS "not found." This is possibility #3 from the requesting brief (technically supports it, but no production caller\'s own wiring can reach a Repository-admitted-only Publication), not possibility #2 (a deliberate domain rejection of first placement).');
 
         console.log('✓ C2 — confirmed live: today\'s production wiring cannot place a Repository-admitted-only Publication, and fails with a resolution error, not an authorization or "already placed" error.');
 
@@ -241,7 +241,7 @@ async function run() {
     {
         const { storage, identity, publicationId, publication, decentralizedPublicationDiscoveryProvider, narrowDiscoveryProvider } = sectionCContext;
 
-        // Exactly application/CreateWorldViewUseCase.js's own 0.9.597
+        // Exactly application/world/CreateWorldViewUseCase.js's own 0.9.597
         // composition (BW-5b in tests/DiscoveredUnplacedPublicationActionabilityProductBoundaryAudit.test.js):
         // publicationActionDiscoveryProvider = CompositeDiscoveryProvider([discoveryProvider, decentralizedPublicationDiscoveryProvider]).
         const publicationActionDiscoveryProvider = new CompositeDiscoveryProvider([narrowDiscoveryProvider, decentralizedPublicationDiscoveryProvider]);
@@ -268,7 +268,7 @@ async function run() {
         assert(recordsAfterSecond.every((r) => r.revision === 1) && new Set(recordsAfterSecond.map((r) => r.placementId)).size === 2,
             'C1b. Confirms both are independent revision-1 genesis records, never one revision-2 supersession of the other.');
 
-        console.log('✓ C-Wiring/C1 — POSSIBILITY #3 confirmed precisely: PlacePublicationUseCase.execute() already, unconditionally, supports creating a Publication\'s first (and every subsequent) placement. The gap Section C2 found is entirely which discoveryProvider instance the already-built use case is constructed with in application/CreateWorldViewUseCase.js today — not a missing capability inside the use case, and not a deliberate rejection.');
+        console.log('✓ C-Wiring/C1 — POSSIBILITY #3 confirmed precisely: PlacePublicationUseCase.execute() already, unconditionally, supports creating a Publication\'s first (and every subsequent) placement. The gap Section C2 found is entirely which discoveryProvider instance the already-built use case is constructed with in application/world/CreateWorldViewUseCase.js today — not a missing capability inside the use case, and not a deliberate rejection.');
     }
 
     // ===============================================================
@@ -290,7 +290,7 @@ async function run() {
         assert(record.owner === 'carol', 'D1. LIVE PROOF: the PlacementRecord\'s owner is the PLACER\'S identity (carol) — never the Publication\'s own author field ("bob") — confirming placing someone else\'s discovered work never claims their authorship.');
         assert(publication.author === 'bob', 'D2. Sanity: the Publication\'s own author is untouched — placement creates no side effect on the Publication object at all.');
 
-        const placePublicationSrc = await readSource('application/PlacePublicationUseCase.js');
+        const placePublicationSrc = await readSource('application/placement/PlacePublicationUseCase.js');
         assert(!/publication\.author|publisherIdentity/.test(placePublicationSrc),
             'D3. Structurally: PlacePublicationUseCase.js never reads publication.author or publication.publisherIdentity anywhere — it has no code path that COULD conflate placement ownership with publication ownership, even by accident.');
 
@@ -314,7 +314,7 @@ async function run() {
         assert(!('claimedPosition' in publication) && !('position' in publication),
             'E1. Reconfirmed (0.9.598 D9b): a resolved Publication object never carries a claimedPosition or position field to begin with — there is nothing for PlacePublicationUseCase\'s own `position` PARAMETER (an explicit user choice, per its own call signature) to be confused with.');
 
-        const placePublicationSrc = await readSource('application/PlacePublicationUseCase.js');
+        const placePublicationSrc = await readSource('application/placement/PlacePublicationUseCase.js');
         assert(!/claimedPosition/.test(placePublicationSrc),
             'E2. Structurally: PlacePublicationUseCase.js never references claimedPosition anywhere — the `position` it places at can only ever be the value its caller explicitly passed as an argument, never something read off the Publication or a discovery candidate.');
 
@@ -328,7 +328,7 @@ async function run() {
     // 0.9.598 recommendation's own closing caveat).
     // ===============================================================
     {
-        const placePublicationSrc = await readSource('application/PlacePublicationUseCase.js');
+        const placePublicationSrc = await readSource('application/placement/PlacePublicationUseCase.js');
         assert(!/isKnownPublication|checkForkPolicy|WorldAuthorizationService|AuthorizationVerifier/.test(placePublicationSrc),
             'F1. Structurally: PlacePublicationUseCase.js contains no fork-policy check, no WorldAuthorizationService/authorization-verifier call, and no ownership gate of any kind — ANY identity holding a resolvable publicationId and a position can place ANY Publication that resolves, today, including one it never published and does not own.');
 
@@ -371,7 +371,7 @@ async function run() {
 
   CLASSIFICATION: CAPABILITY_GAP — narrow, precisely bounded, and
   smaller than it first appeared. Not ALREADY_SUPPORTED: today's actual
-  production wiring (application/CreateWorldViewUseCase.js's own
+  production wiring (application/world/CreateWorldViewUseCase.js's own
   PlacePublicationUseCase construction, Section C2) cannot resolve a
   Repository-admitted-only Publication and throws. Not
   BOUNDARY_CONFLICT: nothing about making first placement reachable
@@ -383,7 +383,7 @@ async function run() {
   not reachable today because of ONE constructor argument.
 
   THE SMALLEST LEGITIMATE NEXT STEP, per Sections C-Wiring/D/G:
-    1. In application/CreateWorldViewUseCase.js, construct
+    1. In application/world/CreateWorldViewUseCase.js, construct
        PlacePublicationUseCase with publicationActionDiscoveryProvider
        instead of the plain discoveryProvider — mirroring the identical,
        already-reasoned-through widening 0.9.597 already applied to

@@ -4,17 +4,17 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
-import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/DecentralizedWorldDiscoveryLeadRegistry.js';
-import { deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes } from '../application/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js';
+import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes } from '../application/discovery/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js';
 import {
     resolveDecentralizedWorldEncounterLeadFromRegistry,
     DecentralizedWorldEncounterLeadResolutionStatus
-} from '../application/DecentralizedWorldEncounterLeadResolution.js';
-import { composeWorldEncounterMaterialSources } from '../application/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
-import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
-import { inspectWorldEncounterMaterial } from '../application/WorldEncounterMaterialInspection.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
+import { composeWorldEncounterMaterialSources } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
+import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
+import { inspectWorldEncounterMaterial } from '../application/worldEncounter/WorldEncounterMaterialInspection.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 
 // 0.9.43 — World Encounter Material Inspection Completion.
 // See docs/Roadmap.md, "0.9.43 — World Encounter Material Inspection Completion."
@@ -22,7 +22,7 @@ import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEn
 // This is the flagship, whole-chain proof the 0.9.39-through-0.9.42 series
 // was building toward: the composed verifier (0.9.43's own
 // `composeWorldEncounterMaterialVerifier()`) is the final verification
-// authority `application/WorldEncounterMaterialInspection.js` (0.9.39,
+// authority `application/worldEncounter/WorldEncounterMaterialInspection.js` (0.9.39,
 // unmodified) actually consults, fed the real material a full Nostr
 // discovery → Arweave retrieval chain produced (0.9.28/0.9.32/0.9.34/0.9.36,
 // each unmodified). No step below is a stand-in except the two genuine
@@ -103,7 +103,7 @@ function gatewayResponse(body, { status = 200, headers = {} } = {}) {
 }
 
 // Discovers `objectId` through the identical Nostr-relay-event shape
-// application/NostrDiscoveryQueryService.js's own header describes, and
+// application/nostr/NostrDiscoveryQueryService.js's own header describes, and
 // resolves it down to a single RESOLVED decentralized lead — the exact
 // chain tests/DecentralizedWorldEncounterMaterialRuntimeComposition.test.js's
 // own Section G already proves, reused here rather than reinvented.
@@ -349,7 +349,7 @@ async function run() {
         const chosenLead = firstResolution.resolvedLead;
 
         // The lead's own discovery service withdraws it — exactly
-        // application/DecentralizedWorldDiscoveryLeadRegistry.js's own
+        // application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js's own
         // removeLead(), unmodified.
         registry.removeLead(lead.origin, lead.discoveryTag, lead.uri);
 
@@ -391,7 +391,7 @@ async function run() {
     // Section H — architectural regression.
     // ---------------------------------------------------------------
     {
-        const path = '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
+        const path = '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
         const fullSource = await readFile(new URL(path, import.meta.url), 'utf8');
         const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -408,11 +408,11 @@ async function run() {
             assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `30. code must never use "${term}" — no trust/ranking vocabulary at this boundary`);
         }
 
-        const compositionSource = await readFile(new URL('../application/WorldEncounterMaterialVerificationComposition.js', import.meta.url), 'utf8');
+        const compositionSource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialVerificationComposition.js', import.meta.url), 'utf8');
         const compositionCodeOnly = compositionSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!compositionCodeOnly.includes('WorldEncounterMaterialIdentityVerifier') && !compositionCodeOnly.includes('WorldEncounterMaterialSignatureVerifier'), '31. the 0.9.42 composition class remains unmodified — still no knowledge of either concrete verifier by name, outside its own prose header');
 
-        const inspectionSource = await readFile(new URL('../application/WorldEncounterMaterialInspection.js', import.meta.url), 'utf8');
+        const inspectionSource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialInspection.js', import.meta.url), 'utf8');
         const inspectionCodeOnly = inspectionSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!inspectionCodeOnly.includes('WorldEncounterMaterialVerifierRuntimeComposition') && !inspectionCodeOnly.includes('WorldEncounterMaterialVerificationComposition'), '32. the 0.9.39 inspection orchestrator remains unmodified — it still receives a verifier without knowing what is inside it, outside its own prose header');
 

@@ -6,7 +6,7 @@
 // Deliberately a vocabulary of ONE. The design doc considered ONLINE/
 // OFFLINE and rejected them: whether a known peer is currently
 // reachable is already, and only ever, answered by
-// application/ConnectedPeerRegistry.js — a live, ephemeral fact about
+// application/peer/ConnectedPeerRegistry.js — a live, ephemeral fact about
 // a CONNECTION, never a property of the durable RELATIONSHIP record
 // itself. Storing it a second time here would immediately raise the
 // question every duplicated-state field in this codebase eventually

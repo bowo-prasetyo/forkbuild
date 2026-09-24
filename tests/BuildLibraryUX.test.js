@@ -1,14 +1,14 @@
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
-import { LibraryPreviewService } from '../application/LibraryPreviewService.js';
+import { LibraryPreviewService } from '../application/editor/LibraryPreviewService.js';
 import { PreviewType } from '../core/DocumentPreview.js';
 import { matches, normalize } from '../ui/components/BuildLibraryPanel.js';
-import { EditorContext } from '../application/EditorContext.js';
-import { PaletteUseCase } from '../application/PaletteUseCase.js';
-import { ForkStructureUseCase } from '../application/ForkStructureUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { EditorContext } from '../application/editor/EditorContext.js';
+import { PaletteUseCase } from '../application/editor/PaletteUseCase.js';
+import { ForkStructureUseCase } from '../application/editor/ForkStructureUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { Brick } from '../core/Brick.js';
 import { BrickRenderer } from '../renderer/BrickRenderer.js';
 

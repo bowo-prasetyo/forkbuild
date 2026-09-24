@@ -1,17 +1,17 @@
 import { computeContentHash } from '../serializer/contentHash.js';
-import { IpfsPublicationRecord } from '../application/IpfsPublicationRecord.js';
-import { IpfsPublicationContentVerificationState } from '../application/IpfsPublicationContentVerificationState.js';
-import { appendIpfsPublicationRecordHistoryEntry } from '../application/IpfsPublicationRecordHistory.js';
-import { appendIpfsPublicationContentVerificationHistoryEntry } from '../application/IpfsPublicationContentVerificationHistory.js';
-import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/BitcoinAnchorConfirmationObservationHistory.js';
-import { BitcoinAnchorBroadcastState } from '../application/BitcoinAnchorBroadcastState.js';
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
-import { BitcoinAnchorContentProofState } from '../application/BitcoinAnchorContentProofState.js';
+import { IpfsPublicationRecord } from '../application/ipfs/IpfsPublicationRecord.js';
+import { IpfsPublicationContentVerificationState } from '../application/ipfs/IpfsPublicationContentVerificationState.js';
+import { appendIpfsPublicationRecordHistoryEntry } from '../application/ipfs/IpfsPublicationRecordHistory.js';
+import { appendIpfsPublicationContentVerificationHistoryEntry } from '../application/ipfs/IpfsPublicationContentVerificationHistory.js';
+import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js';
+import { BitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
 import {
     PublicationObservationTimelineDomain,
     PublicationObservationTimelineEntryKind,
     describePublicationObservationTimeline
-} from '../application/PublicationObservationTimelineView.js';
+} from '../application/publication/observationArchive/PublicationObservationTimelineView.js';
 
 // 0.8.74 — Cross-Domain Publication Observation Timeline.
 //

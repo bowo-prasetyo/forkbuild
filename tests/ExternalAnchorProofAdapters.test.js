@@ -1,7 +1,7 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { ExternalProofVerifierRegistry } from '../application/ExternalProofVerifierRegistry.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { ExternalProofVerifierRegistry } from '../application/anchoring/ExternalProofVerifierRegistry.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -11,8 +11,8 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //
 // The flagship this milestone exists to prove: a real anchorType-
 // specific proofVerifier (anchoring/BitcoinOpReturnProofVerifier.js),
-// reached through application/ExternalProofVerifierRegistry.js's own
-// anchorType lookup, plugged into application/ExternalAnchorVerifier.js
+// reached through application/anchoring/ExternalProofVerifierRegistry.js's own
+// anchorType lookup, plugged into application/anchoring/ExternalAnchorVerifier.js
 // through the EXACT `proofVerifierRegistry` seam 0.8.0 left open and
 // never itself touched. Alice anchors a publication's content hash
 // externally and signs a PublicationAnchor; Bob — starting with NONE of

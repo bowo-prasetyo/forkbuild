@@ -6,20 +6,20 @@ import { Position } from '../core/Position.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStore.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { PlaceNamingDiscoveryMonitor } from '../application/PlaceNamingDiscoveryMonitor.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
+import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.260 — Nearby Place Naming Claim Interaction.
@@ -555,10 +555,10 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const proximitySource = codeOnlyLines(await rawSource('core/PlaceNamingProximitySelection.js'));
-        const monitorSource = codeOnlyLines(await rawSource('application/PlaceNamingDiscoveryMonitor.js'));
+        const monitorSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingDiscoveryMonitor.js'));
         const envelopeSource = codeOnlyLines(await rawSource('core/PlaceNamingDiscoveryEnvelope.js'));
 
-        for (const [name, source] of [['core/PlaceNamingProximitySelection.js', proximitySource], ['application/PlaceNamingDiscoveryMonitor.js', monitorSource], ['core/PlaceNamingDiscoveryEnvelope.js', envelopeSource]]) {
+        for (const [name, source] of [['core/PlaceNamingProximitySelection.js', proximitySource], ['application/placeNaming/PlaceNamingDiscoveryMonitor.js', monitorSource], ['core/PlaceNamingDiscoveryEnvelope.js', envelopeSource]]) {
             assert(!/navigateToNearbyPlaceNamingClaim|focusLocation|WorldNavigationSession/.test(source),
                 `35. ${name} was not touched by this milestone — it carries no reference to the new Navigate function, focusLocation(), or WorldNavigationSession at all.`);
         }

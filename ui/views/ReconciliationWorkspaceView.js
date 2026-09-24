@@ -1,8 +1,8 @@
-import { PublicationObservationArchive } from '../../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../../application/publication/observationArchive/PublicationObservationArchive.js';
 import {
     ReconcilePublisherLeaderboardSnapshotClaimUseCase,
     ReconcilePublisherLeaderboardSnapshotClaimOutcome
-} from '../../application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js';
+} from '../../application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 
 // The literal success value `execute()` itself returns on a fully

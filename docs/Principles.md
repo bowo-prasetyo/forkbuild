@@ -975,7 +975,7 @@ reasons: whether a save has happened (DocumentState/CommandHistory),
 and whether a Publication exists for this document (the same
 discovery lookup 0.2.20's fork-on-edit guard already performs). Two
 sources of truth for the same fact is how they drift; one function
-(application/DocumentLifecycleStatus.js) computing status from state
+(application/document/DocumentLifecycleStatus.js) computing status from state
 that would already have to exist anyway is how they can't.
 
 ### Explaining A Decision Is Not Optional Once The System Can Make One (0.2.21)
@@ -1616,10 +1616,10 @@ specifically what could not be verified).
 
 ### Repository Search Is Not World Search (0.2.31)
 
-`application/SearchWorldUseCase.js` answers "where is this publication
+`application/world/SearchWorldUseCase.js` answers "where is this publication
 in the world?" — text plus an optional spatial radius, enriched with a
 resolved position, because that is what navigating a 3D scene needs.
-`application/SearchPublicationsUseCase.js` answers a different
+`application/publication/SearchPublicationsUseCase.js` answers a different
 question — "which publications match this description?" — with no
 position, no camera, no placement concept anywhere in it, but with
 pagination, deterministic ordering, and (opt-in) a publication's full
@@ -1757,7 +1757,7 @@ regenerated, or simply unavailable, without affecting a publication's
 validity, identity, authorization, replication, or discoverability in
 any way. This is the organizing principle behind every other decision
 in this section, so it's worth stating as its own rule rather than
-leaving it implicit across `application/PreviewService.js`'s and
+leaving it implicit across `application/editor/PreviewService.js`'s and
 `renderer/DocumentThumbnailRenderer.js`'s individual comments.
 
 Two consequences follow directly. First, the trust story a preview
@@ -1832,7 +1832,7 @@ system) — a card that's never scrolled into view never costs anything.
 The same discipline applies going the other direction: a page or
 search-query change that removes a card from view cancels its
 in-flight or queued generation outright (see
-`application/PreviewService.js`'s cancellation, which removes an
+`application/editor/PreviewService.js`'s cancellation, which removes an
 abandoned job from the queue entirely, not merely its promise) — work
 already in flight for a page nobody is looking at anymore is waste,
 not progress.
@@ -1884,13 +1884,13 @@ rather than aspirational.
 ### Presence Is Never Signed, Never Persisted, Never Placed (0.2.33)
 
 *Changed by 0.2.38:* presence advertisements are now signed whenever the
-local identity provider can sign (`application/PresenceSigning.js`).
+local identity provider can sign (`application/presence/PresenceSigning.js`).
 `AvatarPresence` itself still has no signing descriptor, and presence is
 still never persisted or placed. See "Presence Trust, Replay & Conflict
 Handling" in docs/Roadmap.md, 0.2.38.
 
 `core/AvatarPresence.js` deliberately has no `getSigningDescriptor()`,
-and `application/AvatarPresenceSession.js` deliberately has no
+and `application/avatar/AvatarPresenceSession.js` deliberately has no
 `StorageProvider` dependency at all — not a dependency that happens to
 go unused, but one that structurally cannot exist because the
 constructor never accepts one (see `tests/AvatarPresence.test.js`,
@@ -2016,7 +2016,7 @@ CONSUME already-stored data have to be lenient, because by the time
 you're reading, refusing to render is a worse failure mode than
 rendering something slightly wrong.
 
-0.2.41 update: `application/RemoteAvatarAppearanceRegistry.js`'s own
+0.2.41 update: `application/avatar/RemoteAvatarAppearanceRegistry.js`'s own
 `resolve()` applies the exact same READ posture to a REMOTE peer's
 `templateId` — a stranger's advertisement can honestly claim any
 `templateId` string at all (structural validity only requires it be a
@@ -2184,7 +2184,7 @@ The central rule of Local Avatar Movement, stated as literally as
 possible: a keystroke is never allowed to reach a Three.js object
 directly. The only path from "W is held" to "the avatar visibly moved"
 runs through exactly one narrow waist —
-`application/AvatarMovementController.js` turns held keys into an
+`application/avatar/AvatarMovementController.js` turns held keys into an
 `AvatarMovementState`, `core/AvatarMovementSimulation.js` turns that
 into a new position/rotation/animation, and
 `AvatarPresenceSession.update()` is the ONLY thing that ever actually
@@ -2307,7 +2307,7 @@ milestone inspects a claimed position against the previous one for
 plausibility, only for authorization and internal consistency.
 Notably, `core/PresenceIngestion.js` ITSELF is unchanged, byte-for-byte,
 by 0.2.38 — its one rule remains exactly "a higher sequence number
-wins," now reached only AFTER `application/PresenceTrustBoundary.js`
+wins," now reached only AFTER `application/presence/PresenceTrustBoundary.js`
 has already confirmed the claim is authorized, non-replayed, and
 non-conflicting. Hardening the ingestion boundary meant building
 NEW layers around this rule, never rewriting it — see the four
@@ -2367,7 +2367,7 @@ independently testable as every other derivation in `core/`.
 
 `presence/LocalAvatarPresenceBroadcastProvider.js`'s `onmessage`
 handler does exactly one thing: append to a listener's inbox
-(`application/PresenceSyncService.js`'s `_inbox`). It never touches a
+(`application/presence/PresenceSyncService.js`'s `_inbox`). It never touches a
 `LocalPresenceStore`, never touches `RemoteAvatarRegistry`, and never
 reaches the render facade. Ingestion — the moment a raw, untrusted
 network message becomes this replica's own accepted state — happens
@@ -2399,14 +2399,14 @@ Transport Semantics; 0.2.38 Establishes Trust Semantics" above — the
 brief was to harden the ingestion boundary already built, not to
 invent AvatarProfile distribution as a side effect). The binding is
 never cleared when an avatar goes ABSENT and gets pruned from
-`application/LocalPresenceStore.js` — a returning participant must
+`application/presence/LocalPresenceStore.js` — a returning participant must
 still only be believed as the SAME authority that left.
 
 ### Presence Trust Has One Real Policy Axis (0.2.38)
 
 `core/PresenceTrustPolicy.js` has exactly one knob:
 `requireSignedPresence`. Every other rejection
-`application/PresenceTrustBoundary.js` can produce — a wrong-authority
+`application/presence/PresenceTrustBoundary.js` can produce — a wrong-authority
 claim, a replayed claim, an equal-sequence-but-different-content
 claim — is never negotiable by policy; only whether the ABSENCE of a
 signature is disqualifying is a matter of operator choice. This is
@@ -2481,7 +2481,7 @@ principle.
 ### Do Not Let Arrival Order Choose A Winner (0.2.38)
 
 For a genuine equivocation (`sequence 42 -> position A` then
-`sequence 42 -> position B`), `application/PresenceTrustBoundary.js`
+`sequence 42 -> position B`), `application/presence/PresenceTrustBoundary.js`
 does NOT keep whichever one arrived last — that would make "network
 arrival order = reality," exactly the posture 0.2.18-0.2.30 spent this
 codebase's whole decentralization arc rejecting. Instead, whichever
@@ -2496,11 +2496,11 @@ happened at all.
 
 ### Rendering Presence And Trusting Presence Remain Separate (0.2.38)
 
-`application/RemoteAvatarRegistry.js` and `renderer/AvatarRenderer.js`
+`application/avatar/RemoteAvatarRegistry.js` and `renderer/AvatarRenderer.js`
 are UNCHANGED by this milestone — they still only ever read
 `{ advertisement, lifecycleState }` off whatever
 `PresenceSyncService.pull()` returns and draw exactly that. The new
-`trustObservation` field `application/LocalPresenceStore.js` now
+`trustObservation` field `application/presence/LocalPresenceStore.js` now
 attaches to every entry is diagnostics-only: it flows to World View's
 unobtrusive summary line (`core/PresenceDiagnosticsSummary.js`,
 "Other Avatars: 7 — 3 trusted, 2 stale, 1 conflicting, 1 unavailable"),
@@ -2668,8 +2668,8 @@ fundamentally different entities — see "Avatars Are Never Document
 Selection," 0.2.39). The one thing all three DO share is the same
 "stable per-owner configuration, created once with a safe default,
 persisted through an injected StorageProvider" shape — see
-`application/PresenceVisibilityUseCase.js`, deliberately mirroring
-`application/AvatarProfileUseCase.js` structurally without merging
+`application/presence/PresenceVisibilityUseCase.js`, deliberately mirroring
+`application/avatar/AvatarProfileUseCase.js` structurally without merging
 the two.
 
 ### A Policy Abstraction Can Exist Before The Mechanism It Fully Assumes (0.2.40)
@@ -2694,7 +2694,7 @@ all.
 
 ### The Authoritative Position Is Always The Latest Presence; Interpolation Is Only Ever A Presentation Detail (0.2.37)
 
-`application/RemoteAvatarInterpolator.js` tracks two things: `_to`
+`application/avatar/RemoteAvatarInterpolator.js` tracks two things: `_to`
 (the latest AvatarPresenceAdvertisement this replica has actually
 accepted — the authoritative value) and a smoothed, time-based blend
 toward it that only ever feeds the renderer. `sequence` getter reads
@@ -2724,21 +2724,21 @@ AvatarProfileAdvertisement   — WHAT   — low-frequency   — unbounded replay
 ```
 
 Two separate wire shapes, two separate `BroadcastChannel` names, two
-separate sync services (`application/PresenceSyncService.js` and
-`application/AvatarProfileSyncService.js`), two separate trust
-boundaries (`application/PresenceTrustBoundary.js` and `application/
+separate sync services (`application/presence/PresenceSyncService.js` and
+`application/avatar/AvatarProfileSyncService.js`), two separate trust
+boundaries (`application/presence/PresenceTrustBoundary.js` and `application/
 AvatarProfileTrustBoundary.js`), and two separate stores (`application/
 LocalPresenceStore.js`, which prunes on a wall-clock timer, and
-`application/LocalAvatarProfileStore.js`, which never does — see the
+`application/avatar/LocalAvatarProfileStore.js`, which never does — see the
 next principle for why that difference is not an oversight). A single
 combined "here's everything about avatar X" message was explicitly
 rejected: it would force every WASD step to re-transmit an appearance
 that changes maybe once a session, and it would force a mid-session
 customization to wait for the next movement tick to have anywhere to
-ride. `application/RemoteAvatarRegistry.js` and `application/
+ride. `application/avatar/RemoteAvatarRegistry.js` and `application/
 RemoteAvatarAppearanceRegistry.js` mirror the split exactly one layer
 up — the render facade only ever sees the two combined, at the very
-last step, in `application/RenderWorldViewUseCase.js`'s
+last step, in `application/world/RenderWorldViewUseCase.js`'s
 `setRemoteAvatar`/`updateRemoteAvatarAppearance` calls.
 
 Because the two transports are genuinely independent, they race:
@@ -2757,10 +2757,10 @@ before the presence message that first makes the avatar visible.
 
 ### Appearance Is Durable; Presence Is Ephemeral — Neither Store Prunes Like The Other (0.2.41)
 
-`application/LocalPresenceStore.js` prunes ABSENT avatars on a
+`application/presence/LocalPresenceStore.js` prunes ABSENT avatars on a
 wall-clock timer (`staleAfterMs`/`absentAfterMs`) because a stopped
 movement stream really does mean "I no longer know where this replica
-currently is." `application/LocalAvatarProfileStore.js` has no such
+currently is." `application/avatar/LocalAvatarProfileStore.js` has no such
 timer at all, and that is deliberate, not an oversight: Alice's last
 known outfit remains the right thing for Bob to keep rendering even
 while she is temporarily STALE or fully ABSENT in presence terms — an
@@ -2804,7 +2804,7 @@ Avatar Creator again would otherwise be invisible-in-appearance to any
 replica that joined after their one-and-only edit, forever, on a
 transport (`BroadcastChannel`) with no request/response "send me your
 current state" primitive. `PROFILE_REPUBLISH_INTERVAL_MS` (15 seconds,
-`application/WorldNavigationSession.js`) exists ONLY to close that gap
+`application/world/WorldNavigationSession.js`) exists ONLY to close that gap
 — `_lastProfilePublishAt` starts at `0`, which reads as "never yet
 published," so the very first real animation frame after a local
 avatar exists publishes immediately, and every 15 seconds after that
@@ -2821,9 +2821,9 @@ essentially never changes.
 milestone — still the same pure, Three.js-free, world-geometry-free
 kinematics it always was, still producing a PROPOSED position from
 input intent alone. Collision (`core/AvatarCollision.js`,
-`application/AvatarMovementConstraint.js`) is a completely separate
+`application/avatar/AvatarMovementConstraint.js`) is a completely separate
 step, applied AFTER simulation, BEFORE the result reaches
-`AvatarPresence` — see `application/AvatarMovementController.js`'s own
+`AvatarPresence` — see `application/avatar/AvatarMovementController.js`'s own
 `tick()`: simulate first, constrain second, publish third. This is a
 deliberate design choice, not a convenient accident: mixing "what does
 the player want to do" with "what does the world's geometry allow"
@@ -2831,7 +2831,7 @@ into one function would make BOTH harder to reason about and test
 independently, and would tie a pure, trivially-unit-testable kernel to
 whatever collision geometry happens to exist. The same "one pure
 kernel, one separate constraint step applied to its output" shape
-`core/PresenceIngestion.js` and `application/PresenceTrustBoundary.js`
+`core/PresenceIngestion.js` and `application/presence/PresenceTrustBoundary.js`
 already draw between "is this claim newer" and "should I trust it at
 all" — applied here to movement instead of network trust.
 
@@ -2843,7 +2843,7 @@ visibility is transport-scoped (0.2.39), profile appearance is only
 what has actually been received (0.2.41), and the World View itself
 only ever renders what `updateSpatialView()` has streamed in within
 `STREAMING_RADIUS`. Collision extends that same honesty to movement:
-`application/AvatarMovementConstraint.js` reads WorldNavigationSession's
+`application/avatar/AvatarMovementConstraint.js` reads WorldNavigationSession's
 own `_loadedDocuments` Map — BY REFERENCE, never a snapshot — so a
 building outside the streaming radius was never asked for and cannot
 suddenly become a collision obstacle, and a building that streams OUT
@@ -2866,7 +2866,7 @@ AvatarPresence      = WHERE the person is
               collision geometry — DERIVED, not stored
 ```
 
-`application/AvatarMovementConstraint.js` computes every obstacle AABB
+`application/avatar/AvatarMovementConstraint.js` computes every obstacle AABB
 fresh, on demand, every tick, from a brick's own position plus its
 `BrickRegistry` dimensions plus the document's own world-layout offset
 (`WorldNavigationSession._getWorldPosition`, the same source of truth
@@ -2909,7 +2909,7 @@ axis-aligned bounding box (`AVATAR_COLLISION_RADIUS`/
 `AVATAR_COLLISION_HEIGHT`), not a true capsule, and every brick's
 collision bounds as an axis-aligned box built from its
 `BrickDefinition` dimensions, deliberately ignoring `Brick.rotation` —
-the same simplification `application/SelectionBoundsService.js`
+the same simplification `application/editor/SelectionBoundsService.js`
 already makes for gizmo bounds (0.1.38 onward), applied here to a new
 purpose. Full arbitrary mesh collision — thousands of objects,
 arbitrary rotations, groups — was explicitly out of scope for this
@@ -2922,7 +2922,7 @@ elsewhere (`core/` stays engine-agnostic throughout). A rotated brick
 colliding as if it weren't, or a corner brick's diagonal edge being
 slightly more permissive than its true silhouette, are honestly
 accepted simplifications, not oversights — exactly the same posture
-`application/SelectionBoundsService.js`'s own header already takes.
+`application/editor/SelectionBoundsService.js`'s own header already takes.
 
 ### Proximity Is Derived, Never Announced (0.2.43)
 
@@ -2935,7 +2935,7 @@ Bob's known presence ┘
 `core/AvatarProximity.js#computeNearbyAvatars()` is a pure function
 over data Alice's own replica ALREADY holds — her own current
 position, and the SAME trusted remote-presence list
-`application/RemoteAvatarRegistry.js` already renders from. There is
+`application/avatar/RemoteAvatarRegistry.js` already renders from. There is
 no message anywhere in this protocol that means "I am near you," and
 there never will be one — see docs/Protocol.md, "Presence, profiles
 and interactions". This isn't a missing
@@ -2971,7 +2971,7 @@ Near Alice
 ```
 
 This is true by construction, not by a permission check anywhere:
-`application/WorldNavigationSession.js` has never had, and 0.2.43 adds
+`application/world/WorldNavigationSession.js` has never had, and 0.2.43 adds
 no method that would give it, any way to write to a REMOTE avatar's
 own `AvatarPresence` or `AvatarProfile`. `targetAvatar(avatarId)`
 mutates exactly one thing — `this._avatarInteraction`, the CALLER's
@@ -3006,7 +3006,7 @@ Avatar Info panel already reads answers immediately, and the SAME
 "Follow" button, wired to the SAME `followAvatarId()`, already works —
 see the design doc's own instruction, "no new camera mechanism is
 necessary." `ui/components/NearbyAvatarsPanel.js` even reuses
-`application/AvatarPresenceLabels.js` and `.avatar-info-status-dot`'s
+`application/avatar/AvatarPresenceLabels.js` and `.avatar-info-status-dot`'s
 own CSS verbatim, the identical lifecycle/trust vocabulary
 `AvatarInfoPanel` already established — one status dot means one thing
 everywhere in this UI. The only genuinely new code is the ONE thing
@@ -3095,10 +3095,10 @@ this milestone continues rather than a new one it invents.
 
 ### State Synchronization And Event Synchronization Are Different Protocols (0.2.45)
 
-`application/PresenceSyncService.js` and `application/AvatarProfileSyncService.js`
+`application/presence/PresenceSyncService.js` and `application/avatar/AvatarProfileSyncService.js`
 both answer the same underlying question — "what is the LATEST thing
 this avatarId has told me?" — and both keep exactly one record per
-avatarId to answer it. `application/AvatarInteractionSyncService.js`
+avatarId to answer it. `application/avatar/AvatarInteractionSyncService.js`
 answers a genuinely different question — "did anything NEW just
 happen?" — and keeps no record at all: `pull()` returns a fresh,
 transient batch of newly-accepted events every call, never a
@@ -3152,7 +3152,7 @@ and nothing more. There is no code path anywhere in this milestone
 that reads an incoming `targetAvatarId`, matches it against the local
 avatar's own id, and does anything DIFFERENT as a result — no forced
 camera turn, no auto-opened panel, no state change on the named
-target's own replica. `application/WorldNavigationSession.js`'s
+target's own replica. `application/world/WorldNavigationSession.js`'s
 `_applyRemoteAvatarInteraction()` renders the gesture on the SENDER's
 own avatar visual (`event.avatarId`), never touches anything keyed by
 `event.targetAvatarId` at all.
@@ -3182,14 +3182,14 @@ against a full retained "current advertisement" instead — a structure
 interaction deliberately doesn't keep (see this milestone's first
 principle above). Combining both concerns into ONE bounded window,
 rather than reusing PresenceReplayWindow's shape by itself, is what
-lets `application/AvatarInteractionTrustBoundary.js` reject a replayed
+lets `application/avatar/AvatarInteractionTrustBoundary.js` reject a replayed
 OR a genuinely-old-but-never-before-seen event without retaining
 anything beyond a handful of recent ids and one integer per avatarId.
 
 ### An Event Stream Has No Room For Equivocation Detection, And That Gap Is Named, Not Hidden (0.2.45)
 
-`application/AvatarInteractionTrustBoundary.js` has no equivocation
-check, unlike `application/PresenceTrustBoundary.js`/
+`application/avatar/AvatarInteractionTrustBoundary.js` has no equivocation
+check, unlike `application/presence/PresenceTrustBoundary.js`/
 `AvatarProfileTrustBoundary.js`. Equivocation detection needs a
 retained "current claim at this causal position" to compare a
 competing one against; 0.2.45 deliberately keeps no such thing for
@@ -3504,7 +3504,7 @@ discovery-layer value at all.
 endpoint is worth attempting a connection to?" Whether that candidate turns
 out to be who it claims — or anyone verifiable at all — is entirely
 `peer/PeerAuthenticationSession.js`'s question, asked fresh, every time,
-over whatever real connection `application/ConnectToPeerUseCase.js` opens
+over whatever real connection `application/peer/ConnectToPeerUseCase.js` opens
 to that candidate. This is the same "Discovery, Authentication,
 Authorization, Visibility are different questions" separation the 0.2.49
 design doc already drew, made structural here rather than merely
@@ -3535,7 +3535,7 @@ applied here to a peer's own connection lifecycle.
 
 ### A Peer Alias Is A Local Note, Never A Claim About The Peer (0.2.50)
 
-`application/ConnectedPeer.js#setAlias()` is a purely local, in-memory
+`application/peer/ConnectedPeer.js#setAlias()` is a purely local, in-memory
 label this device typed for itself, about one live connection. It is never
 signed, never sent to the peer, never written to storage, and disappears
 the moment that `ConnectedPeer` is discarded — which happens automatically
@@ -3664,7 +3664,7 @@ directly below) suppressing a repeated `messageId` is TRANSPORT hygiene —
 "don't hand the same bytes to a handler twice" — and is a completely
 different question from whether a PROTOCOL considers a given payload stale
 or superseded, which is `core/PresenceFreshness.js`, `core/
-PresenceReplayWindow.js`, and `application/AvatarInteractionTrustBoundary.js`'s
+PresenceReplayWindow.js`, and `application/avatar/AvatarInteractionTrustBoundary.js`'s
 own, entirely separate business.
 
 ### Replay Semantics Belong To The Protocol, Never The Bus (0.2.52)
@@ -3681,7 +3681,7 @@ is not, and must never become, the place that decides whether a
 presence advertisement is stale (`core/PresenceFreshness.js`), whether an
 avatar interaction event is a legitimate duplicate or a replay attack
 (`core/AvatarInteractionReplayWindow.js`'s own sequence + `interactionId`
-tracking, consulted by `application/AvatarInteractionTrustBoundary.js`),
+tracking, consulted by `application/avatar/AvatarInteractionTrustBoundary.js`),
 or whether two conflicting claims constitute equivocation (`core/
 PresenceEquivocation.js`).
 Each of those already exists, already works, and already lives ONE LAYER
@@ -3700,8 +3700,8 @@ layer down.
 implementation of `presence/AvatarPresenceBroadcastProvider.js`'s
 interface — the SAME interface `presence/LocalAvatarPresenceBroadcastProvider.js`
 has satisfied since 0.2.37 — and that is the entire reason 0.2.53 could
-ship without touching `application/PresenceSyncService.js`,
-`application/LocalPresenceStore.js`, `application/PresenceTrustBoundary.js`,
+ship without touching `application/presence/PresenceSyncService.js`,
+`application/presence/LocalPresenceStore.js`, `application/presence/PresenceTrustBoundary.js`,
 `core/PresenceIngestion.js`, `core/PresenceAuthority.js`,
 `core/PresenceReplayWindow.js`, `core/PresenceEquivocation.js`, or
 `core/PresenceFreshness.js` — every one of 0.2.37 through 0.2.38's own
@@ -3725,7 +3725,7 @@ transport existed to test it against.
 
 `core/AvatarPresenceAdvertisement.js`'s wire shape gained nothing in
 0.2.53 — no `recipient`, no `visibility`, no authorized-peer list ever
-travels on it, over either transport. `application/PresenceSyncService.js#publish()`
+travels on it, over either transport. `application/presence/PresenceSyncService.js#publish()`
 still takes exactly one argument, an advertisement, exactly as it has
 since 0.2.37, and still has no idea whether zero, one, or five peers
 end up receiving it. The decision of WHICH of a replica's currently
@@ -3749,10 +3749,10 @@ presence code either, for the identical reason.
 Receiving a presence advertisement is deliberately never, anywhere in
 this codebase, a trigger to `connect()` to anyone.
 `presence/PeerAvatarPresenceBroadcastProvider.js` only ever iterates
-`application/ConnectedPeerRegistry.js#list()` — connections that
+`application/peer/ConnectedPeerRegistry.js#list()` — connections that
 already exist, right now, for reasons entirely outside this class's
 own knowledge — and never calls `peer/PeerConnectionProvider.js#connect()`,
-imports `application/ConnectToPeerUseCase.js`, or reacts to an
+imports `application/peer/ConnectToPeerUseCase.js`, or reacts to an
 incoming advertisement by reaching for either. The layering stays
 strictly one-directional: Discovery finds a candidate address (0.2.50)
 → Connection opens a transport to it (0.2.49/0.2.51) → Authentication
@@ -3788,7 +3788,7 @@ thing that is still HONEST about this: `AvatarProfileVisibilityPolicy`
 grants every AUTHENTICATED peer eligibility (no FRIENDS/LOCAL/HIDDEN
 tier yet — there is still no live profile-sharing configuration
 surface anywhere in the running app for a richer tier to mean
-anything, the same posture `application/AvatarProfileTrustBoundary.js`
+anything, the same posture `application/avatar/AvatarProfileTrustBoundary.js`
 already took on the TRUST side in 0.2.41), rather than pretending
 presence's own policy controls profile privacy just because reusing it
 would have been less code. A future milestone can give
@@ -3811,15 +3811,15 @@ purpose, never by accident of implementation reuse:
 | `AvatarPresence`      | current location      | latest ACCEPTED sequence, PRUNED once stale |
 | `AvatarInteraction`   | something happened    | nothing — an event is never replicated state |
 
-`application/LocalAvatarProfileStore.js` never expires a record on its
+`application/avatar/LocalAvatarProfileStore.js` never expires a record on its
 own — an avatar's LOOK is a durable fact, unaffected by its owner
-being temporarily away — while `application/LocalPresenceStore.js`'s
+being temporarily away — while `application/presence/LocalPresenceStore.js`'s
 own freshness/staleness machinery (0.2.38) exists specifically because
 a LOCATION claim genuinely goes stale. 0.2.54's flagship
 (`tests/PeerAvatarProfile.test.js`, Section C) proves this distinction
 survives the SAME shared transport, not just the SAME shared code:
 fast-forwarding a receiver's clock past presence's own staleness
-window prunes Alice from `application/RemoteAvatarRegistry.js`
+window prunes Alice from `application/avatar/RemoteAvatarRegistry.js`
 entirely, while her profile — sitting in a completely separate store,
 reached over a completely separate `PeerMessageBus` protocol string —
 is provably untouched. Neither store, nor either protocol's trust
@@ -3832,7 +3832,7 @@ independent functions 0.2.41 already chose them to be (see
 abstraction would have had to grow a "does this protocol expire?" flag
 sooner or later, and that flag is exactly the kind of coupling this
 principle exists to rule out in advance. The same reasoning is why
-`application/AvatarProfileSyncService.js` is never constructed with,
+`application/avatar/AvatarProfileSyncService.js` is never constructed with,
 or made to depend on, a presence transport at all — 0.2.54's flagship
 gives Charlie a profile transport and nothing else, and he still
 resolves Alice's real appearance, proving "a peer can know your
@@ -3841,7 +3841,7 @@ merely by assertion.
 
 ### A Peer Session Manager Owns Connections, Never What Travels Over Them (0.2.55)
 
-`application/PeerSessionManager.js` answers exactly one question — "how
+`application/peer/PeerSessionManager.js` answers exactly one question — "how
 does an invitation become an authenticated `ConnectedPeer`?" — and
 stops there, on purpose. It has no method that sends an application
 message, no method that reads or writes presence, a profile, or an
@@ -3896,7 +3896,7 @@ is no field for an endpoint, a `connectionId`, a session nonce, a
 WebRTC candidate, or anything else that named a specific transport
 session — see that file's own header, which calls this out explicitly
 as the reason a `PeerRelationship` can never be used to skip a fresh
-handshake. `application/PeerRelationshipUseCase.js#rememberPeer`
+handshake. `application/peer/PeerRelationshipUseCase.js#rememberPeer`
 enforces where that identity is allowed to come from just as strictly
 as it enforces what is stored: its one parameter must be an actual
 `peer/PeerIdentity.js` instance — the type `peer/
@@ -3916,8 +3916,8 @@ who's on the other end — the cryptographic identity always is.
 
 ### Remembering A Peer Is A Deliberate Act, Never A Side Effect Of Authentication (0.2.56)
 
-Nothing in `application/PeerSessionManager.js`,
-`application/ConnectToPeerUseCase.js`, or `peer/
+Nothing in `application/peer/PeerSessionManager.js`,
+`application/peer/ConnectToPeerUseCase.js`, or `peer/
 PeerAuthenticationSession.js` calls `PeerRelationshipUseCase.rememberPeer()`.
 Authenticating a connection and remembering an identity are two
 independently triggered actions, on purpose: authentication proves
@@ -3954,7 +3954,7 @@ publications, his documents, and his world placements are untouched by
 Alice forgetting him — they live on Bob's device (or wherever he chose
 to publish them), not on Alice's, and Alice's local relationship record
 was never anything more than her own note that she once proved who he
-was. Forgetting also never touches `application/ConnectedPeerRegistry.js`:
+was. Forgetting also never touches `application/peer/ConnectedPeerRegistry.js`:
 if the forgotten identity happens to be connected right now, the live
 `ConnectedPeer` keeps running, exactly as authenticated as it was a
 moment ago — forgetting only means the NEXT time this identity
@@ -4021,7 +4021,7 @@ relationship exists at all"). A friendship advertisement has no such
 soft landing — an unsigned REQUEST or ACCEPT proves nothing whatsoever,
 so it is not evidence at all, and this codebase refuses to pretend
 otherwise by storing it as if it were.
-`application/FriendRelationshipUseCase.js#_handleIncoming()` goes one
+`application/identity/FriendRelationshipUseCase.js#_handleIncoming()` goes one
 step further than the signature check alone: it also requires the
 claimed `actorIdentity` to equal the `remoteIdentity` THIS SPECIFIC,
 already-authenticated connection proved during its own 0.2.49
@@ -4036,8 +4036,8 @@ step 15).
 
 *Changed by 0.2.60:* REJECT, CANCEL and UNFRIEND now exist
 (`core/FriendshipAction.js`,
-`application/FriendRelationshipUseCase.js#unfriend()`), and blocking is
-a separate local decision (`application/PeerBlockUseCase.js`). See
+`application/identity/FriendRelationshipUseCase.js#unfriend()`), and blocking is
+a separate local decision (`application/peer/PeerBlockUseCase.js`). See
 "Friendship Is Mutual Relationship State; Blocking Is A Unilateral Local
 Decision (0.2.60)" below.
 
@@ -4084,7 +4084,7 @@ picture without collapsing into any of the first three.
 
 `core/PresenceVisibilityPolicy.js` and `core/AvatarProfileVisibilityPolicy.js`
 still import nothing from `core/FriendshipRecord.js`, `core/
-FriendshipState.js`, or `application/FriendRelationshipUseCase.js` —
+FriendshipState.js`, or `application/identity/FriendRelationshipUseCase.js` —
 not before this milestone, not after it. Both classes' `shouldAdvertiseToPeer()`
 methods accept a plain `{ isFriend }` boolean the CALLER computes and
 hands in; both `shouldAdvertise()` methods accept the coarser `{
@@ -4101,7 +4101,7 @@ extended one layer further: a pure policy answering "should I
 advertise" must never itself be capable of going and finding out who is
 a friend — it can only be TOLD, fresh, every time it is asked, by
 whichever application-layer caller actually owns that store. A `core/`
-class that could read `application/FriendRelationshipUseCase.js`
+class that could read `application/identity/FriendRelationshipUseCase.js`
 directly would blur exactly the boundary `docs/Architecture.md`'s own
 layering has protected since this project's very first milestone.
 
@@ -4136,7 +4136,7 @@ REMOTE peer's proven identityId — Alice's transport asks "does MY
 wire by Bob himself. A malicious or merely out-of-sync peer claiming
 "we're friends" in some hypothetical future protocol extension could
 never be trusted to grant itself anything — exactly the same posture
-`core/PresenceTrustPolicy.js`/`application/PresenceTrustBoundary.js`
+`core/PresenceTrustPolicy.js`/`application/presence/PresenceTrustBoundary.js`
 already take toward every other claim a remote peer makes about itself.
 This is why `tests/FriendAwareVisibility.test.js`'s own FLAGSHIP proves
 Bob structurally CANNOT alter Alice's policy (step 13): there is no
@@ -4151,7 +4151,7 @@ read only by their own owner's transports.
 flagged, in 0.2.54's own header, as a temporary limitation: "there is
 still no live profile-sharing configuration surface anywhere in the
 running app for a richer tier to mean anything." That surface now
-exists — `application/AvatarProfileVisibilityUseCase.js`,
+exists — `application/avatar/AvatarProfileVisibilityUseCase.js`,
 `ui/views/AvatarSettingsView.js`'s own "Profile Visibility" section —
 so `WorldNavigationSession._publishLocalAvatarProfile()` now consults
 its OWN `avatarProfileVisibilityUseCase`, completely independent of
@@ -4172,7 +4172,7 @@ Switching Profile Visibility to HIDDEN (or narrowing FRIENDS) stops the
 NEXT profile advertisement from reaching an ineligible peer. It does
 not, and structurally cannot, reach into a peer who already received an
 earlier, ACCEPTED advertisement and make them forget it —
-`application/LocalAvatarProfileStore.js` (0.2.41, unmodified) has no
+`application/avatar/LocalAvatarProfileStore.js` (0.2.41, unmodified) has no
 expiry, no remote-wipe primitive, and no mechanism by which Alice's
 policy change could ever be delivered to Bob's own local store as an
 instruction to erase something. This was already true before 0.2.58 —
@@ -4228,7 +4228,7 @@ path exists" and "this code path is what actually runs."
 The organizing claim of this milestone, stated plainly: presence,
 profile, and interaction are not three separate design questions about
 which transport to use — they are three instances of the same answer.
-Once `application/ConnectedPeerRegistry.js` holds an AUTHENTICATED
+Once `application/peer/ConnectedPeerRegistry.js` holds an AUTHENTICATED
 connection to a peer, every avatar-social protocol this replica speaks
 attaches to that SAME connection, through the SAME `peer/
 PeerMessageBus.js`, gated by that protocol's OWN visibility policy —
@@ -4247,7 +4247,7 @@ again.
 "Alice has logged in but has no authenticated peer connections right
 now" and "Alice's avatar social layer has no transport" are different
 facts, and this milestone keeps them different on purpose.
-`application/CreateWorldViewUseCase.js` decides ONCE, at construction
+`application/world/CreateWorldViewUseCase.js` decides ONCE, at construction
 time, whether a real peer transport was supplied — never by polling
 `connectedPeerRegistry.list().length` — so a replica with zero peers
 right now still has a fully live `PeerAvatarPresenceBroadcastProvider`
@@ -4271,7 +4271,7 @@ existing test in this suite that never wires a peer transport keeps
 working over it completely unchanged. What changes is its ROLE. Before
 0.2.59, it was the only transport World View's avatar layer had ever
 actually run over, so it was, by default, the production one. After
-0.2.59, `application/CreateWorldViewUseCase.js` reaches for the real
+0.2.59, `application/world/CreateWorldViewUseCase.js` reaches for the real
 peer transport whenever the caller supplies one, and the real, running
 application (`ui/main.js` -> `ui/views/WorldView.js`) always does. A
 same-origin `BroadcastChannel` was never a substitute for an
@@ -4368,10 +4368,10 @@ checked in a fixed order, neither one ever standing in for the other.
 
 ### Blocking Is Wired Twice, Once Per Direction, Because Neither Side May Trust The Other To Enforce It (0.2.60)
 
-`application/CreateWorldViewUseCase.js` wires the SAME `isBlocked`
+`application/world/CreateWorldViewUseCase.js` wires the SAME `isBlocked`
 predicate to two genuinely different places: each outbound
 `presence/PeerAvatarPresenceBroadcastProvider.js` (never SEND to a
-blocked peer) and `application/WorldNavigationSession.js`'s inbound
+blocked peer) and `application/world/WorldNavigationSession.js`'s inbound
 trust boundaries (never ACCEPT from a blocked signer). Neither wiring
 is optional, and neither one is redundant with the other, for the same
 reason 0.2.38 already established that rendering presence and trusting
@@ -4391,7 +4391,7 @@ that happened to work out twice.
 ### Blocking Is Silent — Never Announced To The Blocked Identity (0.2.60)
 
 `core/PeerBlockRecord.js` has no `signature` field and
-`application/PeerBlockUseCase.js` has no `peerMessageBus` — not an
+`application/peer/PeerBlockUseCase.js` has no `peerMessageBus` — not an
 oversight, the entire point. Telling Bob "Alice has blocked you" is
 itself a piece of information Alice may not want to hand him (it invites
 exactly the retaliation or renewed contact blocking exists to prevent),
@@ -4405,7 +4405,7 @@ no observable difference from her never having received it at all.
 
 ### Unblocking Restores Nothing But The Ability To Be Heard Again (0.2.60)
 
-`application/PeerBlockUseCase.js#unblock()` does exactly one thing:
+`application/peer/PeerBlockUseCase.js#unblock()` does exactly one thing:
 removes a `core/PeerBlockRecord.js` entry. It never touches
 `core/FriendshipRecord.js`, never re-sends anything, and never
 re-derives any other piece of state — see "Friendship Is Mutual
@@ -4427,13 +4427,13 @@ defaulting to FRIEND.
 transport hygiene... protocol semantics belong to the protocol." 0.2.61
 is the first milestone to build a genuinely NEW, direct, two-party
 protocol on top of that promise rather than another avatar-social
-broadcast: `application/ChatUseCase.js` subscribes to its own namespaced
-channel (`forkbuild:chat`), same as `application/FriendRelationshipUseCase.js`
+broadcast: `application/chat/ChatUseCase.js` subscribes to its own namespaced
+channel (`forkbuild:chat`), same as `application/identity/FriendRelationshipUseCase.js`
 (0.2.57) already does, and neither `peer/PeerMessageBus.js` nor
 `peer/PeerConnection.js` gained a single line of chat-specific code.
 Concretely: `peer/PeerMessageBus.js` never contains `if (protocol ===
 'forkbuild:chat')`, chat messages are never distinguished from any
-other protocol's traffic anywhere below `application/ChatUseCase.js`,
+other protocol's traffic anywhere below `application/chat/ChatUseCase.js`,
 and a message being AUTHENTICATED is necessary but never sufficient for
 it to be treated as chat — see "Friendship Authorizes A Protocol; It Is
 Never The Protocol" below for what else is required.
@@ -4444,7 +4444,7 @@ Never The Protocol" below for what else is required.
 consent, not as permission to do anything specific with it — 0.2.58
 already proved this once, gating avatar-social VISIBILITY on it without
 folding visibility into the friendship protocol itself. 0.2.61 proves
-it again, one layer further: `application/ChatUseCase.js` never sends,
+it again, one layer further: `application/chat/ChatUseCase.js` never sends,
 receives, mutates, or even imports a `core/FriendshipAdvertisement.js`
 — it only ever calls `friendRelationshipUseCase.getState(identityId)`,
 fresh, on every single send and every single incoming message, exactly
@@ -4463,7 +4463,7 @@ than asking chat, or friendship itself, to know anything about it.
 0.2.60 already established that friendship/blocking and the peer
 connection are independent axes — a block never closes the underlying
 WebRTC connection (`core/PeerBlockRecord.js`'s own header). 0.2.61
-inherits that precedent directly: `application/ChatUseCase.js` never
+inherits that precedent directly: `application/chat/ChatUseCase.js` never
 asks a connection to close when friendship ends or a block is recorded,
 and never needs to — because both `sendMessage()` and the receiving
 `_handleIncoming()` re-check `isBlocked`/`getState() === FRIEND` FRESH
@@ -4483,13 +4483,13 @@ Continues A Conversation; It Never Starts A New One (0.2.69)" below.
 
 The deliberate boundary of this milestone: two authenticated friends
 exchange text over a direct connection, and nothing about that exchange
-is written down anywhere. `application/LiveConversation.js` — named
+is written down anywhere. `application/chat/LiveConversation.js` — named
 that, and NOT `ChatHistory`, on purpose — holds a conversation's
 transcript only in memory, only for as long as the owning
-`application/ChatUseCase.js` instance lives, with no `toJSON`/`fromJSON`
+`application/chat/ChatUseCase.js` instance lives, with no `toJSON`/`fromJSON`
 at all. There is no store-and-forward: `peer/PeerMessageBus.js#send()`
 already throws for a peer that is not, right now, AUTHENTICATED, and
-`application/ChatUseCase.js` adds no queue anywhere to catch what that
+`application/chat/ChatUseCase.js` adds no queue anywhere to catch what that
 throw prevents from being delivered — see `tests/PeerChat.test.js`'s own
 Scenario G. What persistent message history should even mean in a
 decentralized system — who stores it, whether an intermediary can read
@@ -4527,7 +4527,7 @@ is the first milestone to actually put a second connection next to a
 first one and ask what should happen, and the wrong answer was
 tempting and specific: "this device already knows Bob's identityId; a
 new connection that shows up while Alice is trying to reconnect to Bob
-must BE Bob." `application/ConnectToPeerUseCase.js`'s new
+must BE Bob." `application/peer/ConnectToPeerUseCase.js`'s new
 `expectedIdentityId` refuses that shortcut structurally. The 0.2.49
 handshake runs exactly as it always has — nothing here changes what
 counts as a valid PROOF, and nothing here trusts a connection sooner or
@@ -4560,7 +4560,7 @@ expecting. Collapsing the two into one FAILED would throw away
 information a "Reconnect" UI genuinely needs: "nothing answered" and
 "the wrong person answered, and here specifically is who" are different
 facts that deserve different explanations, not a single indistinguishable
-badge. `application/ConnectToPeerUseCase.js#onIdentityMismatch()` is
+badge. `application/peer/ConnectToPeerUseCase.js#onIdentityMismatch()` is
 the dedicated channel this milestone adds for exactly that second case,
 carrying both the expected and the actual identityId — never merged
 into, and never gating, `peer/PeerAuthenticationState.js` itself.
@@ -4575,7 +4575,7 @@ already built. It doesn't, because the codebase already had the exact
 right answer, twice over, before 0.2.62 ever asked the question:
 `peer/WebRtcPeerConnectionProvider.js#createOffer()` (0.2.51) already
 mints a fresh, globally-unique `connectionId` for every single
-connection, `application/ConnectedPeerRegistry.js` (0.2.50) already
+connection, `application/peer/ConnectedPeerRegistry.js` (0.2.50) already
 keys its entire Map by that id and nothing else, and
 `peer/PeerAuthenticationSession.js` (0.2.49) already binds its own
 HELLO/PROOF `sessionNonce` to that exact same id, specifically so "a
@@ -4585,7 +4585,7 @@ different connection." A reconnect's fresh connection gets a fresh
 connection's belated close() event can only ever remove ITS OWN,
 already-stale registry entry, never a different one it has no key for.
 0.2.62 adds no second identifier, no generation counter, and no new
-bookkeeping for this — see `application/PeerReconnectionUseCase.js`'s
+bookkeeping for this — see `application/peer/PeerReconnectionUseCase.js`'s
 own header for why inventing one would have been exactly the kind of
 "a third thing sitting alongside two real state machines" mistake
 `peer/PeerLifecycleState.js` (0.2.50) already named and rejected once,
@@ -4600,7 +4600,7 @@ peer" once, on purpose: it fails, immediately, with no queue anywhere
 to catch it (`docs/Principles.md`, "0.2.61 Ships Live Chat, Not A
 Message Database"). 0.2.63 does not reopen that answer — it adds a
 SECOND, differently-named operation instead.
-`application/ChatUseCase.js#sendMessage()` is completely unmodified:
+`application/chat/ChatUseCase.js#sendMessage()` is completely unmodified:
 it still requires a real, currently-`AUTHENTICATED` `ConnectedPeer` and
 still throws outright if reachability fails. `#sendOrQueue()` is new
 and addressed to a `peerIdentityId` rather than a connection, because
@@ -4627,7 +4627,7 @@ because an endpoint is exactly as ephemeral as the connection it came
 from. `core/ChatOutboxEntry.js` draws the identical line for a queued
 message: it carries a `peerIdentityId`, never a `connectionId` — there
 is structurally nowhere on it for one to go. This is what makes
-`application/ChatUseCase.js#_attemptFlush()`, triggered automatically
+`application/chat/ChatUseCase.js#_attemptFlush()`, triggered automatically
 by the exact same `connectedPeerRegistry.onChange()` subscription
 0.2.61 already used to `attach()` every peer to the bus, correct
 without any bespoke "is this still the connection I queued against"
@@ -4650,7 +4650,7 @@ and receiving the untouched, still-QUEUED message intact.
 `core/ChatDeliveryState.js` keeps three facts about a queued message
 genuinely separate, the same discipline `core/ChatMessage.js`'s own
 header already applied to a message's identity/sequence/delivery-order
-split (0.2.61): QUEUED (sitting in `application/ChatOutbox.js`, not yet
+split (0.2.61): QUEUED (sitting in `application/chat/ChatOutbox.js`, not yet
 transmitted), SENT (handed to `peer/PeerMessageBus.js#send()` over a
 live connection — the bus ACCEPTED it, nothing more), and DELIVERED (a
 `core/ChatDeliveryAck.js` came back from the recipient's own,
@@ -4658,11 +4658,11 @@ already-trusted ingestion). The ack is a deliberately SEPARATE wire
 vocabulary and a SEPARATE protocol string
 (`ChatUseCase.ACK_PROTOCOL`), never folded into `core/ChatMessage.js`
 or sent over `forkbuild:chat` — the same "own protocol, own wire
-shape" discipline `application/ChatUseCase.js` itself already used to
+shape" discipline `application/chat/ChatUseCase.js` itself already used to
 avoid being folded into `peer/PeerMessageBus.js`. The receiving side
 acknowledges every chat message it accepts, a freshly-accepted one and
 an exact, already-seen duplicate alike — see
-`application/ChatUseCase.js#_handleIncoming()` — which is precisely
+`application/chat/ChatUseCase.js#_handleIncoming()` — which is precisely
 what makes a retransmit after a dropped connection harmless without a
 sender-side retry/timeout system of its own:
 `core/ChatReplayWindow.js` (0.2.61, completely unmodified) already
@@ -4674,9 +4674,9 @@ mistake this state machine exists to make structurally impossible.
 
 ### The Outbox Prunes Itself; It Is Not A Message Database (0.2.63)
 
-`application/LiveConversation.js` (0.2.61) is never durable at all —
+`application/chat/LiveConversation.js` (0.2.61) is never durable at all —
 no `toJSON`/`fromJSON`, gone the moment its owning `ChatUseCase`
-instance does. `application/ChatOutbox.js` is the one genuinely new
+instance does. `application/chat/ChatOutbox.js` is the one genuinely new
 piece of DURABLE chat state 0.2.63 introduces, and it is deliberately
 narrow: an entry exists only for as long as a message remains in
 flight. The instant a `core/ChatDeliveryAck.js` lands,
@@ -4685,9 +4685,9 @@ retaining it DELIVERED forever; an entry whose TTL elapses before that
 ever happens (`core/ChatOutboxEntry.js#isExpired()`) is dropped just
 as completely by `pruneExpired()`, checked lazily on read rather than
 on a background timer, the same lazy-check-on-read posture every other
-TTL in this codebase already uses. Nothing in `application/ChatOutbox.js`
+TTL in this codebase already uses. Nothing in `application/chat/ChatOutbox.js`
 answers "what did we talk about" — that question still belongs
-entirely to `application/LiveConversation.js`, exactly as ephemeral as
+entirely to `application/chat/LiveConversation.js`, exactly as ephemeral as
 0.2.61 left it. A state machine that looks natural to add on top of
 this — `LOCAL_ONLY`, `FAILED` — was deliberately left out of
 `core/ChatDeliveryState.js`'s own four-value vocabulary because
@@ -4710,7 +4710,7 @@ attempting") → Authentication ("this connection actually belongs to
 Bob"). Only the third is ever authoritative. `application/
 FindPeerUseCase.js#connect()` makes this concrete rather than
 aspirational: it always threads the identity ALICE SEARCHED FOR as
-`expectedIdentityId` into `application/ConnectToPeerUseCase.js`'s
+`expectedIdentityId` into `application/peer/ConnectToPeerUseCase.js`'s
 existing 0.2.62 gate, never the candidate record's own `identityHint`
 — so even a maliciously or carelessly mislabeled candidate ("here is
 Bob!" pointing at Charlie's endpoint) is structurally incapable of
@@ -4772,7 +4772,7 @@ as unauthoritative as connecting to one.
 DISTRIBUTED alongside the one source 0.2.50 through 0.2.64 actually
 implement, INVITATION — named now, unimplemented, for the same reason
 `core/ChatDeliveryState.js` names DELIVERED before anything could
-produce it yet: so `application/DiscoverPeersUseCase.js`, `application/
+produce it yet: so `application/peer/DiscoverPeersUseCase.js`, `application/
 FindPeerUseCase.js`, and any future UI never have to special-case "what
 kind of discovery was this" beyond reading the field. Deliberately not
 built in 0.2.64: an actual LAN broadcast provider, a rendezvous
@@ -4781,7 +4781,7 @@ scoping in this milestone's own README.md entry for why. Whichever of
 those eventually ships, none of them earns one bit more trust than
 INVITATION already has: `source` is provenance metadata a UI might
 show a human ("found via invitation" vs. "found via LAN"), never an
-input to `application/ConnectToPeerUseCase.js#_guardExpectedIdentity`
+input to `application/peer/ConnectToPeerUseCase.js#_guardExpectedIdentity`
 or to anything else that decides whether a connection is accepted.
 Every source still produces nothing but `peer/PeerDiscoveryRecord.js`'s
 own untrusted candidate, still required to pass a real
@@ -4796,7 +4796,7 @@ real PUBLISH/LOOKUP/REMOVE, not merely a search over what was already
 imported (`peer/LocalPeerDiscoveryProvider.js#discover`, 0.2.64) — and
 changes nothing about which of the three stages is ever allowed to say
 "this is Bob": still only `peer/PeerAuthenticationSession.js`'s
-handshake, gated by `application/ConnectToPeerUseCase.js`'s 0.2.62
+handshake, gated by `application/peer/ConnectToPeerUseCase.js`'s 0.2.62
 `expectedIdentityId` check. A rendezvous node — even one implemented as
 a real server, one day — is architecturally incapable of vouching for
 an identity; it can only ever hand back candidates, exactly as
@@ -4869,8 +4869,8 @@ source's answer disappear because an unhealthy one nearby failed.
 knowing someone in it?" — by making the answer an explicit, inspectable,
 changeable list (`addBootstrapProvider()`/`removeBootstrapProvider()`),
 never one permanent, hard-coded discovery authority baked into the
-architecture. Nothing about `application/FindPeerUseCase.js` or
-`application/PeerSessionManager.js` needed to change to make this
+architecture. Nothing about `application/peer/FindPeerUseCase.js` or
+`application/peer/PeerSessionManager.js` needed to change to make this
 possible — both already depended on nothing but the `peer/
 PeerDiscoveryProvider.js` interface (see docs/Principles.md,
 "Discovery Finds A Candidate; It Never Authenticates One," 0.2.50), so
@@ -4903,7 +4903,7 @@ Bob's identityId at Charlie's own, completely genuine, completely
 real WebRTC endpoint costs the attacker nothing, over the real
 transport exactly as it cost nothing over the in-memory one in
 0.2.65's flagship — Charlie authenticates honestly as himself, and
-`application/ConnectToPeerUseCase.js`'s 0.2.62 `expectedIdentityId`
+`application/peer/ConnectToPeerUseCase.js`'s 0.2.62 `expectedIdentityId`
 gate rejects the connection the instant that becomes provable. A
 rendezvous node, real or simulated, malicious or merely broken, can
 prevent discovery (by being unreachable, by refusing to answer, by
@@ -4924,9 +4924,9 @@ no such luxury, so 0.2.66 makes the entire contract `async`, and
 propagates that upward exactly one caller at a time, never skipping a
 layer: `peer/RendezvousDiscoveryProvider.js#discover/publish/
 unpublish`, then `peer/DiscoveryBootstrap.js#discover/publishToAll`,
-then `application/DiscoverPeersUseCase.js#discover/publish/unpublish`,
-then `application/PeerSessionManager.js#discoverCandidates/
-publishSelf/stopPublishing`, then `application/FindPeerUseCase.js#search/
+then `application/peer/DiscoverPeersUseCase.js#discover/publish/unpublish`,
+then `application/peer/PeerSessionManager.js#discoverCandidates/
+publishSelf/stopPublishing`, then `application/peer/FindPeerUseCase.js#search/
 publishSelf/stopPublishing`, finally `ui/views/PeerConnectionsView.js`'s
 own `submitFind()`. `peer/LocalRendezvousNetwork.js` itself needed no
 behavioral change at all — wrapping an already-resolved, purely
@@ -5005,7 +5005,7 @@ physically got there.
 
 ### One Publication Answers At Most One Connection Attempt (0.2.66)
 
-`application/PeerSessionManager.js#publishSelf()` publishes a REAL
+`application/peer/PeerSessionManager.js#publishSelf()` publishes a REAL
 WebRTC offer under this device's own identity, and that inherits
 `peer/WebRtcPeerConnectionProvider.js`'s own one-offer/one-answer
 design exactly as it always has (see that file's own header: there is
@@ -5181,7 +5181,7 @@ instinct applied one milestone earlier.
 
 ### A Relayed Identity Lifecycle Record Is Trusted By Its Own Signature, Never By Who Relayed It (0.2.68)
 
-`application/FriendRelationshipUseCase.js`'s ingestion boundary binds a
+`application/identity/FriendRelationshipUseCase.js`'s ingestion boundary binds a
 friendship advertisement's claimed actor to the SPECIFIC, already-
 AUTHENTICATED connection it arrived on — a friendship claim is
 first-person ("I did X"), so the relaying connection's proven identity
@@ -5208,7 +5208,7 @@ lifecycle facts about any identity" would let this protocol grow into
 an unbounded cache of revocations for identities neither side has ever
 otherwise interacted with — a shadow global directory this
 architecture has no server for and no interest in building one of
-implicitly. `application/IdentityLifecyclePropagationUseCase.js`'s
+implicitly. `application/identity/IdentityLifecyclePropagationUseCase.js`'s
 `knowsIdentity` predicate (wired, in the live app, against the SAME
 `core/PeerRelationship.js`/`core/FriendshipRecord.js` stores every
 other social feature already reads) is the deliberate bound: a
@@ -5262,17 +5262,17 @@ whether it is read locally or received over the wire.
 
 ### A Reload Continues A Conversation; It Never Starts A New One (0.2.69)
 
-`application/LiveConversation.js` (0.2.61) was always in-memory only,
+`application/chat/LiveConversation.js` (0.2.61) was always in-memory only,
 and 0.2.63 deliberately kept it that way — see "The Outbox Prunes
 Itself; It Is Not A Message Database" (0.2.63). That left an honest gap
 open ever since: reload the page, and every conversation this device
 ever had simply vanished, not because anything was wrong, but because
-nothing durable backed it. `application/ChatUseCase.js#_rehydrateFromStore()`
+nothing durable backed it. `application/chat/ChatUseCase.js#_rehydrateFromStore()`
 closes that gap without touching `LiveConversation` itself at all — it
 stays exactly as ephemeral as 0.2.61 left it, still with no toJSON/
 fromJSON of its own. What changed is what SEEDS it: on construction,
 every `LiveConversation` this owner has any stored history for is
-rebuilt from `application/ConversationStore.js`, in order, BEFORE a
+rebuilt from `application/chat/ConversationStore.js`, in order, BEFORE a
 single peer is even attached to `peer/PeerMessageBus.js`. A reload is
 therefore never "a new conversation that happens to look similar" — it
 is the SAME conversation, continued, the same way `application/
@@ -5284,7 +5284,7 @@ a reload without pretending the old connection is still alive
 
 Restoring displayed message history after a reload is the easy half of
 "a reload continues the conversation." The hard half, easy to miss
-entirely, is this: `application/ChatUseCase.js#sendMessage()`/
+entirely, is this: `application/chat/ChatUseCase.js#sendMessage()`/
 `sendOrQueue()` both mint the next outgoing `sequence` from an
 in-memory `_nextSequence` map — and a fresh `ChatUseCase` instance,
 with no rehydration, would restart that count at 1 on every reload.
@@ -5316,14 +5316,14 @@ never a connectionId. This is what makes the 0.2.63 security property —
 authenticates as Charlie instead, Bob's mail is neither sent to Charlie
 nor lost, because it was never addressed to a connection in the first
 place" — extend to conversation history for free, with no new
-enforcement code: `application/ConversationStore.js` only ever answers
+enforcement code: `application/chat/ConversationStore.js` only ever answers
 questions about a peerIdentityId, and a rejected reconnect never
 produces one belonging to the wrong identity.
 
 ### A Local History Store Is Never An Authorization Mechanism (0.2.69)
 
-`application/ConversationStore.js` sits entirely on the OUTPUT side of
-`application/ChatUseCase.js`'s trust boundary, never the input side.
+`application/chat/ConversationStore.js` sits entirely on the OUTPUT side of
+`application/chat/ChatUseCase.js`'s trust boundary, never the input side.
 Every write to it — `append()`, `updateDeliveryState()` — is called
 from exactly two places, `_appendMessage()` and `_publishDeliveryState()`,
 and both are only ever reached AFTER `_handleIncoming()`'s full,
@@ -5337,13 +5337,13 @@ block check, no replay check, and is never consulted by
 `_handleIncoming()` to decide whether to accept anything — it has no
 method that could even be asked. A conversation's durable history is a
 LOG of decisions already made, never a place a decision gets made from;
-this is the same one-way relationship `application/LiveConversation.js`
+this is the same one-way relationship `application/chat/LiveConversation.js`
 already had with `ChatUseCase` in 0.2.61, simply extended to something
 that now also survives a reload.
 
 ### Never Reuse A Durable Outbox As A Message Database, Or A Message Database As An Outbox (0.2.69)
 
-`application/ChatOutbox.js` (0.2.63) and `application/ConversationStore.js`
+`application/chat/ChatOutbox.js` (0.2.63) and `application/chat/ConversationStore.js`
 (0.2.69) look, at a glance, like the same idea twice: both are durable,
 per-owner, `peerIdentityId`-addressed stores of chat-adjacent state
 behind an injected StorageProvider. They are deliberately kept as two
@@ -5374,7 +5374,7 @@ too, so a reload never forgets which messages were already accepted.
 It deliberately does not: the actual failure mode a reset replay window
 produces — a stale retransmit being accepted a second time after a
 reload, purely because the window forgot it once — is already
-completely absorbed by `application/ConversationStore.js#append()`'s
+completely absorbed by `application/chat/ConversationStore.js#append()`'s
 own idempotence by `(peerIdentityId, messageId)`. The worst case is a
 redundant, silently-discarded write to already-existing durable state,
 never a duplicate entry in a user-visible transcript and never a
@@ -5393,22 +5393,22 @@ each of those milestones proved, on its own, that the fact it added
 survives a disconnect. 0.2.70 names the property that falls out of all
 three having done that separately, on purpose, rather than merged into
 one lifecycle: a connection closing is the ONLY thing that becomes
-false. `application/PeerRelationshipUseCase.js` still has the
-relationship. `application/FriendRelationshipUseCase.js` still has the
-friendship. `application/ConversationStore.js` still has every message.
-`application/ChatOutbox.js` still has whatever was queued, waiting for
+false. `application/peer/PeerRelationshipUseCase.js` still has the
+relationship. `application/identity/FriendRelationshipUseCase.js` still has the
+friendship. `application/chat/ConversationStore.js` still has every message.
+`application/chat/ChatOutbox.js` still has whatever was queued, waiting for
 exactly this moment to flush. None of those four stores has ever heard
-of `application/ConnectedPeerRegistry.js`, and none of them needs to —
+of `application/peer/ConnectedPeerRegistry.js`, and none of them needs to —
 each already answers its own question correctly regardless of whether
 anyone is connected right now, precisely because none of them was ever
-built to depend on that. `application/PeerPresenceUseCase.js` is the
+built to depend on that. `application/presence/PeerPresenceUseCase.js` is the
 first piece of code in this codebase that reads all five facts
 together, and it exists ONLY to make that already-true independence
 visible to a UI in one place — see the next principle.
 
 ### A Peer Presence Summary Reconciles Independent Lifetimes; It Is Never A Fourth Store (0.2.70)
 
-The temptation `application/PeerPresenceUseCase.js` was built to resist:
+The temptation `application/presence/PeerPresenceUseCase.js` was built to resist:
 collapsing identity, relationship, friendship, connection, and
 conversation into one `PeerState` object durable enough to be worth
 caching. This codebase already has a name for what goes wrong when a
@@ -5439,11 +5439,11 @@ reach the recipient's device" — a signed, transmitted, TRANSPORT fact,
 sent back automatically by the recipient's own trust boundary the
 instant it accepts a message, with no human involved at all. Whether a
 human then actually looked at the screen is a genuinely different
-question, and `application/ConversationReadTracker.js` answers only
+question, and `application/chat/ConversationReadTracker.js` answers only
 that one, only for the device that asks it — `core/
 ConversationReadMarker.js` is never signed, never carried over
 `peer/PeerMessageBus.js`, and never read by
-`application/ChatUseCase.js`'s own ingestion boundary. Bob marking a
+`application/chat/ChatUseCase.js`'s own ingestion boundary. Bob marking a
 conversation read tells Bob's own device that Bob's own device has seen
 it; Alice has no way to observe that this happened, and no code path
 anywhere in this codebase gives her one. This is a deliberate line, not
@@ -5455,11 +5455,11 @@ casually implied by a name like "read" that could be mistaken for one.
 
 ### A Read Marker Answers A Third Question; It Is Never Folded Into The Outbox Or The History Store (0.2.70)
 
-`application/ChatOutbox.js` (0.2.63) answers "what have I sent that
+`application/chat/ChatOutbox.js` (0.2.63) answers "what have I sent that
 hasn't been confirmed delivered" and prunes itself the instant that
-question is answered. `application/ConversationStore.js` (0.2.69)
+question is answered. `application/chat/ConversationStore.js` (0.2.69)
 answers "what did we talk about" and keeps everything, delivered or
-not. `application/ConversationReadTracker.js` (0.2.70) answers a third
+not. `application/chat/ConversationReadTracker.js` (0.2.70) answers a third
 question neither of those two can: "what have I actually seen." All
 three are durable, all three are per-owner, all three are addressed by
 `peerIdentityId`, and all three could, at a glance, be merged into one
@@ -5471,7 +5471,7 @@ store forces an uncomfortable compromise none of the three original
 designs intended. The read tracker in particular never reads message
 CONTENT at all — it only ever receives a bare `peerIdentityId` and a
 sequence number to advance to, computed by its one caller,
-`application/PeerPresenceUseCase.js#markRead()` — so it has no way to
+`application/presence/PeerPresenceUseCase.js#markRead()` — so it has no way to
 become a second, competing copy of either of the other two stores even
 by accident.
 
@@ -5479,17 +5479,17 @@ by accident.
 
 The instruction that shaped this milestone was explicit: do not make
 `core/ConversationReadMarker.js` (0.2.70) into a network read receipt
-by simply transmitting it. `application/ChatUseCase.js#sendReadReceipt()`
+by simply transmitting it. `application/chat/ChatUseCase.js#sendReadReceipt()`
 honors that structurally, not merely by convention — it never reads
-`application/ConversationReadTracker.js` at all. Instead it recomputes
+`application/chat/ConversationReadTracker.js` at all. Instead it recomputes
 "the highest incoming sequence I currently hold for this peer" itself,
 straight from its own `_conversations`, which is the EXACT SAME
-computation `application/PeerPresenceUseCase.js#markRead()`
-independently performs against `application/ConversationStore.js` one
+computation `application/presence/PeerPresenceUseCase.js#markRead()`
+independently performs against `application/chat/ConversationStore.js` one
 layer over. Two independent computations of one underlying fact, never
 one derived from the other, feeding two genuinely different stores: a
 LOCAL note (`ConversationReadTracker`, unsigned, never transmitted) and
-a NETWORK claim (`application/ConversationReadOutbox.js` ->
+a NETWORK claim (`application/chat/ConversationReadOutbox.js` ->
 `core/ChatReadReceipt.js`, authenticated by the connection that carries
 it). Nothing in this codebase ever reads a `ConversationReadMarker` to
 produce a `ChatReadReceipt`, so it is not merely undocumented that the
@@ -5498,9 +5498,9 @@ that could make it so even by accident.
 
 ### A Coalescing Outbox Remembers The Latest Value, Not Every Event (0.2.71)
 
-`application/ChatOutbox.js` (0.2.63) holds one entry per MESSAGE,
+`application/chat/ChatOutbox.js` (0.2.63) holds one entry per MESSAGE,
 because every queued message is its own genuine, individually-important
-event. `application/ConversationReadOutbox.js` (0.2.71) is a
+event. `application/chat/ConversationReadOutbox.js` (0.2.71) is a
 structurally different kind of outbox for a structurally different kind
 of fact: "read through sequence N" already logically implies "read
 through sequence N-1, N-2, ... 1," so there is never anything worth
@@ -5512,10 +5512,10 @@ object in this codebase already uses. Ten `markRead`/`sendReadReceipt`
 calls in a row while a peer is offline never produce ten things to
 transmit once they reconnect — they produce exactly one, the latest.
 This is also why the protocol needs no replay window at all
-(`application/ChatUseCase.js#_handleIncomingRead()`): an out-of-order or
+(`application/chat/ChatUseCase.js#_handleIncomingRead()`): an out-of-order or
 duplicate delivery of a lower-or-equal value is harmless by
 construction on the RECEIVING side too
-(`application/RemoteReadReceiptStore.js`'s own monotonic write), never
+(`application/chat/RemoteReadReceiptStore.js`'s own monotonic write), never
 something a receiver needs to detect and reject.
 
 ### A Read Marker And A Read Receipt Are Opposite-Direction Facts, Never The Same Store (0.2.71)
@@ -5527,7 +5527,7 @@ classes with two separate durable stores anyway, because they answer
 opposite-direction questions: "what have I seen of the PEER's messages"
 (local, asserted about oneself) versus "what has the PEER told me they
 have seen of MY OWN messages" (a received, trusted claim about oneself,
-written only after `application/ChatUseCase.js`'s own trust gates —
+written only after `application/chat/ChatUseCase.js`'s own trust gates —
 connection-proven sender, correct re-derived conversationId — already
 accepted it). The same reasoning "A Read Marker Answers A Third
 Question" (above) already gives for keeping the outbox, the history
@@ -5538,10 +5538,10 @@ milestone's own founding instruction refused to allow.
 
 ### Social Authorization Controls What May Happen Next; It Never Rewrites What Already Happened (0.2.72)
 
-Blocking or unfriending a peer changes what `application/ChatUseCase.js`
+Blocking or unfriending a peer changes what `application/chat/ChatUseCase.js`
 will do on the NEXT send, the NEXT incoming message, and the NEXT
 reconnect. It never changes what already, genuinely happened.
-`application/ConversationStore.js` (0.2.69), `application/
+`application/chat/ConversationStore.js` (0.2.69), `application/
 ConversationReadTracker.js` (0.2.70), and `application/
 RemoteReadReceiptStore.js` (0.2.71) each have exactly one writer in this
 codebase, and none of those writers is `PeerBlockUseCase#block()` or
@@ -5558,7 +5558,7 @@ queue entry — is ever subject to a change in authorization.
 
 ### Queued Mail Answers To The Same Eligibility Check As A Fresh Send, Never A Softer One (0.2.72)
 
-`application/ChatUseCase.js#canChat()` has meant exactly one thing since
+`application/chat/ChatUseCase.js#canChat()` has meant exactly one thing since
 0.2.61: authenticated peer, not locally blocked, and currently a mutual
 FRIEND, checked fresh every time it's asked. 0.2.63 extended that
 discipline to a queued message's own eventual delivery —
@@ -5604,7 +5604,7 @@ who made that choice.
 
 A WebRTC audio track proves nothing about who is speaking — it carries
 no signature, no challenge/response, nothing `peer/PeerAuthenticationSession.js`
-would recognize as evidence. `application/VoiceUseCase.js` never treats
+would recognize as evidence. `application/chat/VoiceUseCase.js` never treats
 it as though it did: every operation starts by requiring a
 `connectedPeer` that is ALREADY, right now, `PeerLifecycleState.AUTHENTICATED`
 — exactly the same precondition every other protocol built on
@@ -5659,7 +5659,7 @@ the conflict. 0.2.73 avoids the entire class of problem structurally:
 `'answerer'`, fixed forever at the moment THAT connection's DataChannel
 was first established, completely independent of who happens to place
 any particular later call — is reused as the single, permanent answer
-to "who renegotiates." `application/VoiceUseCase.js#_beginMediaNegotiation()`
+to "who renegotiates." `application/chat/VoiceUseCase.js#_beginMediaNegotiation()`
 runs identical code on both sides and only the `role === 'offerer'` side
 ever calls `renegotiate()`; the other side attaches its own track and
 waits. A fact 0.2.51 already established once, for an entirely
@@ -5676,7 +5676,7 @@ boundary a third time: `core/VoiceSessionState.js` answers "is this peer
 currently participating in an audio session," a question with no
 bearing at all on `peer/PeerLifecycleState.js`'s own "does a channel to
 them exist, and is it authenticated." Ending a call never closes the
-underlying connection — `application/VoiceUseCase.js#endCall()` only
+underlying connection — `application/chat/VoiceUseCase.js#endCall()` only
 ever tears down local media and sends a control signal — and a
 connection dropping is what ends a call as a CONSEQUENCE, never
 something voice itself decides to do to the connection. A peer can be
@@ -5686,8 +5686,8 @@ inferred from the other.
 
 ### Voice Reuses Chat's Own Authorization Question; It Never Invents A Second Trust System (0.2.73)
 
-`application/ChatUseCase.js#canChat()` and
-`application/VoiceUseCase.js#canCall()` are deliberately the same
+`application/chat/ChatUseCase.js#canChat()` and
+`application/chat/VoiceUseCase.js#canCall()` are deliberately the same
 predicate: authenticated, not blocked, `FriendshipState.FRIEND`. Voice
 could have invented its own, narrower or broader, eligibility rule —
 the design doc explicitly named this as a product decision it was
@@ -5706,7 +5706,7 @@ two people are currently allowed to reach each other.
 Presence (`core/AvatarPresence.js`, `core/PresenceLifecycleState.js`)
 answers "where/how is this avatar currently represented" — deliberately
 ephemeral, deliberately social, and deliberately never asked to carry
-information it was never designed for. `application/VoiceUseCase.js#setMuted()`
+information it was never designed for. `application/chat/VoiceUseCase.js#setMuted()`
 only ever flips a local `MediaStreamTrack#enabled` flag — never
 transmitted, never folded into `core/VoiceCallSignal.js` or
 `core/VoiceMediaSignal.js`, and never surfaced through presence's own
@@ -5717,7 +5717,7 @@ vocabulary that already means something else.
 
 ### Voice Is Ephemeral Like Presence And Connections, Never Durable Like Conversations Or Relationships (0.2.73)
 
-`application/ConversationStore.js` (0.2.69) made a deliberate, narrow
+`application/chat/ConversationStore.js` (0.2.69) made a deliberate, narrow
 case for SOME chat state to survive a reload. Voice makes the opposite
 case just as deliberately: nothing about a call — not its callId, not
 its participants, not when it happened — is ever written to storage.
@@ -5734,10 +5734,10 @@ durability chat earned for itself in 0.2.69–0.2.72.
 ### Ringing Is Bounded By Local Policy, Never By The Network (0.2.74)
 
 Every OTHER bounded wait this codebase has ever built —
-`application/PeerSessionManager.js`'s own signaling timeout,
-`application/AutosaveScheduler.js`'s own debounce — is a purely local
+`application/peer/PeerSessionManager.js`'s own signaling timeout,
+`application/document/AutosaveScheduler.js`'s own debounce — is a purely local
 decision, never something the remote side is consulted about or could
-override. `application/VoiceUseCase.js#_armRingingTimeout()` extends the
+override. `application/chat/VoiceUseCase.js#_armRingingTimeout()` extends the
 identical discipline to CALLING/RINGING: each device starts its OWN timer
 the instant it enters either state, and tears its OWN call down as
 `VoiceCallEndReason.TIMEOUT` if the timer fires first — regardless of
@@ -5758,7 +5758,7 @@ sender-claimed timestamp (0.2.37's own header: presence lifecycle is
 stored fact") — a value only the RECEIVER is positioned to judge honestly
 should never be accepted as a claim from the SENDER instead.
 `VoiceCallSignalType.END` means exactly one thing on the wire, "this call
-is over," and `application/VoiceUseCase.js#_handleEnd()` always maps it to
+is over," and `application/chat/VoiceUseCase.js#_handleEnd()` always maps it to
 `VoiceCallEndReason.REMOTE_HANGUP` — never MEDIA_FAILED, never TIMEOUT,
 never anything the sender would have to self-report and this side would
 have to simply trust. REJECTED and BUSY remain the two exceptions, and
@@ -5772,7 +5772,7 @@ to send.
 ACCEPT had already been exchanged tore down the FAILING side's own call
 but left the OTHER side stranded in CONNECTING, its own microphone
 potentially already attached, waiting on a renegotiation SDP that would
-now never arrive. `application/VoiceUseCase.js#_notifyPeerCallEnded()` —
+now never arrive. `application/chat/VoiceUseCase.js#_notifyPeerCallEnded()` —
 factored out of `endCall()`'s own original 0.2.73 body, and now reused by
 every LOCAL decision that a call is over (a hang up, a block/unfriend, a
 ringing timeout, a media/negotiation failure) — closes it: every one of
@@ -5783,9 +5783,9 @@ Local Judgments" above) — only that there is nothing left to wait for.
 
 ### A Local Microphone Failure Is Never A Peer Or Connection Failure (0.2.74)
 
-`application/VoiceUseCase.js#_beginMediaNegotiation()` now tags whatever
+`application/chat/VoiceUseCase.js#_beginMediaNegotiation()` now tags whatever
 it throws with either `VoiceCallEndReason.MEDIA_FAILED` (this device's own
-`application/LocalAudioTrackProvider.js#getLocalAudioTrack()` itself threw
+`application/chat/LocalAudioTrackProvider.js#getLocalAudioTrack()` itself threw
 — no microphone, a denied permission prompt) or `NEGOTIATION_FAILED` (the
 track came, but attaching or renegotiating it over
 `peer/WebRtcPeerConnection.js` failed). Neither one closes, or even
@@ -5802,7 +5802,7 @@ immediately afterward, both stay completely unaffected.
 
 ### Device Selection Is Local State, Not Peer Protocol State (0.2.75)
 
-`application/VoiceUseCase.js#setMuted()`'s own 0.2.73 precedent — a
+`application/chat/VoiceUseCase.js#setMuted()`'s own 0.2.73 precedent — a
 local `MediaStreamTrack#enabled` flip, never transmitted, never folded
 into `core/VoiceCallSignal.js` or `core/VoiceMediaSignal.js` — extends
 unchanged to `setInputDevice()`. The peer hears whichever microphone this
@@ -5823,7 +5823,7 @@ wants to swap tracks... uses the returned RTCRtpSender's own
 changes only WHICH `MediaStreamTrack` feeds an already-negotiated
 `m=audio` section — never its presence, direction, or codec negotiation —
 so no SDP offer/answer round trip is needed, and
-`application/VoiceUseCase.js` never has to ask "am I the offerer" the way
+`application/chat/VoiceUseCase.js` never has to ask "am I the offerer" the way
 `renegotiate()`/`applyRemoteOffer()` must. `core/VoiceSessionState.js`
 never leaves ACTIVE for the duration of a switch: a device change is
 invisible to the call state machine by construction, not by convention —
@@ -5836,7 +5836,7 @@ the call's own lifecycle is actually in flux while it happens.
 microphone or a failed renegotiation each get their own honest
 `VoiceCallEndReason`, but neither ever touches `peer/PeerConnection.js`.
 0.2.75 extends the identical restraint to a device disappearing MID-CALL:
-`application/VoiceUseCase.js#_handleLocalTrackEnded()` reacts to a real
+`application/chat/VoiceUseCase.js#_handleLocalTrackEnded()` reacts to a real
 `MediaStreamTrack`'s own `ended` event (the browser's own signal that the
 underlying device is gone — never something a script's own `stop()` call
 fires, a real distinction `tests/VoiceUXAndDeviceControls.test.js` has to
@@ -5855,11 +5855,11 @@ local device going away was deliberately left off that list.
 
 Choosing which SPEAKER plays the remote party's audio is a fact about
 this device's own audio hardware, never about the call. Once
-`application/VoiceUseCase.js#getRemoteStream()` hands a UI its
+`application/chat/VoiceUseCase.js#getRemoteStream()` hands a UI its
 `MediaStream` — unchanged since 0.2.73 — routing that stream to a chosen
 output device is entirely a UI/platform concern: `ui/views/ChatView.js`
 calls the bound `<audio>` element's own `setSinkId()` directly and
-`application/VoiceUseCase.js` never even learns an output device was
+`application/chat/VoiceUseCase.js` never even learns an output device was
 chosen, let alone which one. Adding a `setOutputDevice()` to
 `VoiceUseCase` would repeat the exact mistake `core/AvatarPresence.js`'s
 own boundary already warns against elsewhere in this document — a
@@ -5898,7 +5898,7 @@ A building's `core/WorldPlacement.js` position and an avatar's
 before 0.2.76 — ground level is `y = 0`, plus whatever the domain layer
 itself adds (a jump's transient offset, a document's own layout Y). This
 milestone never touches either. Instead, `renderer/WorldRenderer.js` and
-`application/RenderWorldViewUseCase.js` each add
+`application/world/RenderWorldViewUseCase.js` each add
 `renderer.terrainHeightAt(x, z)` to a mesh's/visual's Y position at the
 moment it is actually drawn — after every domain computation has already
 happened, immediately before the result reaches Three.js — and the
@@ -5960,7 +5960,7 @@ Applied To Movement, Never Part Of The Movement Simulation Itself" one
 step further: where 0.2.42 constrains movement against discrete obstacle
 geometry (bricks), 0.2.77 constrains it against a continuous height
 field, using the identical shape — a pure `{ position, blocked }` result
-consulted by `application/AvatarMovementController.js` exactly the way
+consulted by `application/avatar/AvatarMovementController.js` exactly the way
 `{ position, collided }` already was, applied second, on top of whatever
 building collision already resolved. Deliberately NOT attempted: physical
 sliding along a slope's contour, downhill momentum, terrain deformation,
@@ -5969,7 +5969,7 @@ see docs/Roadmap.md, 0.2.77's own "Deliberately not in 0.2.77."
 
 ### Terrain Requires No Streaming Concept; Collision Does (0.2.77)
 
-`application/AvatarMovementConstraint.js` (0.2.42) exists largely to
+`application/avatar/AvatarMovementConstraint.js` (0.2.42) exists largely to
 answer "which obstacles are currently loaded near the avatar" — a real
 question, because brick geometry only exists in a replica's memory once
 some document has actually streamed in. `application/
@@ -6001,7 +6001,7 @@ different, narrower question layered strictly on top: "did some OTHER
 identity give this key permission to act on its behalf." A connection
 that authenticates successfully has proven possession of a key and
 nothing more — it has proven nothing whatsoever about permission, which
-is why `application/DeviceAuthorizationPropagationUseCase.js#resolvePeerAuthority()`
+is why `application/identity/DeviceAuthorizationPropagationUseCase.js#resolvePeerAuthority()`
 is a separate, independent query, never a side effect of reaching
 `PeerLifecycleState.AUTHENTICATED`. Conflating the two would mean any two
 people who happen to both be online could, by definition, act for each
@@ -6050,7 +6050,7 @@ later put it back on.
 
 ### A Connection Represents An Identity Either Directly Or Through One Verified Device Authorization, Never By Assumption (0.2.78)
 
-`application/DeviceAuthorizationPropagationUseCase.js#resolvePeerAuthority()`
+`application/identity/DeviceAuthorizationPropagationUseCase.js#resolvePeerAuthority()`
 gives an explicit, two-mode answer — deliberately reusing `identity/
 DelegationVerifier.js`'s own DIRECT/DELEGATED vocabulary as an
 architectural shape, though never its code path (that class answers a
@@ -6073,8 +6073,8 @@ permission to act for a DIFFERENT one.
 Recorded as 0.2.82 — see docs/Roadmap.md, 0.2.82, "Numbering note."
 
 0.2.78 proved `resolvePeerAuthority()` correct but consulted it nowhere.
-0.2.82 wires it into `application/FriendRelationshipUseCase.js`/
-`application/ChatUseCase.js`/`application/VoiceUseCase.js` under one
+0.2.82 wires it into `application/identity/FriendRelationshipUseCase.js`/
+`application/chat/ChatUseCase.js`/`application/chat/VoiceUseCase.js` under one
 governing rule, stated in the design doc that opened this milestone: when
 Alice's Phone and Alice's Laptop are two independently authorized devices
 of one parent identity, a friendship formed over EITHER of them is the
@@ -6120,7 +6120,7 @@ verified `DeviceAuthority` records about that OTHER party. No code path
 in this milestone asks a device "which parent identity authorized YOU?" —
 sidestepping entirely the much harder question of how a device would
 even come to trust an answer to that about itself. This is precisely why
-`application/ChatUseCase.js`'s own conversation bucketing can resolve the
+`application/chat/ChatUseCase.js`'s own conversation bucketing can resolve the
 PEER side while the wire-level `conversationId` keeps using this device's
 own `myIdentityId` completely unresolved: a conversation still belongs to
 one local device holding one identity's key on the SENDING side, exactly
@@ -6213,7 +6213,7 @@ job for it.
 
 `BrickDefinition#width/height/depth` was already an axis-aligned bounding
 box before 0.2.80 — `core/AvatarCollision.js` and
-`application/SelectionBoundsService.js` both read it that way from the
+`application/editor/SelectionBoundsService.js` both read it that way from the
 moment each was written — but every brick using it was symmetric enough
 (a cube, a slope, a plate, a window pane) that the gap between "true
 shape" and "bounding box" was never visually exercised. 0.2.80's
@@ -6305,8 +6305,8 @@ label, not a relationship a later mutation could ever traverse.
 
 ### Conversation Synchronization Is A Protocol Between A Device And Itself, Never A Wider Chat Feature (0.2.83)
 
-`application/DeviceConversationSyncUseCase.js` runs strictly ALONGSIDE
-`application/ChatUseCase.js`'s own `forkbuild:chat` protocol, on its own
+`application/chat/DeviceConversationSyncUseCase.js` runs strictly ALONGSIDE
+`application/chat/ChatUseCase.js`'s own `forkbuild:chat` protocol, on its own
 namespaced wire channel, never folded into it. Bob's own `ChatUseCase`
 never subscribes to `forkbuild:device-conversation-sync` at all — the
 protocol only ever runs between two connections that BOTH resolve to the
@@ -6317,7 +6317,7 @@ those remain exactly what 0.2.63/0.2.71 built them to be, an
 acknowledgement between this device and the PEER who actually sent
 something, never between this device and one of its own siblings. A
 message a sibling already held converges through the SAME idempotent
-`application/ConversationStore.js#append()` every ordinary received
+`application/chat/ConversationStore.js#append()` every ordinary received
 message already goes through — sync introduces no second notion of
 "accepted."
 
@@ -6329,7 +6329,7 @@ incoming envelope, never cached and never stored as its own fact:
 `resolveConnectionIdentity(peer).identityId === resolveOwnSocialIdentity().identityId`.
 No list of "known sibling device IDs" exists anywhere in this codebase —
 eligibility is computed, every time, from the same
-`core/DeviceAuthority.js` records `application/DeviceAuthorizationPropagationUseCase.js`
+`core/DeviceAuthority.js` records `application/identity/DeviceAuthorizationPropagationUseCase.js`
 already independently verifies for every other purpose. This is what
 makes revocation isolation free rather than a second mechanism to build
 and keep correct: a revoked device's resolution simply stops matching,
@@ -6357,10 +6357,10 @@ path itself uses.
 
 ### Per-Device Local Read State And Identity-Observed Read State Are Never The Same Fact (0.2.83)
 
-`application/ConversationReadTracker.js` (0.2.70) answers "what has THIS
+`application/chat/ConversationReadTracker.js` (0.2.70) answers "what has THIS
 device's owner actually looked at, on THIS screen" and stays completely
 unmodified by this milestone — a sibling's report is never written into
-it. `application/SiblingReadStateStore.js` (new) answers a genuinely
+it. `application/chat/SiblingReadStateStore.js` (new) answers a genuinely
 different, third-party question: "what has one of my OTHER devices told
 me about ITS OWN read position." `DeviceConversationSyncUseCase#getIdentityObservedReadSequence()`
 is the one place these two are ever combined, and even there only by
@@ -6371,7 +6371,7 @@ moves Phone's own local marker; what moves is only what Phone's derived,
 identity-level VIEW reports, and only because Laptop told it so.
 ### Identity Presence Is An Aggregate Of Authorized Device Observations, Never A Fourth Store (0.2.85)
 
-`application/PeerPresenceUseCase.js` already treated `isConnectedNow` as
+`application/presence/PeerPresenceUseCase.js` already treated `isConnectedNow` as
 computed, never stored (0.2.70's own "A Peer Presence Summary
 Reconciles Independent Lifetimes; It Is Never A Fourth Store"). 0.2.85
 extends that same discipline across MULTIPLE simultaneously-live
@@ -6399,7 +6399,7 @@ other peer) derives what it currently knows entirely from its own live
 connections, exactly as `docs/Principles.md`'s own "Discovery Finds A
 Candidate; It Never Authenticates One" already keeps observation and
 authority as separate axes one layer down. And deliberately NOT reused
-for delivery-target selection: `application/ChatUseCase.js#_findAuthenticatedPeer()`
+for delivery-target selection: `application/chat/ChatUseCase.js#_findAuthenticatedPeer()`
 still picks exactly one device to send to (a `.find()`, unchanged) —
 presence aggregation answers "is anyone home," never "which one do I
 talk to," and the two stay two different questions on purpose.
@@ -6609,7 +6609,7 @@ the moment of placement — was rejected for exactly the reason
 driftable representation of the same content, requiring synchronization
 machinery (`Document` edited -> somehow propagate to every copy) that
 this codebase has consistently refused to build anywhere else. Instead,
-`application/StructureDocumentResolver.js` resolves a placement's
+`application/editor/StructureDocumentResolver.js` resolves a placement's
 `documentId` to its CURRENT content fresh, on every call, straight from
 storage — there is exactly one authoritative representation of a
 structure's bricks (the Document itself) and a placement never holds a
@@ -6641,8 +6641,8 @@ translated by the identical value, so the structure always arrives as
 one rigid unit, upright and undeformed, regardless of what terrain or
 offset the containing document itself sits on. Rotation math is shared,
 not duplicated, with the gizmo/gesture system that already owns it —
-`application/TransformMath.js#rotatePointAroundPivotY()` is injected into
-`WorldRenderer` (mirroring how `application/RenderWorldUseCase.js`
+`application/editor/TransformMath.js#rotatePointAroundPivotY()` is injected into
+`WorldRenderer` (mirroring how `application/world/RenderWorldUseCase.js`
 already injects it into `TransformGizmoController`) rather than
 reimplemented locally, because `renderer/` must never import
 `application/` — see `RenderWorldUseCase.js`'s own header.
@@ -6655,7 +6655,7 @@ placement pointing at an id that was never actually saved, or storage
 being cleared underneath it. Either way, `StructureDocumentResolver#resolve()`
 answers `null`, never throws, and every caller treats that exactly like
 "this placement currently contributes nothing" — `renderer/WorldRenderer.js`
-renders no meshes for it, `application/StructurePlacementValidator.js`
+renders no meshes for it, `application/editor/StructurePlacementValidator.js`
 treats it as contributing no collision, and nothing in the render or
 collision path distinguishes "briefly unresolvable" from "permanently
 gone." This mirrors `core/SpatialOverlap.js`'s own "Overlap Is A Fact;
@@ -6690,7 +6690,7 @@ placement selection's `brickIds` is always empty, so those surfaces
 correctly see "nothing to operate on" rather than crashing on an
 unfamiliar shape. Move/rotate/duplicate for a placement selection
 deliberately do NOT flow through that brick/group-shaped gesture kernel
-at all; `application/EditorSession.js` branches on
+at all; `application/editor/EditorSession.js` branches on
 `selection.isStructurePlacementSelection` before ever reaching it,
 routing to small, dedicated commands
 (`MoveStructurePlacementCommand`/`RotateStructurePlacementCommand`/
@@ -6704,7 +6704,7 @@ exactly the distinction this principle exists to keep sharp.
 
 `application/commands/DuplicateStructurePlacementCommand.js` creates a
 new `StructurePlacement` referencing the exact SAME `documentId` — never
-a new Document, never a call into `application/ForkStructureUseCase.js`.
+a new Document, never a call into `application/editor/ForkStructureUseCase.js`.
 This is the same content/spatial-state boundary 0.2.81 drew for forking
 ("Forking A Structure Records Provenance, Never A Live Dependency") and
 0.2.90 drew for placing, applied one more time to duplication: House A
@@ -6727,17 +6727,17 @@ instance of the same House."
 
 `renderer/TransformGizmoController.js` holds exactly one `gestureService`
 reference for its whole lifetime — it was built in 0.1.46 around a single
-brick/group-shaped kernel, `application/SpatialEditingService.js`, and
+brick/group-shaped kernel, `application/editor/SpatialEditingService.js`, and
 has no idea a `StructurePlacement` exists. 0.2.91 explicitly declined to
 widen that kernel ("Selecting An Instance Selects Its Spatial Reference,
 Never Its Content," just above) rather than blur the content/instance
 boundary the whole 0.2.90 design rests on. So when this milestone gives a
 placement selection the SAME interactive arrows/pad/ring gizmo a brick
 selection already has, the two gesture kernels still don't merge:
-`application/StructurePlacementGestureService.js` is a second,
+`application/editor/StructurePlacementGestureService.js` is a second,
 independent implementation of the identical narrow 5-method contract
 (`begin/preview/commit/cancelTransformGesture` + `getGestureFeedback`),
-and `application/GizmoGestureRouter.js` is the one new piece of
+and `application/editor/GizmoGestureRouter.js` is the one new piece of
 machinery — a pure per-call dispatcher, `selection.isStructurePlacementSelection
 ? placement : brick`, that lets `TransformGizmoController` keep believing
 it only ever talks to one gesture service. Neither kernel is modified;
@@ -6747,7 +6747,7 @@ unchanged — they were already selection-agnostic, anchored to nothing
 more than `{ pivot, bounds }`, which is exactly why this milestone did
 not need to touch them at all.
 
-The same split shows up one layer up: `application/EditorSession.js`
+The same split shows up one layer up: `application/editor/EditorSession.js`
 still resolves "where does the gizmo go" through
 `TransformGizmoUseCase` for a brick/group selection (untouched, exactly
 the 0.1.46 use case it always was) and through
@@ -6757,7 +6757,7 @@ one small `if`, not a widened `TransformGizmoUseCase`.
 
 ### A Placement's Elevation Is Never A Gizmo Or Numeric Target (0.2.92)
 
-`application/PlacementPositionService.js#calculateStructureGround()`
+`application/editor/PlacementPositionService.js#calculateStructureGround()`
 already established, in 0.2.90, that a `StructurePlacement`'s local Y
 stays exactly 0 (or whatever it already is) forever — terrain elevation
 is composed on top at RENDER time only (`renderer/WorldRenderer.js`),
@@ -6792,7 +6792,7 @@ gaining any way to move, rotate, duplicate, or delete one. That is not a
 missing feature; it is the point. `application/spatial-state/
 SpatialSelectionState.js#placement()` mints a selection whose `items`
 array is ALWAYS EMPTY, and that single fact is the entire mechanism, not
-merely a convention: `application/SelectionBoundsService.js#calculate()`
+merely a convention: `application/editor/SelectionBoundsService.js#calculate()`
 returns `null` for an item-less selection, so `TransformGizmoUseCase#
 resolvePresentation()` never shows a gizmo for it; `application/
 SpatialEditingService.js#getEditingContext()` falls through to
@@ -6807,7 +6807,7 @@ own "Camera Focus, Active Document, and Selection Are Three Different
 Things" for the same instinct applied to a different pair of concepts.
 
 The read-only surface a placement selection DOES get —
-`application/SpatialInspectionService.js#_inspectPlacement()` — is
+`application/editor/SpatialInspectionService.js#_inspectPlacement()` — is
 deliberately shaped nothing like `StructureInstancePanel`'s numeric
 inspector: plain data only (title, source document id/title, local and
 world position, rotation, groundY), no input field, no Apply button, no
@@ -6839,7 +6839,7 @@ shape applied to avatar gestures rather than spatial selection.
 World View Location & Navigation adds a Locations panel and a `Home`
 action without adding a location database. `core/WorldLocation.js` is
 never persisted, never has its own id-minting scheme, and is never
-written by anything other than `application/WorldLocationDirectory.js#list()`
+written by anything other than `application/world/WorldLocationDirectory.js#list()`
 — every instance is DERIVED, on the fly, from identity that already
 exists for an unrelated reason: a `StructurePlacement`'s own `id` and
 `position` (0.2.90) for a `STRUCTURE` location, or the world's fixed
@@ -6865,7 +6865,7 @@ Every pre-0.2.94 camera move in this codebase (`focusDocument`,
 `focusTarget`, `focusSelection`) applies its target `CameraState` in a
 single synchronous write — correct, but a visible jump-cut once the
 world is large enough that "Home" or "Focus" can cover hundreds of World
-Units in one call. `application/CameraFocusAnimator.js` is a pure
+Units in one call. `application/editor/CameraFocusAnimator.js` is a pure
 function of `(from, to, durationMs, elapsedMs)` — no clock, no renderer,
 no session state — that WorldNavigationSession's own frame tick
 (`_tickCameraFocus`, riding the exact `onAnimationFrame` loop avatar
@@ -6983,12 +6983,12 @@ and the choice is not incidental:
   this codebase never promises to answer.
 
 **Navigation position is never duplicated as session state.**
-`application/WorldNavigationSession.js` holds no history/back-stack
+`application/world/WorldNavigationSession.js` holds no history/back-stack
 field of its own anywhere — the browser's history and the router are
 the only record of "where has this tab been," and `WorldNavigationSession`
 never keeps a second, competing copy that could drift out of sync with
 it. What the session DOES keep, independently of navigation position,
-is genuinely different state: `application/LocalWorldExperienceStore.js`
+is genuinely different state: `application/world/LocalWorldExperienceStore.js`
 (0.3.10) persists camera framing per World, keyed by document id, so
 that returning to a World — however the return happens, push or
 replace, in-app or by direct URL — restores the LAST camera framing
@@ -7038,7 +7038,7 @@ Editing Authority." 0.2.95 states the positive form of the same rule:
 World View mutation REQUIRES explicit document editing authority, asked
 fresh, of the actual Document being touched, every single time. Not
 once at session construction, not once at login, not once per World —
-`application/WorldAuthorizationService.js#resolveAccess(document)` is a
+`application/identity/WorldAuthorizationService.js#resolveAccess(document)` is a
 pure function of (this Document, whoever is asking right now), called
 again at every real mutation attempt. That is what makes revocation
 (device or, later, any richer authority model) take effect on the very
@@ -7065,7 +7065,7 @@ UI -> "if owner then enable button" -> World mutation
 A UI is free to READ `canEditDocument()`/`getWorldAccessLevel()` to
 decide whether to even show a move/rotate/delete affordance — that is
 good, ordinary UX, not a violation of this rule. What the rule forbids
-is a UI decision being the ONLY gate: `application/SpatialEditingService.js`'s
+is a UI decision being the ONLY gate: `application/editor/SpatialEditingService.js`'s
 own mutation methods (`beginTransformGesture`/`_executeLayoutOperation`/
 `_executeForSelection`/`moveBrick`/`rotateBrick`/`deleteBrick`) all
 re-consult authorization themselves, so a caller that skips the UI
@@ -7085,7 +7085,7 @@ look like the owner. `DocumentMetadata.authorIdentityId` records the
 SAME fact with the strength authorization actually needs — a did:key,
 resolved from `identityProvider.getSigningIdentity()` at
 document-creation time by every site that already stamped `author`
-(`application/CreateDocumentManagerUseCase.js`, `ForkDocumentUseCase.js`,
+(`application/document/CreateDocumentManagerUseCase.js`, `ForkDocumentUseCase.js`,
 `ForkPublishedWorldUseCase.js`, `ForkStructureUseCase.js`, via the one
 shared `identity/resolveSigningIdentityId.js` lookup).
 
@@ -7107,7 +7107,7 @@ Document records a real owner identity.
 is looking, what may they do with THIS Document" — and refuses to
 answer a second one it doesn't need to: "which physical device is this,
 and does it speak for someone else." That second question already has
-an owner, `application/DeviceAuthorizationPropagationUseCase.js`
+an owner, `application/identity/DeviceAuthorizationPropagationUseCase.js`
 (0.2.78/0.2.83), and `resolveOwnSocialIdentity()` already answers it
 correctly, including revocation. `WorldAuthorizationService`'s optional
 `resolveSocialIdentity` collaborator is nothing more than that exact
@@ -7127,10 +7127,10 @@ for the same compositional instinct applied to friendship/chat/voice.
 
 ### World Synchronization Is A Command Protocol, Never A Document Sync Channel (0.2.96)
 
-`application/WorldCommandPropagationUseCase.js` never transmits a World,
+`application/document/WorldCommandPropagationUseCase.js` never transmits a World,
 a Document, or a placement list — the unit of propagation is exactly one
 already-executed `application/commands/Command.js` instance, serialized
-`command.toJSON()` the identical way `application/CommandHistory.js`'s
+`command.toJSON()` the identical way `application/editor/CommandHistory.js`'s
 own persistence/replay already does, and reconstructed on the receiving
 side through the SAME `application/commands/CommandRegistry.js`. This is
 not an optimization; it is what keeps "local durable state" and
@@ -7164,7 +7164,7 @@ directly — never `commandHistory.execute(command)`. The distinction
 matters the moment two replicas are both live: if Bob's own `Undo`
 could unwind a mutation Alice made on her replica, pressing it would not
 restore Bob's own prior state at all, it would silently fight Alice for
-control of a fact Bob never touched himself. `application/CommandHistory.js`
+control of a fact Bob never touched himself. `application/editor/CommandHistory.js`
 remains exactly what 0.1.37 built it to be — one replica's own local
 editing session, undo/redo, and save-point tracking — and
 `replication/ReplayGuard.js` (never `CommandHistory`) is what makes a
@@ -7196,7 +7196,7 @@ authority on World A grants her nothing on World B."
 
 ### The Claimed Author Of An Operation Is Never Trusted Ahead Of The Connection That Carried It (0.2.96)
 
-`application/ChatUseCase.js#_handleIncoming()` established the two-step
+`application/chat/ChatUseCase.js#_handleIncoming()` established the two-step
 pattern in 0.2.63: first, the claim in the payload must equal the RAW
 key this specific, already-authenticated connection proved during its
 handshake; only then does social/device identity resolution ever run.
@@ -7245,7 +7245,7 @@ command has always implemented — `execute()` and `undo()` — called in a
 different SEQUENCE than the order operations happened to arrive in, never
 with different SEMANTICS. Reconciling an out-of-order operation undoes
 the already-applied "tail" (operations canonically after the new one,
-LIFO — the identical order `application/CommandHistory.js#undo()`
+LIFO — the identical order `application/editor/CommandHistory.js#undo()`
 already uses for its own stack), inserts the new operation, and replays
 the tail forward. This works, with zero command-specific code, only
 because every command in this codebase was ALREADY required to be safely
@@ -7286,12 +7286,12 @@ replace a `CommandHistory`. Rather than adding a `propagation.broadcastCommand()
 call at each of those sites (a change that would need to be
 independently remembered and kept correct at every one, forever),
 `WorldCommandPropagationUseCase#attachCommandHistory()` subscribes ONCE
-to `application/CommandHistory.js`'s own, already-existing
+to `application/editor/CommandHistory.js`'s own, already-existing
 `COMMAND_EXECUTED` event — the identical event every other consumer of a
 CommandHistory already reacts to. `WorldNavigationSession` funnels every
 `CommandHistory` it creates through one new private chokepoint,
 `_registerCommandHistory()`, mirroring the "one seam, not N call sites"
-discipline `application/SpatialEditingService.js#canEditDocument`
+discipline `application/editor/SpatialEditingService.js#canEditDocument`
 already established for 0.2.95's authorization gate. The result: a
 future mutation chokepoint this file grows never has to remember to
 broadcast anything — it inherits propagation for free the moment it
@@ -7300,7 +7300,7 @@ inherits undo/redo, persistence, and replay.
 
 ### A World Edit Grant Is A Signed Capability About One World, Never A Role And Never A Second Kind Of Ownership (0.2.98)
 
-`core/WorldEditAuthorizationEnvelope.js`/`application/WorldMembershipUseCase.js`
+`core/WorldEditAuthorizationEnvelope.js`/`application/identity/WorldMembershipUseCase.js`
 close the gap 0.2.97 named and deliberately left open: `WorldAuthorizationService`
 granted `EDIT` to exactly one cryptographic owner (plus, transparently,
 that owner's own authorized devices). A World edit grant does not widen
@@ -7322,7 +7322,7 @@ dishonest sender, not merely a well-behaved local caller.
 ### Only The World's Own True Owner May Ever Issue A Membership Grant — Checked Structurally, On Every Replica, Against A Forged Claim (0.2.98)
 
 `WorldMembershipUseCase` is a gossip protocol, structurally identical to
-`application/DeviceAuthorizationPropagationUseCase.js`'s own: a record is
+`application/identity/DeviceAuthorizationPropagationUseCase.js`'s own: a record is
 trusted by its OWN signature alone, never by who relayed it. Device
 authorization never needed to ask "is the signer allowed to make this
 claim" beyond "does it hold the key it claims to" — any identity may
@@ -7346,7 +7346,7 @@ them.
 same posture `core/AvatarPresence.js` already established and for the
 identical reason: nothing here is meant to be believed or relied on
 beyond the single, currently-live, mutually-authenticated peer
-connection it travels over. `application/WorldPresenceUseCase.js` never
+connection it travels over. `application/presence/WorldPresenceUseCase.js` never
 writes a `WorldPresence` row to any `StorageProvider` — a participant's
 presence in a World is answered fresh, on every `getRoster()` call, by
 intersecting this replica's last-known advertisements against its OWN
@@ -7361,8 +7361,8 @@ tell a `RemoteAvatarRegistry` an avatar's movement stopped arriving.
 self-reported UI hint a remote participant advertises about themselves —
 it is never treated as proof of anything. `WorldPresenceUseCase#getRoster()`
 always recomputes each entry's `canEdit` LOCALLY, through the same
-ownership/grant check `application/WorldAuthorizationService.js` and
-`application/WorldMembershipUseCase.js` already answer, never by trusting
+ownership/grant check `application/identity/WorldAuthorizationService.js` and
+`application/identity/WorldMembershipUseCase.js` already answer, never by trusting
 whatever activity string arrived on the wire. Revoking Bob's World edit
 grant while his WebRTC connection stays perfectly alive therefore changes
 what the very next `getRoster()` call reports for him — `canEdit` flips
@@ -7399,7 +7399,7 @@ grant()."
 `ui/components/WorldCollaborationRoster.js`'s `buildWorldCollaborationRoster()`
 is a pure function — no Vue, no DOM, no network, no storage — precisely
 so it can be consumed unchanged by any future collaboration surface
-`application/EditorSession.js` grows, the same way `ui/components/WorldMembersPanel.js`
+`application/editor/EditorSession.js` grows, the same way `ui/components/WorldMembersPanel.js`
 and `ui/components/WorldPresenceIndicator.js` are themselves generic
 Vue components rather than `WorldView`-specific markup. The instinct
 this continues is 0.2.93's own: "Selection In World View Does Not Imply
@@ -7423,7 +7423,7 @@ folded into a `World`, a `Document`, a `Command`, undo/redo, or a
 document a replica holds stays byte-identical whether or not Bob, or
 anyone else, was ever spatially present in it; `tests/CollaborativeSpatialPresence.test.js`'s
 own flagship proves this directly by comparing `document.toJSON()`
-before and after the entire scenario. `application/WorldSpatialPresenceUseCase.js`
+before and after the entire scenario. `application/presence/WorldSpatialPresenceUseCase.js`
 computes its roster from live, authenticated connections only, exactly
 `WorldPresenceUseCase#getRoster()`'s own 0.2.98 discipline — a
 disconnected device's last-known position is pruned, never left behind
@@ -7434,7 +7434,7 @@ IDLE/WALKING/INSPECTING/BUILDING/MOVING_STRUCTURE/ROTATING_STRUCTURE
 vocabulary — is never authorization, extending 0.2.98's own "being
 online is not the same as being authorized to edit" one rung further:
 seeing "Bob — Building" must never mean Bob currently holds EDIT
-authority. `application/WorldAuthorizationService.js` remains the sole
+authority. `application/identity/WorldAuthorizationService.js` remains the sole
 authority on that question, and revoking Bob's grant never gates his
 spatial presence at all — his camera, heading, and selection keep
 flowing exactly as before, proven directly in the flagship's own Section
@@ -7450,9 +7450,9 @@ could forge into something a receiver misreads as an editing signal.
 "UI Selection Must Never Imply Editing Authority (0.2.95)." A remote
 participant's selection implies even less authority than a local one:
 `WorldSpatialSelection` shares no type, and no code path, with
-`SpatialSelectionState`, `application/SpatialEditingService.js`, the
+`SpatialSelectionState`, `application/editor/SpatialEditingService.js`, the
 transform gizmo pipeline, or any `application/commands/` class. Nothing
-in `application/WorldSpatialPresenceUseCase.js` or
+in `application/presence/WorldSpatialPresenceUseCase.js` or
 `renderer/RemoteSpatialPresenceRenderer.js` imports any of them. This is
 the milestone's own defining security assertion, stated directly in its
 flagship: remote spatial presence can never enter a mutation path —
@@ -7495,7 +7495,7 @@ participant may do. A `WorldSpatialAnchor` is never persisted, never
 signed, never broadcast, and is not itself a new wire format:
 `core/WorldSpatialAnchor.js` imports nothing from `peer/` or any
 `application/*PropagationUseCase.js`, and nothing it computes is
-reachable from `application/WorldSpatialPresenceUseCase.js`'s own
+reachable from `application/presence/WorldSpatialPresenceUseCase.js`'s own
 ingestion path — the third protocol 0.3.0 introduced
 (`forkbuild:world-spatial-presence`) remains the only one; this
 milestone adds no fourth. Concretely: a collaborator who is FAR away or
@@ -7514,7 +7514,7 @@ A remote selection's contextual label follows the identical restraint.
 `WorldSpatialSelection` of kind `'placement'` to the referenced
 document's OWN saved title, through the exact
 `getStructurePlacement()`/`getSavedDocumentTitle()` steps
-`application/EditorSession.js#getSelectedPlacementInfo()` already uses
+`application/editor/EditorSession.js#getSelectedPlacementInfo()` already uses
 for a LOCAL selection — never a second, remote-only naming scheme, and
 never something the remote participant supplies directly (the wire
 carries only `documentId`/`placementId`, exactly as 0.3.0 always did;
@@ -7599,7 +7599,7 @@ already does for structure previews.
 
 That framing reaches the screen through the exact same, single write
 path every camera-focus caller in this codebase already shares:
-`application/SpatialCameraController.js#applyFraming()`. A perspective
+`application/world/SpatialCameraController.js#applyFraming()`. A perspective
 is never a second camera controller, never a second Three.js camera,
 and never a parallel code path alongside `focusLocation()`/
 `focusCollaborator()`/`_beginCameraFocus()` — it is a NEW WAY TO COMPUTE
@@ -7643,7 +7643,7 @@ never taken — the avatar stops at the edge, exactly the same "rejected
 outright, never physically slid or accelerated" posture "Terrain
 Walkability Is A Movement Constraint, Never A Physics Slope (0.2.77)"
 already established for slope, restated here for a vertical rise instead
-of a rise/run ratio. `application/AvatarStepConstraint.js` is the
+of a rise/run ratio. `application/avatar/AvatarStepConstraint.js` is the
 application-layer collaborator that supplies the real, currently-loaded
 brick geometry this pure comparison is applied to — the same
 core/application split this codebase has used for every other movement
@@ -7665,10 +7665,10 @@ Deliberately NOT generalized further, this milestone, into following
 `core/TerrainHeightField.js`'s own real, hilly elevation: doing so would
 make the avatar start climbing every gentle slope its feet currently
 walk straight through, a much larger behavior change than "step onto a
-brick" and well outside this milestone's own scope. `application/AvatarStepConstraint.js#supportHeightAt()`
+brick" and well outside this milestone's own scope. `application/avatar/AvatarStepConstraint.js#supportHeightAt()`
 therefore answers "what brick, if any, is directly beneath this point"
 against a flat baseline, never against real terrain elevation —
-`application/AvatarTerrainConstraint.js`'s own real-terrain slope check
+`application/avatar/AvatarTerrainConstraint.js`'s own real-terrain slope check
 remains the only place real terrain height influences movement at all,
 and it still only ever BLOCKS a step, never snaps `Y` to it. Building on
 the flat plane rather than replacing it is what keeps this milestone
@@ -7726,14 +7726,14 @@ get wrong in the first place.
 
 ### A Per-Tick Height Delta Can Replace A Brick-Wide Wall Check, Once Something Downstream Is Equipped To Police It (0.3.3)
 
-`application/AvatarMovementConstraint.js` decided, since 0.3.2, whether
+`application/avatar/AvatarMovementConstraint.js` decided, since 0.3.2, whether
 a brick blocks horizontal passage by comparing its own overall PEAK
 height against the avatar's current support height — correct for a
 flat box, where the peak IS the only height that exists. A stair or a
 slope has no single peak worth comparing: its near edge and far edge
 can differ by the brick's own full height. 0.3.3 resolves this not by
 teaching `AvatarMovementConstraint` to understand tread/ramp geometry
-itself, but by recognizing that `application/AvatarStepConstraint.js`
+itself, but by recognizing that `application/avatar/AvatarStepConstraint.js`
 already runs a per-tick, per-point height-DELTA check downstream of
 it — so a directional shape is excluded from horizontal collision
 UNCONDITIONALLY (once stepping is enabled at all), and the step
@@ -7754,7 +7754,7 @@ genuine, full-height wall, exactly as it always was pre-0.3.2.
 geometric truth every consumer of "where may an avatar stand?" reads —
 walking, stepping onto a low brick, and climbing a stair tread or a
 slope's own ramp. 0.3.4 adds a fourth consumer, landing, without adding
-a second surface concept for it to consult. `application/AvatarStepConstraint.js#supportHeightAt()`
+a second surface concept for it to consult. `application/avatar/AvatarStepConstraint.js#supportHeightAt()`
 — unchanged since 0.3.3 — is both what a walking step snaps onto AND
 what a falling avatar's own gravity integration lands on, recomputed
 fresh every tick from wherever the avatar currently is:
@@ -7774,14 +7774,14 @@ integration was already parameterized on `groundHeight` since 0.3.2 (to
 support Step-Up Movement); 0.3.4 never had to teach it what a stair or a
 slope is, because it was never taught what a flat plane or a brick's top
 face was either — `groundHeight` has always just been a number, supplied
-fresh each tick by whichever surface `application/AvatarStepConstraint.js`
+fresh each tick by whichever surface `application/avatar/AvatarStepConstraint.js`
 resolves for the avatar's own current (x, z). Falling is not a new
 geometric question; it is gravity finally being allowed to ask the same
 old one.
 
 ### A Ledge Is An Absence Of Support; A Wall Is Occupied Geometry — They Stop Being The Same Kind Of Blocked (0.3.4)
 
-Through 0.3.3, `application/AvatarStepConstraint.js#apply()` treated any
+Through 0.3.3, `application/avatar/AvatarStepConstraint.js#apply()` treated any
 height delta beyond `maxStepHeight` identically, regardless of
 direction: blocked, X/Z reverted, exactly like walking into a wall. That
 symmetry was always a deliberately named simplification (see 0.3.3's own
@@ -7807,7 +7807,7 @@ math producing it.
 `core/AvatarVerticalState.js`'s SUPPORTED/RISING/FALLING vocabulary adds
 no new mutable state anywhere in this codebase. `grounded` and
 `verticalVelocity` have been the only vertical-motion bookkeeping
-`core/AvatarMovementSimulation.js` and `application/AvatarMovementController.js`
+`core/AvatarMovementSimulation.js` and `application/avatar/AvatarMovementController.js`
 carry since 0.2.36; `deriveAvatarVerticalState()` is a pure, stateless
 read of exactly those two values, the same "derive, never duplicate"
 discipline `core/WorldSpatialActivity.js#deriveWorldSpatialActivity()`
@@ -7858,13 +7858,13 @@ sounds — `WorldSpatialContext` answers "what is here," never "what did I
 discover" or "what have I visited"; a durable per-user discovery/
 achievement history is a different feature entirely, one this milestone
 does not build, because mixing the two would turn a pure read into a
-write path (see `application/WorldSpatialContextService.js`'s own
+write path (see `application/world/WorldSpatialContextService.js`'s own
 header). `WorldNavigationSession#getAvatarPosition()`/`getWorldSeed()`
 (0.3.6) are the only new session-level surface this required — thin
 reads over state (`_avatarPresenceSession`, the same `DEFAULT_WORLD_SEED`
 every terrain query already shares) the session already held, exactly
 the "takes `session`, calls back into it, never a second source of
-truth" shape `application/WorldLocationDirectory.js` established in
+truth" shape `application/world/WorldLocationDirectory.js` established in
 0.2.94. Camera movement in response to a derived context — focusing a
 structure, following a collaborator — still goes exclusively through
 `focusLocation()`/`followAvatarId()` and `SpatialCameraController`; a
@@ -7893,7 +7893,7 @@ EDIT on the World may rename, redescribe, or remove any landmark in it,
 the same `WorldNavigationSession#canEditDocument()` gate every other
 mutation chokepoint already consults. A landmark's position is X/Z
 LOCAL to its containing World, exactly like `StructurePlacement`'s own —
-`application/WorldLocationDirectory.js#_landmarkLocationsFor()` applies
+`application/world/WorldLocationDirectory.js#_landmarkLocationsFor()` applies
 the World's layout offset for display, and
 `WorldNavigationSession#createLandmarkHere()` subtracts that same offset
 from the avatar's own absolute position when creating one, the two
@@ -7977,7 +7977,7 @@ they never tell a newcomer what they are supposed to do.
 `World.welcomeMessage`, `visitCount`, `lastVisited`, or
 `recommendedLocation` field exists or ever should" — 0.3.10 is that same
 boundary given its own home. `core/LocalWorldExperience.js` and
-`application/LocalWorldExperienceStore.js` remember exactly one thing:
+`application/world/LocalWorldExperienceStore.js` remember exactly one thing:
 THIS replica's own camera framing (position, target, a derived heading
 snapshot, and active Camera Perspective) the last time THIS user left a
 given World, keyed by `worldId` in local storage. Nothing here is a
@@ -8049,7 +8049,7 @@ Document") specifically so the distinction is visible at the point of
 choice, never buried in a menu.
 
 Composition never introduces a second command class to do it: see
-`application/CopyStructureIntoDocumentUseCase.js`'s own header for why
+`application/editor/CopyStructureIntoDocumentUseCase.js`'s own header for why
 it produces an ordinary `PasteBricksCommand` (0.1.42) — the exact "one
 command, many bricks" shape composing many bricks in one atomic,
 undoable, replicable step already needed — rather than a parallel
@@ -8077,7 +8077,7 @@ originated, only about what the current blueprint now contains.
 0.4.0 gave composition its first verb, Copy: Structure into Document.
 0.4.2 (Structure Extraction & Blueprint Creation) adds the direction
 that verb never covered — Document into Structure —
-`application/CreateStructureFromSelectionUseCase.js` turning a selection
+`application/editor/CreateStructureFromSelectionUseCase.js` turning a selection
 of bricks a user has already composed back into a brand-new,
 independent `core/Structure.js`. The same discipline "Copying Composes A
 Blueprint; Forking Creates One (0.4.0)" established for Copy applies
@@ -8128,7 +8128,7 @@ attempting the flatten or silently producing nothing.
 a valid, independent Structure — "saving it anywhere" was named as a
 separate, larger question rather than folded into extraction itself.
 0.4.3 (Personal Blueprint Library) answers it with
-`application/LocalStructureLibraryStore.js`, and draws the same boundary
+`application/editor/LocalStructureLibraryStore.js`, and draws the same boundary
 `LocalWorldExperience` (0.3.10) already drew for a different kind of
 per-user state:
 
@@ -8288,7 +8288,7 @@ IMPORT boundary, deliberately not a live one:
 
     Alice's Structure --export--> Blueprint Package --import--> Bob's Structure
 
-A Blueprint Package (`application/BlueprintPackage.js`) is plain,
+A Blueprint Package (`application/blueprint/BlueprintPackage.js`) is plain,
 self-contained JSON — a Structure's own `id`/`name`/`category`/`tags`/
 `description`/`bricks`, wrapped in a small versioned envelope. It is not
 a pointer to Alice's library, her device, or her session. The moment
@@ -8307,9 +8307,9 @@ milestone's own design conversation drew:
 **Untrusted input, validated before anything is built.** A blueprint
 file may have crossed devices, been hand-edited, or arrived from a
 stranger — it is never trusted the way a Structure already living in the
-current process's own registry is. `application/BlueprintImportValidator.js`
+current process's own registry is. `application/blueprint/BlueprintImportValidator.js`
 answers exactly one question, "is this package well-formed?", and is
-strictly separate from `application/ImportBlueprintUseCase.js`, which
+strictly separate from `application/blueprint/ImportBlueprintUseCase.js`, which
 only ever constructs a Structure from an ALREADY-validated package — the
 identical split `identity/IdentityImport.js`/`identity/IdentityRecovery.js`
 already draw for a portable identity package (0.2.48), applied here to
@@ -8386,7 +8386,7 @@ Valley," via `childRegions()` — and nothing else in this codebase
 consults it. It is never validated against an actually-existing region
 at creation time, and removing a region a child still names as its
 parent leaves that reference simply dangling — the same graceful-
-absence posture `application/WorldLocationDirectory.js` already takes
+absence posture `application/world/WorldLocationDirectory.js` already takes
 toward a removed `StructurePlacement`, never a cascade delete, never an
 integrity error. A region with no parent at all is exactly as valid as
 one nested three levels deep; hierarchy is a convenience a UI MIGHT
@@ -8461,7 +8461,7 @@ geometry — see that file's own header.
 
 **The map's DATA source is `WorldNavigationSession#getMapContent()`, the
 exact same gather every other World-wide read in this codebase already
-performs** — `_collectRegions()`, `application/WorldLocationDirectory.js#list()`.
+performs** — `_collectRegions()`, `application/world/WorldLocationDirectory.js#list()`.
 Deliberately WORLD-WIDE, never streaming-radius-limited: `core/WorldSpatialContext.js`'s
 `nearbyLandmarks`/`nearbyStructures` answer "what's near me right now,"
 a genuinely different question from "what does this whole World
@@ -8530,7 +8530,7 @@ plainly:
 carries a `regionId` it refers to, but is never stored inside
 `World#toJSON()`, never travels through a Command, never touches
 undo/redo, and is never propagated by
-`application/WorldCommandPropagationUseCase.js`. Publishing "Riverbend"
+`application/document/WorldCommandPropagationUseCase.js`. Publishing "Riverbend"
 about Alice's own "Willow Village" changes nothing about the region
 itself — `region.name` stays exactly what it was, forever, regardless of
 how many claims disagree with it or how strongly. See this milestone's
@@ -8542,7 +8542,7 @@ proof: Alice's own claim for her own region loses 1-2 to Bob and Carol's
 `WorldRegion` (0.5.0's own "any EDIT member" posture) or a World edit
 grant (0.2.98's owner-only posture), publishing a `PlaceNamingClaim`
 requires NEITHER EDIT access to the region's World NOR membership in it
-at all — the only thing `application/PlaceNamingClaimUseCase.js#publish()`
+at all — the only thing `application/placeNaming/PlaceNamingClaimUseCase.js#publish()`
 ever checks is "can this identity sign at all." This is intentional and
 load-bearing: the entire point of a naming CLAIM, as opposed to a
 naming EDIT, is that Bob's opinion about Alice's region needs no
@@ -8581,7 +8581,7 @@ ceiling: nothing here computes or displays a "winner," only a ranking a
 viewer can inspect and override.
 
 **A third, genuinely local concept: the preference, never a claim.**
-`application/LocalNamePreferenceStore.js` is deliberately NEVER signed,
+`application/identity/LocalNamePreferenceStore.js` is deliberately NEVER signed,
 NEVER stored in a `PlaceNamingClaim`, and NEVER leaves the device it was
 set on. Alice can locally prefer "Green Valley" while Bob locally
 prefers "Emerald Valley" for the exact same region on the exact same
@@ -8603,7 +8603,7 @@ Community-preferred name  — a client's own DERIVED ranking of whatever
 
 **`getDisplayPlaceName()` is presentation, composing all three layers
 without ever collapsing them into one stored fact.**
-`application/WorldNavigationSession.js#getDisplayPlaceName()` reads, in
+`application/world/WorldNavigationSession.js#getDisplayPlaceName()` reads, in
 order, a viewer's own local preference, then the top-ranked claimed
 name, then falls back to the region's own `WorldRegion.name` — the exact
 0.5.0 behavior every pre-0.5.2 caller already saw. Nothing about this
@@ -8616,7 +8616,7 @@ INTO the World says, versus what a client merely DISPLAYS, must never
 become indistinguishable in storage.
 
 **Not yet a decentralized exchange — that boundary is drawn on purpose.**
-`application/LocalPlaceNamingClaimStore.js` persists and lists claims
+`application/placeNaming/LocalPlaceNamingClaimStore.js` persists and lists claims
 for whichever World this replica happens to have; it never gossips one
 to a peer, never fetches one from anywhere else, and never reconciles
 two replicas' independently-published claims into one. This is
@@ -8637,7 +8637,7 @@ that asked for it:
 
 > Naming exchange DISTRIBUTES claims; it never ESTABLISHES truth.
 
-`application/PlaceNamingClaimExchange.js` proves this the same way
+`application/placeNaming/PlaceNamingClaimExchange.js` proves this the same way
 every prior milestone in this section proved its own restraint: by what
 it deliberately never does. It never calls `core/PlaceNamingView.js#namingView()`,
 never compares one claim's "confidence" against another's, and never
@@ -8651,10 +8651,10 @@ carrying its own signature, from one replica's store to another's.
 
 **Validate, construct, verify — always in that order, before anything
 is persisted.** `PlaceNamingClaimExchange#importClaim()` follows the
-exact same three-step discipline `application/ImportBlueprintUseCase.js`
+exact same three-step discipline `application/blueprint/ImportBlueprintUseCase.js`
 already established one domain over for a Blueprint: a package is
 untrusted input the moment it crosses a device boundary, so
-`application/PlaceNamingClaimPublicationValidator.js` checks its SHAPE
+`application/placeNaming/PlaceNamingClaimPublicationValidator.js` checks its SHAPE
 first, `core/PlaceNamingClaim.js#fromJSON()` constructs a real claim
 second, and only then does `identity/LocalAuthorizationVerifier.js#verifyPlaceNamingClaim()`
 ask whether it is actually AUTHENTIC. "Well-formed" and "signed by who
@@ -8671,7 +8671,7 @@ into the signed payload (`getSigningDescriptor()`'s own `payload.id`),
 so a claim's id cannot be forged to a DIFFERENT payload without the
 signature failing to verify — the exact property a derived content hash
 would have existed to provide, already present for free. See
-`application/LocalPlaceNamingClaimStore.js#has()`'s own header for why
+`application/placeNaming/LocalPlaceNamingClaimStore.js#has()`'s own header for why
 this is a genuinely different question from that store's own
 `save()`'s "never deduplicate by (regionId, name, author)" rule: that
 rule is about the SAME author republishing a name under a brand-NEW
@@ -8688,16 +8688,16 @@ unsigned, spoofable shadow of `claim.createdAt` (already the real,
 trustworthy signed timestamp); only `receivedAt` — "when did THIS
 replica first learn about this" — is genuinely new, because by
 definition no author could ever sign that in advance.
-`application/LocalPlaceNamingPublicationLog.js` keeps it, first-seen-
+`application/placeNaming/LocalPlaceNamingPublicationLog.js` keeps it, first-seen-
 wins, and 0.5.3 deliberately never reads it back into a ranking. This
-mirrors `application/LocalNamePreferenceStore.js`'s own 0.5.2 restraint
+mirrors `application/identity/LocalNamePreferenceStore.js`'s own 0.5.2 restraint
 exactly: preserve a genuinely local fact, but never let its mere
 existence quietly become a second, competing naming authority.
 
 **The first transport is deliberately boring, on purpose.** Every
-package `application/PlaceNamingClaimExchange.js` produces or consumes
+package `application/placeNaming/PlaceNamingClaimExchange.js` produces or consumes
 is plain, portable JSON, moved by hand today — a file export, a file
-import, the exact same shape `application/BlueprintPackage.js` already
+import, the exact same shape `application/blueprint/BlueprintPackage.js` already
 proved out for a Structure. This is 0.4.6's own restraint applied a
 second time: prove the EXCHANGE BOUNDARY works, in isolation, before
 building any real transport on top of it. A future WebRTC peer
@@ -8922,7 +8922,7 @@ Derived content:
 ```
 
 A geographic place becomes navigable by being addressable through
-`application/WorldLocationDirectory.js`'s own existing identifier
+`application/world/WorldLocationDirectory.js`'s own existing identifier
 space — a `WorldLocation` whose kind is `GEOGRAPHIC_PLACE` and whose id
 is `place:<fingerprintKey>`, built FRESH on every `find()` call by
 resolving the place's own deterministic representative region (see
@@ -8991,7 +8991,7 @@ regardless of which surface a viewer selected something from:
 DERIVED, read-only reshaping of whatever was selected, rebuilt fresh on
 every call, never persisted, and never a sixth stored kind alongside
 `WorldRegion`/`WorldLandmark`/`StructurePlacement`/`GeographicPlaceView`/
-`WorldSpatialContext`. `application/WorldNavigationSession.js#getFocusContextForLocation()`/
+`WorldSpatialContext`. `application/world/WorldNavigationSession.js#getFocusContextForLocation()`/
 `getFocusContextForCollaborator()` are the only two places one is ever
 built, and both are thin resolvers over collections the session already
 had — no new World content, no new command, no new persistence.
@@ -9227,7 +9227,7 @@ possible. Both stay content operations, never World/placement
 operations (per "Forking A Structure Records Provenance, Never A Live
 Dependency," 0.2.81, which this principle extends rather than
 replaces), and both leave the SOURCE Structure completely untouched:
-`application/ForkStructureToLibraryUseCase.js` mints a fresh Structure
+`application/editor/ForkStructureToLibraryUseCase.js` mints a fresh Structure
 id and fresh brick ids, the same "an id crossing a boundary always
 regenerates" rule every fork/import in this codebase already applies.
 
@@ -9256,7 +9256,7 @@ Footprint, Height) to `ui/components/BuildLibraryPanel.js`. None of it
 touches what a Structure IS. `core/sortStructures.js` is a pure function:
 structures in, the SAME structures back out, reordered. It never mutates
 a Structure, never reorders anything `core/StructureRegistry.js` or
-`application/LocalStructureLibraryStore.js` itself hands back, and its
+`application/editor/LocalStructureLibraryStore.js` itself hands back, and its
 result is never serialized, cached, or treated as a second source of
 truth about the library's contents. Choosing "Brick count" instead of
 "Name" changes what the user sees in one render pass and nothing else —
@@ -9276,7 +9276,7 @@ hypothetical. It is tempting to add a `createdAt` field to
 `core/Structure.js` to support it properly — this milestone doesn't.
 Instead, `sortStructures()` accepts an optional `savedAtById` map
 supplied by the caller, sourced from
-`application/LocalStructureLibraryStore.js#getSavedAtById()` — a
+`application/editor/LocalStructureLibraryStore.js#getSavedAtById()` — a
 personal Structure's own storage record already carries a `savedAt`
 (0.4.3, preserved across a rename); this milestone only exposes it. A
 built-in Village Structure was never "created" at any moment a user
@@ -9289,10 +9289,10 @@ domain object it describes.
 ### Usage History Is Local Presentation Metadata, Never Structure State (0.6.4)
 
 The Build Library's "Recent" section answers "what did I just place,"
-sourced from `application/LibraryUsageHistoryStore.js` — a new store
+sourced from `application/editor/LibraryUsageHistoryStore.js` — a new store
 recording which structure id was used and when. It sits at the exact
-same architectural altitude `application/LocalWorldExperienceStore.js`
-(0.3.10, camera framing) and `application/LocalNamePreferenceStore.js`
+same architectural altitude `application/world/LocalWorldExperienceStore.js`
+(0.3.10, camera framing) and `application/identity/LocalNamePreferenceStore.js`
 (place-naming display choice) already established, extended to a third
 kind of purely local, per-device, presentation-only signal:
 
@@ -9303,7 +9303,7 @@ immutable reusable value      local UI/session metadata
 ```
 
 `core/Structure.js` gains no field for this — no `lastUsedAt`, no
-`useCount`. `application/ExportBlueprintUseCase.js`'s portable package
+`useCount`. `application/blueprint/ExportBlueprintUseCase.js`'s portable package
 carries exactly the Structure it always did; usage history never
 crosses the export/import boundary, because it describes THIS device's
 own recent activity, not a fact about the blueprint itself. Recording a
@@ -9351,7 +9351,7 @@ category/description — and deliberately blind to everything that marks
 where or how a particular copy happens to be stored: `Structure#id`,
 every `Brick#id`, creation timestamp, library location, usage history,
 source library, and local author identity. None of the latter group are
-even fields `core/Structure.js` or `application/BlueprintPackage.js`'s
+even fields `core/Structure.js` or `application/blueprint/BlueprintPackage.js`'s
 own wire shape carries — there was nothing to accidentally leak into the
 fingerprint so much as nothing to have to remember to exclude.
 
@@ -9420,7 +9420,7 @@ BlueprintAttribution  = a subjective, signed, published ASSERTION
 A `BlueprintAttribution` carries a `fingerprint` it is about, but is
 never stored inside `core/Structure.js#toJSON()`, never travels through
 a Command, never touches undo/redo, and is never written into
-`application/BlueprintPackage.js`'s own portable Structure package.
+`application/blueprint/BlueprintPackage.js`'s own portable Structure package.
 Publishing an attribution for a fingerprint changes nothing about any
 Structure that happens to fingerprint to it — on this device, or
 anyone else's — the exact same "a claim about content is never mutation
@@ -9457,8 +9457,8 @@ disagreement between them is left entirely to whoever reads them later
 make on a naming claim's behalf.
 
 0.6.5 builds no exchange transport for an attribution at all —
-`application/LocalBlueprintAttributionStore.js` is exactly what its name
-says, LOCAL, mirroring `application/LocalPlaceNamingClaimStore.js`
+`application/blueprint/LocalBlueprintAttributionStore.js` is exactly what its name
+says, LOCAL, mirroring `application/placeNaming/LocalPlaceNamingClaimStore.js`
 before 0.5.3 gave naming claims somewhere to travel. A fingerprint match
 across two independent replicas remains informational only, never
 grounds for this milestone to auto-deduplicate an import: "you already
@@ -9480,10 +9480,10 @@ domain over:
 > Attribution exchange DISTRIBUTES assertions; it never ESTABLISHES who
 > actually made a design.
 
-`application/BlueprintAttributionExchange.js` proves this the same way
-`application/PlaceNamingClaimExchange.js` already proved its own
+`application/blueprint/BlueprintAttributionExchange.js` proves this the same way
+`application/placeNaming/PlaceNamingClaimExchange.js` already proved its own
 restraint: by what it deliberately never does. It never calls
-`application/BlueprintAttributionUseCase.js#summarize()`, never compares
+`application/blueprint/BlueprintAttributionUseCase.js#summarize()`, never compares
 one attribution's plausibility against another's, and never decides
 which of two identities attributing the same fingerprint is telling the
 truth. Every one of those questions was already, correctly, answered by
@@ -9497,7 +9497,7 @@ replica's store to another's.
 design conversation that proposed this milestone considered a
 "SharedBlueprint" or "BlueprintSharePackage" as a new domain concept and
 explicitly declined to build one. A design's geometry
-(`application/BlueprintPackage.js`, unchanged since 0.4.6) and a signed
+(`application/blueprint/BlueprintPackage.js`, unchanged since 0.4.6) and a signed
 assertion about who made it (`core/BlueprintAttribution.js#toJSON()`,
 unchanged since 0.6.5) stay two separate, independently-portable,
 independently-verifiable artifacts. `BlueprintPackage.js` only ever grows
@@ -9519,7 +9519,7 @@ actually has the Structure an attribution is about — typically because it
 just imported the very Blueprint Package the attribution traveled
 alongside — `deriveBlueprintFingerprint()` on that LOCAL Structure is
 strictly more trustworthy than any string a portable package merely
-claims. `application/BlueprintAttributionExchange.js#importAttribution()`'s
+claims. `application/blueprint/BlueprintAttributionExchange.js#importAttribution()`'s
 own `expectedFingerprint` parameter enforces exactly this: a
 cryptographically PERFECT signature only proves the named identity signed
 THIS payload — it proves nothing about whether that payload's
@@ -9545,8 +9545,8 @@ genuinely has something local to check supplies it; omitting it is not a
 weaker import, only a different, equally valid one.
 
 **`receivedAt` gets the same treatment a second time.**
-`application/LocalBlueprintAttributionPublicationLog.js` is the exact
-`application/LocalPlaceNamingPublicationLog.js` shape one domain over —
+`application/blueprint/LocalBlueprintAttributionPublicationLog.js` is the exact
+`application/placeNaming/LocalPlaceNamingPublicationLog.js` shape one domain over —
 first-seen-wins, never read back into `summarize()`'s own attribution
 list, preserved for a future freshness policy that this milestone
 deliberately does not build. The reasoning is unchanged from 0.5.3: a
@@ -9606,7 +9606,7 @@ already made, it never adjudicates it.
 separate, additive method.** The design conversation considered folding
 the new ranked view directly into `summarize()`'s own return shape and
 rejected it, for the same reason `core/PlaceNamingView.js` has never been
-merged into `application/PlaceNamingClaimUseCase.js`: a flat, unranked
+merged into `application/placeNaming/PlaceNamingClaimUseCase.js`: a flat, unranked
 read and a ranked, presentation-oriented derivation are two different
 questions, and answering both from one method invites exactly the kind of
 implicit coupling this architecture keeps refusing. Every pre-0.6.7 caller
@@ -9615,7 +9615,7 @@ them — keeps working, unchanged, reading the exact same flat shape it
 always has.
 
 **`receivedAt` finally gets consumed — but ranking still never sees it.**
-`application/LocalBlueprintAttributionPublicationLog.js`'s own 0.6.6
+`application/blueprint/LocalBlueprintAttributionPublicationLog.js`'s own 0.6.6
 header reserved its bookkeeping "for a future freshness policy... not
 wired into 0.6.5's own plain, unranked attribution list now." This
 milestone is that future policy, and it draws the boundary exactly where
@@ -9750,7 +9750,7 @@ legible EVIDENCE, never an oracle a UI defers to.
 
 **`core/BlueprintSimilarity.js` never signs, never persists, and is never
 itself consulted by the layer that actually asserts lineage.**
-`application/BlueprintLineageUseCase.js#publish()` reads exactly two
+`application/blueprint/BlueprintLineageUseCase.js#publish()` reads exactly two
 things before signing a claim: whether the caller can sign at all, and
 whether the two fingerprints differ. It does not call
 `compareBlueprintSimilarity()`, does not check `isPossibleLineageCandidate()`,
@@ -9829,11 +9829,11 @@ hold for disagreeing claims, extended here to disagreeing LOCATIONS of
 the same content.
 
 **A resolver never trusts what it retrieves — it only ever verifies it.**
-`application/PublicationResolver.js` runs the identical discipline every
+`application/publication/PublicationResolver.js` runs the identical discipline every
 exchange class in this codebase already followed ad hoc since 0.5.3
-(`application/PlaceNamingClaimExchange.js`,
-`application/BlueprintAttributionExchange.js`,
-`application/BlueprintLineageExchange.js`): validate the envelope,
+(`application/placeNaming/PlaceNamingClaimExchange.js`,
+`application/blueprint/BlueprintAttributionExchange.js`,
+`application/blueprint/BlueprintLineageExchange.js`): validate the envelope,
 construct it, verify its signature, retrieve the referenced bytes,
 verify the bytes actually hash to what was signed, validate the wrapped
 content, construct it, verify ITS OWN signature, optionally cross-check
@@ -9847,7 +9847,7 @@ validator/constructor/verifier that domain already built.
 
 ### Availability Is Not Validity (0.7.1)
 
-0.7.0's `application/PublicationResolver.js#resolve()` only had one way
+0.7.0's `application/publication/PublicationResolver.js#resolve()` only had one way
 to fail: throw, with a message. That was sufficient as long as the only
 `ContentStore` behind it was `content/LocalContentStore.js` — a local
 read either finds bytes or it doesn't, instantly and forever, and every
@@ -9860,7 +9860,7 @@ down. None of that is evidence the publication is bad. Collapsing "bad"
 and "not available yet" into one generic failure would force every
 caller to guess which one actually happened from a string message.
 
-**`application/PublicationResolutionOutcome.js` names the difference
+**`application/publication/PublicationResolutionOutcome.js` names the difference
 structurally, not by convention.** `CONTENT_UNAVAILABLE` is its own
 outcome, produced whenever `content/IpfsContentStore.js#get()` throws
 or returns nothing — never conflated with `CONTENT_HASH_MISMATCH`
@@ -9892,7 +9892,7 @@ IpfsContentStore.js#put()` computes its returned `ContentReference`'s
 and only ever writes the CID Kubo hands back into `uri`. A caller that
 only ever reads `contentReference.hash` cannot tell whether the bytes
 came from a local store or a real IPFS node, which is exactly why
-`application/PublicationResolver.js` never had to change to gain one.
+`application/publication/PublicationResolver.js` never had to change to gain one.
 
 **A publication points at content, not at a device.** The property a
 real decentralized network is FOR: once bytes are content-addressed and
@@ -9907,27 +9907,27 @@ network, when one happens to be running.
 
 ### Discovery Is Not Resolution (0.7.2)
 
-`application/PublicationResolver.js` has always answered exactly one
+`application/publication/PublicationResolver.js` has always answered exactly one
 question at a time: "here is a publication I already possess — can I
 retrieve and verify its content?" Nothing before 0.7.2 ever gave a
 replica anywhere to keep an envelope it had SEEN without immediately
 resolving it, which quietly conflated two facts that are not the same:
 knowing a publication exists, and being able to fetch what it points at
-right now. `application/LocalPublicationCatalog.js` exists to keep those
+right now. `application/publication/LocalPublicationCatalog.js` exists to keep those
 facts apart, structurally rather than by convention.
 
 **A catalog entry records that a signed envelope was seen. It never
 records whether the content it points at is reachable.** Cataloging a
 `DecentralizedPublication` runs exactly three checks — is the envelope
 well-formed, does it construct, does its own signature verify — the
-identical first three steps `application/PublicationResolver.js#resolve()`
+identical first three steps `application/publication/PublicationResolver.js#resolve()`
 already runs before it ever touches a `ContentStore`. It deliberately
 stops there. A publication whose bytes are temporarily unreachable
 (0.7.1's own `CONTENT_UNAVAILABLE`) is exactly as valid a catalog entry
 as one that resolves instantly — the catalog has no way to tell the
 difference, and asking it to try would mean fetching content merely to
 decide whether to remember a locator, the exact "retrieve → trust"
-shortcut `application/PublicationResolver.js`'s own header has refused
+shortcut `application/publication/PublicationResolver.js`'s own header has refused
 since 0.7.0.
 
 **Resolution status is always derived, never stored.** `application/
@@ -9937,7 +9937,7 @@ would need to keep in sync as content propagates, gets garbage
 collected, or reappears. A caller that wants to know whether a cataloged
 publication currently resolves calls `application/
 PublicationResolver.js#resolve()` on it, on demand, every time — the
-same restraint `application/PublicationResolutionOutcome.js`'s own
+same restraint `application/publication/PublicationResolutionOutcome.js`'s own
 0.7.1 header already applied to a single resolution call, extended here
 across the CATALOG'S entire lifetime: a cached verdict about
 reachability is a verdict that can go silently wrong the moment the
@@ -9958,38 +9958,38 @@ signed facts, never reconciled into one, extended here to disagreeing
 LOCATIONS of the same content rather than disagreeing claims about it.
 
 **Exchanging a publication moves a locator, never its content.**
-`application/PublicationExchange.js` is the generalization of
-`application/PlaceNamingClaimExchange.js`/`application/
+`application/publication/PublicationExchange.js` is the generalization of
+`application/placeNaming/PlaceNamingClaimExchange.js`/`application/
 BlueprintAttributionExchange.js` one layer up — the identical
 validate → construct → verify discipline, applied to the WRAPPER those
 two domains can optionally travel inside instead of to either domain
-directly. It never calls `application/PublicationResolver.js`, never
+directly. It never calls `application/publication/PublicationResolver.js`, never
 touches a `ContentStore`, and never learns what a `contentKind` string
 means. A live transport — gossiping envelopes over an actual peer
 connection rather than a hand-off file — is deliberately still missing;
 this class only establishes what moves and how it is checked, exactly
-as boring on purpose as `application/PlaceNamingClaimExchange.js`'s own
+as boring on purpose as `application/placeNaming/PlaceNamingClaimExchange.js`'s own
 0.5.3 header insisted its own first transport had to be.
 
 ### A Peer Connection Transports Publications; It Does Not Resolve Them (0.7.3)
 
 0.7.2 closed with one thing named and unbuilt: a live transport for
-`application/PublicationExchange.js`, which until 0.7.3 only ever moved
+`application/publication/PublicationExchange.js`, which until 0.7.3 only ever moved
 a plain envelope object in, a plain envelope object out — a caller
 still had to physically carry that object from one replica to another
-by hand. `application/PublicationPeerExchange.js` is that transport,
+by hand. `application/publication/PublicationPeerExchange.js` is that transport,
 and the constraint this milestone's own design conversation stated
 before any code existed: **do not make `application/
 LocalPublicationCatalog.js` network-aware.** The catalog gained no new
 method, no new field, and no idea that a peer connection exists at
 all — a transport was built AROUND `application/
 PublicationExchange.js`, never threaded into `application/
-LocalPublicationCatalog.js` or `application/PublicationResolver.js`
+LocalPublicationCatalog.js` or `application/publication/PublicationResolver.js`
 themselves.
 
 **A live announce runs through the exact same discipline a pasted file
-already did.** `application/PublicationPeerExchange.js#_handleIncoming()`
-calls `application/PublicationExchange.js#importPublication()`
+already did.** `application/publication/PublicationPeerExchange.js#_handleIncoming()`
+calls `application/publication/PublicationExchange.js#importPublication()`
 UNCHANGED — validate, construct, verify, catalog — the identical four
 steps 0.7.2's own flagship already proved against a hand-off JSON
 object, now driven by a message that arrived over `peer/
@@ -10018,15 +10018,15 @@ agnostic by `tests/PeerMessaging.test.js`'s own flagship running
 unmodified over both `peer/LocalPeerConnectionProvider.js` and `peer/
 WebRtcPeerConnectionProvider.js`. `application/
 PublicationPeerExchange.js` is built directly on that bus, the same
-shape `application/IdentityLifecyclePropagationUseCase.js` and
-`application/DeviceAuthorizationPropagationUseCase.js` already
+shape `application/identity/IdentityLifecyclePropagationUseCase.js` and
+`application/identity/DeviceAuthorizationPropagationUseCase.js` already
 established for their own gossiped records, rather than a second,
 parallel transport abstraction duplicating hygiene that already
 existed. A consequence, not a coincidence: a future real WebRTC
 milestone is composition-root wiring, not new protocol work.
 
 **Peer identity stays informational, never authority.**
-`application/PublicationPeerExchange.js#_handleIncoming()` never reads
+`application/publication/PublicationPeerExchange.js#_handleIncoming()` never reads
 `meta.connectedPeer` — a publication received from Alice, from
 Charlie, or from a pasted file is exactly as valid, because its own
 signature (verified entirely inside `application/
@@ -10034,7 +10034,7 @@ PublicationExchange.js`, unchanged) is the only thing that ever made
 it trustworthy. No `trustedPeer`, `trustedPublisher`, or `peerScore`
 concept exists anywhere in this milestone, extending the identical
 "publisher identity ≠ transport source" invariant this codebase has
-held since `application/PlaceNamingClaimExchange.js`'s own 0.5.3
+held since `application/placeNaming/PlaceNamingClaimExchange.js`'s own 0.5.3
 header, now proven true of a live connection as much as a file.
 
 ### Content Delivery Is Not Content Authority (0.7.4)
@@ -10044,7 +10044,7 @@ request/response protocol... any form of content transfer." Every
 milestone through 0.7.3 answered "who published this locator, and can
 its bytes be resolved" without ever asking a THIRD replica to help —
 the bytes a publication pointed at were always already sitting wherever
-`application/PublicationResolver.js#resolve()` looked. `application/
+`application/publication/PublicationResolver.js#resolve()` looked. `application/
 PeerContentExchange.js` is the missing pull, and the rule its own
 design conversation stated before any code existed: **a peer is never
 trusted merely because it supplied bytes.**
@@ -10062,10 +10062,10 @@ successfully delivering bytes gives him no retroactive claim to have
 published anything.
 
 **The hash is the only thing that ever makes a RESPONSE trustworthy.**
-`application/PeerContentExchange.js#_handleResponse()` never reads
+`application/peer/PeerContentExchange.js#_handleResponse()` never reads
 `meta.connectedPeer` to decide whether to accept a RESPONSE — the same
 "peer identity stays informational, never authority" restraint
-`application/PublicationPeerExchange.js`'s own header already
+`application/publication/PublicationPeerExchange.js`'s own header already
 established for an ANNOUNCE, extended here from "is this signed
 correctly" to "do these bytes hash to what I asked for." `core/
 ContentReference.js#verify()` recomputes the hash of exactly what
@@ -10078,7 +10078,7 @@ verification step existed. This milestone adds a check in front of
 storage, not a fix inside it.
 
 **Retrieval is authorized by what was published, never by what is
-merely known.** `application/PeerContentExchange.js#request()` and
+merely known.** `application/peer/PeerContentExchange.js#request()` and
 `#_handleRequest()` both refuse to act on a hash the local `application/
 LocalPublicationCatalog.js` does not already hold, via some cataloged
 publication's own `contentReference` — see `tests/
@@ -10109,7 +10109,7 @@ What none of the five ever answered is the question a PERSON actually
 has, looking at one cataloged publication: "can I see this, and if not,
 can you go get it?" Answering that means calling two of them in
 sequence and reacting to an event neither raises on its own behalf.
-`application/PublicationResolutionCoordinator.js` is exactly that
+`application/publication/PublicationResolutionCoordinator.js` is exactly that
 sequencing — and, this milestone's own design conversation insisted,
 **nothing more**: it owns no storage, ranks nothing, and decides nothing
 a person didn't already ask for.
@@ -10132,7 +10132,7 @@ connected peer." A caller with no peer to offer gets exactly the local
 `resolve()` result back, unchanged; automatic, unattended retrieval for
 every catalog entry a replica happens to hold was named directly in
 this milestone's own design conversation and refused, for the identical
-reason `application/PeerContentExchange.js`'s own 0.7.4 header refuses
+reason `application/peer/PeerContentExchange.js`'s own 0.7.4 header refuses
 to answer a hash nobody published a locator for. `ui/views/
 DecentralizedPublicationsView.js` is where "which peer" actually gets
 decided — a single, named, narrow default policy (the first
@@ -10162,8 +10162,8 @@ with no `store` at all — one that resolves a publication far enough to
 describe it, and imports it nowhere. Merely opening `ui/views/
 DecentralizedPublicationsView.js` to check whether a cataloged
 attribution or naming claim can be seen right now must never, as a side
-effect, add it to `application/LocalBlueprintAttributionStore.js` or
-`application/LocalPlaceNamingClaimStore.js` — a person who actually
+effect, add it to `application/blueprint/LocalBlueprintAttributionStore.js` or
+`application/placeNaming/LocalPlaceNamingClaimStore.js` — a person who actually
 wants that already has "Claim authorship" and its naming-claim
 equivalent, both entirely unchanged. Looking at a publication and
 adopting it stay two different acts, exactly as separate as cataloging
@@ -10173,12 +10173,12 @@ See `docs/Roadmap.md`, 0.7.5, for the full milestone entry.
 
 ### Replication Creates Availability; It Does Not Create Authority (0.7.6)
 
-0.7.4 built `application/PeerContentExchange.js#request()` to ask exactly
+0.7.4 built `application/peer/PeerContentExchange.js#request()` to ask exactly
 one peer for one hash. 0.7.5's own `application/
 PublicationResolutionCoordinator.js` header named the obvious next step
 and declined to build it: asking several peers, one after another, for
 content this replica does not yet have. 0.7.6 is that step — a new
-`application/PeerContentRetrievalCoordinator.js` that tries an ORDERED
+`application/peer/PeerContentRetrievalCoordinator.js` that tries an ORDERED
 list of candidates until one answers, or all of them don't. Nothing
 about WHAT makes a RESPONSE trustworthy changed: `core/
 ContentReference.js#verify()` still recomputes the hash of exactly what
@@ -10190,7 +10190,7 @@ order — never who they are, or what they are owed for answering.
 them.** Bob retrieving Alice's content puts real bytes in Bob's own
 `content/ContentStore.js` — genuine replication, not a resolved verdict
 that evaporates on the next page load. It does not put a new entry in
-Bob's own `application/LocalPublicationCatalog.js`, does not sign
+Bob's own `application/publication/LocalPublicationCatalog.js`, does not sign
 anything on Bob's behalf, and gives Bob no more claim to have published
 Alice's design than a browser's HTTP cache gives it a claim to have
 written a web page. `tests/PeerContentRetrievalCoordinator.test.js`'s
@@ -10222,7 +10222,7 @@ class's own header has held since it was written.
 **Resolution asks what; retrieval asks whether.** `application/
 PublicationResolutionOutcome.js` answers "what is the state of this
 publication" — RESOLVED, CONTENT_UNAVAILABLE, one of the INVALID_*
-values. `application/PeerContentRetrievalCoordinator.js#retrieve()`
+values. `application/peer/PeerContentRetrievalCoordinator.js#retrieve()`
 answers a narrower, operational question: "did THIS attempt, against
 THESE candidates, obtain verified bytes?" The two questions look similar
 enough to tempt merging them into one enum, and this milestone's own
@@ -10231,14 +10231,14 @@ outcome is carried on its own `retrieval` field
 (`{ retrieved, hash, attemptedPeers, peer?, reason? }`), never folded
 into `outcome`, so a caller that only ever cared about the five-year-old
 `PublicationResolutionOutcome` contract sees it completely unchanged.
-`application/PublicationResolutionCoordinator.js#resolve()` is the one
+`application/publication/PublicationResolutionCoordinator.js#resolve()` is the one
 place both facts ever travel together, and only ever side by side.
 
 **Trying candidate N before candidate N+1 is an ordering, never a
-ranking.** `application/PeerContentRetrievalCoordinator.js` introduces
+ranking.** `application/peer/PeerContentRetrievalCoordinator.js` introduces
 no field anywhere that could hold an opinion about which peer is more
 reliable, more trustworthy, or "preferred" — the identical restraint
-`application/PeerContentExchange.js`'s own 0.7.4 header already applies
+`application/peer/PeerContentExchange.js`'s own 0.7.4 header already applies
 to a single peer, extended here to a list of them. The ORDER candidates
 are tried in is entirely the caller's own policy (see `ui/views/
 DecentralizedPublicationsView.js` — every currently authenticated peer,
@@ -10302,12 +10302,12 @@ identity really sign exactly this tuple? `application/
 ExternalAnchorVerifier.js` answers the second, and only when a caller
 supplies a `proofVerifier` for the anchor's own `anchorType` — no such
 plugin exists yet anywhere in this codebase, on purpose (see
-`docs/Roadmap.md`), so `application/AnchorVerificationOutcome.js` names
+`docs/Roadmap.md`), so `application/anchoring/AnchorVerificationOutcome.js` names
 `VALID_PROOF_UNVERIFIED` as its own honest, non-rejected outcome rather
 than let "genuinely signed" quietly stand in for "proof independently
 confirmed." Whether the anchored CONTENT is authentic is the third
 question, and no anchor — proof-verified or not — ever answers it;
-`application/PublicationResolver.js`'s own ten-step discipline is the
+`application/publication/PublicationResolver.js`'s own ten-step discipline is the
 only place that question is ever asked.
 
 **Multiple independent anchors for the identical content are never
@@ -10358,7 +10358,7 @@ confirmed might be confirmed a block later; the explorer itself might be
 down. None of these says "this proof is fraudulent" — each one only says
 "this replica cannot presently tell." `application/
 AnchorVerificationOutcome.js`'s own `PROOF_UNAVAILABLE` names exactly
-that state, and `application/ExternalAnchorVerifier.js#verify()` reaches
+that state, and `application/anchoring/ExternalAnchorVerifier.js#verify()` reaches
 it two ways: a `proofVerifier` that returns
 `{ valid: false, unavailable: true, reason }` explicitly, or one that
 simply throws — treated identically, because a network error IS an
@@ -10406,14 +10406,14 @@ PublicationAnchor.js` — verification stays what 0.8.0 already made it:
 something computed fresh, every time, by calling `ExternalAnchorVerifier
 #verify()` again, never something stored and trusted stale.
 
-`application/ExternalProofVerifierRegistry.js` is the one piece of new
+`application/anchoring/ExternalProofVerifierRegistry.js` is the one piece of new
 composability 0.8.1 actually adds, and it is deliberately dumb: a
 `Map<anchorType, proofVerifier>` and nothing more. It never verifies
 anything itself, never imports `anchoring/
 BitcoinOpReturnProofVerifier.js` or any other concrete adapter, and
-`application/ExternalAnchorVerifier.js` never imports the registry
+`application/anchoring/ExternalAnchorVerifier.js` never imports the registry
 either — both are wired together explicitly by a caller (see
-`application/CreateExternalAnchorVerifierUseCase.js`'s own
+`application/anchoring/CreateExternalAnchorVerifierUseCase.js`'s own
 `proofVerifiers` option), the identical "generic pipeline, concrete
 plugin wired at the composition root" split `application/
 PublicationResolver.js`'s own `kindPlugin` has held since 0.7.0. A
@@ -10421,17 +10421,17 @@ second, third, or hundredth real anchorType — an Ethereum contract event,
 an OpenTimestamps calendar server, a notarization API — plugs in the
 same way: implement `anchoring/ProofVerifier.js`'s own tiny contract,
 register it, and change nothing about `core/PublicationAnchor.js`,
-`application/ExternalAnchorVerifier.js`, or any anchor already signed
+`application/anchoring/ExternalAnchorVerifier.js`, or any anchor already signed
 under a different `anchorType`.
 
 See `docs/Roadmap.md`, 0.8.1, for the full milestone entry.
 
 ### Cataloging External Evidence Does Not Validate External Evidence (0.8.2)
 
-`application/LocalPublicationCatalog.js`'s own 0.7.2 header already drew
+`application/publication/LocalPublicationCatalog.js`'s own 0.7.2 header already drew
 this line for a different axis — "Discovery Is Not Resolution" — and
 0.8.2 draws the identical line for evidence instead of locators.
-`application/LocalPublicationAnchorCatalog.js#add()` records that a
+`application/anchoring/LocalPublicationAnchorCatalog.js#add()` records that a
 `PublicationAnchor` exists and that this replica has seen it. It never
 records, computes, or implies whether that anchor is genuinely signed,
 whether its proof holds up, or whether it should be trusted at all.
@@ -10439,11 +10439,11 @@ whether its proof holds up, or whether it should be trusted at all.
 **The catalog answers "what anchor claims do I know about?" The verifier
 answers "what can I independently establish about one of those claims
 right now?" Nothing in this codebase is ever allowed to collapse those
-into one question.** `application/AddPublicationAnchorUseCase.js` runs
+into one question.** `application/anchoring/AddPublicationAnchorUseCase.js` runs
 exactly two steps — validate the envelope's own structure, construct a
 real `PublicationAnchor` — and stops. It never calls `identity/
 LocalAuthorizationVerifier.js#verifyPublicationAnchor()`, never calls
-`application/ExternalAnchorVerifier.js#verify()`, and never touches a
+`application/anchoring/ExternalAnchorVerifier.js#verify()`, and never touches a
 network. `tests/PublicationAnchorCatalog.test.js`'s own Section D proves
 this directly: an unsigned, outright forged anchor catalogs exactly as
 cleanly as a genuinely valid one, and a spy `proofVerifier` that would
@@ -10451,16 +10451,16 @@ fail its own assertion if `AddPublicationAnchorUseCase` ever called it
 is never invoked by cataloging, under any circumstance.
 
 **No verification outcome is ever stored beside a cataloged anchor.**
-`application/LocalPublicationAnchorCatalog.js`'s stored record holds only
+`application/anchoring/LocalPublicationAnchorCatalog.js`'s stored record holds only
 the signed envelope itself and `receivedAt`, the one fact genuinely local
 to this replica and never part of what any identity signed — the same
-restraint `application/LocalPublicationCatalog.js` already applies to a
+restraint `application/publication/LocalPublicationCatalog.js` already applies to a
 `DecentralizedPublication`'s own `receivedAt`. No `verified`,
 `verificationOutcome`, `verificationTimestamp`, or `verificationReason`
 field exists anywhere in this class, and none should ever be added to
 it: a verification result computed once and cached beside the anchor it
 was computed for would silently reintroduce the exact "checked once,
-trusted forever" shortcut `application/ExternalAnchorVerifier.js`'s own
+trusted forever" shortcut `application/anchoring/ExternalAnchorVerifier.js`'s own
 0.8.0 header already refused — an external system's confirmation state
 can change (a transaction gets confirmed later; a previously-unreachable
 explorer comes back), and a stale cached "PROOF_UNAVAILABLE" or even a
@@ -10470,7 +10470,7 @@ stale cached "VALID" would misrepresent it. Verification stays what
 
 **Multiple independent anchors for the same evidence are cataloged
 exactly as multiple independent anchors, never merged, ranked, or
-resolved to one.** `application/LocalPublicationAnchorCatalog.js#
+resolved to one.** `application/anchoring/LocalPublicationAnchorCatalog.js#
 findByPublicationId()` and `#findByContentHash()` both always return
 every matching anchor this replica has cataloged, in the same
 deterministic most-recently-received order `#list()` uses — the
@@ -10485,7 +10485,7 @@ this catalog ever narrows any of them down to a "canonical" one.
 
 **Cataloging an anchor still builds no path from evidence to peer
 exchange.** 0.8.2 deliberately ships no `PublicationAnchorExchange` and
-no anchor gossip — `application/AddPublicationAnchorUseCase.js` only
+no anchor gossip — `application/anchoring/AddPublicationAnchorUseCase.js` only
 ever admits an anchor a caller already holds, with no untrusted-arrival
 transport boundary for a signature check to guard. A future milestone
 that DOES add that transport reuses `application/
@@ -10505,7 +10505,7 @@ PERSON able to see that same line, in the Publication Center, without
 either question ever quietly answering the other.
 
 **Discovery is always visible; verification is never automatic.**
-`application/PublicationEvidenceCoordinator.js#discover()` is
+`application/publication/evidence/PublicationEvidenceCoordinator.js#discover()` is
 synchronous, local-only, and runs the moment `ui/views/
 DecentralizedPublicationsView.js`'s own list loads — a person sees "N
 anchors known" for free, the same way they already see how many
@@ -10514,7 +10514,7 @@ every way that matters: asynchronous, may reach a real external system,
 and runs ONLY when a person clicks "Verify Evidence" on one specific
 anchor. Opening the Publication Center, expanding its evidence section,
 or a fresh anchor simply arriving in the catalog — none of these ever
-calls `application/ExternalAnchorVerifier.js`. `tests/
+calls `application/anchoring/ExternalAnchorVerifier.js`. `tests/
 PublicationEvidenceUX.test.js`'s own Section D proves this with a
 spying verifier that would fail if `discover()` — called repeatedly —
 ever consulted it, and never does.
@@ -10535,7 +10535,7 @@ stays what 0.8.0 already made it: computed fresh, every time, by asking
 again.
 
 **Every outcome keeps its own word, and none of them says "trust."**
-`application/PublicationEvidenceView.js#describeVerificationOutcome()`
+`application/publication/evidence/PublicationEvidenceView.js#describeVerificationOutcome()`
 gives each of the seven `AnchorVerificationOutcome` values its own
 distinct label — "Independently verified" for `VALID`, "Proof not
 independently verified" for `VALID_PROOF_UNVERIFIED`, "Verification
@@ -10563,7 +10563,7 @@ into an honest `CONTENT_MISMATCH` rather than a false confirmation.
 
 **No anchor is ever ranked, summed, or selected as canonical.** Several
 independent anchors for the same publication are listed in the same
-order `application/LocalPublicationAnchorCatalog.js` itself already
+order `application/anchoring/LocalPublicationAnchorCatalog.js` itself already
 uses, each with its own independent verification state; nothing this
 milestone added ever picks a "best" one, weighs several `VALID` outcomes
 into a stronger claim, or derives "therefore this publication is
@@ -10579,22 +10579,22 @@ signature proves only that the named `anchorIdentity` really did sign
 exactly this tuple. Verifying the `proof` itself... is a SEPARATE,
 anchorType-specific question." 0.8.4 is the milestone that turns that
 distinction into an actual second class, because a peer transport finally
-needs it: `application/PublicationAnchorExchange.js` runs every incoming
+needs it: `application/anchoring/PublicationAnchorExchange.js` runs every incoming
 anchor through validate -> construct -> verify SIGNATURE -> catalog,
-stopping exactly where `application/AddPublicationAnchorUseCase.js`
+stopping exactly where `application/anchoring/AddPublicationAnchorUseCase.js`
 (0.8.2) already stopped one step earlier, and exactly where
-`application/ExternalAnchorVerifier.js` (0.8.0-0.8.1) goes one step
+`application/anchoring/ExternalAnchorVerifier.js` (0.8.0-0.8.1) goes one step
 further.
 
 **Three questions, three answerers, never conflated.** "Is this
-envelope well-formed?" is `application/PublicationAnchorValidator.js`,
+envelope well-formed?" is `application/anchoring/PublicationAnchorValidator.js`,
 unchanged since 0.8.0. "Did the claimed identity really sign it?" is now
-`application/PublicationAnchorExchange.js#importAnchor()`, calling
+`application/anchoring/PublicationAnchorExchange.js#importAnchor()`, calling
 `identity/LocalAuthorizationVerifier.js#verifyPublicationAnchor()`
 directly — REQUIRED, never optional, for anything arriving over
-`application/PublicationAnchorPeerExchange.js`. "Does the external
+`application/anchoring/PublicationAnchorPeerExchange.js`. "Does the external
 system actually substantiate the claim?" stays entirely
-`application/ExternalAnchorVerifier.js`'s own question, asked separately,
+`application/anchoring/ExternalAnchorVerifier.js`'s own question, asked separately,
 asked explicitly, asked only when a person clicks "Verify Evidence" —
 `tests/PublicationAnchorPeerExchange.test.js`'s own Section B and C each
 prove this with a spy `ExternalAnchorVerifier` that would fail the
@@ -10604,7 +10604,7 @@ and never does.
 **A forged signature is refused before the catalog ever sees it; an
 unreachable external system never is.** This is the one behavioral
 difference between the two "add an anchor" paths this codebase now
-carries side by side: `application/AddPublicationAnchorUseCase.js`
+carries side by side: `application/anchoring/AddPublicationAnchorUseCase.js`
 catalogs a well-formed-but-unsigned or forged anchor cleanly, because a
 caller using it already trusts the anchor some other way (its own
 freshly-signed record, an already-vetted import). `application/
@@ -10630,7 +10630,7 @@ system — the temptation to shortcut peer-to-peer trust by also gossiping
 exists in part to structurally foreclose it.
 
 **What crosses the wire is exactly `PublicationAnchor.toJSON()`, nothing
-more.** `application/PublicationAnchorPeerProtocol.js#
+more.** `application/anchoring/PublicationAnchorPeerProtocol.js#
 toPublicationAnchorAnnounceMessage()` wraps only `{ kind, envelope }` —
 `tests/PublicationAnchorPeerExchange.test.js` Section A asserts the
 wrapper carries exactly two keys, and Section C asserts the envelope a
@@ -10643,8 +10643,8 @@ unchanged from 0.8.0, byte for byte, whether it travelled zero peer hops
 or several.
 
 **Receiving an anchor is never verifying it.**
-`application/PublicationAnchorPeerExchange.js#_handleIncoming()` never
-calls `application/ExternalAnchorVerifier.js` — the single most important
+`application/anchoring/PublicationAnchorPeerExchange.js#_handleIncoming()` never
+calls `application/anchoring/ExternalAnchorVerifier.js` — the single most important
 restraint this class exists to enforce, named directly in its own header.
 "Another replica told me about this evidence claim" and "the evidence has
 been verified" stay two separate facts a person can hold about the exact
@@ -10652,12 +10652,12 @@ same anchor, exactly as separate as 0.8.2 already kept "cataloged" from
 "verified" for an anchor that arrived by any other means.
 
 **Authentication gates who a claim is sent to, never whether a received
-claim is believed.** `application/PublicationAnchorPeerExchange.js#
+claim is believed.** `application/anchoring/PublicationAnchorPeerExchange.js#
 announce()` sends only to peers `PeerLifecycleState.AUTHENTICATED` — the
-identical channel-level gate `application/PublicationPeerExchange.js`
+identical channel-level gate `application/publication/PublicationPeerExchange.js`
 already applies to publications — but authentication is never asked to
 do double duty as an authority mechanism. An anchor's own signature,
-checked entirely inside `application/PublicationAnchorExchange.js`, is
+checked entirely inside `application/anchoring/PublicationAnchorExchange.js`, is
 the only thing that ever makes it acceptable; `_handleIncoming()` never
 reads which connection a message arrived over, and this codebase adds no
 notion of a "trusted peer" or "trusted anchor source" anywhere in this
@@ -10692,7 +10692,7 @@ connected when an anchor is announced hears about it. 0.8.5 gives them a
 PULL: a replica that connects LATER can explicitly ask for anchors it
 missed. The mechanism is new — `application/
 PublicationAnchorPeerProtocol.js`'s own `REQUEST`/`RESPONSE` pair,
-`application/PublicationAnchorPeerExchange.js#requestAnchors()`/
+`application/anchoring/PublicationAnchorPeerExchange.js#requestAnchors()`/
 `_handleRequest()`/`_handleResponse()` — but the invariant is not: this
 milestone exists specifically to prove that adding a pull-based transport
 never widens what actually crosses the wire.
@@ -10708,7 +10708,7 @@ anything at all.
 **Every anchor in a RESPONSE is verified exactly as strictly as one
 ANNOUNCE always was — there is no bulk-trust shortcut.**
 `_handleResponse()` runs each envelope in the batch through the IDENTICAL
-`application/PublicationAnchorExchange.js#importAnchor()` call an
+`application/anchoring/PublicationAnchorExchange.js#importAnchor()` call an
 ANNOUNCE already used: validate, construct, verify SIGNATURE, catalog.
 `tests/PublicationAnchorPeerExchange.test.js`'s own Section C proves a
 forged anchor anywhere in a RESPONSE array is rejected exactly like a
@@ -10719,7 +10719,7 @@ times more trustworthy than synchronizing one; each one still stands or
 falls entirely on its own signature.
 
 **A RESPONSE carries claims, never metadata about how this replica came
-to know them.** `application/PublicationAnchorPeerProtocol.js#
+to know them.** `application/anchoring/PublicationAnchorPeerProtocol.js#
 toPublicationAnchorResponseMessage()`'s own wire shape is `{ kind,
 publicationId, anchors }` — plain `PublicationAnchor.toJSON()` envelopes,
 nothing else. No `receivedAt`, no verification outcome, and no "which
@@ -10733,7 +10733,7 @@ Carol's own `receivedAt` is recorded fresh, at the moment SHE first heard
 about it, never copied from Bob's.
 
 **THE central invariant extends completely unchanged: neither new
-handler ever calls `application/ExternalAnchorVerifier.js`.**
+handler ever calls `application/anchoring/ExternalAnchorVerifier.js`.**
 `_handleRequest()` answering a REQUEST and `_handleResponse()` importing
 a RESPONSE both stay exactly where `_handleIncoming()` already stopped
 for an ANNOUNCE — a synchronized anchor is exactly as unverified, on
@@ -10750,7 +10750,7 @@ See `docs/Roadmap.md`, 0.8.5, for the full milestone entry.
 
 ### Evidence Set Convergence Does Not Imply Truth Convergence (0.8.5)
 
-`application/PublicationAnchorDiscoveryCoordinator.js`'s own flagship
+`application/anchoring/PublicationAnchorDiscoveryCoordinator.js`'s own flagship
 sets up the exact asymmetry this principle is named for: Alice starts
 knowing only Anchor A, Bob knows both A and B, Carol starts knowing only
 B. After each of Alice and Carol runs `discoverFromPeers()` against Bob,
@@ -10764,7 +10764,7 @@ MEAN.
 claims' own truth.** Nothing added in 0.8.5 computes a "most complete"
 peer, ranks a replica that holds more anchors above one that holds fewer,
 or treats a converged set as more authoritative than any individual
-member of it. `application/PublicationAnchorDiscoveryCoordinator.js#
+member of it. `application/anchoring/PublicationAnchorDiscoveryCoordinator.js#
 discoverFromPeers()` returns `{ publicationId, attemptedPeers,
 discovered }` — an operation log of what was asked and what came back —
 never a verdict, a score, or a "consensus" field. Two anchors that
@@ -10777,7 +10777,7 @@ why multiple anchors were never meant to be reconciled into one verdict
 in the first place.
 
 **Deduplication is not agreement.** When Alice and Carol both discover
-Anchor A through Bob, `application/LocalPublicationAnchorCatalog.js#
+Anchor A through Bob, `application/anchoring/LocalPublicationAnchorCatalog.js#
 add()`'s own id-based dedup (0.8.2) means each ends up with exactly ONE
 cataloged copy — never two redundant entries, and never a "confirmed by N
 peers" counter either. Convergence here means "the set no longer differs
@@ -10788,7 +10788,7 @@ peer's RESPONSE and ten peers' identical RESPONSEs produce the exact same
 cataloged outcome.
 
 **Verification stays exactly as independent after synchronization as it
-was before it.** `application/PublicationAnchorPeerExchange.js#
+was before it.** `application/anchoring/PublicationAnchorPeerExchange.js#
 _handleResponse()`'s own header already establishes that a synchronized
 anchor is exactly as unverified on arrival as an announced one — this
 principle names the natural next question and forecloses it too: once
@@ -10808,7 +10808,7 @@ See `docs/Roadmap.md`, 0.8.5, for the full milestone entry.
 independently-held, possibly disagreeing anchors for the SAME
 publication might ever be reasoned about together" — gets exactly one
 answer in 0.8.6, and it is a narrow one: they can be COMPARED, never
-RESOLVED. `application/PublicationEvidenceConvergence.js#
+RESOLVED. `application/publication/evidence/PublicationEvidenceConvergence.js#
 derivePublicationEvidenceConvergence()` is the first module in this
 codebase that looks at more than one anchor for the same publicationId
 at once and says something about how they relate. What it says is
@@ -10866,7 +10866,7 @@ observations count as exchanging them? This principle's answer is no,
 and the discipline that keeps it no is entirely about which module ever
 sees more than one replica's observations at once.
 
-**`application/PublicationEvidenceConvergence.js` never receives more
+**`application/publication/evidence/PublicationEvidenceConvergence.js` never receives more
 than one replica's own `verificationByAnchorId` map in a single call.**
 There is no parameter for "which replica observed this," no way to
 merge two maps into one, and no code path that could average, tally, or
@@ -10903,15 +10903,15 @@ See `docs/Roadmap.md`, 0.8.6, for the full milestone entry.
 0.8.4 drew this line for a peer connection: `application/
 PublicationAnchorExchange.js#importAnchor()` validates an envelope,
 constructs it, and verifies its SIGNATURE — and stops there, never once
-calling `application/ExternalAnchorVerifier.js`. 0.8.7 draws the
+calling `application/anchoring/ExternalAnchorVerifier.js`. 0.8.7 draws the
 identical line for the other way an anchor can now arrive: bundled
-inside an `application/BlueprintPackage.js`. Importing a package that
+inside an `application/blueprint/BlueprintPackage.js`. Importing a package that
 carries three anchors catalogs three CLAIMS. It proves nothing about any
 of them.
 
-**`application/ImportPackageAnchorsUseCase.js` calls
+**`application/anchoring/ImportPackageAnchorsUseCase.js` calls
 `PublicationAnchorExchange#importAnchor()` and nothing else.** No new
-call to `application/ExternalAnchorVerifier.js` exists anywhere in this
+call to `application/anchoring/ExternalAnchorVerifier.js` exists anywhere in this
 class, or anywhere else this milestone touches — `tests/
 PublicationAnchorPackageImport.test.js`'s own Section C proves this with
 a spy `ExternalAnchorVerifier` that increments a counter every time it is
@@ -10927,7 +10927,7 @@ so its anchors get exactly the same gate, never a looser one.** A
 forged or tampered anchor bundled in a package is rejected at the
 identical `identity/LocalAuthorizationVerifier.js#
 verifyPublicationAnchor()` boundary a forged anchor arriving over
-`application/PublicationAnchorPeerExchange.js` already is — see `docs/
+`application/anchoring/PublicationAnchorPeerExchange.js` already is — see `docs/
 Principles.md`, "Signature Verification Is Not Proof Verification
 (0.8.4)." Nothing about arriving inside a `.json` file someone emailed,
 rather than over a live authenticated connection, earns an anchor any
@@ -10936,7 +10936,7 @@ more standing trust.
 **The Section D flagship makes the positive case.** Bob imports a
 package bundling a Blueprint, an attribution, a lineage claim, and a
 Bitcoin anchor from Alice, catalogs the anchor, and derives a full
-`application/PublicationEvidenceConvergence.js` view over it — correctly
+`application/publication/evidence/PublicationEvidenceConvergence.js` view over it — correctly
 reporting one known anchor, one anchorType, no content-binding conflict
 — entirely BEFORE he ever calls `ExternalAnchorVerifier.verify()` on it.
 Evidence discovery, evidence comparison, and evidence verification stay
@@ -10951,12 +10951,12 @@ See `docs/Roadmap.md`, 0.8.7, for the full milestone entry.
 A `BlueprintPackage` bundles a `Structure`; a `PublicationAnchor`
 describes evidence about a `DecentralizedPublication`. This codebase has
 never had a concept of "the publication a given Blueprint Package is
-about" — no field on `application/BlueprintPackage.js` names one, and
+about" — no field on `application/blueprint/BlueprintPackage.js` names one, and
 0.8.7 does not invent one merely because a package can now also carry
 anchors. That absence is deliberate, not an oversight this milestone
 should have fixed.
 
-**`application/ImportPackageAnchorsUseCase.js` never cross-checks a
+**`application/anchoring/ImportPackageAnchorsUseCase.js` never cross-checks a
 bundled anchor's `publicationId`/`contentHash` against anything about the
 package it arrived in, because there is nothing structurally binding the
 two.** An anchor naming `publicationId: "pub-x"` bundled inside a package
@@ -10964,11 +10964,11 @@ whose `structure` has nothing at all to do with `pub-x` is exactly as
 importable as one that agrees — this class has no basis to judge
 "agreement" in the first place, and does not pretend to. The anchor's own
 `publicationId`/`contentHash` fields are preserved byte-for-byte, exactly
-as `application/PublicationAnchorExchange.js` already preserves them for
+as `application/anchoring/PublicationAnchorExchange.js` already preserves them for
 a peer-delivered anchor.
 
 **Whether a bundled anchor's claims agree with what a caller separately
-knows is `application/PublicationEvidenceConvergence.js`'s own question,
+knows is `application/publication/evidence/PublicationEvidenceConvergence.js`'s own question,
 asked afterward, never this milestone's to pre-empt.** A caller that
 wants to know whether an imported anchor's `contentHash` matches a
 publication it has separately resolved passes `expectedContentHash` to
@@ -10986,7 +10986,7 @@ No `importedFromPackage`, `packageId`, or similar field was added to
 `core/PublicationAnchor.js` — the signed envelope a package carries is
 identical to the one a peer connection would have carried for the same
 claim, and stays exactly as portable leaving this milestone's own import
-path as it was arriving. `application/LocalPublicationAnchorCatalog.js#
+path as it was arriving. `application/anchoring/LocalPublicationAnchorCatalog.js#
 receivedAt` remains this codebase's one place for local arrival
 metadata, unchanged.
 
@@ -10994,7 +10994,7 @@ See `docs/Roadmap.md`, 0.8.7, for the full milestone entry.
 
 ### Creating an Anchor Claim Does Not Create External Evidence (0.8.8)
 
-`application/CreatePublicationAnchorUseCase.js` is the first thing this
+`application/anchoring/CreatePublicationAnchorUseCase.js` is the first thing this
 codebase has ever built that produces a brand-new `core/
 PublicationAnchor.js` on ForkBuild's own initiative, rather than
 receiving one from a stranger (0.8.4's peer exchange) or a portable file
@@ -11027,11 +11027,11 @@ question, cutting across every milestone since 0.8.0 rather than adding
 a new axis to any one of them:
 
 ```text
-create a claim         (0.8.8, application/CreatePublicationAnchorUseCase.js)
+create a claim         (0.8.8, application/anchoring/CreatePublicationAnchorUseCase.js)
     ≠
 recording by the external system   (never this codebase's to perform)
     ≠
-proof verification     (0.8.1, application/ExternalAnchorVerifier.js)
+proof verification     (0.8.1, application/anchoring/ExternalAnchorVerifier.js)
     ≠
 authority               (never established anywhere in this codebase)
 ```
@@ -11050,7 +11050,7 @@ one path where the claim being produced is ForkBuild's own, not a
 stranger's already-signed envelope arriving over a peer connection
 (0.8.4) or inside a package (0.8.7). Guaranteeing a locally CREATED
 anchor cannot misname the publication it is about is not evidence
-adjudication — `application/PublicationEvidenceConvergence.js`'s
+adjudication — `application/publication/evidence/PublicationEvidenceConvergence.js`'s
 restraint against ranking or reconciling independent anchors (0.8.6) is
 completely untouched, and an anchor arriving by any other path still
 carries its claims exactly as signed, unexamined against anything this
@@ -11085,9 +11085,9 @@ create the transaction     (0.8.9, anchoring/BitcoinAnchorPublisher.js)
     ≠
 broadcast acceptance       (a network-layer fact, not evidence at all)
     ≠
-create the claim            (0.8.8, application/CreatePublicationAnchorUseCase.js)
+create the claim            (0.8.8, application/anchoring/CreatePublicationAnchorUseCase.js)
     ≠
-proof verification          (0.8.1, application/ExternalAnchorVerifier.js)
+proof verification          (0.8.1, application/anchoring/ExternalAnchorVerifier.js)
 ```
 
 `tests/BitcoinAnchorCreationAdapter.test.js`'s own Section A and B prove
@@ -11106,11 +11106,11 @@ afterward.
 
 **Creating the transaction is not creating the claim.**
 `BitcoinAnchorPublisher#publish()` never imports, constructs, or calls
-`core/PublicationAnchor.js` or `application/CreatePublicationAnchorUseCase.js` —
+`core/PublicationAnchor.js` or `application/anchoring/CreatePublicationAnchorUseCase.js` —
 it returns plain evidence parameters, `{ locator, proof }`, and stops.
 Whether those parameters go on to become a signed `PublicationAnchor` at
 all is entirely the caller's own next, explicit step, exactly as
-`application/CreatePublicationAnchorUseCase.js`'s own header already
+`application/anchoring/CreatePublicationAnchorUseCase.js`'s own header already
 insists evidence parameters are always supplied BY the caller, never
 fetched or constructed by that use case itself. A caller could just as
 easily discard a `{ published: false }` result, retry a broadcast, or
@@ -11143,7 +11143,7 @@ See `docs/Roadmap.md`, 0.8.9, for the full milestone entry.
 
 ### A Publisher's Failure Is Not the Orchestration's Failure — But It Is Still No Anchor (0.8.10)
 
-`application/CreateExternalPublicationAnchorUseCase.js` is the first
+`application/anchoring/CreateExternalPublicationAnchorUseCase.js` is the first
 class in this codebase that both TRIGGERS a real external operation
 (0.8.9's own new ground) AND decides, immediately afterward, whether a
 signed claim gets created from it. That combination invites two opposite
@@ -11159,12 +11159,12 @@ publisher unavailable ───────────────────�
 ```
 
 A `PUBLISH_REJECTED` or `PUBLISH_UNAVAILABLE` result from
-`application/ExternalAnchorCreationOutcome.js` is not an exception this
+`application/anchoring/ExternalAnchorCreationOutcome.js` is not an exception this
 orchestration failed to catch — it is the orchestration correctly
 reporting an ordinary, expected fact about the external world, the
 identical "unavailable is not a crash" discipline `application/
 PublicationResolver.js` (0.7.1) already established for content
-retrieval and `application/ExternalAnchorVerifier.js` (0.8.1) already
+retrieval and `application/anchoring/ExternalAnchorVerifier.js` (0.8.1) already
 established for proof verification, applied here to a third operation:
 requesting a recording in the first place. `execute()` still throws — but
 only for what those two classes also reserve throwing for: a genuine
@@ -11195,7 +11195,7 @@ catalog before publishing to prevent this. Refusing a second anchor
 because a first one already exists would be a hidden canonicalization
 policy — deciding, on this replica's own authority, that only one
 recording per publication "counts" — exactly the kind of adjudication
-`application/PublicationEvidenceConvergence.js` (0.8.6) already refuses
+`application/publication/evidence/PublicationEvidenceConvergence.js` (0.8.6) already refuses
 to perform between independent anchors arriving by any other path. This
 orchestration extends that same restraint to anchors it creates itself:
 it is no more entitled to declare one of its own recordings canonical
@@ -11204,7 +11204,7 @@ than it is to declare a stranger's.
 **No preferred anchor type; no automatic retry.** `application/
 ExternalAnchorPublisherRegistry.js` resolves an explicit `anchorType`
 string to a publisher — it never chooses one on the caller's behalf,
-mirroring `application/ExternalProofVerifierRegistry.js`'s own restraint
+mirroring `application/anchoring/ExternalProofVerifierRegistry.js`'s own restraint
 against ranking or preferring verifiers (0.8.1). And a
 `PUBLISH_UNAVAILABLE` outcome is never retried internally; `execute()`
 consults its publisher exactly once, leaving retry/backoff policy
@@ -11219,7 +11219,7 @@ See `docs/Roadmap.md`, 0.8.10, for the full milestone entry.
 ### External Anchoring Is An Explicit User Action (0.8.11)
 
 0.8.8 through 0.8.10 built a complete pipeline for orchestrating an
-external recording — `application/CreatePublicationAnchorUseCase.js`,
+external recording — `application/anchoring/CreatePublicationAnchorUseCase.js`,
 `anchoring/BitcoinAnchorPublisher.js`, `application/
 CreateExternalPublicationAnchorUseCase.js` — and every one of those
 milestones' own "Deliberately excluded" list ended with the identical
@@ -11238,10 +11238,10 @@ Verify    →  an external observation.     Always one explicit click, separate 
 **Discovering evidence, listing which anchor types this replica can
 create, and creating an anchor are three different questions, answered by
 three different collaborators, and merely asking the first two never
-answers the third.** `application/PublicationAnchorCreationCoordinator.js`
-(new) sits directly beside `application/PublicationEvidenceCoordinator.js`
+answers the third.** `application/anchoring/PublicationAnchorCreationCoordinator.js`
+(new) sits directly beside `application/publication/evidence/PublicationEvidenceCoordinator.js`
 (0.8.3) rather than folding into it — the same "one class, one axis"
-discipline `application/ExternalAnchorCreationOutcome.js` already applied
+discipline `application/anchoring/ExternalAnchorCreationOutcome.js` already applied
 to outcomes, applied here to the coordinators built on top of them.
 Opening the Publication Center, listing cataloged publications, expanding
 or collapsing the evidence list, and reading `availableAnchorTypes()` are
@@ -11257,7 +11257,7 @@ single most important restraint this milestone holds, and the one most
 tempting to break: broadcasting a Bitcoin transaction and then
 immediately checking whether it confirmed FEELS like one action to a
 person, and chaining them in code is one line. 0.8.11 does not take that
-line. The moment `application/CreateExternalPublicationAnchorUseCase.js`
+line. The moment `application/anchoring/CreateExternalPublicationAnchorUseCase.js`
 (0.8.10, unmodified) reports `CREATED`, the resulting anchor is
 re-discovered into the ordinary evidence list — application/
 PublicationEvidenceCoordinator.js#discover(), the same purely local read
@@ -11283,7 +11283,7 @@ end to end: the SAME anchor, completely unchanged, reporting
 external world — never this codebase — actually changes.
 
 **The UI never says more than the pipeline underneath it has actually
-established.** `application/PublicationAnchorCreationView.js`'s own
+established.** `application/anchoring/PublicationAnchorCreationView.js`'s own
 header names the exact ceiling: "`<type>` evidence was recorded for this
 content hash" is the strongest sentence a successful creation is ever
 allowed to produce — never "verified," "confirmed," or "trusted," each of
@@ -11294,11 +11294,11 @@ ExternalAnchorCreationOutcome.js` (0.8.10) itself distinguishes them — a
 definite external "no" reads differently from "could not presently
 tell," because retrying is reasonable after the second and pointless
 after the first. A local precondition failure — nobody signed in, so
-`application/CreateExternalPublicationAnchorUseCase.js` throws before any
+`application/anchoring/CreateExternalPublicationAnchorUseCase.js` throws before any
 publisher is ever consulted — is caught at the UI boundary (ui/views/
 DecentralizedPublicationsView.js#createAnchor(), never inside
-`application/PublicationAnchorCreationCoordinator.js` itself, which stays
-as thin a pass-through as `application/PublicationEvidenceCoordinator.js`
+`application/anchoring/PublicationAnchorCreationCoordinator.js` itself, which stays
+as thin a pass-through as `application/publication/evidence/PublicationEvidenceCoordinator.js`
 already is) and reported honestly as its own case: to a person, it reads
 exactly like "external system unreachable" — no anchor was created either
 way — while the specific reason ("sign in to create a publication
@@ -11310,16 +11310,16 @@ Bitcoin Anchor" a second time for a publication that already has one
 produces a second, equally valid, equally visible anchor — this
 milestone's own button label change ("Create Another Bitcoin Anchor")
 makes that explicit rather than implying a replacement, but nothing in
-`application/PublicationAnchorCreationCoordinator.js` or the pipeline
+`application/anchoring/PublicationAnchorCreationCoordinator.js` or the pipeline
 beneath it ever refuses, deduplicates, or ranks a second recording. See
 `docs/Principles.md`, "A Publisher's Failure Is Not the Orchestration's
 Failure — But It Is Still No Anchor (0.8.10)," for why that restraint
 already existed one layer down; this milestone only makes it visible.
 
 **No anchoring as a side effect of anything else.** Nothing in
-`application/SaveDocumentUseCase.js`, `application/
+`application/document/SaveDocumentUseCase.js`, `application/
 PublishDocumentUseCase.js`, or anywhere else in this codebase calls
-`application/PublicationAnchorCreationCoordinator.js#create()`. An
+`application/anchoring/PublicationAnchorCreationCoordinator.js#create()`. An
 external recording costs real resources on a real external system and is
 never triggered by anything other than the specific click this milestone
 names — the identical restraint 0.8.9 already held for `publish()` itself
@@ -11384,7 +11384,7 @@ PublicationAnchorVerificationLifecycleView.js#deriveAnchorVerificationLifecycle(
 still reports the CURRENT state (`NOT_VERIFIED`/`VERIFIED`/
 `UNVERIFIED_PROOF`/`UNAVAILABLE`/`REJECTED` — application/
 AnchorVerificationLifecycleState.js) from nothing but the MOST RECENT
-observation, exactly as `application/PublicationEvidenceView.js` already
+observation, exactly as `application/publication/evidence/PublicationEvidenceView.js` already
 did from a single result. The temptation this milestone's own design
 conversation named explicitly, and declined, was inventing a sixth state
 — something like `PREVIOUSLY_VALID_NOW_UNAVAILABLE` — to carry that
@@ -11404,7 +11404,7 @@ wording, not just the state, for exactly this reason.
 
 **Verification observations never cross a replica boundary, and this
 milestone adds nothing that could make them.**
-`application/PublicationAnchorVerificationObservation.js`'s own header
+`application/anchoring/PublicationAnchorVerificationObservation.js`'s own header
 states this as a hard rule, and `tests/
 PublicationAnchorLifecycle.test.js`'s own Section D proves it directly:
 two independently constructed `ExternalAnchorVerifier` instances, each
@@ -11413,7 +11413,7 @@ at essentially the same time — one finds a confirmed transaction and
 reports `VALID`, the other finds nothing at all and reports
 `PROOF_UNAVAILABLE` — and a shared `LocalPublicationAnchorCatalog` is
 asserted completely unaffected by either. This is the identical
-restraint `application/PublicationEvidenceConvergence.js`'s own header
+restraint `application/publication/evidence/PublicationEvidenceConvergence.js`'s own header
 already held for a single replica's own `verificationByAnchorId` map
 (0.8.6, "Verification Observations Never Cross A Replica Boundary
 Through This Function") — 0.8.12 extends it from "one map, one moment"
@@ -11434,7 +11434,7 @@ timer, a poll, a TTL, or a "last known good" fallback — `tests/
 PublicationAnchorLifecycle.test.js`'s own Section E calls `verify()`
 three times with nothing changed (identical outcome every time) and then
 once more immediately after a real external change (the very next call
-reflects it). `application/PublicationAnchorVerificationObservation.js`'s
+reflects it). `application/anchoring/PublicationAnchorVerificationObservation.js`'s
 own `observedAt` records only when THIS replica happened to look, never
 a validity window or an expiration — there is no code path anywhere in
 this milestone that reads an old observation instead of asking again.
@@ -11460,7 +11460,7 @@ design conversation named it directly before writing a line of UI code.
 counted as more likely correct than a smaller one.** `application/
 PublicationEvidenceConvergenceView.js#publicationEvidenceConvergenceView()`
 returns `contentGroups` sorted the identical deterministic way
-`application/PublicationEvidenceConvergence.js`'s own `contentHashGroups`
+`application/publication/evidence/PublicationEvidenceConvergence.js`'s own `contentHashGroups`
 already is — by `contentHash`, never by size — and `ui/views/
 DecentralizedPublicationsView.js` lays every group out as an
 equal-sized card in a row. Two anchors claiming Hash A and one claiming
@@ -11475,7 +11475,7 @@ sweep `tests/PublicationEvidenceConvergence.test.js`'s own flagship
 already ran one layer down, now proven to hold through the presentation
 shaping too.
 
-**`application/ContentBindingSetRelationship.js`'s own vocabulary is
+**`application/publication/evidence/ContentBindingSetRelationship.js`'s own vocabulary is
 deliberately two values, and deliberately those two.** `AGREEMENT`/
 `CONFLICT` name a structural fact about the evidence SET — do these
 claims match each other or not — and nothing else was ever a candidate
@@ -11532,19 +11532,19 @@ at an anchor would quietly start doing more.
 
 **Opening "Inspect Evidence" never calls `application/
 ExternalAnchorVerifier.js`, never touches the network, never modifies
-`application/LocalPublicationAnchorCatalog.js`, never creates a
+`application/anchoring/LocalPublicationAnchorCatalog.js`, never creates a
 verification observation, and never mutates the anchor itself.**
-`application/PublicationAnchorDetailView.js#publicationAnchorDetailView()`
+`application/anchoring/PublicationAnchorDetailView.js#publicationAnchorDetailView()`
 is a pure, synchronous reshape of state this replica already holds in
 memory — the identical restraint application/
-PublicationResolutionView.js/application/PublicationEvidenceView.js
+PublicationResolutionView.js/application/publication/evidence/PublicationEvidenceView.js
 already hold for their own derived views, applied here to the anchor's
 full field set rather than a verification result. `tests/
 PublicationAnchorInspectionUX.test.js`'s own flagship proves this
 directly, not merely by omission: Bob receives an anchor Alice created
 and signed, snapshots the anchor's own `toJSON()`, the catalog's full
 contents, an (initially empty) verification-observation history, and the
-derived `application/PublicationEvidenceConvergence.js` result — opens
+derived `application/publication/evidence/PublicationEvidenceConvergence.js` result — opens
 "Inspect Evidence" — and re-checks all four are byte-identical, while a
 call-counting spy around `ExternalAnchorVerifier` proves it was never
 once consulted. Only Bob's SEPARATE, later "Verify Evidence" click moves
@@ -11554,7 +11554,7 @@ any of those numbers.
 `proof`.** `proof` is opaque by design since core/PublicationAnchor.js's
 own 0.8.0 header ("Verifying the `proof` itself... is a SEPARATE,
 anchorType-specific question this milestone deliberately does not
-answer") — `application/PublicationAnchorDetailView.js` honors that at
+answer") — `application/anchoring/PublicationAnchorDetailView.js` honors that at
 the presentation layer too, returning `proof` exactly as the anchor
 carries it, with no `proof.txid`/`proof.confirmations`/
 `proof.blockHeight` read anywhere in that file. Anchor-type-specific
@@ -11585,7 +11585,7 @@ guesses and never throws.
 because it is now shown in more detail.** core/PublicationAnchor.js's own
 0.8.0 header already establishes that `anchoredAt` is the external
 system's OWN reported timestamp, never something this replica
-independently established — `application/PublicationAnchorDetailView.js`
+independently established — `application/anchoring/PublicationAnchorDetailView.js`
 carries that restraint onto the screen literally, attaching the fixed
 label "Claimed external recording time" to the field rather than letting
 each screen invent its own wording (and risk "Verified at" or "Confirmed
@@ -11594,7 +11594,7 @@ contentHash pair gets the identical treatment: `describeAnchorBinding()`
 says only "This anchor claims that publication P was externally recorded
 with content hash H" — worded as a claim, never cross-checked against a
 locally known publication's own `contentReference.hash` here (that stays
-`application/ExternalAnchorVerifier.js`'s own job), extending 0.8.7's own
+`application/anchoring/ExternalAnchorVerifier.js`'s own job), extending 0.8.7's own
 "a bundled anchor's claim is preserved, never silently repaired"
 restraint onto the inspection screen.
 
@@ -11602,7 +11602,7 @@ See `docs/Roadmap.md`, 0.8.14, for the full milestone entry.
 
 ### A Persistent Store Is An Untrusted Byte Source, Not A Second Trust Root (0.8.15)
 
-`application/LocalPublicationAnchorCatalog.js` has taken a
+`application/anchoring/LocalPublicationAnchorCatalog.js` has taken a
 `StorageProvider` and written every `add()` straight through it since
 0.8.2 — this replica's anchor catalog was never actually in-memory-only,
 and surviving a page reload was never the gap. The gap 0.8.15 closes is
@@ -11611,7 +11611,7 @@ a catalog read has always turned whatever JSON happened to be sitting in
 storage directly into a `PublicationAnchor` instance, with no
 re-validation and no signature check. For a record THIS replica's own
 process just wrote, that is exactly the right amount of trust — it
-already passed `application/PublicationAnchorExchange.js`'s own validate
+already passed `application/anchoring/PublicationAnchorExchange.js`'s own validate
 → construct → verify-signature gate on the way in, moments earlier, in
 the same process. For a record that was already sitting in storage
 before this process started, it is not: storage cannot distinguish
@@ -11620,7 +11620,7 @@ from "written by a bug in an earlier version of this codebase" from
 "hand-edited through devtools" from "corrupted by bit rot." All four look
 identical the moment they're read back.
 
-**`application/LocalPublicationAnchorStore.js` treats whatever is in
+**`application/anchoring/LocalPublicationAnchorStore.js` treats whatever is in
 storage as exactly what it is: an untrusted byte source, no more entitled
 to automatic trust than a peer message or an imported package.** This is
 why the class is deliberately, almost aggressively dumb — it never
@@ -11638,7 +11638,7 @@ on garbage would be a store that assumed everything reaching it was
 already trustworthy, which is precisely the assumption this milestone
 exists to remove.
 
-**`application/LocalPublicationAnchorCatalog.js`'s own constructor,
+**`application/anchoring/LocalPublicationAnchorCatalog.js`'s own constructor,
 public API, and every observed behavior are completely unchanged.** Every
 call site written against it before 0.8.15 — `application/
 AddPublicationAnchorUseCase.js`, `application/
@@ -11664,7 +11664,7 @@ See `docs/Roadmap.md`, 0.8.15, for the full milestone entry.
 
 ### Restoration Re-Earns Trust In The Claim; It Never Re-Asks The External System (0.8.15)
 
-Given `application/LocalPublicationAnchorStore.js`'s own untrusted-byte-
+Given `application/anchoring/LocalPublicationAnchorStore.js`'s own untrusted-byte-
 source posture (previous entry), SOMETHING has to decide, at some point,
 which of the records already sitting in storage this replica is willing
 to vouch for again. Re-verifying on every ordinary catalog read was
@@ -11678,7 +11678,7 @@ explicit: it runs ONCE, at startup, over every record application/
 LocalPublicationAnchorStore.js has on file, and never again afterward.
 
 **Restoration reuses the IDENTICAL validate → construct → verify-
-SIGNATURE boundary application/PublicationAnchorExchange.js already
+SIGNATURE boundary application/anchoring/PublicationAnchorExchange.js already
 established for a stranger's anchor arriving over a peer connection
 (0.8.4) — and deliberately stops at the exact same place.** A record that
 fails structural validation or signature verification is PRUNED, not
@@ -11694,7 +11694,7 @@ ImportPackageAnchorsUseCase.js` already established for a package's own
 bundled anchors (0.8.7) — one bad record in a store of several never
 aborts restoring the rest.
 
-**Restoration never once calls `application/ExternalAnchorVerifier.js`.**
+**Restoration never once calls `application/anchoring/ExternalAnchorVerifier.js`.**
 Signature verification answers "did the claimed identity really sign
 exactly this claim" — a question about the CLAIM's own integrity, fully
 answerable offline, from the record alone. Proof verification answers
@@ -11737,7 +11737,7 @@ See `docs/Roadmap.md`, 0.8.15, for the full milestone entry.
 
 ### Discovery Is Not Verification, And 'No New Evidence' Is Not 'No Evidence' (0.8.16)
 
-`application/PublicationAnchorDiscoveryCoordinator.js` has been able to
+`application/anchoring/PublicationAnchorDiscoveryCoordinator.js` has been able to
 ask peers for historical anchor claims since 0.8.5. What it never had,
 until this milestone, was a person able to trigger it — and the moment a
 "Discover from Peers" button exists on screen, a new, sharper version of
@@ -11747,11 +11747,11 @@ possible to violate by accident: a discovery button that quietly also
 verifies, or a result screen that quietly implies "nothing new" means
 "nothing at all."
 
-**`application/PublicationEvidenceDiscoveryCoordinator.js` never imports
-`application/ExternalAnchorVerifier.js`.** Discovery answers "what claims
+**`application/publication/evidence/PublicationEvidenceDiscoveryCoordinator.js` never imports
+`application/anchoring/ExternalAnchorVerifier.js`.** Discovery answers "what claims
 did these peers offer?" — a question fully answered by the SAME
 validate → construct → verify-SIGNATURE boundary
-`application/PublicationAnchorExchange.js` already established for every
+`application/anchoring/PublicationAnchorExchange.js` already established for every
 other arrival path (ANNOUNCE in 0.8.4, RESPONSE in 0.8.5, restoration in
 0.8.15). Whether a discovered anchor's PROOF holds up is a completely
 separate question, answered only by a later, separate, explicit "Verify
@@ -11773,7 +11773,7 @@ ask, or the attempt itself failed) — a statement about this replica's own
 present inability to ask, never about whether evidence exists. Collapsing
 either into "no evidence exists" would be an authority-like conclusion no
 single UI state in this codebase has ever been allowed to assert — the
-identical restraint `application/AnchorVerificationOutcome.js` already
+identical restraint `application/anchoring/AnchorVerificationOutcome.js` already
 holds between `PROOF_UNAVAILABLE` ("couldn't currently confirm") and a
 definite rejection, applied here one layer up, to the act of asking
 rather than the act of checking. `tests/
@@ -11798,13 +11798,13 @@ See `docs/Roadmap.md`, 0.8.16, for the full milestone entry.
 
 ### Discovery Asks A Collective Question; It Never Asks Which Peer To Trust (0.8.16)
 
-`application/PublicationAnchorDiscoveryCoordinator.js`'s own 0.8.5 header
+`application/anchoring/PublicationAnchorDiscoveryCoordinator.js`'s own 0.8.5 header
 already drew this distinction for its own `discoverFromPeers()`: unlike
-`application/PeerContentRetrievalCoordinator.js`'s single right-answer
+`application/peer/PeerContentRetrievalCoordinator.js`'s single right-answer
 race, historical anchor discovery asks EVERY candidate, in order, and
 unions whatever each one offers, because "which anchors exist" has no
 single correct answer the way "do these bytes match this hash" does.
-`application/PublicationEvidenceDiscoveryCoordinator.js` — the
+`application/publication/evidence/PublicationEvidenceDiscoveryCoordinator.js` — the
 application-facing layer this milestone adds directly above that
 coordinator — inherits this restraint at the one place a new policy
 question could otherwise sneak in: WHICH peers to ask in the first place.
@@ -11834,7 +11834,7 @@ tally of `isNew`, never a ranking, never a "most anchors" peer singled
 out, never a "best" evidence set assembled from parts of what different
 peers said. Two peers offering the identical anchor converge to one
 cataloged entry for the identical reason 0.8.5 already established:
-`application/LocalPublicationAnchorCatalog.js#add()` dedupes by the
+`application/anchoring/LocalPublicationAnchorCatalog.js#add()` dedupes by the
 anchor's own id, not by which peer said it first or most confidently.
 
 See `docs/Roadmap.md`, 0.8.16, for the full milestone entry.
@@ -11854,7 +11854,7 @@ layer that could have offered one — no canonical anchor (0.8.2), no
 "best" verification outcome (0.8.6), no peer reputation (0.8.4), no
 "most reliable" peer for discovery (0.8.16) — and 0.8.17 draws the
 identical line for its own new concept, `application/
-AnchorAcquisitionKind.js` and `application/AnchorKnowledgeRecord.js`.
+AnchorAcquisitionKind.js` and `application/anchoring/AnchorKnowledgeRecord.js`.
 
 **`AnchorAcquisitionKind` has exactly three values, and none of them
 compares to another.** `LOCAL`, `PACKAGE`, and `PEER` are unordered
@@ -11871,7 +11871,7 @@ it at all; the two live in entirely separate collaborators.
 
 **A `PublicationAnchor`'s own signed payload is never touched.** Every
 one of this milestone's three recording call sites —
-`application/CreatePublicationAnchorUseCase.js`, `application/
+`application/anchoring/CreatePublicationAnchorUseCase.js`, `application/
 ImportPackageAnchorsUseCase.js`, `application/
 PublicationAnchorPeerExchange.js` — calls `application/
 LocalAnchorKnowledgeStore.js#record()` as a SEPARATE step alongside the
@@ -11886,7 +11886,7 @@ completely different `AnchorKnowledgeRecord`s for it — one `LOCAL`, one
 
 **FIRST-SEEN-WINS is what makes "how I learned it" a genuine, stable fact
 about MY history, not a flag that flips with whatever arrived most
-recently.** `application/LocalAnchorKnowledgeStore.js#record()` never
+recently.** `application/anchoring/LocalAnchorKnowledgeStore.js#record()` never
 overwrites an existing entry, regardless of which acquisition kind a
 later call supplies — an anchor a replica first received over a peer
 connection reports `PEER` forever afterward, even after that replica
@@ -11906,7 +11906,7 @@ surviving a restart with a new acquisition (surviving one is 0.8.15's own
 job, entirely separate — see `application/
 RestorePublicationAnchorCatalogUseCase.js`), and splitting `PEER` by
 transport would document a wire-protocol implementation detail no UI or
-caller has ever needed. See `application/AnchorAcquisitionKind.js`'s own
+caller has ever needed. See `application/anchoring/AnchorAcquisitionKind.js`'s own
 header for the full reasoning on each.
 
 **The UI names how, never who, and never scores.** `application/
@@ -11953,13 +11953,13 @@ question quietly stand in for the other — a placement that "looks like"
 evidence of history, or an anchor that "looks like" a place to fetch
 bytes — when neither one actually is. Keeping them as two entirely
 separate signed record types, verified by two entirely separate classes
-(`application/ExternalAnchorVerifier.js`, `application/
+(`application/anchoring/ExternalAnchorVerifier.js`, `application/
 SnapshotPlacementResolver.js`), makes it structurally impossible to
 conflate what each one actually claims.
 
 **NEITHER A PLACEMENT NOR ITS SUCCESSFUL RESOLUTION MAKES CONTENT
 CANONICAL OR AUTHENTIC.** Resolving a `PublicationSnapshotPlacement` —
-`application/SnapshotPlacementResolver.js#resolve()` reaching `RESOLVED`
+`application/snapshot/placement/SnapshotPlacementResolver.js#resolve()` reaching `RESOLVED`
 — proves only that the named storage backend, right now, serves bytes
 that hash to exactly what the placing identity claimed. It never
 compares those bytes against a locally known `publisher/Publication.js`,
@@ -11981,7 +11981,7 @@ ContentStore.js` already implements both halves a placement's lifecycle
 needs — `put()` to place bytes, `get()` to retrieve them — on the SAME
 object, self-identifying via its own new `storage` getter (mirroring the
 `storage` value it already stamps onto every `ContentReference` its
-`put()` returns). `application/SnapshotPlacementStoreRegistry.js` is
+`put()` returns). `application/snapshot/placement/SnapshotPlacementStoreRegistry.js` is
 therefore deliberately the one lookup table both `application/
 CreateExternalSnapshotPlacementUseCase.js` and `application/
 SnapshotPlacementResolver.js` share — introducing a second, parallel
@@ -12003,7 +12003,7 @@ peer-to-peer trust by also gossiping "and by the way, I checked, it
 resolves" is exactly as real here as it was for evidence.
 
 **What crosses the wire is exactly `PublicationSnapshotPlacement.toJSON()`,
-nothing more.** `application/PublicationSnapshotPlacementPeerProtocol.js#
+nothing more.** `application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js#
 toPublicationSnapshotPlacementAnnounceMessage()` wraps only `{ kind,
 envelope }` — `tests/PublicationSnapshotPlacementPeerExchange.test.js`
 Section A asserts the wrapper carries exactly two keys, and Section C
@@ -12018,7 +12018,7 @@ zero peer hops or several.
 
 **Receiving a placement is never resolving it.** `application/
 PublicationSnapshotPlacementPeerExchange.js#_handleIncoming()` never
-calls `application/SnapshotPlacementResolver.js` — from ANY of its three
+calls `application/snapshot/placement/SnapshotPlacementResolver.js` — from ANY of its three
 handlers, `_handleIncoming()`, `_handleRequest()`, or `_handleResponse()`
 alike. "Another replica told me about this locator claim" and "the
 locator has been confirmed to serve those bytes" stay two separate facts
@@ -12029,7 +12029,7 @@ arrived by any other means.
 **Every placement in a RESPONSE is verified exactly as strictly as one
 ANNOUNCE always was — there is no bulk-trust shortcut.**
 `_handleResponse()` runs each envelope in the batch through the IDENTICAL
-`application/PublicationSnapshotPlacementExchange.js#importPlacement()`
+`application/snapshot/placement/PublicationSnapshotPlacementExchange.js#importPlacement()`
 call an ANNOUNCE already used: validate, construct, verify SIGNATURE,
 catalog. `tests/PublicationSnapshotPlacementPeerExchange.test.js`'s own
 Section C proves a forged placement anywhere in a RESPONSE array is
@@ -12061,7 +12061,7 @@ claim is believed.** `application/PublicationSnapshotPlacementPeerExchange
 the identical channel-level gate `application/PublicationAnchorPeerExchange
 .js` already applies — but authentication is never asked to do double
 duty as an authority mechanism. A placement's own signature, checked
-entirely inside `application/PublicationSnapshotPlacementExchange.js`,
+entirely inside `application/snapshot/placement/PublicationSnapshotPlacementExchange.js`,
 is the only thing that ever makes it acceptable; no handler ever reads
 which connection a message arrived over, and this codebase adds no
 notion of a "trusted peer" or "trusted storage locator" anywhere in this
@@ -12111,7 +12111,7 @@ more than looking?
 
 **Opening "Inspect Placement" never calls `application/
 SnapshotPlacementResolver.js`, never touches the network, never modifies
-`application/LocalPublicationSnapshotPlacementCatalog.js`, and never
+`application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js`, and never
 mutates the placement itself.** `application/
 PublicationSnapshotPlacementDetailView.js#publicationSnapshotPlacementDetailView()`
 is a pure, synchronous reshape of state this replica already holds in
@@ -12138,7 +12138,7 @@ PublicationSnapshotPlacementDetailView.js` honors that at the
 presentation layer too, returning `locator` exactly as the placement
 carries it, with no `locator.cid`/`locator.gateway`/`locator.path` read
 anywhere in that file. Storage-specific interpretation lives behind its
-own seam, `application/SnapshotPlacementViewRegistry.js` — a SECOND,
+own seam, `application/snapshot/placement/SnapshotPlacementViewRegistry.js` — a SECOND,
 independent `storage -> plugin` registry alongside `application/
 SnapshotPlacementStoreRegistry.js` (0.8.18, retrieval) — so `content/
 IpfsSnapshotPlacementView.js` is the only place in this codebase an
@@ -12151,7 +12151,7 @@ guessing.** `content/IpfsSnapshotPlacementView.js#describe()` derives a
 followable `https://ipfs.io/ipfs/<cid>` destination from an `ipfs://`
 locator — pure string construction, never a fetch — and explicitly does
 NOT check whether the CID is pinned, reachable, or currently serves
-those bytes: all three stay `application/SnapshotPlacementResolver.js`'s
+those bytes: all three stay `application/snapshot/placement/SnapshotPlacementResolver.js`'s
 own job, completely unchanged by this milestone. `content/
 LocalSnapshotPlacementView.js` goes further and NEVER produces an
 external link at all for a `local` placement — a storage key on this
@@ -12165,7 +12165,7 @@ neither adapter ever makes.
 placement's own signed claim.** `application/
 SnapshotPlacementResolutionCoordinator.js#resolve()` writes its result
 nowhere durable — not to `core/PublicationSnapshotPlacement.js`, not to
-`application/LocalPublicationSnapshotPlacementCatalog.js`, and not to
+`application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js`, and not to
 any new storage this milestone might have been tempted to add. A signed
 placement remains historically intact whether or not this replica can
 presently retrieve its bytes, exactly as `docs/Principles.md`'s own
@@ -12186,10 +12186,10 @@ written back into the shared claim, ever compared against the other, or
 ever changes what the other replica can determine for itself.
 
 **Six resolution outcomes stay six, never collapsed into "available" or
-"unavailable."** `application/SnapshotPlacementView.js#
+"unavailable."** `application/snapshot/placement/SnapshotPlacementView.js#
 describeResolutionOutcome()` gives every `application/
 SnapshotPlacementResolutionOutcome.js` (0.8.18) value its own distinct
-label — mirroring `application/PublicationEvidenceView.js#
+label — mirroring `application/publication/evidence/PublicationEvidenceView.js#
 describeVerificationOutcome()`'s own restraint exactly. `STORE_UNAVAILABLE`
 ("this replica has no backend configured for this storage") and
 `CONTENT_UNAVAILABLE` ("a backend was consulted, and could not presently
@@ -12220,7 +12220,7 @@ See `docs/Roadmap.md`, 0.8.20, for the full milestone entry.
 
 ### A Placement's Persistent Store Is An Untrusted Byte Source Too (0.8.21)
 
-`application/LocalPublicationSnapshotPlacementCatalog.js` has taken a
+`application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js` has taken a
 `storageProvider` and written every `add()` straight through it since
 0.8.18 — this replica's placement catalog was never actually
 in-memory-only, and surviving a page reload was never the gap. The gap
@@ -12239,7 +12239,7 @@ from "written by a bug in an earlier version of this codebase" from
 "hand-edited through devtools" from "corrupted by bit rot." All four look
 identical the moment they're read back.
 
-**`application/LocalPublicationSnapshotPlacementStore.js` treats whatever
+**`application/snapshot/placement/LocalPublicationSnapshotPlacementStore.js` treats whatever
 is in storage as exactly what it is: an untrusted byte source, no more
 entitled to automatic trust than a peer message or an imported package.**
 This is why the class is deliberately, almost aggressively dumb — it
@@ -12258,10 +12258,10 @@ caller is looking for. A store that threw on garbage would be a store
 that assumed everything reaching it was already trustworthy, which is
 precisely the assumption this milestone exists to remove.
 
-**`application/LocalPublicationSnapshotPlacementCatalog.js`'s own
+**`application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js`'s own
 constructor, public API, and every observed behavior are completely
 unchanged.** Every call site written against it before 0.8.21 —
-`application/AddPublicationSnapshotPlacementUseCase.js`, `application/
+`application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js`, `application/
 PublicationSnapshotPlacementExchange.js`, every existing test file that
 constructs it directly — keeps working identically, and keeps reading and
 writing under the IDENTICAL storage key it already used before this
@@ -12287,7 +12287,7 @@ See `docs/Roadmap.md`, 0.8.21, for the full milestone entry.
 
 ### Restoring A Snapshot Placement Re-establishes The Signed Claim, Not Its Current Availability (0.8.21)
 
-Given `application/LocalPublicationSnapshotPlacementStore.js`'s own
+Given `application/snapshot/placement/LocalPublicationSnapshotPlacementStore.js`'s own
 untrusted-byte-source posture (previous entry), SOMETHING has to decide,
 at some point, which of the records already sitting in storage this
 replica is willing to vouch for again. Re-verifying on every ordinary
@@ -12303,7 +12303,7 @@ LocalPublicationSnapshotPlacementStore.js has on file, and never again
 afterward.
 
 **Restoration reuses the IDENTICAL validate → construct → verify-
-SIGNATURE boundary `application/PublicationSnapshotPlacementExchange.js`
+SIGNATURE boundary `application/snapshot/placement/PublicationSnapshotPlacementExchange.js`
 already established for a stranger's placement arriving over a peer
 connection (0.8.19) — and deliberately stops at the exact same place.** A
 record that fails structural validation or signature verification is
@@ -12321,7 +12321,7 @@ Section D's own second restart, over a store deliberately corrupted a
 SECOND time after an already-successful first restore, proves the same
 tolerance holds indefinitely, not merely on a store's very first restart.
 
-**Restoration never once calls `application/SnapshotPlacementResolver.js`
+**Restoration never once calls `application/snapshot/placement/SnapshotPlacementResolver.js`
 .** Signature verification answers "did the claimed `placerIdentity`
 really sign exactly this claim" — a question about the CLAIM's own
 integrity, fully answerable offline, from the record alone. Resolution
@@ -12379,15 +12379,15 @@ See `docs/Roadmap.md`, 0.8.21, for the full milestone entry.
 0.8.19 drew this line for a peer connection: `application/
 PublicationSnapshotPlacementExchange.js#importPlacement()` validates an
 envelope, constructs it, and verifies its SIGNATURE — and stops there,
-never once calling `application/SnapshotPlacementResolver.js`. 0.8.22
+never once calling `application/snapshot/placement/SnapshotPlacementResolver.js`. 0.8.22
 draws the identical line for the other way a placement can now arrive:
-bundled inside an `application/BlueprintPackage.js`. Importing a package
+bundled inside an `application/blueprint/BlueprintPackage.js`. Importing a package
 that carries three placements catalogs three LOCATOR CLAIMS. It
 retrieves not a single byte from any of them.
 
-**`application/ImportPackageSnapshotPlacementsUseCase.js` calls
+**`application/snapshot/placement/ImportPackageSnapshotPlacementsUseCase.js` calls
 `PublicationSnapshotPlacementExchange#importPlacement()` and nothing
-else.** No new call to `application/SnapshotPlacementResolver.js` exists
+else.** No new call to `application/snapshot/placement/SnapshotPlacementResolver.js` exists
 anywhere in this class, or anywhere else this milestone touches —
 `tests/PublicationSnapshotPlacementPackageImport.test.js`'s own Section C
 proves this with a spy `SnapshotPlacementResolver` that increments a
@@ -12404,7 +12404,7 @@ so its placements get exactly the same gate, never a looser one.** A
 forged or tampered placement bundled in a package is rejected at the
 identical `identity/LocalAuthorizationVerifier.js#
 verifyPublicationSnapshotPlacement()` boundary a forged placement
-arriving over `application/PublicationSnapshotPlacementPeerExchange.js`
+arriving over `application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js`
 already is. Nothing about arriving inside a `.json` file someone emailed,
 rather than over a live authenticated connection, earns a placement any
 more standing trust — and nothing about traveling in a file earns it any
@@ -12431,12 +12431,12 @@ See `docs/Roadmap.md`, 0.8.22, for the full milestone entry.
 A `BlueprintPackage` bundles a `Structure`; a `PublicationSnapshotPlacement`
 describes a locator for a `DecentralizedPublication`'s bytes. This
 codebase has never had a concept of "the publication a given Blueprint
-Package is about" — no field on `application/BlueprintPackage.js` names
+Package is about" — no field on `application/blueprint/BlueprintPackage.js` names
 one, and 0.8.22 does not invent one merely because a package can now
 also carry placements, the identical restraint 0.8.7 already held for
 anchors.
 
-**`application/ImportPackageSnapshotPlacementsUseCase.js` never
+**`application/snapshot/placement/ImportPackageSnapshotPlacementsUseCase.js` never
 cross-checks a bundled placement's `publicationId`/`contentHash` against
 anything about the package it arrived in, because there is nothing
 structurally binding the two.** A placement naming
@@ -12495,8 +12495,8 @@ Adjudicated (0.8.6)," drew the line for anchors: several independent
 claims about the same publication can be compared structurally, and
 never adjudicated. This milestone draws the identical line for
 placements — but drawing an IDENTICAL line is not the same as writing an
-IDENTICAL function, and `application/PublicationSnapshotPlacementConvergence.js`
-is deliberately not `application/PublicationEvidenceConvergence.js` with
+IDENTICAL function, and `application/snapshot/placement/PublicationSnapshotPlacementConvergence.js`
+is deliberately not `application/publication/evidence/PublicationEvidenceConvergence.js` with
 the nouns swapped.
 
 **An anchor and a placement answer two different questions, and the
@@ -12524,7 +12524,7 @@ deliberately unasked, question.
 
 **Storage diversity and locator diversity are reported because they are
 meaningful specifically for placements, and have no natural equivalent
-on the anchor side.** `application/PublicationSnapshotPlacementConvergence.js`'s
+on the anchor side.** `application/snapshot/placement/PublicationSnapshotPlacementConvergence.js`'s
 own `storageTypes`/`locators`/`locatorCount` name a fact — how many
 independent backends, and how many independent locations, currently
 claim to serve this content — that an `anchorType` never captures for an
@@ -12581,7 +12581,7 @@ architecture, not merely an illustration of it:**
 ```
 
 Resolution tells us what THIS REPLICA established, locally, at a
-particular moment — `application/SnapshotPlacementResolutionObservation.js`
+particular moment — `application/snapshot/placement/SnapshotPlacementResolutionObservation.js`
 (0.8.20) continues to exist for exactly that, entirely outside this
 milestone's own two new files. It is not, and must never become, a
 ranking mechanism over placement claims.
@@ -12617,7 +12617,7 @@ accident.** No global statement like "IPFS placement is currently
 available" exists anywhere in this milestone's own files — see
 `docs/Roadmap.md`, 0.8.23's own "Deliberately excluded" list.
 Availability is inherently observational and replica/time-dependent,
-exactly as `application/SnapshotPlacementResolutionOutcome.js`'s own
+exactly as `application/snapshot/placement/SnapshotPlacementResolutionOutcome.js`'s own
 0.8.18 header already established; a future milestone that wants to
 build ON TOP of the resolution/convergence split this entry names can
 now do so with the boundary already drawn, rather than needing to draw
@@ -12665,7 +12665,7 @@ even existed to test it against.
 
 **A `PublicationSnapshotPlacement`'s own signed payload is never
 touched.** Every one of this milestone's three recording call sites —
-`application/CreatePublicationSnapshotPlacementUseCase.js`, `application/
+`application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js`, `application/
 ImportPackageSnapshotPlacementsUseCase.js`, `application/
 PublicationSnapshotPlacementPeerExchange.js` — calls `application/
 LocalPlacementKnowledgeStore.js#record()` as a SEPARATE step alongside
@@ -12679,7 +12679,7 @@ anything about the other's.
 
 **FIRST-SEEN-WINS is what makes "how I learned it" a genuine, stable fact
 about MY history, not a flag that flips with whatever arrived most
-recently.** `application/LocalPlacementKnowledgeStore.js#record()` never
+recently.** `application/placement/LocalPlacementKnowledgeStore.js#record()` never
 overwrites an existing entry, regardless of which acquisition kind a
 later call supplies — a placement a replica first received over a peer
 connection reports `PEER` forever afterward, even after that replica
@@ -12696,7 +12696,7 @@ catalog that never once refers to acquisition at all.
 
 **Deliberately no `peerId`, no `RESTORED` kind, no `PEER_ANNOUNCEMENT`/
 `PEER_DISCOVERY` split.** Each of these was considered and declined, for
-the identical reason `application/AnchorAcquisitionKind.js`'s own 0.8.17
+the identical reason `application/anchoring/AnchorAcquisitionKind.js`'s own 0.8.17
 header already gives: none of them describe a genuinely different way a
 replica came to know a claim, and each would invite exactly the ranking
 this entry exists to forbid. `peerId` would let "which peer" quietly
@@ -12708,7 +12708,7 @@ RestorePublicationSnapshotPlacementCatalogUseCase.js`), and splitting
 no UI or caller has ever needed.
 
 **The UI names how, never who, and never scores — nor does it imply
-availability.** `application/PublicationSnapshotPlacementKnowledgeView.js#
+availability.** `application/snapshot/placement/PublicationSnapshotPlacementKnowledgeView.js#
 describePlacementKnowledge()` produces "Learned via peer exchange," never
 "Source: Alice ✓" and never "Reliable source" — `tests/
 PlacementKnowledgeProvenance.test.js`'s own Section C asserts directly
@@ -12727,7 +12727,7 @@ See `docs/Roadmap.md`, 0.8.24, for the full milestone entry.
 ### Snapshot Placement Creation Is An Explicit User Action, Never A Second Publish (0.8.25)
 
 0.8.18 built a complete pipeline for orchestrating an external
-placement — `application/CreatePublicationSnapshotPlacementUseCase.js`,
+placement — `application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js`,
 `content/IpfsContentStore.js`, `application/
 CreateExternalSnapshotPlacementUseCase.js` — and its own "Deliberately
 excluded" list, echoed again at 0.8.24, ended with the identical line
@@ -12746,7 +12746,7 @@ place onto, and creating a placement are three different questions,
 answered by three different collaborators, and merely asking the first
 two never answers the third.** `application/
 SnapshotPlacementCreationCoordinator.js` (new) sits directly beside
-`application/SnapshotPlacementResolutionCoordinator.js` (0.8.20) rather
+`application/snapshot/placement/SnapshotPlacementResolutionCoordinator.js` (0.8.20) rather
 than folding into it — the identical "one class, one axis" discipline
 0.8.11 already applied to anchors. `tests/
 SnapshotPlacementCreationUX.test.js`'s own Section C proves this with a
@@ -12760,7 +12760,7 @@ restraint 0.8.11 named as its single most important rule, applied here
 one axis over. The moment `application/
 CreateExternalSnapshotPlacementUseCase.js` (0.8.18, unmodified) reports
 `CREATED`, the resulting placement is re-discovered into the ordinary
-placement list — `application/SnapshotPlacementResolutionCoordinator.js#
+placement list — `application/snapshot/placement/SnapshotPlacementResolutionCoordinator.js#
 discover()`, the same purely local read every other cataloged placement
 already goes through — and shown exactly as unresolved, with its own
 separate "Resolve Snapshot" button, never pre-checked or pre-labeled.
@@ -12769,11 +12769,11 @@ too: a `create()` call that succeeds never once touches a resolver spy
 sitting right next to it. A content store accepting bytes just now says
 nothing about whether it can still serve them a moment later — collapsing
 the two would silently reintroduce exactly the "retrieve → trust"
-shortcut `application/PublicationResolver.js`'s own 0.7.0 header already
+shortcut `application/publication/PublicationResolver.js`'s own 0.7.0 header already
 refused, one layer up.
 
 **There is no REJECTED state on the placement side, and inventing one
-would be dishonest.** `application/ExternalAnchorCreationUiState.js` has
+would be dishonest.** `application/anchoring/ExternalAnchorCreationUiState.js` has
 four values because a Bitcoin broadcaster can reach the network and
 receive a genuine, definite no. `application/
 SnapshotPlacementCreationOutcome.js`'s own 0.8.18 header already explains
@@ -12790,7 +12790,7 @@ deliberate exception, made precisely because blind mirroring here would
 manufacture a UI state with no possible cause.
 
 **"Create <Storage> Placement," never "Publish to <Storage>."**
-`application/SnapshotPlacementCreationView.js#describeCreationButtonLabel()`
+`application/snapshot/placement/SnapshotPlacementCreationView.js#describeCreationButtonLabel()`
 and every button label in `ui/views/DecentralizedPublicationsView.js`'s
 own new "Snapshot Placements" card use the vocabulary `docs/Roadmap.md`'s
 own 0.8.25 entry fixes: a *publication* is an immutable local content
@@ -12802,12 +12802,12 @@ domain concepts this codebase has kept separate since 0.8.18; "Create
 IPFS Placement" does not.
 
 **The bridge is necessary, and it is exactly a bridge — nothing more.**
-`application/CreateExternalSnapshotPlacementUseCase.js` (0.8.18) was
+`application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js` (0.8.18) was
 built and tested against `discovery/DiscoveryProvider.js`/`discovery/
 ContentResolver.js` — the older, pre-0.7.0 `Publication`/`Publisher`
 world `discovery/LocalDiscoveryProvider.js` still serves. The Publication
 Center this codebase actually ships has never used that world; it reads
-and writes `application/LocalPublicationCatalog.js` and a real
+and writes `application/publication/LocalPublicationCatalog.js` and a real
 `content/ContentStore.js` everywhere else. `discovery/
 PublicationCatalogDiscoveryProvider.js` and `discovery/
 PublicationCatalogContentResolver.js` (both new) are thin, synchronous,
@@ -12853,10 +12853,10 @@ through it, never writing to it.
 
 **A history of observations adds exactly one new fact — `everResolved` —
 never a new state of its own,** the identical restraint 0.8.12 already
-held for `everValid`. `application/SnapshotPlacementLifecycleView.js#
+held for `everValid`. `application/snapshot/placement/SnapshotPlacementLifecycleView.js#
 deriveSnapshotPlacementLifecycle()` still reports the CURRENT state
 (`NOT_RESOLVED`/`RESOLVED`/`UNAVAILABLE`/`HASH_MISMATCH`/
-`INVALID_PLACEMENT` — `application/SnapshotPlacementLifecycleState.js`)
+`INVALID_PLACEMENT` — `application/snapshot/placement/SnapshotPlacementLifecycleState.js`)
 from nothing but the MOST RECENT observation, exactly as `application/
 SnapshotPlacementView.js` already did from a single result. The
 temptation 0.8.12 already named and declined for anchors — inventing a
@@ -12889,7 +12889,7 @@ which say nothing negative about the claim) and it is not "not even a
 validly signed record" (`INVALID_ENVELOPE`/`INVALID_SIGNATURE`,
 structural rejections with no retrieval attempted at all) — it is a
 definite, independent finding that the locator is presently serving
-something else. `application/SnapshotPlacementLifecycleState.js` keeps
+something else. `application/snapshot/placement/SnapshotPlacementLifecycleState.js` keeps
 `HASH_MISMATCH` permanently separate from both, and
 `describeSnapshotPlacementLifecycleNote()` never applies its
 "previously resolved" softening to it, even directly after a genuine
@@ -12997,14 +12997,14 @@ resolution lifecycle (`application/
 PublicationAnchorVerificationLifecycleView.js`, 0.8.12; `application/
 SnapshotPlacementLifecycleView.js`, 0.8.26) is a LOCAL OBSERVATION about
 ONE claim this replica happened to check, and an acquisition record
-(`application/PublicationAnchorKnowledgeView.js`, 0.8.17; `application/
+(`application/anchoring/PublicationAnchorKnowledgeView.js`, 0.8.17; `application/
 PublicationSnapshotPlacementKnowledgeView.js`, 0.8.24) is a LOCAL FACT
 about how THIS replica happened to learn ONE claim — neither is a
 property of the shared claim set, and neither is a property of how the
 evidence dimension relates to the placement dimension. Giving this
 function a parameter for either, even one that would do nothing today,
 would have been an open invitation for a future milestone to quietly fold
-one in. `application/PublicationDecentralizationView.js` has no parameter
+one in. `application/publication/PublicationDecentralizationView.js` has no parameter
 capable of receiving either at all — a caller still shows a lifecycle
 note or a provenance line exactly where 0.8.12/0.8.17/0.8.24/0.8.26
 already put them, underneath the individual anchor/placement card, never
@@ -13024,7 +13024,7 @@ combining `Publication`, `PublicationAnchor`, and
 `PublicationSnapshotPlacement`. This codebase has three independently
 meaningful domain objects and no evidence yet that a fourth, combining
 aggregate is a genuine domain concept rather than a convenient screen
-shape — `application/PublicationDecentralizationView.js` lives in the
+shape — `application/publication/PublicationDecentralizationView.js` lives in the
 application/view layer specifically so it stays trivially removable if
 this replica's own architecture never needs it to be anything more. See
 `docs/Roadmap.md`, 0.8.27, for the full milestone entry.
@@ -13065,7 +13065,7 @@ byte-identical whether his own anchor verification observation reads
 `CONTENT_UNAVAILABLE`, or neither observation has been made at all —
 because those observations were never a parameter this view's own
 signature could accept to begin with, the identical restraint
-`application/PublicationDecentralizationView.js` (0.8.27) already
+`application/publication/PublicationDecentralizationView.js` (0.8.27) already
 enforces for lifecycle and provenance, extended here to the one new fact
 this milestone adds.
 
@@ -13076,9 +13076,9 @@ claiming this snapshot sits at this locator" — it never means the
 snapshot's bytes were fetched, and a known Bitcoin anchor claim never
 means this replica queried Bitcoin. Retrieval stays `application/
 SnapshotPlacementResolver.js`'s job; proof verification stays
-`application/ExternalAnchorVerifier.js`'s job; both remain separate,
+`application/anchoring/ExternalAnchorVerifier.js`'s job; both remain separate,
 explicit operations a caller runs afterward, exactly as before this
-milestone. `application/PublicationReplicaKnowledgeView.js` imports
+milestone. `application/publication/replica/PublicationReplicaKnowledgeView.js` imports
 neither file, and imports no catalog, store, coordinator, or network
 dependency of any kind — it only ever reshapes a boolean and two
 convergence views a caller already computed.
@@ -13093,7 +13093,7 @@ model this codebase has refused since 0.7.0 — that some replica's
 knowledge is more "complete," and therefore more trustworthy, than
 another's with fewer claims. `application/
 PublicationReplicaKnowledgeView.js`'s own result carries exactly the same
-plain structural facts `application/PublicationDecentralizationView.js`
+plain structural facts `application/publication/PublicationDecentralizationView.js`
 already exposed, plus `hasPublication` — nothing scored, ranked, or
 averaged. `tests/PublicationReplicaKnowledgeView.test.js`'s own Section A
 asserts directly that no `completeness`, `confidence`, `trustLevel`, or
@@ -13104,7 +13104,7 @@ asserts directly that no `completeness`, `confidence`, `trustLevel`, or
 class, and 0.8.27 never merged `Publication`, `PublicationAnchor`, and
 `PublicationSnapshotPlacement` into one aggregate, this milestone adds no
 new domain object either. `hasPublication` is a plain boolean the CALLER
-already knows — ordinarily `application/LocalPublicationCatalog.js#
+already knows — ordinarily `application/publication/LocalPublicationCatalog.js#
 has()` (0.7.2) — never a record this view looks up or wraps itself. See
 `docs/Roadmap.md`, 0.8.28, for the full milestone entry.
 
@@ -13117,14 +13117,14 @@ reconstructed knowledge to another, deliberately, offline? The answer
 this milestone gives is a package — `application/
 PublicationReplicaPackage.js` — that bundles exactly one publication
 plus the signed anchor/placement claims that name it, and two use cases
-(`application/BuildPublicationReplicaPackageUseCase.js`/`application/
+(`application/publication/replica/BuildPublicationReplicaPackageUseCase.js`/`application/
 ImportPublicationReplicaPackageUseCase.js`) that move it in and out of a
 replica's own catalogs. The one design question this raises that 0.8.7's
 and 0.8.22's own package-import milestones never had to answer — a
 Blueprint Package carries no acquisition history to lose, because a
 `core/Structure.js` was never acquired FROM anyone in the first place —
 is what happens to an anchor's or a placement's own PACKAGE/PEER/LOCAL
-provenance (`application/AnchorAcquisitionKind.js`/`application/
+provenance (`application/anchoring/AnchorAcquisitionKind.js`/`application/
 PlacementAcquisitionKind.js`, 0.8.17/0.8.24) when it travels inside one
 replica's export and lands in another's import.
 
@@ -13132,7 +13132,7 @@ The answer is: nothing happens to it, because the package never carries
 it to begin with. Suppose Alice created Anchor A locally, verified it
 five times, and has known it for a year. She exports a Publication
 Replica Package naming her publication, Anchor A, and a placement. Bob
-imports it. `application/ImportPackageAnchorsUseCase.js`'s own
+imports it. `application/anchoring/ImportPackageAnchorsUseCase.js`'s own
 `knowledgeStore` parameter — reused here completely UNCHANGED — records
 exactly one fact about Anchor A in Bob's own `application/
 LocalAnchorKnowledgeStore.js`: that BOB acquired it via PACKAGE. Alice's
@@ -13149,7 +13149,7 @@ envelope already did.
 
 This is what makes the interesting case work without any new machinery.
 If Carol later sends Bob the IDENTICAL Anchor A over a live peer
-connection, `application/LocalAnchorKnowledgeStore.js`'s own
+connection, `application/anchoring/LocalAnchorKnowledgeStore.js`'s own
 FIRST-SEEN-WINS rule (0.8.17, already exercised for every other
 acquisition-route pair — LOCAL-before-PACKAGE, PACKAGE-before-PEER,
 PEER-before-PACKAGE) applies exactly as it always has: Bob's record for
@@ -13166,11 +13166,11 @@ peer connection, Bob's own PACKAGE record is unmoved — as an invariant.
 **Reuse the existing trust boundary; never build a second one.** Every
 claim a Publication Replica Package carries crosses the IDENTICAL
 validate-construct-verify boundary it would cross arriving any other
-way: `application/PublicationExchange.js#importPublication()` for the
-publication, `application/PublicationAnchorExchange.js#importAnchor()`
+way: `application/publication/PublicationExchange.js#importPublication()` for the
+publication, `application/anchoring/PublicationAnchorExchange.js#importAnchor()`
 for each anchor, `application/
 PublicationSnapshotPlacementExchange.js#importPlacement()` for each
-placement. `application/ImportPublicationReplicaPackageUseCase.js` does
+placement. `application/publication/replica/ImportPublicationReplicaPackageUseCase.js` does
 not merely call the SAME exchange classes 0.8.7's/0.8.22's own package
 importers already call — it calls those importers THEMSELVES,
 unmodified, because a Publication Replica Package bundles its
@@ -13196,8 +13196,8 @@ resists all three, and the resistance IS the milestone.
 
 **A question spanning two dimensions does not require a wire protocol
 spanning two dimensions.** By the time this milestone starts,
-`application/PublicationAnchorPeerProtocol.js` (0.8.4/0.8.5) and
-`application/PublicationSnapshotPlacementPeerProtocol.js` (0.8.19) each
+`application/anchoring/PublicationAnchorPeerProtocol.js` (0.8.4/0.8.5) and
+`application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js` (0.8.19) each
 already answer "give me every claim you know about this publicationId,"
 completely, independently, over their own namespaced protocol strings.
 Neither needed to change. `application/
@@ -13209,7 +13209,7 @@ gives a peer a third way to tell this replica about an anchor or a
 placement. Two peer-facing subsystems answering a shared question is not,
 by itself, evidence that a THIRD, unified subsystem needs to exist
 underneath them; sometimes the answer is a synthesis one layer up, the
-identical shape `application/PublicationDecentralizationView.js` (0.8.27)
+identical shape `application/publication/PublicationDecentralizationView.js` (0.8.27)
 already proved for VIEWING two dimensions side by side, now proved again
 for ACTING on them together.
 
@@ -13243,7 +13243,7 @@ for the same publication naming a DIFFERENT contentHash — a genuine,
 irreducible conflict — and synchronizing does not resolve it, hide it, or
 pick a side. Both claims land on both replicas, symmetrically, regardless
 of who initiated which `synchronize()` call, and each replica's own
-`application/PublicationEvidenceConvergenceView.js` (0.8.13) — completely
+`application/publication/evidence/PublicationEvidenceConvergenceView.js` (0.8.13) — completely
 unmodified by this milestone — independently reports CONFLICT from its
 own now-larger claim set. `PublicationKnowledgeSynchronizationCoordinator
 .js#synchronize()`'s own result carries no ranking field, no "winner," no
@@ -13259,7 +13259,7 @@ See `docs/Roadmap.md`, 0.8.30, for the full milestone entry.
 
 ### Replica Knowledge Explains What Is Known And How It Was Acquired; It Does Not Judge What Should Be Trusted (0.8.31)
 
-`application/PublicationReplicaKnowledgeDetailView.js` places two facts
+`application/publication/replica/PublicationReplicaKnowledgeDetailView.js` places two facts
 that have existed since 0.8.12/0.8.17/0.8.24/0.8.26 on the same row, for
 the first time: how THIS replica came to know each individual claim, and
 what it has separately, independently established about it right now.
@@ -13268,7 +13268,7 @@ one claim inspected at a time — is exactly the shape a ranking would be
 easiest to smuggle into, and this file's own tests, and its own header,
 exist to prove it never does.
 
-`application/PublicationDecentralizationView.js` (0.8.27) already drew the
+`application/publication/PublicationDecentralizationView.js` (0.8.27) already drew the
 line one card up: a SYNTHESIS is never an ADJUDICATION. This principle is
 that same line, held at the one layer where it is hardest to hold —
 looking at a whole table of claims, each with its own provenance and its
@@ -13284,7 +13284,7 @@ screen.
 **Acquisition provenance is not evidence rank, restated one more time at
 the one place it is most tempting to break.** `application/
 AnchorAcquisitionKind.js` (0.8.17) established this for a single claim's
-own badge; `application/PublicationDecentralizationView.js` (0.8.27)
+own badge; `application/publication/PublicationDecentralizationView.js` (0.8.27)
 restated it for two dimensions compared side by side. This milestone is
 the version of the same rule that matters most: a full, unranked table of
 every claim this replica knows, each labeled by how it arrived. Nothing
@@ -13299,11 +13299,11 @@ here; there is a great deal in this codebase's own history explaining why
 it should not.
 
 **No peer identity, anywhere, even though the machinery underneath knows
-it.** `application/PublicationKnowledgeSynchronizationCoordinator.js`
+it.** `application/publication/evidence/PublicationKnowledgeSynchronizationCoordinator.js`
 (0.8.30) authenticates every peer it talks to, and could trivially record
 which one supplied which claim. `acquisitionLabel` says "Learned via peer
 exchange," never "Learned from Alice" — the identical understated wording
-`application/PublicationAnchorKnowledgeView.js` (0.8.17) chose for a
+`application/anchoring/PublicationAnchorKnowledgeView.js` (0.8.17) chose for a
 single claim's own badge, now shown across an entire table where naming a
 source would read far more like an authority claim than it ever did one
 row at a time. The inference this refuses is specific and easy to state:
@@ -13341,7 +13341,7 @@ both facts about the same claim without contradiction (`docs/
 Principles.md`, "Known Is Not Available (0.8.28)"). This milestone draws
 the identical line one layer down, for the one thing every anchor and
 every placement claim is ultimately ABOUT: the snapshot's own bytes.
-`application/PublicationReplicaPackage.js` (0.8.29) lets a replica
+`application/publication/replica/PublicationReplicaPackage.js` (0.8.29) lets a replica
 transfer everything it KNOWS about a publication — including a placement
 claiming exactly where the bytes can supposedly be found — without
 transferring a single byte of the bytes themselves. Before this
@@ -13350,7 +13350,7 @@ replica's only paths to actual content were `application/
 PublicationResolver.js` (a live content-addressed fetch) and `application/
 PeerContentExchange.js` (a live, request/response pull from an
 authenticated peer). Both require a network. Neither can run entirely
-offline the way `application/ImportPublicationReplicaPackageUseCase.js`
+offline the way `application/publication/replica/ImportPublicationReplicaPackageUseCase.js`
 already can.
 
 **Content transfer and placement resolution are two independent paths to
@@ -13361,7 +13361,7 @@ Replica Package offline (he now knows the publication, its anchor, and
 its IPFS placement) and explicitly does NOT yet possess the snapshot —
 then imports a Publication Snapshot Transfer Package, ALSO offline, and
 obtains the actual bytes without ever constructing, referencing, or
-calling `application/SnapshotPlacementResolver.js`, or any network object
+calling `application/snapshot/placement/SnapshotPlacementResolver.js`, or any network object
 of any kind, anywhere in the test. Carol, receiving only the replica
 package, is left in the mirror-image state: she knows exactly where the
 snapshot is CLAIMED to be retrievable, and does not possess it. Both are
@@ -13376,7 +13376,7 @@ once, for a live RESPONSE: peer identity is never content authenticity,
 and the only thing that makes received bytes trustworthy is `core/
 ContentReference.js#verify()` — recomputing the hash of exactly the bytes
 received and checking it against exactly the hash being claimed.
-`application/ImportPublicationSnapshotTransferPackageUseCase.js` applies
+`application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js` applies
 the identical rule to an offline package: a well-formed envelope (correct
 `kind`, correct `schemaVersion`, a non-empty `content` string) proves
 NOTHING about whether `content` is the content it claims to be. Only
@@ -13388,10 +13388,10 @@ tampered content is rejected as `CONTENT_HASH_MISMATCH` with nothing
 written to the `ContentStore` at all.
 
 **`publicationKnown` observes; it never gates.** The single new fact
-`application/ImportPublicationSnapshotTransferPackageUseCase.js` reports
+`application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js` reports
 alongside every transfer outcome — whether this replica's own publication
 catalog currently has an envelope for the package's `publicationId` — is
-read the same way `application/PublicationReplicaKnowledgeView.js`
+read the same way `application/publication/replica/PublicationReplicaKnowledgeView.js`
 (0.8.28) already reads `hasPublication`: a live, independent, boolean
 observation, computed fresh on every call, never cached, and never a
 precondition checked before step 4 of this milestone's own pipeline runs.
@@ -13408,11 +13408,11 @@ changed.
 **Two packages, deliberately, permanently, never one.** `application/
 PublicationReplicaPackage.js` (0.8.29) transfers claims: a publication
 envelope, plus the signed anchors and placements that name it.
-`application/PublicationSnapshotTransferPackage.js` (this milestone)
+`application/snapshot/PublicationSnapshotTransferPackage.js` (this milestone)
 transfers exactly one thing: bytes, addressed by their own hash. This
 milestone's own design conversation considered folding `content` into
 the replica package directly, and rejected it for the same reason
-`application/PublicationReplicaPackage.js`'s own header already gives for
+`application/publication/replica/PublicationReplicaPackage.js`'s own header already gives for
 staying scoped to one publication at a time: a package that tries to be
 "everything about this publication, whatever happens to be handy" stops
 being able to answer any one question cleanly. Keeping the two packages
@@ -13455,7 +13455,7 @@ changed between the three checks.
 **"No bytes here" and "the wrong bytes are here" are different facts,
 never conflated.** `application/
 LocalSnapshotContentAvailabilityOutcome.js` draws the identical
-distinction `application/SnapshotPlacementResolutionOutcome.js` (0.8.18)
+distinction `application/snapshot/placement/SnapshotPlacementResolutionOutcome.js` (0.8.18)
 already drew between `CONTENT_UNAVAILABLE` and `CONTENT_HASH_MISMATCH`
 one layer over: `NOT_AVAILABLE` says this replica has never stored
 anything under this hash; `CONTENT_HASH_MISMATCH` says it has, and what
@@ -13470,7 +13470,7 @@ by direct comparison, not merely by each individually matching its own
 expected enum value.
 
 **The strongest sentence this milestone will say is exact, and stops
-exactly there.** `application/LocalSnapshotContentAvailabilityView.js`'s
+exactly there.** `application/snapshot/materialization/LocalSnapshotContentAvailabilityView.js`'s
 own `AVAILABLE` message reads: "Local snapshot is available and matches
 the publication's content hash." Not "verified" — this milestone checks
 no signature and consults no external system. Not "trusted" or
@@ -13561,7 +13561,7 @@ action now sits between them.
 **A content-hash mismatch is `REJECTED`, not `UNAVAILABLE` — a distinction
 the placement side does not need and does not have.** `application/
 SnapshotContentMaterializationUiState.js` keeps `REJECTED` as its own
-state, unlike `application/SnapshotPlacementCreationUiState.js` (0.8.25),
+state, unlike `application/snapshot/placement/SnapshotPlacementCreationUiState.js` (0.8.25),
 which has none. The reason is exactly the asymmetry `application/
 SnapshotContentTransferOutcome.js`'s own header already draws one layer
 under: a placement's `STORE_UNAVAILABLE`/`CONTENT_UNAVAILABLE` both mean
@@ -13582,7 +13582,7 @@ unaffected by that rejected attempt landing on top of them.
 own UI names the fact rather than hiding it.** 0.8.32 established the
 invariant at the use-case layer; this milestone's own job was to make sure
 adding a UI on top did not quietly reintroduce a gate the use case itself
-never had. `application/SnapshotContentMaterializationView.js` never
+never had. `application/snapshot/materialization/SnapshotContentMaterializationView.js` never
 refuses to show `IMPORTED` for an uncataloged publication — it shows the
 identical successful state with a second, honest sentence appended:
 "Snapshot imported. The publication is not currently known locally."
@@ -13593,7 +13593,7 @@ of prior knowledge as a plain fact rather than converting it into a
 rejection.
 
 **What this milestone deliberately still refuses to build.**
-`application/SnapshotContentMaterializationCoordinator.js` has no
+`application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js` has no
 `availableSources(publicationId)` — see that file's own header for why
 inventing source discovery/ranking now would be exactly the kind of
 premature system `docs/Principles.md`'s own "Snapshot Placement Resolution
@@ -13642,7 +13642,7 @@ SnapshotPlacementMaterializationOutcome.js` has five values; three of them
 are direct, lossless, documented mappings of `application/
 SnapshotPlacementResolutionOutcome.js`'s own five — `STORE_UNAVAILABLE`
 and `CONTENT_UNAVAILABLE` both collapse into one coarser `UNAVAILABLE`,
-the identical coarsening `application/SnapshotPlacementLifecycleView.js`
+the identical coarsening `application/snapshot/placement/SnapshotPlacementLifecycleView.js`
 (0.8.26) already applies for the identical reason: a caller asking "did
 materializing work?" does not need, and should not be handed, a second
 reason to weigh — resolution's own per-attempt label already carries the
@@ -13651,8 +13651,8 @@ milestone invent a new explanation for why a store failed to answer; it
 only ever asks resolution, once, and relays what it already knows.
 
 **A placement is chosen, never discovered by this new machinery.**
-`application/MaterializeSnapshotFromPlacementUseCase.js#execute()` and
-`application/SnapshotPlacementMaterializationCoordinator.js#materialize()`
+`application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js#execute()` and
+`application/snapshot/placement/SnapshotPlacementMaterializationCoordinator.js#materialize()`
 both accept an already-hydrated `PublicationSnapshotPlacement` INSTANCE —
 never a bare `placementId` this milestone would have to look up itself.
 This is not an incidental implementation shortcut: it is what keeps a
@@ -13667,7 +13667,7 @@ different storage backends never gets a "best source" computed on its
 behalf; it gets three buttons, each naming its own backend, each
 resolving and materializing independently, none of them ranked, tried as
 a fallback for another, or hidden behind a "recommended" label. See
-`application/SnapshotPlacementMaterializationCoordinator.js`'s own header
+`application/snapshot/placement/SnapshotPlacementMaterializationCoordinator.js`'s own header
 for why building that ranking now, before more than two competing sources
 even exist side by side, would be exactly the premature system 0.8.34's
 own `SnapshotContentMaterializationCoordinator.js` already declined to
@@ -13714,7 +13714,7 @@ its own copy of the identical three-step shape: verify the claimed hash,
 check whether this replica already holds it, write it if not. Two
 milestones is enough for a duplicated shape to start drifting; this
 milestone closes that risk by extracting the shape once, into
-`application/StoreSnapshotContentUseCase.js`, and wiring both existing
+`application/snapshot/materialization/StoreSnapshotContentUseCase.js`, and wiring both existing
 paths through the SAME instance. What it deliberately does not do is
 collapse the two paths themselves into one.
 
@@ -13728,12 +13728,12 @@ forever, without either one needing its own copy of `core/
 ContentReference.js#verify()` to stay correct. It does not make the two
 callers interchangeable, does not let one stand in for the other, and
 does not give this codebase a single "acquire snapshot content" action
-where two used to exist. `application/ImportPublicationSnapshotTransferPackageUseCase.js`
-and `application/MaterializeSnapshotFromPlacementUseCase.js` remain two
+where two used to exist. `application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js`
+and `application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js` remain two
 separate classes, each still requiring its own separate explicit user
 action, each still returning its own separate outer outcome vocabulary
-un-merged (`application/SnapshotContentTransferOutcome.js` and
-`application/SnapshotPlacementMaterializationOutcome.js`, both unchanged).
+un-merged (`application/snapshot/materialization/SnapshotContentTransferOutcome.js` and
+`application/snapshot/placement/SnapshotPlacementMaterializationOutcome.js`, both unchanged).
 Only the narrow inner question — verify, then store — now has one answer
 instead of two.
 
@@ -13744,7 +13744,7 @@ adjective attached to either. A person who obtained a publication's bytes
 through a resolved IPFS placement possesses them exactly as completely as
 a person who obtained the identical bytes through an offline transfer
 package — this milestone's own flagship test proves it operationally,
-byte for byte. `application/SnapshotMaterializationView.js#describeSnapshotMaterializationSourceLabel()`
+byte for byte. `application/snapshot/materialization/SnapshotMaterializationView.js#describeSnapshotMaterializationSourceLabel()`
 returns "Transfer package" or "Placement" and nothing more: never
 "verified," "trusted," "authentic," "preferred," "recommended," or
 "primary." The UI's new "Source: …" line exists to answer "which
@@ -13760,7 +13760,7 @@ list to rank. No automatic fallback from a `HASH_MISMATCH` or
 `UNAVAILABLE` result on one source to quietly trying the other. No picker
 comparing a package against a placement side by side, even though a
 shared storage boundary would make such a picker mechanically trivial to
-wire up — see `application/StoreSnapshotContentUseCase.js`'s own header
+wire up — see `application/snapshot/materialization/StoreSnapshotContentUseCase.js`'s own header
 on why building it now, before more than two sources even exist, would be
 exactly the premature ranking system this codebase has refused at every
 layer since discovery first asked "did anyone see new evidence" instead
@@ -13818,7 +13818,7 @@ on purpose. Being authenticated only ever proved which key sent a
 message; it never proved the message's own claim about its bytes. The
 ONLY thing that ever makes those bytes trustworthy is `application/
 MaterializeSnapshotFromPeerUseCase.js` handing them, unchanged, to
-`application/StoreSnapshotContentUseCase.js`, which recomputes their hash
+`application/snapshot/materialization/StoreSnapshotContentUseCase.js`, which recomputes their hash
 and checks it against exactly the `contentHash` this replica itself asked
 for. This milestone's own flagship test proves the point operationally: an
 authenticated peer that answers with bytes not matching its own claimed
@@ -13833,7 +13833,7 @@ REQUEST by asking exactly one question of exactly one collaborator — does
 this replica's own local `content/ContentStore.js` currently hold bytes
 for this hash? — and nothing else. It never resolves a placement, never
 consults IPFS, never asks a third peer, never inspects an anchor, and
-(unlike `application/PeerContentExchange.js`'s 0.7.4 automatic-retrieval
+(unlike `application/peer/PeerContentExchange.js`'s 0.7.4 automatic-retrieval
 sibling) never even consults a catalog. A peer that answers is saying
 "I happen to have these bytes right now," full stop; it is never saying
 "a placement I hold names this locator authoritative" or "I verified this
@@ -13866,7 +13866,7 @@ a request quietly forwarded to a third peer on the first peer's behalf.
 
 **Explicit, single-peer selection is a deliberately different shape from
 automatic, multi-peer retrieval — and building the second is not a reason
-to bend the first into it.** `application/PeerContentExchange.js` (0.7.4)
+to bend the first into it.** `application/peer/PeerContentExchange.js` (0.7.4)
 already exists, already asks every connected peer automatically the
 moment a publication resolves `CONTENT_UNAVAILABLE`, and already
 verifies-and-stores inline the instant a RESPONSE arrives. This milestone
@@ -13881,7 +13881,7 @@ clicking "Get Snapshot from Peer" on one specific, already-selected peer
 is the only mechanism this milestone ever offers for choosing who to ask.
 Two classes, two protocols, two authorization boundaries, sharing nothing
 but `peer/PeerMessageBus.js`'s own multiplexing — the identical restraint
-that already keeps `application/PublicationPeerExchange.js`, `application/
+that already keeps `application/publication/PublicationPeerExchange.js`, `application/
 PublicationAnchorPeerExchange.js`, and `application/
 PublicationSnapshotPlacementPeerExchange.js` three separate classes rather
 than one generic superclass, now proven to hold for content transport too.
@@ -13909,12 +13909,12 @@ See `docs/Roadmap.md`, 0.8.37, for the full milestone entry.
 **A materialization source identifies the mechanism through which bytes
 were supplied to the local content store. It does not establish
 authority, reliability, authenticity, persistence, preference, or
-ranking for that source.** `application/SnapshotMaterializationHistory.js`
-and `application/SnapshotMaterializationHistoryView.js` exist to let a
+ranking for that source.** `application/snapshot/materialization/SnapshotMaterializationHistory.js`
+and `application/snapshot/materialization/SnapshotMaterializationHistoryView.js` exist to let a
 person see, over one browsing session, how their own replica's "Local
 Snapshot" came to hold what it holds — every explicit "Import Snapshot,"
 "Materialize Snapshot," and "Get Snapshot from Peer" attempt that
-actually reached `application/StoreSnapshotContentUseCase.js`, in the
+actually reached `application/snapshot/materialization/StoreSnapshotContentUseCase.js`, in the
 order it happened, including the ones that were rejected. Nowhere in
 that history is a source ever called "trusted," "best," "verified,"
 "reliable," "preferred," or "canonical" — `describeSnapshotMaterializationSourceLabel()`
@@ -13968,14 +13968,14 @@ confirm.
 the history, because nothing about "how bytes reached the content store"
 actually happened.** A placement whose resolution answers `UNAVAILABLE`
 or `INVALID_PLACEMENT`, or a peer request that simply times out, never
-once calls `application/StoreSnapshotContentUseCase.js` — the three
+once calls `application/snapshot/materialization/StoreSnapshotContentUseCase.js` — the three
 mapping functions `ui/views/DecentralizedPublicationsView.js` uses to
 build a history entry (`mapPackageOutcomeToStoreOutcome()`/
 `mapPlacementOutcomeToStoreOutcome()`/`mapPeerOutcomeToStoreOutcome()`)
 each return `null` for exactly those outcomes, and a `null` mapped
 outcome means `recordMaterializationHistoryEntry()` records nothing.
 This is not an oversight or an economy of storage — it is the same
-honesty restraint `application/PeerSnapshotContentProtocol.js`'s own
+honesty restraint `application/snapshot/materialization/PeerSnapshotContentProtocol.js`'s own
 header already holds for silence ("`UNAVAILABLE` is deliberately the SAME
 outcome whether the selected peer does not currently hold the bytes, is
 unreachable, or simply never replies"): a history that recorded an entry
@@ -14006,12 +14006,12 @@ See `docs/Roadmap.md`, 0.8.38, for the full milestone entry.
 
 **A replica can know that it possesses a valid snapshot without that fact
 becoming a publication claim, a placement claim, or a decentralization
-score.** `application/PublicationSnapshotPossessionView.js` exists to give
+score.** `application/snapshot/possession/PublicationSnapshotPossessionView.js` exists to give
 that one, present-tense fact — "does this replica's own `content/
 ContentStore.js` currently hold bytes matching this publication's claimed
 hash?" — a small, pure shape of its own: `{ publicationId, contentHash,
 possession: { state } }`. It introduces NO new content checker: `state`
-is `application/LocalSnapshotContentAvailabilityOutcome.js`'s own three
+is `application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js`'s own three
 0.8.33 values, reused unchanged, because the question this milestone asks
 was already fully answered by `application/
 CheckLocalSnapshotContentAvailabilityUseCase.js` — what this milestone
@@ -14022,7 +14022,7 @@ attached to a placement or an anchor. A replica reporting `AVAILABLE` for
 a publication with zero known placements and zero known anchors is not
 thereby "more decentralized," and a replica reporting `NOT_AVAILABLE` for
 a publication with three independently-verified placements has cast no
-doubt on any of them — `application/PublicationDecentralizationView.js`
+doubt on any of them — `application/publication/PublicationDecentralizationView.js`
 (0.8.27) describes DISTRIBUTED claims; this file describes a fact about
 ONE replica's own present bytes, and the two dimensions never merge into
 one score.
@@ -14088,7 +14088,7 @@ which this milestone touches. `application/
 PublicationSnapshotPossessionView.js` and `application/
 PublicationReplicaContentKnowledgeView.js` both stay strictly LOCAL:
 neither imports a peer exchange, a network primitive, or a knowledge
-store, mirroring `application/CheckLocalSnapshotContentAvailabilityUseCase.js`'s
+store, mirroring `application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js`'s
 own 0.8.33 restraint one layer up. Local possession earns a completely
 well-defined, small, honest shape FIRST; a bounded observation protocol
 for sharing it across replicas remains explicitly future work, not
@@ -14108,16 +14108,16 @@ SnapshotPeerPossessionObservation.js`'s own `{ peerId, publicationId,
 contentHash, state, observedAt }`, is a fact about what that ONE peer said,
 at that ONE moment, never a distributed claim this replica now holds
 evidence for. It is never signed, never gossiped further, never merged
-into `application/LocalPlacementKnowledgeStore.js` or `application/
+into `application/placement/LocalPlacementKnowledgeStore.js` or `application/
 LocalAnchorKnowledgeStore.js`, and never added as a fourth value to
-`application/SnapshotMaterializationSourceKind.js` — a peer saying "I have
+`application/snapshot/materialization/SnapshotMaterializationSourceKind.js` — a peer saying "I have
 this" is not this replica materializing anything, and carries no bytes to
 materialize from in the first place.
 
 **Possession observation and content transfer stay two independent
 protocols, deliberately never merged into one.** `application/
 PublicationSnapshotPossessionPeerExchange.js` never returns bytes, and
-`application/PublicationSnapshotContentPeerExchange.js` (0.8.37) is never
+`application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js` (0.8.37) is never
 consulted, invoked, or implied by an AVAILABLE answer. A peer can honestly
 answer AVAILABLE and subsequently fail to supply the bytes when actually
 asked — its own store may have changed in the interval, or the two
@@ -14126,7 +14126,7 @@ boundaries — and that is not a contradiction, because "do you have it?"
 and "give it to me" are different observations about different moments.
 This milestone's own flagship test proves the point directly: Bob learns
 that both Alice and Carol report AVAILABLE, and his own local possession
-(`application/CheckLocalSnapshotContentAvailabilityUseCase.js`, 0.8.33)
+(`application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js`, 0.8.33)
 stays NOT_AVAILABLE the entire time — only a SEPARATE, explicit "Get
 Snapshot from Peer" click against Alice, running entirely through 0.8.37's
 own unchanged transport, ever gives Bob the bytes. Knowing a peer possesses
@@ -14135,8 +14135,8 @@ this codebase promotes one into the other automatically.
 
 **A REQUEST always gets a RESPONSE — the one place this protocol's wire
 behavior deliberately differs from every sibling `*PeerProtocol.js` in this
-codebase.** `application/PeerSnapshotContentProtocol.js` (0.8.37) and
-`application/PublicationSnapshotPlacementPeerProtocol.js` (0.8.19) both
+codebase.** `application/snapshot/materialization/PeerSnapshotContentProtocol.js` (0.8.37) and
+`application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js` (0.8.19) both
 have peers stay silent rather than say "no," because for THOSE protocols
 silence and "no" are the identical observable outcome from the requester's
 side. Possession is different: answering NOT_AVAILABLE costs nothing and
@@ -14153,7 +14153,7 @@ peer's own business; the question this protocol answers stays exactly "do
 you have bytes matching this hash," and `application/
 PublicationSnapshotPossessionPeerExchange.js#_handleRequest()` collapses
 CONTENT_HASH_MISMATCH into NOT_AVAILABLE before anything reaches the wire,
-reusing `application/CheckLocalSnapshotContentAvailabilityUseCase.js`
+reusing `application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js`
 (0.8.33) UNCHANGED — the identical semantic definition of "possession"
 0.8.39's own local "Local Snapshot" UI already established, never a second,
 independently-defined notion of what possessing a snapshot means.
@@ -14191,12 +14191,12 @@ See `docs/Roadmap.md`, 0.8.40, for the full milestone entry.
 **Collecting several peers' possession observations together — comparing
 them, counting them, keeping every one of them on file — never turns the
 COLLECTION into something more authoritative than any single observation
-already was.** `application/SnapshotPeerPossessionCoordinator.js#observePeers()`
+already was.** `application/snapshot/possession/SnapshotPeerPossessionCoordinator.js#observePeers()`
 lets a person ask several caller-chosen, already-authenticated peers the
-identical `application/PeerSnapshotPossessionProtocol.js` question at
-once; `application/SnapshotPeerPossessionObservationHistory.js` keeps
+identical `application/snapshot/possession/PeerSnapshotPossessionProtocol.js` question at
+once; `application/snapshot/possession/SnapshotPeerPossessionObservationHistory.js` keeps
 every answer, forever (for the lifetime of the page), in the order it
-arrived; `application/SnapshotPeerPossessionComparisonView.js` shows them
+arrived; `application/snapshot/possession/SnapshotPeerPossessionComparisonView.js` shows them
 side by side. At no point does any of this become a placement, a trust
 signal, or a recommendation — the identical restraint `docs/Principles.md`'s
 own "Peer Possession Responses Are Observations, Not Placement Claims
@@ -14236,20 +14236,20 @@ UNAVAILABLE "Could not determine" — deliberately NOT "Not available," and
 deliberately never merged with NOT_AVAILABLE's own count in
 `describeSnapshotPeerPossessionComparison()`'s output. "The peer said no"
 and "nothing came back" remain two different facts, all the way from
-`application/SnapshotPeerPossessionState.js`'s own three-value enum
+`application/snapshot/possession/SnapshotPeerPossessionState.js`'s own three-value enum
 (0.8.40) through to the comparison a person actually reads.
 
 **Composing many observations changes nothing about what a single
 observation already could not do.** No `POSSESSION`-shaped value was
-added to `application/SnapshotMaterializationSourceKind.js`; no
+added to `application/snapshot/materialization/SnapshotMaterializationSourceKind.js`; no
 observation, singular or collected, is ever written into `application/
-LocalPlacementKnowledgeStore.js`, `application/LocalAnchorKnowledgeStore.js`,
+LocalPlacementKnowledgeStore.js`, `application/anchoring/LocalAnchorKnowledgeStore.js`,
 a publication catalog, a placement catalog, or a Publication Replica
 Package; and no `PublicationSnapshotPlacement` is ever synthesized because
 several peers happened to answer AVAILABLE. The flagship test in
 `tests/SnapshotPeerPossessionObservationHistory.test.js` asserts this
 directly and structurally, not merely by absence of code that would do
-it: `application/PublicationSnapshotPlacementConvergence.js`'s own derived
+it: `application/snapshot/placement/PublicationSnapshotPlacementConvergence.js`'s own derived
 convergence over a real, shared placement catalog is asserted
 BYTE-IDENTICAL before and after every round of observations — including a
 round where one peer's own possession genuinely changed between checks.
@@ -14264,7 +14264,7 @@ never discovers a peer, never pads the list out with additional peers it
 considers relevant, never retries a peer that timed out, and never falls
 back to a different peer after one fails to answer. A peer that never
 answers resolves to its own honest UNAVAILABLE observation, exactly as
-`application/ObservePeerSnapshotPossessionUseCase.js` (0.8.40) already
+`application/snapshot/possession/ObservePeerSnapshotPossessionUseCase.js` (0.8.40) already
 guarantees for a single request — `observePeers()` adds no fallback logic
 of its own on top of that guarantee.
 
@@ -14354,7 +14354,7 @@ bytes — nothing more.
 
 ### Current Snapshot Possession Is Independent Of How The Snapshot Was Acquired (0.8.43)
 
-**`application/PublicationSnapshotAcquisitionView.js#describePublicationSnapshotAcquisition()`
+**`application/snapshot/PublicationSnapshotAcquisitionView.js#describePublicationSnapshotAcquisition()`
 reports `possession.state` exactly as its own `possessionView` parameter
 already holds it — never inferred, corrected, or overridden by whatever
 `materializationHistory` happens to narrate alongside it.** A history
@@ -14384,8 +14384,8 @@ deletion touches it — while his current possession now reads
 history now underlies two different, genuinely true, current-possession
 facts.
 
-**This is the same restraint `application/PublicationSnapshotPossessionView.js`
-(0.8.39) and `application/PublicationReplicaContentKnowledgeView.js`
+**This is the same restraint `application/snapshot/possession/PublicationSnapshotPossessionView.js`
+(0.8.39) and `application/publication/replica/PublicationReplicaContentKnowledgeView.js`
 (0.8.39) already established, extended one composition further.** Just as
 replica knowledge, materialization history, and current content
 possession were already three independent facts a caller could combine
@@ -14395,16 +14395,16 @@ the other. See `docs/Roadmap.md`, 0.8.43, for the full milestone entry.
 
 ### Acquisition History Explains Past Attempts; It Does Not Determine Present Possession (0.8.43)
 
-**`application/PublicationSnapshotAcquisitionView.js`'s own `acquisition`
+**`application/snapshot/PublicationSnapshotAcquisitionView.js`'s own `acquisition`
 field is a plain, non-judgmental tally — `attemptCount`, `storedCount`,
 `alreadyAvailableCount`, `hashMismatchCount`, and a per-source `sources`
 breakdown — built entirely from counting functions that already existed
 or that this same milestone added beside them:
-`application/SnapshotMaterializationHistory.js#describeSnapshotMaterializationSourceCounts()`
+`application/snapshot/materialization/SnapshotMaterializationHistory.js#describeSnapshotMaterializationSourceCounts()`
 (0.8.38) and its own new sibling `describeSnapshotMaterializationOutcomeCounts()`
 (0.8.43).** Neither counts anything this codebase did not already record
 as an explicit "Import Snapshot"/"Materialize Snapshot"/"Get Snapshot from
-Peer" attempt that reached `application/StoreSnapshotContentUseCase.js`
+Peer" attempt that reached `application/snapshot/materialization/StoreSnapshotContentUseCase.js`
 (0.8.36) — an event outside that boundary, such as storage corruption or a
 byte deletion, is never itself an acquisition attempt, and produces no
 history entry of its own.
@@ -14420,7 +14420,7 @@ deliberately different source, both recovers possession back to
 `AVAILABLE` and adds a second, genuinely new entry to the history. A
 count of past attempts is never treated as a prediction, a guarantee, or
 a substitute for the one authoritative present-tense fact —
-`application/PublicationSnapshotPossessionView.js`'s own `possession.state`
+`application/snapshot/possession/PublicationSnapshotPossessionView.js`'s own `possession.state`
 — and no field anywhere in this milestone's own shape is named
 `confidence`, `quality`, `reliability`, `bestSource`, `preferredSource`,
 or `successRate`; the flagship test asserts this recursively, over every
@@ -14448,10 +14448,10 @@ See `docs/Roadmap.md`, 0.8.42, for the full milestone entry.
 
 ### History Records What Happened During An Explicit Acquisition Attempt; Inspection Must Not Reinterpret Why It Happened (0.8.44)
 
-**`application/SnapshotMaterializationHistoryDetailView.js`'s two functions
+**`application/snapshot/materialization/SnapshotMaterializationHistoryDetailView.js`'s two functions
 — `describeSnapshotMaterializationHistoryEntry(attempt)` and
 `describeSnapshotMaterializationHistoryDetails(history)` — add exactly ONE
-new field beyond what `application/SnapshotMaterializationHistoryView.js`
+new field beyond what `application/snapshot/materialization/SnapshotMaterializationHistoryView.js`
 (0.8.38) already narrates for every attempt: a short `outcomeShortLabel`
 ("Stored"/"Already available"/"Hash mismatch") alongside the SAME full
 sentence (`outcomeLabel`) that file already returns.** Everything else —
@@ -14465,7 +14465,7 @@ or store, and are proven pure and non-mutating directly in
 **Making a fact inspectable is not the same as explaining it, and this
 milestone is careful never to blur that line.** A person opening "Show
 Acquisition History" and expanding one row sees exactly what
-`application/StoreSnapshotContentUseCase.js` (0.8.36) already recorded for
+`application/snapshot/materialization/StoreSnapshotContentUseCase.js` (0.8.36) already recorded for
 that one attempt — which source, what outcome, when, for which publication
 and content hash — never a sentence inferring why a `HASH_MISMATCH`
 happened, never a suggestion about which source to try next, and never a
@@ -14475,7 +14475,7 @@ assert this recursively.
 
 **The two FLAGSHIP invariants `tests/SnapshotMaterializationHistoryDetailView.test.js`
 (Sections C and D) prove, at the per-attempt inspection layer, are the
-identical pair `application/PublicationSnapshotAcquisitionView.js`'s own
+identical pair `application/snapshot/PublicationSnapshotAcquisitionView.js`'s own
 flagship (0.8.43) already proved one layer up, at the count layer — now
 restated for the full narration a person actually reads when they expand
 one row.** Section C: Bob and Carol materialize a snapshot through an
@@ -14492,8 +14492,8 @@ remain entirely different — two entries naming a rejection and a recovery
 for Bob, one entry naming a single success for Alice. Identical possession
 never collapses two genuinely different histories into one.
 
-**This is the same restraint `application/SnapshotMaterializationHistory.js`
-(0.8.38) and `application/PublicationSnapshotAcquisitionView.js` (0.8.43)
+**This is the same restraint `application/snapshot/materialization/SnapshotMaterializationHistory.js`
+(0.8.38) and `application/snapshot/PublicationSnapshotAcquisitionView.js` (0.8.43)
 already established, extended one layer further toward the person actually
 reading it.** Where 0.8.38 refused to let a count rank one source over
 another, and 0.8.43 refused to let a count decide current possession, this
@@ -14503,14 +14503,14 @@ history in detail is still just reading it, never re-judging it. See
 
 ### A Peer Possession Observation Records What A Peer Reported At A Particular Time; Inspection Must Not Turn It Into A Current Claim About The Peer (0.8.45)
 
-**`application/SnapshotPeerPossessionObservationDetailView.js`'s two
+**`application/snapshot/possession/SnapshotPeerPossessionObservationDetailView.js`'s two
 functions — `describeSnapshotPeerPossessionObservationDetail(observation)`
 and `describeSnapshotPeerPossessionObservationDetails(observations)` — add
 no new fact to an observation, and bring together exactly TWO
 ALREADY-EXISTING sentences this codebase produces elsewhere for the same
-`state`.** `stateLabel` is `application/SnapshotPeerPossessionView.js#describePeerPossessionAttempt()`'s
+`state`.** `stateLabel` is `application/snapshot/possession/SnapshotPeerPossessionView.js#describePeerPossessionAttempt()`'s
 own full sentence ("Peer reports snapshot available"), unchanged since
-0.8.40. `stateShortLabel` is `application/SnapshotPeerPossessionComparisonView.js#describeSnapshotPeerPossessionStateLabel()`'s
+0.8.40. `stateShortLabel` is `application/snapshot/possession/SnapshotPeerPossessionComparisonView.js#describeSnapshotPeerPossessionStateLabel()`'s
 own short word ("Available"), unchanged since 0.8.41. `peerId`,
 `publicationId`, `contentHash`, `state`, and `observedAt` are carried
 through unchanged from the observation itself. Neither function contacts a
@@ -14525,8 +14525,8 @@ never a new one.
 **`UNAVAILABLE` still means only "no answer arrived before the timeout,"
 never "the peer does not have it," and this milestone changes that in no
 way.** `stateShortLabel` for `UNAVAILABLE` reads "Could not determine" —
-the identical three-way distinction `application/SnapshotPeerPossessionState.js`
-(0.8.40) and `application/SnapshotPeerPossessionComparisonView.js` (0.8.41)
+the identical three-way distinction `application/snapshot/possession/SnapshotPeerPossessionState.js`
+(0.8.40) and `application/snapshot/possession/SnapshotPeerPossessionComparisonView.js` (0.8.41)
 already drew, preserved unchanged at this new inspection layer. Inspection
 never collapses "the peer said no" into "nothing came back," and never
 invents a fourth state.
@@ -14581,7 +14581,7 @@ milestone entry.
 
 ### A Snapshot's Independently Observed Facts Are Exposed Side By Side, Never Collapsed Into One Verdict (0.8.46)
 
-**`application/SnapshotStateInspectionView.js`'s `describeSnapshotStateInspection()`
+**`application/snapshot/SnapshotStateInspectionView.js`'s `describeSnapshotStateInspection()`
 composes FOUR already-independent views — local possession (0.8.39),
 acquisition history (0.8.43), placement convergence (0.8.23), and peer
 possession comparison (0.8.41) — into one small, structured shape, and
@@ -14602,7 +14602,7 @@ trusting this header alone.
 
 **Each of the three optional dimensions carries its own honest `null`,
 distinct from a computed, empty result — the same "not yet observed"
-discipline application/PublicationSnapshotPossessionView.js's own `state:
+discipline application/snapshot/possession/PublicationSnapshotPossessionView.js's own `state:
 null` already established, extended here across three more fields.** A
 caller that has never loaded placements for an entry supplies no
 `placementConvergenceView`, and `placements` reports `null` — never a
@@ -14996,7 +14996,7 @@ See `docs/Roadmap.md`, 0.8.52, for the full milestone entry.
 
 ### One Explicit Publication Action, Composed From Existing Primitives (0.8.53)
 
-**`application/BitcoinAnchorPublicationCoordinator.js` adds no new
+**`application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js` adds no new
 Bitcoin primitive.** Six domain classes (`anchoring/
 BitcoinAnchorTransactionBuilder.js` through `anchoring/
 BitcoinAnchorTransactionBroadcaster.js`) and one use case
@@ -15028,7 +15028,7 @@ BitcoinAnchorPublicationLifecycleState.js` gives a caller `PLAN_FAILED`,
 `BROADCAST_UNAVAILABLE`, and `BROADCAST_REJECTED` as six DIFFERENT
 outcomes, plus a `reachedStage` naming the last stage that genuinely
 succeeded — the identical "name the difference structurally, not by
-convention" discipline `application/AnchorVerificationOutcome.js` already
+convention" discipline `application/anchoring/AnchorVerificationOutcome.js` already
 established for anchor verification. An unreachable wallet is never
 treated as a declined one; a cryptographically wrong signature never
 reaches the broadcaster; a network rejection of a fully valid, finalized
@@ -15065,7 +15065,7 @@ Unlike `anchoring/BitcoinAnchorTransactionBroadcaster.js`, which CAN
 receive a real, definite rejection from the network at submission time,
 there is no Bitcoin-network answer that means "this txid will never
 exist." A transaction simply not (yet) found may mean it has not yet
-propagated. `application/BitcoinAnchorConfirmationState.js` therefore
+propagated. `application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js` therefore
 holds only `CONFIRMED`, `NOT_CONFIRMED` (a transaction genuinely found but
 not yet mined — a real, positive fact), and `UNAVAILABLE` (cannot
 presently tell, for any reason, including "not found") — the same
@@ -15108,7 +15108,7 @@ Roadmap.md`, 0.8.54, for the full milestone entry.
 
 ### Reconciliation Composes Independent Observations; It Does Not Score Them (0.8.55)
 
-**`application/BitcoinAnchorProofReconciliationView.js#reconcile()` never
+**`application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js#reconcile()` never
 asks whether a Bitcoin anchor is trustworthy — it asks only what two
 already-independent observations currently say, placed side by side.**
 0.8.54's own "Deliberately excluded" list named exactly this restraint in
@@ -15140,7 +15140,7 @@ and `verify()` together, never sequentially gated on each other. A slow or
 failing confirmation source never delays the content-proof check, and a
 throwing proof verifier is translated into the identical honest
 `UNAVAILABLE` form a well-behaved verifier would have returned itself —
-mirroring `application/ExternalAnchorVerifier.js`'s own treatment of a
+mirroring `application/anchoring/ExternalAnchorVerifier.js`'s own treatment of a
 throwing `proofVerifier` — without ever blocking the independent
 confirmation observation from completing normally. Two facts about the
 same anchor are still two separate acts of observation, not one
@@ -15170,9 +15170,9 @@ the full milestone entry.
 (0.8.54) already holds no state across calls and returns a fresh, frozen
 record every time; its own header already named this file in advance: "A
 caller that wants a HISTORY of observations... keeps that history
-itself." `application/BitcoinAnchorConfirmationObservationHistory.js` is
+itself." `application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js` is
 that caller-kept history, and it holds itself to the identical restraint
-`application/SnapshotMaterializationHistory.js` (0.8.38) and `application/
+`application/snapshot/materialization/SnapshotMaterializationHistory.js` (0.8.38) and `application/
 SnapshotPeerPossessionObservationHistory.js` (0.8.41) already established
 for their own sequences: every explicit `observeConfirmation()` call gets
 its own entry, in the order it happened, even one that reports the
@@ -15193,8 +15193,8 @@ reorganization — but noticing that difference requires comparing one
 observation against another, which is a judgment this milestone
 deliberately does not make. `application/
 BitcoinAnchorConfirmationObservationHistory.js`,
-`application/BitcoinAnchorConfirmationObservationHistoryView.js`, and
-`application/BitcoinAnchorConfirmationObservationHistoryDetailView.js`
+`application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryView.js`, and
+`application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryDetailView.js`
 each only ever read ONE observation, or a whole history in isolation from
 any other history — none of them ever accepts two observations and
 returns a verdict about their relationship. `anchoring/
@@ -15249,8 +15249,8 @@ for the full milestone entry.
 The Publication Center's new "Bitcoin Anchor" section is the first screen
 in this entire Bitcoin sequence — 0.8.47 through 0.8.56 built every piece
 of the pipeline with no UI consumer at all. What it displays is Confirmation
-(`application/BitcoinAnchorConfirmationState.js`) and Content proof
-(`application/BitcoinAnchorContentProofState.js`) as two separately badged
+(`application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js`) and Content proof
+(`application/anchoring/bitcoin/BitcoinAnchorContentProofState.js`) as two separately badged
 facts, side by side, exactly as `application/
 BitcoinAnchorProofReconciliationView.js`'s own header (0.8.55) already
 demanded of any future caller: "no `valid`, `healthy`, `trusted`,
@@ -15265,7 +15265,7 @@ aggregate. There is no "Anchor is valid," "Anchor is trustworthy," or
 "Anchor is healthy" label anywhere in this section, and there never will
 be one that merges these two badges — a caller wanting an opinion about
 what a given combination MEANS forms that opinion itself, one layer up,
-exactly as `application/BitcoinAnchorProofReconciliationView.js`'s own
+exactly as `application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js`'s own
 header already required of the layer beneath this one.
 
 **One explicit action, not two pretending to be independent.** A single
@@ -15291,7 +15291,7 @@ is no fourth value for 'definitely will never confirm.'"
 because they are independent observations.** Every "Reconcile" click's own
 `transaction.confirmation` joins `entry.
 bitcoinAnchorConfirmationHistories[anchorId]` — the SAME append-only
-`application/BitcoinAnchorConfirmationObservationHistory.js` sequence
+`application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js` sequence
 0.8.56 already built, never mutated, never reordered, never rewritten by
 a later click, mirrored one-for-one by `application/
 BitcoinAnchorConfirmationObservationHistoryDetailView.js`'s own
@@ -15309,7 +15309,7 @@ Not Score Them (0.8.55)," already established, extended here to the two
 histories that could otherwise tempt a future caller into merging them.
 
 **Inspection adds presentation, not new facts — again, one layer up.**
-`application/BitcoinAnchorContentProofView.js`'s own
+`application/anchoring/bitcoin/BitcoinAnchorContentProofView.js`'s own
 `describeBitcoinAnchorContentProofStateLabel()` and
 `describeBitcoinAnchorContentProof()` are the one new application-layer
 file this milestone adds, and they add exactly one new field —
@@ -15322,8 +15322,8 @@ re-verifies a proof, or accepts a proof verifier as an argument — there is
 no way for either one to perform a new network read. Everything else this
 section displays — `bitcoinAnchorReconciliationView()`,
 `bitcoinAnchorConfirmationHistoryView()` — is pure UI-layer composition
-over facts `application/BitcoinAnchorProofReconciliationView.js` and
-`application/BitcoinAnchorConfirmationObservationHistory.js` already
+over facts `application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js` and
+`application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js` already
 produced; no new application-layer fact model was needed for the
 confirmation side at all, exactly as this milestone's own design
 conversation anticipated: "You've already created the application-layer
@@ -15354,7 +15354,7 @@ long as `BitcoinWalletConnection`'s own status stays `CONNECTED`;
 `disconnect()`, and nothing else in this codebase, discards it.
 
 **Connected is a fact about availability, never a judgment about trust.**
-`application/BitcoinWalletConnectionState.js` names four states —
+`application/anchoring/bitcoin/BitcoinWalletConnectionState.js` names four states —
 `DISCONNECTED`, `CONNECTING`, `CONNECTED`, `UNAVAILABLE` — and `CONNECTED`
 means only that a signing capability and an account are presently
 available. Nothing in `BitcoinWalletConnection` or `BitcoinAnchorWalletSigner`
@@ -15401,7 +15401,7 @@ revoke a browser extension's own permission grant, which this codebase has
 no way to control.
 
 **A network mismatch is reported, never resolved on a person's behalf.**
-`application/BitcoinWalletConnectionView.js#describeBitcoinWalletConnection()`
+`application/anchoring/bitcoin/BitcoinWalletConnectionView.js#describeBitcoinWalletConnection()`
 compares a connected wallet's own reported network against this replica's
 expected one and names the disagreement — `networkMismatch: true` — but
 does not disconnect the wallet, does not switch networks, and does not
@@ -15586,7 +15586,7 @@ for the other.
 > whatever moment a person actually reads it.
 
 **Explicit action, all the way down — never inferred from an adjacent
-fact.** `application/BitcoinAnchorTransactionConstructionCoordinator.js#construct()`
+fact.** `application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionCoordinator.js#construct()`
 is reachable from exactly one place: a "Create Transaction Plan" click, on
 one publication, using whichever funding observation the page currently
 holds. Observing funding does not construct a plan. Refreshing funding
@@ -15634,7 +15634,7 @@ to; a later milestone that actually signs is where re-checking spendability
 would belong, never here.
 
 **A four-value state, deliberately incapable of expressing a verdict.**
-`application/BitcoinAnchorTransactionConstructionState.js` names `IDLE`,
+`application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js` names `IDLE`,
 `CONSTRUCTING`, `CONSTRUCTED`, `FAILED` — and nothing else. There is no
 `READY` a person could mistake for "safe to sign," no `VALID` that would
 imply this application checked something it did not, no `BEST` or
@@ -15783,16 +15783,16 @@ boundary is for.
 signed PSBT, once verified, produces real transaction bytes this page
 holds only until the next signing or construction click replaces them —
 never a new acquisition-history entry, never a placement, never a
-publication claim of its own. `application/BitcoinAnchorPublicationCoordinator.js`
+publication claim of its own. `application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js`
 (0.8.53) already drew this exact line for the all-in-one pipeline: a
 transaction becomes a durable record only once `CreatePublicationAnchorUseCase`
 (0.8.8, unchanged) says so, and that has always been broadcast's own job,
 never finalization's.
 
 **"Verified" is finally honest here — and still not a security verdict.**
-`application/BitcoinAnchorReviewedSigningView.js`'s own header (0.8.62)
+`application/anchoring/bitcoin/BitcoinAnchorReviewedSigningView.js`'s own header (0.8.62)
 forbade a `verified` field because a `SIGNED` result had not earned it.
-`application/BitcoinAnchorSignedPsbtFinalizationView.js` is the one place
+`application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationView.js` is the one place
 in this whole pipeline that actually performed the check, so naming
 `FINALIZED` as verified is not a claim beyond what was done — but it still
 stops exactly there. No `safe`, `secure`, `trusted`, or `recommended` field
@@ -15829,7 +15829,7 @@ submitted are the bytes a person actually looked at.
 
 **Every earlier stage in this pipeline already retires its own successor's
 result on a fresh attempt; this milestone extends that chain one stage
-further.** `application/BitcoinAnchorSignedPsbtFinalizationState.js`'s own
+further.** `application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationState.js`'s own
 header already required that a fresh "Sign Reviewed Transaction" click
 retires a previous FINALIZED outcome. This milestone's own
 `bitcoinAnchorFinalizedTransaction` and `bitcoinAnchorBroadcastOutcome` are
@@ -15839,7 +15839,7 @@ so a stale broadcast result, or a broadcast-eligible artifact bound to a
 transaction that no longer exists, can never survive past the moment a
 person moves on to building something new.
 
-**No new Bitcoin logic, anywhere.** `application/BitcoinAnchorBroadcastCoordinator.js`
+**No new Bitcoin logic, anywhere.** `application/anchoring/bitcoin/BitcoinAnchorBroadcastCoordinator.js`
 selects no UTXO, builds no PSBT, checks no signature, and re-implements no
 part of the broadcast protocol — it calls the unchanged 0.8.52 broadcaster
 exactly once per explicit click and translates its result into a
@@ -15855,10 +15855,10 @@ stays exactly what 0.8.52 already built and tested.
 
 **BROADCASTED is still not CONFIRMED — the line 0.8.9 drew first is drawn
 again, one stage later.** `anchoring/BitcoinAnchorPublisher.js`'s own
-header (0.8.9) and `application/BitcoinAnchorPublicationLifecycleState.js`'s
+header (0.8.9) and `application/anchoring/bitcoin/BitcoinAnchorPublicationLifecycleState.js`'s
 own header (0.8.53) already held that accepting a transaction for
 broadcast is not the same fact as Bitcoin having mined it. `application/
-BitcoinAnchorBroadcastState.js` and `application/BitcoinAnchorBroadcastView.js`
+BitcoinAnchorBroadcastState.js` and `application/anchoring/bitcoin/BitcoinAnchorBroadcastView.js`
 hold the identical line: no `confirmed`, `confirmations`, `blockHeight`, or
 `blockHash` field exists anywhere in this milestone's own vocabulary or
 view. Observing confirmation stays its own, separate, later, explicit
@@ -15882,7 +15882,7 @@ See `docs/Roadmap.md`, 0.8.64, for the full milestone entry.
 
 ### Confirmation Is Bound To Broadcast Identity, Not Whatever Is On Screen (0.8.65)
 
-`application/BitcoinAnchorBroadcastCoordinator.js`'s own header (0.8.64)
+`application/anchoring/bitcoin/BitcoinAnchorBroadcastCoordinator.js`'s own header (0.8.64)
 required that its caller prove a `txid`/`rawTransaction` genuinely came
 from a real FINALIZED outcome (`finalized: true`) before it would ever
 touch them. This milestone holds the identical line one stage later, for
@@ -15893,7 +15893,7 @@ the same reason.
 > displayed anywhere on the same screen.
 
 **`broadcasted: true` is not decoration — it is the entire reason this
-class exists.** `application/BitcoinAnchorConfirmationCoordinator.js`
+class exists.** `application/anchoring/bitcoin/BitcoinAnchorConfirmationCoordinator.js`
 could have accepted a bare txid string and called it done; nothing about
 `anchoring/BitcoinAnchorConfirmationObserver.js` (0.8.54) would have
 objected, since that class already treats any well-formed txid as
@@ -15906,12 +15906,12 @@ broadcast" apart from "a txid that happens to be rendered in a `<dd>` tag
 somewhere below it." `observeConfirmation({ broadcasted, txid })` requires
 `broadcasted === true`, checked before the injected observer is ever
 consulted — the caller-contract proof that this exact `{ broadcasted,
-txid }` pair came from a real `application/BitcoinAnchorBroadcastCoordinator.js`
+txid }` pair came from a real `application/anchoring/bitcoin/BitcoinAnchorBroadcastCoordinator.js`
 BROADCASTED outcome, mirroring `finalized: true` one stage earlier exactly.
 
 **Two independent coordinators, one shared observer, two different bound
-identities.** `application/BitcoinAnchorProofReconciliationView.js`
-(0.8.55) and `application/BitcoinAnchorConfirmationCoordinator.js` (this
+identities.** `application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js`
+(0.8.55) and `application/anchoring/bitcoin/BitcoinAnchorConfirmationCoordinator.js` (this
 milestone) both read through the SAME `bitcoinAnchorConfirmationObserver`
 instance — `ui/main.js` constructs it once and never a second time. What
 differs is never the observer, and never the underlying Bitcoin fact it
@@ -15924,9 +15924,9 @@ session. Two different provenances, two different acceptable inputs, one
 identical, unchanged observer underneath both.
 
 **Reaching BROADCASTED still does not mean asking about it.**
-`application/BitcoinAnchorBroadcastState.js`'s own header (0.8.64) already
+`application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js`'s own header (0.8.64) already
 named this the identical way `anchoring/BitcoinAnchorPublisher.js` (0.8.9)
-and `application/BitcoinAnchorPublicationLifecycleState.js` (0.8.53) named
+and `application/anchoring/bitcoin/BitcoinAnchorPublicationLifecycleState.js` (0.8.53) named
 it before: broadcast acceptance is one observation, mining confirmation is
 another, entirely separate one. This milestone holds that line at the UI
 layer too — `observeBitcoinAnchorBroadcastConfirmation()` is called from
@@ -15967,7 +15967,7 @@ this class returns from `get()` still has to pass through the exact same
 implementation's output is already held to. A gateway that serves
 different bytes than what was actually published produces exactly the
 same outcome a Kubo node serving corrupted bytes would: CONTENT_HASH_
-MISMATCH, from application/PublicationResolver.js or application/
+MISMATCH, from application/publication/PublicationResolver.js or application/
 SnapshotPlacementResolver.js, never a special "gateway said so" bypass.
 The CID a gateway resolved is still, after every step, only a locator.
 
@@ -16016,9 +16016,9 @@ CREATION-side composition root keeps Kubo, unchanged — because only Kubo
 can `put()`. These are two independently constructed `application/
 SnapshotPlacementStoreRegistry.js` instances (see that class's own
 "UNLIKE ANCHORING, ONE REGISTRY SUFFICES FOR BOTH DIRECTIONS" header, and
-`application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js`'s own
+`application/snapshot/placement/CreateSnapshotPlacementResolutionCoordinatorUseCase.js`'s own
 header on why it is deliberately a separate composition root from
-`application/CreateSnapshotPlacementOrchestratorUseCase.js`), so choosing
+`application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js`), so choosing
 the gateway for ordinary resolution never hides or silently replaces
 Kubo's own publish capability anywhere else in this replica.
 
@@ -16076,7 +16076,7 @@ by ForkBuild itself, only ever supplied by an external signer at the
 moment it is genuinely needed.
 
 **Two failure modes, because a real remote service can genuinely
-refuse.** `application/SnapshotPlacementCreationOutcome.js`'s own 0.8.18
+refuse.** `application/snapshot/placement/SnapshotPlacementCreationOutcome.js`'s own 0.8.18
 header explained why it built no REJECTED outcome: no real adapter in
 this codebase, until now, could report one. `content/
 HttpPinningProvider.js` is the first that can, and it says so honestly
@@ -16099,7 +16099,7 @@ See `docs/Roadmap.md`, 0.8.67, for the full milestone entry.
 own a credential: "the application receives a capability, not custody."
 That refusal only meant something once a person had a real, safe way to
 supply a credential in the first place — the gap 0.8.67 left open on
-purpose. `application/IpfsRemotePublishingConfiguration.js` (0.8.68) is
+purpose. `application/ipfs/IpfsRemotePublishingConfiguration.js` (0.8.68) is
 where a person's own endpoint, credential, and field names are finally
 collected, and it holds the identical restraint one step earlier:
 nothing it constructs is ever saved.
@@ -16120,11 +16120,11 @@ navigating away all discard it identically, because none of them were
 ever asked to persist it in the first place.
 
 **A fresh capability for every attempt, never a remembered one.**
-`application/IpfsRemotePublicationCoordinator.js` never holds a
+`application/ipfs/IpfsRemotePublicationCoordinator.js` never holds a
 configuration, a provider, or a store across calls — `publish()`
 constructs a brand-new `content/HttpPinningProvider.js` from whatever
 configuration is currently in effect, every single time, mirroring
-`application/BitcoinAnchorReviewedSigningCoordinator.js`'s own 0.8.62
+`application/anchoring/bitcoin/BitcoinAnchorReviewedSigningCoordinator.js`'s own 0.8.62
 "a fresh signer for every attempt, never a remembered one." A person who
 reconfigures a different endpoint or credential between two publish
 attempts gets exactly that configuration consulted next time — never a
@@ -16153,7 +16153,7 @@ this vocabulary is ever "verified," "trusted," "safe," "permanent," or
 "guaranteed" — a pinning provider saying it accepted content is an
 observation, not a verdict. See "The UI Displays Observations; It Does
 Not Turn Them Into A Verdict (0.8.57)," extended here exactly as
-`application/BitcoinAnchorBroadcastState.js`'s own header already
+`application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js`'s own header already
 extends it for a different external boundary.
 
 **Capabilities are shown, never chosen for a person.** The UI this
@@ -16197,7 +16197,7 @@ locator right now produce bytes that hash to THIS contentHash." The CID
 never appears in the comparison itself — `core/ContentReference.js#
 verify()` only ever compares retrieved bytes against `contentHash`, the
 identical check every other content-addressed retrieval in this codebase
-already performs (`application/PublicationResolver.js#resolve()`'s own
+already performs (`application/publication/PublicationResolver.js#resolve()`'s own
 step 5, unchanged). This milestone adds no second notion of identity
 anywhere.
 
@@ -16213,7 +16213,7 @@ about whether the content it would have served is right or wrong; only
 bytes that were actually retrieved are ever compared at all.
 
 **A record is a plain, unsigned local fact — never a second protocol
-envelope.** `application/IpfsPublicationRecord.js` carries no `id`, no
+envelope.** `application/ipfs/IpfsPublicationRecord.js` carries no `id`, no
 signature, and no `kind`/`schemaVersion` tag, deliberately unlike `core/
 PublicationAnchor.js` or `core/PublicationSnapshotPlacement.js` — both
 signed, catalogued envelopes meant to be published, exchanged, and
@@ -16234,9 +16234,9 @@ identical restraint held one axis over, for a different kind of
 accumulation.** `docs/Principles.md`, "An Observation Describes The
 Network At The Time It Was Made, Not The Current State Of The Transaction
 (0.8.56)," held this for repeated OBSERVATIONS of one already-existing
-Bitcoin anchor. `application/IpfsPublicationRecordHistory.js` holds it for
+Bitcoin anchor. `application/ipfs/IpfsPublicationRecordHistory.js` holds it for
 something structurally different: repeated PUBLICATIONS, each one its own
-new `application/IpfsPublicationRecord.js` (0.8.69), not a reading of a
+new `application/ipfs/IpfsPublicationRecord.js` (0.8.69), not a reading of a
 fact that already existed. Publishing the same content twice produces two
 records with two distinct locators — `appendIpfsPublicationRecordHistoryEntry()`
 never merges them into one entry merely because they share a
@@ -16252,7 +16252,7 @@ retrieval attempt against ONE of those records reported) stay two sibling
 structures on the same UI state, never `{ record, verificationHistory }`.
 This is the identical restraint `docs/Principles.md`, "Reconciliation
 Composes Independent Observations; It Does Not Score Them (0.8.55)," and
-`application/BitcoinAnchorProofReconciliationView.js`'s own header
+`application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js`'s own header
 already hold for `confirmation` and `contentProof` staying two sibling
 fields rather than one merged verdict — different observations answer
 different questions, and are not collapsed merely because they concern
@@ -16265,7 +16265,7 @@ To Broadcast Identity, Not Whatever Is On Screen (0.8.65)," already drew
 this line for one bound record; this milestone draws the identical line
 for MANY records at once, addressed by array index rather than by an
 `anchorId` or a txid, because a history entry has no natural identifier
-of its own — only the fact that `application/IpfsPublicationRecordHistory.js`
+of its own — only the fact that `application/ipfs/IpfsPublicationRecordHistory.js`
 never reorders, splices, or removes an entry makes that index a stable
 address at all. `verifyIpfsPublicationRecordHistoryEntry(entry, index)`
 reads `entry.ipfsPublicationRecordHistory[index]` directly and passes it,
@@ -16300,7 +16300,7 @@ relationship.
 **Never persisted, never shared, never transmitted.** This history lives
 only in whatever ephemeral component state a caller keeps for the
 lifetime of a page, reset to empty the moment it is reopened — the
-identical restraint `application/IpfsPublicationRecord.js`'s own header
+identical restraint `application/ipfs/IpfsPublicationRecord.js`'s own header
 already holds for a single record, and `application/
 BitcoinAnchorConfirmationObservationHistory.js`'s own header already
 holds for a different sequence entirely, each one domain over. See
@@ -16314,7 +16314,7 @@ identical restraint held twice already, applied here to a third axis.**
 Current State Of The Transaction (0.8.56)" held this for repeated
 Bitcoin confirmation readings; "A Publication Record Is A Historical
 Fact; A Republish Never Erases It (0.8.71)" held it for repeated
-PUBLICATIONS. `application/IpfsPublicationContentVerificationHistory.js`
+PUBLICATIONS. `application/ipfs/IpfsPublicationContentVerificationHistory.js`
 holds it for repeated OBSERVATIONS of one already-published record:
 verifying record A, getting `HASH_MATCH`, verifying it again and getting
 `UNAVAILABLE`, then verifying it a third time and getting `HASH_MATCH`
@@ -16382,7 +16382,7 @@ ipfsPublicationVerificationHistoriesByRecordIndex` (0.8.72) each preserve
 INSERTION order — the order things actually happened to be recorded in,
 which is not always the order they actually happened in wall-clock time
 (a slow verification request can resolve after a faster, later one).
-`application/IpfsPublicationObservationTimelineView.js`'s
+`application/ipfs/IpfsPublicationObservationTimelineView.js`'s
 `describeIpfsPublicationObservationTimeline()` is free to re-order that
 same set of facts into true chronological order for display, because it
 returns a brand-new projection array — never the history itself, and
@@ -16396,8 +16396,8 @@ T2 actually happened first.
 **A projection over two histories is still not a third history.** This
 milestone adds no new append function, no new "record this fact" action,
 and no new place a fact can originate — `describeIpfsPublicationObservationTimeline()`
-only ever reads `application/IpfsPublicationRecordHistory.js`'s own
-records and `application/IpfsPublicationContentVerificationHistory.js`'s
+only ever reads `application/ipfs/IpfsPublicationRecordHistory.js`'s own
+records and `application/ipfs/IpfsPublicationContentVerificationHistory.js`'s
 own observations, exactly as `application/
 IpfsPublicationContentVerificationHistoryView.js`'s own
 `describeIpfsPublicationContentVerificationHistory()` (0.8.72) already
@@ -16457,7 +16457,7 @@ what a given cross-domain combination means forms that opinion itself,
 one layer up.
 
 **A shared content hash is never evidence of shared publication identity.**
-`application/IpfsPublicationRecord.js` identifies a record only by its own
+`application/ipfs/IpfsPublicationRecord.js` identifies a record only by its own
 position (`recordIndex`) in a caller's own history; `core/
 PublicationAnchor.js` identifies a Bitcoin anchor by its own `anchorId`/
 `publicationId` — two entirely separate identity schemes, native to two
@@ -16517,7 +16517,7 @@ a confirmation, a content-proof reconciliation — is a plain, already-settled
 record of something that happened. A wallet connection, a `signPsbt`
 function, a private key, a seed phrase, and a pinning-provider credential
 are not records of something that happened; they are standing PERMISSION
-to make something happen next. `application/PublicationObservationArchive.js`
+to make something happen next. `application/publication/observationArchive/PublicationObservationArchive.js`
 persists the first kind of thing across a page reload for the first time
 in this codebase's history, and this milestone exists specifically to draw
 that line precisely: nothing on that class, or on `storage/
@@ -16534,7 +16534,7 @@ would be so convenient to remember" — and held anyway.
 **A reload restores what was OBSERVED, never what was AUTHORIZED.** After
 a reload, a person can see "Bitcoin — Broadcasted — Confirmed —
 HASH_MATCH" for a publication they archived last session, exactly as
-`application/PublicationObservationTimelineView.js`'s own vocabulary
+`application/publication/observationArchive/PublicationObservationTimelineView.js`'s own vocabulary
 already states these facts. The application never infers from this that a
 wallet is presently connected, that a signing authorization still exists,
 or that this transaction should or even could be rebroadcast — every
@@ -16548,7 +16548,7 @@ archive is read-only history to every part of this codebase except the
 decide whether an action is currently permitted.
 
 **Persistence restores historical facts; it never resurrects invented
-ones.** `application/PublicationObservationArchive.js#fromJSON()`
+ones.** `application/publication/observationArchive/PublicationObservationArchive.js#fromJSON()`
 validates its ENTIRE input strictly — the right `schemaVersion`, every
 required field present on every nested record and observation, no
 unexpected extra field anywhere, every timestamp a real, parseable date —
@@ -16570,7 +16570,7 @@ degrades to the same empty archive, never a crashed page and never a
 half-restored one.
 
 **A domain class stays ignorant of storage; only one adapter is ever
-allowed to know it exists.** `application/PublicationObservationArchive.js`
+allowed to know it exists.** `application/publication/observationArchive/PublicationObservationArchive.js`
 imports nothing from `storage/`, and computes its own `toJSON()`/
 `fromJSON()` using nothing but plain data — the identical
 domain-stays-storage-agnostic discipline `core/Document.js` and
@@ -16579,7 +16579,7 @@ milestone family over. `storage/LocalStoragePublicationObservationArchive.js`
 is the ONE file allowed to know that "durable" currently means "an
 injected `storage/StorageProvider.js`" — and even it only ever calls that
 provider's own generic `save(name, data)`/`load(name)`/`remove(name)`
-contract, the identical seam `application/SaveDocumentUseCase.js` already
+contract, the identical seam `application/document/SaveDocumentUseCase.js` already
 uses for a document. `window.localStorage` itself is never referenced by
 name outside `storage/LocalStorageProvider.js`.
 
@@ -16603,12 +16603,12 @@ See `docs/Roadmap.md`, 0.8.75, for the full milestone entry.
 **A changed `blockHash` is an observed change in placement; it is not,
 by itself, a chain reorganization, an invalidation, a double spend, a
 loss of finality, a canonicality verdict, a safety verdict, or a trust
-verdict.** `application/BitcoinAnchorChainPlacementObservation.js`'s own
+verdict.** `application/anchoring/bitcoin/BitcoinAnchorChainPlacementObservation.js`'s own
 `compareBitcoinAnchorChainPlacementObservations(previous, later)` answers
 exactly one narrow, factual question — "did these two already-recorded
 observations of the same transaction name the same block, or a different
 one?" — and reports `PLACEMENT_CHANGED` or `UNCHANGED` accordingly,
-nothing more. `application/BitcoinAnchorConfirmationObservationHistory.js`'s
+nothing more. `application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js`'s
 own header named this exact boundary the day it was written, 0.8.20
 milestones earlier: a later CONFIRMED observation naming a different
 `blockHash` than an earlier one "would look different — a possible chain
@@ -16661,7 +16661,7 @@ already narrates — never itself a placement change.
 **Both observations are always preserved, in full, on either side of a
 comparison — never collapsed to "before" and "after" values with the
 rest of the record discarded, and never resolved into a single "current"
-answer.** `application/BitcoinAnchorChainPlacementObservationView.js`
+answer.** `application/anchoring/bitcoin/BitcoinAnchorChainPlacementObservationView.js`
 carries `previous` and `later` through a `PLACEMENT_CHANGED` comparison
 completely unchanged — hash, height, confirmation count, and the moment
 each was observed, for BOTH observations — so a person sees the actual
@@ -16675,10 +16675,10 @@ itself be visible rather than quietly choosing one field as ground
 truth.
 
 **A comparison is read-only, both over the history it compares and over
-the Bitcoin network.** `application/BitcoinAnchorChainPlacementObserver.js`
+the Bitcoin network.** `application/anchoring/bitcoin/BitcoinAnchorChainPlacementObserver.js`
 takes no confirmation source, makes no network call, and appends nothing
-to `application/BitcoinAnchorConfirmationObservationHistory.js`'s own
-array or to `application/PublicationObservationArchive.js`'s own durable
+to `application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js`'s own
+array or to `application/publication/observationArchive/PublicationObservationArchive.js`'s own durable
 record — the identical "an observation describes a moment; inspecting it
 later performs no new work" restraint 0.8.56's own detail view already
 held, extended here to comparing two such moments against each other.
@@ -16700,7 +16700,7 @@ See `docs/Roadmap.md`, 0.8.76, for the full milestone entry.
 unchanged `blockHash`, or two different `blockHash` values reported for
 one `blockHeight` are all shapes a single, real, settled Bitcoin chain
 state could never itself produce — but naming that gap is still not a
-claim about what caused it.** `application/BitcoinAnchorObservationConsistencyState.js`'s
+claim about what caused it.** `application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyState.js`'s
 own `compareBitcoinAnchorObservationConsistency(previous, later)` answers
 a narrow, factual question one step past "A Changed Observation Is Not
 Automatically A Reorganization (0.8.76)" immediately above: not merely
@@ -16712,7 +16712,7 @@ confirmation-depth progress or an entirely new, later block cannot
 explain — never that a reorganization, invalidation, double spend, or
 loss of finality occurred, and never which of the two observations (if
 either) is correct. The identical `confirmationSource`-is-untrusted
-reasoning `application/BitcoinAnchorChainPlacementObservation.js`'s own
+reasoning `application/anchoring/bitcoin/BitcoinAnchorChainPlacementObservation.js`'s own
 principle above already holds applies here unchanged: two facts an
 untrusted external source reported at two different moments are compared
 against each other, honestly, and named as self-contradictory — never
@@ -16771,7 +16771,7 @@ original observation objects, by reference — alongside `finding` on every
 result, for every state, not only `INCONSISTENT`. A person reading "an
 inconsistency was found" can always move back to "these were the two
 actual observations from which that statement was derived," the same
-auditability `application/BitcoinAnchorChainPlacementObservationView.js`'s
+auditability `application/anchoring/bitcoin/BitcoinAnchorChainPlacementObservationView.js`'s
 own header already demanded of `PLACEMENT_CHANGED`, held here for a
 finding's own more specific claim.
 
@@ -16785,10 +16785,10 @@ this replica's source could not presently answer.
 
 **An analysis is read-only, both over the history it analyzes and over
 the Bitcoin network — proven across a real persist-and-restore cycle, not
-merely asserted.** `application/BitcoinAnchorObservationConsistencyAnalyzer.js`
+merely asserted.** `application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyAnalyzer.js`
 takes no confirmation source, makes no network call, and appends nothing
-to `application/BitcoinAnchorConfirmationObservationHistory.js`'s own
-array or to `application/PublicationObservationArchive.js`'s own durable
+to `application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js`'s own
+array or to `application/publication/observationArchive/PublicationObservationArchive.js`'s own durable
 record. The flagship test's own persistence-round-trip section goes one
 step further than 0.8.76's own flagship did: it feeds this milestone's
 own analyzer a history restored through `PublicationObservationArchive`'s
@@ -16806,11 +16806,11 @@ Bitcoin anchors can easily carry byte-identical `contentHash` values — the
 same content anchored twice, in two entirely separate transactions — and
 remain two completely separate anchors, each with its own broadcast,
 confirmation, content-proof, chain-placement, and consistency evidence.
-`application/BitcoinAnchorObservationEvidence.js`'s own
+`application/anchoring/bitcoin/BitcoinAnchorObservationEvidence.js`'s own
 `composeBitcoinAnchorObservationEvidence()` extends the identical
-restraint `application/PublicationObservationTimelineView.js`'s own
+restraint `application/publication/observationArchive/PublicationObservationTimelineView.js`'s own
 principle already holds for `recordIndex`/`anchorId` (0.8.74) and
-`application/PublicationObservationArchive.js`'s own header already holds
+`application/publication/observationArchive/PublicationObservationArchive.js`'s own header already holds
 for its anchorId-keyed maps (0.8.75) into a new place: correlating a
 single Bitcoin anchor's OWN evidence, gathered from five independent
 streams, without ever letting a coincidental resemblance between two
@@ -16837,9 +16837,9 @@ content-proof — is carried through completely unchanged, under an
 `{ index, observation }` wrapper naming only that observation's own
 1-based position within the one array a caller supplied for this one
 anchor. `chainPlacementObservations`/`consistencyFindings` are carried
-through EXACTLY as `application/BitcoinAnchorChainPlacementObserver.js`'s
+through EXACTLY as `application/anchoring/bitcoin/BitcoinAnchorChainPlacementObserver.js`'s
 own `observeBitcoinAnchorChainPlacementChanges()` (0.8.76) and
-`application/BitcoinAnchorObservationConsistencyAnalyzer.js`'s own
+`application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyAnalyzer.js`'s own
 `analyzeBitcoinAnchorObservationConsistency()` (0.8.77) already produced
 them — by reference, provably, in the test suite's own Section F — never
 recomputed, re-derived, or second-guessed. That keeps both of those
@@ -16864,7 +16864,7 @@ signed claim — carries no broadcast observation of its own on this
 replica's page, because this replica never itself observed one being
 broadcast; its evidence bundle reports `broadcastObservations: { count:
 0, observations: [] }` rather than inventing one, the identical restraint
-`application/PublicationObservationTimelineView.js`'s own principle
+`application/publication/observationArchive/PublicationObservationTimelineView.js`'s own principle
 already holds for the identical fact (0.8.74).
 
 See `docs/Roadmap.md`, 0.8.78, for the full milestone entry.
@@ -16872,7 +16872,7 @@ See `docs/Roadmap.md`, 0.8.78, for the full milestone entry.
 ### Derived Evidence Is Reconstructed From Durable Facts; It Is Not Stored As A Second History (0.8.79)
 
 **A durable archive holds facts; it does not hold conclusions about those
-facts.** `application/PublicationObservationArchive.js` (0.8.75) persists
+facts.** `application/publication/observationArchive/PublicationObservationArchive.js` (0.8.75) persists
 exactly five collections of already-observed facts — IPFS publication
 records, IPFS verification observations, Bitcoin broadcast observations,
 Bitcoin confirmation observations, and Bitcoin content-proof observations.
@@ -16918,7 +16918,7 @@ own flagship section by swapping out `globalThis.fetch` for the duration
 of a restoration and asserting it was never called.
 
 **Explicit identity survives restoration exactly as it survived
-composition.** `application/BitcoinAnchorObservationEvidence.js`'s own
+composition.** `application/anchoring/bitcoin/BitcoinAnchorObservationEvidence.js`'s own
 principle (0.8.78, "Correlate Evidence By Explicit Identity, Never By
 Resemblance") already established that a shared `contentHash` is never
 evidence of a shared anchor for a LIVE session; this milestone's own
@@ -16938,14 +16938,14 @@ BitcoinAnchorFundingObservationState.js` through `application/
 BitcoinAnchorObservationEvidence.js` (0.8.78) was already, individually,
 an honest fact. What none of them ever did was say, durably, in one
 place: "this particular Bitcoin anchor publication attempt is THIS
-thing." `application/BitcoinAnchorPublicationRecord.js`'s own `{ anchorId,
+thing." `application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js`'s own `{ anchorId,
 contentHash, txid, network, createdAt }` is that one thing — and, per its
 own header, nothing else. It never carries `confirmed`, `valid`,
 `trusted`, `safe`, `healthy`, `canonical`, or `status`, and never any
 derived, mutable confirmation state. Whether this publication was later
 confirmed, whether its placement stayed stable, whether its observations
 stay consistent — every one of those questions still belongs entirely to
-`application/PublicationObservationArchive.js`'s own, separately kept
+`application/publication/observationArchive/PublicationObservationArchive.js`'s own, separately kept
 observation collections and to `application/
 BitcoinAnchorDurableEvidenceView.js`'s own reconstruction over them
 (0.8.79, unchanged). This is docs/Principles.md, "The UI Displays
@@ -16953,12 +16953,12 @@ Observations; It Does Not Turn Them Into A Verdict (0.8.57)," held once
 more, one layer higher.
 
 **A shared `contentHash`, or even a shared `txid`, never merges two
-publication identities.** `application/BitcoinAnchorObservationEvidence.js`'s
+publication identities.** `application/anchoring/bitcoin/BitcoinAnchorObservationEvidence.js`'s
 own principle (0.8.78, "Correlate Evidence By Explicit Identity, Never By
 Resemblance") already established that two anchors sharing a `contentHash`
 are never assumed to be the same anchor for the purpose of correlating
 OBSERVATIONS. This milestone extends the identical restraint one layer up,
-to IDENTITY itself: `application/BitcoinAnchorPublicationRecordHistory.js`'s
+to IDENTITY itself: `application/anchoring/bitcoin/BitcoinAnchorPublicationRecordHistory.js`'s
 own `findBitcoinAnchorPublicationRecordByAnchorId()` looks up a record by
 explicit `anchorId` alone — never by `contentHash` or `txid` — and its own
 append function never deduplicates, merges, or reconciles two records
@@ -16995,7 +16995,7 @@ fact about what this replica attempted, regardless of whether the network
 later agreed to relay it.
 
 **A sixth, independent collection — never a seventh source of truth.**
-`application/PublicationObservationArchive.js`'s own `bitcoinAnchorPublicationRecords`
+`application/publication/observationArchive/PublicationObservationArchive.js`'s own `bitcoinAnchorPublicationRecords`
 sits alongside its five pre-existing collections, contributing to neither
 `publicationCount` nor `observationCount` — see that file's own header on
 why blurring that distinction would undo the very thing this milestone
@@ -17028,8 +17028,8 @@ Reconstructed From Durable Facts; It Is Not Stored As A Second History
 entry.** A publication with no broadcast observation contributes no
 broadcast entry to its timeline; a publication whose UI session passed
 through a review or signing stage that this codebase deliberately never
-made durable (`application/BitcoinAnchorReviewedSigningState.js`,
-`application/BitcoinAnchorSignedPsbtFinalizationState.js`) contributes no
+made durable (`application/anchoring/bitcoin/BitcoinAnchorReviewedSigningState.js`,
+`application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationState.js`) contributes no
 entry for either, because this file reads only what `application/
 PublicationObservationArchive.js` actually chose to persist. A gap in the
 timeline names a gap in what was recorded, never a conclusion about why —
@@ -17054,7 +17054,7 @@ the other's.
 **A timestamp alone is never an entry's identity.** Two observations can
 legitimately share an `observedAt`, down to the millisecond. Every
 confirmation, broadcast, and content-proof entry instead carries the same
-1-based `index` `application/BitcoinAnchorObservationEvidence.js`'s own
+1-based `index` `application/anchoring/bitcoin/BitcoinAnchorObservationEvidence.js`'s own
 `composeBitcoinAnchorObservationEvidence()` already assigns it (0.8.78) —
 "Confirmation observation #1," never a position a reader has to infer from
 timestamps alone. A chain-placement comparison or consistency finding
@@ -17081,10 +17081,10 @@ See `docs/Roadmap.md`, 0.8.81, for the full milestone entry.
 ### An Archive Export Contains Facts, Not Capabilities Or Conclusions (0.8.82)
 
 **Exporting is a serialization boundary, not a second storage adapter.**
-`application/PublicationObservationArchiveExport.js`'s own
+`application/publication/observationArchive/PublicationObservationArchiveExport.js`'s own
 `exportPublicationObservationArchive()` and
 `importPublicationObservationArchive()` carry no `StorageProvider`, invent
-no second schema, and reuse `application/PublicationObservationArchive.js`'s
+no second schema, and reuse `application/publication/observationArchive/PublicationObservationArchive.js`'s
 own `toJSON()`/`fromJSON()` entirely unchanged. The exported payload IS
 that method's own output — no wrapping envelope, no `exportedAt`, no
 second schema version competing with `SCHEMA_VERSION`. Two archives
@@ -17133,8 +17133,8 @@ IPFS publication records and verification observations, Bitcoin broadcast,
 confirmation, and content-proof observations, and Bitcoin publication
 records — are exactly what an export carries. `chainPlacementObservations`,
 `consistencyFindings`, and any lifecycle timeline stay derived, exactly as
-`application/BitcoinAnchorDurableEvidenceView.js` (0.8.79) and
-`application/BitcoinAnchorPublicationLifecycleTimelineView.js` (0.8.81)
+`application/anchoring/bitcoin/BitcoinAnchorDurableEvidenceView.js` (0.8.79) and
+`application/anchoring/bitcoin/BitcoinAnchorPublicationLifecycleTimelineView.js` (0.8.81)
 already established — an imported archive reconstructs them fresh,
 through the identical, unchanged reconstruction code a live archive
 already uses, rather than trusting a stale, previously computed copy.
@@ -17171,7 +17171,7 @@ A, exported, and imported into replica B becomes `IMPORTED` in B — never
 carried forward as "originally local, but now imported here too." Replica
 B has no way to know, and does not claim to know, how replica A itself
 produced the fact; it only knows how the fact entered B's own archive.
-`application/PublicationObservationArchive.js`'s own
+`application/publication/observationArchive/PublicationObservationArchive.js`'s own
 `withUniformProvenance(origin)` is the one place provenance is ever
 rewritten wholesale — called exactly once by `importPublicationObservationArchive()`,
 over an entire freshly reconstructed archive, discarding whatever
@@ -17202,8 +17202,8 @@ trailing `origin` argument, defaulting to `LOCAL` — every call site that
 predates this milestone gets that default automatically, and correctly.
 
 **Provenance is additional metadata; it is never an input to analysis.**
-Not one line of `application/PublicationObservationArchiveView.js`,
-`application/PublicationObservationTimelineView.js`, `application/
+Not one line of `application/publication/observationArchive/PublicationObservationArchiveView.js`,
+`application/publication/observationArchive/PublicationObservationTimelineView.js`, `application/
 BitcoinAnchorDurableEvidenceView.js`, or `application/
 BitcoinAnchorPublicationLifecycleTimelineView.js` changed. Two archives
 holding byte-identical facts but different provenance produce
@@ -17222,7 +17222,7 @@ and dependency-free, in `core/Sha256.js`, which every fingerprint file and
 `anchoring/BitcoinAnchorSignedPsbtFinalizer.js` import.
 
 **A matching fingerprint means "byte-identical canonical content" and
-nothing else.** `application/PublicationObservationArchiveFingerprint.js`'s
+nothing else.** `application/publication/observationArchive/PublicationObservationArchiveFingerprint.js`'s
 own `fingerprintPublicationObservationArchive()` hashes a
 `PublicationObservationArchive`'s own canonical `toJSON()` output (minus
 `archiveImportEvents`, see below) with SHA-256. Two archives fingerprint
@@ -17235,7 +17235,7 @@ identity rather than over a single observation or a single ingestion
 history.
 
 **Reuses `toJSON()`'s own canonical serialization; invents no second
-schema.** `application/PublicationObservationArchive.js`'s own `toJSON()`
+schema.** `application/publication/observationArchive/PublicationObservationArchive.js`'s own `toJSON()`
 already serializes deterministically — identical facts, identical field
 order, identical output, every time. This milestone's only job is to hash
 exactly that output. No `toFingerprintJSON()`, no competing field order,
@@ -17259,7 +17259,7 @@ provenance itself durable archive data: an archive whose facts are
 facts are `LOCAL`. Two archives holding byte-identical facts under
 different provenance fingerprint DIFFERENTLY — even though `application/
 BitcoinAnchorDurableEvidenceView.js`'s own reconstructed evidence and
-`application/PublicationObservationArchiveView.js`'s own cross-domain
+`application/publication/observationArchive/PublicationObservationArchiveView.js`'s own cross-domain
 summary stay byte-identical between them, exactly as 0.8.83 already
 established. Provenance affects archive IDENTITY; it still has no vote in
 the INTERPRETATION of the underlying facts — the same restraint 0.8.83
@@ -17326,7 +17326,7 @@ to almost-compare against a real digest.
 **A non-`PublicationObservationArchive` input is `INVALID_ARCHIVE` — a
 result, not a throw, and not a silent degrade.** application/
 PublicationObservationArchiveFingerprint.js's own algorithm throws for a
-non-archive input; application/PublicationObservationArchiveFingerprintView.js
+non-archive input; application/publication/observationArchive/PublicationObservationArchiveFingerprintView.js
 instead silently degrades to `PublicationObservationArchive.empty()`'s own
 fingerprint, for display purposes only. Neither fits a comparison:
 throwing would single this one result out from the other three, mechanical
@@ -17387,7 +17387,7 @@ exists to answer: "what does this archive already say about itself?", not
 **An inspection result is a structural index, not evidence, and answers
 no question that requires a second archive.** Every count an inspection
 reports is read straight from three already-existing, unchanged
-projections — application/PublicationObservationArchiveView.js's own
+projections — application/publication/observationArchive/PublicationObservationArchiveView.js's own
 `describePublicationObservationArchive()`, application/
 PublicationObservationArchiveProvenanceView.js's own
 `describePublicationObservationArchiveProvenance()`, and application/
@@ -17423,7 +17423,7 @@ See `docs/Roadmap.md`, 0.8.86, for the full milestone entry.
 
 **An archive difference describes structural differences between two
 durable archive states; it does not determine which state is correct.**
-`application/PublicationObservationArchiveDifference.js`'s own
+`application/publication/observationArchive/PublicationObservationArchiveDifference.js`'s own
 `describePublicationObservationArchiveDifference(currentArchive, externalArchive)`
 answers exactly one question — which durable facts, and which provenance
 tags, differ between two archives — and stops there. This is docs/
@@ -17573,7 +17573,7 @@ See `docs/Roadmap.md`, 0.8.88, for the full milestone entry.
 never only what was published or where.** `application/
 BlockchainPublicationIdentity.js` introduces the one field every
 Bitcoin-domain class since 0.8.0 was written without needing: `blockchain`.
-`application/BitcoinAnchorPublicationRecord.js`'s own `{ anchorId,
+`application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js`'s own `{ anchorId,
 contentHash, txid, network, createdAt }` (0.8.80) never once says
 "Bitcoin" as data — only as a class name. That silence was harmless with
 one blockchain in the codebase. `BlockchainPublicationIdentity` closes it
@@ -17618,7 +17618,7 @@ method; this milestone builds no path for constructing an identity that
 could drift out of sync with the record it describes.
 
 **Naming a reserved blockchain is not building a capability.**
-`application/BlockchainKind.js` names `BASE` alongside `BITCOIN` so a
+`application/anchoring/BlockchainKind.js` names `BASE` alongside `BITCOIN` so a
 future implementation has a fixed identifier to build against — never a
 signal that a Base publisher, signer, broadcaster, or confirmation
 observer exists. Nothing in this milestone constructs, signs, or
@@ -17673,9 +17673,9 @@ carried on a mismatch, honestly, never discarded and never silently
 replaced with a Base default.
 
 **No publication identity is manufactured by observing an account.**
-`application/BaseAccountObservation.js` carries exactly `address`,
+`application/anchoring/base/BaseAccountObservation.js` carries exactly `address`,
 `network`, `chainId`, `nativeBalanceWei`, `reason`, and `observedAt` —
-nothing resembling `application/BlockchainPublicationIdentity.js`'s own
+nothing resembling `application/anchoring/BlockchainPublicationIdentity.js`'s own
 `contentHash`/`chainReference` pair (0.8.89). Observing an account is not
 publishing anything, and `BlockchainKind.BASE` still names no publisher,
 signer, broadcaster, or confirmation observer after this milestone ships.
@@ -17699,7 +17699,7 @@ BasePublicationTransactionPlanCoordinator.js#construct()` turn an
 already-OBSERVED Base account and a content hash into an unsigned
 transaction plan — a `from`, a `to`, a `value`, a `data` payload, a
 nonce, a gas limit, and fee figures — and stop exactly there. Neither
-class constructs an `application/BlockchainPublicationIdentity.js`
+class constructs an `application/anchoring/BlockchainPublicationIdentity.js`
 (0.8.89): there is no `chainReference` yet, because no transaction hash
 exists until something is actually signed and broadcast. This extends
 `docs/Roadmap.md`, 0.8.90's own "No publication identity is manufactured
@@ -17790,7 +17790,7 @@ second, silent observation of the network underneath it.
 
 **The commitment is made visible, not just carried through.**
 `contentHash` is the plan's own `data` decoded back through the exact
-inverse of `application/BasePublicationCommitmentEncoding.js`'s own
+inverse of `application/anchoring/base/BasePublicationCommitmentEncoding.js`'s own
 encoder (0.8.91, unchanged) — a genuine, independent re-validation of the
 commitment bytes, mirroring the identical role `anchoring/
 BitcoinAnchorPsbtSerializer.js#serialize()` already plays inside
@@ -17895,13 +17895,13 @@ or even structurally, and calls nothing broadcast-shaped. Genuinely
 confirming a wallet's claimed signature belongs to the exact transaction
 this milestone asked to have signed is this codebase's own deliberately
 separate next milestone (`docs/Roadmap.md`, 0.8.94) — mirroring
-`application/BitcoinAnchorReviewedSigningState.js`'s own "SIGNED IS NOT
+`application/anchoring/bitcoin/BitcoinAnchorReviewedSigningState.js`'s own "SIGNED IS NOT
 VERIFIED" (0.8.62), held here one step earlier still: this milestone's own
 SIGNED is not even the lighter structural inspection Bitcoin's identical
 stage already performs.
 
 **Every explicit signing click is its own, fresh attempt — never a
-retry.** `application/BaseReviewedSigningCoordinator.js` performs no
+retry.** `application/anchoring/base/BaseReviewedSigningCoordinator.js` performs no
 internal retry, no automatic wallet reconnect, and no automatic
 re-construction of a plan after a DECLINED/UNAVAILABLE/FAILED attempt. A
 DECLINED result stays DECLINED, forever, until a person explicitly asks
@@ -18211,7 +18211,7 @@ fewer.
 
 **A durability boundary and a presentation boundary are different
 questions, and closing the second one requires no new archive schema.**
-0.8.97 deliberately left `application/PublicationObservationTimelineView.js`
+0.8.97 deliberately left `application/publication/observationArchive/PublicationObservationTimelineView.js`
 untouched, answering only whether a Base observation could survive
 restart and export/import. This milestone answers the presentation
 question 0.8.97 left open, and needs no new durable collection or
@@ -18238,14 +18238,14 @@ See `docs/Roadmap.md`, 0.8.97, for the full milestone entry.
 ### A Publication Record Establishes Identity; It Never Manufactures, Or Is Manufactured By, An Observation — Held For A Second Chain (0.8.99)
 
 **Identity generalizes across chains through one projection, never through
-one shared record shape.** `application/BitcoinAnchorPublicationRecord.js`
-(0.8.80) and `application/BaseAnchorPublicationRecord.js` (this milestone)
+one shared record shape.** `application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js`
+(0.8.80) and `application/anchoring/base/BaseAnchorPublicationRecord.js` (this milestone)
 are NOT two implementations of a common `AnchorPublicationRecord` base —
 each keeps its own, chain-specific identity shape (Bitcoin's own
 `anchorId`/`txid` pair; Base's own `txid` alone, because Base's own
 observation vocabulary never introduced a second correlation key — see
 `docs/Roadmap.md`, 0.8.90 onward), and each projects independently onto
-`application/BlockchainPublicationIdentity.js`'s (0.8.89) chain-independent
+`application/anchoring/BlockchainPublicationIdentity.js`'s (0.8.89) chain-independent
 shape. Generalization happens exactly once, at the one seam 0.8.89 already
 built for it — never by forcing two genuinely different domains into one
 shared class merely because both now need durable identity.
@@ -18270,7 +18270,7 @@ can say ForkBuild published it.
 
 **A shared raw identifier across two chains is not evidence of a shared
 publication — the strongest form of this rule this codebase has tested.**
-`application/BlockchainPublicationIdentity.js`'s own `sameAs()` already
+`application/anchoring/BlockchainPublicationIdentity.js`'s own `sameAs()` already
 compares `blockchain` + `chainReference` together, never `chainReference`
 alone (0.8.89) — this milestone's own flagship test exercises the
 adversarial case directly: a Bitcoin publication record and a Base
@@ -18291,7 +18291,7 @@ field on the finalizer, and no reach backward into `base/
 BaseTransactionBroadcaster.js` or `base/BaseJsonRpcClient.js` to
 "discover" a transaction's own identity. `application/
 CreateBaseAnchorPublicationRecordUseCase.js` reads that value the identical
-way `application/CreateBitcoinAnchorPublicationRecordUseCase.js` already
+way `application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js` already
 reads a finalized PSBT's own txid — as a fact its own upstream artifact
 already established, never as a fact this construction boundary reaches
 out to acquire.
@@ -18316,7 +18316,7 @@ See `docs/Roadmap.md`, 0.8.99, for the full milestone entry.
 **An achievement event states that a specific, already-durable record
 caused a specific, named threshold to be crossed — never that a person,
 wallet, or identity is good, trusted, important, or worth more than
-another.** `application/AchievementEvent.js`'s own `AchievementKind` names
+another.** `application/achievement/AchievementEvent.js`'s own `AchievementKind` names
 six closed, factual thresholds — a first publication, a chain's own first
 publication, a second chain joining a first, a 10th and a 100th
 publication — and nothing resembling a `points`, `score`, `rank`, `level`,
@@ -18329,7 +18329,7 @@ whether a PUBLISHER is.
 
 **An achievement is a projection over facts that were already durable,
 never a second, competing source of truth.** `describeAchievementEvents()`
-adds no ninth collection to `application/PublicationObservationArchive.js`,
+adds no ninth collection to `application/publication/observationArchive/PublicationObservationArchive.js`,
 no `SCHEMA_VERSION` bump, and no new `appendXxx()` method — it is computed
 fresh, every time, from whatever `bitcoinAnchorPublicationRecords` (0.8.80)
 and `baseAnchorPublicationRecords` (0.8.99) the archive already holds.
@@ -18377,8 +18377,8 @@ See `docs/Roadmap.md`, 0.8.102, for the full milestone entry.
 ### A Badge Presents An Achievement; It Does Not Redefine It (0.8.103)
 
 **A badge is a human-facing presentation of an achievement event, never a
-second, competing achievement system.** `application/AchievementBadgeView.js`'s
-own `describeAchievementBadges()` composes `application/AchievementEvent.js`'s
+second, competing achievement system.** `application/achievement/AchievementBadgeView.js`'s
+own `describeAchievementBadges()` composes `application/achievement/AchievementEvent.js`'s
 own `describeAchievementEvents()` (0.8.102) UNCHANGED — the same fact, given
 a title, a description, and an icon. A badge's own `achievementKind` is
 always exactly the achievement event's own `achievementKind`; its own
@@ -18390,7 +18390,7 @@ earned.
 **A badge is a projection over facts that were already durable, never a
 second, competing source of truth — the identical restraint held one layer
 down.** `describeAchievementBadges()` adds no tenth collection to
-`application/PublicationObservationArchive.js`, no `SCHEMA_VERSION` bump,
+`application/publication/observationArchive/PublicationObservationArchive.js`, no `SCHEMA_VERSION` bump,
 and no new `appendXxx()` method — it is computed fresh, every time, from
 whatever `describeAchievementEvents()` itself already produces from the
 archive's own durable records. Destroying and restoring the archive can
@@ -18422,7 +18422,7 @@ navigation convenience, not a second identity: it lets the UI reopen this
 codebase's own already-existing Bitcoin lifecycle timeline (0.8.81), which
 is keyed by `anchorId` rather than the `chainReference`/`txid` a Bitcoin
 publication identity actually carries. It is resolved by one, local,
-one-off match against `application/BlockchainPublicationIdentity.js`'s own
+one-off match against `application/anchoring/BlockchainPublicationIdentity.js`'s own
 `sameAs()` — the one sanctioned equality that class defines — never by a
 new, general lookup exposed on `application/
 BitcoinAnchorPublicationRecordHistory.js`, whose own header still holds
@@ -18447,7 +18447,7 @@ finalizes, a reference is minted only by an explicit, person-initiated
 action, every time.
 
 **Both sides of a reference are reached by projection, never assembled by
-hand.** `application/PublicationReferenceRecord.js`'s own
+hand.** `application/publication/PublicationReferenceRecord.js`'s own
 `sourcePublicationIdentity`/`referencedPublicationIdentity` are ordinary
 `BlockchainPublicationIdentity` (0.8.89) instances, reached the one way
 that class's own header already sanctions: by calling an already-durable
@@ -18480,7 +18480,7 @@ way into storage.
 
 **A reference is made durable, unlike the achievements and badges that
 may one day read it, because it is itself an externally attributable
-fact.** `application/PublicationObservationArchive.js`'s own ninth
+fact.** `application/publication/observationArchive/PublicationObservationArchive.js`'s own ninth
 collection, `publicationReferenceRecords`, is held to the identical
 append-only, provenance-tagged, export/import/fingerprint/diff/inspect
 discipline every collection before it already holds — a reference
@@ -18502,7 +18502,7 @@ See `docs/Roadmap.md`, 0.8.104, for the full milestone entry.
 
 ### A Reference Graph Is Grouped From Durable Facts, And Stays As Uninterpreted As They Are (0.8.105)
 
-**Grouping is not scoring.** `application/PublicationReferenceGraphView.js`
+**Grouping is not scoring.** `application/publication/PublicationReferenceGraphView.js`
 takes 0.8.104's own flat, append-only `publicationReferenceRecords` and
 arranges them by publication — one node per identity, each carrying its
 own `outgoingReferences`/`incomingReferences` — but arranging facts by
@@ -18518,7 +18518,7 @@ observation.
 truth.** Exactly as `docs/Principles.md`'s own "A Badge Presents An
 Achievement; It Does Not Redefine It (0.8.103)" already held one layer
 up, `describePublicationReferenceGraph()` invents no new durable fact —
-`application/PublicationObservationArchive.js` gains nothing from this
+`application/publication/observationArchive/PublicationObservationArchive.js` gains nothing from this
 milestone, no cached graph, no node database, no mutable edge. Calling it
 twice against a byte-identical archive returns a byte-identical graph,
 because there is no state anywhere for a second call to have drifted
@@ -18559,7 +18559,7 @@ See `docs/Roadmap.md`, 0.8.105, for the full milestone entry.
 ### A Reference-Derived Achievement Is Attributed To A Publication, Never To The Archive As A Whole (0.8.106)
 
 **A reference names two publications, so its achievements are scoped to
-identities, not to the entire archive.** `application/AchievementEvent.js`'s
+identities, not to the entire archive.** `application/achievement/AchievementEvent.js`'s
 own 0.8.102 kinds are each a fact about THIS REPLICA'S ENTIRE ARCHIVE ("its
 first publication ever") and fire at most once, ever. The five kinds this
 milestone adds — `FIRST_REFERENCE_CREATED`, `FIRST_REFERENCE_RECEIVED`,
@@ -18603,7 +18603,7 @@ describe history, which they stop doing the moment a record is deleted,
 re-imported, or simply observed out of order. Every `PublicationReferenceRecord`
 is instead placed into one fixed source order, then stably sorted by its
 own `createdAt`, exactly mirroring `docs/Principles.md`'s own "Deterministic
-Ordering" discipline `application/AchievementEvent.js` already held for
+Ordering" discipline `application/achievement/AchievementEvent.js` already held for
 publication records at 0.8.102. If the 10th distinct publisher references
 Bob at time T, the achievement's own `earnedAt` is T — never "whenever this
 replica happened to notice."
@@ -18623,7 +18623,7 @@ everywhere else in this codebase, and "cross-chain" is decided by
 **Extending a closed vocabulary is not the same as widening what it may
 express.** `AchievementKind` grows from six values to eleven, and
 `describeAchievementEvents()` gains a third, optional parameter — but
-every 0.8.102 call site, `application/AchievementBadgeView.js`'s own
+every 0.8.102 call site, `application/achievement/AchievementBadgeView.js`'s own
 `describeAchievementBadges()` chief among them, keeps returning its own
 byte-identical six-achievement result, because an omitted third argument
 defaults to an empty array that contributes nothing. A vocabulary can grow
@@ -18642,8 +18642,8 @@ See `docs/Roadmap.md`, 0.8.106, for the full milestone entry.
 ### A Publication Profile Names What A Publication Earned, Never Who Earned It (0.8.107)
 
 **A reduction over an existing vocabulary is not license to invent a new
-one.** `application/AchievementProfileView.js`'s own `describeAchievementProfile()`
-computes nothing `application/AchievementEvent.js` did not already compute
+one.** `application/achievement/AchievementProfileView.js`'s own `describeAchievementProfile()`
+computes nothing `application/achievement/AchievementEvent.js` did not already compute
 — it keeps the achievement events whose own `sourcePublicationIdentity`
 `sameAs()` (0.8.89) one supplied identity, in their existing chronological
 order, and returns the exact frozen event objects unchanged. This extends
@@ -18689,7 +18689,7 @@ applied once more rather than assumed to already be obvious.
 **An empty profile is a valid answer, never an error.** A
 `BlockchainPublicationIdentity` this replica has never seen earn anything
 still produces `{ publicationIdentity, achievements: [], achievementCount: 0 }`
-— the same restraint `application/PublicationReferenceGraphView.js`'s own
+— the same restraint `application/publication/PublicationReferenceGraphView.js`'s own
 `findPublicationReferenceGraphNode()` (0.8.105) already holds for an
 untouched identity, held here one layer up: absence of evidence is stated
 plainly, never converted into a thrown exception or a fabricated default.
@@ -18704,7 +18704,7 @@ the whole of it.
 See `docs/Roadmap.md`, 0.8.107, for the full milestone entry.
 
 **A relationship record states association, never ownership or human
-identity.** `application/PublisherPublicationAssociationRecord.js`'s own
+identity.** `application/publisher/PublisherPublicationAssociationRecord.js`'s own
 `{ publisherIdentity, publicationIdentity, createdAt }` says exactly one
 thing — "this publisher identity is explicitly associated with this
 publication identity" — and nothing more. It does not say "this is the
@@ -18729,7 +18729,7 @@ restraint 0.8.107 already held for a shared wallet as evidence of a
 shared human, extended here to a publisher label as well.
 
 **A publisher identity is a bare, explicit label — never a cryptographic
-identity, and never normalized.** `application/PublisherIdentityRecord.js`'s
+identity, and never normalized.** `application/publisher/PublisherIdentityRecord.js`'s
 own `sameAs()` compares `publisherId` by exact, case-sensitive string
 equality alone — "Publisher A" and "publisher a" are different publishers,
 deliberately, because normalizing them into "the same publisher" would
@@ -18744,8 +18744,8 @@ the other.
 
 **An association manufactures no achievement.** `application/
 CreatePublisherPublicationAssociationRecordUseCase.js` touches neither
-`application/AchievementEvent.js` nor
-`application/AchievementBadgeView.js` — a relationship fact and a
+`application/achievement/AchievementEvent.js` nor
+`application/achievement/AchievementBadgeView.js` — a relationship fact and a
 threshold crossing remain two entirely different kinds of fact, and
 recording the former never fabricates the latter.
 
@@ -18897,7 +18897,7 @@ never itself durable. That discipline was always, implicitly, a portability
 story waiting to be tested: if a conclusion is nothing but a pure function
 of durable facts, then handing another replica the identical facts must
 let it compute the identical conclusion, with no need to also hand over
-the conclusion itself. `application/AchievementEvidenceExport.js` is the
+the conclusion itself. `application/achievement/AchievementEvidenceExport.js` is the
 first milestone that actually tests this claim, by literally destroying
 the exporting replica's own archive reference between export and import
 and reconstructing the achievement pipeline's full output on a
@@ -18918,10 +18918,10 @@ every one of those fields is computed by the importing replica itself, or
 it does not exist for that replica at all.
 
 **The four exported collections are not a policy choice — they are a
-traced fact about what the pipeline reads.** `application/AchievementEvent.js`'s
+traced fact about what the pipeline reads.** `application/achievement/AchievementEvent.js`'s
 own `reconstructAchievementEvents()` reads exactly `bitcoinAnchorPublicationRecords`,
 `baseAnchorPublicationRecords`, and `publicationReferenceRecords` off an
-archive; `application/PublisherAssociationView.js`'s own
+archive; `application/publisher/PublisherAssociationView.js`'s own
 `reconstructDistinctPublisherIdentifiers()` reads exactly
 `publisherPublicationAssociationRecords`. No achievement, badge,
 statistic, rank, or leaderboard fact in this codebase has ever been
@@ -18946,7 +18946,7 @@ unconditionally, for the one reason that is always true regardless of
 Alice's own history: it entered Bob's own archive through import.
 
 **A narrower export is not a smaller trust boundary — it is a more
-honest one.** `application/PublicationObservationArchiveExport.js`
+honest one.** `application/publication/observationArchive/PublicationObservationArchiveExport.js`
 already exports an entire archive faithfully, for the genuinely different
 purpose of one replica restoring or relocating its own complete state.
 This milestone's own export exists for a different purpose entirely —
@@ -18965,7 +18965,7 @@ evidence from others without discarding what they already had.**
 0.8.114 proved evidence could travel between two replicas at all, but its
 own `importAchievementEvidence()` only ever constructs a bare, ISOLATED
 archive — it has nothing to say about a replica that already holds its
-own durable facts. `application/AchievementEvidenceMerge.js`'s own
+own durable facts. `application/achievement/AchievementEvidenceMerge.js`'s own
 `mergeAchievementEvidence()` is the primitive that answers that question,
 and it answers it by holding the identical restraint 0.8.114 already
 established, one layer further in: evidence is the only thing that ever
@@ -18983,7 +18983,7 @@ PublisherPublicationAssociationRecord.js`'s own headers already state,
 independently of merge, that exact-duplicate relationship records are
 allowed to coexist within a single archive — a person re-asserting the
 same fact twice produces two independent records, "NEVER DEDUPLICATED."
-`application/BitcoinAnchorPublicationRecord.js`'s own header states,
+`application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js`'s own header states,
 independently of merge, that a shared `anchorId` or `txid` is never
 grounds to collapse two publication records into one. A merge identity
 narrower than "every field the record itself carries" — deduplicating by
@@ -19058,8 +19058,8 @@ Two replicas that ingested the identical facts in different sequences —
 guaranteed to happen the moment evidence moves between independent
 replicas rather than one linear log — must fingerprint identically, so
 each collection's canonicalization sorts its own records' serialized
-`toJSON()` text before hashing. But `application/PublicationReferenceRecord.js`'s
-and `application/PublisherPublicationAssociationRecord.js`'s own headers
+`toJSON()` text before hashing. But `application/publication/PublicationReferenceRecord.js`'s
+and `application/publisher/PublisherPublicationAssociationRecord.js`'s own headers
 already establish, independently of this milestone, that a person
 re-asserting the identical fact a second time produces a second,
 equally durable record — "NEVER DEDUPLICATED." A fingerprint that
@@ -19070,8 +19070,8 @@ that price, because a genuine duplicate simply sorts adjacent to its twin
 and both remain in the canonical text.
 
 **Structural separation, not mere convention, is what keeps two chains
-from colliding.** `application/BitcoinAnchorPublicationRecord.js`'s and
-`application/BaseAnchorPublicationRecord.js`'s own headers already
+from colliding.** `application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js`'s and
+`application/anchoring/base/BaseAnchorPublicationRecord.js`'s own headers already
 establish that a Bitcoin publication and a Base publication are never the
 same identity, even sharing a `contentHash` and an identical-looking
 chain reference. This milestone holds that boundary by hashing the two
@@ -19109,14 +19109,14 @@ See `docs/Roadmap.md`, 0.8.116, for the full milestone entry.
 evidence differs — compare two fingerprints. It deliberately never
 answered the question a replica actually has the moment that comparison
 comes back different: WHICH facts, exactly, does each side hold that the
-other doesn't? `application/AchievementEvidenceDifference.js` answers
+other doesn't? `application/achievement/AchievementEvidenceDifference.js` answers
 exactly that, over the identical four evidence collections 0.8.114 already
 named "the achievement evidence" — and holds the fingerprint itself at
 arm's length while doing it.
 
 **A fingerprint is a fast indication that something differs; an evidence
 difference is the explicit account of what.** This milestone deliberately
-reverses `application/PublicationObservationArchiveDifference.js`'s own
+reverses `application/publication/observationArchive/PublicationObservationArchiveDifference.js`'s own
 0.8.87 choice to let a settled, authoritative whole-archive fingerprint
 decide equality. Here, `sameEvidence` is computed from the actual
 per-collection multiset comparison, never from
@@ -19134,7 +19134,7 @@ against `[A, B]` reports exactly one `A` as exclusive to the first side —
 never zero, and never two — the identical multiplicity discipline
 0.8.116's own fingerprint and 0.8.115's own merge already hold for this
 exact evidence, for the identical underlying reason
-(`application/PublicationReferenceRecord.js`'s and `application/
+(`application/publication/PublicationReferenceRecord.js`'s and `application/
 PublisherPublicationAssociationRecord.js`'s own "NEVER DEDUPLICATED"
 headers). Two independent replicas' evidence carries no common,
 append-only history to walk position-by-position — comparing by content,
@@ -19170,7 +19170,7 @@ See `docs/Roadmap.md`, 0.8.117, for the full milestone entry.
 compared, side by side, in the same process. That is the natural shape for
 a replica inspecting an external payload it just received — but it is not
 the shape two independent replicas that have never met are actually in.
-`application/AchievementEvidenceExchange.js` is the missing, PORTABLE
+`application/achievement/AchievementEvidenceExchange.js` is the missing, PORTABLE
 messages those two replicas send each other instead: a request naming
 almost nothing, and a response carrying evidence, never a conclusion.
 
@@ -19255,7 +19255,7 @@ was computed from, and the policy it was ordered by — and by nothing else.
 evidence fingerprints match and their policy versions match.** Not when
 they were computed at the same moment; not when they name the same number
 of publishers; not when a hash computed over the rendered leaderboard
-happens to agree. `application/PublisherLeaderboardSnapshot.js`'s own
+happens to agree. `application/leaderboard/PublisherLeaderboardSnapshot.js`'s own
 `{ evidenceFingerprint, policy, leaderboard }` carries no field a caller
 would need beyond those two to decide whether two replicas would produce —
 or did produce — the same leaderboard. Recomputing a snapshot from
@@ -19329,7 +19329,7 @@ more, one layer up, over a derived conclusion instead of a raw fact.
 
 **`signatureValid` and a replica's own semantic match are computed
 independently, and neither is ever inferred from the other.**
-`application/PublisherLeaderboardSnapshotClaimVerification.js` names four
+`application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js` names four
 facts — `signatureValid`, `evidenceFingerprintMatches`,
 `policyVersionMatches`, `snapshotFingerprintMatches` — the first answering
 only "did the signer genuinely sign this?" without consulting any
@@ -19344,7 +19344,7 @@ checks the signature separately; the flagship test proves both halves
 matter by making one of them fail while the other genuinely succeeds.
 
 **The signer is always a cryptographic identity, never a publisher
-label.** `application/PublisherIdentityRecord.js` (0.8.108) remains "a
+label.** `application/publisher/PublisherIdentityRecord.js` (0.8.108) remains "a
 bare, explicit, case-sensitive label representing a publisher" —
 human/application-level, never cryptographic — and this milestone never
 lets one silently stand in for a signing key. `signerIdentityId` is
@@ -19368,7 +19368,7 @@ See `docs/Roadmap.md`, 0.8.121, for the full milestone entry.
 0.8.121-0.8.129 built a complete claim subsystem — signing, exchange,
 receipt, verification, and three read-only projections — entirely over a
 plain, in-memory array with nowhere durable to live. 0.8.130 gave that
-array a durable home inside `application/PublicationObservationArchive.js`,
+array a durable home inside `application/publication/observationArchive/PublicationObservationArchive.js`,
 and in doing so had to hold, once more, the single distinction the entire
 subsystem exists to protect: a claim received and durably recorded is a
 fact about the PAST — what a signer asserted, at the moment they signed
@@ -19377,10 +19377,10 @@ still agrees with reality is a fact about the PRESENT, computed fresh,
 every time, against whatever evidence this replica currently holds.
 
 **Persisting a claim never freezes its verification result alongside it.**
-`application/LeaderboardClaimRecord.js`'s own fields —
+`application/leaderboard/LeaderboardClaimRecord.js`'s own fields —
 `claim`/`receivedAt`/`origin` — are the entire durable receipt; there is
 no `matches`, `signatureValid`, or `verifiedAt` field anywhere near it,
-in memory or on disk. `application/PublicationObservationArchive.js`'s own
+in memory or on disk. `application/publication/observationArchive/PublicationObservationArchive.js`'s own
 `leaderboardClaimRecords` collection stores exactly that receipt, and
 nothing more, mirroring the identical restraint every other durable
 collection in that archive already holds — no `status`, `confidence`, or
@@ -19398,9 +19398,9 @@ this is not a bug the reconstruction functions work around, it is the
 whole reason verification is recomputed on demand rather than persisted.
 
 **Only one function is ever allowed to read the archive's own claim
-collection directly.** `application/PublisherLeaderboardClaimHistoryView.js`'s
+collection directly.** `application/leaderboard/PublisherLeaderboardClaimHistoryView.js`'s
 own `reconstructPublisherLeaderboardClaimHistory(archive)` is that one
-seam; `application/PublisherLeaderboardClaimHistoryDifference.js`,
+seam; `application/leaderboard/PublisherLeaderboardClaimHistoryDifference.js`,
 `PublisherLeaderboardClaimHistoryStatisticsView.js`,
 `PublisherLeaderboardClaimHistoryTimelineView.js`, and
 `PublisherLeaderboardClaimVerificationHistoryView.js` all compose on top
@@ -19413,10 +19413,10 @@ keeps it one.
 
 **A received signed claim is never achievement evidence, and a
 whole-archive fingerprint is never the same question as an evidence
-fingerprint.** `application/AchievementEvidenceFingerprint.js`'s own
+fingerprint.** `application/achievement/AchievementEvidenceFingerprint.js`'s own
 `reconstructAchievementEvidenceFingerprint()` — four named collections,
 untouched by this milestone — answers "do two replicas agree on the
-achievement-relevant FACTS?" `application/PublicationObservationArchiveFingerprint.js`'s
+achievement-relevant FACTS?" `application/publication/observationArchive/PublicationObservationArchiveFingerprint.js`'s
 own whole-archive `fingerprintPublicationObservationArchive()` answers a
 different question — "what exact durable archive state does this replica
 represent?" — and naturally, correctly, now includes claim receipts,
@@ -19434,16 +19434,16 @@ See `docs/Roadmap.md`, 0.8.130, for the full milestone entry.
 against this genuinely-existing candidate,' never 'this disposition was
 validated as the right one' and never 'reconciliation happened.'" 0.8.150
 gave that record a durable home inside
-`application/PublicationObservationArchive.js`, and had to hold the
+`application/publication/observationArchive/PublicationObservationArchive.js`, and had to hold the
 identical restraint one layer down, at the persistence boundary itself —
 because a durable store is exactly the layer where "just append it" is
 easiest to quietly extend into "and also check it's the right choice."
 
 **The persistence use case is deliberately smaller than its claim-receiving
-counterpart.** `application/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js`
+counterpart.** `application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js`
 (0.8.130) delegates to an existing use case
 (`ReceivePublisherLeaderboardSnapshotClaimUseCase`) and adds only the
-archive append. `application/RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionIntoArchiveUseCase.js`
+archive append. `application/claimSnapshotReconciliation/decision/RecordDecisionIntoArchiveUseCase.js`
 delegates to nothing, because there is nothing to delegate to — 0.8.145 is
 a pure function a caller calls for itself, not a class-shaped use case this
 file could wrap. Its entire flow is four steps: accept an
@@ -19481,9 +19481,9 @@ corrupted storage, never against a disposition it disagrees with.
 **A recorded reconciliation decision is never achievement evidence, and
 changes the whole-archive fingerprint without ever touching the narrower
 one.** The identical separation 0.8.130 already held for a claim receipt,
-restated here once more: `application/AchievementEvidenceFingerprint.js`'s
+restated here once more: `application/achievement/AchievementEvidenceFingerprint.js`'s
 own four named collections are untouched by this milestone, while
-`application/PublicationObservationArchiveFingerprint.js`'s own
+`application/publication/observationArchive/PublicationObservationArchiveFingerprint.js`'s own
 whole-archive fingerprint naturally, correctly, now includes recorded
 decisions, because they genuinely are part of this replica's own durable
 state.
@@ -19521,7 +19521,7 @@ disposition field instead.
 
 **Exchange-level deduplication is a deliberate, narrow departure from
 0.8.146's own append rule — governing a different question, not
-overriding the old answer.** `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js`'s
+overriding the old answer.** `application/claimSnapshotReconciliation/decision/History.js`'s
 own header is unambiguous: recording the byte-identical decision twice,
 LOCALLY, is always two independent entries, never collapsed. 0.8.151's own
 `applyXxx()` still never collapses what a replica already, genuinely
@@ -19550,9 +19550,9 @@ a `candidate` is genuinely one of 0.8.144's own three, closed outcome
 shapes, that `decision` is `'OBSERVE'` or `'DEFER'`, and that `decidedAt`
 parses as a genuine timestamp — never whether that candidate exists in
 any replica's own current reconciliation plan. It imports nothing from
-`PublisherLeaderboardClaimSnapshotReconciliation.js`,
-`PublisherLeaderboardClaimSnapshotReconciliationDecision.js`,
-`PublisherLeaderboardClaimSnapshotReconciliationPlanView.js`, or
+`application/claimSnapshotReconciliation/ReconciliationCandidate.js`,
+`application/claimSnapshotReconciliation/decision/Decision.js`,
+`application/claimSnapshotReconciliation/PlanView.js`, or
 `PublicationObservationArchive.js` — a decision record arriving through
 this file is checked for genuine SHAPE alone, exactly as true or false
 after that check as it was before transport.
@@ -19574,7 +19574,7 @@ candidate does each decision correspond to? — a question so close to
 was most at risk of quietly answering the wrong way.
 
 **The correct implementation of "which candidate" is a projection, never a
-re-selection.** `application/PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondenceView.js`
+re-selection.** `application/claimSnapshotReconciliation/decision/CandidateCorrespondenceView.js`
 answers its own question by reading `candidate` off each stored 0.8.145
 decision record and handing it back, unchanged — it does not accept a
 plan, a claim history, or a snapshot list as an argument at all, because
@@ -19645,7 +19645,7 @@ authoritative than an earlier one, that the sequence represents a single
 evolving judgment rather than three separate judgments that happen to
 concern the same candidate, or that "current" is even a coherent question
 to ask of a decision log. `application/
-PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionView.js`
+application/claimSnapshotReconciliation/candidate/DecisionEvolutionView.js`
 reports the sequence and stops: `{ candidate, decisionCount, decisions:
 [{ decision, decidedAt }] }`, ordered by `decidedAt`, and nothing about
 what the ordering implies.
@@ -19685,7 +19685,7 @@ placement." This principle names why that risk is real, and how this
 codebase refuses it structurally.
 
 **Discovery answers "what exists"; it never answers "what is true."**
-`application/PlaceNamingDiscoveryQueryService.js#search()` returns
+`application/placeNaming/PlaceNamingDiscoveryQueryService.js#search()` returns
 `core/PlaceNamingDiscoveryEnvelope.js`'s own validated shape — a claim
 that parses, carrying a signature that LOOKS like a signature. Nothing
 about having been discovered, rather than imported from a file
@@ -19695,7 +19695,7 @@ caller holding a freshly discovered envelope and a caller holding a
 freshly hand-typed JSON object are holding equally unverified data, and
 this codebase's own APIs make no distinction between them: both must
 pass through `identity/LocalAuthorizationVerifier.js#verifyPlaceNamingClaim()`
-— today reached via `application/PlaceNamingClaimExchange.js#importClaim()`,
+— today reached via `application/placeNaming/PlaceNamingClaimExchange.js#importClaim()`,
 unchanged by this milestone — before either is worth anything more than
 "something, somewhere, claims this."
 
@@ -19703,7 +19703,7 @@ unchanged by this milestone — before either is worth anything more than
 that a claim ECHOED BY SEVERAL discovery sources, or DISCOVERED NEAR the
 Wanderer's own position, deserves more trust than one an author had to
 hand-carry as a file. Nothing in `core/PlaceNamingDiscoveryEnvelope.js`
-or `application/PlaceNamingDiscoveryQueryService.js` computes reach,
+or `application/placeNaming/PlaceNamingDiscoveryQueryService.js` computes reach,
 counts sources, or ranks by proximity — `search()`'s own deduplication
 by `claim.id` exists only to avoid describing the SAME claim twice, never
 to accumulate corroborating "votes" for it. `core/PlaceNamingView.js#
@@ -19788,7 +19788,7 @@ has determined this is the official name of this place."
 filter operates on an ordered list, it is tempting to treat "the first
 survivor" as somehow privileged. `selectNearbyPlaceNamingClaims()`
 refuses even that: it preserves whatever order
-`application/PlaceNamingDiscoveryQueryService.js#search()` already
+`application/placeNaming/PlaceNamingDiscoveryQueryService.js#search()` already
 produced, exactly as given, so no caller can mistake array position for
 relevance, and no future refactor of discovery's own internal ordering
 can silently change what a Wanderer sees "first" today.
@@ -19804,7 +19804,7 @@ Naming Discovery Orchestration) is the moment Place Naming becomes
 genuinely automatic: a Wanderer who does nothing but walk around now
 causes discovery and proximity selection to run on their behalf. That is
 exactly the moment this codebase's own history warns is most tempting to
-overreach in — see `application/WorldSnapshotDiscoveryMonitor.js`'s own
+overreach in — see `application/snapshot/WorldSnapshotDiscoveryMonitor.js`'s own
 0.9.186 precedent, and the still-separate, still-unscheduled "0.9.187 —
 Automatic Snapshot Encounter Cascade" it deliberately left for later. This
 principle names the identical boundary, redrawn for Place Naming's own
@@ -19852,12 +19852,12 @@ deliberately, one milestone at a time.
 **A safe default is "nothing," never "assume nearby."** This milestone's
 own monitor has no real way yet to resolve a discovered claim's `regionId`
 into a position — that requires a World-layout-aware resolver (a future
-`application/WorldNavigationSession.js` wiring) this milestone deliberately
+`application/world/WorldNavigationSession.js` wiring) this milestone deliberately
 does not build. Rather than guess, or treat an unresolvable claim as
 "probably fine to show," a missing or failing resolver degrades every such
 claim to `null`, which `selectNearbyPlaceNamingClaims()` already excludes.
 An absent capability produces less automatic behavior, never more — the
-same fail-closed instinct `application/PlaceNamingDiscoveryQueryService.js`'s
+same fail-closed instinct `application/placeNaming/PlaceNamingDiscoveryQueryService.js`'s
 own "an honest empty roster" already models for zero discovery sources.
 
 See `docs/Roadmap.md`, 0.9.256, for the full milestone entry.
@@ -19985,7 +19985,7 @@ first time rather than reproduced or strengthened.
 **Adopt reshapes; it never re-verifies, re-signs, or re-authors.**
 `adoptNearbyPlaceNamingClaim()` does exactly one substantive thing:
 rehydrate a `PlaceNamingClaim` from the row's own fields and hand it to
-`application/PlaceNamingClaimPublication.js#buildPlaceNamingClaimPublication()`
+`application/placeNaming/PlaceNamingClaimPublication.js#buildPlaceNamingClaimPublication()`
 — the SAME pure builder `session.exportPlaceNamingClaim()` already calls
 for the manual export path — before calling the SAME
 `session.importPlaceNamingClaim()` the manual `PlaceNamingPanel`'s own
@@ -20014,7 +20014,7 @@ independently-authored claims can name the same region two different
 things — "Riverside" and "Old River" for the identical ground is not a
 malformed state; it is the ordinary, expected shape of a decentralized
 naming system 0.5.2 built for exactly this reason. Adopting "Riverside"
-touches `application/LocalPlaceNamingClaimStore.js#save()` for that one
+touches `application/placeNaming/LocalPlaceNamingClaimStore.js#save()` for that one
 claim's own `id` and nothing else — it never reads, ranks, or removes any
 OTHER claim for the same region. "Old River" remains exactly as
 discoverable, exactly as displayed, and exactly as independently adoptable
@@ -20108,7 +20108,7 @@ See `docs/Roadmap.md`, 0.9.266, for the full milestone entry.
 ### A NotificationEvent Represents An Awareness-Worthy Fact; It Is Not A Delivery, A Read State, Or A Chat Message (0.9.273)
 
 0.9.272's reassessment found several domains capable of producing a meaningful, user-directed event, and one real
-architectural precedent for durable delivery, `application/ChatOutbox.js` — but no domain-neutral representation of
+architectural precedent for durable delivery, `application/chat/ChatOutbox.js` — but no domain-neutral representation of
 the fact itself, independent of who will eventually deliver it or how. `core/NotificationEvent.js` is that missing
 seam: five fields — `notificationId`, `eventType`, `recipientIdentityId`, `createdAt`, `payload` — and nothing else.
 
@@ -20145,13 +20145,13 @@ See `docs/Roadmap.md`, 0.9.273, for the full milestone entry.
 obvious way to wire that in would be adding a `notificationSink` collaborator directly to
 `AddPublicationCommentaryUseCase`'s own constructor. 0.9.275 deliberately does not do that.
 
-**A decorator, not a fourth argument.** `application/PublicationCommentaryNotificationProducer.js` wraps a real
+**A decorator, not a fourth argument.** `application/publication/commentary/PublicationCommentaryNotificationProducer.js` wraps a real
 `AddPublicationCommentaryUseCase` instance instead of becoming part of it. `AddPublicationCommentaryUseCase.js` is
 left completely unmodified — every existing caller, and every one of `tests/AddPublicationCommentaryUseCase.test.js`'s
 own constructions with exactly three collaborators, keeps working exactly as it did before this milestone. Producing
 a notification is additive behavior layered in front of an unchanged command, the same "ask, don't own, the
-decision" composition `application/SpatialEditingService.js` already uses for
-`application/WorldAuthorizationService.js`'s own decisions — extended one step further here: let the wrapped command
+decision" composition `application/editor/SpatialEditingService.js` already uses for
+`application/identity/WorldAuthorizationService.js`'s own decisions — extended one step further here: let the wrapped command
 finish its own job entirely, then react to what it already produced.
 
 **Ordering falls out of sequencing, not a transaction.** The wrapped use case's `execute()` runs first, unguarded by

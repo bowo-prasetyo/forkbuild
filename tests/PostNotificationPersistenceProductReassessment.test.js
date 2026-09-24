@@ -4,9 +4,9 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import {
     NotificationCollisionOutcome,
@@ -169,7 +169,7 @@ function buildProducer({ discoveryProvider, commentaryStore, commentAuthorProvid
 // independent store instance against the same provider (Section E's own
 // restart proof). Nothing about this wiring requires any production file
 // to change — `notificationSink` has always been a plain injected
-// function, per application/PublicationCommentaryNotificationProducer.js's
+// function, per application/publication/commentary/PublicationCommentaryNotificationProducer.js's
 // own header.
 function buildWiredPipeline({ publisherProvider, commentAuthorProvider, publicationId, notificationStorageProvider = new InMemoryStorageProvider() }) {
     const { publication, discoveryProvider } = makePublication({ id: publicationId, publisherProvider });
@@ -198,8 +198,8 @@ async function runTests() {
     // trusting any file's own header.
     // ===============================================================
     {
-        const addUseCase = await rawSource('application/AddPublicationCommentaryUseCase.js');
-        const producer = await rawSource('application/PublicationCommentaryNotificationProducer.js');
+        const addUseCase = await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
+        const producer = await rawSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js');
         const notificationEvent = await rawSource('core/NotificationEvent.js');
         const dedupPolicy = await rawSource('core/NotificationDeduplicationPolicy.js');
         const store = await rawSource('storage/NotificationEventStore.js');
@@ -209,7 +209,7 @@ async function runTests() {
         // producer constructs anything, unguarded by any try/catch of its
         // own (0.9.275's own "ordering" claim, reconfirmed fresh).
         assert(producer.includes('this._addPublicationCommentaryUseCase.execute(input)'),
-            'A1a. application/PublicationCommentaryNotificationProducer.js still delegates persistence to the wrapped AddPublicationCommentaryUseCase before doing anything else.');
+            'A1a. application/publication/commentary/PublicationCommentaryNotificationProducer.js still delegates persistence to the wrapped AddPublicationCommentaryUseCase before doing anything else.');
         const producerCode = codeOnlyLines(producer);
         const executeIdx = producerCode.indexOf('this._addPublicationCommentaryUseCase.execute(input)');
         const constructEventIdx = producerCode.indexOf('new NotificationEvent(');
@@ -221,7 +221,7 @@ async function runTests() {
         // the producer's payload still carries only identifiers, never
         // commentary.content itself.
         assert(!/authorIdentityId:\s*commentary\.content|content:\s*commentary\.content/.test(producer),
-            'A2a. application/PublicationCommentaryNotificationProducer.js still never copies commentary.content into a NotificationEvent payload — Commentary stays the sole authoritative source for what was actually said.');
+            'A2a. application/publication/commentary/PublicationCommentaryNotificationProducer.js still never copies commentary.content into a NotificationEvent payload — Commentary stays the sole authoritative source for what was actually said.');
         assert(/payload:\s*\{\s*publicationId:\s*commentary\.publicationId,\s*commentaryId:\s*commentary\.commentaryId,\s*authorIdentityId:\s*commentary\.authorIdentityId\s*\}/.test(producer),
             'A2b. The constructed payload still carries exactly publicationId/commentaryId/authorIdentityId — three identifiers, never the commentary content itself.');
         assert(notificationEvent.includes('get payload() { return clonePayload(this._payload); }'),
@@ -231,8 +231,8 @@ async function runTests() {
         // event, never persistence. It imports NotificationEvent, never
         // NotificationEventStore.
         const producerImports = producer.match(/^import .*/gm) || [];
-        assert(producerImports.length === 1 && producerImports[0].includes("from '../core/NotificationEvent.js'"),
-            `A3. application/PublicationCommentaryNotificationProducer.js still imports exactly one thing — NotificationEvent — and nothing from storage/ (found imports: ${JSON.stringify(producerImports)}). The producer constructs a fact; it has no idea a store exists.`);
+        assert(producerImports.length === 1 && producerImports[0].includes("from '../../../core/NotificationEvent.js'"),
+            `A3. application/publication/commentary/PublicationCommentaryNotificationProducer.js still imports exactly one thing — NotificationEvent — and nothing from storage/ (found imports: ${JSON.stringify(producerImports)}). The producer constructs a fact; it has no idea a store exists.`);
 
         // A4. DeduplicationPolicy establishes logical equivalence — pure,
         // dependency-free, no import of NotificationEventStore or any
@@ -264,7 +264,7 @@ async function runTests() {
             ['core/NotificationEvent.js', codeOnlyLines(notificationEvent)],
             ['core/NotificationDeduplicationPolicy.js', codeOnlyLines(dedupPolicy)],
             ['storage/NotificationEventStore.js', codeOnlyLines(store)],
-            ['application/PublicationCommentaryNotificationProducer.js', codeOnlyLines(producer)]
+            ['application/publication/commentary/PublicationCommentaryNotificationProducer.js', codeOnlyLines(producer)]
         ]) {
             assert(!deliveryVocab.test(code), `A6. ${label}'s own CODE (comments excluded) still contains no delivery/lifecycle vocabulary (delivered, seen, acknowledged, queued, pending, failed, dispatch, markRead, isRead, ttl, expiresAt, state, QUEUED/SENT/DELIVERED, expire).`);
         }
@@ -289,8 +289,8 @@ async function runTests() {
         // B2. Determine recipient (for Commentary specifically — this
         // matrix is scoped to the one real producer that exists, exactly
         // as this milestone's own brief frames it).
-        assert((await rawSource('application/PublicationCommentaryNotificationProducer.js')).includes('recipientIdentityId: publication.publisherIdentity.id'),
-            'B2. application/PublicationCommentaryNotificationProducer.js still resolves a recipient from an already-on-file field (Publication.publisherIdentity.id) — no new relationship invented.');
+        assert((await rawSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js')).includes('recipientIdentityId: publication.publisherIdentity.id'),
+            'B2. application/publication/commentary/PublicationCommentaryNotificationProducer.js still resolves a recipient from an already-on-file field (Publication.publisherIdentity.id) — no new relationship invented.');
         capabilityRegister.push(['Determine recipient (Commentary)', 'COMPLETE']);
 
         // B3. Deduplicate retries.
@@ -329,16 +329,16 @@ async function runTests() {
 
         // B10. Retrieve notifications for recipient — the row this
         // milestone's own brief calls out by name. This finding was closed
-        // by 0.9.283 (see application/GetRecipientNotificationEventsUseCase.js's
+        // by 0.9.283 (see application/chat/GetRecipientNotificationEventsUseCase.js's
         // own header): no getForRecipient() was added to the STORE, exactly
         // as Section C recommended, but the capability itself now exists
         // one layer up, as a plain filter over loadAll() gated on the
         // authenticated identity.
         assert(!/getForRecipient/.test(codeOnlyLines(store)),
             'B10. storage/NotificationEventStore.js still exposes no getForRecipient() — 0.9.283 deliberately built the capability one layer up instead, per Section C\'s own recommendation.');
-        assert(await sourceExists('application/GetRecipientNotificationEventsUseCase.js'),
-            'B10b. application/GetRecipientNotificationEventsUseCase.js now exists (0.9.283) — the capability this row named is built.');
-        capabilityRegister.push(['Retrieve notifications for recipient', 'COMPLETE (0.9.283) — application/GetRecipientNotificationEventsUseCase.js, no store change']);
+        assert(await sourceExists('application/chat/GetRecipientNotificationEventsUseCase.js'),
+            'B10b. application/chat/GetRecipientNotificationEventsUseCase.js now exists (0.9.283) — the capability this row named is built.');
+        capabilityRegister.push(['Retrieve notifications for recipient', 'COMPLETE (0.9.283) — application/chat/GetRecipientNotificationEventsUseCase.js, no store change']);
 
         // B11. Mark notification read.
         assert(!/markRead|isRead|\breadAt\b/i.test(codeOnlyLines(store) + codeOnlyLines(await rawSource('core/NotificationEvent.js'))),
@@ -346,7 +346,7 @@ async function runTests() {
         capabilityRegister.push(['Mark notification read', 'MISSING_DOMAIN_CAPABILITY']);
 
         // B12. Deliver notification. Checked against real CODE only —
-        // application/PublicationCommentaryNotificationProducer.js's own
+        // application/publication/commentary/PublicationCommentaryNotificationProducer.js's own
         // header comment NAMES NotificationDelivery/NotificationInbox/
         // NotificationCenter to explain their absence, which would
         // otherwise false-positive a raw whole-file grep.
@@ -417,16 +417,16 @@ async function runTests() {
         // C2. At the time this milestone shipped, this derivation was NOT
         // yet a built product capability — zero application/ui callers of
         // loadAll() existed. 0.9.283 closed exactly that gap
-        // (application/GetRecipientNotificationEventsUseCase.js#execute()
+        // (application/chat/GetRecipientNotificationEventsUseCase.js#execute()
         // calls loadAll() and applies the identical filter this section
         // demonstrates), so this is now re-verified as CLOSED rather than
         // re-asserted as absent.
         const loadAllCallers = await grepCount('\\.loadAll(', ['application', 'ui']);
         assert(loadAllCallers >= 1,
             'C2. At least one real application/ caller of NotificationEventStore#loadAll() now exists (0.9.283\'s GetRecipientNotificationEventsUseCase) — the filter this section demonstrates is no longer test-only.');
-        const recipientUseCaseCode = codeOnlyLines(await rawSource('application/GetRecipientNotificationEventsUseCase.js'));
+        const recipientUseCaseCode = codeOnlyLines(await rawSource('application/chat/GetRecipientNotificationEventsUseCase.js'));
         assert(recipientUseCaseCode.includes('.loadAll()') && recipientUseCaseCode.includes('recipientIdentityId'),
-            'C2b. application/GetRecipientNotificationEventsUseCase.js still performs exactly the loadAll() + recipientIdentityId filter this section proved safe, never a reimplementation of it.');
+            'C2b. application/chat/GetRecipientNotificationEventsUseCase.js still performs exactly the loadAll() + recipientIdentityId filter this section proved safe, never a reimplementation of it.');
 
         // C3. getForRecipient() itself does not exist as a method, on
         // this store or anywhere else in the codebase. storage/
@@ -456,7 +456,7 @@ async function runTests() {
         assert(probeRequiresFullEvent,
             'C4. getByDeduplicationIdentity() still takes a full NotificationEvent as its probe, not merely a recipientIdentityId — confirming it answers a different question than a recipient-facing query would.');
 
-        console.log('✓ C: getForRecipient() CAN be safely derived from the existing store\'s own data (C1) — a plain filter over loadAll() is provably correct, introduces no new semantics, and required no change to any existing method\'s contract. At the time this milestone shipped it was not yet a product capability (zero application/UI code performed this derivation); 0.9.283 closed that gap one layer up, in application/GetRecipientNotificationEventsUseCase.js, without ever adding getForRecipient() to the store itself (C2/C2b), the method still does not exist anywhere on the store (C3), and the one existing by-identity lookup still answers a structurally different question (C4). Classification: COMPLETE (0.9.283) — built exactly where Section C\'s own evidence said it safely could be, no store change.');
+        console.log('✓ C: getForRecipient() CAN be safely derived from the existing store\'s own data (C1) — a plain filter over loadAll() is provably correct, introduces no new semantics, and required no change to any existing method\'s contract. At the time this milestone shipped it was not yet a product capability (zero application/UI code performed this derivation); 0.9.283 closed that gap one layer up, in application/chat/GetRecipientNotificationEventsUseCase.js, without ever adding getForRecipient() to the store itself (C2/C2b), the method still does not exist anywhere on the store (C3), and the one existing by-identity lookup still answers a structurally different question (C4). Classification: COMPLETE (0.9.283) — built exactly where Section C\'s own evidence said it safely could be, no store change.');
     }
 
     // ===============================================================
@@ -518,7 +518,7 @@ async function runTests() {
 
         // D6. The honest finding: isolation today is a FIELD-LEVEL fact
         // (recipientIdentityId), never a storage-level partition. Unlike
-        // application/ChatOutbox.js, which scopes its OWN storage key per
+        // application/chat/ChatOutbox.js, which scopes its OWN storage key per
         // local owner (`chat-outbox:${owner}` — see Section I), the
         // notification store persists every recipient's facts under one
         // single, shared key. Confirmed directly: the raw persisted array
@@ -534,7 +534,7 @@ async function runTests() {
         const storeConstantKey = (await rawSource('storage/NotificationEventStore.js')).includes("const NOTIFICATION_EVENT_STORE_KEY = 'notification-events:entries';");
         assert(storeConstantKey, 'D6c. storage/NotificationEventStore.js still persists under one single, fixed constant key — never a per-recipient or per-owner key template.');
 
-        console.log('✓ D: Recipient isolation holds at the FIELD level, proven against two real recipients through the full producer -> store pipeline (D1-D5) — Alice never observes Carol\'s notification, both commenters on one Publication still notify only its one publisher. The honest finding (D6): this isolation is enforced entirely by recipientIdentityId as a fact a caller must filter on, never by a storage-level partition the way application/ChatOutbox.js scopes storage per LOCAL owner. A future getForRecipient(id) implemented as a plain filter (Section C) would be correct only as long as every caller passes the CURRENT authenticated identity — nothing in the store itself prevents a caller from passing any id and reading any recipient\'s history. This is the concrete shape of the access-boundary question Section G below returns to.');
+        console.log('✓ D: Recipient isolation holds at the FIELD level, proven against two real recipients through the full producer -> store pipeline (D1-D5) — Alice never observes Carol\'s notification, both commenters on one Publication still notify only its one publisher. The honest finding (D6): this isolation is enforced entirely by recipientIdentityId as a fact a caller must filter on, never by a storage-level partition the way application/chat/ChatOutbox.js scopes storage per LOCAL owner. A future getForRecipient(id) implemented as a plain filter (Section C) would be correct only as long as every caller passes the CURRENT authenticated identity — nothing in the store itself prevents a caller from passing any id and reading any recipient\'s history. This is the concrete shape of the access-boundary question Section G below returns to.');
     }
 
     // ===============================================================
@@ -669,7 +669,7 @@ async function runTests() {
             'G1d. The original record on file is completely untouched by the rejected CONFLICT save.');
 
         // G2. THE HONEST FINDING: the one real producer that exists —
-        // application/PublicationCommentaryNotificationProducer.js, wired
+        // application/publication/commentary/PublicationCommentaryNotificationProducer.js, wired
         // to a real PublicationCommentaryStore — structurally CANNOT
         // manufacture a CONFLICT in NotificationEventStore today. The
         // only way for two NotificationEvents to share a deduplication
@@ -761,7 +761,7 @@ async function runTests() {
     // ===============================================================
     {
         const chatOutboxEntry = await rawSource('core/ChatOutboxEntry.js');
-        const chatOutbox = await rawSource('application/ChatOutbox.js');
+        const chatOutbox = await rawSource('application/chat/ChatOutbox.js');
         const notificationEvent = await rawSource('core/NotificationEvent.js');
         const notificationStore = await rawSource('storage/NotificationEventStore.js');
 
@@ -773,7 +773,7 @@ async function runTests() {
         // a live connection, retried on reconnect. NotificationEventStore
         // has none of this — reconfirmed via Section H's own outcome set.
         assert(chatOutbox.includes('markSent(') && chatOutbox.includes('acknowledge(') && chatOutbox.includes('pruneExpired('),
-            'I2. application/ChatOutbox.js still exposes markSent()/acknowledge()/pruneExpired() — a full delivery-confirmation lifecycle NotificationEventStore has never had any of.');
+            'I2. application/chat/ChatOutbox.js still exposes markSent()/acknowledge()/pruneExpired() — a full delivery-confirmation lifecycle NotificationEventStore has never had any of.');
         assert(!/markSent|acknowledge\(|pruneExpired/i.test(codeOnlyLines(notificationStore)),
             'I2b. storage/NotificationEventStore.js\'s own CODE still contains none of ChatOutbox\'s delivery-lifecycle vocabulary.');
 
@@ -793,7 +793,7 @@ async function runTests() {
         // owner's own entries, by construction of the storage key itself,
         // never by a runtime filter a caller could get wrong.
         assert(chatOutbox.includes("STORAGE_KEY_PREFIX + owner") || chatOutbox.includes('STORAGE_KEY_PREFIX + this._currentOwnerOrNull()'),
-            'I4a. application/ChatOutbox.js still scopes its OWN storage key per local owner.');
+            'I4a. application/chat/ChatOutbox.js still scopes its OWN storage key per local owner.');
         const notifKeyIsConstant = notificationStore.includes("const NOTIFICATION_EVENT_STORE_KEY = 'notification-events:entries';") && !/NOTIFICATION_EVENT_STORE_KEY\s*\+/.test(notificationStore);
         assert(notifKeyIsConstant,
             'I4b. storage/NotificationEventStore.js still persists every recipient under one single, unparameterized key — never a per-recipient key template the way ChatOutbox uses per-owner keys.');
@@ -827,27 +827,27 @@ async function runTests() {
         // J1. The producer itself — at the time this milestone shipped,
         // still completely unwired from any real composition root,
         // exactly as 0.9.281's own "what comes after" left it. CLOSED by
-        // 0.9.285 (application/CreateWorldViewUseCase.js now constructs
+        // 0.9.285 (application/world/CreateWorldViewUseCase.js now constructs
         // one real PublicationCommentaryNotificationProducer, backing
         // WorldNavigationSession's own addPublicationCommentary()).
         // 0.9.393 — this count had gone stale: "exactly one caller" was
         // always a PROXY for the real invariant ("every caller shares the
         // same durable sink"), and 0.9.29x-era work added
-        // application/CreatePublicationCommentaryUseCase.js as a second,
+        // application/publication/commentary/CreatePublicationCommentaryUseCase.js as a second,
         // legitimate composition root reusing the identical sink — never
         // caught because nothing re-ran this guard until 0.9.393's own
         // full-suite execution. Replaced here with the real invariant: an
         // exact, named set of callers, each proven to route through the
         // SAME `notificationEventStore.save()` sink.
         const KNOWN_PRODUCER_CALLERS = [
-            'application/CreateWorldViewUseCase.js',
-            'application/CreatePublicationCommentaryUseCase.js'
+            'application/world/CreateWorldViewUseCase.js',
+            'application/publication/commentary/CreatePublicationCommentaryUseCase.js'
         ];
         const producerCallerFiles = execSync('grep -rl "new PublicationCommentaryNotificationProducer(" application ui --include="*.js" || true',
             { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean).sort();
         assert(producerCallerFiles.length === KNOWN_PRODUCER_CALLERS.length
             && KNOWN_PRODUCER_CALLERS.every((f) => producerCallerFiles.includes(f)),
-            `J1. application/PublicationCommentaryNotificationProducer.js now has exactly the two known, classified callers in application/ or ui/ — no third, unclassified one (found: ${producerCallerFiles.join(', ')}).`);
+            `J1. application/publication/commentary/PublicationCommentaryNotificationProducer.js now has exactly the two known, classified callers in application/ or ui/ — no third, unclassified one (found: ${producerCallerFiles.join(', ')}).`);
         for (const file of KNOWN_PRODUCER_CALLERS) {
             const callerSource = await rawSource(file);
             assert(/\(notificationEvent\)\s*=>\s*notificationEventStore\.save\(notificationEvent\)/.test(callerSource),
@@ -856,7 +856,7 @@ async function runTests() {
 
         // J2. The store itself — CLOSED (for reads) by 0.9.284, which
         // wires a REAL NotificationEventStore into
-        // application/CreateWorldViewUseCase.js to back
+        // application/world/CreateWorldViewUseCase.js to back
         // GetRecipientNotificationEventsUseCase's own read path. This is
         // deliberately NOT the same finding as J1 resolving: the
         // producer that would ever WRITE a NotificationEvent (J1, still
@@ -867,15 +867,15 @@ async function runTests() {
         // 0.9.393 — this count had gone stale the same way J1's did:
         // "exactly one caller" was a PROXY for "exactly one underlying
         // storage namespace," and 0.9.29x-era work added
-        // application/CreatePublicationCommentaryUseCase.js as a second
+        // application/publication/commentary/CreatePublicationCommentaryUseCase.js as a second
         // NotificationEventStore construction (its own write-side
         // composition root, mirroring J1's producer) — over the SAME
         // storageProvider, never a second namespace. Replaced with the
         // real invariant: an exact, named set of construction sites, each
         // proven to wrap the same `storageProvider` argument.
         const KNOWN_STORE_CALLERS = [
-            'application/CreateWorldViewUseCase.js',
-            'application/CreatePublicationCommentaryUseCase.js'
+            'application/world/CreateWorldViewUseCase.js',
+            'application/publication/commentary/CreatePublicationCommentaryUseCase.js'
         ];
         const storeCallerFiles = execSync('grep -rl "new NotificationEventStore(" application ui --include="*.js" || true',
             { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean).sort();
@@ -887,9 +887,9 @@ async function runTests() {
             assert(/new NotificationEventStore\(storageProvider\)/.test(callerSource),
                 `J2. ${file} still constructs NotificationEventStore over the SAME "storageProvider" argument — one underlying storage namespace, never a second, isolated one.`);
         }
-        const createWorldView = await rawSource('application/CreateWorldViewUseCase.js');
+        const createWorldView = await rawSource('application/world/CreateWorldViewUseCase.js');
         assert(createWorldView.includes('new GetRecipientNotificationEventsUseCase(notificationEventStore, identityProvider)'),
-            'J2b. application/CreateWorldViewUseCase.js\'s own NotificationEventStore construction backs GetRecipientNotificationEventsUseCase specifically (0.9.284) — never a write path.');
+            'J2b. application/world/CreateWorldViewUseCase.js\'s own NotificationEventStore construction backs GetRecipientNotificationEventsUseCase specifically (0.9.284) — never a write path.');
 
         // J3. The one place a producer WOULD be wired in — WorldView's
         // composition root — at the time this milestone shipped, still
@@ -905,7 +905,7 @@ async function runTests() {
         // WRAPPED capability — never the raw use case — to
         // WorldNavigationSession.
         assert(createWorldView.includes('new AddPublicationCommentaryUseCase(') && createWorldView.includes('new PublicationCommentaryNotificationProducer('),
-            'J3. application/CreateWorldViewUseCase.js still constructs a bare AddPublicationCommentaryUseCase, and now (0.9.285) also constructs a PublicationCommentaryNotificationProducer wrapping it — the composition root that needed to change to wire notification WRITES in now has.');
+            'J3. application/world/CreateWorldViewUseCase.js still constructs a bare AddPublicationCommentaryUseCase, and now (0.9.285) also constructs a PublicationCommentaryNotificationProducer wrapping it — the composition root that needed to change to wire notification WRITES in now has.');
         assert(/addPublicationCommentaryUseCase\s*:\s*publicationCommentaryCapability/.test(createWorldView),
             'J3b. The decorated capability — never the raw addPublicationCommentaryUseCase — is what WorldNavigationSession actually receives as its own addPublicationCommentaryUseCase collaborator (0.9.285).');
 
@@ -926,13 +926,13 @@ async function runTests() {
         // finding originally named. The honest scope check: it is a
         // thin, read-only delegate to GetRecipientNotificationEventsUseCase
         // — no lifecycle/delivery vocabulary was introduced alongside it.
-        const navSession = await rawSource('application/WorldNavigationSession.js');
+        const navSession = await rawSource('application/world/WorldNavigationSession.js');
         assert(navSession.includes('getRecipientNotificationEvents()'),
-            'J5. application/WorldNavigationSession.js now exposes getRecipientNotificationEvents() (0.9.284) — the orchestration layer already carrying Commentary\'s own use cases now carries notification retrieval too.');
+            'J5. application/world/WorldNavigationSession.js now exposes getRecipientNotificationEvents() (0.9.284) — the orchestration layer already carrying Commentary\'s own use cases now carries notification retrieval too.');
         assert(!/markRead|isRead|\breadAt\b|delivered|acknowledg/i.test(codeOnlyLines(navSession)),
             'J5b. The new method introduces no lifecycle/delivery vocabulary of its own — still a plain read-only delegate, same restraint every other getX() method on this file already holds to.');
 
-        console.log('✓ J: Re-verified rather than re-derived. The producer (J1) now has exactly one caller — application/CreateWorldViewUseCase.js (0.9.285) — so the live product now WRITES a notification on every successfully persisted Commentary. The store (J2) has had exactly one caller since 0.9.284 (reads); 0.9.285 adds no second store construction — the SAME notificationEventStore instance now backs both the read path (GetRecipientNotificationEventsUseCase) and the producer\'s own notificationSink. The composition root that would wire WRITES in has now been touched, decorating rather than modifying (J3). Of the two natural existing homes this finding named, OwnPublicationPanel still carries no notification vocabulary at all (J4, unaffected by 0.9.284 or 0.9.285 — the History panel is a separate surface), while WorldNavigationSession still exposes only the one thin read-only delegate 0.9.284 added, with no lifecycle vocabulary of its own (J5) — 0.9.285 gave it a notification-producing WRITE path without adding any read-side vocabulary here either.');
+        console.log('✓ J: Re-verified rather than re-derived. The producer (J1) now has exactly one caller — application/world/CreateWorldViewUseCase.js (0.9.285) — so the live product now WRITES a notification on every successfully persisted Commentary. The store (J2) has had exactly one caller since 0.9.284 (reads); 0.9.285 adds no second store construction — the SAME notificationEventStore instance now backs both the read path (GetRecipientNotificationEventsUseCase) and the producer\'s own notificationSink. The composition root that would wire WRITES in has now been touched, decorating rather than modifying (J3). Of the two natural existing homes this finding named, OwnPublicationPanel still carries no notification vocabulary at all (J4, unaffected by 0.9.284 or 0.9.285 — the History panel is a separate surface), while WorldNavigationSession still exposes only the one thin read-only delegate 0.9.284 added, with no lifecycle vocabulary of its own (J5) — 0.9.285 gave it a notification-producing WRITE path without adding any read-side vocabulary here either.');
     }
 
     // ===============================================================
@@ -992,7 +992,7 @@ async function runTests() {
         // L1. Notification delivery — still much larger than persistence,
         // still requires real delivery semantics this store deliberately
         // excludes (Section H).
-        // application/PublicationCommentaryNotificationProducer.js's own
+        // application/publication/commentary/PublicationCommentaryNotificationProducer.js's own
         // header comment NAMES NotificationDelivery/NotificationInbox/
         // NotificationCenter to explain their absence — checked against
         // real CODE only, per this section's own established discipline.
@@ -1052,8 +1052,8 @@ async function runTests() {
             },
             {
                 rank: 2,
-                name: 'Wire the existing producer into a real composition root — CLOSED by 0.9.285 (application/CreateWorldViewUseCase.js)',
-                evidence: 'Section J found the producer and the store both fully built and fully unwired — zero constructors called outside their own files. 0.9.284 wired the STORE (for reads, backing GetRecipientNotificationEventsUseCase). 0.9.285 closed the remaining half: application/CreateWorldViewUseCase.js now constructs a real PublicationCommentaryNotificationProducer wrapping the SAME AddPublicationCommentaryUseCase instance it already built, sinking into the SAME NotificationEventStore instance the read side already reads from, and hands the decorated capability — never the raw use case — to WorldNavigationSession (Section J1/J3, re-verified). AddPublicationCommentaryUseCase.js itself remains completely unmodified — only composition changed which implementation is exposed.'
+                name: 'Wire the existing producer into a real composition root — CLOSED by 0.9.285 (application/world/CreateWorldViewUseCase.js)',
+                evidence: 'Section J found the producer and the store both fully built and fully unwired — zero constructors called outside their own files. 0.9.284 wired the STORE (for reads, backing GetRecipientNotificationEventsUseCase). 0.9.285 closed the remaining half: application/world/CreateWorldViewUseCase.js now constructs a real PublicationCommentaryNotificationProducer wrapping the SAME AddPublicationCommentaryUseCase instance it already built, sinking into the SAME NotificationEventStore instance the read side already reads from, and hands the decorated capability — never the raw use case — to WorldNavigationSession (Section J1/J3, re-verified). AddPublicationCommentaryUseCase.js itself remains completely unmodified — only composition changed which implementation is exposed.'
             },
             {
                 rank: 3,
@@ -1130,7 +1130,7 @@ async function runTests() {
 '\n' +
 'EXISTING CONSUMERS (Section J)\n' +
 '    Narrowed by 0.9.284, then closed for writes by 0.9.285. The store has\n' +
-'    exactly one real caller (application/CreateWorldViewUseCase.js), now\n' +
+'    exactly one real caller (application/world/CreateWorldViewUseCase.js), now\n' +
 '    backing BOTH GetRecipientNotificationEventsUseCase (reads, 0.9.284) and\n' +
 '    PublicationCommentaryNotificationProducer\'s own notificationSink\n' +
 '    (writes, 0.9.285) — the SAME NotificationEventStore instance, not two.\n' +
@@ -1141,12 +1141,12 @@ async function runTests() {
 '\n' +
 'RANKED CANDIDATES FOR THE NEXT PRODUCT SEAM (as ranked here; ranks 1, 2 and 4 since built)\n' +
 '    1. Recipient query capability — CLOSED by 0.9.283\n' +
-'       (application/GetRecipientNotificationEventsUseCase.js). Built exactly\n' +
+'       (application/chat/GetRecipientNotificationEventsUseCase.js). Built exactly\n' +
 '       as safely derivable (Section C), resolving Section D6\'s own open\n' +
 '       design question by hard-scoping to the authenticated identity, never\n' +
 '       a caller-supplied id.\n' +
 '    2. Wire the existing producer into a real composition root — CLOSED by\n' +
-'       0.9.285 (application/CreateWorldViewUseCase.js). The store was\n' +
+'       0.9.285 (application/world/CreateWorldViewUseCase.js). The store was\n' +
 '       already wired for reads (0.9.284); 0.9.285 wired the producer that\n' +
 '       WRITES a notification, wrapping the SAME AddPublicationCommentaryUseCase\n' +
 '       instance rather than modifying it.\n' +

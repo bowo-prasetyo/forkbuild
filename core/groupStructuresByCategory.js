@@ -1,6 +1,6 @@
 // Pure grouping helper — first-seen category order, [{ category,
 // structures }] — extracted from core/StructureRegistry.js#groupByCategory()
-// so a second Structure catalog (application/LocalStructureLibraryStore.js,
+// so a second Structure catalog (application/editor/LocalStructureLibraryStore.js,
 // 0.4.3's Personal Blueprint Library) groups its own contents exactly the
 // same way the built-in registry always has, rather than a second grouping
 // loop written for personal content. Takes a plain array of Structures —

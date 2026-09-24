@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
 
-import { AutomaticSnapshotEncounterRetentionReconciliation } from '../application/AutomaticSnapshotEncounterRetentionReconciliation.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { registerMaterializedSnapshotWorldSource } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
+import { AutomaticSnapshotEncounterRetentionReconciliation } from '../application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { registerMaterializedSnapshotWorldSource } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 
 // 0.9.190 — Automatic Snapshot Encounter Retention Integration.
@@ -253,7 +253,7 @@ async function runTests() {
     // Section I — no rediscovery: structural sweep.
     // ---------------------------------------------------------------
     {
-        const source = await codeOnlySource('application/AutomaticSnapshotEncounterRetentionReconciliation.js');
+        const source = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js');
         const forbidden = [
             'AutomaticSnapshotEncounterCascade', 'WorldSnapshotDiscoveryMonitor',
             'DiscoverSnapshotCandidatesCommand', 'ResolveSelectedSnapshotCommand',

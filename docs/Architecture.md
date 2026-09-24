@@ -45,14 +45,14 @@ commands. Nothing touches meshes directly.
 the shared EventBus and wires it to both World and the renderer, so
 core/ and renderer/ only ever meet through events. The main sessions:
 
-- EditorSession (application/EditorSession.js): the Editor's whole live
+- EditorSession (application/editor/EditorSession.js): the Editor's whole live
   runtime graph as one unit, rebuilt by start(), loadDocument(),
   newDocument() and openDocument(). It is the only place bricks,
   structures and groups are edited.
-- WorldNavigationSession (application/WorldNavigationSession.js): World
+- WorldNavigationSession (application/world/WorldNavigationSession.js): World
   View's runtime graph. It observes and navigates; see "World View"
   below.
-- PublishedWorldSession (application/PublishedWorldSession.js): a
+- PublishedWorldSession (application/publication/PublishedWorldSession.js): a
   read-only projection of one Publication, with selection and
   inspection but no mutation path at all.
 
@@ -147,7 +147,7 @@ docs/CapabilityMatrix.md for exactly what each surface may do.
   StructureCompositionTool). InputDispatcher normalizes DOM events and
   picks once per pointer event, so tools receive pre-picked results.
 - **Commands and history.** Every document change is a Command executed
-  through CommandHistory (application/CommandHistory.js): a linear
+  through CommandHistory (application/editor/CommandHistory.js): a linear
   history where executing after an undo clears redo. Commands carry an
   id, timestamp and stable type string; CommandRegistry
   (application/commands/CommandRegistry.js) maps the type back to a
@@ -205,13 +205,13 @@ the detailed references; in short:
   core/library/VillageLibrary.js. A Structure is only ordinary bricks in
   local coordinates.
 - The Editor's Build Library (ui/components/BuildLibraryPanel.js) lists
-  both, with previews from application/LibraryPreviewService.js. Clicking
+  both, with previews from application/editor/LibraryPreviewService.js. Clicking
   a structure places a copy of its bricks
   (CopyStructureIntoDocumentUseCase through StructureCompositionTool);
   Fork opens it as a new document.
 - A StructurePlacement (core/StructurePlacement.js) places a whole saved
   Document inside another one by reference, resolved fresh by
-  application/StructureDocumentResolver.js; placements can be moved,
+  application/editor/StructureDocumentResolver.js; placements can be moved,
   rotated, duplicated and removed with their own commands.
 - Blueprints: a personal structure library (LocalStructureLibraryStore,
   local to the device), BlueprintPackage export and import, and
@@ -282,7 +282,7 @@ CommandHistory is not persisted with the document: after a reload or a
 recovery, undo history starts empty.
 
 **Lifecycle status** (Draft, Saved, Published) is computed on demand by
-application/DocumentLifecycleStatus.js from facts that already exist
+application/document/DocumentLifecycleStatus.js from facts that already exist
 (has it been saved, is a Publication known for it), never stored. A fork
 is not a status: it is an ordinary document whose metadata carries
 `parentDocumentId` (or `parentStructureId` for a Structure fork).
@@ -327,7 +327,7 @@ PublicationQuery (text, author, sort, page, pageSize,
 includeDescriptions) and gets back a PublicationPage (items, totals,
 hasNext/hasPrevious). The discovery provider it searches merges local
 publications with the application-wide decentralized discovery provider
-(application/CreateDiscoveryUseCase.js).
+(application/discovery/CreateDiscoveryUseCase.js).
 
 - Sorting (core/PublicationSort.js) always falls back to an ordinal
   publicationId tiebreak, so every replica orders the same way.
@@ -337,7 +337,7 @@ publications with the application-wide decentralized discovery provider
 - Pagination is explicit (PublicationPagination.js); there is no
   infinite scroll.
 - Previews are derived client state, never part of a Publication.
-  PublicationPreview asks application/PreviewService.js for a thumbnail
+  PublicationPreview asks application/editor/PreviewService.js for a thumbnail
   only while the card is visible; PreviewService queues, deduplicates,
   caches and cancels renders done by renderer/DocumentThumbnailRenderer.js,
   and a failed preview never fails the publication.
@@ -358,7 +358,7 @@ signature and causal stamp. Several placements may point at one
 publication, and a document's author, its publisher and its placement's
 owner can be three different people.
 
-**What the live World View uses.** application/CreateWorldViewUseCase.js
+**What the live World View uses.** application/world/CreateWorldViewUseCase.js
 wires:
 
 - LocalSpatialIndexProvider (spatial/) and LocalPlacementRegistry
@@ -368,7 +368,7 @@ wires:
   falls back to a deterministic, id-keyed grid position
   (core/DeterministicGridPlacement.js) for a publication with none.
 - PlacePublicationUseCase with GridPlacementStrategy
-  (application/InitialPlacementStrategy.js): the automatic first
+  (application/placement/InitialPlacementStrategy.js): the automatic first
   placement after publishing. Its position is a pure function of the
   publication id, so every replica computes the same one.
 - MoveWorldPlacementUseCase and RemoveWorldPlacementUseCase. A move
@@ -441,7 +441,7 @@ the signer allowed.
 
 - delegation: core/Delegation.js grants one PLACE or MOVE capability,
   checked by identity/DelegationVerifier.js;
-- replica merging (application/CreateReplicationUseCase.js,
+- replica merging (application/placement/CreateReplicationUseCase.js,
   replication/ReplicaMergeService.js and LocalReplicationStore.js).
   ConflictResolver compares two causal stamps (EQUAL, BEFORE, AFTER,
   CONCURRENT), ConflictPolicy picks a deterministic presentation winner
@@ -515,7 +515,7 @@ URL; the reference server is server/rendezvous-worker/) or through a
 manual invitation (peer/PeerInvitation.js with an offer and answer). A
 discovered candidate is only a hint; peer/PeerAuthenticationSession.js
 runs a challenge–response over the new connection, and a signature is
-bound to that one connection. application/PeerSessionManager.js is the
+bound to that one connection. application/peer/PeerSessionManager.js is the
 one app-wide owner of connections (listPeers(), importCandidate(),
 disconnect(), onIdentityMismatch()), and ConnectedPeerRegistry lists the
 authenticated ones.
@@ -617,7 +617,7 @@ who you are, what your avatar looks like, and where it is right now.
 
 ## Avatar movement constraint pipeline
 
-`application/AvatarMovementController.js` runs the simulated move through up to six optional constraints, in this
+`application/avatar/AvatarMovementController.js` runs the simulated move through up to six optional constraints, in this
 order. Each is a separate class with a `{ position, blocked | collided }` result, and each can be left out:
 
     simulateAvatarMovement()        speed x run multiplier x water speed factor
@@ -726,7 +726,7 @@ until it arrives (DocumentOperationDeferralUseCase).
 The earlier protocol from Collaboration Protocol Foundation (0.2.7) and
 Multi-client Synchronization (0.2.9) (collaboration/: CollaborationSession,
 DocumentAuthority and the transports, wired by
-application/CreateCollaborationUseCase.js) still exists but has no callers
+application/document/CreateCollaborationUseCase.js) still exists but has no callers
 in the app; the design notes are in docs/ArchitectureHistory.md.
 
 ## Places, landmarks and naming
@@ -846,7 +846,7 @@ the rest.
   (*SnapshotPlacement*, Materialize*, DecentralizedSnapshotResolver)
   cover creating, announcing, discovering, resolving and explicitly
   materializing Snapshots. content/ holds the stores and
-  application/IpfsRemotePublicationCoordinator.js the remote-pinning path.
+  application/ipfs/IpfsRemotePublicationCoordinator.js the remote-pinning path.
 - **World Encounters.** The DecentralizedWorld*/WorldDiscovery*
   application files turn discovered publications and Snapshots into
   encounters shown by ui/components/WorldEncounterCanvas.js.

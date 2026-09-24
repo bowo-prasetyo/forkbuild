@@ -1,8 +1,8 @@
 import { decodeBaseSignedTransaction } from '../base/BaseSignedTransactionCodec.js';
 import { BaseSignedTransactionFinalizer } from '../base/BaseSignedTransactionFinalizer.js';
-import { BaseSignedTransactionFinalizationCoordinator } from '../application/BaseSignedTransactionFinalizationCoordinator.js';
-import { BaseSignedTransactionFinalizationState, isValidBaseSignedTransactionFinalizationState } from '../application/BaseSignedTransactionFinalizationState.js';
-import { describeBaseSignedTransactionFinalization, describeBaseSignedTransactionFinalizationStateLabel } from '../application/BaseSignedTransactionFinalizationView.js';
+import { BaseSignedTransactionFinalizationCoordinator } from '../application/anchoring/base/BaseSignedTransactionFinalizationCoordinator.js';
+import { BaseSignedTransactionFinalizationState, isValidBaseSignedTransactionFinalizationState } from '../application/anchoring/base/BaseSignedTransactionFinalizationState.js';
+import { describeBaseSignedTransactionFinalization, describeBaseSignedTransactionFinalizationStateLabel } from '../application/anchoring/base/BaseSignedTransactionFinalizationView.js';
 
 // 0.8.94 — Explicit Base Signed Transaction Verification & Finalization.
 //

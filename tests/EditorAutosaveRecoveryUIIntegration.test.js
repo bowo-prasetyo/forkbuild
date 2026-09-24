@@ -6,18 +6,18 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
-import { CreatePersistenceUseCase } from '../application/CreatePersistenceUseCase.js';
-import { AutosaveScheduler } from '../application/AutosaveScheduler.js';
-import { RecoveryObserver } from '../application/RecoveryObserver.js';
+import { CreatePersistenceUseCase } from '../application/document/CreatePersistenceUseCase.js';
+import { AutosaveScheduler } from '../application/document/AutosaveScheduler.js';
+import { RecoveryObserver } from '../application/document/RecoveryObserver.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { AutosaveDocumentUseCase } from '../application/AutosaveDocumentUseCase.js';
-import { CheckRecoveryUseCase } from '../application/CheckRecoveryUseCase.js';
-import { RecoverDocumentUseCase } from '../application/RecoverDocumentUseCase.js';
-import { DiscardRecoveryUseCase } from '../application/DiscardRecoveryUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { AutosaveDocumentUseCase } from '../application/document/AutosaveDocumentUseCase.js';
+import { CheckRecoveryUseCase } from '../application/document/CheckRecoveryUseCase.js';
+import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentUseCase.js';
+import { DiscardRecoveryUseCase } from '../application/document/DiscardRecoveryUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
@@ -30,7 +30,7 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 // wired to no UI caller at all. This milestone connects them to
 // ui/views/EditorView.js through two small additions — AutosaveScheduler
 // is unchanged and simply started now, and the new
-// application/RecoveryObserver.js gates CheckRecoveryUseCase on document
+// application/document/RecoveryObserver.js gates CheckRecoveryUseCase on document
 // identity rather than on every edit.
 //
 // EditorView.js itself cannot be exercised here: it imports 'vue', which
@@ -104,7 +104,7 @@ function makeFakeTimers() {
 }
 
 // The same low-level collaborators CreatePersistenceUseCase composes
-// (application/CreatePersistenceUseCase.js), over a caller-owned
+// (application/document/CreatePersistenceUseCase.js), over a caller-owned
 // in-memory storage instance instead of the real
 // LocalStorageProvider — CreatePersistenceUseCase.execute() itself
 // works fine to construct/inspect in plain Node (see Section A), but
@@ -525,7 +525,7 @@ async function run() {
         assert(!bannerSource.includes('RecoverDocumentUseCase') && !bannerSource.includes('DiscardRecoveryUseCase'),
             'RecoveryBanner.js never calls a recovery use case itself — it only emits recover/discard');
 
-        const observerSource = codeOnlyLines(await rawSource('application/RecoveryObserver.js'));
+        const observerSource = codeOnlyLines(await rawSource('application/document/RecoveryObserver.js'));
         assert(!/from ['"].*\/(storage|persistence)\//.test(observerSource),
             'RecoveryObserver.js imports nothing from storage/ or persistence/ — only the injected use case');
         assert(!observerSource.includes('import '),

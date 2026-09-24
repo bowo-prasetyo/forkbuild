@@ -29,7 +29,7 @@ export const placeNamingMethods = {
 	// if the region is unknown to this replica, or if naming claims were
 	// never wired — never a canEditDocument() check, unlike every
 	// World-content mutation above: publishing a claim never touches the
-	// World itself. See application/PlaceNamingClaimUseCase.js#publish().
+	// World itself. See application/placeNaming/PlaceNamingClaimUseCase.js#publish().
 	publishPlaceNamingClaim(regionId, name) {
 	    if (!this._placeNamingClaimUseCase) {
 	        throw new Error('WorldNavigationSession: place naming claims are not available');
@@ -42,7 +42,7 @@ export const placeNamingMethods = {
 	},
 
 	// Withdraws a claim THIS identity itself published — see
-	// application/PlaceNamingClaimUseCase.js#retract() on why anyone
+	// application/placeNaming/PlaceNamingClaimUseCase.js#retract() on why anyone
 	// else's claim id is silently ignored (returns false) rather than
 	// throwing.
 	retractPlaceNamingClaim(regionId, claimId) {
@@ -99,16 +99,16 @@ export const placeNamingMethods = {
 	// -----------------------------------------------------------------
 	// Decentralized Place Name Exchange: how a claim reaches, or is reached by,
 	// another replica. Both methods delegate to
-	// application/PlaceNamingClaimExchange.js; this session validates, signs
+	// application/placeNaming/PlaceNamingClaimExchange.js; this session validates, signs
 	// and verifies nothing itself.
 	// -----------------------------------------------------------------
 
 	// Builds a portable publication package for one claim this replica
 	// already has on file for `regionId` — see
-	// application/PlaceNamingClaimPublication.js for the exact wire
+	// application/placeNaming/PlaceNamingClaimPublication.js for the exact wire
 	// shape. What the caller does with the returned package (write it to
 	// a file, copy it to a clipboard) is this session's own business as
-	// little as it is application/ExportBlueprintUseCase.js's. Throws if
+	// little as it is application/blueprint/ExportBlueprintUseCase.js's. Throws if
 	// exchange isn't wired, the region is unknown, or `claimId` doesn't
 	// match any claim this replica actually has for it — never a stale
 	// or partial package.
@@ -130,11 +130,11 @@ export const placeNamingMethods = {
 	},
 
 	// Imports a naming claim publication `pkg` (untrusted input — see
-	// application/PlaceNamingClaimExchange.js#importClaim()'s own
+	// application/placeNaming/PlaceNamingClaimExchange.js#importClaim()'s own
 	// "validate, construct, verify" order) into this replica's own
 	// claim store. Deliberately NOT scoped to `regionId` or to whatever
 	// World is currently active: a publication carries its own
-	// worldId/regionId, and application/LocalPlaceNamingClaimStore.js is
+	// worldId/regionId, and application/placeNaming/LocalPlaceNamingClaimStore.js is
 	// already scoped per-World — see that store's own header on why it
 	// happily holds claims for a World this replica isn't even currently
 	// viewing. Returns `{ claim, isNew }`; throws for anything malformed
@@ -147,7 +147,7 @@ export const placeNamingMethods = {
 	},
 
 	// This replica's own LOCAL, unsigned, unshared override — see
-	// application/LocalNamePreferenceStore.js's own header on why this
+	// application/identity/LocalNamePreferenceStore.js's own header on why this
 	// is a genuinely third concept, never a claim and never the
 	// region's own name.
 	setPreferredPlaceName(regionId, name) {

@@ -1,6 +1,6 @@
 import { LocalIdentity } from '../identity/LocalIdentity.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { IdentityUseCase } from '../application/IdentityUseCase.js';
+import { IdentityUseCase } from '../application/identity/IdentityUseCase.js';
 import { IdentityLifecycleState } from '../core/IdentityLifecycleState.js';
 import { isValidIdentityRevocationRecord, toIdentityRevocationRecord } from '../core/IdentityRevocationEnvelope.js';
 import { isValidIdentitySuccessionRecord } from '../core/IdentitySuccessionEnvelope.js';

@@ -1,14 +1,14 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreatePublicationReferenceRecordUseCase } from '../application/CreatePublicationReferenceRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
 import {
     describePublisherLeaderboardSnapshotClaimVerification,
     verifyPublisherLeaderboardSnapshotClaim
-} from '../application/PublisherLeaderboardSnapshotClaimVerification.js';
+} from '../application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js';
 import {
     PublisherLeaderboardSnapshotClaim,
     getPublisherLeaderboardSnapshotClaimSigningDescriptor,
@@ -25,7 +25,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // Section B: toJSON()/fromJSON() round trip, self-describing wire envelope
 // Section C: getSigningDescriptor() — canonical payload shape, never carries
 //            score/reputation/trust vocabulary
-// Section D: application/PublisherLeaderboardSnapshotFingerprint.js — deterministic,
+// Section D: application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js — deterministic,
 //            changes with the snapshot, tolerant of malformed input
 // Section E: CreatePublisherLeaderboardSnapshotClaimUseCase — the ONE
 //            construction boundary; requires an authenticated identity;
@@ -233,7 +233,7 @@ async function run() {
     console.log('✓ Section C: getSigningDescriptor() produces the canonical protocol/claimKind/evidenceFingerprint/policyVersion/snapshotFingerprint payload, never evaluative vocabulary');
 
     // ---------------------------------------------------------------
-    // Section D — application/PublisherLeaderboardSnapshotFingerprint.js.
+    // Section D — application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js.
     // ---------------------------------------------------------------
     {
         const archive = buildSharedArchive();

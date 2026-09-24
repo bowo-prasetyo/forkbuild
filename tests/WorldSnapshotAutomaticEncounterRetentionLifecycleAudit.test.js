@@ -1,25 +1,25 @@
 import { readFile } from 'node:fs/promises';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { AutomaticSnapshotEncounterRetentionReconciliation } from '../application/AutomaticSnapshotEncounterRetentionReconciliation.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { AutomaticSnapshotEncounterRetentionReconciliation } from '../application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource,
     materializedSnapshotWorldOrigin
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { assembleWorldDiscoveryInputs } from '../core/WorldDiscoverySourceAssembly.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
@@ -36,9 +36,9 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //
 // 0.9.186 through 0.9.190 built two independently-correct autonomous
 // processes sharing the identical Wanderer-movement observation cadence —
-// `application/WorldSnapshotDiscoveryMonitor.js` +
-// `application/AutomaticSnapshotEncounterCascade.js` (DISCOVER -> ... ->
-// REGISTER) and `application/AutomaticSnapshotEncounterRetentionReconciliation.js`
+// `application/snapshot/WorldSnapshotDiscoveryMonitor.js` +
+// `application/snapshot/AutomaticSnapshotEncounterCascade.js` (DISCOVER -> ... ->
+// REGISTER) and `application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js`
 // (RETAIN -> UNREGISTER). Each was proven correct in isolation — 0.9.187/
 // 0.9.188 for the cascade alone, 0.9.189/0.9.190 for reconciliation alone.
 // NEITHER prior test file ever constructs both together, feeding the SAME
@@ -738,7 +738,7 @@ async function runTests() {
             materializeSelectedSnapshotCommand: (resolution) => Promise.resolve({ outcome: StoreSnapshotContentOutcome.STORED, contentHash: resolution.__testHash, reason: null }),
             worldDiscoverySourceRegistry: registry,
             // publicationId alone determines the placement, per
-            // application/AutomaticSnapshotEncounterCascade.js's own header
+            // application/snapshot/AutomaticSnapshotEncounterCascade.js's own header
             // ("placement is resolved from publicationId alone, never from
             // contentHash") — this test reads whichever revision is
             // currently "the near one" at call time via the closure below.
@@ -754,7 +754,7 @@ async function runTests() {
         // documented "OBSERVED" consequence of Section E: two content
         // revisions of one Publication occupy two independent origins) and
         // reconciles each origin's own watched placement directly, exactly
-        // as application/AutomaticSnapshotEncounterRetentionReconciliation.js
+        // as application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js
         // itself does per-origin — never conflating the two revisions'
         // own positions into one.
         registry.setSource(describeWorldDiscoverySource({
@@ -1114,14 +1114,14 @@ async function runTests() {
     // to make discovery and retention compose.
     // ---------------------------------------------------------------
     {
-        const reconciliationSource = await codeOnlySource('application/AutomaticSnapshotEncounterRetentionReconciliation.js');
+        const reconciliationSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js');
         const exportCount = (reconciliationSource.match(/^export /gm) || []).length;
         assert(exportCount === 1, '1. AutomaticSnapshotEncounterRetentionReconciliation.js exports exactly one thing — the class itself, no companion enum/constant');
         for (const token of ['WATCHED', 'FORGOTTEN', 'ACTIVE', 'STALE', 'EXPIRED', 'RETIRED', 'LOST']) {
             assert(!new RegExp(`\\b${token}\\b`).test(reconciliationSource), `2. no "${token}" lifecycle-state token appears anywhere in the reconciliation file`);
         }
 
-        const cascadeSource = await codeOnlySource('application/AutomaticSnapshotEncounterCascade.js');
+        const cascadeSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
         assert(!cascadeSource.includes('AutomaticSnapshotEncounterRetentionReconciliation'), '3. the cascade still never imports the reconciliation class — composition happens only at ui/views/WorldView.js\'s own call site, never inside either file');
 
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');

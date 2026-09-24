@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { orchestratePublicationDistribution } from '../application/PublicationDistributionOrchestrator.js';
+import { orchestratePublicationDistribution } from '../application/publication/distribution/PublicationDistributionOrchestrator.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -278,7 +278,7 @@ async function run() {
     // Section G — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/PublicationDistributionOrchestrator.js', import.meta.url);
+        const sourceUrl = new URL('../application/publication/distribution/PublicationDistributionOrchestrator.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -303,10 +303,10 @@ async function run() {
             assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `44. code must never use "${term}" — no transaction/status/execution-state/scheduling vocabulary at this boundary`);
         }
 
-        const compositionSource = await readFile(new URL('../application/PublicationDistributionRuntimeComposition.js', import.meta.url), 'utf8');
+        const compositionSource = await readFile(new URL('../application/publication/distribution/PublicationDistributionRuntimeComposition.js', import.meta.url), 'utf8');
         assert(!compositionSource.includes('PublicationDistributionOrchestrator'), '45. the 0.9.47 composition itself is never modified to know about this orchestrator');
 
-        const executorSource = await readFile(new URL('../application/PublicationDistributionExecutor.js', import.meta.url), 'utf8');
+        const executorSource = await readFile(new URL('../application/publication/distribution/PublicationDistributionExecutor.js', import.meta.url), 'utf8');
         assert(!executorSource.includes('PublicationDistributionOrchestrator'), '46. the 0.9.49 executor itself is never modified to know about this orchestrator');
 
         console.log('✓ Architectural regression: no re-implemented construction/sequencing, no lifecycle/persistence imports, no forbidden vocabulary, exactly one export');

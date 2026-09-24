@@ -4,7 +4,7 @@ const DEFAULT_NOSTR_RELAY_URL = 'wss://relay.damus.io';
 //
 // docs/Roadmap.md's own 0.9.368 audit named the exact gap this closes: all
 // three read-path Nostr discovery classes in this codebase
-// (application/NostrDiscoveryQueryService.js, application/
+// (application/nostr/NostrDiscoveryQueryService.js, application/
 // NostrSnapshotDiscoveryQueryService.js, application/
 // NostrPlaceNamingDiscoverySource.js) already accept their own `relayUrl`
 // through ordinary constructor injection, but `ui/main.js` never supplied
@@ -129,7 +129,7 @@ const DEFAULT_NOSTR_RELAY_URL = 'wss://relay.damus.io';
 // storage store, its use case, its resolution provider, and its own
 // settings page have all been REMOVED; every consumer that used to read
 // `resolvedNostrPublicationRelayUrls` (Publication distribution via
-// `application/NostrMultiRelayPublicationDiscoveryPublisher.js`,
+// `application/nostr/NostrMultiRelayPublicationDiscoveryPublisher.js`,
 // Publication discovery via `application/
 // NostrPublicationRelaySetDiscoveryQueryService.js`) now reads THIS file's
 // own `relayUrls` instead — the identical array Snapshot discovery,
@@ -237,7 +237,7 @@ export class NostrRelayConfiguration {
 // discovery classes already hardcodes individually (application/
 // NostrDiscoveryQueryService.js's own DEFAULT_RELAY_URL, application/
 // NostrSnapshotDiscoveryQueryService.js's own DEFAULT_RELAY_URL,
-// application/NostrPlaceNamingDiscoverySource.js's own DEFAULT_RELAY_URL) —
+// application/placeNaming/NostrPlaceNamingDiscoverySource.js's own DEFAULT_RELAY_URL) —
 // byte-identical here, deliberately never imported from any of the three:
 // the same per-file "no cross-import of a sibling's own constant" restraint
 // this codebase's other configuration boundaries already hold, applied here

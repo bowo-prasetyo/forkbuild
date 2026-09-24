@@ -32,7 +32,7 @@
 //     produce the FIRST accepted claim in the first place.)
 //
 // Never cleared when an avatar goes ABSENT/is pruned from
-// application/LocalPresenceStore.js — a returning participant must
+// application/presence/LocalPresenceStore.js — a returning participant must
 // still only be believed as the SAME authority that left, not
 // whoever next claims their avatarId. This registry's lifetime is
 // tied to the trust boundary that owns it (effectively one replica

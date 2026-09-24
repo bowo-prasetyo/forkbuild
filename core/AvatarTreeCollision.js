@@ -91,8 +91,8 @@ export function avatarCollisionCircleAt(position) {
 // to be tested against" query (a separate spatial-query concern, not
 // this file's — see docs/Roadmap.md, 0.9.60); a generic world-object
 // collision query spanning trees, terrain, and future object kinds
-// (0.9.62); wiring this file into application/AvatarMovementConstraint.js
-// or application/AvatarTerrainConstraint.js in any way; importing
+// (0.9.62); wiring this file into application/avatar/AvatarMovementConstraint.js
+// or application/avatar/AvatarTerrainConstraint.js in any way; importing
 // core/NaturalFeatureField.js, core/TreeCollisionGeometry.js, any
 // renderer module, Three.js, or any avatar movement/simulation module;
 // randomness, wall-clock time, persistence, or networking of any kind;

@@ -176,7 +176,7 @@ import { isNonEmptyString } from '../utils/typeGuards.js';
 // "one fact, one explicit replacement method" discipline `withPosition()`
 // already established for itself. A caller that wants to change BOTH
 // facts on the same tick (ordinarily
-// application/AvatarVehicleMovementController.js, once movement genuinely
+// application/avatar/AvatarVehicleMovementController.js, once movement genuinely
 // changes a vehicle's horizontal position) calls both methods explicitly
 // — `withPosition()` deliberately does NOT recompute `heading` as a
 // side effect, and `withHeading()` deliberately does NOT touch

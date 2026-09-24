@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { describeWorldEncounterView } from '../application/WorldEncounterView.js';
-import { describeWorldEncounterReadModel } from '../application/WorldEncounterReadModel.js';
+import { describeWorldEncounterView } from '../application/worldEncounter/WorldEncounterView.js';
+import { describeWorldEncounterReadModel } from '../application/worldEncounter/WorldEncounterReadModel.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 
 // 0.9.2 — World View Presentation Projection.
@@ -229,7 +229,7 @@ async function run() {
             assert(!resultText.includes(term), `34. the result never carries spatial/evaluative vocabulary ('${term}')`);
         }
 
-        const moduleSource = await readFile(new URL('../application/WorldEncounterView.js', import.meta.url), 'utf8');
+        const moduleSource = await readFile(new URL('../application/worldEncounter/WorldEncounterView.js', import.meta.url), 'utf8');
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
         const forbiddenInCode = [
             'score', 'rank', 'winner', 'trust', 'reputation', 'verified', 'confidence',

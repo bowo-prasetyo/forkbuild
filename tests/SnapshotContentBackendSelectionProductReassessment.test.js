@@ -101,7 +101,7 @@ async function run() {
     // in an isolated test harness).
     // ===============================================================
     {
-        const backendSelectionSource = await rawSource('application/SnapshotDistributionContentBackendSelection.js');
+        const backendSelectionSource = await rawSource('application/snapshot/SnapshotDistributionContentBackendSelection.js');
         check(/SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES\s*=\s*Object\.freeze\(\['ipfs',\s*'ar'\]\)/.test(backendSelectionSource),
             "B. the eligible Content backend set is exactly {IPFS, Arweave} — frozen, closed, no third option");
 
@@ -220,11 +220,11 @@ async function run() {
     // regression-checked here at the source level.
     // ===============================================================
     {
-        const backendSelectionSource = await rawSource('application/SnapshotDistributionContentBackendSelection.js');
+        const backendSelectionSource = await rawSource('application/snapshot/SnapshotDistributionContentBackendSelection.js');
         check(/throw new Error\(`resolveSnapshotDistributionContentStore: no ContentStore is currently registered for "\$\{storage\}"`\);/.test(backendSelectionSource),
             'F. an eligible-but-unregistered backend throws synchronously — no attempt to substitute a different, registered backend');
 
-        const resolverSource = await rawSource('application/DecentralizedSnapshotResolver.js');
+        const resolverSource = await rawSource('application/snapshot/DecentralizedSnapshotResolver.js');
         check(resolverSource.includes('contentStore || (storeRegistry ? storeRegistry.get(candidate.storage) : null)'),
             "F. resolution still looks up EXACTLY the candidate's own declared storage — no ranking, no retry loop, no cross-backend fallback");
 
@@ -239,7 +239,7 @@ async function run() {
     // nothing about how Placement itself works.
     // ===============================================================
     {
-        const backendSelectionSource = await rawSource('application/SnapshotDistributionContentBackendSelection.js');
+        const backendSelectionSource = await rawSource('application/snapshot/SnapshotDistributionContentBackendSelection.js');
         check(!backendSelectionSource.includes("'local'") || /never a legitimate Distribution target|SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES = Object\.freeze\(\['ipfs', 'ar'\]\)/.test(backendSelectionSource),
             "G. 'local' is documented and enforced as excluded from Distribution's own eligible set");
 
@@ -247,9 +247,9 @@ async function run() {
         check(mainSource.includes('stores: [publicationContentStore, new IpfsContentStore({ apiUrl: resolvedIpfsNodeApiUrl })]'),
             "G. 'local' remains a genuinely registered, usable Placement backend (publicationContentStore, storage 'local')");
 
-        check(!(await rawSource('application/SnapshotDistributionContentBackendSelection.js')).match(/CreateSnapshotPlacementOrchestratorUseCase|CreateExternalSnapshotPlacementUseCase/),
+        check(!(await rawSource('application/snapshot/SnapshotDistributionContentBackendSelection.js')).match(/CreateSnapshotPlacementOrchestratorUseCase|CreateExternalSnapshotPlacementUseCase/),
             'G. the Distribution selection module never imports any Placement creation class — no coupling introduced in that direction');
-        const placementOrchestratorSource = await rawSource('application/CreateSnapshotPlacementOrchestratorUseCase.js');
+        const placementOrchestratorSource = await rawSource('application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js');
         check(!/SnapshotDistributionContentBackendSelection|resolveSnapshotDistributionContentStore/.test(placementOrchestratorSource),
             "G. ...nor does Placement's own creation orchestrator import anything from Distribution's selection module, in the other direction");
 

@@ -2,7 +2,7 @@ import { DiscoveryProvider } from './DiscoveryProvider.js';
 
 // 0.8.25 — Explicit Snapshot Placement Creation UX.
 //
-// application/CreateExternalSnapshotPlacementUseCase.js and application/
+// application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js and application/
 // CreatePublicationSnapshotPlacementUseCase.js (both 0.8.18) were built
 // and tested against THIS file's own base class — discovery/
 // DiscoveryProvider.js#findById() — mirroring application/
@@ -13,7 +13,7 @@ import { DiscoveryProvider } from './DiscoveryProvider.js';
 // The Publication Center this codebase actually ships (ui/views/
 // DecentralizedPublicationsView.js, wired in ui/main.js) has never used
 // that world — it catalogs core/DecentralizedPublication.js instances in
-// application/LocalPublicationCatalog.js, whose own lookup method is
+// application/publication/LocalPublicationCatalog.js, whose own lookup method is
 // `get(publicationId)`, not `findById(publicationId)`. Two established,
 // already-shipped classes; two different method names for the identical
 // idea. This class is the thin bridge: it answers findById() by
@@ -41,7 +41,7 @@ export class PublicationCatalogDiscoveryProvider extends DiscoveryProvider {
     }
 
     // The cataloged DecentralizedPublication for `id`, or null — exactly
-    // application/LocalPublicationCatalog.js#get()'s own return value,
+    // application/publication/LocalPublicationCatalog.js#get()'s own return value,
     // completely unchanged.
     findById(id) {
         return this._publicationCatalog.get(id);

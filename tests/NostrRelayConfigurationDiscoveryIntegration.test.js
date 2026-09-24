@@ -3,11 +3,11 @@ import { readFile } from 'node:fs/promises';
 import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
-import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQueryService.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
+import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 
 // 0.9.369 — Nostr Relay Configuration Discovery Integration.
 // See docs/Roadmap.md, "0.9.369 — Nostr Relay Configuration Boundary."
@@ -91,7 +91,7 @@ async function run() {
         });
         assert(nostr instanceof NostrDiscoveryQueryService, 'A1. a usable queryImpl still produces a real NostrDiscoveryQueryService');
         assert(nostr.relayUrl === 'wss://my-world-encounter-relay.example', 'A2. the configured relayUrl reaches the constructed NostrDiscoveryQueryService verbatim, through the unmodified composition function');
-        console.log('✓ Section A: a configured relayUrl reaches application/NostrDiscoveryQueryService.js through application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js unmodified');
+        console.log('✓ Section A: a configured relayUrl reaches application/nostr/NostrDiscoveryQueryService.js through application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js unmodified');
     }
 
     // ===============================================================
@@ -105,7 +105,7 @@ async function run() {
         });
         assert(queryService instanceof NostrSnapshotDiscoveryQueryService, 'B1. a usable queryImpl still produces a real NostrSnapshotDiscoveryQueryService');
         assert(queryService.relayUrl === 'wss://my-snapshot-relay.example', 'B2. the configured relayUrl reaches the constructed NostrSnapshotDiscoveryQueryService verbatim, through the unmodified composition function');
-        console.log('✓ Section B: a configured relayUrl reaches application/NostrSnapshotDiscoveryQueryService.js through application/DiscoverSnapshotRuntimeComposition.js unmodified');
+        console.log('✓ Section B: a configured relayUrl reaches application/nostr/NostrSnapshotDiscoveryQueryService.js through application/snapshot/DiscoverSnapshotRuntimeComposition.js unmodified');
     }
 
     // ===============================================================
@@ -118,7 +118,7 @@ async function run() {
     {
         const placeNamingSource = new NostrPlaceNamingDiscoverySource({ queryImpl: fakeQueryImpl, relayUrl: 'wss://my-place-naming-relay.example' });
         assert(placeNamingSource.relayUrl === 'wss://my-place-naming-relay.example', 'C1. the configured relayUrl reaches the constructed NostrPlaceNamingDiscoverySource verbatim');
-        console.log('✓ Section C: a configured relayUrl reaches application/NostrPlaceNamingDiscoverySource.js through direct construction, the exact shape ui/main.js uses');
+        console.log('✓ Section C: a configured relayUrl reaches application/placeNaming/NostrPlaceNamingDiscoverySource.js through direct construction, the exact shape ui/main.js uses');
     }
 
     // ===============================================================

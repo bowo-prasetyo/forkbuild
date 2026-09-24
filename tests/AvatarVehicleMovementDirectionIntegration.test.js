@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
-import { AvatarTreeConstraint } from '../application/AvatarTreeConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
+import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
 import { AvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 import { AvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
@@ -15,12 +15,12 @@ import {
 } from '../core/AvatarVehicleMovementCapability.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { Position } from '../core/Position.js';
 
 // 0.9.89 — Vehicle Movement Direction Semantics.
@@ -233,7 +233,7 @@ async function runTests() {
         // `_currentMovementSpeed` residual; reusing it immediately for
         // "backward" would spend the SAME window mostly decelerating
         // that residual back through zero (see the milestone's own
-        // "passes through zero, never jumps" design — application/AvatarMovementController.js's
+        // "passes through zero, never jumps" design — application/avatar/AvatarMovementController.js's
         // own 0.9.91 header) rather than genuinely moving backward. This
         // section's own concern is direction PERMISSION (0.9.89), not
         // deceleration timing — a fresh controller per direction removes
@@ -277,7 +277,7 @@ async function runTests() {
         // is now RATE_LIMITED (0.9.90): the forward burst just above
         // leaves real positive `_currentMovementSpeed` residual, and
         // reversing direction must decelerate THROUGH zero before making
-        // genuine backward progress (see application/AvatarMovementController.js's
+        // genuine backward progress (see application/avatar/AvatarMovementController.js's
         // own 0.9.91 header) — a longer window gives it time to actually
         // cross zero and accumulate net negative displacement, not just
         // cancel the forward residual.
@@ -555,7 +555,7 @@ async function runTests() {
     // Section J — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/AvatarMovementController.js', import.meta.url);
+        const sourceUrl = new URL('../application/avatar/AvatarMovementController.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -563,15 +563,15 @@ async function runTests() {
             .join('\n');
 
         assert(!/\bBICYCLE\b|\bMOTORCYCLE\b|\bCAR\b|\bDRONE\b/.test(codeOnly),
-            '34. application/AvatarMovementController.js never references BICYCLE/MOTORCYCLE/CAR/DRONE — it knows only about a resolved capability\'s own movementDirections, never which vehicle produced it');
+            '34. application/avatar/AvatarMovementController.js never references BICYCLE/MOTORCYCLE/CAR/DRONE — it knows only about a resolved capability\'s own movementDirections, never which vehicle produced it');
         assert(!codeOnly.includes('GROUND_VEHICLE') && !codeOnly.includes('AERIAL_VEHICLE'),
-            '35. application/AvatarMovementController.js never branches on a specific AvatarMovementCapabilityKind value to decide direction — it only ever reads the generic movementDirections shape');
+            '35. application/avatar/AvatarMovementController.js never branches on a specific AvatarMovementCapabilityKind value to decide direction — it only ever reads the generic movementDirections shape');
         assert(!/leftAllowed|rightAllowed|movementDirections\.(left|right)|steering|Steering/i.test(codeOnly),
-            '36. application/AvatarMovementController.js introduces no left/right movement-direction CAPABILITY vocabulary (the pre-existing A/D turnAxis keys are unrelated and untouched — see Section G\'s own turning assertion) — this milestone\'s capability gating is forward/backward only');
+            '36. application/avatar/AvatarMovementController.js introduces no left/right movement-direction CAPABILITY vocabulary (the pre-existing A/D turnAxis keys are unrelated and untouched — see Section G\'s own turning assertion) — this milestone\'s capability gating is forward/backward only');
         assert(codeOnly.includes('_resolvedMovementDirections') && codeOnly.includes('movementDirections'),
-            '37. application/AvatarMovementController.js does expose the _resolvedMovementDirections() seam this milestone exists to add');
+            '37. application/avatar/AvatarMovementController.js does expose the _resolvedMovementDirections() seam this milestone exists to add');
         assert(!/BicycleMovementController|MotorcycleMovementController|CarMovementController|DroneMovementController|VehicleMovementController/.test(codeOnly),
-            '38. application/AvatarMovementController.js contains no per-vehicle movement controller of any kind — there remains exactly one movement controller');
+            '38. application/avatar/AvatarMovementController.js contains no per-vehicle movement controller of any kind — there remains exactly one movement controller');
     }
     {
         const sourceUrl = new URL('../core/AvatarVehicleMovementCapability.js', import.meta.url);
@@ -582,7 +582,7 @@ async function runTests() {
             .join('\n');
 
         assert(!codeOnly.includes('AvatarMovementController') && !codeOnly.includes('AvatarMovementSimulation'),
-            '39. core/AvatarVehicleMovementCapability.js still never imports application/AvatarMovementController.js or core/AvatarMovementSimulation.js — the movement-directions seam is a pure capability field, never a cross-module coupling');
+            '39. core/AvatarVehicleMovementCapability.js still never imports application/avatar/AvatarMovementController.js or core/AvatarMovementSimulation.js — the movement-directions seam is a pure capability field, never a cross-module coupling');
     }
     {
         const sourceUrl = new URL('../core/AvatarMovementDirectionCapability.js', import.meta.url);

@@ -7,8 +7,8 @@ import { register } from 'node:module';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { TurnServerConfiguration } from '../core/TurnServerConfiguration.js';
 import { TurnServerConfigurationStore } from '../storage/TurnServerConfigurationStore.js';
-import { resolveTurnServerConfiguration } from '../application/TurnServerConfigurationProvider.js';
-import { SetTurnServerConfigurationUseCase } from '../application/SetTurnServerConfigurationUseCase.js';
+import { resolveTurnServerConfiguration } from '../application/settings/TurnServerConfigurationProvider.js';
+import { SetTurnServerConfigurationUseCase } from '../application/settings/SetTurnServerConfigurationUseCase.js';
 import { IceServerConfiguration } from '../core/IceServerConfiguration.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 import { NostrRelayConfiguration } from '../core/NostrRelayConfiguration.js';
@@ -784,8 +784,8 @@ async function run() {
         const KNOWN_COMPOSITION_FILES = new Set([
             'core/TurnServerConfiguration.js',
             'storage/TurnServerConfigurationStore.js',
-            'application/TurnServerConfigurationProvider.js',
-            'application/SetTurnServerConfigurationUseCase.js',
+            'application/settings/TurnServerConfigurationProvider.js',
+            'application/settings/SetTurnServerConfigurationUseCase.js',
             'ui/views/TurnServerSettingsView.js',
             'ui/router/index.js',
             'ui/views/NetworkSettingsView.js',

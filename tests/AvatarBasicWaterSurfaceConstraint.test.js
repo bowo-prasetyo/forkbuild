@@ -13,7 +13,7 @@ import { DEFAULT_MAX_WALKING_DEPTH } from '../core/AvatarWaterWalkability.js';
 // tests/AvatarBasicWaterTraversalBoundaryAudit.test.js (0.9.614) traced
 // the cause (position.y is a flat simulated plane by deliberate design;
 // terrain height, hill or lake alike, is only ever combined with it at
-// the RENDERING layer — application/RenderWorldViewUseCase.js's own
+// the RENDERING layer — application/world/RenderWorldViewUseCase.js's own
 // withGroundElevation()) and test-drove a minimal, TEST-LOCAL candidate
 // fix at exactly that layer, never installed anywhere.
 //
@@ -27,7 +27,7 @@ import { DEFAULT_MAX_WALKING_DEPTH } from '../core/AvatarWaterWalkability.js';
 // (extracted from its actual source text, never re-typed by hand)
 // satisfies exactly the invariants the milestone's own brief named.
 //
-// Since application/RenderWorldViewUseCase.js's execute() constructs a
+// Since application/world/RenderWorldViewUseCase.js's execute() constructs a
 // real renderer/Renderer.js (a real THREE.WebGLRenderer, which needs a
 // browser `document` this headless suite does not have — see
 // renderer/StructureRelativeFaceSnappingRendering.test.js's own header
@@ -171,9 +171,9 @@ async function run() {
     // Section A — extraction: pull the REAL withGroundElevation()
     // straight out of its real source file, never re-typed by hand.
     // -------------------------------------------------------------
-    const renderWorldViewSource = await readSource('application/RenderWorldViewUseCase.js');
+    const renderWorldViewSource = await readSource('application/world/RenderWorldViewUseCase.js');
     const functionBody = extractFunctionBody(renderWorldViewSource, 'function withGroundElevation(position) {');
-    assert(functionBody !== null, '1. application/RenderWorldViewUseCase.js#withGroundElevation() is located and extracted from its real source text');
+    assert(functionBody !== null, '1. application/world/RenderWorldViewUseCase.js#withGroundElevation() is located and extracted from its real source text');
     assert(functionBody.includes('surfaceCategoryAt') && functionBody.includes('LAKE_SURFACE_HEIGHT') && functionBody.includes('Math.max'),
         '2. the extracted function body genuinely contains the water-floor gate (surfaceCategoryAt/LAKE_SURFACE_HEIGHT/Math.max) — this is testing the shipped fix, not a stand-in for it');
 
@@ -307,8 +307,8 @@ async function run() {
             'core/AvatarMovementState.js',
             'core/AvatarAnimationState.js',
             'core/AvatarMovementSimulation.js',
-            'application/AvatarStepConstraint.js',
-            'application/AvatarMovementController.js'
+            'application/avatar/AvatarStepConstraint.js',
+            'application/avatar/AvatarMovementController.js'
         ];
         for (const file of presenceFiles) {
             const src = codeOnly(await readSource(file));
@@ -332,7 +332,7 @@ async function run() {
         const forbiddenTerms = /\bbreath\b|\bdrown|\bstamina\b|\bbuoyan/i;
         const renderWorldViewCode = codeOnly(renderWorldViewSource);
         assert(!forbiddenTerms.test(renderWorldViewCode),
-            '18. application/RenderWorldViewUseCase.js introduces no breath/drowning/stamina/buoyancy vocabulary — the milestone stayed exactly as narrow as its own brief specified');
+            '18. application/world/RenderWorldViewUseCase.js introduces no breath/drowning/stamina/buoyancy vocabulary — the milestone stayed exactly as narrow as its own brief specified');
         for (const file of ['core/AvatarMovementSimulation.js', 'core/AvatarMovementState.js', 'core/AvatarAnimationState.js']) {
             const src = codeOnly(await readSource(file));
             assert(!forbiddenTerms.test(src), `19. ${file} introduces no breath/drowning/stamina/buoyancy mechanic`);

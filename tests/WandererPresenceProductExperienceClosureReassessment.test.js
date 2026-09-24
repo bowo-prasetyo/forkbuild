@@ -5,20 +5,20 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
 
 import { AvatarProfile } from '../core/AvatarProfile.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { PresenceSyncService } from '../application/PresenceSyncService.js';
-import { LocalPresenceStore } from '../application/LocalPresenceStore.js';
-import { RemoteAvatarRegistry } from '../application/RemoteAvatarRegistry.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { PresenceSyncService } from '../application/presence/PresenceSyncService.js';
+import { LocalPresenceStore } from '../application/presence/LocalPresenceStore.js';
+import { RemoteAvatarRegistry } from '../application/avatar/RemoteAvatarRegistry.js';
 import { toAvatarPresenceAdvertisement } from '../core/AvatarPresenceAdvertisement.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
 import { computeNearbyAvatars } from '../core/AvatarProximity.js';
 
-import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../application/AvatarPresenceLabels.js';
+import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../application/avatar/AvatarPresenceLabels.js';
 import NearbyAvatarsPanel from '../ui/components/NearbyAvatarsPanel.js';
 import AvatarInfoPanel from '../ui/components/AvatarInfoPanel.js';
 import WorldMembersPanel from '../ui/components/WorldMembersPanel.js';
@@ -31,7 +31,7 @@ import { worldNavigationSessionFiles, stylesheetFiles, worldEncounterCanvasFiles
 //
 // TYPE: test-only product/presentation reassessment, plus one small,
 // narrowly-scoped production fix this milestone's own Section K located
-// (application/AvatarPresenceLabels.js + the two panels that read it).
+// (application/avatar/AvatarPresenceLabels.js + the two panels that read it).
 //
 // 0.9.582 asked, and closed: does this codebase clearly and consistently
 // REPRESENT (in its own application/core state) who is present, where,
@@ -49,19 +49,19 @@ import { worldNavigationSessionFiles, stylesheetFiles, worldEncounterCanvasFiles
 // doesn't require re-proving them live.
 //
 // SAME STRUCTURAL CONSTRAINT AS EVERY MILESTONE SINCE 0.9.574:
-// application/WorldNavigationSession.js transitively imports
-// application/RenderWorldViewUseCase.js, which imports `three` — a
+// application/world/WorldNavigationSession.js transitively imports
+// application/world/RenderWorldViewUseCase.js, which imports `three` — a
 // package this checkout has no node_modules for at all. So this file
 // never imports WorldNavigationSession.js; every claim about its own
 // methods (getAvatarDisplayName(), getAvatarInfo(), getNearbyAvatars(),
 // the WorldView.js host-composition seams that call them) is proven by
 // direct source citation (readSource() + exact string match), exactly
 // like 0.9.576 through 0.9.582 already established. Every OTHER
-// collaborator this file needs — application/RemoteAvatarRegistry.js,
-// application/RemoteAvatarInterpolator.js, application/PresenceSyncService.js,
-// application/LocalPresenceStore.js, application/AvatarPresenceSession.js,
+// collaborator this file needs — application/avatar/RemoteAvatarRegistry.js,
+// application/avatar/RemoteAvatarInterpolator.js, application/presence/PresenceSyncService.js,
+// application/presence/LocalPresenceStore.js, application/avatar/AvatarPresenceSession.js,
 // core/AvatarProximity.js, presence/PeerAvatarPresenceBroadcastProvider.js,
-// application/AvatarPresenceLabels.js, and the plain-object UI components
+// application/avatar/AvatarPresenceLabels.js, and the plain-object UI components
 // (ui/components/NearbyAvatarsPanel.js, ui/components/AvatarInfoPanel.js,
 // ui/components/WorldMembersPanel.js, ui/components/WorldPresenceIndicator.js,
 // ui/components/WorldCollaborationRoster.js, ui/components/WorldCollaboratorIndicator.js)
@@ -393,7 +393,7 @@ async function main() {
     // ===================================================================
     // Section D — Presence lifecycle visibility.
     //
-    // application/RemoteAvatarRegistry.js is the ACTUAL seam between
+    // application/avatar/RemoteAvatarRegistry.js is the ACTUAL seam between
     // "PresenceSyncService believes this avatar exists" and "the
     // renderer is showing something for it." 0.9.582 imported this
     // class and cited it, but never once instantiated it. This section
@@ -500,7 +500,7 @@ async function main() {
         // protocol — because, per 0.9.582 Section C, this protocol has
         // NO explicit leave signal at all; claiming a deliberate
         // departure would be inventing a fact the system doesn't have.
-        const labelsSource = codeOnly(await readSource('application/AvatarPresenceLabels.js'));
+        const labelsSource = codeOnly(await readSource('application/avatar/AvatarPresenceLabels.js'));
         assert(!/'?left'?|disconnected|offline/i.test(labelsSource),
             'F1. Present/Stale/Absent (and Trusted/Unsigned/Conflicting/etc.) never use "left"/"disconnected"/"offline" — the vocabulary stays honestly agnostic about WHY someone is no longer known.');
 
@@ -691,7 +691,7 @@ async function main() {
     // 'jumping') were reaching BOTH AvatarInfoPanel.js and
     // NearbyAvatarsPanel.js verbatim — the ONLY status field in either
     // panel that bypassed the label-function discipline
-    // application/AvatarPresenceLabels.js already enforces for
+    // application/avatar/AvatarPresenceLabels.js already enforces for
     // lifecycleState and trustStatus. Both panels' OWN design-doc
     // mockups (embedded verbatim in their own header comments, cited in
     // Section A/G above) show "Walking"/"Idle" — capitalized — yet
@@ -765,7 +765,7 @@ async function main() {
     // objects — never a hand-rolled stand-in for the trust/transport
     // layer — with Alice's own render-facade spy as the thing actually
     // asserted against, because that spy IS, structurally, what a
-    // Wanderer's own screen is built from (application/RenderWorldViewUseCase.js's
+    // Wanderer's own screen is built from (application/world/RenderWorldViewUseCase.js's
     // own setRemoteAvatar/updateRemoteAvatarPresence/removeRemoteAvatar,
     // cited in Section D's own header).
     // ===================================================================
@@ -879,7 +879,7 @@ async function main() {
             ['H — Avatar/vehicle presentation', 'ALREADY_CORRECT — structurally isolated from identity; the mount prompt itself can only ever describe the viewer\'s own avatar.'],
             ['I — Multiple participants (3+)', 'ALREADY_CORRECT — dedup is by identity in all three roster functions and live in RemoteAvatarRegistry; overlapping position/activity never collapses people.'],
             ['J — Async visual correctness', 'ALREADY_CORRECT — rapid retargets collapse to one visual; dispose() removes every live visual and leaves nothing for a fresh registry to inherit.'],
-            ['K — Vocabulary sweep', 'PRESENTATION_GAP FOUND AND FIXED — raw animation-enum leakage in AvatarInfoPanel.js/NearbyAvatarsPanel.js; fixed with describeAnimationState() in application/AvatarPresenceLabels.js, the smallest available seam. Nothing else found.'],
+            ['K — Vocabulary sweep', 'PRESENTATION_GAP FOUND AND FIXED — raw animation-enum leakage in AvatarInfoPanel.js/NearbyAvatarsPanel.js; fixed with describeAnimationState() in application/avatar/AvatarPresenceLabels.js, the smallest available seam. Nothing else found.'],
             ['L — Flagship journey', 'ALREADY_CORRECT — the complete enter/see/move/disconnect/reconnect/switch-world journey holds end to end at the real render-facade seam, over a real authenticated connection.']
         ];
         for (const [section, verdict] of classifications) {

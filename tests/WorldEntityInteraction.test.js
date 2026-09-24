@@ -1,16 +1,16 @@
 import * as THREE from 'three';
 import { AvatarInteractionState } from '../application/spatial-state/AvatarInteractionState.js';
-import { describeLifecycleState, describeTrustStatus } from '../application/AvatarPresenceLabels.js';
+import { describeLifecycleState, describeTrustStatus } from '../application/avatar/AvatarPresenceLabels.js';
 import { AvatarPickingService } from '../renderer/AvatarPickingService.js';
 import { PickingService } from '../renderer/PickingService.js';
 import { PresenceLifecycleState } from '../core/PresenceLifecycleState.js';
 import { TrustStatus } from '../core/TrustObservation.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
-import { RemoteAvatarRegistry } from '../application/RemoteAvatarRegistry.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { SpatialCameraController } from '../application/SpatialCameraController.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { RemoteAvatarRegistry } from '../application/avatar/RemoteAvatarRegistry.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
@@ -22,14 +22,14 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -41,10 +41,10 @@ import { License, LicenseId } from '../core/License.js';
 // 0.2.39 — World Entity Interaction & Selection.
 //
 //   Section A: application/spatial-state/AvatarInteractionState.js
-//   Section B: application/AvatarPresenceLabels.js
+//   Section B: application/avatar/AvatarPresenceLabels.js
 //   Section C: renderer/AvatarPickingService.js — REAL Three.js raycasting
 //   Section D: renderer/PickingService.js — distance field addition
-//   Section E: application/RemoteAvatarRegistry.js — has()/currentPosition()
+//   Section E: application/avatar/RemoteAvatarRegistry.js — has()/currentPosition()
 //   Section F: WorldNavigationSession.pick() — avatar-vs-brick priority/distance
 //   Section G: WorldNavigationSession.getAvatarInfo() — local vs remote
 //   Section H: Follow-a-remote-avatar / mutual exclusivity / pruning on absence
@@ -150,7 +150,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — application/AvatarPresenceLabels.js
+    // Section B — application/avatar/AvatarPresenceLabels.js
     // -------------------------------------------------------------
     {
         assert(describeLifecycleState(PresenceLifecycleState.PRESENT) === 'Present', '4. PRESENT -> "Present"');
@@ -239,7 +239,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section E — application/RemoteAvatarRegistry.js: has()/currentPosition()
+    // Section E — application/avatar/RemoteAvatarRegistry.js: has()/currentPosition()
     // -------------------------------------------------------------
     {
         const calls = { setRemoteAvatar: [], updateRemoteAvatarPresence: [], removeRemoteAvatar: [] };

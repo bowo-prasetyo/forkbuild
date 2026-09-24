@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { stylesheetFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { stylesheetFiles, publicationsPageFiles, peerConnectionsViewSource } from './support/SourceFileGroups.js';
 
 // 0.9.648 — Publications Page Container Consistency Boundary Audit.
 //
@@ -114,7 +114,7 @@ async function run() {
     const recentWorldsViewSrc = await readSource('ui/views/RecentWorldsView.js');
     const identityManagementViewSrc = await readSource('ui/views/IdentityManagementView.js');
     const conversationsViewSrc = await readSource('ui/views/ConversationsView.js');
-    const peerConnectionsViewSrc = await readSource('ui/views/PeerConnectionsView.js');
+    const peerConnectionsViewSrc = peerConnectionsViewSource();
     const leaderboardHubViewSrc = await readSource('ui/views/LeaderboardHubView.js');
     const routerSrc = await readSource('ui/router/index.js');
 
@@ -149,7 +149,7 @@ async function run() {
         // (search, sort, pagination) via PublicationCatalogToolbar.js/
         // PublicationPagination.js.
         assert(!/from ['"]\.\.\/components\/PublicationCatalog\.js['"]|from ['"]\.\.\/components\/PublicationPagination\.js['"]|from ['"]\.\.\/components\/PublicationCatalogToolbar\.js['"]/.test(publicationsViewSrc),
-            n('A: DecentralizedPublicationsView.js imports none of ui/components/PublicationCatalog.js/PublicationPagination.js/PublicationCatalogToolbar.js — no catalog-browsing chrome exists on this page to begin with (its own unrelated mentions of application/LocalPublicationCatalog.js, a different, non-UI store class, are not this)'));
+            n('A: DecentralizedPublicationsView.js imports none of ui/components/PublicationCatalog.js/PublicationPagination.js/PublicationCatalogToolbar.js — no catalog-browsing chrome exists on this page to begin with (its own unrelated mentions of application/publication/LocalPublicationCatalog.js, a different, non-UI store class, are not this)'));
 
         // The entries list itself: exactly the SAME card vocabulary
         // (.identity-mgmt-list/.identity-mgmt-card) as the tools panel's

@@ -1,32 +1,32 @@
 import {
     recallIpfsRemotePublishingCredential, rememberIpfsRemotePublishingCredential
-} from '../../../application/IpfsRemotePublishingCredentialMemory.js';
-import { IpfsRemotePublishingConfiguration } from '../../../application/IpfsRemotePublishingConfiguration.js';
-import { IpfsRemotePublicationState } from '../../../application/IpfsRemotePublicationState.js';
+} from '../../../application/ipfs/IpfsRemotePublishingCredentialMemory.js';
+import { IpfsRemotePublishingConfiguration } from '../../../application/ipfs/IpfsRemotePublishingConfiguration.js';
+import { IpfsRemotePublicationState } from '../../../application/ipfs/IpfsRemotePublicationState.js';
 import {
     describeIpfsRemotePublishingConfiguration, describeIpfsRemotePublication
-} from '../../../application/IpfsRemotePublicationView.js';
-import { IpfsPublicationRecord, IpfsPublicationMethod } from '../../../application/IpfsPublicationRecord.js';
-import { appendIpfsPublicationRecordHistoryEntry } from '../../../application/IpfsPublicationRecordHistory.js';
+} from '../../../application/ipfs/IpfsRemotePublicationView.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod } from '../../../application/ipfs/IpfsPublicationRecord.js';
+import { appendIpfsPublicationRecordHistoryEntry } from '../../../application/ipfs/IpfsPublicationRecordHistory.js';
 import {
     IPFS_REMOTE_PUBLICATION_BADGE_CLASSES, IPFS_PUBLICATION_CONTENT_VERIFICATION_BADGE_CLASSES
 } from './presentation.js';
 import {
     IpfsPublicationContentVerificationCoordinatorState
-} from '../../../application/IpfsPublicationContentVerificationCoordinatorState.js';
+} from '../../../application/ipfs/IpfsPublicationContentVerificationCoordinatorState.js';
 import {
     describeIpfsPublicationContentVerification
-} from '../../../application/IpfsPublicationContentVerificationView.js';
-import { describeIpfsPublicationRecordHistory } from '../../../application/IpfsPublicationRecordHistoryView.js';
+} from '../../../application/ipfs/IpfsPublicationContentVerificationView.js';
+import { describeIpfsPublicationRecordHistory } from '../../../application/ipfs/IpfsPublicationRecordHistoryView.js';
 import {
     appendIpfsPublicationContentVerificationHistoryEntry, latestIpfsPublicationContentVerification
-} from '../../../application/IpfsPublicationContentVerificationHistory.js';
+} from '../../../application/ipfs/IpfsPublicationContentVerificationHistory.js';
 import {
     describeIpfsPublicationContentVerificationHistory
-} from '../../../application/IpfsPublicationContentVerificationHistoryView.js';
+} from '../../../application/ipfs/IpfsPublicationContentVerificationHistoryView.js';
 import {
     describeIpfsPublicationObservationTimeline, IpfsPublicationObservationTimelineEntryKind
-} from '../../../application/IpfsPublicationObservationTimelineView.js';
+} from '../../../application/ipfs/IpfsPublicationObservationTimelineView.js';
 
 // Remote IPFS publishing: the pinning-service configuration form, publishing
 // an entry's content, verifying what was published, and the per-entry record,

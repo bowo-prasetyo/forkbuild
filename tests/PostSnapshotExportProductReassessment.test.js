@@ -1,4 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises';
+import { applicationPath } from './support/ApplicationFiles.js';
 
 import { Brick } from '../core/Brick.js';
 import { Building } from '../core/Building.js';
@@ -7,16 +8,16 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
-import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/BuildPublicationSnapshotTransferPackageUseCase.js';
-import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
-import { SnapshotContentMaterializationCoordinator } from '../application/SnapshotContentMaterializationCoordinator.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { SnapshotContentTransferOutcome } from '../application/SnapshotContentTransferOutcome.js';
-import { validatePublicationSnapshotTransferPackage } from '../application/PublicationSnapshotTransferPackageValidator.js';
-import { CURRENT_SCHEMA_VERSION, PUBLICATION_SNAPSHOT_TRANSFER_PACKAGE_KIND } from '../application/PublicationSnapshotTransferPackage.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js';
+import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js';
+import { SnapshotContentMaterializationCoordinator } from '../application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { SnapshotContentTransferOutcome } from '../application/snapshot/materialization/SnapshotContentTransferOutcome.js';
+import { validatePublicationSnapshotTransferPackage } from '../application/snapshot/PublicationSnapshotTransferPackageValidator.js';
+import { CURRENT_SCHEMA_VERSION, PUBLICATION_SNAPSHOT_TRANSFER_PACKAGE_KIND } from '../application/snapshot/PublicationSnapshotTransferPackage.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -228,7 +229,7 @@ async function runTests() {
         const commandHistoryImports = [...navigationSessionSource.matchAll(/import\s*\{[^}]*\bCommandHistory\b[^}]*\}\s*from\s*['"]([^'"]+)['"]/g)];
         assert(new Set(commandHistoryImports.map((m) => m[1].split('/').pop())).size === 1, 'C4a. WorldNavigationSession.js and its method modules import exactly one CommandHistory-shaped class');
         assert(!/_undoStack|_redoStack/.test(navigationSessionSource), 'C4b. WorldNavigationSession.js still maintains no second undo/redo stack of its own');
-        const editorSessionSource = await rawSource('application/EditorSession.js');
+        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
         assert(!/_undoStack|_redoStack/.test(editorSessionSource), 'C4c. EditorSession.js also maintains no second undo/redo stack');
 
         console.log('✓ Section C: World material/document lifecycle — COMPLETE, reconfirmed. Autosave/recovery, history/replay/restore, and placement/publication/naming all remain composed and UI-reachable; CommandHistory remains the sole undo/redo authority for both sessions.');
@@ -262,9 +263,9 @@ async function runTests() {
         assert(clickHandlers.has('discoverOwnSnapshot') && clickHandlers.has('discoverSnapshotCandidates') && clickHandlers.has('distributeOwnSnapshot') && clickHandlers.has('exportOwnSnapshot'),
             'D1c. OwnPublicationPanel.js still wires Snapshot discovery/distribution/export actions alongside Publication');
 
-        const removePlacementSource = await rawSource('application/RemoveWorldPlacementUseCase.js');
+        const removePlacementSource = await rawSource('application/placement/RemoveWorldPlacementUseCase.js');
         assert(!/Publish|Unpublish/.test(removePlacementSource), 'D1d. Unpublish != Remove placement: RemoveWorldPlacementUseCase.js still carries no Publish/Unpublish reference');
-        const unpublishSource = await rawSource('application/UnpublishDocumentUseCase.js');
+        const unpublishSource = await rawSource('application/publication/UnpublishDocumentUseCase.js');
         assert(!/Placement/.test(unpublishSource), 'D1e. ...and UnpublishDocumentUseCase.js still carries no Placement reference');
 
         // D2 — Publication distribution, its own row: Nostr/Arweave
@@ -306,7 +307,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         // E1 — Transform gesture feedback (closed by 0.9.214).
-        const spatialEditingServiceSource = await rawSource('application/SpatialEditingService.js');
+        const spatialEditingServiceSource = await rawSource('application/editor/SpatialEditingService.js');
         assert(/getGestureFeedback\(\)\s*\{\s*return this\._gestureFeedback;\s*\}/.test(spatialEditingServiceSource), 'E1a. SpatialEditingService still exposes getGestureFeedback()');
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/import TransformFeedback from '..\/components\/TransformFeedback\.js';/.test(editorViewSource), 'E1b. EditorView.js still imports TransformFeedback');
@@ -314,7 +315,7 @@ async function runTests() {
         assert(/transformFeedback\.value = result\.feedback \|\| null;/.test(editorViewSource), 'E1d. ...still a bare passthrough of the captured pointer-event result, no reconstruction');
 
         // E2 — Undo/redo label mirrors (closed by 0.9.213).
-        const actionRegistrySource = await rawSource('application/EditorActionRegistry.js');
+        const actionRegistrySource = await rawSource('application/editor/EditorActionRegistry.js');
         const undoActionMatch = actionRegistrySource.match(/id:\s*'history\.undo',[\s\S]{0,1000}?execute:/);
         assert(undoActionMatch && /contextualLabel:\s*\(ctx\)\s*=>\s*ctx\.undoLabel/.test(undoActionMatch[0]), 'E2a. EditorActionRegistry\'s history.undo action still carries contextualLabel: (ctx) => ctx.undoLabel');
         const commandPaletteSource = await rawSource('ui/components/CommandPalette.js');
@@ -325,7 +326,7 @@ async function runTests() {
         // it BEHAVIORALLY and audits the symmetry boundary in depth.
         const mainSource = await rawSource('ui/main.js');
         assert(/new BuildPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'E3a. ui/main.js still composes BuildPublicationSnapshotTransferPackageUseCase');
-        const coordinatorSource = await rawSource('application/SnapshotContentMaterializationCoordinator.js');
+        const coordinatorSource = await rawSource('application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js');
         assert(/async export\(publicationId\)/.test(coordinatorSource), 'E3b. SnapshotContentMaterializationCoordinator still has a matching export(publicationId) method');
 
         console.log('✓ Section E: Editor — COMPLETE. All three ACTUAL_GAP findings 0.9.212 made (transform feedback, undo/redo label mirrors, Snapshot export) remain closed under regression, not merely assumed.');
@@ -365,9 +366,9 @@ async function runTests() {
     {
         // G1 — both directions share the SAME package schema. Neither
         // Build nor Import defines its own parallel shape.
-        const buildSource = await rawSource('application/BuildPublicationSnapshotTransferPackageUseCase.js');
+        const buildSource = await rawSource('application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js');
         assert(/import \{ buildPublicationSnapshotTransferPackage \} from '\.\/PublicationSnapshotTransferPackage\.js';/.test(buildSource), 'G1a. Build use case still assembles the package through PublicationSnapshotTransferPackage.js\'s own builder — no parallel shape');
-        const validatorSource = await rawSource('application/PublicationSnapshotTransferPackageValidator.js');
+        const validatorSource = await rawSource('application/snapshot/PublicationSnapshotTransferPackageValidator.js');
         assert(/CURRENT_SCHEMA_VERSION|PUBLICATION_SNAPSHOT_TRANSFER_PACKAGE_KIND/.test(validatorSource), 'G1b. Import\'s own structural validator still checks against the SAME schema constants Build\'s package carries');
         assert(CURRENT_SCHEMA_VERSION === 1, 'G1c. no second schema version exists — CURRENT_SCHEMA_VERSION is still 1, unchanged since 0.8.32 (no versioning work introduced here)');
 
@@ -384,10 +385,10 @@ async function runTests() {
         // export alone, now applied to BOTH directions plus the shared
         // package module.
         for (const file of [
-            'application/BuildPublicationSnapshotTransferPackageUseCase.js',
-            'application/ImportPublicationSnapshotTransferPackageUseCase.js',
-            'application/SnapshotContentMaterializationCoordinator.js',
-            'application/PublicationSnapshotTransferPackage.js'
+            'application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js',
+            'application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js',
+            'application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js',
+            'application/snapshot/PublicationSnapshotTransferPackage.js'
         ]) {
             const codeOnly = codeOnlyLines(await rawSource(file)).join('\n');
             assert(!/publish|distribut|nostr|arweave|placement/i.test(codeOnly), `G3. ${file}'s own CODE references none of Publish/Distribute/Nostr/Arweave/Placement — neither direction silently publishes, distributes, places, or touches decentralized discovery`);
@@ -460,7 +461,7 @@ async function runTests() {
         const bobStoredBytes = await bob.contentStore.get(result.contentReference);
         assert(bobStoredBytes === bytes, 'G6g. ...and the actual bytes Bob now holds are byte-identical to what Alice exported');
         assert(bobBefore !== null && bobBefore.id === publication.id, 'G6h. Alice\'s own catalog entry is untouched by having exported (still present, same id) — export performed no mutation on the exporting side either');
-        assert(!bob.publicationCatalog.get(publication.id), 'G6i. importing content never silently catalogs the Publication itself on the importing side — Bob knows content he does not yet know a Publication for, exactly as application/PublicationSnapshotTransferPackage.js\'s own header documents');
+        assert(!bob.publicationCatalog.get(publication.id), 'G6i. importing content never silently catalogs the Publication itself on the importing side — Bob knows content he does not yet know a Publication for, exactly as application/snapshot/PublicationSnapshotTransferPackage.js\'s own header documents');
 
         console.log('✓ Section G: Snapshot import/export symmetry — OBSERVED, not extended. Both directions share one package schema (G1); export stays read-only (G2); neither direction touches Publish/Distribute/Placement/decentralized discovery (G3); import stays a single explicit action, no drag-and-drop (G4); no file-save/clipboard affordance exists for export (G5); a real Export->Import round trip preserves Publication identity and content hash exactly, with no cataloging side effect in either direction (G6).');
     }
@@ -547,7 +548,7 @@ async function runTests() {
         // document happens to load next.
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/autosaveScheduler\.stop\(\)/.test(editorViewSource), 'J3. EditorView.js still stops (never merely pauses) the autosave scheduler on teardown — no orphaned cross-document autosave write');
-        const autosaveSchedulerSource = await rawSource('application/AutosaveScheduler.js');
+        const autosaveSchedulerSource = await rawSource('application/document/AutosaveScheduler.js');
         assert(/onStateChanged/.test(autosaveSchedulerSource), 'J4. AutosaveScheduler.js still subscribes to documentManager.onStateChanged — a document switch is observed, not silently ignored');
 
         // Existing dedicated regression proofs for this exact invariant,
@@ -650,7 +651,7 @@ async function runTests() {
         // granularity was built for a closed three-level vocabulary, but
         // this codebase has never promised gating WORLD VIEW RENDERING
         // by read level, only gating EDIT.
-        const authServiceSource = await rawSource('application/WorldAuthorizationService.js');
+        const authServiceSource = await rawSource('application/identity/WorldAuthorizationService.js');
         assert(/the ONE seam/.test(authServiceSource) || /consulted from BOTH the LOCAL mutation chokepoint/i.test((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n')), 'L4a. the authorization architecture still documents edit-gating (canEditDocument), not read-gating, as its own seam');
         assert(countReferences(worldViewSource, 'getWorldAccessLevel') === 0 && countReferences(worldViewSource, 'canReadDocument') === 0, 'L4b. neither is called from WorldView.js — consistent with the documented boundary, not an oversight');
         assert(/canEditDocument/.test(worldViewSource), 'L4c. ...while canEditDocument(), the ONE dimension the architecture actually gates UI with, IS called from WorldView.js');
@@ -699,27 +700,27 @@ async function runTests() {
         // M1 — the two ALREADY-known findings, reconfirmed unchanged.
         const mainSource = await rawSource('ui/main.js');
         assert(!/GroupsPanel/.test(mainSource), 'M1a. ui/components/GroupsPanel.js is still not registered in ui/main.js');
-        assert(!/CreatePublicationSnapshotPlacementCatalogUseCase/.test(mainSource), 'M1b. application/CreatePublicationSnapshotPlacementCatalogUseCase.js is still not composed in ui/main.js');
-        assert((await rawSource('application/CreatePublicationSnapshotPlacementCatalogUseCase.js')).includes('class CreatePublicationSnapshotPlacementCatalogUseCase'), 'M1c. ...and still exists on disk, unremoved');
+        assert(!/CreatePublicationSnapshotPlacementCatalogUseCase/.test(mainSource), 'M1b. application/snapshot/placement/CreatePublicationSnapshotPlacementCatalogUseCase.js is still not composed in ui/main.js');
+        assert((await rawSource('application/snapshot/placement/CreatePublicationSnapshotPlacementCatalogUseCase.js')).includes('class CreatePublicationSnapshotPlacementCatalogUseCase'), 'M1c. ...and still exists on disk, unremoved');
 
-        // M2 — NEW, full OBSOLETE: application/CreatePublicationAnchorCatalogUseCase.js.
+        // M2 — NEW, full OBSOLETE: application/anchoring/CreatePublicationAnchorCatalogUseCase.js.
         // The SAME shape as the already-known finding above, one
         // subsystem over — ui/main.js's own comment names the
         // supersession explicitly.
         assert(!/new CreatePublicationAnchorCatalogUseCase\(/.test(mainSource), 'M2a. ui/main.js never composes CreatePublicationAnchorCatalogUseCase');
         assert(/new CreatePublicationAnchorPeerExchangeUseCase\(/.test(mainSource), 'M2b. ...and ui/main.js composes the superseding class instead');
-        const anchorCatalogUseCaseSource = await rawSource('application/CreatePublicationAnchorCatalogUseCase.js');
+        const anchorCatalogUseCaseSource = await rawSource('application/anchoring/CreatePublicationAnchorCatalogUseCase.js');
         assert(/class CreatePublicationAnchorCatalogUseCase/.test(anchorCatalogUseCaseSource), 'M2c. CreatePublicationAnchorCatalogUseCase.js still exists, fully implemented');
         assert(await repoWideInstantiationCount('CreatePublicationAnchorCatalogUseCase') === 0, 'M2d. ...and is instantiated NOWHERE in application/ or ui/ — confirmed superseded, no production caller');
 
-        // M3 — NEW, full OBSOLETE: application/CreatePlacementRegistryUseCase.js.
+        // M3 — NEW, full OBSOLETE: application/placement/CreatePlacementRegistryUseCase.js.
         // The supersession is documented on the REPLACEMENT's own side
         // this time (CreateWorldViewUseCase.js's own 0.2.23 header),
         // rather than the superseded file's — the identical shape, just
         // the comment sitting one file over.
-        const createWorldViewUseCaseSource = await rawSource('application/CreateWorldViewUseCase.js');
+        const createWorldViewUseCaseSource = await rawSource('application/world/CreateWorldViewUseCase.js');
         assert(!/new CreatePlacementRegistryUseCase\(/.test(createWorldViewUseCaseSource) && /new LocalPlacementRegistry\(/.test(createWorldViewUseCaseSource), 'M3a. CreateWorldViewUseCase.js builds its own placement stack rather than composing CreatePlacementRegistryUseCase');
-        const placementRegistryUseCaseSource = await rawSource('application/CreatePlacementRegistryUseCase.js');
+        const placementRegistryUseCaseSource = await rawSource('application/placement/CreatePlacementRegistryUseCase.js');
         assert(/class CreatePlacementRegistryUseCase/.test(placementRegistryUseCaseSource), 'M3b. CreatePlacementRegistryUseCase.js still exists, fully implemented');
         assert(await repoWideInstantiationCount('CreatePlacementRegistryUseCase') === 0, 'M3c. ...and is instantiated NOWHERE in application/ or ui/');
         assert(/new CreateWorldViewUseCase\(/.test(((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'))), 'M3d. ...while the replacement, CreateWorldViewUseCase, is genuinely composed by WorldView.js — the replacement is reachable, not merely claimed');
@@ -738,7 +739,7 @@ async function runTests() {
             'CreateWorldViewStreamingUseCase'
         ];
         for (const className of candidateFiles) {
-            const source = await rawSource(`application/${className}.js`);
+            const source = await rawSource(applicationPath(className));
             assert(new RegExp(`class ${className}`).test(source), `M4a. application/${className}.js still exists, fully implemented`);
             assert(await repoWideInstantiationCount(className) === 0, `M4b. ${className} is instantiated NOWHERE in application/ or ui/ — no production caller`);
         }

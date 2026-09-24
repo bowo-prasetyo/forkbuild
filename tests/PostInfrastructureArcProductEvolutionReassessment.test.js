@@ -175,26 +175,26 @@ async function run() {
     {
         const capabilityInventory = [
             { capability: 'Document creation & editing', evidence: ['core/Document.js', 'ui/views/EditorView.js'], classification: 'COMPLETE' },
-            { capability: 'Local Publication (publish)', evidence: ['publisher/Publication.js', 'application/PublishDocumentUseCase.js'], classification: 'COMPLETE' },
-            { capability: 'Peer Publication exchange', evidence: ['application/AutoConnectKnownPeersUseCase.js', 'application/ResolvePublicationUseCase.js'], classification: 'COMPLETE' },
-            { capability: 'Decentralized Publication discovery', evidence: ['application/NostrPublicationDiscoveryPublisher.js', 'content/ArweaveContentStore.js'], classification: 'COMPLETE' },
-            { capability: 'Publication distribution', evidence: ['application/PublicationDistributionCommand.js', 'application/PublicationDistributionOrchestrator.js'], classification: 'COMPLETE' },
+            { capability: 'Local Publication (publish)', evidence: ['publisher/Publication.js', 'application/publication/PublishDocumentUseCase.js'], classification: 'COMPLETE' },
+            { capability: 'Peer Publication exchange', evidence: ['application/peer/AutoConnectKnownPeersUseCase.js', 'application/publication/ResolvePublicationUseCase.js'], classification: 'COMPLETE' },
+            { capability: 'Decentralized Publication discovery', evidence: ['application/nostr/NostrPublicationDiscoveryPublisher.js', 'content/ArweaveContentStore.js'], classification: 'COMPLETE' },
+            { capability: 'Publication distribution', evidence: ['application/publication/distribution/PublicationDistributionCommand.js', 'application/publication/distribution/PublicationDistributionOrchestrator.js'], classification: 'COMPLETE' },
             { capability: 'Post-publish -> Repository navigation', evidence: ['ui/views/EditorView.js'], classification: 'COMPLETE' },
             { capability: 'Explore (Repository / World View)', evidence: ['ui/views/WorldView.js', 'ui/views/RepositoryView.js'], classification: 'COMPLETE' },
-            { capability: 'Fork', evidence: ['application/ForkDocumentUseCase.js', 'application/ForkFailureReason.js'], classification: 'COMPLETE' },
-            { capability: 'Snapshot creation & distribution', evidence: ['application/CreateSnapshotPlacementOrchestratorUseCase.js', 'application/SnapshotDistributionRuntimeComposition.js'], classification: 'COMPLETE' },
-            { capability: 'Snapshot discovery & recovery', evidence: ['application/NostrSnapshotDiscoveryQueryService.js', 'application/ResolveSelectedSnapshotCommand.js'], classification: 'COMPLETE' },
-            { capability: 'Publication Commentary', evidence: ['core/PublicationCommentary.js', 'application/AddPublicationCommentaryUseCase.js'], classification: 'COMPLETE' },
-            { capability: 'Notifications & history', evidence: ['storage/NotificationEventStore.js', 'application/GetRecipientNotificationEventsUseCase.js'], classification: 'COMPLETE', note: 'durable history only — delivery/unread/read deliberately absent' },
-            { capability: 'Place Naming (claim, persist, publish, discover, adopt)', evidence: ['core/PlaceNamingClaim.js', 'core/PlaceNamingView.js', 'application/NostrPlaceNamingDiscoverySource.js'], classification: 'COMPLETE' },
+            { capability: 'Fork', evidence: ['application/document/ForkDocumentUseCase.js', 'application/document/ForkFailureReason.js'], classification: 'COMPLETE' },
+            { capability: 'Snapshot creation & distribution', evidence: ['application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js', 'application/snapshot/SnapshotDistributionRuntimeComposition.js'], classification: 'COMPLETE' },
+            { capability: 'Snapshot discovery & recovery', evidence: ['application/nostr/NostrSnapshotDiscoveryQueryService.js', 'application/snapshot/ResolveSelectedSnapshotCommand.js'], classification: 'COMPLETE' },
+            { capability: 'Publication Commentary', evidence: ['core/PublicationCommentary.js', 'application/publication/commentary/AddPublicationCommentaryUseCase.js'], classification: 'COMPLETE' },
+            { capability: 'Notifications & history', evidence: ['storage/NotificationEventStore.js', 'application/chat/GetRecipientNotificationEventsUseCase.js'], classification: 'COMPLETE', note: 'durable history only — delivery/unread/read deliberately absent' },
+            { capability: 'Place Naming (claim, persist, publish, discover, adopt)', evidence: ['core/PlaceNamingClaim.js', 'core/PlaceNamingView.js', 'application/placeNaming/NostrPlaceNamingDiscoverySource.js'], classification: 'COMPLETE' },
             { capability: 'World presence', evidence: ['presence/AvatarPresenceBroadcastProvider.js'], classification: 'COMPLETE' },
             { capability: 'Collaboration', evidence: ['collaboration/CollaborationSession.js'], classification: 'COMPLETE', note: 'STOP since 0.9.241, reconfirmed at every reassessment since, this one included (Section E)' },
             { capability: 'Provider preference (Snapshot content)', evidence: ['core/RoleProviderPreference.js', 'ui/views/ContentProviderSettingsView.js'], classification: 'COMPLETE' },
             { capability: 'Arweave Gateway / Nostr Relay endpoint configuration', evidence: ['core/ArweaveGatewayConfiguration.js', 'core/NostrRelayConfiguration.js'], classification: 'COMPLETE' },
-            { capability: 'IPFS placement/pinning', evidence: ['application/IpfsRemotePublicationCoordinator.js'], classification: 'COMPLETE', note: 'gated by a real external prerequisite, not the default path' },
-            { capability: 'Bitcoin anchoring', evidence: ['application/CreateBitcoinAnchorPublisherUseCase.js'], classification: 'COMPLETE' },
-            { capability: 'Base anchoring', evidence: ['application/BlockchainKind.js'], classification: 'DEFERRED', note: 'BlockchainKind.BASE remains named, reserved, unimplemented — reconfirmed fresh, Section E' },
-            { capability: 'Repository federation (encounter/decentralized-discovery-driven)', evidence: ['application/ResolvePublicationUseCase.js', 'application/SearchPublicationsUseCase.js'], classification: 'COMPLETE', note: 'proactive/crawling discovery remains DEFERRED' },
+            { capability: 'IPFS placement/pinning', evidence: ['application/ipfs/IpfsRemotePublicationCoordinator.js'], classification: 'COMPLETE', note: 'gated by a real external prerequisite, not the default path' },
+            { capability: 'Bitcoin anchoring', evidence: ['application/anchoring/bitcoin/CreateBitcoinAnchorPublisherUseCase.js'], classification: 'COMPLETE' },
+            { capability: 'Base anchoring', evidence: ['application/anchoring/BlockchainKind.js'], classification: 'DEFERRED', note: 'BlockchainKind.BASE remains named, reserved, unimplemented — reconfirmed fresh, Section E' },
+            { capability: 'Repository federation (encounter/decentralized-discovery-driven)', evidence: ['application/publication/ResolvePublicationUseCase.js', 'application/publication/SearchPublicationsUseCase.js'], classification: 'COMPLETE', note: 'proactive/crawling discovery remains DEFERRED' },
             { capability: 'Achievement/Reconciliation Leaderboard', evidence: ['ui/router/index.js'], classification: 'INTERNAL', note: 'reachable only by its own router registration — no nav-link or programmatic navigation anywhere leads to it, reconfirmed fresh' },
             // The two capabilities the closed infrastructure arc (0.9.385-
             // 0.9.391) genuinely added, re-derived fresh, never merely
@@ -266,7 +266,7 @@ async function run() {
         // re-derived (0.9.383 Section C already proved both bridges live).
         assert(await sourceExists('publisher/Publication.js') && await sourceExists('discovery/LocalDiscoveryProvider.js'),
             n('C4. publisher/Publication.js and discovery/LocalDiscoveryProvider.js still exist as the Repository/World-side model, unaffected by the closed arc'));
-        const searchCode = codeOnly(await source('application/SearchPublicationsUseCase.js'));
+        const searchCode = codeOnly(await source('application/publication/SearchPublicationsUseCase.js'));
         assert(!/Arweave|Nostr|Ipfs|Stun|Rendezvous|fetch\(|WebSocket/i.test(searchCode) && !/async execute/.test(searchCode),
             n('C4. SearchPublicationsUseCase.js still imports no network/discovery/infrastructure-configuration collaborator and stays synchronous — the closed arc did not quietly reopen proactive Repository search'));
 
@@ -389,9 +389,9 @@ async function run() {
     // ===============================================================
     {
         const roster = [
-            { candidate: 'Base anchoring', evidence: 'application/BlockchainKind.js', decision: 'DEFERRED' },
+            { candidate: 'Base anchoring', evidence: 'application/anchoring/BlockchainKind.js', decision: 'DEFERRED' },
             { candidate: 'Reconciliation Leaderboard entry point', evidence: 'ui/router/index.js (no nav-link)', decision: 'DEFERRED — too small to justify a milestone alone' },
-            { candidate: 'Proactive Repository discovery', evidence: 'application/SearchPublicationsUseCase.js (still synchronous)', decision: 'DEFERRED' },
+            { candidate: 'Proactive Repository discovery', evidence: 'application/publication/SearchPublicationsUseCase.js (still synchronous)', decision: 'DEFERRED' },
             { candidate: 'Collaboration expansion (live editing / cursors)', evidence: 'no UI file imports collaboration/CollaborationSession.js', decision: 'STOP' },
             { candidate: 'Notification delivery / unread badges', evidence: 'core/NotificationEvent.js still carries no delivered/seen/read field', decision: 'DEFERRED' },
             { candidate: 'Additional infrastructure providers', evidence: 'no evidence of a third STUN/Rendezvous/Arweave/Nostr candidate', decision: 'DEFERRED' },

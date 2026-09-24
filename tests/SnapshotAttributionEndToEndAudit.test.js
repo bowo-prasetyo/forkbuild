@@ -2,16 +2,16 @@ import { readFile, readdir } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { resolveSnapshotPublicationAttribution } from '../application/SnapshotPublicationAttribution.js';
-import { SnapshotPublicationAttributionOutcome } from '../application/SnapshotPublicationAttributionOutcome.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
-import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
+import { resolveSnapshotPublicationAttribution } from '../application/snapshot/SnapshotPublicationAttribution.js';
+import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
+import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -555,7 +555,7 @@ async function run() {
             // call against H2 directly, then attributes the verified
             // result against a Publication whose own hash is H1 — the
             // exact "resolved against some OTHER contentHash" scenario
-            // application/SnapshotPublicationAttribution.js's own header
+            // application/snapshot/SnapshotPublicationAttribution.js's own header
             // names).
             contentReference: new ContentReference({ hash: h1Hash })
         });
@@ -868,7 +868,7 @@ async function run() {
         //
         // UPDATED 0.9.505 — Register Arweave as Snapshot Content Store.
         // ui/main.js now directly constructs a real `new ArweaveContentStore(`
-        // to register it into application/SnapshotPlacementStoreRegistry.js
+        // to register it into application/snapshot/placement/SnapshotPlacementStoreRegistry.js
         // for Snapshot Placement — the identical, already-permitted pattern
         // `new IpfsContentStore(`/`new IpfsGatewayContentStore(` already held
         // in ui/main.js before this milestone (neither ever appeared in this
@@ -898,7 +898,7 @@ async function run() {
 
         // I4. Attribution performs no I/O.
         {
-            const code = await codeOnlySource('application/SnapshotPublicationAttribution.js');
+            const code = await codeOnlySource('application/snapshot/SnapshotPublicationAttribution.js');
             assert(!/\bfetch\(|WebSocket|localStorage|readFile|writeFile|XMLHttpRequest/.test(code), 'I4. resolveSnapshotPublicationAttribution() performs no network, filesystem, or storage access');
             assert(!/resolver\.resolve\(|queryService\.search\(|\.get\(reference\)/.test(code), 'I5. ...and never rediscovers, queries, or retrieves anything itself');
         }
@@ -906,9 +906,9 @@ async function run() {
         // I6. The discovery command carries no attribution vocabulary or
         // algorithm of its own.
         {
-            const code = await codeOnlySource('application/DiscoverSnapshotCommand.js');
+            const code = await codeOnlySource('application/snapshot/DiscoverSnapshotCommand.js');
             assert(!/\bMATCH\b|\bNO_MATCH\b|publicationHash|snapshotHash|SnapshotPublicationAttribution/.test(code),
-                'I6. application/DiscoverSnapshotCommand.js never references MATCH/NO_MATCH/publicationHash/snapshotHash or the attribution module — discovery stays entirely separate from Q3');
+                'I6. application/snapshot/DiscoverSnapshotCommand.js never references MATCH/NO_MATCH/publicationHash/snapshotHash or the attribution module — discovery stays entirely separate from Q3');
             assert(!code.includes("from '../publisher/Publication.js'"), 'I7. it never imports publisher/Publication.js either — contentHash is always an explicit, caller-supplied input, never derived from a Publication itself');
         }
 
@@ -919,9 +919,9 @@ async function run() {
         // "match" in an error message, never the SnapshotPublicationAttributionOutcome
         // enum value itself (always upper-case MATCH/NO_MATCH).
         {
-            const code = await codeOnlySource('application/DecentralizedSnapshotResolver.js');
+            const code = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
             assert(!/\bMATCH\b|\bNO_MATCH\b|publicationHash|Publication\.js|\bOWNED\b/.test(code),
-                'I8a. application/DecentralizedSnapshotResolver.js never references the MATCH/NO_MATCH enum values, publicationHash, OWNED, or Publication.js — it answers only "can these bytes be found and verified," never "whose Publication is this"');
+                'I8a. application/snapshot/DecentralizedSnapshotResolver.js never references the MATCH/NO_MATCH enum values, publicationHash, OWNED, or Publication.js — it answers only "can these bytes be found and verified," never "whose Publication is this"');
             assert(!/ATTRIBUT/i.test(code),
                 'I8b. ...nor any form of ATTRIBUT(E/ED/ION) — attribution vocabulary of any kind stays entirely out of this file');
         }
@@ -929,12 +929,12 @@ async function run() {
         // I9/I10. Distribution remains a separate command path from
         // discovery/attribution, in both directions.
         {
-            const distributionCode = await codeOnlySource('application/SnapshotDistributionCommand.js');
+            const distributionCode = await codeOnlySource('application/snapshot/SnapshotDistributionCommand.js');
             assert(!distributionCode.includes('DiscoverSnapshotCommand') && !distributionCode.includes('SnapshotPublicationAttribution') && !distributionCode.includes('DecentralizedSnapshotResolver'),
-                'I9. application/SnapshotDistributionCommand.js never imports the discovery command, the resolver, or the attribution module');
-            const discoverCode = await codeOnlySource('application/DiscoverSnapshotCommand.js');
+                'I9. application/snapshot/SnapshotDistributionCommand.js never imports the discovery command, the resolver, or the attribution module');
+            const discoverCode = await codeOnlySource('application/snapshot/DiscoverSnapshotCommand.js');
             assert(!discoverCode.includes('SnapshotDistributionCommand') && !discoverCode.includes('NostrSnapshotDiscoveryPublisher') && !discoverCode.includes('ArweaveContentStore'),
-                'I10. application/DiscoverSnapshotCommand.js never imports the distribution command or constructs a placement-side collaborator — the two families remain two disjoint pipelines sharing only a runtime host, never each other\'s code');
+                'I10. application/snapshot/DiscoverSnapshotCommand.js never imports the distribution command or constructs a placement-side collaborator — the two families remain two disjoint pipelines sharing only a runtime host, never each other\'s code');
         }
 
         console.log('✓ Section I: repository-wide structural sweep — UI contains no Nostr/Arweave logic, attribution performs no I/O, the discovery command carries no attribution vocabulary, the resolver carries no Publication/ownership vocabulary, and distribution stays a separate command path from discovery/attribution in both directions');

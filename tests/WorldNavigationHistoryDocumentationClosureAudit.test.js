@@ -22,7 +22,7 @@ import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles } from './
 // browser-like Back/Forward behavior because a user might expect it.
 //
 // SAME STRUCTURAL CONSTRAINT AS EVERY "World"-CLASS MILESTONE SINCE
-// 0.9.556/0.9.574/0.9.584: application/WorldNavigationSession.js
+// 0.9.556/0.9.574/0.9.584: application/world/WorldNavigationSession.js
 // transitively requires 'three'; ui/views/WorldView.js imports it;
 // ui/router/index.js imports 'vue-router'. None of the three packages
 // resolve in this checkout. This file never imports any of them — every
@@ -187,7 +187,7 @@ async function main() {
         // name exists.
         for (const needle of ['_navigationHistory', '_backStack', '_navigationStack', '_visitedWorlds', '_worldHistory']) {
             assert(!sessionSource.includes(needle),
-                `C1. application/WorldNavigationSession.js contains no "${needle}" field — no navigation-position back-stack is duplicated inside session state anywhere under this name.`);
+                `C1. application/world/WorldNavigationSession.js contains no "${needle}" field — no navigation-position back-stack is duplicated inside session state anywhere under this name.`);
         }
 
         // C2. The ONE "history"-named field this class actually has,
@@ -197,7 +197,7 @@ async function main() {
         // this milestone's own documentation relies on C1's absence
         // claim meaning anything.
         assert(/beginHistoryPreview\(\)/.test(sessionSource) && /_historyPreview = \{ active: true, cursor: null, world: null \}/.test(sessionSource),
-            'C2. application/WorldNavigationSession.js#beginHistoryPreview() is real and initializes _historyPreview as { active, cursor, world } — a replay CURSOR over document history, never a router path or documentId stack.');
+            'C2. application/world/WorldNavigationSession.js#beginHistoryPreview() is real and initializes _historyPreview as { active, cursor, world } — a replay CURSOR over document history, never a router path or documentId stack.');
         assert(!/_historyPreview[\s\S]{0,120}?router\./.test(sessionSource),
             'C2b. No _historyPreview-adjacent code touches `router.` anywhere — confirmed live, this field never leaks into, or substitutes for, navigation.');
 
@@ -234,7 +234,7 @@ async function main() {
         // — not by anything the router or route.query carried.
         const sessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n'));
         assert(/restoreWorldExperience\(documentId\)/.test(sessionSource),
-            'D2. application/WorldNavigationSession.js#restoreWorldExperience(documentId) is real and keyed by documentId alone — never by a route query, a history entry, or anything Section A/B\'s navigation primitives carry.');
+            'D2. application/world/WorldNavigationSession.js#restoreWorldExperience(documentId) is real and keyed by documentId alone — never by a route query, a history entry, or anything Section A/B\'s navigation primitives carry.');
 
         console.log('✓ Section D: "return to World A" (a fresh, unconditional navigateToDocument() focus) and "restore World A\'s previous session state" (a documentId-keyed LocalWorldExperienceStore effect of that same call) are confirmed, by source, to be two different operations that merely run back-to-back — never one operation replaying cached navigation-history state.');
     }
@@ -266,7 +266,7 @@ async function main() {
 
         const sessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n'));
         assert(!/\bawait\b|\basync\b|\.then\(|new Promise\(/.test(sessionSource),
-            'F1. application/WorldNavigationSession.js contains zero await/async/.then()/Promise anywhere — reconfirming (not re-deriving) 0.9.584 Section G1\'s own live proof that the entire navigation path is synchronous, so a "stale operation from a left World mutates the newly active one" race is structurally impossible inside this class.');
+            'F1. application/world/WorldNavigationSession.js contains zero await/async/.then()/Promise anywhere — reconfirming (not re-deriving) 0.9.584 Section G1\'s own live proof that the entire navigation path is synchronous, so a "stale operation from a left World mutates the newly active one" race is structurally impossible inside this class.');
 
         console.log('✓ Section F: WorldNavigationSession.js\'s own synchronicity (zero Promise/await/async) is reconfirmed live, citing rather than re-deriving 0.9.584 Section G\'s already-proven navigation-race semantics.');
     }

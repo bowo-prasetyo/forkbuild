@@ -2,11 +2,11 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
-import { ChatUseCase } from '../application/ChatUseCase.js';
-import { VoiceUseCase } from '../application/VoiceUseCase.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
+import { ChatUseCase } from '../application/chat/ChatUseCase.js';
+import { VoiceUseCase } from '../application/chat/VoiceUseCase.js';
 import { VoiceSessionState } from '../core/VoiceSessionState.js';
 import { VoiceCallSignalType } from '../core/VoiceCallSignal.js';
 
@@ -148,7 +148,7 @@ class SyntheticAudioTrackProvider {
         // Explicit track.stop() (rather than relying on closing the
         // AudioContext alone) so a released track deterministically
         // reaches readyState 'ended' — the same guarantee
-        // application/LocalAudioTrackProvider.js#releaseTrack() gives a
+        // application/chat/LocalAudioTrackProvider.js#releaseTrack() gives a
         // real getUserMedia() track.
         this._cleanups.set(track, () => { try { oscillator.stop(); } catch { /* already stopped */ } track.stop(); ctx.close(); });
         this.lastTrack = track;

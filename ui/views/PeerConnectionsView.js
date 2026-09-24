@@ -1,19 +1,31 @@
-import { ref, reactive, computed, onMounted, onBeforeUnmount, inject } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { FriendshipState } from '../../core/FriendshipState.js';
-import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
+import { LIFECYCLE_LABELS, LIFECYCLE_CLASSES, PROGRESSION_STEPS, formatDuration, shortId, formatWhen } from './peerConnections/presentation.js';
+import { useKnownPeers } from './peerConnections/useKnownPeers.js';
+import { useFriendships } from './peerConnections/useFriendships.js';
+import { useBlockedPeers } from './peerConnections/useBlockedPeers.js';
+import { useConnectionFlow } from './peerConnections/useConnectionFlow.js';
+import { useFindPeer } from './peerConnections/useFindPeer.js';
+
+// Large template sections live in ./peerConnections/templates/ as strings
+// interpolated into `template`; they share this component's scope.
+import { inviteAndConnectTemplate } from './peerConnections/templates/inviteAndConnect.js';
+import { findPeerSectionTemplate } from './peerConnections/templates/findPeerSection.js';
+import { myPeersListTemplate } from './peerConnections/templates/myPeersList.js';
+import { knownPeersListTemplate } from './peerConnections/templates/knownPeersList.js';
 
 // 0.2.60 — Friendship Revocation, Blocking & Privacy Withdrawal adds:
 //   - Reject/Cancel on a pending request (the terminal counterparts to
 //     Send/Accept, both still on an AUTHENTICATED "My Peers" card only
-//     — see application/FriendRelationshipUseCase.js's own header on
+//     — see application/identity/FriendRelationshipUseCase.js's own header on
 //     why every friendship gesture requires a live, proven connection
 //     to actually deliver its signed advertisement).
 //   - Unfriend, on a FRIEND — available from "My Peers" when connected,
 //     and from the "Friends" list itself when that friend happens to
 //     be connected right now (cross-referenced the same way
 //     "Connected now" already is).
-//   - Block/Unblock, backed entirely by application/PeerBlockUseCase.js
+//   - Block/Unblock, backed entirely by application/peer/PeerBlockUseCase.js
 //     — a FOURTH, independent list ("Blocked"), never requiring a live
 //     connection at all (see core/PeerBlockRecord.js's own header):
 //     available on any card this device already holds identityId/
@@ -23,16 +35,16 @@ import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 // everything 0.2.49 through 0.2.54 built underneath. Answers the one
 // question the app still had no answer for — "okay, I have an identity,
 // how do I actually connect to another person?" — through nothing but
-// application/PeerSessionManager.js, itself nothing but a thin composition
-// of application/ConnectToPeerUseCase.js and application/
+// application/peer/PeerSessionManager.js, itself nothing but a thin composition
+// of application/peer/ConnectToPeerUseCase.js and application/
 // DiscoverPeersUseCase.js. This view invents no new state machine: every
 // badge below is peer.getLifecycleState() (peer/PeerLifecycleState.js),
-// read straight off the SAME application/ConnectedPeer.js / peer/
+// read straight off the SAME application/peer/ConnectedPeer.js / peer/
 // PeerAuthenticationSession.js this codebase has had since 0.2.49/0.2.50.
 //
 // No chat (peer/PeerMessageBus.js is still not touched anywhere in this
 // file). An alias typed into a peer's CARD — the "Local alias" field
-// below — is exactly what application/ConnectedPeer.js already documents
+// below — is exactly what application/peer/ConnectedPeer.js already documents
 // it as: a local note, never sent, never surviving a reconnect.
 //
 // 0.2.56 adds the persistent counterpart 0.2.55 deliberately declined to
@@ -40,9 +52,9 @@ import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 // PeerRelationshipUseCase.js. The two lists on this page answer two
 // different questions and are never merged into one: "My Peers" is
 // exactly as ephemeral as it always was — every row disappears the
-// instant application/ConnectedPeerRegistry.js says the connection is
+// instant application/peer/ConnectedPeerRegistry.js says the connection is
 // gone — while "Known Peers" is exactly as durable as
-// application/PeerRelationshipUseCase.js's own storage, surviving a
+// application/peer/PeerRelationshipUseCase.js's own storage, surviving a
 // disconnect, a reload, and the app restarting. A peer only ever crosses
 // from the first list into the second by an explicit "Remember" click —
 // see docs/Principles.md, "Remembering A Peer Is A Deliberate Act, Never
@@ -60,7 +72,7 @@ import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 //
 // 0.2.64 adds "Find a Peer": an identity search over candidates this
 // device has discovered (imported invitations it hasn't necessarily
-// connected to yet — see application/FindPeerUseCase.js), entirely
+// connected to yet — see application/peer/FindPeerUseCase.js), entirely
 // distinct from "My Peers"/"Known Peers" below. A candidate card is
 // always labeled "Discovered," never a name — this page never displays
 // an identity as an established fact before peer/
@@ -70,7 +82,7 @@ import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 //
 // 0.2.62 adds Reconnect to a Known Peer card that isn't connected right
 // now. It is deliberately NOT a new transport or a remembered address —
-// application/PeerReconnectionUseCase.js walks the exact same
+// application/peer/PeerReconnectionUseCase.js walks the exact same
 // invitation dance "Invite Someone"/"Connect to Peer" already do, just
 // scoped to one remembered identityId so the fresh handshake's result
 // is VERIFIED against who this device expects, not merely accepted
@@ -78,50 +90,10 @@ import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 // invitation that authenticates as a different identity) is surfaced
 // as an explicit error, never a silently-vanishing card — see
 // reconnectRejectedError below.
-const LIFECYCLE_LABELS = {
-    [PeerLifecycleState.CONNECTING]: 'Connecting…',
-    [PeerLifecycleState.CONNECTED]: 'Connected — not yet authenticated',
-    [PeerLifecycleState.AUTHENTICATING]: 'Authenticating…',
-    [PeerLifecycleState.AUTHENTICATED]: 'Authenticated',
-    [PeerLifecycleState.FAILED]: 'Failed'
-};
 
-const LIFECYCLE_CLASSES = {
-    [PeerLifecycleState.CONNECTING]: 'peer-badge--pending',
-    [PeerLifecycleState.CONNECTED]: 'peer-badge--pending',
-    [PeerLifecycleState.AUTHENTICATING]: 'peer-badge--pending',
-    [PeerLifecycleState.AUTHENTICATED]: 'peer-badge--authenticated',
-    [PeerLifecycleState.FAILED]: 'peer-badge--failed'
-};
-
-// The five-step progression the design doc asked for, each step read
-// from a peer's getLifecycleState(). The first two are always reached
-// for any card "My Peers" can show: a card only exists once an
-// invitation was imported (rendezvous) and a real WebRtcPeerConnection
-// was created for it (connecting) — neither has a separately-observable
-// "not yet" moment of its own.
-const PROGRESSION_STEPS = [
-    { label: 'Rendezvous discovered', reached: () => true },
-    { label: 'WebRTC connecting', reached: () => true },
-    { label: 'Peer connected', reached: (state) => state !== PeerLifecycleState.CONNECTING && state !== PeerLifecycleState.FAILED },
-    { label: 'Authenticating identity', reached: (state) => state === PeerLifecycleState.AUTHENTICATING || state === PeerLifecycleState.AUTHENTICATED },
-    { label: 'Authenticated', reached: (state) => state === PeerLifecycleState.AUTHENTICATED }
-];
-
-function formatDuration(ms) {
-    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    if (minutes > 0) return `${minutes}m ${seconds}s`;
-    return `${seconds}s`;
-}
-
-function stripPrefix(message) {
-    return message.replace(/^(PeerSessionManager|PeerRelationshipUseCase|PeerReconnectionUseCase|FindPeerUseCase|FriendRelationshipUseCase|PeerBlockUseCase|LocalPeerDiscoveryProvider|WebRtcPeerConnectionProvider|WebRtcPeerConnection|PeerInvitation|PeerConnectionOffer|PeerConnectionAnswer):\s*/, '');
-}
-
+// Each section's state and actions live in ./peerConnections/ as
+// composables; this view wires them to the injected use cases and owns
+// the page-wide subscriptions and the one-second tick.
 export default {
     name: 'PeerConnectionsView',
     setup() {
@@ -171,7 +143,7 @@ export default {
         // SOMEWHERE, "be discoverable enough for someone else to actually
         // find you" had no working path through this UI at all: a person
         // could only ever hand out the shortened display string, which a
-        // real search() — application/DiscoverPeersUseCase.js's own exact
+        // real search() — application/peer/DiscoverPeersUseCase.js's own exact
         // string match — will never match.
         const myIdentityId = ref(null);
         // Reads the whole session, not only the lock: which identity is
@@ -189,38 +161,13 @@ export default {
         refreshLockState();
 
         const peers = ref(peerSessionManager.listPeers());
-        const relationships = ref(peerRelationshipUseCase.getRelationships());
-        const relationshipError = ref('');
-        const friendships = ref(friendRelationshipUseCase.getRelationships());
-        const friendshipError = ref('');
-        const blocked = ref(peerBlockUseCase.getBlocked());
-        const blockError = ref('');
         const now = ref(Date.now());
-
-        // Every per-card lookup below reads these, never storage. The
-        // three lists above are refreshed by their use cases' own change
-        // events (every save publishes one) and by onSessionChanged, so
-        // an index over them is exactly as current as a fresh storage
-        // read — without re-parsing storage for every card on every
-        // one-second `now` tick, which redraws this whole page.
-        const relationshipsById = computed(() => new Map(relationships.value.map((r) => [r.identityId, r])));
-        const friendshipsById = computed(() => new Map(friendships.value.map((f) => [f.identityId, f])));
-        const blockedIds = computed(() => new Set(blocked.value.map((b) => b.identityId)));
-        // application/IdentityLifecyclePropagationUseCase.js publishes no
-        // change event, so a newly received revocation/succession has
-        // only ever appeared on the next one-second redraw. Kept that
-        // way on purpose — `now` is read here so this re-reads storage
-        // once per tick in total, instead of once per call per card.
-        const remoteLifecyclesById = computed(() => {
-            void now.value;
-            return new Map(identityLifecyclePropagationUseCase.listRemoteLifecycle().map((l) => [l.identityId, l]));
-        });
         function refreshPeers(list) {
             peers.value = list || peerSessionManager.listPeers();
         }
 
         // Time since this connection attempt started on this device, read
-        // from the app-wide registry (application/ConnectedPeerRegistry.js
+        // from the app-wide registry (application/peer/ConnectedPeerRegistry.js
         // #connectedSince) — so it keeps counting across leaving and
         // returning to this page, rather than restarting at 0s.
         function connectedFor(peer) {
@@ -228,461 +175,43 @@ export default {
             return since ? formatDuration(now.value - since.getTime()) : '0s';
         }
 
-        // --- Known Peers (0.2.56) ----------------------------------------
-        function refreshRelationships(list) {
-            relationships.value = list || peerRelationshipUseCase.getRelationships();
-        }
+        // Every per-card lookup reads indexes over the Known Peers,
+        // Friends and Blocked lists, never storage. Those lists are
+        // refreshed by their use cases' own change events (every save
+        // publishes one) and by onSessionChanged, so an index over them is
+        // exactly as current as a fresh storage read — without re-parsing
+        // storage for every card on every one-second `now` tick, which
+        // redraws this whole page.
+        const {
+            relationships, relationshipsById, relationshipError, refreshRelationships, relationshipFor, isConnectedNow,
+            rememberPeer, forgetKnownPeer, updateKnownAlias,
+            reconnectTargetId, reconnectInvitePending, reconnectInviteError, reconnectInvitation,
+            reconnectImportText, reconnectAcceptError, reconnectReply, reconnectRejectedError,
+            toggleReconnect, submitReconnectInvite, submitReconnectAccept
+        } = useKnownPeers({ peerRelationshipUseCase, peerReconnectionUseCase, peerPresenceUseCase });
 
-        // A relationship is looked up ONLY by a peer's already-verified
-        // remoteIdentity — see application/PeerRelationshipUseCase.js's
-        // own header on why an invitation hint is never eligible here.
-        function relationshipFor(peer) {
-            return peer.remoteIdentity ? relationshipsById.value.get(peer.remoteIdentity.identityId) || null : null;
-        }
+        const {
+            friendshipError, refreshFriendships, remoteLifecycleFor, friends, friendStatus, hasPendingIncomingRequest, hasSentRequest,
+            sendFriendRequest, acceptFriendRequest, rejectFriendRequest, cancelFriendRequest, unfriendPeer, unfriendByIdentity,
+            friendDisplayName
+        } = useFriendships({ friendRelationshipUseCase, identityLifecyclePropagationUseCase, peerPresenceUseCase, relationshipsById, now });
 
-        // "Is this known peer connected right now?" is never stored on
-        // the relationship itself — see core/PeerRelationshipStatus.js's
-        // own header — it is derived, fresh, from application/
-        // PeerPresenceUseCase.js#isIdentityOnline() (0.2.85: the
-        // Identity Presence aggregate — true if ANY currently-authorized
-        // device of this identity has a live connection, not only one
-        // whose own key happens to equal identityId directly).
-        function isConnectedNow(identityId) {
-            return peerPresenceUseCase.isIdentityOnline(identityId);
-        }
+        const {
+            blocked, blockError, isBlockedIdentity, blockIdentity, unblockIdentity, refreshBlocked
+        } = useBlockedPeers({ peerBlockUseCase });
 
-        function rememberPeer(peer) {
-            relationshipError.value = '';
-            try {
-                peerRelationshipUseCase.rememberPeer(peer.remoteIdentity, { alias: peer.alias || undefined });
-            } catch (e) {
-                relationshipError.value = stripPrefix(e.message);
-            }
-        }
+        const {
+            invitePending, inviteError, pendingInvitation, startInvite, dismissInvitation,
+            showAcceptForm, importText, acceptError, acceptReply, submitAcceptInvitation, closeAcceptForm,
+            completingConnectionId, completeReplyText, completeError, startComplete, submitComplete, awaitingReply
+        } = useConnectionFlow({ peerSessionManager });
 
-        function forgetKnownPeer(identityId) {
-            relationshipError.value = '';
-            try {
-                peerRelationshipUseCase.forgetPeer(identityId);
-            } catch (e) {
-                relationshipError.value = stripPrefix(e.message);
-            }
-        }
-
-        function updateKnownAlias(identityId, event) {
-            peerRelationshipUseCase.updateAlias(identityId, event.target.value);
-        }
-
-        function formatWhen(date) {
-            return date instanceof Date ? date.toLocaleString() : '';
-        }
-
-        // --- Reconnect (0.2.62) --------------------------------------------
-        // A "Known Peer" that isn't connected right now (isConnectedNow()
-        // above) gets a Reconnect gesture — the exact same two-step
-        // invitation dance "Invite Someone"/"Connect to Peer" already walk
-        // a FIRST connection through, scoped to one remembered identity via
-        // application/PeerReconnectionUseCase.js so the fresh handshake is
-        // verified against who this device actually expects, not merely
-        // accepted because SOMEONE authenticated. Completing the offering
-        // side's handshake (pasting the far end's reply) reuses the
-        // existing "My Peers" awaitingReply()/startComplete() flow below
-        // unmodified — a reconnect's pending connection is an ordinary
-        // pending ConnectedPeer, nothing more.
-        const reconnectTargetId = ref(null);
-        const reconnectInvitePending = ref(false);
-        const reconnectInviteError = ref('');
-        const reconnectInvitation = reactive({ json: '', expiresAt: null });
-        const reconnectImportText = ref('');
-        const reconnectAcceptError = ref('');
-        const reconnectReply = ref('');
-        const reconnectRejectedError = ref('');
-
-        function toggleReconnect(identityId) {
-            reconnectRejectedError.value = '';
-            if (reconnectTargetId.value === identityId) {
-                reconnectTargetId.value = null;
-                return;
-            }
-            reconnectTargetId.value = identityId;
-            reconnectInviteError.value = '';
-            reconnectAcceptError.value = '';
-            reconnectInvitation.json = '';
-            reconnectInvitation.expiresAt = null;
-            reconnectImportText.value = '';
-            reconnectReply.value = '';
-        }
-
-        async function submitReconnectInvite(identityId) {
-            reconnectInviteError.value = '';
-            reconnectInvitePending.value = true;
-            try {
-                const { invitation } = await peerReconnectionUseCase.reconnectAsInviter(identityId);
-                reconnectInvitation.json = JSON.stringify(invitation.toJSON(), null, 2);
-                reconnectInvitation.expiresAt = invitation.expiresAt;
-            } catch (e) {
-                reconnectInviteError.value = stripPrefix(e.message);
-            } finally {
-                reconnectInvitePending.value = false;
-            }
-        }
-
-        async function submitReconnectAccept(identityId) {
-            reconnectAcceptError.value = '';
-            if (!reconnectImportText.value.trim()) {
-                return;
-            }
-            try {
-                const { reply } = await peerReconnectionUseCase.reconnectViaInvitation(identityId, reconnectImportText.value.trim());
-                reconnectReply.value = reply;
-                reconnectImportText.value = '';
-            } catch (e) {
-                reconnectAcceptError.value = stripPrefix(e.message);
-            }
-        }
-
-        // --- Friends (0.2.57) ---------------------------------------------
-        // Looked up ONLY by a peer's already-verified remoteIdentity —
-        // the exact same discipline relationshipFor() above already
-        // applies, for the exact same reason: an unauthenticated
-        // invitation hint is never eligible to stand in for a proven
-        // identity.
-        // 0.2.68 — what THIS device has, second-hand, verified, learned
-        // about `identityId`'s lifecycle (see core/
-        // RemoteIdentityLifecycle.js's own header on why this is a purely
-        // DISPLAY cross-reference, never a mutation of the Known Peer or
-        // Friend record it's shown alongside).
-        function remoteLifecycleFor(identityId) {
-            return remoteLifecyclesById.value.get(identityId) || null;
-        }
-
-        function friendshipFor(peer) {
-            return peer.remoteIdentity ? friendshipsById.value.get(peer.remoteIdentity.identityId) || null : null;
-        }
-
-        function friendStatus(peer) {
-            const record = friendshipFor(peer);
-            return record ? record.status : FriendshipState.NONE;
-        }
-
-        function hasPendingIncomingRequest(peer) {
-            const record = friendshipFor(peer);
-            return Boolean(record && !record.outgoingAction
-                && record.incomingAction && record.incomingAction.action === FriendshipAction.REQUEST);
-        }
-
-        function hasSentRequest(peer) {
-            const record = friendshipFor(peer);
-            return Boolean(record && record.status !== FriendshipState.FRIEND
-                && record.outgoingAction && record.outgoingAction.action === FriendshipAction.REQUEST);
-        }
-
-        function sendFriendRequest(peer) {
-            friendshipError.value = '';
-            try {
-                friendRelationshipUseCase.sendFriendRequest(peer);
-            } catch (e) {
-                friendshipError.value = stripPrefix(e.message);
-            }
-        }
-
-        function acceptFriendRequest(peer) {
-            friendshipError.value = '';
-            try {
-                friendRelationshipUseCase.acceptFriendRequest(peer);
-            } catch (e) {
-                friendshipError.value = stripPrefix(e.message);
-            }
-        }
-
-        // 0.2.60 — the terminal counterpart to acceptFriendRequest:
-        // declines a pending incoming request instead of answering it.
-        function rejectFriendRequest(peer) {
-            friendshipError.value = '';
-            try {
-                friendRelationshipUseCase.rejectFriendRequest(peer);
-            } catch (e) {
-                friendshipError.value = stripPrefix(e.message);
-            }
-        }
-
-        // 0.2.60 — withdraws OUR OWN pending outgoing request.
-        function cancelFriendRequest(peer) {
-            friendshipError.value = '';
-            try {
-                friendRelationshipUseCase.cancelFriendRequest(peer);
-            } catch (e) {
-                friendshipError.value = stripPrefix(e.message);
-            }
-        }
-
-        // 0.2.60 — ends a currently-FRIEND relationship. `peer` must be
-        // a live, AUTHENTICATED ConnectedPeer — see
-        // application/FriendRelationshipUseCase.js#unfriend's own
-        // header: the other side has to actually receive the signed
-        // UNFRIEND for the relationship to end on both devices, not
-        // just this one.
-        function unfriendPeer(peer) {
-            friendshipError.value = '';
-            try {
-                friendRelationshipUseCase.unfriend(peer);
-            } catch (e) {
-                friendshipError.value = stripPrefix(e.message);
-            }
-        }
-
-        // The "Friends" list's own Unfriend button needs a real,
-        // AUTHENTICATED ConnectedPeer to send through — 0.2.85: application/
-        // PeerPresenceUseCase.js#findConnectedPeer(), the same resolved-
-        // identity lookup isConnectedNow() above uses, so this never
-        // duplicates that lookup's logic.
-        function unfriendByIdentity(identityId) {
-            const peer = peerPresenceUseCase.findConnectedPeer(identityId);
-            if (peer) {
-                unfriendPeer(peer);
-            }
-        }
-
-        function refreshFriendships(list) {
-            friendships.value = list || friendRelationshipUseCase.getRelationships();
-        }
-
-        // A friend never carries its own alias — see core/
-        // FriendshipRecord.js's own header on why it stores only signed
-        // evidence, never a local note. This cross-references the SAME
-        // application/PeerRelationshipUseCase.js alias "Known Peers"
-        // already renders, falling back to a shortened identityId for a
-        // friend this device never separately chose to "Remember."
-        function friendDisplayName(identityId) {
-            const relationship = relationshipsById.value.get(identityId);
-            return (relationship && relationship.alias) || shortId(identityId);
-        }
-
-        const friends = computed(() => friendships.value.filter((f) => f.status === FriendshipState.FRIEND));
-
-        // --- Blocked (0.2.60) ---------------------------------------------
-        // Entirely local, never requires a live connection — see
-        // core/PeerBlockRecord.js's own header. Available from any card
-        // this device already holds identityId/publicKey for: an
-        // AUTHENTICATED "My Peers" entry, a Known Peer, or a Friend —
-        // `identity` is duck-typed (identityId/publicKey[/algorithm]),
-        // so all three shapes work unmodified.
-        function isBlockedIdentity(identityId) {
-            return blockedIds.value.has(identityId);
-        }
-
-        function blockIdentity(identity) {
-            blockError.value = '';
-            try {
-                peerBlockUseCase.block(identity);
-            } catch (e) {
-                blockError.value = stripPrefix(e.message);
-            }
-        }
-
-        function unblockIdentity(identityId) {
-            blockError.value = '';
-            try {
-                peerBlockUseCase.unblock(identityId);
-            } catch (e) {
-                blockError.value = stripPrefix(e.message);
-            }
-        }
-
-        function refreshBlocked(list) {
-            blocked.value = list || peerBlockUseCase.getBlocked();
-        }
-
-        // --- Invite Someone ---------------------------------------------
-        const invitePending = ref(false);
-        const inviteError = ref('');
-        const pendingInvitation = reactive({ json: '', expiresAt: null });
-
-        async function startInvite() {
-            inviteError.value = '';
-            pendingInvitation.json = '';
-            invitePending.value = true;
-            try {
-                const { invitation } = await peerSessionManager.createInvitation();
-                pendingInvitation.json = JSON.stringify(invitation.toJSON(), null, 2);
-                pendingInvitation.expiresAt = invitation.expiresAt;
-            } catch (e) {
-                inviteError.value = stripPrefix(e.message);
-            } finally {
-                invitePending.value = false;
-            }
-        }
-        function dismissInvitation() {
-            pendingInvitation.json = '';
-            pendingInvitation.expiresAt = null;
-        }
-
-        // --- Connect to Peer ----------------------------------------------
-        const showAcceptForm = ref(false);
-        const importText = ref('');
-        const acceptError = ref('');
-        const acceptReply = ref('');
-        async function submitAcceptInvitation() {
-            acceptError.value = '';
-            if (!importText.value.trim()) {
-                return;
-            }
-            try {
-                const { reply } = await peerSessionManager.acceptInvitation(importText.value.trim());
-                acceptReply.value = reply;
-                importText.value = '';
-            } catch (e) {
-                acceptError.value = stripPrefix(e.message);
-            }
-        }
-        function closeAcceptForm() {
-            showAcceptForm.value = false;
-            importText.value = '';
-            acceptError.value = '';
-            acceptReply.value = '';
-        }
-
-        // --- Find a Peer (0.2.64) -------------------------------------------
-        // "Discovered" is never "Authenticated" — see application/
-        // FindPeerUseCase.js's own header. A candidate below is exactly
-        // as untrusted as any invitation this device has ever imported;
-        // clicking Connect starts a REAL connection through the exact
-        // same WebRTC + 0.2.49 handshake pipeline every other card on
-        // this page already goes through, and the result shows up in
-        // "My Peers" above like any other pending connection — this
-        // section never renders a second, competing progression display
-        // for it.
-        const findImportText = ref('');
-        const findImportError = ref('');
-        const findImportSuccess = ref('');
-        function submitFindImport() {
-            findImportError.value = '';
-            findImportSuccess.value = '';
-            if (!findImportText.value.trim()) {
-                return;
-            }
-            try {
-                const record = findPeerUseCase.importCandidate(findImportText.value.trim());
-                findImportSuccess.value = record.identityHint
-                    ? `Candidate added — claims to be ${shortId(record.identityHint)}.`
-                    : 'Candidate added — no identity hint was included.';
-                findImportText.value = '';
-            } catch (e) {
-                findImportError.value = stripPrefix(e.message);
-            }
-        }
-
-        const findIdentityId = ref('');
-        const findCandidates = ref([]);
-        const findSearched = ref(false);
-        const findError = ref('');
-        const findConnectingId = ref(null);
-        const findReplies = reactive({});
-        const findRejectedError = ref('');
-
-        async function submitFind() {
-            findError.value = '';
-            findRejectedError.value = '';
-            const identityId = findIdentityId.value.trim();
-            if (!identityId) {
-                return;
-            }
-            try {
-                findCandidates.value = await findPeerUseCase.search(identityId);
-                findSearched.value = true;
-            } catch (e) {
-                findError.value = stripPrefix(e.message);
-            }
-        }
-
-        // --- Be Discoverable (0.2.66) ----------------------------------------
-        // "Publish me to whatever rendezvous network is configured" — see
-        // application/FindPeerUseCase.js#publishSelf's own header. Never
-        // available unless at least one real rendezvous node is actually
-        // configured (ui/main.js) — with none configured, publishSelf()
-        // has nothing to publish TO and this section explains that rather
-        // than offering a button that would silently do nothing.
-        const publishPending = ref(false);
-        const publishError = ref('');
-        // Read from the app-wide application/FindPeerUseCase.js#isPublishing
-        // — never a flag of this view's own, which reset on every remount
-        // and never noticed an inbound connection consuming the offer.
-        // Re-read whenever the peer list changes (an offer being answered
-        // or closed is a peer change), on every one-second tick (expiry),
-        // and after this view's own publish/stop (publishRevision).
-        const publishRevision = ref(0);
-        const isPublished = computed(() => {
-            void peers.value;
-            void now.value;
-            void publishRevision.value;
-            return findPeerUseCase.isPublishing();
-        });
-        async function togglePublish() {
-            publishError.value = '';
-            publishPending.value = true;
-            try {
-                if (isPublished.value) {
-                    await findPeerUseCase.stopPublishing();
-                } else {
-                    const publication = await findPeerUseCase.publishSelf();
-                    if (!publication) {
-                        publishError.value = 'No rendezvous network is configured on this device — see peer/RendezvousConfig.js.';
-                    }
-                }
-            } catch (e) {
-                publishError.value = stripPrefix(e.message);
-            } finally {
-                publishRevision.value++;
-                publishPending.value = false;
-            }
-        }
-
-        function candidateExpiry(record) {
-            return formatDuration(Math.max(0, record.expiresAt.getTime() - now.value));
-        }
-
-        async function connectToCandidate(record) {
-            findError.value = '';
-            findConnectingId.value = record.peerDiscoveryId;
-            try {
-                const { reply } = await findPeerUseCase.connect(record, findIdentityId.value.trim());
-                findReplies[record.peerDiscoveryId] = reply;
-            } catch (e) {
-                findError.value = stripPrefix(e.message);
-            } finally {
-                findConnectingId.value = null;
-            }
-        }
-
-        // --- Complete Connection (the inviter's second, closing step) ------
-        const completingConnectionId = ref(null);
-        const completeReplyText = ref('');
-        const completeError = ref('');
-        function startComplete(peer) {
-            completingConnectionId.value = peer.connectionId;
-            completeReplyText.value = '';
-            completeError.value = '';
-        }
-        async function submitComplete(peer) {
-            completeError.value = '';
-            if (!completeReplyText.value.trim()) {
-                return;
-            }
-            try {
-                await peerSessionManager.completeConnection(peer.connectionId, completeReplyText.value.trim());
-                completingConnectionId.value = null;
-                completeReplyText.value = '';
-            } catch (e) {
-                completeError.value = stripPrefix(e.message);
-            }
-        }
-        function awaitingReply(peer) {
-            // Only the offering side of a real WebRTC handshake ever needs
-            // a second, manual paste — see peer/WebRtcPeerConnection.js's
-            // own header. Bob's side (role "answerer") completes the moment
-            // ICE finds a path; there is nothing for him to paste.
-            return peer.connection && peer.connection.role === 'offerer' && peer.getLifecycleState() === PeerLifecycleState.CONNECTING;
-        }
+        const {
+            findImportText, findImportError, findImportSuccess, submitFindImport,
+            findIdentityId, findCandidates, findSearched, findError, findConnectingId, findReplies,
+            findRejectedError, submitFind, candidateExpiry, connectToCandidate,
+            publishPending, publishError, isPublished, togglePublish
+        } = useFindPeer({ findPeerUseCase, peers, now });
 
         // --- Peer Identity panel --------------------------------------------
         const selectedConnectionId = ref(null);
@@ -714,10 +243,6 @@ export default {
             }
         }
 
-        function shortId(identityId) {
-            return identityId ? identityId.slice(-14) : '';
-        }
-
         let unsubscribePeers = null;
         let unsubscribeRelationships = null;
         let unsubscribeFriendships = null;
@@ -740,7 +265,7 @@ export default {
                 refreshLockState();
             });
             // Locking/unlocking never fires onSessionChanged — see
-            // application/IdentityUseCase.js's own header: being
+            // application/identity/IdentityUseCase.js's own header: being
             // authenticated and being unlocked are different questions,
             // deliberately signaled separately. This is what keeps
             // isIdentityLocked current if the user unlocks (or a vault
@@ -749,9 +274,9 @@ export default {
             unsubscribeVaultLock = identityUseCase.onVaultLockChanged(() => refreshLockState());
             // 0.2.62 — a reconnect that authenticates as someone other
             // than the identity this device expected is never silently
-            // dropped: application/ConnectToPeerUseCase.js has already
+            // dropped: application/peer/ConnectToPeerUseCase.js has already
             // closed the connection by the time this fires (see
-            // application/PeerReconnectionUseCase.js's own header), so
+            // application/peer/PeerReconnectionUseCase.js's own header), so
             // this is purely explaining what happened, never a chance to
             // still accept it.
             unsubscribeReconnectRejected = peerReconnectionUseCase.onReconnectRejected(({ relationship }) => {
@@ -761,8 +286,8 @@ export default {
             // 0.2.64 — a "Find a Peer" connect() that authenticates as
             // someone other than the identity Alice searched for is
             // never silently dropped either: the connection is already
-            // closed by application/ConnectToPeerUseCase.js by the time
-            // this fires (see application/FindPeerUseCase.js's own
+            // closed by application/peer/ConnectToPeerUseCase.js by the time
+            // this fires (see application/peer/FindPeerUseCase.js's own
             // header) — this only explains what happened.
             unsubscribeFindRejected = findPeerUseCase.onCandidateRejected(({ expectedIdentityId }) => {
                 findRejectedError.value = `Connection rejected: whoever answered at that candidate's endpoint was not ${shortId(expectedIdentityId)} — the connection has been closed.`;
@@ -831,272 +356,13 @@ export default {
                     is waiting on you — for them, only after their own handshake eventually times out.
                 </p>
 
-                <div class="peer-actions">
-                    <button class="action-btn action-btn--primary" :disabled="invitePending || isIdentityLocked" @click="startInvite">
-                        {{ invitePending ? 'Creating…' : 'Invite Someone' }}
-                    </button>
-                    <button class="action-btn action-btn--secondary" :disabled="isIdentityLocked" @click="showAcceptForm = !showAcceptForm">
-                        Connect to Peer
-                    </button>
-                </div>
+                ${inviteAndConnectTemplate}
 
-                <p v-if="inviteError" class="identity-unlock-error">{{ inviteError }}</p>
-
-                <div v-if="pendingInvitation.json" class="peer-signal-box">
-                    <h2>Invitation</h2>
-                    <p class="form-hint form-hint--neutral">
-                        Expires {{ new Date(pendingInvitation.expiresAt).toLocaleTimeString() }}. This is a
-                        rendezvous hint, not proof of who you are — send it to the person you want to
-                        connect with over any channel you already trust to reach them.
-                    </p>
-                    <textarea class="form-input peer-signal-json" rows="6" readonly :value="pendingInvitation.json"></textarea>
-                    <div class="modal-actions">
-                        <button class="modal-btn modal-btn--secondary" @click="dismissInvitation">Dismiss</button>
-                        <button class="modal-btn modal-btn--primary" @click="copyText(pendingInvitation.json, 'invitation')">
-                            {{ copiedKey === 'invitation' ? 'Copied!' : 'Copy Invitation' }}
-                        </button>
-                    </div>
-                    <p class="form-hint form-hint--neutral">
-                        Once they reply, find this pending connection below in <strong>My Peers</strong> and paste
-                        their reply there to finish connecting.
-                    </p>
-                </div>
-
-                <div v-if="showAcceptForm" class="peer-signal-box">
-                    <h2>Connect to Peer</h2>
-                    <textarea v-model="importText" class="form-input peer-signal-json" rows="6"
-                              placeholder="Paste an invitation here"></textarea>
-                    <p v-if="acceptError" class="identity-unlock-error">{{ acceptError }}</p>
-                    <div class="modal-actions">
-                        <button class="modal-btn modal-btn--secondary" @click="closeAcceptForm">Cancel</button>
-                        <button class="modal-btn modal-btn--primary" @click="submitAcceptInvitation">Connect</button>
-                    </div>
-
-                    <div v-if="acceptReply" class="peer-signal-box peer-signal-box--nested">
-                        <p class="form-hint form-hint--neutral">
-                            Send this reply back to whoever invited you — the connection will not
-                            complete until they paste it in.
-                        </p>
-                        <textarea class="form-input peer-signal-json" rows="6" readonly :value="acceptReply"></textarea>
-                        <button class="modal-btn modal-btn--primary" @click="copyText(acceptReply, 'reply')">
-                            {{ copiedKey === 'reply' ? 'Copied!' : 'Copy Reply' }}
-                        </button>
-                    </div>
-                </div>
-
-                <h2 class="peer-my-peers-heading">Find a Peer</h2>
-                <p class="form-hint form-hint--neutral">
-                    Discovery only ever finds a <strong>candidate</strong> — never a proven identity. Add
-                    invitations you've received here without connecting to them yet, then search by identity
-                    to find one worth attempting. Connecting still runs the full WebRTC + authentication
-                    handshake every other connection on this page does; if whoever actually answers isn't the
-                    identity you searched for, the connection is rejected and closed automatically, exactly
-                    like a rejected <strong>Reconnect</strong> above.
-                </p>
-
-                <div class="peer-signal-box">
-                    <h3>Add a Candidate</h3>
-                    <p class="form-hint form-hint--neutral">
-                        Paste an invitation someone sent you to add it to this device's discovery pool — this
-                        does not connect to it.
-                    </p>
-                    <textarea v-model="findImportText" class="form-input peer-signal-json" rows="4"
-                              placeholder="Paste an invitation here"></textarea>
-                    <p v-if="findImportError" class="identity-unlock-error">{{ findImportError }}</p>
-                    <p v-if="findImportSuccess" class="form-hint form-hint--neutral">{{ findImportSuccess }}</p>
-                    <div class="modal-actions">
-                        <button class="modal-btn modal-btn--primary" @click="submitFindImport">Add Candidate</button>
-                    </div>
-                </div>
-
-                <div class="peer-signal-box">
-                    <h3>Be Discoverable</h3>
-                    <p class="form-hint form-hint--neutral">
-                        Publishes an offer for this device under your own identity to every rendezvous
-                        network this app is configured with, so someone who only knows your identity can
-                        find and connect to you without an invitation ever passing between you directly.
-                        A publication answers at most one incoming connection — publish again once someone
-                        connects if you want to be found for a next one.
-                    </p>
-                    <div v-if="myIdentityId" class="peer-signal-box peer-signal-box--nested">
-                        <p class="form-hint form-hint--neutral">
-                            <strong>Your Identity</strong> — this is what "Be Discoverable" publishes under,
-                            and what someone needs to paste into their own <strong>Find Someone</strong> to
-                            find you. It is NOT the shortened …{{ shortId(myIdentityId) }} shown elsewhere in
-                            this app for telling cards apart at a glance — that shortened form will never
-                            match a real search.
-                        </p>
-                        <textarea class="form-input peer-signal-json" rows="2" readonly :value="myIdentityId" @click="$event.target.select()"></textarea>
-                        <button class="modal-btn modal-btn--primary" @click="copyText(myIdentityId, 'my-identity')">
-                            {{ copiedKey === 'my-identity' ? 'Copied!' : 'Copy Your Identity' }}
-                        </button>
-                    </div>
-                    <p v-if="publishError" class="identity-unlock-error">{{ publishError }}</p>
-                    <div class="modal-actions">
-                        <button class="modal-btn modal-btn--primary" :disabled="publishPending" @click="togglePublish">
-                            {{ publishPending ? 'Working…' : (isPublished ? 'Stop Being Discoverable' : 'Be Discoverable') }}
-                        </button>
-                    </div>
-                </div>
-
-                <div class="peer-signal-box">
-                    <h3>Find Someone</h3>
-                    <label class="peer-alias-field">
-                        <span class="form-label">Identity</span>
-                        <input type="text" class="form-input" v-model="findIdentityId"
-                               placeholder="did:key:..." @keyup.enter="submitFind" />
-                    </label>
-                    <div class="modal-actions">
-                        <button class="modal-btn modal-btn--primary" @click="submitFind">Discover</button>
-                    </div>
-                    <p v-if="findError" class="identity-unlock-error">{{ findError }}</p>
-                    <p v-if="findRejectedError" class="identity-unlock-error">{{ findRejectedError }}</p>
-
-                    <div v-if="findCandidates.length" class="identity-mgmt-list">
-                        <div v-for="record in findCandidates" :key="record.peerDiscoveryId" class="identity-mgmt-card">
-                            <div class="identity-mgmt-card-header">
-                                <span class="identity-mgmt-name">Candidate — {{ shortId(findIdentityId) }}</span>
-                                <span class="peer-badge peer-badge--pending">Discovered</span>
-                            </div>
-                            <p class="identity-mgmt-status">
-                                Source: {{ record.source }} · expires in {{ candidateExpiry(record) }}
-                            </p>
-                            <p class="form-hint form-hint--neutral">
-                                This is only a claim — connecting proves (or disproves) it.
-                            </p>
-
-                            <div v-if="findReplies[record.peerDiscoveryId]" class="peer-signal-box peer-signal-box--nested">
-                                <p class="form-hint form-hint--neutral">
-                                    Send this reply back to whoever gave you this candidate — the connection
-                                    will not complete until they paste it in. Check <strong>My Peers</strong>
-                                    above for live progress.
-                                </p>
-                                <textarea class="form-input peer-signal-json" rows="5" readonly :value="findReplies[record.peerDiscoveryId]"></textarea>
-                                <button class="modal-btn modal-btn--primary"
-                                        @click="copyText(findReplies[record.peerDiscoveryId], 'find-reply-' + record.peerDiscoveryId)">
-                                    {{ copiedKey === ('find-reply-' + record.peerDiscoveryId) ? 'Copied!' : 'Copy Reply' }}
-                                </button>
-                            </div>
-                            <div v-else class="identity-mgmt-actions">
-                                <button class="action-btn action-btn--primary"
-                                        :disabled="findConnectingId === record.peerDiscoveryId"
-                                        @click="connectToCandidate(record)">
-                                    {{ findConnectingId === record.peerDiscoveryId ? 'Connecting…' : 'Connect' }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <p v-else-if="findSearched" class="form-hint form-hint--neutral">
-                        No fresh candidates for that identity yet. Add one above, or ask them to send you an
-                        invitation.
-                    </p>
-                </div>
+                ${findPeerSectionTemplate}
             </template>
 
             <h2 class="peer-my-peers-heading">My Peers</h2>
-            <div v-if="peers.length" class="identity-mgmt-list">
-                <div v-for="peer in peers" :key="peer.connectionId" class="identity-mgmt-card">
-                    <div class="identity-mgmt-card-header">
-                        <span class="identity-mgmt-name">{{ peer.alias || (peer.remoteIdentity ? shortId(peer.remoteIdentity.identityId) : 'Unknown peer') }}</span>
-                        <span class="peer-badge" :class="LIFECYCLE_CLASSES[peer.getLifecycleState()]">
-                            {{ LIFECYCLE_LABELS[peer.getLifecycleState()] || peer.getLifecycleState() }}
-                        </span>
-                    </div>
-                    <p class="identity-mgmt-status">
-                        WebRTC · connected {{ connectedFor(peer) }}
-                        <template v-if="peer.remoteIdentity"> · {{ shortId(peer.remoteIdentity.identityId) }}</template>
-                    </p>
-
-                    <ol class="peer-progression" v-if="peer.getLifecycleState() !== PeerLifecycleState.AUTHENTICATED">
-                        <li v-for="step in PROGRESSION_STEPS" :key="step.label"
-                            :class="{ 'peer-progression-step--done': step.reached(peer.getLifecycleState()) }">
-                            {{ step.label }}
-                        </li>
-                    </ol>
-                    <p v-if="peer.getLifecycleState() === PeerLifecycleState.FAILED" class="identity-unlock-error">
-                        {{ peer.authenticationSession.failureReason || 'Authentication failed.' }}
-                    </p>
-
-                    <label class="peer-alias-field">
-                        <span class="form-label">Local alias (never shared)</span>
-                        <input type="text" class="form-input" :value="peer.alias || ''"
-                               placeholder="e.g. Bob"
-                               @change="updateAlias(peer, $event)" />
-                    </label>
-
-                    <div v-if="awaitingReply(peer)" class="peer-complete-box">
-                        <template v-if="completingConnectionId === peer.connectionId">
-                            <textarea v-model="completeReplyText" class="form-input peer-signal-json" rows="5"
-                                      placeholder="Paste their reply here"></textarea>
-                            <p v-if="completeError" class="identity-unlock-error">{{ completeError }}</p>
-                            <div class="modal-actions">
-                                <button class="modal-btn modal-btn--secondary" @click="completingConnectionId = null">Cancel</button>
-                                <button class="modal-btn modal-btn--primary" @click="submitComplete(peer)">Complete Connection</button>
-                            </div>
-                        </template>
-                        <button v-else class="action-btn action-btn--secondary" @click="startComplete(peer)">
-                            Paste Reply to Complete
-                        </button>
-                    </div>
-
-                    <template v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED">
-                        <p v-if="relationshipFor(peer)" class="form-hint form-hint--neutral">
-                            ✓ Known Peer{{ relationshipFor(peer).alias ? ' — ' + relationshipFor(peer).alias : '' }}
-                        </p>
-                        <p v-if="friendStatus(peer) === FriendshipState.FRIEND" class="form-hint form-hint--neutral">
-                            ✓ Friend
-                        </p>
-                        <p v-else-if="hasPendingIncomingRequest(peer)" class="form-hint form-hint--neutral">
-                            {{ peer.alias || shortId(peer.remoteIdentity.identityId) }} sent you a friend request.
-                        </p>
-                        <p v-else-if="hasSentRequest(peer)" class="form-hint form-hint--neutral">
-                            Friend request sent — waiting for them to accept.
-                        </p>
-                        <p v-if="isBlockedIdentity(peer.remoteIdentity.identityId)" class="form-hint form-hint--neutral">
-                            ⛔ Blocked — this device refuses social interaction from this identity.
-                        </p>
-                    </template>
-
-                    <div class="identity-mgmt-actions">
-                        <template v-if="peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED">
-                            <button v-if="!relationshipFor(peer)" class="action-btn action-btn--secondary" @click="rememberPeer(peer)">
-                                Remember
-                            </button>
-                            <button v-else class="action-btn action-btn--secondary" @click="forgetKnownPeer(peer.remoteIdentity.identityId)">
-                                Forget
-                            </button>
-                            <button v-if="friendStatus(peer) === FriendshipState.NONE"
-                                    class="action-btn action-btn--secondary" @click="sendFriendRequest(peer)">
-                                Send Friend Request
-                            </button>
-                            <template v-if="hasPendingIncomingRequest(peer)">
-                                <button class="action-btn action-btn--primary" @click="acceptFriendRequest(peer)">
-                                    Accept Friend Request
-                                </button>
-                                <button class="action-btn action-btn--secondary" @click="rejectFriendRequest(peer)">
-                                    Reject Friend Request
-                                </button>
-                            </template>
-                            <button v-if="hasSentRequest(peer)" class="action-btn action-btn--secondary" @click="cancelFriendRequest(peer)">
-                                Cancel Friend Request
-                            </button>
-                            <button v-if="friendStatus(peer) === FriendshipState.FRIEND"
-                                    class="action-btn action-btn--secondary" @click="unfriendPeer(peer)">
-                                Unfriend
-                            </button>
-                            <button v-if="!isBlockedIdentity(peer.remoteIdentity.identityId)"
-                                    class="action-btn action-btn--danger" @click="blockIdentity(peer.remoteIdentity)">
-                                Block
-                            </button>
-                            <button v-else class="action-btn action-btn--secondary" @click="unblockIdentity(peer.remoteIdentity.identityId)">
-                                Unblock
-                            </button>
-                        </template>
-                        <button class="action-btn action-btn--secondary" @click="openDetail(peer)">Details</button>
-                        <button class="action-btn action-btn--danger" @click="disconnectPeer(peer)">Disconnect</button>
-                    </div>
-                </div>
-            </div>
+            ${myPeersListTemplate}
             <p v-else class="form-hint form-hint--neutral">No peers connected right now.</p>
 
             <p v-if="relationshipError" class="identity-unlock-error">{{ relationshipError }}</p>
@@ -1113,105 +379,7 @@ export default {
                 invitation from someone else is closed, not accepted.
             </p>
             <p v-if="reconnectRejectedError" class="identity-unlock-error">{{ reconnectRejectedError }}</p>
-            <div v-if="relationships.length" class="identity-mgmt-list">
-                <div v-for="relationship in relationships" :key="relationship.identityId" class="identity-mgmt-card">
-                    <div class="identity-mgmt-card-header">
-                        <span class="identity-mgmt-name">{{ relationship.alias || shortId(relationship.identityId) }}</span>
-                        <span class="peer-badge" :class="isConnectedNow(relationship.identityId) ? 'peer-badge--authenticated' : 'peer-badge--pending'">
-                            {{ isConnectedNow(relationship.identityId) ? 'Connected now' : 'Not connected' }}
-                        </span>
-                    </div>
-                    <p class="identity-mgmt-status">
-                        {{ shortId(relationship.identityId) }} · known since {{ formatWhen(relationship.createdAt) }}
-                        <br />last authenticated {{ formatWhen(relationship.lastAuthenticatedAt) }}
-                    </p>
-
-                    <label class="peer-alias-field">
-                        <span class="form-label">Alias</span>
-                        <input type="text" class="form-input" :value="relationship.alias || ''"
-                               placeholder="e.g. Bob"
-                               @change="updateKnownAlias(relationship.identityId, $event)" />
-                    </label>
-
-                    <p v-if="isBlockedIdentity(relationship.identityId)" class="form-hint form-hint--neutral">
-                        ⛔ Blocked — this device refuses social interaction from this identity.
-                    </p>
-                    <p v-if="remoteLifecycleFor(relationship.identityId) && remoteLifecycleFor(relationship.identityId).isRevoked" class="form-hint form-hint--neutral">
-                        <span class="identity-revoked-badge">⚠ Revoked</span> — a signed revocation for this identity
-                        was received and verified.
-                        <template v-if="remoteLifecycleFor(relationship.identityId).successorIdentityId">
-                            Remembered successor: …{{ shortId(remoteLifecycleFor(relationship.identityId).successorIdentityId) }}.
-                        </template>
-                        This is informational only — the Known Peer record above is untouched; nothing about
-                        this identity's past connections or relationship is changed automatically.
-                    </p>
-                    <p v-else-if="remoteLifecycleFor(relationship.identityId) && remoteLifecycleFor(relationship.identityId).successorIdentityId" class="form-hint form-hint--neutral">
-                        A signed successor declaration was received and verified — remembered successor:
-                        …{{ shortId(remoteLifecycleFor(relationship.identityId).successorIdentityId) }}.
-                    </p>
-
-                    <div class="identity-mgmt-actions">
-                        <button v-if="!isConnectedNow(relationship.identityId)"
-                                class="action-btn action-btn--primary" @click="toggleReconnect(relationship.identityId)">
-                            {{ reconnectTargetId === relationship.identityId ? 'Close Reconnect' : 'Reconnect' }}
-                        </button>
-                        <button v-if="!isBlockedIdentity(relationship.identityId)"
-                                class="action-btn action-btn--danger" @click="blockIdentity(relationship)">
-                            Block
-                        </button>
-                        <button v-else class="action-btn action-btn--secondary" @click="unblockIdentity(relationship.identityId)">
-                            Unblock
-                        </button>
-                        <button class="action-btn action-btn--danger" @click="forgetKnownPeer(relationship.identityId)">Forget</button>
-                    </div>
-
-                    <div v-if="reconnectTargetId === relationship.identityId" class="peer-signal-box peer-signal-box--nested">
-                        <p class="form-hint form-hint--neutral">
-                            Reconnecting always starts a brand-new invitation and a brand-new handshake — nothing
-                            about any past connection to {{ relationship.alias || shortId(relationship.identityId) }}
-                            is reused. Either create a fresh invitation to send them, or paste one they already sent you.
-                        </p>
-                        <div class="peer-actions">
-                            <button class="action-btn action-btn--secondary" :disabled="reconnectInvitePending"
-                                    @click="submitReconnectInvite(relationship.identityId)">
-                                {{ reconnectInvitePending ? 'Creating…' : 'Create Invitation' }}
-                            </button>
-                        </div>
-                        <p v-if="reconnectInviteError" class="identity-unlock-error">{{ reconnectInviteError }}</p>
-                        <div v-if="reconnectInvitation.json" class="peer-signal-box peer-signal-box--nested">
-                            <p class="form-hint form-hint--neutral">
-                                Send this to {{ relationship.alias || shortId(relationship.identityId) }}. Once they
-                                reply, find this pending connection in <strong>My Peers</strong> above and paste
-                                their reply there to finish connecting.
-                            </p>
-                            <textarea class="form-input peer-signal-json" rows="5" readonly :value="reconnectInvitation.json"></textarea>
-                            <button class="modal-btn modal-btn--primary"
-                                    @click="copyText(reconnectInvitation.json, 'reconnect-invite-' + relationship.identityId)">
-                                {{ copiedKey === ('reconnect-invite-' + relationship.identityId) ? 'Copied!' : 'Copy Invitation' }}
-                            </button>
-                        </div>
-
-                        <p class="form-hint form-hint--neutral">Or, if they already sent you an invitation:</p>
-                        <textarea v-model="reconnectImportText" class="form-input peer-signal-json" rows="5"
-                                  placeholder="Paste their invitation here"></textarea>
-                        <div class="modal-actions">
-                            <button class="modal-btn modal-btn--primary" @click="submitReconnectAccept(relationship.identityId)">Connect</button>
-                        </div>
-                        <p v-if="reconnectAcceptError" class="identity-unlock-error">{{ reconnectAcceptError }}</p>
-                        <div v-if="reconnectReply" class="peer-signal-box peer-signal-box--nested">
-                            <p class="form-hint form-hint--neutral">
-                                Send this reply back to {{ relationship.alias || shortId(relationship.identityId) }} —
-                                the connection completes once they paste it in.
-                            </p>
-                            <textarea class="form-input peer-signal-json" rows="5" readonly :value="reconnectReply"></textarea>
-                            <button class="modal-btn modal-btn--primary"
-                                    @click="copyText(reconnectReply, 'reconnect-reply-' + relationship.identityId)">
-                                {{ copiedKey === ('reconnect-reply-' + relationship.identityId) ? 'Copied!' : 'Copy Reply' }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            ${knownPeersListTemplate}
             <p v-else class="form-hint form-hint--neutral">
                 No known peers yet. Authenticate a connection above, then click <strong>Remember</strong> on
                 their card to keep a local record of who they are.

@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { transitionPublicationDistributionLifecycle } from '../application/PublicationDistributionLifecycleTransition.js';
-import { describePublicationDistributionLifecycle } from '../application/PublicationDistributionLifecycle.js';
-import { executePublicationDistribution } from '../application/PublicationDistributionExecutor.js';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { transitionPublicationDistributionLifecycle } from '../application/publication/distribution/PublicationDistributionLifecycleTransition.js';
+import { describePublicationDistributionLifecycle } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -271,13 +271,13 @@ async function run() {
     // Section J — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/PublicationDistributionLifecycleStore.js', import.meta.url);
+        const sourceUrl = new URL('../application/publication/distribution/PublicationDistributionLifecycleStore.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(!codeOnly.includes("from './PublicationDistributionLifecycle"), '30. never imports the 0.9.50 lifecycle module');
+        assert(!codeOnly.includes("from '../../PublicationDistributionLifecycle"), '30. never imports the 0.9.50 lifecycle module');
         assert(!codeOnly.includes("from './PublicationDistributionLifecycleTransition"), '31. never imports the 0.9.51 transition module');
-        assert(!codeOnly.includes("from './PublicationDistributionResult"), '32. never imports the 0.9.48 result module');
+        assert(!codeOnly.includes("from '../../PublicationDistributionResult"), '32. never imports the 0.9.48 result module');
         assert(!codeOnly.includes("from './PublicationDistributionExecutor"), '33. never imports the 0.9.49 execution module');
         assert(!codeOnly.includes('ArweavePublicationMaterialUploader') && !codeOnly.includes('NostrPublicationDiscoveryPublisher') && !codeOnly.includes('PublicationDistributionDescriptor') && !codeOnly.includes('PublicationDistributionRuntimeComposition'), '34. never imports any of the four collaborator/execution files');
         assert(!/\bfetch\(/.test(codeOnly), '35. never calls fetch(...) — no network access of its own');

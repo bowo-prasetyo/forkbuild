@@ -1,41 +1,41 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreatePublicationReferenceRecordUseCase } from '../application/CreatePublicationReferenceRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
-import { verifyPublisherLeaderboardSnapshotClaim } from '../application/PublisherLeaderboardSnapshotClaimVerification.js';
-import { exportPublisherLeaderboardSnapshotClaim } from '../application/PublisherLeaderboardSnapshotClaimExchange.js';
-import { LeaderboardClaimRecord } from '../application/LeaderboardClaimRecord.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
+import { verifyPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js';
+import { exportPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
 import {
     ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase,
     LeaderboardClaimArchiveReceiptOutcome
-} from '../application/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
+} from '../application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
 import {
     describePublisherLeaderboardClaimHistory,
     reconstructPublisherLeaderboardClaimHistory
-} from '../application/PublisherLeaderboardClaimHistoryView.js';
+} from '../application/leaderboard/PublisherLeaderboardClaimHistoryView.js';
 import {
     describePublisherLeaderboardClaimHistoryStatistics,
     reconstructPublisherLeaderboardClaimHistoryStatistics
-} from '../application/PublisherLeaderboardClaimHistoryStatisticsView.js';
+} from '../application/leaderboard/PublisherLeaderboardClaimHistoryStatisticsView.js';
 import {
     describePublisherLeaderboardClaimHistoryTimeline,
     reconstructPublisherLeaderboardClaimHistoryTimeline
-} from '../application/PublisherLeaderboardClaimHistoryTimelineView.js';
+} from '../application/leaderboard/PublisherLeaderboardClaimHistoryTimelineView.js';
 import {
     describePublisherLeaderboardClaimHistoryDifference,
     reconstructPublisherLeaderboardClaimHistoryDifference
-} from '../application/PublisherLeaderboardClaimHistoryDifference.js';
-import { reconstructPublisherLeaderboardClaimVerificationHistory } from '../application/PublisherLeaderboardClaimVerificationHistoryView.js';
-import { describePublicationObservationArchiveDifference } from '../application/PublicationObservationArchiveDifference.js';
-import { describePublicationObservationArchiveReplacementReview } from '../application/PublicationObservationArchiveReplacementReview.js';
+} from '../application/leaderboard/PublisherLeaderboardClaimHistoryDifference.js';
+import { reconstructPublisherLeaderboardClaimVerificationHistory } from '../application/leaderboard/PublisherLeaderboardClaimVerificationHistoryView.js';
+import { describePublicationObservationArchiveDifference } from '../application/publication/observationArchive/PublicationObservationArchiveDifference.js';
+import { describePublicationObservationArchiveReplacementReview } from '../application/publication/observationArchive/PublicationObservationArchiveReplacementReview.js';
 import {
     exportPublicationObservationArchive,
     importPublicationObservationArchive
-} from '../application/PublicationObservationArchiveExport.js';
-import { fingerprintPublicationObservationArchive } from '../application/PublicationObservationArchiveFingerprint.js';
-import { reconstructAchievementEvidenceFingerprint } from '../application/AchievementEvidenceFingerprint.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
+} from '../application/publication/observationArchive/PublicationObservationArchiveExport.js';
+import { fingerprintPublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveFingerprint.js';
+import { reconstructAchievementEvidenceFingerprint } from '../application/achievement/AchievementEvidenceFingerprint.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -305,7 +305,7 @@ async function run() {
         // LeaderboardClaimRecord.fromJSON() (0.8.123, UNCHANGED) must
         // catch this, exactly as it would for a bare, non-archived claim.
         // (Cryptographic signature validity is deliberately NOT this
-        // seam's job — see application/PublisherLeaderboardSnapshotClaimVerification.js's
+        // seam's job — see application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js's
         // own, separate, explicit 0.8.121 step; fromJSON() has no verifier
         // to call one with, exactly like every other record class here.)
         const malformedClaimRecords = goodJSON.leaderboardClaimRecords.map((r, i) => i === 0
@@ -697,7 +697,7 @@ async function run() {
         // Verification content (signatureValid/matches/etc.) is identical;
         // only the archive-level provenance driving nothing in this
         // comparison could differ, and doesn't appear in verification
-        // output at all — see application/LeaderboardClaimRecord.js's own
+        // output at all — see application/leaderboard/LeaderboardClaimRecord.js's own
         // header.
         const stripReceivedWallClock = (v) => v.verifications.map(({ signerIdentityId, claimCreatedAt, signatureValid, evidenceFingerprintMatches, policyVersionMatches, snapshotFingerprintMatches, matches }) =>
             ({ signerIdentityId, claimCreatedAt, signatureValid, evidenceFingerprintMatches, policyVersionMatches, snapshotFingerprintMatches, matches }));

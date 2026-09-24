@@ -6,16 +6,16 @@ import { StructurePlacement } from '../core/StructurePlacement.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateEditorContextUseCase } from '../application/CreateEditorContextUseCase.js';
-import { PlacementPositionService } from '../application/PlacementPositionService.js';
-import { StructureDocumentResolver } from '../application/StructureDocumentResolver.js';
-import { StructurePlacementValidator } from '../application/StructurePlacementValidator.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
+import { PlacementPositionService } from '../application/editor/PlacementPositionService.js';
+import { StructureDocumentResolver } from '../application/editor/StructureDocumentResolver.js';
+import { StructurePlacementValidator } from '../application/editor/StructurePlacementValidator.js';
 import { StructurePlacementTool } from '../application/tools/StructurePlacementTool.js';
 import { SelectionTool } from '../application/tools/SelectionTool.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { StructurePreviewUseCase } from '../application/StructurePreviewUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { StructurePreviewUseCase } from '../application/editor/StructurePreviewUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -266,7 +266,7 @@ async function run() {
     // the ANCHOR's own placement coordinate on that axis, never the
     // hover position along the anchor's face (calculateStructureStack()
     // literally initializes `z = anchorPosition.z` / `x = anchorPosition.x`
-    // before branching — see application/PlacementPositionService.js).
+    // before branching — see application/editor/PlacementPositionService.js).
     // A user cannot slide a new structure to different points along a
     // wide anchor face by hovering at different points along it; every
     // hover along that face resolves to the same carried-axis value. This

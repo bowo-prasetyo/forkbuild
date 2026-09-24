@@ -73,7 +73,7 @@ export class RendezvousPublication {
     // 0.2.66 — returns a NEW RendezvousPublication, identical in every
     // other field, carrying `signature`. Never mutates this instance —
     // the same "signing produces a new object" discipline
-    // application/PresenceSigning.js already established one layer up.
+    // application/presence/PresenceSigning.js already established one layer up.
     // See peer/RendezvousPublicationSigning.js, the only caller.
     withSignature(signature) {
         return new RendezvousPublication({
@@ -112,7 +112,7 @@ export class RendezvousPublication {
     }
 
     // Alice's/Bob's side of PUBLISH: wraps an already-built peer/
-    // PeerInvitation.js (see application/DiscoverPeersUseCase.js#createInvitation,
+    // PeerInvitation.js (see application/peer/DiscoverPeersUseCase.js#createInvitation,
     // unmodified by this milestone) as a fresh, short-lived publication.
     static create({ invitation, ttlMs = DEFAULT_PUBLICATION_TTL_MS, now = new Date() } = {}) {
         const parsed = invitation instanceof PeerInvitation ? invitation : PeerInvitation.fromJSON(invitation);

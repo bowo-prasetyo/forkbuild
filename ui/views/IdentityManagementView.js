@@ -11,7 +11,7 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, inject } from 'vue
 // exported. See identity/LocalIdentityProvider.js's exportLocalIdentity/
 // importLocalIdentity and identity/IdentityRecovery.js for where the
 // actual logic lives — this view is pure presentation over
-// application/IdentityUseCase.js, same division as every other view.
+// application/identity/IdentityUseCase.js, same division as every other view.
 //
 // Export requires re-entering the identity's own passphrase even if it's
 // currently unlocked — LocalIdentityProvider.exportLocalIdentity()

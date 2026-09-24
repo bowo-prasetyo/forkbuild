@@ -5,10 +5,10 @@ import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import PublicationList from '../ui/components/PublicationList.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -567,7 +567,7 @@ async function run() {
         assert(!/discoveryProvider/.test(localWrapperMatch[0]),
             n('PATH 2\'s structural gap is one layer BELOW the UI: WorldView.js\'s own local addPublicationCommentaryCommand does not even accept a discoveryProvider parameter — even a hypothetical selector rendered on OwnPublicationPanel.js/WorldEncounterCanvas.js today would have its selection silently dropped by this pass-through before it ever reached WorldNavigationSession, let alone a distribution collaborator'));
 
-        const createWorldViewCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
+        const createWorldViewCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
         assert(!/PublicationCommentaryNostrDistribution|PublicationCommentaryArweaveDistribution|PublicationCommentaryDistributionPeerExchange/.test(createWorldViewCode),
             n('confirmed again: PATH 2\'s own composition (CreateWorldViewUseCase.js) still imports none of the three distribution collaborators — there is no substrate for a PATH 2 selector to choose between yet, regardless of UI'));
 

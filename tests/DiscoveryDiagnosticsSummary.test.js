@@ -11,7 +11,7 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { SpatialIndexRoot } from '../core/SpatialIndexRoot.js';
 import { TrustStatus } from '../core/TrustObservation.js';
 import { summarizeDiscoveryDiagnostics } from '../core/DiscoveryDiagnosticsSummary.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalSpatialIndexStore } from '../spatial/LocalSpatialIndexStore.js';
@@ -25,12 +25,12 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { TrustPolicy } from '../identity/TrustPolicy.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { SearchWorldUseCase } from '../application/SearchWorldUseCase.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { SearchWorldUseCase } from '../application/world/SearchWorldUseCase.js';
 
 // 0.2.30 — Trust-Aware Spatial Discovery & Diagnostics.
 //

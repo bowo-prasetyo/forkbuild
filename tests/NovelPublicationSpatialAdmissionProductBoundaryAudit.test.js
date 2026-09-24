@@ -1,23 +1,23 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { assembleWorldDiscoveryInputs } from '../core/WorldDiscoverySourceAssembly.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
-import { resolveSnapshotWorldPositionClaim } from '../application/SnapshotWorldPositionClaim.js';
-import { SnapshotWorldPositionClaimOutcome } from '../application/SnapshotWorldPositionClaimOutcome.js';
+import { resolveSnapshotWorldPositionClaim } from '../application/snapshot/placement/SnapshotWorldPositionClaim.js';
+import { SnapshotWorldPositionClaimOutcome } from '../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
@@ -25,7 +25,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldNavigationSessionFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.551 — Novel Publication Spatial Admission Product Boundary Audit.
 //
@@ -33,7 +33,7 @@ import { worldNavigationSessionFiles, worldViewFiles } from './support/SourceFil
 //
 // The requesting brief starts from an observation about the real,
 // already-shipped DISCOVER -> SELECT -> RESOLVE -> VERIFY -> MATERIALIZE ->
-// PLACE -> REGISTER pipeline (application/AutomaticSnapshotEncounterCascade.js,
+// PLACE -> REGISTER pipeline (application/snapshot/AutomaticSnapshotEncounterCascade.js,
 // 0.9.187, built on 0.9.150-0.9.172's own explicit stages, gated by 0.9.193's
 // session-lifetime guard): a Wanderer's own walking can drive a genuinely
 // unknown, third-party Publication's Snapshot all the way through real
@@ -325,12 +325,12 @@ async function runTests() {
         // Structural confirmation that this is DOCUMENTED, DELIBERATE
         // restraint in the cascade's own source — never merely an
         // omission this audit happens to be the first to notice.
-        const cascadeSource = codeOnlyLines(await rawSource('application/AutomaticSnapshotEncounterCascade.js'));
+        const cascadeSource = codeOnlyLines(await rawSource('application/snapshot/AutomaticSnapshotEncounterCascade.js'));
         assert(!/SnapshotWorldPositionClaim/.test(cascadeSource),
-            'A8. AutomaticSnapshotEncounterCascade.js never imports application/SnapshotWorldPositionClaim.js.');
+            'A8. AutomaticSnapshotEncounterCascade.js never imports application/snapshot/placement/SnapshotWorldPositionClaim.js.');
         assert(!/candidate\.claimedPosition/.test(cascadeSource),
             'A9. AutomaticSnapshotEncounterCascade.js never reads candidate.claimedPosition anywhere in its own source.');
-        const cascadeHeader = await rawSource('application/AutomaticSnapshotEncounterCascade.js');
+        const cascadeHeader = await rawSource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
         assert(/claimedPosition.{0,40}IS NEVER PROMOTED TO AUTHORITATIVE PLACEMENT/s.test(cascadeHeader),
             'A10. The file\'s own header names this exact restraint explicitly, by name, as a deliberate invariant — not a fact this audit is inferring from absence alone.');
 
@@ -414,7 +414,7 @@ async function runTests() {
         const absent = resolveSnapshotWorldPositionClaim({ contentHash: 'h' }, 'p1');
         assert(absent.outcome === SnapshotWorldPositionClaimOutcome.ABSENT, 'B2c. No claim fields at all: ABSENT.');
 
-        console.log('✓ B(2) — this codebase already names the identity-binding question precisely (CLAIMED/ABSENT/MISMATCHED, application/SnapshotWorldPositionClaim.js) for the one, explicit, person-initiated flow that ever asks it — and, per A8, the automatic walking-triggered path never asks this question at all, because it never reaches for authority via a claim in the first place.');
+        console.log('✓ B(2) — this codebase already names the identity-binding question precisely (CLAIMED/ABSENT/MISMATCHED, application/snapshot/placement/SnapshotWorldPositionClaim.js) for the one, explicit, person-initiated flow that ever asks it — and, per A8, the automatic walking-triggered path never asks this question at all, because it never reaches for authority via a claim in the first place.');
     }
 
     // ===============================================================
@@ -423,7 +423,7 @@ async function runTests() {
     // primitive that actually creates a PlacementRecord.
     // ===============================================================
     {
-        const cascadeHeader = await rawSource('application/AutomaticSnapshotEncounterCascade.js');
+        const cascadeHeader = await rawSource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
         assert(/resolvePlacementInfo.{0,400}does an ALREADY-KNOWN, ALREADY-AUTHORITATIVE\s*\n?\/\/ WORLD PLACEMENT exist/is.test(cascadeHeader.replace(/\r/g, ''))
             || /does an ALREADY-KNOWN, ALREADY-AUTHORITATIVE/.test(cascadeHeader),
             'C1. The cascade\'s own header names its ONE admission question explicitly: does an already-known, already-authoritative WorldPlacement exist for this publicationId.');
@@ -443,7 +443,7 @@ async function runTests() {
         assert(!/WorldDiscoverySourceRegistry|Repository|claimedPosition/i.test(scoped),
             'C4. getPlacementInfoForPublication() consults no WorldDiscoverySourceRegistry, Repository, or claimedPosition concept — publicationId + PlacementRegistry is the whole story.');
 
-        const placeUseCaseSource = codeOnlyLines(await rawSource('application/PlacePublicationUseCase.js'));
+        const placeUseCaseSource = codeOnlyLines(await rawSource('application/placement/PlacePublicationUseCase.js'));
         assert(!/claimedPosition/.test(placeUseCaseSource),
             'C5. PlacePublicationUseCase — the ONE place a PlacementRecord is ever created by an explicit human action — never reads claimedPosition either.');
         assert(/currentUser\s*\?\s*currentUser\.username\s*:\s*null/.test(placeUseCaseSource),
@@ -463,7 +463,7 @@ async function runTests() {
         // already names claimedPosition as unreachable at the ONE
         // encounter-inspection surface this codebase has — and that
         // surface only exists post-registration in the first place.
-        const inspectionHeader = await rawSource('application/WorldSnapshotInspection.js');
+        const inspectionHeader = await rawSource('application/snapshot/WorldSnapshotInspection.js');
         assert(/claimedPosition.*NOT REACHABLE HERE|NOT REACHABLE HERE.*claimedPosition/s.test(inspectionHeader),
             'D1. WorldSnapshotInspection.js\'s own header already documents claimedPosition as not reachable at the one inspection surface this codebase has for an encounter.');
         const inspectionSourceCode = codeOnlyLines(inspectionHeader);
@@ -475,7 +475,7 @@ async function runTests() {
         // back from later; it is returned once, to the one caller of that
         // one processCandidate() call, and then only ever re-returned
         // (memoized) to an IDENTICAL future call for the same key.
-        const cascadeSourceCode = codeOnlyLines(await rawSource('application/AutomaticSnapshotEncounterCascade.js'));
+        const cascadeSourceCode = codeOnlyLines(await rawSource('application/snapshot/AutomaticSnapshotEncounterCascade.js'));
         const publicMethodNames = [...cascadeSourceCode.matchAll(/^\s{4}(\w+)\s*\(/gm)].map((m) => m[1]);
         const queryLikeMethods = publicMethodNames.filter((name) => name !== 'constructor' && name !== 'processCandidate' && !name.startsWith('_'));
         assert(queryLikeMethods.length === 0,
@@ -502,19 +502,21 @@ async function runTests() {
         // spatial-semantics models, and this milestone's own follow-up,
         // 0.9.552, built exactly that model under exactly the name this
         // grep was written to detect — core/ObserverLocalPublicationEncounter.js
-        // and application/ObserverLocalEncounterStore.js, plus 0.9.552's own
+        // and application/worldEncounter/ObserverLocalEncounterStore.js, plus 0.9.552's own
         // additive `encounter` field on
-        // application/AutomaticSnapshotEncounterCascade.js's own UNPLACED
+        // application/snapshot/AutomaticSnapshotEncounterCascade.js's own UNPLACED
         // result. This is this audit's own predicted gap being closed, not
         // a false positive — the three files below are excluded from this
         // check by name, on record, rather than loosening the pattern
         // itself (which would silently stop detecting a REAL future rename
         // of this exact missing state under a fourth name).
         const knownAsOf0_9_552 = new Set([
-            'application/AutomaticSnapshotEncounterCascade.js',
-            'application/ObserverLocalEncounterStore.js',
+            'application/snapshot/AutomaticSnapshotEncounterCascade.js',
+            'application/worldEncounter/ObserverLocalEncounterStore.js',
             'core/ObserverLocalPublicationEncounter.js',
             'ui/views/WorldView.js',
+            // WorldView.js's own Nearby section template, moved out of it.
+            'ui/views/worldView/templates/nearbySection.js',
             'ui/components/WorldEncounterCanvas.js',
             // WorldEncounterCanvas.js's own observer-local methods, moved out of it.
             'ui/components/worldEncounterCanvas/observerLocalEncounterMethods.js'
@@ -539,7 +541,7 @@ async function runTests() {
         assert(!/candidate|unauthoritative|claimSource/i.test(placementRecordSource),
             'E1. core/PlacementRecord.js carries no notion of a "candidate" or "unauthoritative" placement today — any Model 2 (untrusted spatial claim) implementation would need genuinely NEW state, never a repurposing of an existing PlacementRecord field.');
 
-        const registrySource = codeOnlyLines(await rawSource('application/MaterializedSnapshotWorldDiscoveryBridge.js'));
+        const registrySource = codeOnlyLines(await rawSource('application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js'));
         assert(!/candidate|unauthoritative|observerLocal/i.test(registrySource),
             'E2. The existing World-registration bridge carries no notion of a non-shared, observer-scoped registration either — a Model 3 (observer-local encounter) would likewise need a genuinely new, session-scoped surface, never a mode flag on the existing shared WorldDiscoverySourceRegistry.');
 
@@ -561,7 +563,7 @@ async function runTests() {
     // position (P) versus the publisher's claimedPosition (Q).
     // ===============================================================
     {
-        const monitorSource = codeOnlyLines(await rawSource('application/WorldSnapshotDiscoveryMonitor.js'));
+        const monitorSource = codeOnlyLines(await rawSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js'));
         assert(/shouldRefreshSnapshotDiscovery/.test(monitorSource),
             'F1. WorldSnapshotDiscoveryMonitor consults the Wanderer\'s own current spatial context only through shouldRefreshSnapshotDiscovery(), to decide WHEN to refresh discovery.');
         // The candidate array itself (this.lastResult) is assigned
@@ -649,13 +651,13 @@ async function runTests() {
     {
         const nonGoalVocabulary = /\bTRUST_SCORE\b|\bREPUTATION\b|\bPUBLISHER_RANK|\btrustScore\b|\breputation\b|\bADMISSION_STATE\b|\bCANDIDATE_PLACEMENT\b|\bOBSERVER_LOCAL\b/i;
         const filesToCheck = [
-            'application/AutomaticSnapshotEncounterCascade.js',
-            'application/SnapshotWorldPlacement.js',
-            'application/SnapshotWorldPositionClaim.js',
+            'application/snapshot/AutomaticSnapshotEncounterCascade.js',
+            'application/snapshot/placement/SnapshotWorldPlacement.js',
+            'application/snapshot/placement/SnapshotWorldPositionClaim.js',
             'core/PlacementRecord.js',
             'placement/LocalPlacementRegistry.js',
             'core/SpatialAllocationPolicy.js',
-            'application/PlacePublicationUseCase.js'
+            'application/placement/PlacePublicationUseCase.js'
         ];
         for (const file of filesToCheck) {
             const source = codeOnlyLines(await rawSource(file));
@@ -668,7 +670,7 @@ async function runTests() {
         // than merely trusting its recorded verdict still holds. 0.9.468's
         // own Orphaned Placement Product Reassessment — the most directly
         // relevant guard — transitively imports
-        // application/WorldNavigationSession.js -> renderer/Renderer.js ->
+        // application/world/WorldNavigationSession.js -> renderer/Renderer.js ->
         // the 'three' package, which this Node-only harness does not have
         // installed (the SAME documented constraint 0.9.550's own header
         // names for the identical reason: "that class can't be imported
@@ -731,15 +733,15 @@ async function runTests() {
         // with the two composition roots this audit traces in Section C).
         const excludedVocabulary = /reputation|trust\s*score|publisher\s*ranking|crowdsourc|trusted\s*publisher\s*badge|moderation\s*infrastructure|consensus\s*protocol|permanent\s*spatial\s*claim/i;
         const productionFilesThisAuditDependsOn = [
-            'application/AutomaticSnapshotEncounterCascade.js',
-            'application/SnapshotWorldPlacement.js',
-            'application/SnapshotWorldPositionClaim.js',
+            'application/snapshot/AutomaticSnapshotEncounterCascade.js',
+            'application/snapshot/placement/SnapshotWorldPlacement.js',
+            'application/snapshot/placement/SnapshotWorldPositionClaim.js',
             'core/PlacementRecord.js',
             'placement/LocalPlacementRegistry.js',
-            'application/PlacePublicationUseCase.js',
-            'ui/views/WorldView.js',
-            'application/WorldSnapshotDiscoveryMonitor.js',
-            'application/WorldSnapshotInspection.js',
+            'application/placement/PlacePublicationUseCase.js',
+            'ui/views/WorldView.js', ...worldViewTemplateFiles(),
+            'application/snapshot/WorldSnapshotDiscoveryMonitor.js',
+            'application/snapshot/WorldSnapshotInspection.js',
             'ui/components/OwnPublicationPanel.js'
         ];
         for (const file of productionFilesThisAuditDependsOn) {

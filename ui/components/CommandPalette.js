@@ -1,4 +1,4 @@
-import { EditorActionRegistry } from '../../application/EditorActionRegistry.js';
+import { EditorActionRegistry } from '../../application/editor/EditorActionRegistry.js';
 
 // The command palette (0.1.50): one searchable list over the
 // EditorActionRegistry — the same definitions that drive keyboard

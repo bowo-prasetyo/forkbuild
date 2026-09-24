@@ -11,17 +11,17 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalBlueprintLineageClaimStore } from '../application/LocalBlueprintLineageClaimStore.js';
-import { BlueprintLineageUseCase } from '../application/BlueprintLineageUseCase.js';
-import { BlueprintLineageExchange } from '../application/BlueprintLineageExchange.js';
+import { LocalBlueprintLineageClaimStore } from '../application/blueprint/LocalBlueprintLineageClaimStore.js';
+import { BlueprintLineageUseCase } from '../application/blueprint/BlueprintLineageUseCase.js';
+import { BlueprintLineageExchange } from '../application/blueprint/BlueprintLineageExchange.js';
 import {
     validateBlueprintLineageClaimPublication, BlueprintLineageClaimPublicationError
-} from '../application/BlueprintLineageClaimPublicationValidator.js';
-import { ExportBlueprintUseCase } from '../application/ExportBlueprintUseCase.js';
-import { ImportBlueprintUseCase } from '../application/ImportBlueprintUseCase.js';
-import { buildBlueprintPackage } from '../application/BlueprintPackage.js';
-import { BlueprintAttributionUseCase } from '../application/BlueprintAttributionUseCase.js';
-import { LocalBlueprintAttributionStore } from '../application/LocalBlueprintAttributionStore.js';
+} from '../application/blueprint/BlueprintLineageClaimPublicationValidator.js';
+import { ExportBlueprintUseCase } from '../application/blueprint/ExportBlueprintUseCase.js';
+import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprintUseCase.js';
+import { buildBlueprintPackage } from '../application/blueprint/BlueprintPackage.js';
+import { BlueprintAttributionUseCase } from '../application/blueprint/BlueprintAttributionUseCase.js';
+import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
 
 // 0.6.8 — Blueprint Lineage & Revision Discovery.
 //
@@ -34,16 +34,16 @@ import { LocalBlueprintAttributionStore } from '../application/LocalBlueprintAtt
 //
 //   Section A: core/BlueprintLineageClaim.js — construction/validation
 //   Section B: signing descriptor parity + verifyBlueprintLineageClaim()
-//   Section C: application/LocalBlueprintLineageClaimStore.js — the
+//   Section C: application/blueprint/LocalBlueprintLineageClaimStore.js — the
 //              dual-indexed store, queryable from EITHER fingerprint
-//   Section D: application/BlueprintLineageClaimPublicationValidator.js
-//   Section E: application/BlueprintLineageExchange.js — export/import/
+//   Section D: application/blueprint/BlueprintLineageClaimPublicationValidator.js
+//   Section E: application/blueprint/BlueprintLineageExchange.js — export/import/
 //              dedup/tamper/both-sided fingerprint cross-check
 //   Section F: core/BlueprintLineageView.js — derivedFrom/derivedDesigns
 //              split, cycle detection, describeLineageView()
-//   Section G: application/BlueprintLineageUseCase.js — publish/retract/
+//   Section G: application/blueprint/BlueprintLineageUseCase.js — publish/retract/
 //              lineageView wiring
-//   Section H: application/BlueprintPackage.js — optional lineageClaims
+//   Section H: application/blueprint/BlueprintPackage.js — optional lineageClaims
 //              bundling, mirroring 0.6.6's own attributions field
 //   Section I — FLAGSHIP: Alice authors "Farmstead" and exports it; Bob
 //              imports it, modifies his own copy into "Farmstead Large,"
@@ -188,7 +188,7 @@ async function run() {
     console.log('✓ Section B: signing descriptor parity, required signature, tamper detection, impersonation rejection');
 
     // ---------------------------------------------------------------
-    // Section C — application/LocalBlueprintLineageClaimStore.js
+    // Section C — application/blueprint/LocalBlueprintLineageClaimStore.js
     // ---------------------------------------------------------------
     {
         const storage = new InMemoryStorageProvider();
@@ -231,7 +231,7 @@ async function run() {
     console.log('✓ Section C: LocalBlueprintLineageClaimStore — dual-indexed save/list/has, both-key retract, no dedup on save');
 
     // ---------------------------------------------------------------
-    // Section D — application/BlueprintLineageClaimPublicationValidator.js
+    // Section D — application/blueprint/BlueprintLineageClaimPublicationValidator.js
     // ---------------------------------------------------------------
     {
         function expectRejected(pkg, label) {
@@ -266,7 +266,7 @@ async function run() {
     console.log('✓ Section D: BlueprintLineageClaimPublicationValidator — every malformed-publication rejection');
 
     // ---------------------------------------------------------------
-    // Section E — application/BlueprintLineageExchange.js
+    // Section E — application/blueprint/BlueprintLineageExchange.js
     // ---------------------------------------------------------------
     {
         const alice = makeReplica('Alice');
@@ -376,7 +376,7 @@ async function run() {
     console.log('✓ Section F: core/BlueprintLineageView.js — derivedFrom/derivedDesigns split, one-hop cycle detection, describeLineageView()');
 
     // ---------------------------------------------------------------
-    // Section G — application/BlueprintLineageUseCase.js wiring
+    // Section G — application/blueprint/BlueprintLineageUseCase.js wiring
     // ---------------------------------------------------------------
     {
         const alice = makeReplica('Alice');
@@ -417,7 +417,7 @@ async function run() {
     console.log('✓ Section G: BlueprintLineageUseCase — publish/retract/lineageView/claimsForBlueprint wiring, author-only retraction');
 
     // ---------------------------------------------------------------
-    // Section H — application/BlueprintPackage.js lineageClaims bundling
+    // Section H — application/blueprint/BlueprintPackage.js lineageClaims bundling
     // ---------------------------------------------------------------
     {
         const alice = makeReplica('Alice');

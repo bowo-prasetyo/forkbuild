@@ -1,4 +1,4 @@
-import { EditorActionRegistry } from '../../application/EditorActionRegistry.js';
+import { EditorActionRegistry } from '../../application/editor/EditorActionRegistry.js';
 
 // 0.6.2 — Editor UX Consolidation: "Keyboard shortcuts become
 // discoverable." Opened with `?` (or a click on Toolbar's own shortcuts

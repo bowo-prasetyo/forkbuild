@@ -31,7 +31,7 @@ import { Signature, SignatureType } from './Signature.js';
 // A BlueprintAttribution carries a `fingerprint` it is about, but is
 // never stored inside `core/Structure.js#toJSON()`, never travels
 // through a Command, never touches undo/redo, and is never written by
-// `application/ExportBlueprintUseCase.js`'s own portable package —
+// `application/blueprint/ExportBlueprintUseCase.js`'s own portable package —
 // exactly the same "a claim about content is never mutation of that
 // content" boundary core/PlaceNamingClaim.js already drew for a region's
 // name, extended here to a blueprint's own design identity. Publishing
@@ -50,7 +50,7 @@ import { Signature, SignatureType } from './Signature.js';
 // fingerprint over time (a redundant republish — no protocol reason to
 // forbid it, mirroring core/PlaceNamingClaim.js's own header on the
 // identical question) and so retracting one attribution
-// (application/BlueprintAttributionUseCase.js#retract()) never has to
+// (application/blueprint/BlueprintAttributionUseCase.js#retract()) never has to
 // guess which of several a caller meant.
 export const BLUEPRINT_ATTRIBUTION_KIND = 'forkbuild.blueprint-attribution';
 export const CURRENT_SCHEMA_VERSION = 1;
@@ -105,7 +105,7 @@ export class BlueprintAttribution {
 
     // `kind`/`schemaVersion` make this a small, self-describing wire
     // envelope the moment it leaves this replica — the same posture
-    // application/BlueprintPackage.js's own `kind`/`schemaVersion`
+    // application/blueprint/BlueprintPackage.js's own `kind`/`schemaVersion`
     // fields already establish for a Structure's own portable form, so
     // a malformed or unrelated JSON blob fails an eventual import check
     // with a specific message rather than an obscure one field deep.

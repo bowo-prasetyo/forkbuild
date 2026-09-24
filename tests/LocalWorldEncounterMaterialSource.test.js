@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
-import { WorldEncounterMaterialSource, loadWorldEncounterMaterial } from '../application/WorldEncounterMaterialLoading.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
+import { WorldEncounterMaterialSource, loadWorldEncounterMaterial } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { Publication } from '../publisher/Publication.js';
 import { AvatarProfile } from '../core/AvatarProfile.js';
@@ -179,7 +179,7 @@ function seedAvatarProfile(storageProvider, key, overrides = {}) {
 //    verification vocabulary, no modification of the 0.9.21 file itself.
 // ---------------------------------------------------------------------
 {
-    const path = '../application/LocalWorldEncounterMaterialSource.js';
+    const path = '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
     const sourceUrl = new URL(path, import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -194,7 +194,7 @@ function seedAvatarProfile(storageProvider, key, overrides = {}) {
         assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `21. code must never use "${term}" — retrieval only, no trust/verification vocabulary`);
     }
 
-    const loadingBoundarySource = await readFile(new URL('../application/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
+    const loadingBoundarySource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
     assert(!loadingBoundarySource.includes('LocalWorldEncounterMaterialSource'), '22. the 0.9.21 loading boundary itself is never modified to know about this source');
 
     console.log('✓ Architectural regression: no peer transport or trust vocabulary; 0.9.21 boundary untouched');

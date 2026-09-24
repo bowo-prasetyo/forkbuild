@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { ArweaveSnapshotDiscoveryQueryService } from '../application/ArweaveSnapshotDiscoveryQueryService.js';
-import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/LocalSnapshotCandidateDiscoveryQueryService.js';
-import { SnapshotCandidateDiscoveryQueryService } from '../application/SnapshotCandidateDiscoveryQueryService.js';
-import { SnapshotCandidateDiscoveryOutcome } from '../application/SnapshotCandidateDiscoveryOutcome.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
+import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js';
+import { SnapshotCandidateDiscoveryQueryService } from '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
+import { SnapshotCandidateDiscoveryOutcome } from '../application/snapshot/SnapshotCandidateDiscoveryOutcome.js';
 import {
     executeDiscoverSnapshotCandidatesCommand,
     executeDiscoverSnapshotCandidatesCommandWithOutcome
-} from '../application/DiscoverSnapshotCandidatesCommand.js';
+} from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
@@ -194,12 +194,12 @@ async function runTests() {
             '11. the composite\'s own search() still degrades to [], unchanged');
 
         // resolveLocator() on Nostr still runs through the unmodified search().
-        const nostrSource = await readSource('application/NostrSnapshotDiscoveryQueryService.js');
+        const nostrSource = await readSource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         assert(/async resolveLocator\(discoveryTag, contentHash\) \{\s*const candidates = await this\.search\(discoveryTag\);/.test(nostrSource),
             '12. resolveLocator() still calls this.search() directly — an existing caller left byte-for-byte unmodified');
 
         // The composite's own callers.
-        const commandSource = await readSource('application/DiscoverSnapshotCandidatesCommand.js');
+        const commandSource = await readSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js');
         assert(/return discoveryQueryService\.search\(discoveryTag\);/.test(commandSource),
             '13. executeDiscoverSnapshotCandidatesCommand() still forwards to search() verbatim');
 
@@ -209,7 +209,7 @@ async function runTests() {
         assert(/new WorldSnapshotDiscoveryMonitor\(\{\s*discoverSnapshotCandidatesCommand\s*\}\)/.test(mainSource),
             '14. WorldSnapshotDiscoveryMonitor is still constructed with the LEGACY discoverSnapshotCandidatesCommand, never the outcome-aware sibling');
 
-        const monitorSource = await readSource('application/WorldSnapshotDiscoveryMonitor.js');
+        const monitorSource = await readSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js');
         assert(!/searchWithOutcome|SnapshotCandidateDiscoveryOutcome|WithOutcomeCommand/.test(monitorSource),
             '15. WorldSnapshotDiscoveryMonitor.js has no idea this vocabulary exists');
 
@@ -361,17 +361,17 @@ async function runTests() {
 
         // No retry loop: exactly one timer per query, never a scheduled
         // re-attempt, in either searchWithOutcome() implementation.
-        const nostrSource = await readSource('application/NostrSnapshotDiscoveryQueryService.js');
+        const nostrSource = await readSource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         const outcomeMethodMatch = nostrSource.match(/async searchWithOutcome\(discoveryTag\) \{[\s\S]*?\n {4}\}/);
         assert(outcomeMethodMatch && (outcomeMethodMatch[0].match(/setTimeout/g) || []).length === 0,
             '36. NostrSnapshotDiscoveryQueryService#searchWithOutcome() schedules no timer of its own — it reuses the existing single withTimeout() guard, never a retry');
-        assert(!/setInterval/.test(nostrSource) && !/setInterval/.test(await readSource('application/SnapshotCandidateDiscoveryQueryService.js')),
+        assert(!/setInterval/.test(nostrSource) && !/setInterval/.test(await readSource('application/snapshot/SnapshotCandidateDiscoveryQueryService.js')),
             '37. no setInterval-based retry/poll exists anywhere in this milestone\'s own files');
 
         // The command file itself imports nothing Repository/resolution/
         // verification-shaped — it cannot reach those systems even by
         // accident.
-        const commandSource = await readSource('application/DiscoverSnapshotCandidatesCommand.js');
+        const commandSource = await readSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js');
         assert(!/^import /m.test(commandSource), '38. DiscoverSnapshotCandidatesCommand.js imports nothing at all — it cannot reach a Repository, resolver, or verifier even accidentally');
 
         console.log('✓ Section E: a Nostr timeout reaches UNAVAILABLE and the honest UI copy while leaving Repository, resolution, verification, placement, the monitor, and every sentinel field completely untouched, with no retry loop anywhere');
@@ -399,7 +399,7 @@ async function runTests() {
         // The vocabulary file itself introduces no import of, or reference
         // to, Publication/Snapshot/contentHash-as-identity/locator-as-identity/
         // verification-state machinery — it is pure, standalone enum text.
-        const outcomeSource = await readSource('application/SnapshotCandidateDiscoveryOutcome.js');
+        const outcomeSource = await readSource('application/snapshot/SnapshotCandidateDiscoveryOutcome.js');
         assert(!/^import /m.test(outcomeSource), '42. SnapshotCandidateDiscoveryOutcome.js imports nothing — it is not a second representation of anything else in this codebase');
 
         console.log('✓ Section F: the outcome vocabulary is exactly three frozen values, carries no other semantics, and FOUND means only "the query produced candidates"');
@@ -516,7 +516,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     // Section I — CLOSED BY 0.9.591: the classification gap this audit
     // originally found for Arweave (Section A's own evidence) has since
-    // been fixed by application/ArweaveSnapshotDiscoveryQueryService.js's
+    // been fixed by application/arweave/ArweaveSnapshotDiscoveryQueryService.js's
     // own 0.9.591 `searchWithOutcome()` addition — reconfirmed live, here,
     // rather than left as a standing, stale "not fixed" assertion.
     // ---------------------------------------------------------------
@@ -524,7 +524,7 @@ async function runTests() {
         // ArweaveSnapshotDiscoveryQueryService now carries the identical
         // searchWithOutcome() sibling NostrSnapshotDiscoveryQueryService
         // already had.
-        const arweaveSourceText = await readSource('application/ArweaveSnapshotDiscoveryQueryService.js');
+        const arweaveSourceText = await readSource('application/arweave/ArweaveSnapshotDiscoveryQueryService.js');
         assert(/searchWithOutcome/.test(arweaveSourceText),
             '54. CLOSED (1/3): ArweaveSnapshotDiscoveryQueryService now exposes its own searchWithOutcome() — confirmed live, not assumed');
 

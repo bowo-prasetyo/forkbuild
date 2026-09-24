@@ -12,7 +12,7 @@ import CollapsibleSection from './CollapsibleSection.js';
 // from the palette and keyboard.
 //
 // 0.6.2 — Editor UX Consolidation reworks this file around a Primary /
-// Common / Advanced action hierarchy (application/EditorActionRegistry.js's
+// Common / Advanced action hierarchy (application/editor/EditorActionRegistry.js's
 // own `tier` field — see that file's 0.6.2 header) instead of exposing
 // every operation at once:
 //   - The old "Selection" section (a bare "N brick(s) selected" line

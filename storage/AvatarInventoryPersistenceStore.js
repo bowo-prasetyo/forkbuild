@@ -6,7 +6,7 @@ const AVATAR_INVENTORY_STORE_KEY = 'avatar-inventory';
 
 // World View Inventory Persistence.
 //
-// application/AvatarInventoryStore.js is the session-local holder of the
+// application/avatar/AvatarInventoryStore.js is the session-local holder of the
 // current AvatarInventory — this file is its optional durable backing,
 // the same seam storage/NotificationEventStore.js and
 // storage/PublicationCommentaryStore.js already establish for their own

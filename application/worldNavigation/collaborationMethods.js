@@ -17,7 +17,7 @@ export const collaborationMethods = {
     // -----------------------------------------------------------------
     //
     // Three public queries, never an "isOwner" or role name (see
-    // core/WorldAccessLevel.js, application/WorldAuthorizationService.js).
+    // core/WorldAccessLevel.js, application/identity/WorldAuthorizationService.js).
     // Without a worldAuthorizationService every loaded document is editable,
     // and getWorldAccessLevel() returns EDIT even for an unresolvable id, so a
     // typo or not-yet-loaded document never looks more restrictive than having
@@ -66,7 +66,7 @@ export const collaborationMethods = {
     },
 
     // Grants `subjectIdentityId` EDIT authority over `documentId` —
-    // throws exactly when application/WorldMembershipUseCase.js#grantEdit()
+    // throws exactly when application/identity/WorldMembershipUseCase.js#grantEdit()
     // itself would (not wired, not this World's owner, or a malformed
     // subject). See that class's own header for the full security
     // model.
@@ -143,7 +143,7 @@ export const collaborationMethods = {
     },
 
     // The roster of every OTHER participant currently present in
-    // `documentId` — see application/WorldPresenceUseCase.js#getRoster()'s
+    // `documentId` — see application/presence/WorldPresenceUseCase.js#getRoster()'s
     // own header for the exact shape. An empty array, never a throw,
     // when no worldPresenceUseCase is wired.
     getWorldPresenceRoster(documentId) {
@@ -165,7 +165,7 @@ export const collaborationMethods = {
     // -----------------------------------------------------------------
     //
     // Declares this replica spatially present in `documentId` (see
-    // application/WorldSpatialPresenceUseCase.js). No-op when not wired.
+    // application/presence/WorldSpatialPresenceUseCase.js). No-op when not wired.
     // `resolveDisplayName`, an optional `(identityId) => string`, is passed to
     // every remote marker for this World; without it a truncated identityId is
     // shown.

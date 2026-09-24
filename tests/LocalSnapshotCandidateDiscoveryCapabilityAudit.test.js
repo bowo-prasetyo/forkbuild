@@ -1,13 +1,13 @@
 import { execSync } from 'node:child_process';
 
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PUBLICATION_SNAPSHOT_PLACEMENT_STORE_KEY } from '../application/LocalPublicationSnapshotPlacementStore.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PUBLICATION_SNAPSHOT_PLACEMENT_STORE_KEY } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { shouldRefreshSnapshotDiscovery } from '../application/ShouldRefreshSnapshotDiscovery.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { shouldRefreshSnapshotDiscovery } from '../application/snapshot/ShouldRefreshSnapshotDiscovery.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
 // 0.9.480 — Local Snapshot Candidate Discovery Capability Audit.
@@ -34,7 +34,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //               reproduced, so this audit builds on fact, not memory.
 //   Section B — Widening the search: a second, structurally different
 //               local subsystem this codebase already has —
-//               `application/LocalPublicationSnapshotPlacementCatalog.js`
+//               `application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js`
 //               (0.8.18/0.8.21) — proven, live, to expose a `list()`-
 //               shaped browsing capability 0.9.479 never looked at,
 //               because it belongs to an entirely different milestone
@@ -140,7 +140,7 @@ async function run() {
     // Section B — Widening the search: a second local subsystem.
     // ===============================================================
     {
-        // B1. application/LocalPublicationSnapshotPlacementCatalog.js
+        // B1. application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js
         // (0.8.18/0.8.21) already exists, already persists through its
         // own dedicated store, and already exposes a synchronous,
         // no-argument BROWSING method — list() — a structurally
@@ -165,7 +165,7 @@ async function run() {
         assert(priorAuditReferencesPlacementCatalog.length === 0,
             "3. 0.9.479's own test file never references LocalPublicationSnapshotPlacementCatalog at all — Section D's \"conceptually absent\" finding was accurate for the ONE file it checked, and simply never extended to this one.");
 
-        console.log('✓ Section B: a second, already-existing local subsystem — application/LocalPublicationSnapshotPlacementCatalog.js — exposes a synchronous, no-argument browsing capability 0.9.479 never examined, because it belongs to an entirely different, older milestone family (Snapshot PLACEMENT) than the one 0.9.479 audited (Snapshot DISCOVERY).');
+        console.log('✓ Section B: a second, already-existing local subsystem — application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js — exposes a synchronous, no-argument browsing capability 0.9.479 never examined, because it belongs to an entirely different, older milestone family (Snapshot PLACEMENT) than the one 0.9.479 audited (Snapshot DISCOVERY).');
     }
 
     // ===============================================================
@@ -243,7 +243,7 @@ async function run() {
         // retrieval and no verification — cataloging a placement never
         // touches a ContentStore.
         const catalogSource = await (await import('node:fs/promises')).readFile(
-            new URL('../application/LocalPublicationSnapshotPlacementCatalog.js', import.meta.url), 'utf8'
+            new URL('../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js', import.meta.url), 'utf8'
         );
         assert(!/ContentStore/.test(catalogSource),
             '1. LocalPublicationSnapshotPlacementCatalog.js never imports or mentions a ContentStore of any kind — cataloging a placement is never conflated with checking whether its bytes are actually retrievable.');
@@ -259,7 +259,7 @@ async function run() {
         assert(typeof CheckLocalSnapshotContentAvailabilityUseCase === 'function',
             '2. CheckLocalSnapshotContentAvailabilityUseCase already exists as its own, independent, already-tested class — a Local candidate source has no reason to duplicate, inline, or shortcut what it already does.');
         const availabilitySource = await (await import('node:fs/promises')).readFile(
-            new URL('../application/CheckLocalSnapshotContentAvailabilityUseCase.js', import.meta.url), 'utf8'
+            new URL('../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js', import.meta.url), 'utf8'
         );
         assert(!/PublicationSnapshotPlacement/.test(availabilitySource),
             '3. CheckLocalSnapshotContentAvailabilityUseCase.js never references PublicationSnapshotPlacement at all — confirming "do I have these bytes" and "what locator was catalogued for this hash" are, today, two genuinely independent questions, exactly as this milestone requires them to remain.');
@@ -292,7 +292,7 @@ async function run() {
         // populated by TWO existing, unrelated-to-this-milestone
         // pathways — self-declaration (application/
         // AddPublicationSnapshotPlacementUseCase.js) and peer exchange
-        // (application/PublicationSnapshotPlacementPeerExchange.js /
+        // (application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js /
         // PublicationSnapshotPlacementDiscoveryCoordinator.js) — so its
         // data is never something a Local candidate source would need
         // to COPY or duplicate; it can be OBSERVED through the
@@ -300,10 +300,10 @@ async function run() {
         // the restraint the brief's own question 4 was actually asking
         // for, even though "Repository" was the wrong name for it.
         const addUseCaseSource = await (await import('node:fs/promises')).readFile(
-            new URL('../application/AddPublicationSnapshotPlacementUseCase.js', import.meta.url), 'utf8'
+            new URL('../application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js', import.meta.url), 'utf8'
         );
         const peerExchangeSource = await (await import('node:fs/promises')).readFile(
-            new URL('../application/PublicationSnapshotPlacementPeerExchange.js', import.meta.url), 'utf8'
+            new URL('../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js', import.meta.url), 'utf8'
         );
         assert(/LocalPublicationSnapshotPlacementCatalog/.test(addUseCaseSource),
             '3. AddPublicationSnapshotPlacementUseCase.js — a self-declaration pathway that exists independently of this milestone — already writes into this exact catalog.');
@@ -454,14 +454,14 @@ async function run() {
         // architectural boundary").
         const worldEncounterReferences = grepFiles(
             'WorldEncounterMaterialLoading|LocalWorldEncounterMaterialSource|AutomaticSnapshotEncounterCascade|registerMaterializedSnapshotWorldSource',
-            ['application/LocalPublicationSnapshotPlacementCatalog.js',
-             'application/LocalPublicationSnapshotPlacementStore.js',
+            ['application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js',
+             'application/snapshot/placement/LocalPublicationSnapshotPlacementStore.js',
              'core/PublicationSnapshotPlacement.js']
         );
         assert(worldEncounterReferences.length === 0,
             '1. none of the three files this audit\'s prototype depends on reference the World Encounter material-loading, cascade, or registration families at all — candidate discovery and material resolution remain two structurally separate concerns, exactly as they already are for Nostr.');
 
-        console.log('✓ Section J: the local subsystem this audit identifies stays entirely within candidate discovery — it never becomes, and never grows toward, a second World Encounter engine. Material resolution remains application/LocalWorldEncounterMaterialSource.js\'s own, entirely separate, already-existing job.');
+        console.log('✓ Section J: the local subsystem this audit identifies stays entirely within candidate discovery — it never becomes, and never grows toward, a second World Encounter engine. Material resolution remains application/worldEncounter/LocalWorldEncounterMaterialSource.js\'s own, entirely separate, already-existing job.');
     }
 
     // ===============================================================
@@ -494,7 +494,7 @@ async function run() {
         // the same reason). Amended to exclude exactly 0.9.597's own,
         // already-accounted-for files, while still catching any OTHER,
         // unexpected production drift.
-        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js']);
+        const expectedLaterMilestoneFiles = new Set(['application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js']);
         const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
             .filter((f) => !expectedLaterMilestoneFiles.has(f));
         assert(unexpectedNonTestFiles.length === 0, `1. AMENDED BY 0.9.597 — no UNEXPECTED production file is modified by this milestone (0.9.597's own, separately-justified files excepted) — found: ${unexpectedNonTestFiles.join(', ') || 'none'}.`);
@@ -517,7 +517,7 @@ async function run() {
 "WHY. 0.9.479's own Section D was accurate about the one file it examined (discovery/LocalDiscoveryProvider.js has\n" +
 'no search() method and no contentHash concept at all) but never claimed to have swept the ENTIRE local-data surface\n' +
 "-- and it had not. Section B of this audit found a second, already-existing, already-mature local subsystem\n" +
-'(application/LocalPublicationSnapshotPlacementCatalog.js, 0.8.18/0.8.21) belonging to a completely different\n' +
+'(application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js, 0.8.18/0.8.21) belonging to a completely different\n' +
 'milestone family (Snapshot PLACEMENT, populated by self-declaration AND peer exchange) that already exposes exactly\n' +
 'the synchronous, no-argument browsing capability ("tell me everything you know") a candidate source needs. Section C\n' +
 "confirmed its underlying domain object's own REQUIRED fields already ARE the candidate identity, field for field,\n" +

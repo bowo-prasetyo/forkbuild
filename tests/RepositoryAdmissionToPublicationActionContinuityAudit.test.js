@@ -1,20 +1,20 @@
 import { readFile } from 'node:fs/promises';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
-import { CreateDiscoveryUseCase } from '../application/CreateDiscoveryUseCase.js';
+import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscoveryUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
@@ -23,16 +23,16 @@ import { License, LicenseId } from '../core/License.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
@@ -52,7 +52,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // into `discovery/DecentralizedPublicationDiscoveryProvider.js` — CLOSED,
 // re-confirmed independently in Section B below. But 0.9.595's own header
 // ("A KNOWN, PRE-EXISTING LIMIT") already flagged, without a dedicated
-// audit, that `application/WorldNavigationSession.js`'s own
+// audit, that `application/world/WorldNavigationSession.js`'s own
 // `discoveryProvider` — the one thing `getPublicationForDocument()`
 // (and therefore `OwnPublicationPanel`'s own `publication` prop, per
 // `ui/views/WorldView.js`) ever reads — is a structurally separate
@@ -110,11 +110,11 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // getPublicationForDocument()/findPublicationById() specifically, without
 // widening _isKnownPublication()/_checkForkPolicy()/_loadWorld()'s
 // publish-marking or LocalWorldLayoutProvider's enrichment) is exactly
-// what 0.9.597 implemented: application/CreateWorldViewUseCase.js now
+// what 0.9.597 implemented: application/world/CreateWorldViewUseCase.js now
 // accepts an optional `decentralizedPublicationDiscoveryProvider` and
 // composes a SEPARATE `publicationActionDiscoveryProvider` (via the
 // existing, unmodified discovery/CompositeDiscoveryProvider.js) that
-// application/WorldNavigationSession.js's own getPublicationForDocument()/
+// application/world/WorldNavigationSession.js's own getPublicationForDocument()/
 // findPublicationById() now read — `discoveryProvider` itself (fork
 // policy, world-layout enrichment, placement resolution) is untouched.
 // Section A's A2/A3 (below) are amended in place, per this codebase's own
@@ -147,7 +147,7 @@ class InMemoryStorageProvider extends StorageProvider {
     list() { return Array.from(this._data.keys()); }
 }
 
-// application/CreateDiscoveryUseCase.js constructs a real
+// application/discovery/CreateDiscoveryUseCase.js constructs a real
 // storage/LocalStorageProvider.js, which reads window.localStorage — a
 // minimal in-memory shim, installed ONLY when no window already exists
 // (a real browser test run never hits this branch), scoped to this
@@ -324,7 +324,7 @@ async function encounterVerified(tag, { publicationId, claimedPosition, encounte
 
 // -----------------------------------------------------------------------
 // New harness for this audit: constructs a WorldNavigationSession the
-// SAME way application/CreateWorldViewUseCase.js#execute() constructs its
+// SAME way application/world/CreateWorldViewUseCase.js#execute() constructs its
 // own (verified against the real source in Section A, below) — never the
 // full factory itself, which spins up avatar-presence/collaboration
 // machinery this audit has no use for and which does not resolve cleanly
@@ -385,8 +385,8 @@ async function run() {
     // Section A — Reproduce the provider-instance split.
     // ===============================================================
     {
-        const createWorldViewSource = await readSource('application/CreateWorldViewUseCase.js');
-        const createDiscoverySource = await readSource('application/CreateDiscoveryUseCase.js');
+        const createWorldViewSource = await readSource('application/world/CreateWorldViewUseCase.js');
+        const createDiscoverySource = await readSource('application/discovery/CreateDiscoveryUseCase.js');
 
         // A1-A3: which provider performs Repository admission, which
         // provider WorldNavigationSession owns, and that CreateDiscoveryUseCase.js
@@ -406,7 +406,7 @@ async function run() {
         // `discoveryProvider` itself, which A1's own assertion (above)
         // still confirms is untouched.
         assert(/const discoveryProvider = new LocalDiscoveryProvider\(storageProvider\);/.test(createWorldViewSource),
-            'A1. application/CreateWorldViewUseCase.js constructs a bare, fresh LocalDiscoveryProvider for the discoveryProvider it hands WorldNavigationSession — confirmed against the literal current source, not assumed. UNCHANGED BY 0.9.597: this is still the exact object fork-policy/world-layout/placement resolution read.');
+            'A1. application/world/CreateWorldViewUseCase.js constructs a bare, fresh LocalDiscoveryProvider for the discoveryProvider it hands WorldNavigationSession — confirmed against the literal current source, not assumed. UNCHANGED BY 0.9.597: this is still the exact object fork-policy/world-layout/placement resolution read.');
         assert(/CompositeDiscoveryProvider/.test(createWorldViewSource),
             'A2. AMENDED BY 0.9.597 — CreateWorldViewUseCase.js now imports and uses CompositeDiscoveryProvider, but only to build a SEPARATE `publicationActionDiscoveryProvider`, never to replace `discoveryProvider` itself (see A1).');
         assert(/decentralizedPublicationDiscoveryProvider\s*=\s*null/.test(createWorldViewSource),

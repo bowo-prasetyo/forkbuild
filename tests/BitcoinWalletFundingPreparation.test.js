@@ -1,8 +1,8 @@
 import { BitcoinWalletFundingObserver } from '../anchoring/BitcoinWalletFundingObserver.js';
 import { BitcoinEsploraWalletFundingSource } from '../anchoring/BitcoinEsploraWalletFundingSource.js';
 import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTransactionBuilder.js';
-import { BitcoinAnchorFundingObservationState } from '../application/BitcoinAnchorFundingObservationState.js';
-import { describeBitcoinAnchorFundingStateLabel, describeBitcoinAnchorFunding } from '../application/BitcoinAnchorFundingView.js';
+import { BitcoinAnchorFundingObservationState } from '../application/anchoring/bitcoin/BitcoinAnchorFundingObservationState.js';
+import { describeBitcoinAnchorFundingStateLabel, describeBitcoinAnchorFunding } from '../application/anchoring/bitcoin/BitcoinAnchorFundingView.js';
 
 // 0.8.60 — Explicit Bitcoin Anchor Funding & Address Preparation.
 //

@@ -1,9 +1,9 @@
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { describePublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
-import { describePublisherLeaderboardSnapshotDifference } from '../application/PublisherLeaderboardSnapshotDifference.js';
-import * as PublisherLeaderboardSnapshotTimelineViewModule from '../application/PublisherLeaderboardSnapshotTimelineView.js';
-import { describePublisherLeaderboardSnapshotTimeline } from '../application/PublisherLeaderboardSnapshotTimelineView.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { describePublisherLeaderboardSnapshotDifference } from '../application/leaderboard/PublisherLeaderboardSnapshotDifference.js';
+import * as PublisherLeaderboardSnapshotTimelineViewModule from '../application/leaderboard/PublisherLeaderboardSnapshotTimelineView.js';
+import { describePublisherLeaderboardSnapshotTimeline } from '../application/leaderboard/PublisherLeaderboardSnapshotTimelineView.js';
 
 // 0.8.136 — Historical Leaderboard Snapshot Timeline Projection.
 //

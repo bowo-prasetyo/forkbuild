@@ -3,7 +3,7 @@ import {
     verifyWorldEncounterMaterial,
     WorldEncounterMaterialVerificationStatus,
     WorldEncounterMaterialVerifier
-} from '../application/WorldEncounterMaterialVerification.js';
+} from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 
 // 0.9.37 — World Encounter Material Verification Boundary.
@@ -289,7 +289,7 @@ class FakeVerifier extends WorldEncounterMaterialVerifier {
 //     vocabulary, and neither loading-boundary file is ever modified.
 // ---------------------------------------------------------------------
 {
-    const path = '../application/WorldEncounterMaterialVerification.js';
+    const path = '../application/worldEncounter/WorldEncounterMaterialVerification.js';
     const sourceUrl = new URL(path, import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -313,10 +313,10 @@ class FakeVerifier extends WorldEncounterMaterialVerifier {
         assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `47. code must never use "${term}" — no trust/ranking vocabulary at this boundary`);
     }
 
-    const decentralizedLoadingSource = await readFile(new URL('../application/DecentralizedWorldEncounterLeadAwareMaterialLoading.js', import.meta.url), 'utf8');
+    const decentralizedLoadingSource = await readFile(new URL('../application/worldEncounter/DecentralizedWorldEncounterLeadAwareMaterialLoading.js', import.meta.url), 'utf8');
     assert(!decentralizedLoadingSource.includes('WorldEncounterMaterialVerification'), '48. the 0.9.34 loading boundary is never modified to know about this file');
 
-    const loadingBoundarySource = await readFile(new URL('../application/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
+    const loadingBoundarySource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
     assert(!loadingBoundarySource.includes('WorldEncounterMaterialVerification'), '49. the 0.9.21 loading boundary is never modified to know about this file either');
 
     console.log('✓ Architectural regression: no concrete verifier, no signature machinery, no upstream imports, no trust vocabulary; both loading boundaries untouched');

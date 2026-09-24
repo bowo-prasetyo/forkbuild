@@ -3,14 +3,14 @@ import { Building } from '../core/Building.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { CollaborationEnvelope } from '../core/CollaborationEnvelope.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { DeleteBrickCommand } from '../application/commands/DeleteBrickCommand.js';
 import { CollaborationSession } from '../collaboration/CollaborationSession.js';
 import { LocalCollaborationTransport } from '../collaboration/LocalCollaborationTransport.js';
-import { CreateCollaborationUseCase } from '../application/CreateCollaborationUseCase.js';
+import { CreateCollaborationUseCase } from '../application/document/CreateCollaborationUseCase.js';
 
 // ---------------------------------------------------------------------
 // Helpers

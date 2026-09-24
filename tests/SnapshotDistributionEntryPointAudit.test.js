@@ -2,12 +2,12 @@ import { readFile, readdir } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.141 — Distribution Entry-Point Convergence Audit.
@@ -540,7 +540,7 @@ async function run() {
             canvasCtx.distributeSelectedSnapshot();
             await flushMicrotasks();
 
-            assert(ownCtx.snapshotDistributionError === 'relay unreachable', 'F1. the local entry point genuinely reports failure, now surfacing the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js');
+            assert(ownCtx.snapshotDistributionError === 'relay unreachable', 'F1. the local entry point genuinely reports failure, now surfacing the sanitized underlying cause — see application/publication/distribution/DistributionErrorMessageSanitizer.js');
             assert(ownCtx.snapshotDistributionResult === null, 'F2. the local entry point produces no fabricated result');
             assert(canvasCtx.snapshotDistributionError === null && canvasCtx.snapshotDistributionResult !== null,
                 'F3. the remote entry point\'s own concurrent, independent call succeeds despite the local entry point\'s failure');
@@ -598,7 +598,7 @@ async function run() {
             canvasCtx.distributeSelectedSnapshot();
             await flushMicrotasks();
 
-            assert(canvasCtx.snapshotDistributionError === 'ArweaveContentStore: Arweave gateway', 'F7. the remote entry point genuinely reports failure when its own placement fails, now surfacing the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js');
+            assert(canvasCtx.snapshotDistributionError === 'ArweaveContentStore: Arweave gateway', 'F7. the remote entry point genuinely reports failure when its own placement fails, now surfacing the sanitized underlying cause — see application/publication/distribution/DistributionErrorMessageSanitizer.js');
             assert(remotePublishAttempts === 0, 'F8. an Arweave placement failure means the remote entry point never even attempts an announcement');
             assert(ownCtx.snapshotDistributionError === null && ownCtx.snapshotDistributionResult !== null,
                 'F9. the local entry point\'s own independent call succeeds despite the remote entry point\'s Arweave failure');
@@ -675,7 +675,7 @@ async function run() {
 
         // 0.9.142 — World View Snapshot Discovery Command added a SECOND,
         // independent composition root over the same ArweaveContentStore
-        // class: application/DiscoverSnapshotRuntimeComposition.js, the
+        // class: application/snapshot/DiscoverSnapshotRuntimeComposition.js, the
         // READ-side counterpart of this WRITE-side one, deliberately never
         // importing or reusing this file (see that file's own header, "no
         // coupling to... Snapshot distribution"). The invariant this
@@ -684,13 +684,13 @@ async function run() {
         // exactly as before; only the closed, recognized set of
         // composition roots allowed to do so has grown by the one this
         // milestone legitimately added.
-        assert(constructions['new ArweaveContentStore('].sort().join(',') === 'application/DiscoverSnapshotRuntimeComposition.js,application/SnapshotDistributionRuntimeComposition.js',
+        assert(constructions['new ArweaveContentStore('].sort().join(',') === 'application/snapshot/DiscoverSnapshotRuntimeComposition.js,application/snapshot/SnapshotDistributionRuntimeComposition.js',
             `H1. 'new ArweaveContentStore(' appears only in the two recognized composition roots (distribution + discovery) — found in: ${constructions['new ArweaveContentStore('].join(', ') || '(none)'}`);
-        assert(constructions['new NostrSnapshotDiscoveryPublisher('].sort().join(',') === 'application/SnapshotDistributionRuntimeComposition.js',
+        assert(constructions['new NostrSnapshotDiscoveryPublisher('].sort().join(',') === 'application/snapshot/SnapshotDistributionRuntimeComposition.js',
             `H2. 'new NostrSnapshotDiscoveryPublisher(' appears in exactly one production file — found in: ${constructions['new NostrSnapshotDiscoveryPublisher('].join(', ') || '(none)'}`);
-        assert(constructions['executeSnapshotDistributionCommand('].sort().join(',') === 'application/SnapshotDistributionCommand.js,ui/main.js',
+        assert(constructions['executeSnapshotDistributionCommand('].sort().join(',') === 'application/snapshot/SnapshotDistributionCommand.js,ui/main.js',
             `H3. 'executeSnapshotDistributionCommand(' appears only where it is defined and where it is composed into the app — found in: ${constructions['executeSnapshotDistributionCommand('].join(', ') || '(none)'}`);
-        assert(constructions['composeSnapshotDistributionRuntime('].sort().join(',') === 'application/SnapshotDistributionRuntimeComposition.js,ui/main.js',
+        assert(constructions['composeSnapshotDistributionRuntime('].sort().join(',') === 'application/snapshot/SnapshotDistributionRuntimeComposition.js,ui/main.js',
             `H4. 'composeSnapshotDistributionRuntime(' appears only where it is defined and where it is called — found in: ${constructions['composeSnapshotDistributionRuntime('].join(', ') || '(none)'}`);
         assert(constructions['function distributeWorldEncounterSnapshot('].sort().join(',') === 'ui/views/WorldView.js',
             `H5. the ONE UI-level wrapper function is declared in exactly ui/views/WorldView.js, never a second time elsewhere — found in: ${constructions['function distributeWorldEncounterSnapshot('].join(', ') || '(none)'}`);

@@ -4,7 +4,7 @@
 //
 // Deliberately holds the Structure INSTANCE itself, not an id: unlike
 // ActiveStructureState (which names a documentId StructurePlacementTool
-// resolves through application/StructureDocumentResolver.js at every
+// resolves through application/editor/StructureDocumentResolver.js at every
 // pointer move), a library Structure is not a Document — there is
 // nothing to resolve it FROM at render time, so the only thing to carry
 // is the Structure a caller already has in hand (from

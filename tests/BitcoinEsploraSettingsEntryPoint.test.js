@@ -3,8 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { BitcoinEsploraConfiguration, DEFAULT_BITCOIN_ESPLORA_API_URL, isValidBitcoinEsploraApiUrl } from '../core/BitcoinEsploraConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { BitcoinEsploraConfigurationStore } from '../storage/BitcoinEsploraConfigurationStore.js';
-import { SetBitcoinEsploraConfigurationUseCase } from '../application/SetBitcoinEsploraConfigurationUseCase.js';
-import { CreateBitcoinEsploraTransactionConfirmationObserverUseCase } from '../application/CreateBitcoinEsploraTransactionConfirmationObserverUseCase.js';
+import { SetBitcoinEsploraConfigurationUseCase } from '../application/settings/SetBitcoinEsploraConfigurationUseCase.js';
+import { CreateBitcoinEsploraTransactionConfirmationObserverUseCase } from '../application/anchoring/bitcoin/CreateBitcoinEsploraTransactionConfirmationObserverUseCase.js';
 
 // Bitcoin Endpoint Settings UI.
 //
@@ -81,7 +81,7 @@ async function run() {
     // ===============================================================
     {
         const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { SetBitcoinEsploraConfigurationUseCase } from '../application/SetBitcoinEsploraConfigurationUseCase.js';"),
+        assert(mainSource.includes("import { SetBitcoinEsploraConfigurationUseCase } from '../application/settings/SetBitcoinEsploraConfigurationUseCase.js';"),
             '1. ui/main.js imports the new write use case');
         assert(/new SetBitcoinEsploraConfigurationUseCase\(\{\s*bitcoinEsploraConfigurationStore\s*\}\)/.test(mainSource),
             '2. ui/main.js wires SetBitcoinEsploraConfigurationUseCase against the SAME shared bitcoinEsploraConfigurationStore the resolved apiUrl is read from, never a second disconnected store');
@@ -295,7 +295,7 @@ async function run() {
     // Section H — architecture sweep of the new use case file.
     // ===============================================================
     {
-        const useCaseSource = await source('application/SetBitcoinEsploraConfigurationUseCase.js');
+        const useCaseSource = await source('application/settings/SetBitcoinEsploraConfigurationUseCase.js');
         const executable = useCaseSource.replace(/\/\/.*$/gm, '');
         assert(!/\bfetch\s*\(/.test(executable), '49. no network call of any kind');
         assert(!/localStorage/.test(executable), '50. no direct localStorage access — persistence stays behind the injected store');

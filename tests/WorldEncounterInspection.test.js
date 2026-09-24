@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { describeWorldEncounterInspection } from '../application/WorldEncounterInspection.js';
+import { describeWorldEncounterInspection } from '../application/worldEncounter/WorldEncounterInspection.js';
 
 // 0.9.16 — World Encounter Inspection Read Model.
 //
@@ -228,7 +228,7 @@ async function run() {
             assert(!avatarResult.includes(term), `33. the avatar inspection result never carries "${term}"`);
         }
 
-        const moduleSource = await readFile(new URL('../application/WorldEncounterInspection.js', import.meta.url), 'utf8');
+        const moduleSource = await readFile(new URL('../application/worldEncounter/WorldEncounterInspection.js', import.meta.url), 'utf8');
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
         const forbiddenInCode = [
             'score', 'rank', 'winner', 'trust', 'reputation', 'confidence',
@@ -247,9 +247,9 @@ async function run() {
     // Section J — this file imports nothing.
     // ---------------------------------------------------------------
     {
-        const moduleSource = await readFile(new URL('../application/WorldEncounterInspection.js', import.meta.url), 'utf8');
+        const moduleSource = await readFile(new URL('../application/worldEncounter/WorldEncounterInspection.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
-        assert(importLines.length === 0, '35. application/WorldEncounterInspection.js imports nothing');
+        assert(importLines.length === 0, '35. application/worldEncounter/WorldEncounterInspection.js imports nothing');
 
         console.log('✓ Section J: this file imports nothing');
     }

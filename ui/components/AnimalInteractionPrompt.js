@@ -6,9 +6,9 @@
 //
 // PRESENTATION ONLY — MAKES NO CATCH/RELEASE DECISION OF ITS OWN. `state`
 // is exactly whatever
-// application/WorldNavigationSession.js#avatarAnimalInteractionState()
+// application/world/WorldNavigationSession.js#avatarAnimalInteractionState()
 // returned (in turn
-// application/AvatarAnimalInteractionController.js#catchInteractionState()'s
+// application/avatar/AvatarAnimalInteractionController.js#catchInteractionState()'s
 // own output) — an already-authoritative `{ canCatch, canRelease,
 // species, targetAnimalId, carriedCount }` snapshot. This component
 // never computes distance, never queries an animal list, and never

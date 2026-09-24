@@ -1,16 +1,16 @@
 import { computeContentHash } from '../serializer/contentHash.js';
-import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/IpfsPublicationRecord.js';
-import { IpfsPublicationContentVerifier } from '../application/IpfsPublicationContentVerifier.js';
-import { IpfsPublicationContentVerificationState } from '../application/IpfsPublicationContentVerificationState.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
+import { IpfsPublicationContentVerifier } from '../application/ipfs/IpfsPublicationContentVerifier.js';
+import { IpfsPublicationContentVerificationState } from '../application/ipfs/IpfsPublicationContentVerificationState.js';
 import {
     appendIpfsPublicationRecordHistoryEntry,
     latestIpfsPublicationRecord
-} from '../application/IpfsPublicationRecordHistory.js';
+} from '../application/ipfs/IpfsPublicationRecordHistory.js';
 import {
     describeIpfsPublicationMethodLabel,
     describeIpfsPublicationRecordHistoryEntry,
     describeIpfsPublicationRecordHistory
-} from '../application/IpfsPublicationRecordHistoryView.js';
+} from '../application/ipfs/IpfsPublicationRecordHistoryView.js';
 
 // 0.8.71 — IPFS Publication Record History & Inspection.
 //

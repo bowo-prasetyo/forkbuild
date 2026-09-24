@@ -3,16 +3,16 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { composePublicationDistributionCommand, composeMultiRelayNostrPublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js';
-import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
-import { createArweavePublicationDistributionRuntimeAdapter } from '../application/ArweavePublicationDistributionRuntimeAdapter.js';
-import { createNostrPublicationDistributionRuntimeAdapter } from '../application/NostrPublicationDistributionRuntimeAdapter.js';
-import { createArweaveTaggedTransactionUpload } from '../application/ArweaveTaggedTransactionUpload.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
+import { composePublicationDistributionCommand, composeMultiRelayNostrPublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { createPublicationDistributionRuntimeProvider } from '../application/publication/distribution/PublicationDistributionRuntimeProvider.js';
+import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js';
+import { createArweavePublicationDistributionRuntimeAdapter } from '../application/arweave/ArweavePublicationDistributionRuntimeAdapter.js';
+import { createNostrPublicationDistributionRuntimeAdapter } from '../application/nostr/NostrPublicationDistributionRuntimeAdapter.js';
+import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.503 — Editor Announcement/Discovery Provider Selection Integration
@@ -541,7 +541,7 @@ async function run() {
     // ===============================================================
     {
         // Snapshot-family isolation (structurally separate role — see
-        // application/SnapshotDistributionCommand.js's own header).
+        // application/snapshot/SnapshotDistributionCommand.js's own header).
         // AMENDED — scoped to distributeEditorPublication()'s own body,
         // not the whole file: a later, independently-scoped milestone
         // gave EditorView.js its own, separate "Distribute Snapshot"
@@ -583,7 +583,7 @@ async function run() {
         // own scope boundary, reconfirmed here at the role-isolation
         // level rather than only at the end, in Section L).
         const untouchedFamilies = execSync(
-            'git status --porcelain -- content/ArweaveContentStore.js core/Publication.js application/PublicationAnchorVerificationLifecycleView.js application/BlueprintAttributionUseCase.js application/BlueprintLineageUseCase.js ui/views/RepositoryView.js 2>/dev/null || true',
+            'git status --porcelain -- content/ArweaveContentStore.js core/Publication.js application/anchoring/PublicationAnchorVerificationLifecycleView.js application/blueprint/BlueprintAttributionUseCase.js application/blueprint/BlueprintLineageUseCase.js ui/views/RepositoryView.js 2>/dev/null || true',
             { cwd: SOURCE_ROOT }
         ).toString().trim();
         assert(untouchedFamilies === '',

@@ -1,10 +1,10 @@
-import { requireRealBasePublicationTransactionPlan } from '../application/BasePublicationTransactionReview.js';
+import { requireRealBasePublicationTransactionPlan } from '../application/anchoring/base/BasePublicationTransactionReview.js';
 
 // 0.8.93 — Explicit Base Reviewed Transaction Signing.
 //
-// `application/BasePublicationTransactionPlanCoordinator.js#construct()`
+// `application/anchoring/base/BasePublicationTransactionPlanCoordinator.js#construct()`
 // (0.8.91) produces a real, immutable, UNSIGNED Base transaction plan, and
-// `application/BasePublicationTransactionReview.js` (0.8.92) turns it into
+// `application/anchoring/base/BasePublicationTransactionReview.js` (0.8.92) turns it into
 // what a person sees before authorizing it. Nothing since has ever handed
 // that plan to a wallet and asked for a signature. This class is that
 // handoff, held to the identical principle `anchoring/
@@ -114,7 +114,7 @@ import { requireRealBasePublicationTransactionPlan } from '../application/BasePu
 //
 // `plan` MUST BE A REAL, ALREADY-CONSTRUCTED PLAN — NO DUCK TYPING. Every
 // field this class reads off `plan` is checked, before a transactionRequest
-// is ever built, by `application/BasePublicationTransactionReview.js`'s
+// is ever built, by `application/anchoring/base/BasePublicationTransactionReview.js`'s
 // own exported `requireRealBasePublicationTransactionPlan()` — the exact
 // same known-good-internal-artifact re-validation 0.8.92's own review
 // already performs, reused verbatim rather than duplicated. A malformed

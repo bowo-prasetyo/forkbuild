@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
-import { AvatarTreeConstraint } from '../application/AvatarTreeConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
+import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
 import { AvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 import { AvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
@@ -15,12 +15,12 @@ import {
 } from '../core/AvatarVehicleMovementCapability.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { Position } from '../core/Position.js';
 
 // 0.9.85 — Vehicle Movement Capability Integration.
@@ -30,7 +30,7 @@ import { Position } from '../core/Position.js';
 // relationship imply" as a pure function, and deliberately stopped
 // there. This milestone answers the question 0.9.84's own closing
 // paragraph named and did not answer: can
-// application/AvatarMovementController.js — the ONE existing avatar
+// application/avatar/AvatarMovementController.js — the ONE existing avatar
 // movement pipeline — actually CONSUME a resolved capability, without
 // becoming a second movement system, and without gaining a speed
 // difference it was never asked to have yet.
@@ -372,8 +372,8 @@ async function runTests() {
     // MOTORCYCLE/CAR already do in Sections C/D, above. The real
     // "vehicle moves, avatar follows" split that keeps a MOUNTED drone's
     // horizontal movement from double-driving both this controller and
-    // application/AvatarVehicleMovementController.js lives one layer up,
-    // in application/WorldNavigationSession.js's own `vehicleMovementActive`
+    // application/avatar/AvatarVehicleMovementController.js lives one layer up,
+    // in application/world/WorldNavigationSession.js's own `vehicleMovementActive`
     // gate (never calling this controller's own tick() at all while a
     // real, movable vehicle is mounted) — exactly the same real-world
     // guard MOTORCYCLE/CAR already rely on, proven in
@@ -502,7 +502,7 @@ async function runTests() {
     // Section I — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/AvatarMovementController.js', import.meta.url);
+        const sourceUrl = new URL('../application/avatar/AvatarMovementController.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -510,25 +510,25 @@ async function runTests() {
             .join('\n');
 
         assert(!codeOnly.includes('VehicleType'),
-            '39. application/AvatarMovementController.js never references VehicleType — it knows only about a resolved AvatarVehicleMovementCapability, never which vehicle produced it');
+            '39. application/avatar/AvatarMovementController.js never references VehicleType — it knows only about a resolved AvatarVehicleMovementCapability, never which vehicle produced it');
         assert(!codeOnly.includes('AvatarVehicleMount'),
-            '40. application/AvatarMovementController.js never references AvatarVehicleMount');
+            '40. application/avatar/AvatarMovementController.js never references AvatarVehicleMount');
         assert(!codeOnly.includes('VehiclePresence') && !codeOnly.includes('VehiclePlacement') && !codeOnly.includes('vehiclePresenceInRegion'),
-            '41. application/AvatarMovementController.js never references VehiclePresence, VehiclePlacement, or a vehicle lookup of any kind — vehicle lookup is exclusively application/AvatarVehicleInteractionController.js\'s job, composed one layer up');
+            '41. application/avatar/AvatarMovementController.js never references VehiclePresence, VehiclePlacement, or a vehicle lookup of any kind — vehicle lookup is exclusively application/avatar/AvatarVehicleInteractionController.js\'s job, composed one layer up');
         assert(!/BicycleMovementController|MotorcycleMovementController|CarMovementController|DroneMovementController|VehicleMovementController/.test(codeOnly),
-            '42. application/AvatarMovementController.js contains no per-vehicle movement controller of any kind — there remains exactly one movement controller');
+            '42. application/avatar/AvatarMovementController.js contains no per-vehicle movement controller of any kind — there remains exactly one movement controller');
         assert(codeOnly.includes('setMovementCapability') && codeOnly.includes('movementCapability'),
-            '43. application/AvatarMovementController.js does expose the setMovementCapability()/movementCapability() integration seam this milestone exists to add');
+            '43. application/avatar/AvatarMovementController.js does expose the setMovementCapability()/movementCapability() integration seam this milestone exists to add');
     }
     {
-        const sourceUrl = new URL('../application/WorldNavigationSession.js', import.meta.url);
+        const sourceUrl = new URL('../application/world/WorldNavigationSession.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
 
-        // 0.9.96 note: application/WorldNavigationSession.js now
+        // 0.9.96 note: application/world/WorldNavigationSession.js now
         // legitimately binds a real Control key to
         // core/AvatarVehicleBrakingIntent.js's own NONE/BRAKE
         // vocabulary and core/AvatarVehicleBrakingInputAdapter.js (see
@@ -547,9 +547,9 @@ async function runTests() {
         // Section I.
         const codeOnlyWithoutBrakingVocabulary = codeOnly.replace(/[A-Za-z_]*[Vv]ehicleBraking[A-Za-z]*/g, '');
         assert(!/vehicleSpeed|vehicleAcceleration|vehicleBraking|vehicleTurning|vehicleMass|vehicleDrag|vehicleVelocity/i.test(codeOnlyWithoutBrakingVocabulary),
-            '44. application/WorldNavigationSession.js never references any numeric vehicle physics quantity — this milestone integrates a capability KIND, never a speed');
-        // 0.9.116 note: application/WorldNavigationSession.js now
-        // legitimately constructs application/AvatarVehicleMovementController.js
+            '44. application/world/WorldNavigationSession.js never references any numeric vehicle physics quantity — this milestone integrates a capability KIND, never a speed');
+        // 0.9.116 note: application/world/WorldNavigationSession.js now
+        // legitimately constructs application/avatar/AvatarVehicleMovementController.js
         // — a single, GENERIC vehicle movement controller (see that
         // file's own header) that actually connects this capability
         // layer to a moving VehicleInstance, exactly as 0.9.84's own
@@ -566,14 +566,14 @@ async function runTests() {
         // assertion is updated to the claim it actually cares about"
         // precedent 0.9.95/0.9.96 already set is applied here.
         assert(!/BicycleMovementController|MotorcycleMovementController|CarMovementController|DroneMovementController/.test(codeOnly),
-            '45. application/WorldNavigationSession.js constructs no PER-VEHICLE-TYPE movement controller of any kind — 0.9.116\'s own generic AvatarVehicleMovementController is the one legitimate exception, reusing this exact same capability/simulation layer rather than forking it per vehicle type');
+            '45. application/world/WorldNavigationSession.js constructs no PER-VEHICLE-TYPE movement controller of any kind — 0.9.116\'s own generic AvatarVehicleMovementController is the one legitimate exception, reusing this exact same capability/simulation layer rather than forking it per vehicle type');
         assert(codeOnly.includes('resolveAvatarVehicleMovementCapability') && codeOnly.includes('setMovementCapability') && codeOnly.includes('mountedVehicleType'),
-            '46. application/WorldNavigationSession.js does compose mountedVehicleType() -> resolveAvatarVehicleMovementCapability() -> setMovementCapability() — the integration this milestone exists to make');
+            '46. application/world/WorldNavigationSession.js does compose mountedVehicleType() -> resolveAvatarVehicleMovementCapability() -> setMovementCapability() — the integration this milestone exists to make');
         assert(codeOnly.includes('AvatarVehicleMovementController') && codeOnly.includes('VehicleRuntimeInstances'),
-            '47. 0.9.116 note: application/WorldNavigationSession.js does compose the mounted-vehicle-movement integration — application/AvatarVehicleMovementController.js reading from and writing to application/VehicleRuntimeInstances.js — the follow-on integration that connects this capability KIND to an actual moving VehicleInstance; see tests/AvatarVehicleMovementControllerIntegration.test.js for that integration\'s own dedicated coverage');
+            '47. 0.9.116 note: application/world/WorldNavigationSession.js does compose the mounted-vehicle-movement integration — application/avatar/AvatarVehicleMovementController.js reading from and writing to application/world/VehicleRuntimeInstances.js — the follow-on integration that connects this capability KIND to an actual moving VehicleInstance; see tests/AvatarVehicleMovementControllerIntegration.test.js for that integration\'s own dedicated coverage');
     }
     {
-        const sourceUrl = new URL('../application/AvatarVehicleInteractionController.js', import.meta.url);
+        const sourceUrl = new URL('../application/avatar/AvatarVehicleInteractionController.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -581,9 +581,9 @@ async function runTests() {
             .join('\n');
 
         assert(!codeOnly.includes('AvatarMovementController'),
-            '47. application/AvatarVehicleInteractionController.js never imports or references AvatarMovementController — the coupling between mount state and movement capability lives entirely in application/WorldNavigationSession.js, never here');
+            '47. application/avatar/AvatarVehicleInteractionController.js never imports or references AvatarMovementController — the coupling between mount state and movement capability lives entirely in application/world/WorldNavigationSession.js, never here');
         assert(codeOnly.includes('mountedVehicleType'),
-            '48. application/AvatarVehicleInteractionController.js does expose mountedVehicleType() — the one new read 0.9.85 adds to this controller\'s own already-existing vehicle lookup');
+            '48. application/avatar/AvatarVehicleInteractionController.js does expose mountedVehicleType() — the one new read 0.9.85 adds to this controller\'s own already-existing vehicle lookup');
     }
 
     console.log('✅ All Avatar-Vehicle Movement Capability Integration tests passed.');

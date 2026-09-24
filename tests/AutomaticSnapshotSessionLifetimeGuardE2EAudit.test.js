@@ -1,22 +1,22 @@
 import { readFile } from 'node:fs/promises';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/AutomaticSnapshotEncounterCascadeOutcome.js';
-import { AutomaticSnapshotEncounterRetentionReconciliation } from '../application/AutomaticSnapshotEncounterRetentionReconciliation.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { registerMaterializedSnapshotWorldSource } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/snapshot/AutomaticSnapshotEncounterCascadeOutcome.js';
+import { AutomaticSnapshotEncounterRetentionReconciliation } from '../application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { registerMaterializedSnapshotWorldSource } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { assembleWorldDiscoveryInputs } from '../core/WorldDiscoverySourceAssembly.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -31,7 +31,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //
 // Test-only. No production changes. 0.9.193 closed 0.9.192's own Section D
 // orphan with one narrow, synchronous guard inside
-// `application/AutomaticSnapshotEncounterCascade.js`, verified there against
+// `application/snapshot/AutomaticSnapshotEncounterCascade.js`, verified there against
 // stubbed collaborators. This file asks the question that leaves open:
 // does that guard compose correctly with EVERYTHING 0.9.186-0.9.193 already
 // built — real Nostr discovery, real Arweave resolution, real local
@@ -70,7 +70,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //   Section C: teardown at every asynchronous boundary the cascade actually
 //              has — discovery, resolution (verification is bundled inside
 //              resolution from the cascade's own point of view, see
-//              `application/ResolveSelectedSnapshotCommand.js`), and
+//              `application/snapshot/ResolveSelectedSnapshotCommand.js`), and
 //              materialization — all converge on SUPPRESSED; a structural
 //              check confirms placement itself is synchronous and therefore
 //              never its own distinct teardown window.
@@ -497,7 +497,7 @@ async function runTests() {
         }
 
         // C2 — teardown during resolution (which itself bundles hash
-        // verification — see application/ResolveSelectedSnapshotCommand.js's
+        // verification — see application/snapshot/ResolveSelectedSnapshotCommand.js's
         // own header: the cascade has no separate "verify" await of its own).
         {
             const host = makeHost('e2e-boundary-resolve');
@@ -565,7 +565,7 @@ async function runTests() {
         // materialization settles through the registration call it gates
         // runs in ONE uninterrupted synchronous stretch.
         {
-            const cascadeSource = await codeOnlySource('application/AutomaticSnapshotEncounterCascade.js');
+            const cascadeSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
             const materializeAwaitIndex = cascadeSource.indexOf('await this._materializeSelectedSnapshotCommand(resolution);');
             const registerIndex = cascadeSource.indexOf('registerMaterializedSnapshotWorldSource(this._worldDiscoverySourceRegistry');
             assert(materializeAwaitIndex > -1 && registerIndex > materializeAwaitIndex, '9. sanity: both markers present, in order');
@@ -868,7 +868,7 @@ async function runTests() {
         assert(registration.outcome === SnapshotWorldRegistrationOutcome.REGISTERED, '1. manual registration reaches REGISTERED unconditionally');
         assert(hasOrigin(registry, originFor(contentHash, publicationId)), '2. genuinely landed');
 
-        const bridgeSource = await codeOnlySource('application/MaterializedSnapshotWorldDiscoveryBridge.js');
+        const bridgeSource = await codeOnlySource('application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js');
         assert(!/isSessionActive/.test(bridgeSource), '3. structural: the shared registration primitive both manual buttons and the automatic cascade call has no isSessionActive concept of its own — the guard lives exclusively one layer up, inside the cascade');
 
         console.log('✓ Section I: manual registration (and the shared registration primitive it and the cascade both call) is completely independent of any automatic session predicate');
@@ -994,7 +994,7 @@ async function runTests() {
     // Section L — structural sweep.
     // ---------------------------------------------------------------
     {
-        const cascadeSource = await codeOnlySource('application/AutomaticSnapshotEncounterCascade.js');
+        const cascadeSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
 
         const checkpointOccurrences = cascadeSource.split('this._isSessionActive()').length - 1;
         assert(checkpointOccurrences === 1, `1. exactly one isSessionActive() checkpoint exists in the cascade — got ${checkpointOccurrences}`);
@@ -1013,15 +1013,15 @@ async function runTests() {
         const outcomeKeys = Object.keys(AutomaticSnapshotEncounterCascadeOutcome);
         assert(outcomeKeys.length === 2 && outcomeKeys.includes('INELIGIBLE') && outcomeKeys.includes('SUPPRESSED'),
             `7. AutomaticSnapshotEncounterCascadeOutcome carries exactly two values total — got ${JSON.stringify(outcomeKeys)}`);
-        const outcomeSource = await codeOnlySource('application/AutomaticSnapshotEncounterCascadeOutcome.js');
+        const outcomeSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterCascadeOutcome.js');
         for (const forbidden of ['CANCELLED', 'CANCELED', 'ABANDONED', 'EXPIRED', 'ORPHANED', 'DEAD', 'STALE']) {
             assert(!outcomeSource.includes(forbidden), `8. no "${forbidden}" lifecycle value exists`);
         }
 
-        const bridgeSource = await codeOnlySource('application/MaterializedSnapshotWorldDiscoveryBridge.js');
+        const bridgeSource = await codeOnlySource('application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js');
         assert(!/isSessionActive/.test(bridgeSource), '9. manual registration\'s own primitive still has no isSessionActive concept of any kind');
 
-        const registryClassSource = await codeOnlySource('application/WorldDiscoverySourceRegistry.js');
+        const registryClassSource = await codeOnlySource('application/discovery/WorldDiscoverySourceRegistry.js');
         assert(!/isSessionActive/.test(registryClassSource), '10. the shared World registry itself has no isSessionActive concept either — the guard lives exclusively inside the automatic cascade');
 
         console.log('✓ Section L: exactly one isSessionActive() checkpoint, no await between it and registration, no cancellation machinery, no new timer, exactly two cascade outcome values with no new lifecycle vocabulary, and manual registration/the shared registry both remain completely untouched');

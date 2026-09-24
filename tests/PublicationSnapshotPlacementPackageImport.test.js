@@ -14,29 +14,29 @@ import {
     buildBlueprintPackage,
     BLUEPRINT_KIND,
     CURRENT_SCHEMA_VERSION as BLUEPRINT_SCHEMA_VERSION
-} from '../application/BlueprintPackage.js';
-import { validateBlueprintPackage, BlueprintPackageError } from '../application/BlueprintImportValidator.js';
-import { ExportBlueprintUseCase } from '../application/ExportBlueprintUseCase.js';
-import { ImportBlueprintUseCase } from '../application/ImportBlueprintUseCase.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { ImportPackageAnchorsUseCase } from '../application/ImportPackageAnchorsUseCase.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { SnapshotPlacementResolver } from '../application/SnapshotPlacementResolver.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
+} from '../application/blueprint/BlueprintPackage.js';
+import { validateBlueprintPackage, BlueprintPackageError } from '../application/blueprint/BlueprintImportValidator.js';
+import { ExportBlueprintUseCase } from '../application/blueprint/ExportBlueprintUseCase.js';
+import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprintUseCase.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { ImportPackageAnchorsUseCase } from '../application/anchoring/ImportPackageAnchorsUseCase.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
 import {
     ImportPackageSnapshotPlacementsUseCase,
     PackagePlacementImportReason
-} from '../application/ImportPackageSnapshotPlacementsUseCase.js';
+} from '../application/snapshot/placement/ImportPackageSnapshotPlacementsUseCase.js';
 
 // 0.8.22 — Snapshot Placement Package Integration.
 //
 // 0.8.21 completed the placement side's persistence half — a persistent
 // catalog, a restart-recovery pass, all without ever resolving anything.
 // This milestone connects the placement layer to the OTHER portable
-// container this codebase already has, application/BlueprintPackage.js
+// container this codebase already has, application/blueprint/BlueprintPackage.js
 // (0.4.6, extended in 0.6.6, 0.6.8, and 0.8.7 for anchors) — without
 // merging their semantics:
 //
@@ -49,11 +49,11 @@ import {
 //
 // `placements` never becomes part of the Structure, never gets ranked,
 // deduplicated by anything but the placement's own id, or silently
-// resolved — see application/BlueprintPackage.js's own header for why no
+// resolved — see application/blueprint/BlueprintPackage.js's own header for why no
 // separate PublicationPackage container was introduced (the identical
 // reasoning 0.8.7 already established for anchors), and application/
 // ImportPackageSnapshotPlacementsUseCase.js's own header for why package
-// import reuses application/PublicationSnapshotPlacementExchange.js's
+// import reuses application/snapshot/placement/PublicationSnapshotPlacementExchange.js's
 // existing validate -> construct -> verify SIGNATURE -> catalog boundary
 // rather than building a second one.
 //
@@ -233,7 +233,7 @@ async function run() {
 
         // ImportBlueprintUseCase is UNCHANGED by this milestone — it still
         // only ever returns a Structure; reading pkg.placements back out
-        // is application/ImportPackageSnapshotPlacementsUseCase.js's own
+        // is application/snapshot/placement/ImportPackageSnapshotPlacementsUseCase.js's own
         // job (Section C).
         const rebuiltStructure = new ImportBlueprintUseCase().execute(bundledPkg);
         assert(rebuiltStructure instanceof Structure && rebuiltStructure.name === structure.name,

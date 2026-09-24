@@ -3,20 +3,20 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
 import { FriendshipState } from '../core/FriendshipState.js';
-import { ChatUseCase } from '../application/ChatUseCase.js';
+import { ChatUseCase } from '../application/chat/ChatUseCase.js';
 
 // 0.2.79 — Multi-Device Social State Semantics.
 //
 // 0.2.78 proved the CRYPTOGRAPHIC model: a device is just another
 // LocalIdentity, and a signed, revocable authorization link lets a
 // receiver resolve a live connection as DIRECT or DEVICE
-// (application/DeviceAuthorizationPropagationUseCase.js#resolvePeerAuthority()).
+// (application/identity/DeviceAuthorizationPropagationUseCase.js#resolvePeerAuthority()).
 // It deliberately went no further — that resolution was proven correct
 // in isolation but consulted by nothing else in this codebase.
 //
@@ -24,10 +24,10 @@ import { ChatUseCase } from '../application/ChatUseCase.js';
 // "Device authorization changes peer authority, NOT social identity."
 // Friendship, chat eligibility, and conversation history now key off the
 // RESOLVED social identity of a connected peer
-// (application/DeviceAuthorizationPropagationUseCase.js#resolveConnectionIdentity(),
+// (application/identity/DeviceAuthorizationPropagationUseCase.js#resolveConnectionIdentity(),
 // this milestone's own new query) rather than the raw, literally-
-// authenticated key — see application/FriendRelationshipUseCase.js's and
-// application/ChatUseCase.js's own 0.2.79 headers.
+// authenticated key — see application/identity/FriendRelationshipUseCase.js's and
+// application/chat/ChatUseCase.js's own 0.2.79 headers.
 class InMemoryStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }
     save(name, data) { this._data.set(name, JSON.parse(JSON.stringify(data))); }
@@ -203,7 +203,7 @@ async function runTests() {
 
     // The Phone's own local eligibility (its OWN completed friendship
     // with Bob's raw key) is untouched by a PARENT-level revocation it
-    // has no way to know about — see application/ChatUseCase.js's own
+    // has no way to know about — see application/chat/ChatUseCase.js's own
     // 0.2.79 header, "authentication and social identity are resolved
     // independently on each side." The send is attempted and reaches the
     // wire; the real security boundary is Bob's own RECEIVING side.
@@ -231,7 +231,7 @@ async function runTests() {
 console.log('\nAll multi-device social semantics tests passed.');
 console.log('Note (deliberately not solved here, see docs/Roadmap.md 0.2.79): a device that never');
 console.log('independently completes its OWN friend-request/accept cycle cannot pass its OWN local');
-console.log('sendMessage() eligibility check on its OWN account — application/FriendRelationshipUseCase.js');
+console.log('sendMessage() eligibility check on its OWN account — application/identity/FriendRelationshipUseCase.js');
 console.log('has no verb for "additionally acknowledge a second device of an already-FRIEND parent identity"');
 console.log('once the first device\'s ACCEPT is already recorded. Receivers correctly recognize an unacknowledged');
 console.log('device (this file\'s own Laptop, receiving and being sent to, never sending itself); a device');

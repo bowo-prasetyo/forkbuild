@@ -1,20 +1,20 @@
 import { readFile } from 'node:fs/promises';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { nearbyVehicleInstances, VEHICLE_RENDER_RADIUS } from '../application/NearbyVehicleInstances.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { nearbyVehicleInstances, VEHICLE_RENDER_RADIUS } from '../application/world/NearbyVehicleInstances.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { vehicleInstanceFromPresence, isValidVehicleInstance } from '../core/VehicleInstance.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
 // 0.9.115 — Vehicle Rendering, World View integration.
 //
-//   Section A: application/NearbyVehicleInstances.js — the pure
+//   Section A: application/world/NearbyVehicleInstances.js — the pure
 //              VehiclePresence -> VehicleInstance region bridge
-//   Section B: application/WorldNavigationSession.js#_setupVehicleRendering() —
+//   Section B: application/world/WorldNavigationSession.js#_setupVehicleRendering() —
 //              wires the render facade's syncVehicles() to fire once per
 //              render frame, centered on the local avatar
 //   Section C: falls back to camera position when there is no local avatar
@@ -81,7 +81,7 @@ function buildAvatarStack(username, position) {
 
 async function runTests() {
     // -------------------------------------------------------------
-    // Section A — application/NearbyVehicleInstances.js
+    // Section A — application/world/NearbyVehicleInstances.js
     // -------------------------------------------------------------
     {
         const center = { x: 0, z: 0 };
@@ -143,7 +143,7 @@ async function runTests() {
         }
 
         // A second frame re-queries fresh (a requery, never a cache) —
-        // see application/AvatarVehicleInteractionController.js's own
+        // see application/avatar/AvatarVehicleInteractionController.js's own
         // "Vehicle lookup" precedent.
         facade.fireFrame();
         assert(facade.syncCalls.length === 2, '12. every render frame produces its own syncVehicles() call');
@@ -205,12 +205,12 @@ async function runTests() {
     // ownership of mount/dismount interaction detection, and vice versa.
     // -------------------------------------------------------------
     {
-        const controllerSource = await readFile(new URL('../application/AvatarVehicleInteractionController.js', import.meta.url), 'utf8');
+        const controllerSource = await readFile(new URL('../application/avatar/AvatarVehicleInteractionController.js', import.meta.url), 'utf8');
         for (const term of ['VehicleRenderer', 'VehicleVisual', 'VehicleFieldRenderer', 'THREE', 'syncVehicles']) {
             assert(!controllerSource.includes(term),
-                `19. application/AvatarVehicleInteractionController.js never references "${term}" — mount/dismount stays entirely independent of rendering`);
+                `19. application/avatar/AvatarVehicleInteractionController.js never references "${term}" — mount/dismount stays entirely independent of rendering`);
         }
-        const sessionSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const sessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
         assert(sessionSource.includes('avatarVehicleInteractionState'),
             '20. the existing mount/dismount observation seam is still exposed, untouched by this milestone');
     }

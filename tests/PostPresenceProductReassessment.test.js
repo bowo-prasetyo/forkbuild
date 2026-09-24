@@ -1,4 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises';
+import { applicationPath } from './support/ApplicationFiles.js';
 
 import { Brick } from '../core/Brick.js';
 import { Building } from '../core/Building.js';
@@ -7,23 +8,23 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { IdentityUseCase } from '../application/IdentityUseCase.js';
+import { IdentityUseCase } from '../application/identity/IdentityUseCase.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { WorldMembershipUseCase } from '../application/WorldMembershipUseCase.js';
-import { WorldPresenceUseCase } from '../application/WorldPresenceUseCase.js';
-import { WorldAuthorizationService } from '../application/WorldAuthorizationService.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { WorldMembershipUseCase } from '../application/identity/WorldMembershipUseCase.js';
+import { WorldPresenceUseCase } from '../application/presence/WorldPresenceUseCase.js';
+import { WorldAuthorizationService } from '../application/identity/WorldAuthorizationService.js';
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.219 — Post-Presence Product Reassessment.
@@ -440,7 +441,7 @@ async function runTests() {
 
         // B4 — Editor. COMPLETE (transform feedback, undo/redo label
         // mirrors, Snapshot export composition — all 0.9.213-0.9.215).
-        const spatialEditingServiceSource = await rawSource('application/SpatialEditingService.js');
+        const spatialEditingServiceSource = await rawSource('application/editor/SpatialEditingService.js');
         assert(/getGestureFeedback\(\)\s*\{\s*return this\._gestureFeedback;\s*\}/.test(spatialEditingServiceSource), 'B4a. SpatialEditingService still exposes getGestureFeedback()');
         const mainSource = await rawSource('ui/main.js');
         assert(/new BuildPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'B4b. ui/main.js still composes BuildPublicationSnapshotTransferPackageUseCase');
@@ -456,7 +457,7 @@ async function runTests() {
         // symmetry. COMPLETE, boundary observed not extended.
         assert(/discoverOwnSnapshot\(/.test(panelSource), 'B6a. OwnPublicationPanel.js still calls discoverOwnSnapshot');
         assert(/worldSnapshotDiscoveryMonitor\.observe\(/.test(worldViewSource), 'B6b. WorldView.js still drives automatic Snapshot discovery');
-        const { CURRENT_SCHEMA_VERSION } = await import('../application/PublicationSnapshotTransferPackage.js');
+        const { CURRENT_SCHEMA_VERSION } = await import('../application/snapshot/PublicationSnapshotTransferPackage.js');
         assert(CURRENT_SCHEMA_VERSION === 1, 'B6c. no second Transfer Package schema version exists');
 
         // B7 — World Presence. COMPLETE as of this milestone — see
@@ -470,7 +471,7 @@ async function runTests() {
         // B8 — Cross-cutting infrastructure. COMPLETE for cross-document
         // isolation (reconfirmed); the event/error-boundary question
         // gets its own dedicated Section C rather than a footnote here.
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = await rawSource('application/world/WorldNavigationSession.js');
         assert(/this\._historyPreview\.documentId === docId/.test(navigationSessionSource), 'B8a. history preview restore still scoped to its own documentId');
         assert(/checkPlacementOverlap\(documentId,\s*newPosition\)/.test(navigationSessionSource), 'B8b. placement overlap check still takes an explicit documentId');
 
@@ -502,10 +503,10 @@ async function runTests() {
         // C2 — the SAME structural precondition 0.9.218's defect needed
         // (a use case that publishes an event, then performs MORE
         // authoritative work in the same synchronous call chain) recurs
-        // in application/IdentityUseCase.js: authenticate()/endSession()/
+        // in application/identity/IdentityUseCase.js: authenticate()/endSession()/
         // changePassphrase() each call _publishChange() (which itself
         // fires TWO events in sequence) and THEN _publishLockChange().
-        const identityUseCaseSource = codeOnlyLines(await rawSource('application/IdentityUseCase.js')).join('\n');
+        const identityUseCaseSource = codeOnlyLines(await rawSource('application/identity/IdentityUseCase.js')).join('\n');
         assert(/this\._publishChange\(\);\s*this\._publishLockChange\(identityId\);/.test(identityUseCaseSource), 'C2a. authenticate() still calls _publishChange() then _publishLockChange() in sequence');
         const publishChangeDefinitionIndex = identityUseCaseSource.indexOf('_publishChange() {');
         const publishChangeBody = identityUseCaseSource.slice(publishChangeDefinitionIndex, publishChangeDefinitionIndex + 300);
@@ -555,7 +556,7 @@ async function runTests() {
         assert(/currentSession\(\)|isUnlocked\(/.test(userWidgetSource), 'C4b. refreshLockState() itself reads only currentSession()/isUnlocked() — no mutating cross-use-case call');
         assert(/identityUseCase\.onUserChanged\(\(u\) => \{/.test(avatarSettingsSource), 'C4c. AvatarSettingsView.js\'s onUserChanged callback exists and is likewise a local ref assignment plus a same-owner data reload, never a call into a DIFFERENT use case\'s mutation surface');
 
-        console.log('✓ Section C: Event/error boundary check — REPEATED architectural PATTERN confirmed, not isolated to World Presence: the exact "publish, then more authoritative work in the same synchronous chain" precondition recurs in application/IdentityUseCase.js (C2), and behaviorally reproduces the identical failure-skips-a-later-broadcast shape (C3). It is DEFERRED, not fixed here, per this milestone\'s own brief: unlike World Presence at the time 0.9.218 ran, no CURRENT production listener on these three events performs cross-use-case, fallible derived work (C4) — the architectural precondition is real, but nothing user-facing is broken today. Named precisely for a future decision, exactly as this section\'s own brief asked, rather than expanding this milestone into an error-handling project.');
+        console.log('✓ Section C: Event/error boundary check — REPEATED architectural PATTERN confirmed, not isolated to World Presence: the exact "publish, then more authoritative work in the same synchronous chain" precondition recurs in application/identity/IdentityUseCase.js (C2), and behaviorally reproduces the identical failure-skips-a-later-broadcast shape (C3). It is DEFERRED, not fixed here, per this milestone\'s own brief: unlike World Presence at the time 0.9.218 ran, no CURRENT production listener on these three events performs cross-use-case, fallible derived work (C4) — the architectural precondition is real, but nothing user-facing is broken today. Named precisely for a future decision, exactly as this section\'s own brief asked, rather than expanding this milestone into an error-handling project.');
     }
 
     // ---------------------------------------------------------------
@@ -570,8 +571,8 @@ async function runTests() {
         // D1 — the two confirmed OBSOLETE findings (explicit in-repo
         // supersession record each), reconfirmed unchanged.
         assert(!/GroupsPanel/.test(mainSource), 'D1a. GroupsPanel.js still has no live caller in ui/main.js');
-        assert(/instead of application\/CreatePublicationAnchorCatalogUseCase\.js/.test(mainSource), 'D1b. CreatePublicationAnchorCatalogUseCase.js\'s supersession record still stands');
-        const createWorldViewUseCaseSource = await rawSource('application/CreateWorldViewUseCase.js');
+        assert(/instead of application\/anchoring\/CreatePublicationAnchorCatalogUseCase\.js/.test(mainSource), 'D1b. CreatePublicationAnchorCatalogUseCase.js\'s supersession record still stands');
+        const createWorldViewUseCaseSource = await rawSource('application/world/CreateWorldViewUseCase.js');
         assert(/CreatePlacementRegistryUseCase already/.test(createWorldViewUseCaseSource), 'D1c. CreatePlacementRegistryUseCase.js\'s supersession record still stands');
 
         // D2 — the four OBSOLETE_CANDIDATE files: reconfirm (a) no live
@@ -591,12 +592,12 @@ async function runTests() {
         ];
         const repoFiles = [...await listJsFiles('application'), ...await listJsFiles('ui')];
         for (const className of candidateFiles) {
-            const source = await rawSource(`application/${className}.js`);
+            const source = await rawSource(applicationPath(className));
             assert(new RegExp(`class ${className}`).test(source), `D2a. application/${className}.js still exists, fully implemented`);
             assert(await repoWideInstantiationCount(className) === 0, `D2b. ${className} is still instantiated NOWHERE in application/ or ui/`);
             let supersessionRecordFound = false;
             for (const file of repoFiles) {
-                if (file === `application/${className}.js`) continue;
+                if (file === applicationPath(className)) continue;
                 const fileSource = codeOnlyLines(await rawSource(file)).join('\n');
                 if (new RegExp(`(instead of|supersed|replaces?)[^\\n]{0,80}${className}|${className}[^\\n]{0,80}(instead of|supersed|already builds this)`, 'i').test(fileSource)) {
                     supersessionRecordFound = true;
@@ -616,7 +617,7 @@ async function runTests() {
         // WorldNavigationSession private-method example, which IS that
         // shape).
         for (const className of candidateFiles) {
-            const source = await rawSource(`application/${className}.js`);
+            const source = await rawSource(applicationPath(className));
             assert(/^export class/m.test(source), `D3. ${className} is still a top-level exported class, not an internal helper — the "intentionally internal" branch of the classification tree does not apply`);
         }
 
@@ -633,7 +634,7 @@ async function runTests() {
         // documented intent name a user-facing workflow that is
         // currently unreachable, for a reason that is NOT already an
         // established INTENTIONAL_BOUNDARY or a redundant wrapper?
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = await rawSource('application/world/WorldNavigationSession.js');
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         // AMENDED by the My Worlds dead-code cleanup: the redundant
         // getRecentlyVisitedWorlds() wrapper was deleted outright (its
@@ -716,7 +717,7 @@ Classification summary:
        B8  Cross-cutting infrastructure ................... COMPLETE (cross-document isolation); see C for event/error boundary
        B9  Performance ...................................... DEFERRED
        B10 Obsolete UI/application artifacts .............. see D
-  C. Event/error boundary check ............................ REPEATED PATTERN found (application/IdentityUseCase.js), DEFERRED — not currently realized as a product defect, not fixed here
+  C. Event/error boundary check ............................ REPEATED PATTERN found (application/identity/IdentityUseCase.js), DEFERRED — not currently realized as a product defect, not fixed here
   D. Obsolete-candidate reassessment:
        GroupsPanel.js, CreatePublicationSnapshotPlacementCatalogUseCase.js .. OBSOLETE (reconfirmed)
        CreatePublicationAnchorCatalogUseCase.js, CreatePlacementRegistryUseCase.js .. OBSOLETE (reconfirmed)

@@ -9,8 +9,8 @@ import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider
 import { DiscoveryBootstrap } from '../peer/DiscoveryBootstrap.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { PeerSessionManager } from '../application/PeerSessionManager.js';
-import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
+import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
+import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
 
 // 0.2.66 — Real Network Rendezvous & NAT Traversal.
 //
@@ -24,12 +24,12 @@ import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
 // milestone adds — optional publication signing (peer/
 // RendezvousPublicationSigning.js, identity/LocalAuthorizationVerifier.js#
 // verifyRendezvousPublication) and the live application wiring
-// (application/PeerSessionManager.js#publishSelf/stopPublishing,
-// application/FindPeerUseCase.js) that makes a rendezvous network
+// (application/peer/PeerSessionManager.js#publishSelf/stopPublishing,
+// application/peer/FindPeerUseCase.js) that makes a rendezvous network
 // something the running app can actually use.
 //
 // The FLAGSHIP (final block) is the scenario this milestone exists for:
-// two independent application/PeerSessionManager.js instances, each with
+// two independent application/peer/PeerSessionManager.js instances, each with
 // its own peer/WebRtcPeerConnectionProvider.js (a REAL RTCPeerConnection
 // pair, exactly like tests/WebRtcPeerTransport.test.js's own flagship —
 // no shared in-process registry), discover each other ONLY through a
@@ -403,7 +403,7 @@ async function runTests() {
 }
 
 // ---------------------------------------------------------------------
-// 8. FLAGSHIP — two independent application/PeerSessionManager.js
+// 8. FLAGSHIP — two independent application/peer/PeerSessionManager.js
 //    instances, each with its own REAL RTCPeerConnection pair, discover
 //    each other ONLY through a simulated real network rendezvous round
 //    trip. A malicious publication points bob's identityId at charlie's
@@ -456,7 +456,7 @@ async function runTests() {
     // Bob publishes himself, genuinely, to node B. bobSession's own
     // discoveryProvider is a peer/DiscoveryBootstrap.js with exactly ONE
     // configured bootstrap node, so publishSelf() resolves to a
-    // one-element ARRAY — see application/PeerSessionManager.js#publishSelf's
+    // one-element ARRAY — see application/peer/PeerSessionManager.js#publishSelf's
     // own header on the three possible return shapes.
     const bobPublications = await bobSession.publishSelf();
     assert(Array.isArray(bobPublications) && bobPublications.length === 1, "bob's publishSelf() actually reaches its one configured rendezvous node");
@@ -498,10 +498,10 @@ async function runTests() {
     // out-of-band step ui/views/PeerConnectionsView.js's own "Complete
     // Connection" performs by hand — over a real rendezvous flow, THIS is
     // the one leg a rendezvous network still cannot do for either side
-    // (see application/PeerSessionManager.js#publishSelf's own header on
+    // (see application/peer/PeerSessionManager.js#publishSelf's own header on
     // why one publication answers at most one connection attempt); a
     // future signaling relay could automate exactly this step without
-    // changing anything above application/PeerSessionManager.js.
+    // changing anything above application/peer/PeerSessionManager.js.
     await charlieSession.completeConnection(charlieAttempt.connectionId, charlieReply);
     await waitForState(charlieAttempt, [PeerLifecycleState.CLOSED, PeerLifecycleState.FAILED]);
 

@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { RendezvousConfiguration, isValidRendezvousUrl } from '../core/RendezvousConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
-import { SetRendezvousConfigurationUseCase } from '../application/SetRendezvousConfigurationUseCase.js';
+import { SetRendezvousConfigurationUseCase } from '../application/settings/SetRendezvousConfigurationUseCase.js';
 import { WebSocketRendezvousTransport } from '../peer/WebSocketRendezvousTransport.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { DiscoveryBootstrap } from '../peer/DiscoveryBootstrap.js';
@@ -68,7 +68,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 //               never import either.
 //
 // See core/RendezvousConfiguration.js, storage/RendezvousConfigurationStore.js,
-// application/SetRendezvousConfigurationUseCase.js, and
+// application/settings/SetRendezvousConfigurationUseCase.js, and
 // ui/views/RendezvousSettingsView.js for the full design rationale this
 // milestone carries out.
 
@@ -176,7 +176,7 @@ async function run() {
         const mainSource = await source('ui/main.js');
         assert(mainSource.includes("import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';"),
             '1. ui/main.js imports the new store');
-        assert(mainSource.includes("import { SetRendezvousConfigurationUseCase } from '../application/SetRendezvousConfigurationUseCase.js';"),
+        assert(mainSource.includes("import { SetRendezvousConfigurationUseCase } from '../application/settings/SetRendezvousConfigurationUseCase.js';"),
             '2. ui/main.js imports the new write use case');
         assert(/new RendezvousConfigurationStore\(new LocalStorageProvider\(\)\)/.test(mainSource),
             '3. ui/main.js constructs a real RendezvousConfigurationStore over LocalStorageProvider');

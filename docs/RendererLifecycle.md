@@ -1,6 +1,6 @@
 renderer/Renderer.js builds the rendering stack in this order. Editor View
-(application/RenderWorldUseCase.js) and World View
-(application/RenderWorldViewUseCase.js) both construct it the same way.
+(application/world/RenderWorldUseCase.js) and World View
+(application/world/RenderWorldViewUseCase.js) both construct it the same way.
 
 Editor View / World View
 

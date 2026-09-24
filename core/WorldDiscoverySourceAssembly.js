@@ -36,7 +36,7 @@ import { WorldDiscoveryInputKeys } from './WorldDiscoverySource.js';
 // records describe the same object and choose between them — that is
 // reconciliation, a real and separate concern this codebase has already
 // built dedicated machinery for elsewhere (e.g.
-// `application/PublicationObservationArchiveReplacementReview.js`'s own
+// `application/publication/observationArchive/PublicationObservationArchiveReplacementReview.js`'s own
 // candidate/decision vocabulary) — but it is never this file's job, and
 // this file does not borrow, anticipate, or half-implement any piece of
 // it. Multiset-preserving concatenation is the entire algorithm.

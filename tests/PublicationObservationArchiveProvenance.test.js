@@ -1,23 +1,23 @@
 import { computeContentHash } from '../serializer/contentHash.js';
-import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/IpfsPublicationRecord.js';
-import { IpfsPublicationContentVerificationCoordinatorState } from '../application/IpfsPublicationContentVerificationCoordinatorState.js';
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
+import { IpfsPublicationContentVerificationCoordinatorState } from '../application/ipfs/IpfsPublicationContentVerificationCoordinatorState.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import {
     PublicationObservationArchiveProvenanceOrigin,
     isValidPublicationObservationArchiveProvenanceOrigin,
     describePublicationObservationArchiveProvenanceOrigin
-} from '../application/PublicationObservationArchiveProvenance.js';
-import { describePublicationObservationArchiveProvenance } from '../application/PublicationObservationArchiveProvenanceView.js';
-import { describePublicationObservationArchive } from '../application/PublicationObservationArchiveView.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { reconstructBitcoinAnchorPublicationLifecycleTimeline } from '../application/BitcoinAnchorPublicationLifecycleTimelineView.js';
-import { reconstructBitcoinAnchorDurableEvidence } from '../application/BitcoinAnchorDurableEvidenceView.js';
+} from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
+import { describePublicationObservationArchiveProvenance } from '../application/publication/observationArchive/PublicationObservationArchiveProvenanceView.js';
+import { describePublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveView.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { reconstructBitcoinAnchorPublicationLifecycleTimeline } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationLifecycleTimelineView.js';
+import { reconstructBitcoinAnchorDurableEvidence } from '../application/anchoring/bitcoin/BitcoinAnchorDurableEvidenceView.js';
 import {
     exportPublicationObservationArchive,
     importPublicationObservationArchive,
     recordPublicationObservationArchiveImport
-} from '../application/PublicationObservationArchiveExport.js';
+} from '../application/publication/observationArchive/PublicationObservationArchiveExport.js';
 
 // 0.8.83 — Publication Archive Provenance & Imported-Fact Boundary.
 //

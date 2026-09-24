@@ -8,16 +8,16 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { LoadPublishedWorldSessionUseCase } from '../application/LoadPublishedWorldSessionUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { LoadPublishedWorldSessionUseCase } from '../application/publication/LoadPublishedWorldSessionUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldPlacement } from '../core/WorldPlacement.js';
@@ -128,7 +128,7 @@ function seedRepositoryAdmittedPublication(decentralizedProvider, { id, document
     return publication;
 }
 
-// Builds every collaborator application/CreateWorldViewUseCase.js itself
+// Builds every collaborator application/world/CreateWorldViewUseCase.js itself
 // builds for the world-rendering/placement/material path, in the SAME
 // shape, so this file's own hypotheses ("what if worldLayoutProvider's
 // own discoveryProvider argument were publicationActionDiscoveryProvider
@@ -207,14 +207,14 @@ async function run() {
         assert(!/publicationId/.test(baseSrc),
             'A7. The ABSTRACT contract (WorldLayoutProvider.js itself) never mentions publicationId at all — every public signature is documentId-in, documentId/WorldPosition-out. `publicationId` is an implementation detail LocalWorldLayoutProvider introduces internally (Section A2-A4) to bridge to the spatial index; a caller of this class\'s public API never needs to know Publication identity exists.');
 
-        const compositionSrc = await readSource('application/CreateWorldViewUseCase.js');
+        const compositionSrc = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(compositionSrc),
-            'A8. UPDATED BY 0.9.605 (Wire Publication Discovery into World Rendering): production\'s composition root (application/CreateWorldViewUseCase.js) now constructs worldLayoutProvider from `publicationActionDiscoveryProvider` — the ONE constructor-argument substitution this audit\'s own Section D/K identified as necessary and sufficient. At the time this audit was written it still read the plain, narrow `discoveryProvider` — the SAME LocalDiscoveryProvider instance _findPublications()/fork-policy also reads (see Section E, still passing, still unchanged) — this assertion is updated to reflect that 0.9.605 performed exactly the substitution this file recommended, nothing more.');
+            'A8. UPDATED BY 0.9.605 (Wire Publication Discovery into World Rendering): production\'s composition root (application/world/CreateWorldViewUseCase.js) now constructs worldLayoutProvider from `publicationActionDiscoveryProvider` — the ONE constructor-argument substitution this audit\'s own Section D/K identified as necessary and sufficient. At the time this audit was written it still read the plain, narrow `discoveryProvider` — the SAME LocalDiscoveryProvider instance _findPublications()/fork-policy also reads (see Section E, still passing, still unchanged) — this assertion is updated to reflect that 0.9.605 performed exactly the substitution this file recommended, nothing more.');
 
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
         assert(/const \{ document, isMaterializedPublication \} = this\._resolveWorldDocument\(documentId\);/.test(sessionSrc)
             && /return \{ document: this\._loadPublicationDocumentUseCase\.execute\(documentId, this\._eventBus\), isMaterializedPublication: false \};/.test(sessionSrc),
-            'A9. UPDATED BY 0.9.605: where the discovered document is SUBSEQUENTLY loaded: _loadWorld(documentId) (application/WorldNavigationSession.js), called once updateSpatialView() has a documentId from worldLayoutProvider.findVisibleDocuments(), now delegates to _resolveWorldDocument(documentId) — still a COMPLETELY SEPARATE collaborator/step from WorldLayoutProvider itself, and still tries loadPublicationDocumentUseCase FIRST, exactly as before. 0.9.605 added exactly one thing here: a fallback to the material bridge (loadPublishedWorldSessionUseCase, Section D/K) for the specific case this document\'s own local storage[documentId] is empty — never a method on WorldLayoutProvider, never merged into discovery itself. This textually confirms the brief\'s own required distinction still holds after 0.9.605: discovery-for-rendering (WHICH documents, WHERE) and material loading (WHAT is in them) remain two separate steps in the real pipeline.');
+            'A9. UPDATED BY 0.9.605: where the discovered document is SUBSEQUENTLY loaded: _loadWorld(documentId) (application/world/WorldNavigationSession.js), called once updateSpatialView() has a documentId from worldLayoutProvider.findVisibleDocuments(), now delegates to _resolveWorldDocument(documentId) — still a COMPLETELY SEPARATE collaborator/step from WorldLayoutProvider itself, and still tries loadPublicationDocumentUseCase FIRST, exactly as before. 0.9.605 added exactly one thing here: a fallback to the material bridge (loadPublishedWorldSessionUseCase, Section D/K) for the specific case this document\'s own local storage[documentId] is empty — never a method on WorldLayoutProvider, never merged into discovery itself. This textually confirms the brief\'s own required distinction still holds after 0.9.605: discovery-for-rendering (WHICH documents, WHERE) and material loading (WHAT is in them) remain two separate steps in the real pipeline.');
 
         console.log('✓ A — WorldLayoutProvider\'s real discovery contract, traced from source: it receives ONE discoveryProvider at construction (A2), needs exactly three of its methods (list/findById/findByDocumentId — A5/A6), works entirely in documentId terms at its own public boundary while resolving publicationId only as an internal bridging detail (A3/A4/A7), and never itself loads a document (A1/A9 — that is a separate collaborator, called at a separate, later step). Production wires it to publicationActionDiscoveryProvider as of 0.9.605 (A8).');
     }
@@ -268,7 +268,7 @@ async function run() {
     // composition root.
     // ===============================================================
     {
-        const compositionSrc = await readSource('application/CreateWorldViewUseCase.js');
+        const compositionSrc = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(/const discoveryProvider = new LocalDiscoveryProvider\(storageProvider\);/.test(compositionSrc),
             'C1. `discoveryProvider` — a plain LocalDiscoveryProvider — is the FIRST, narrowest capability this composition root builds: local documents only (whatever this replica itself has published). This is what fork-policy (_findPublications), worldLayoutProvider (Section A/B), and every pre-0.9.597 caller all read.');
         assert(/const publicationActionDiscoveryProvider = decentralizedPublicationDiscoveryProvider\s*\n\s*\? new CompositeDiscoveryProvider\(\[discoveryProvider, decentralizedPublicationDiscoveryProvider\]\)\s*\n\s*: discoveryProvider;/.test(compositionSrc),
@@ -295,7 +295,7 @@ async function run() {
             'C7. DecentralizedPublicationDiscoveryProvider itself performs NO verification of its own — by its own header. Whatever it holds got there because something upstream (an admission gate, 0.9.595) already decided to call .add() — this class is a pure accumulator, never a filter WorldLayoutProvider or any adapter would need to duplicate.');
 
         console.log(`
-✓ C — DISCOVERY CAPABILITY INVENTORY (application/CreateWorldViewUseCase.js):
+✓ C — DISCOVERY CAPABILITY INVENTORY (application/world/CreateWorldViewUseCase.js):
 
 | Capability                              | Local docs | Publications |            Fork policy | Rendering (today) |
 | ---------------------------------------- | ---------: | -----------: | ---------------------: | -----------------: |
@@ -323,7 +323,7 @@ already offers, not a capability that provider lacks.
         // worldLayoutProvider built with publicationActionDiscoveryProvider
         // instead of the narrow discoveryProvider — nothing else about
         // Section B's own state touched, never written back into
-        // application/CreateWorldViewUseCase.js itself (Section H/J
+        // application/world/CreateWorldViewUseCase.js itself (Section H/J
         // reconfirm this).
         const widenedWorldLayoutProvider = new LocalWorldLayoutProvider(
             harness.spatialIndexProvider,
@@ -435,10 +435,10 @@ already offers, not a capability that provider lacks.
         // DIFFERENT class from the one _findPublications() reads.
         const _rewidened = new LocalWorldLayoutProvider(harness.spatialIndexProvider, harness.publicationActionDiscoveryProvider);
         assert(harness.session.getPublicationIdForDocument(collisionDocId) === null,
-            'E6. AFTER widening worldLayoutProvider: fork-policy\'s own answer for the SAME collisionDocId is UNCHANGED (still null) — session.getPublicationIdForDocument() reads WorldNavigationSession\'s own `discoveryProvider` field, a constructor argument entirely separate from worldLayoutProvider\'s (application/CreateWorldViewUseCase.js builds and passes them independently — see Section A8/C1-C2). Widening worldLayoutProvider alone, as Section D proposes, cannot touch this — reproducing 0.9.596\'s exact collision scenario against THIS specific widening and confirming it stays safe, not merely citing that a DIFFERENT widening (a shared session-level discoveryProvider) was once unsafe.');
+            'E6. AFTER widening worldLayoutProvider: fork-policy\'s own answer for the SAME collisionDocId is UNCHANGED (still null) — session.getPublicationIdForDocument() reads WorldNavigationSession\'s own `discoveryProvider` field, a constructor argument entirely separate from worldLayoutProvider\'s (application/world/CreateWorldViewUseCase.js builds and passes them independently — see Section A8/C1-C2). Widening worldLayoutProvider alone, as Section D proposes, cannot touch this — reproducing 0.9.596\'s exact collision scenario against THIS specific widening and confirming it stays safe, not merely citing that a DIFFERENT widening (a shared session-level discoveryProvider) was once unsafe.');
 
         // Reconfirm the source-level separation this all rests on.
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]) && !/worldLayoutProvider/.test(findPublicationsBody[0]),
             'E7. RECONFIRMED at the source level: _findPublications() reads only `this._discoveryProvider`; it has no reference to worldLayoutProvider or publicationActionDiscoveryProvider anywhere in its own body. The two axes (rendering-discovery, fork-policy-discovery) are, and remain, structurally disjoint.');
@@ -574,7 +574,7 @@ already offers, not a capability that provider lacks.
             'H3. Repeated querying creates NO placement — an unplaced, merely-discovered Publication stays unplaced no matter how many times rendering asks about it. No automatic placement, ever, as a side effect of visibility queries.');
         assert(decentralized.list().length === 1, 'H4. Querying never admits/re-admits/duplicates anything into decentralizedPublicationDiscoveryProvider either — the ONE Publication seeded is still the only one there.');
 
-        const publishedSessionSrc = await readSource('application/PublishedWorldSession.js');
+        const publishedSessionSrc = await readSource('application/publication/PublishedWorldSession.js');
         assert(/canEdit.*false|canSave.*false/s.test(publishedSessionSrc) || true, 'H5. Sanity note: PublishedWorldSession — what the material bridge (Section D/G) produces — is read-only by construction (already reconfirmed live at D6b/0.9.603 Section D3); rendering never receives an editable/mutable handle through this chain.');
 
         console.log('✓ H — WorldLayoutProvider remains a pure, side-effect-free consumer of already-established discovery/spatial state (H1-H4): no downloading, no verification, no admission, no placement creation, no Repository mutation. The desired Acquire -> Verify -> Accept -> Place -> Render pipeline is preserved; nothing in this audit\'s own widening turns Render into a silent Acquire/Verify/Admit step.');
@@ -702,7 +702,7 @@ already offers, not a capability that provider lacks.
         // World Rendering) is the milestone that actually performed the
         // exact substitution this file's own Section D/K identified as
         // the smallest sufficient production change — reconfirmed here.
-        const compositionSrc = await readSource('application/CreateWorldViewUseCase.js');
+        const compositionSrc = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(compositionSrc),
             'K1. Production composition now (0.9.605) builds worldLayoutProvider from publicationActionDiscoveryProvider — the exact seam this audit named below.');
         assert(!/new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*discoveryProvider\s*\);/.test(compositionSrc),
@@ -720,7 +720,7 @@ materializable Publication renderable, WITHOUT widening ordinary
 local-document discovery or fork-policy semantics.
 
 WHY WorldLayoutProvider CURRENTLY CANNOT RENDER THE PLACED PUBLICATION:
-it is constructed (application/CreateWorldViewUseCase.js) from the
+it is constructed (application/world/CreateWorldViewUseCase.js) from the
 narrow \`discoveryProvider\`, which never includes Repository-admitted-
 only Publications (Section A2/A8, reproduced live in Section B) — even
 though its PlacementRecord (B1/B2) and its verified material (B3/B4,
@@ -748,7 +748,7 @@ widening (Section E, including a fresh run of 0.9.596's own
 documentId-collision scenario against worldLayoutProvider's own
 argument rather than a session-level discoveryProvider) — the two axes
 remain structurally disjoint constructor arguments in
-application/CreateWorldViewUseCase.js (E7), and Publication Q (never
+application/world/CreateWorldViewUseCase.js (E7), and Publication Q (never
 admitted) stays excluded with no new check needed (E4).
 
 DOES LoadPublishedWorldSessionUseCase COMPLETE THE MATERIAL SIDE
@@ -779,7 +779,7 @@ Section H reconfirms it remains a pure, side-effect-free consumer.
 CLASSIFICATION: RENDERING_DISCOVERY_BRIDGE_GAP.
 
 THE EXACT SMALLEST PRODUCTION SEAM: one constructor-argument
-substitution, at application/CreateWorldViewUseCase.js's own
+substitution, at application/world/CreateWorldViewUseCase.js's own
 
     const worldLayoutProvider = new LocalWorldLayoutProvider(
         spatialIndexProvider,

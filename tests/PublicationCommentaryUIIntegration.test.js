@@ -1,9 +1,9 @@
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -59,7 +59,7 @@ function makeDocument(title, author) {
 }
 
 // The real application stack this milestone wires OwnPublicationPanel.js
-// to, mirroring application/CreateWorldViewUseCase.js's own 0.9.248
+// to, mirroring application/world/CreateWorldViewUseCase.js's own 0.9.248
 // composition exactly (same storageProvider, same discoveryProvider,
 // same identityProvider feeding all three commentary collaborators).
 function makeBackend() {
@@ -246,8 +246,8 @@ async function runTests() {
         const forbidden = [
             "from '../../core/PublicationCommentary.js'",
             "from '../../storage/PublicationCommentaryStore.js'",
-            "from '../../application/GetPublicationCommentariesUseCase.js'",
-            "from '../../application/AddPublicationCommentaryUseCase.js'",
+            "from '../../application/publication/commentary/GetPublicationCommentariesUseCase.js'",
+            "from '../../application/publication/commentary/AddPublicationCommentaryUseCase.js'",
             'new PublicationCommentary(', 'PublicationCommentaryStore'
         ];
         for (const term of forbidden) {
@@ -428,7 +428,7 @@ async function runTests() {
 
     // ---------------------------------------------------------------
     // Section K — Composition/wiring regression: ui/views/WorldView.js
-    // and application/CreateWorldViewUseCase.js wire the two use cases
+    // and application/world/CreateWorldViewUseCase.js wire the two use cases
     // through WorldNavigationSession, never a second, parallel path.
     // ---------------------------------------------------------------
     {
@@ -449,13 +449,13 @@ async function runTests() {
         assert(viewCode.includes('session.addPublicationCommentary({ publicationId, content, commentaryId, createdAt })'),
             '44. WorldView.js\'s own command forwards to WorldNavigationSession, never a use case directly');
 
-        const sessionCode = await codeOnlySource('application/WorldNavigationSession.js');
+        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
         assert(sessionCode.includes('this._getPublicationCommentariesUseCase.execute({ publicationId })'),
             '45. WorldNavigationSession delegates reads to the unmodified use case');
         assert(sessionCode.includes('this._addPublicationCommentaryUseCase.execute({ publicationId, content, commentaryId, createdAt })'),
             '46. WorldNavigationSession delegates writes to the unmodified use case, forwarding no authorIdentityId');
 
-        const compositionCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
+        const compositionCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
         assert(compositionCode.includes('new PublicationCommentaryStore(storageProvider)'),
             '47. the composition root reuses the SAME storageProvider every other local store already uses');
         assert(compositionCode.includes('new CanCommentOnPublicationUseCase(discoveryProvider)'),

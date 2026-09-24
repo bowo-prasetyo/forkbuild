@@ -1,6 +1,6 @@
-import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
-import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
+import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
+import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 
 // 0.9.253 — Place Naming Discovery Boundary.
@@ -248,13 +248,13 @@ function sourceOf(rawPayloads) {
 // ---------------------------------------------------------------------
 // D. CAPSTONE — a discovery candidate is a candidate, never adopted,
 //    never placed, never ranked. This suite never once imports
-//    application/LocalPlaceNamingClaimStore.js, core/PlaceNamingView.js,
+//    application/placeNaming/LocalPlaceNamingClaimStore.js, core/PlaceNamingView.js,
 //    identity/LocalAuthorizationVerifier.js, or application/
 //    WorldNavigationSession.js — proving structurally, not just by
 //    convention, that this milestone's discovery boundary never reaches
 //    into World presentation, the local claim store, or verification.
 //    A caller who wants to ADOPT a discovered candidate hands its own
-//    `claim` to application/PlaceNamingClaimExchange.js#importClaim() as
+//    `claim` to application/placeNaming/PlaceNamingClaimExchange.js#importClaim() as
 //    a publication package — a deliberately separate, later step this
 //    boundary never performs on its own.
 // ---------------------------------------------------------------------

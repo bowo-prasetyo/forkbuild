@@ -4,7 +4,7 @@ import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { AnimalDecoration } from '../core/AnimalDecoration.js';
 import { CreateWorldAnimalDecorationCommand } from '../application/commands/CreateWorldAnimalDecorationCommand.js';
 import { RemoveWorldAnimalDecorationCommand } from '../application/commands/RemoveWorldAnimalDecorationCommand.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 
 // 0.9.703 — World Animal Decorations: Removal, application/commands/
 // RemoveWorldAnimalDecorationCommand.js. The direct structural twin of

@@ -134,24 +134,24 @@ async function runTests() {
     {
         const REACHABLE_SURFACES = [
             ['Editor', 'ui/views/EditorView.js', 'export default'],
-            ['Publish', 'application/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase'],
-            ['Distribution', 'application/NostrPublicationDistributionRuntimeAdapter.js', 'export function createNostrPublicationDistributionRuntimeAdapter'],
+            ['Publish', 'application/publication/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase'],
+            ['Distribution', 'application/nostr/NostrPublicationDistributionRuntimeAdapter.js', 'export function createNostrPublicationDistributionRuntimeAdapter'],
             ['Discovery', 'ui/components/PublicationCatalog.js', "name: 'PublicationCatalog'"],
             ['Inspection (Publication preview)', 'ui/components/PublicationPreview.js', 'export default'],
             ['Commentary', 'core/PublicationCommentary.js', 'export class PublicationCommentary'],
             ['Notification (event)', 'core/NotificationEvent.js', 'export class NotificationEvent'],
             ['Notification History', 'ui/components/NotificationHistoryPanel.js', "name: 'NotificationHistoryPanel'"],
-            ['Placement (Publish -> World)', 'application/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
-            ['Snapshot discovery', 'application/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
-            ['Snapshot materialization', 'application/MaterializeSnapshotFromPlacementUseCase.js', 'export class MaterializeSnapshotFromPlacementUseCase'],
-            ['Snapshot placement (multi)', 'application/AddPublicationSnapshotPlacementUseCase.js', 'export class AddPublicationSnapshotPlacementUseCase'],
+            ['Placement (Publish -> World)', 'application/placement/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
+            ['Snapshot discovery', 'application/snapshot/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
+            ['Snapshot materialization', 'application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js', 'export class MaterializeSnapshotFromPlacementUseCase'],
+            ['Snapshot placement (multi)', 'application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js', 'export class AddPublicationSnapshotPlacementUseCase'],
             ['World View', 'ui/views/WorldView.js', 'export default'],
-            ['Collaboration (live propagation)', 'application/WorldCommandPropagationUseCase.js', 'export class WorldCommandPropagationUseCase'],
+            ['Collaboration (live propagation)', 'application/document/WorldCommandPropagationUseCase.js', 'export class WorldCommandPropagationUseCase'],
             ['Collaboration (conflict resolution)', 'replication/WorldConflictResolver.js', 'export class WorldConflictResolver'],
             ['Place Naming', 'core/PlaceNamingClaim.js', 'export class PlaceNamingClaim'],
             ['Provider preferences', 'core/RoleProviderPreference.js', 'export class RoleProviderPreference'],
             ['Authentication/identity', 'identity/LocalIdentityProvider.js', 'export class LocalIdentityProvider'],
-            ['Wanderer/vehicle', 'application/AvatarVehicleInteractionController.js', 'export class AvatarVehicleInteractionController'],
+            ['Wanderer/vehicle', 'application/avatar/AvatarVehicleInteractionController.js', 'export class AvatarVehicleInteractionController'],
             // 0.9.392 — this closure guard's own B-nav assertion had gone
             // stale: 0.9.364-0.9.372 (Arweave Gateway/Nostr Relay
             // settings) and 0.9.386/0.9.388 (STUN/Rendezvous settings)
@@ -214,8 +214,8 @@ async function runTests() {
 
         const HISTORICAL_FAMILY = [
             'replication/ConflictResolver.js', 'replication/ReplicaMergeService.js',
-            'replication/LocalReplicationStore.js', 'application/ReplicatePlacementUseCase.js',
-            'application/SynchronizeReplicaUseCase.js', 'application/CreateReplicationUseCase.js'
+            'replication/LocalReplicationStore.js', 'application/placement/ReplicatePlacementUseCase.js',
+            'application/placement/SynchronizeReplicaUseCase.js', 'application/placement/CreateReplicationUseCase.js'
         ];
         for (const path of HISTORICAL_FAMILY) {
             assert(await sourceExists(path), `B. HISTORICAL family member ${path} still exists (carried forward, 0.9.312/0.9.313).`);
@@ -274,8 +274,8 @@ async function runTests() {
     {
         const HISTORICAL_FAMILY_FILES = new Set([
             'replication/ConflictResolver.js', 'replication/ReplicaMergeService.js',
-            'replication/LocalReplicationStore.js', 'application/ReplicatePlacementUseCase.js',
-            'application/SynchronizeReplicaUseCase.js', 'application/CreateReplicationUseCase.js',
+            'replication/LocalReplicationStore.js', 'application/placement/ReplicatePlacementUseCase.js',
+            'application/placement/SynchronizeReplicaUseCase.js', 'application/placement/CreateReplicationUseCase.js',
             'replication/ConflictPolicy.js'
         ]);
         function outsideFamily(files) {
@@ -286,8 +286,8 @@ async function runTests() {
         // construction, AND adapter-naming patterns are all swept.
         const guardPatterns = [
             "from '.*replication/ConflictResolver.js'", "from '.*replication/ReplicaMergeService.js'",
-            "from '.*replication/LocalReplicationStore.js'", "from '.*application/ReplicatePlacementUseCase.js'",
-            "from '.*application/SynchronizeReplicaUseCase.js'", "from '.*application/CreateReplicationUseCase.js'",
+            "from '.*replication/LocalReplicationStore.js'", "from '.*application/placement/ReplicatePlacementUseCase.js'",
+            "from '.*application/placement/SynchronizeReplicaUseCase.js'", "from '.*application/placement/CreateReplicationUseCase.js'",
             "from '.*replication/ConflictPolicy.js'",
             'new ConflictResolver(', 'new ReplicaMergeService(', 'new CreateReplicationUseCase(',
             'new ReplicatePlacementUseCase(', 'new SynchronizeReplicaUseCase(', 'new LocalReplicationStore(',
@@ -304,7 +304,7 @@ async function runTests() {
 
         // Neither real composition root references the historical
         // family, by name, at all.
-        const compositionRoots = ['ui/main.js', 'application/CreateWorldViewUseCase.js'];
+        const compositionRoots = ['ui/main.js', 'application/world/CreateWorldViewUseCase.js'];
         const familyNames = ['ReplicaMergeService', 'CreateReplicationUseCase', 'ReplicatePlacementUseCase', 'SynchronizeReplicaUseCase', 'LocalReplicationStore', 'ConflictPolicy'];
         for (const rootPath of compositionRoots) {
             const source = await rawSource(rootPath);

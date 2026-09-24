@@ -3,22 +3,22 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { BaseAnchorPublisher } from '../anchoring/BaseAnchorPublisher.js';
-import { CreateBaseAnchorPublisherUseCase } from '../application/CreateBaseAnchorPublisherUseCase.js';
-import { BaseReviewedSigningCoordinator } from '../application/BaseReviewedSigningCoordinator.js';
+import { CreateBaseAnchorPublisherUseCase } from '../application/anchoring/base/CreateBaseAnchorPublisherUseCase.js';
+import { BaseReviewedSigningCoordinator } from '../application/anchoring/base/BaseReviewedSigningCoordinator.js';
 import { BaseTransactionBroadcaster } from '../base/BaseTransactionBroadcaster.js';
 import { BaseSignedTransactionFinalizer } from '../base/BaseSignedTransactionFinalizer.js';
 import { BaseTransactionSigner } from '../base/BaseTransactionSigner.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { describeBasePublicationTransactionReview } from '../application/BasePublicationTransactionReview.js';
-import { encodeBasePublicationCommitment } from '../application/BasePublicationCommitmentEncoding.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { describeBasePublicationTransactionReview } from '../application/anchoring/base/BasePublicationTransactionReview.js';
+import { encodeBasePublicationCommitment } from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
 import { BaseProofVerifier } from '../anchoring/BaseProofVerifier.js';
 import { BitcoinAnchorPublisher } from '../anchoring/BitcoinAnchorPublisher.js';
-import { CreatePublicationAnchorUseCase } from '../application/CreatePublicationAnchorUseCase.js';
+import { CreatePublicationAnchorUseCase } from '../application/anchoring/CreatePublicationAnchorUseCase.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -28,9 +28,9 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // 0.9.469's own binding verdict — BASE_ANCHOR_SIGNING_POLICY =
 // REVIEW_REQUIRED — named the buildable direction: a small bridge from the
 // already-live, already-reviewed Base Publication Transaction pipeline
-// (application/BaseReviewedSigningCoordinator.js, base/
+// (application/anchoring/base/BaseReviewedSigningCoordinator.js, base/
 // BaseSignedTransactionFinalizer.js, base/BaseTransactionBroadcaster.js,
-// application/CreateBaseAnchorPublicationRecordUseCase.js — every one of
+// application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js — every one of
 // them UNCHANGED by this milestone) into application/
 // CreatePublicationAnchorUseCase.js's own already-generic contract. This
 // file proves anchoring/BaseAnchorPublisher.js (THIS milestone) is exactly
@@ -207,7 +207,7 @@ function makeIdentity(label) {
 
 // A full, real replica — publicationCatalog, anchorCatalog, verifier, and a
 // real, signed-in identityProvider — feeding a real, unmodified
-// application/CreatePublicationAnchorUseCase.js, exactly mirroring tests/
+// application/anchoring/CreatePublicationAnchorUseCase.js, exactly mirroring tests/
 // BitcoinAnchorCreationAdapter.test.js's own replica setup one milestone
 // over.
 function makeReplica() {
@@ -321,7 +321,7 @@ async function run() {
         assert(result.published === true, '10. test setup: a genuinely matching contentHash publishes');
         assert(wallet.requests.length === 1, '11. the wallet was consulted exactly once');
         assert(wallet.requests[0].data === plan.data, '12. the wallet\'s own transactionRequest carries plan.data — the commitment — completely unchanged');
-        assert(wallet.requests[0].data === encodeBasePublicationCommitment(CONTENT_HASH), '13. that data is exactly the supplied contentHash, encoded the one, unchanged way application/BasePublicationCommitmentEncoding.js already defines');
+        assert(wallet.requests[0].data === encodeBasePublicationCommitment(CONTENT_HASH), '13. that data is exactly the supplied contentHash, encoded the one, unchanged way application/anchoring/base/BasePublicationCommitmentEncoding.js already defines');
 
         // A contentHash that does not match what was actually reviewed —
         // e.g. a caller accidentally handing this publisher a plan/review
@@ -347,7 +347,7 @@ async function run() {
         assert(!/describeBasePublicationTransactionReview/.test(publisherCodeOnly), '16. anchoring/BaseAnchorPublisher.js\'s own real code never calls describeBasePublicationTransactionReview — it can only sign a reviewedTransaction a caller already produced, never manufacture one itself');
 
         // C2: omitting reviewedTransaction entirely is a caller-contract
-        // violation — application/BaseReviewedSigningCoordinator.js's own
+        // violation — application/anchoring/base/BaseReviewedSigningCoordinator.js's own
         // precondition, reused verbatim, never duplicated or weakened.
         const replica = makeReplica();
         publishContent(replica.publicationCatalog, { id: 'pub-c' });
@@ -588,7 +588,7 @@ async function run() {
     {
         const publisherCodeOnly2 = codeOnly(await source('anchoring/BaseAnchorPublisher.js'));
         assert(!/from ['"]\.\.\/base\/BaseTransactionSigner\.js['"]/.test(publisherCodeOnly2), '62. anchoring/BaseAnchorPublisher.js never imports base/BaseTransactionSigner.js directly');
-        assert(!/from ['"]\.\.\/base\/BaseReviewedTransactionSigner\.js['"]/.test(publisherCodeOnly2), '63. anchoring/BaseAnchorPublisher.js never imports base/BaseReviewedTransactionSigner.js directly — it only ever composes application/BaseReviewedSigningCoordinator.js');
+        assert(!/from ['"]\.\.\/base\/BaseReviewedTransactionSigner\.js['"]/.test(publisherCodeOnly2), '63. anchoring/BaseAnchorPublisher.js never imports base/BaseReviewedTransactionSigner.js directly — it only ever composes application/anchoring/base/BaseReviewedSigningCoordinator.js');
 
         const rawSignerSrc = await source('base/BaseTransactionSigner.js');
         assert(/requireRealBasePublicationTransactionPlan\(plan\)/.test(rawSignerSrc), '64. base/BaseTransactionSigner.js is untouched — it still re-validates a full, already-constructed plan');

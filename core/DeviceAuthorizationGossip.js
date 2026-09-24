@@ -37,7 +37,7 @@ export function toDeviceAuthorizationGossipMessage(kind, record) {
 // own isValidIdentityLifecycleGossipMessage(): says nothing about
 // whether the record's SIGNATURE verifies, whether it is relevant to
 // this device, or whether it is newer than something already on file.
-// Those are application/DeviceAuthorizationPropagationUseCase.js's own
+// Those are application/identity/DeviceAuthorizationPropagationUseCase.js's own
 // ingestion boundary questions, asked in order, one layer up.
 export function isValidDeviceAuthorizationGossipMessage(value) {
     if (!value || typeof value !== 'object') {

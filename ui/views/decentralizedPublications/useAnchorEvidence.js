@@ -1,24 +1,24 @@
-import { publicationEvidenceView } from '../../../application/PublicationEvidenceView.js';
-import { createVerificationObservation } from '../../../application/PublicationAnchorVerificationObservation.js';
+import { publicationEvidenceView } from '../../../application/publication/evidence/PublicationEvidenceView.js';
+import { createVerificationObservation } from '../../../application/anchoring/PublicationAnchorVerificationObservation.js';
 import {
     deriveAnchorVerificationLifecycle, describeAnchorVerificationLifecycleNote
-} from '../../../application/PublicationAnchorVerificationLifecycleView.js';
-import { publicationAnchorDetailView } from '../../../application/PublicationAnchorDetailView.js';
-import { describeAnchorKnowledge } from '../../../application/PublicationAnchorKnowledgeView.js';
-import { ExternalAnchorCreationOutcome } from '../../../application/ExternalAnchorCreationOutcome.js';
+} from '../../../application/anchoring/PublicationAnchorVerificationLifecycleView.js';
+import { publicationAnchorDetailView } from '../../../application/anchoring/PublicationAnchorDetailView.js';
+import { describeAnchorKnowledge } from '../../../application/anchoring/PublicationAnchorKnowledgeView.js';
+import { ExternalAnchorCreationOutcome } from '../../../application/anchoring/ExternalAnchorCreationOutcome.js';
 import {
     describeEvidenceDiscoveryAttempt, describeDiscoveryButtonLabel
-} from '../../../application/PublicationEvidenceDiscoveryView.js';
+} from '../../../application/publication/evidence/PublicationEvidenceDiscoveryView.js';
 import {
     DISCOVERY_BADGE_CLASSES, SYNCHRONIZATION_BADGE_CLASSES, CREATION_BADGE_CLASSES, humanizeAnchorType
 } from './presentation.js';
 import {
     describeSynchronizationAttempt, describeSynchronizationButtonLabel
-} from '../../../application/PublicationKnowledgeSynchronizationView.js';
+} from '../../../application/publication/evidence/PublicationKnowledgeSynchronizationView.js';
 import {
     describeCreationAttempt, describeCreationButtonLabel
-} from '../../../application/PublicationAnchorCreationView.js';
-import { ExternalAnchorCreationUiState } from '../../../application/ExternalAnchorCreationUiState.js';
+} from '../../../application/anchoring/PublicationAnchorCreationView.js';
+import { ExternalAnchorCreationUiState } from '../../../application/anchoring/ExternalAnchorCreationUiState.js';
 
 // External anchor evidence for one entry: verifying and inspecting known
 // anchors, creating new ones, and discovering/synchronizing anchors with peers.

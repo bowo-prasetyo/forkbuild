@@ -2,12 +2,12 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-import { NostrMultiRelayPublicationDiscoveryPublisher } from '../application/NostrMultiRelayPublicationDiscoveryPublisher.js';
-import { orchestrateMultiRelayNostrPublicationDistribution } from '../application/NostrMultiRelayPublicationDistributionOrchestrator.js';
-import { executeMultiRelayNostrPublicationDistributionCommand, executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { NostrMultiRelayPublicationDiscoveryPublisher } from '../application/nostr/NostrMultiRelayPublicationDiscoveryPublisher.js';
+import { orchestrateMultiRelayNostrPublicationDistribution } from '../application/nostr/NostrMultiRelayPublicationDistributionOrchestrator.js';
+import { executeMultiRelayNostrPublicationDistributionCommand, executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 
 // 0.9.444 — Nostr Multi-Relay Announcement Fan-Out.
 //
@@ -412,10 +412,10 @@ async function run() {
         // Arweave-as-announcement-provider (0.9.428) is entirely untouched:
         // this milestone's own new command never selects it and never
         // imports ArweaveAnnouncementPublisher.
-        const commandSource = codeOnly(await source('application/PublicationDistributionCommand.js'));
+        const commandSource = codeOnly(await source('application/publication/distribution/PublicationDistributionCommand.js'));
         assert(!/ArweaveAnnouncementPublisher/.test(commandSource), n('J2. PublicationDistributionCommand.js still never imports ArweaveAnnouncementPublisher directly — Arweave-as-announcement-provider construction remains entirely PublicationDistributionRuntimeComposition.js\'s own job, untouched by this milestone'));
 
-        const orchestratorSource = codeOnly(await source('application/NostrMultiRelayPublicationDistributionOrchestrator.js'));
+        const orchestratorSource = codeOnly(await source('application/nostr/NostrMultiRelayPublicationDistributionOrchestrator.js'));
         assert(!/ArweaveAnnouncementPublisher|BitcoinAnchor/.test(orchestratorSource), n('J3. the new multi-relay orchestrator imports nothing Arweave-announcement-related or Bitcoin-related — this milestone modifies announcement publication for Nostr only'));
 
         assert(typeof ArweaveAnnouncementPublisher.DEFAULT_GATEWAY_URL === 'string', n('J4. ArweaveAnnouncementPublisher itself remains fully intact and importable, unmodified by this milestone'));
@@ -458,9 +458,9 @@ async function run() {
     // never redefined, and Nostr discovery-QUERY multiplicity is untouched.
     // ===============================================================
     {
-        const publisherCode = codeOnly(await source('application/NostrMultiRelayPublicationDiscoveryPublisher.js'));
-        const orchestratorCode = codeOnly(await source('application/NostrMultiRelayPublicationDistributionOrchestrator.js'));
-        const commandCode = codeOnly(await source('application/PublicationDistributionCommand.js'));
+        const publisherCode = codeOnly(await source('application/nostr/NostrMultiRelayPublicationDiscoveryPublisher.js'));
+        const orchestratorCode = codeOnly(await source('application/nostr/NostrMultiRelayPublicationDistributionOrchestrator.js'));
+        const commandCode = codeOnly(await source('application/publication/distribution/PublicationDistributionCommand.js'));
 
         const forbiddenVocabulary = ['PARTIAL_SUCCESS', 'AGGREGATE_STATUS', 'RELAY_HEALTH', 'RELAY_RANK', 'FAILOVER', 'relayList', 'RelayConfiguration', 'Settings'];
         for (const term of forbiddenVocabulary) {
@@ -474,7 +474,7 @@ async function run() {
 
         // discoveryProvider itself is never redefined by this milestone —
         // the strict two-value substrate selector is untouched.
-        const runtimeCompositionSource = await source('application/PublicationDistributionRuntimeComposition.js');
+        const runtimeCompositionSource = await source('application/publication/distribution/PublicationDistributionRuntimeComposition.js');
         assert(/unrecognized discoveryProvider/.test(runtimeCompositionSource), n('L4. PublicationDistributionRuntimeComposition.js still rejects any discoveryProvider outside "nostr"/"arweave" — untouched by this milestone'));
         assert(!commandCode.includes("discoveryProvider: 'wss://") && !commandCode.includes('discoveryProvider: relayUrl'), n('L5. no relay URL is ever passed as a discoveryProvider value anywhere in the command file'));
 
@@ -494,7 +494,7 @@ async function run() {
         // milestone (0.9.444) itself remains otherwise unmodified — only
         // this one assertion, about a DIFFERENT file's later state, is
         // updated to match that deliberate, subsequent change.
-        const commandCompositionSource = await source('application/PublicationDistributionCommandComposition.js');
+        const commandCompositionSource = await source('application/publication/distribution/PublicationDistributionCommandComposition.js');
         assert(/composeMultiRelayNostrPublicationDistributionCommand/.test(commandCompositionSource), n('L7. AMENDED BY 0.9.447 — PublicationDistributionCommandComposition.js now composes the multi-relay command too, via the new, additive composeMultiRelayNostrPublicationDistributionCommand(), closing the reachability gap this section originally found'));
 
         console.log('✓ Section L: no aggregate status, no hidden race semantics, no relay Settings UI, and discoveryProvider identity remains exactly as 0.9.443 left it');

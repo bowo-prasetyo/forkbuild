@@ -3,11 +3,11 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { composePublicationDistributionCommand, composeMultiRelayNostrPublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { composePublicationDistributionCommand, composeMultiRelayNostrPublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.502 — Editor Announcement/Discovery Provider Selection.
@@ -27,7 +27,7 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 // architecture, and never touching the Snapshot-family
 // NostrSnapshotDiscoveryPublisher/ArweaveSnapshotDiscoveryPublisher pair
 // (0.9.133/0.9.498), which is a structurally separate role from
-// Publication distribution — see application/SnapshotDistributionCommand.js's
+// Publication distribution — see application/snapshot/SnapshotDistributionCommand.js's
 // own header, "No coupling to Signed Claim distribution." (A later,
 // independently-scoped milestone gave EditorView.js its own, separate
 // "Distribute Snapshot" action — Section G below now checks the real,
@@ -445,7 +445,7 @@ async function run() {
         const snapshotFamilyPattern = /SnapshotDiscoveryPublisher|SnapshotDistributionCommand|SnapshotDistributionRuntimeComposition/;
         const publicationDistributionFunction = extractFunctionBody(editorSource, 'distributeEditorPublication');
         assert(!snapshotFamilyPattern.test(publicationDistributionFunction),
-            n('G1. distributeEditorPublication() — 0.9.502\'s own Announcement/Discovery substrate choice for Publication distribution — references none of the Snapshot-family (NostrSnapshotDiscoveryPublisher/ArweaveSnapshotDiscoveryPublisher/SnapshotDistributionCommand) classes, structurally separate per application/SnapshotDistributionCommand.js\'s own header'));
+            n('G1. distributeEditorPublication() — 0.9.502\'s own Announcement/Discovery substrate choice for Publication distribution — references none of the Snapshot-family (NostrSnapshotDiscoveryPublisher/ArweaveSnapshotDiscoveryPublisher/SnapshotDistributionCommand) classes, structurally separate per application/snapshot/SnapshotDistributionCommand.js\'s own header'));
 
         // G2 used to assert `git status --porcelain` was empty for the
         // Snapshot-family files listed above — a live working-tree check
@@ -454,7 +454,7 @@ async function run() {
         // an Arweave alternative." A later, separately-scoped milestone
         // (Announcement/Discovery Provider Selection, extended to the
         // Snapshot and Place Naming families) legitimately touches
-        // application/SnapshotDistributionRuntimeComposition.js — G1, above,
+        // application/snapshot/SnapshotDistributionRuntimeComposition.js — G1, above,
         // already carries this section's real, durable invariant, now
         // precisely scoped: distributeEditorPublication() itself never
         // references any Snapshot-family class, regardless of what those

@@ -1,15 +1,15 @@
 import { readFile } from 'node:fs/promises';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { AutomaticSnapshotEncounterRetentionReconciliation } from '../application/AutomaticSnapshotEncounterRetentionReconciliation.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { registerMaterializedSnapshotWorldSource } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { AutomaticSnapshotEncounterRetentionReconciliation } from '../application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { registerMaterializedSnapshotWorldSource } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.192 — Automatic World Observation Cadence Audit.
@@ -262,7 +262,7 @@ async function runTests() {
         // Discovery's own command has NOT been invoked yet: `monitor.observe()`
         // itself runs synchronously, but the command call it eventually makes
         // is deferred behind its own `Promise.resolve().then()` (see
-        // application/WorldSnapshotDiscoveryMonitor.js's own `observe()`) —
+        // application/snapshot/WorldSnapshotDiscoveryMonitor.js's own `observe()`) —
         // so `reconcile()` genuinely runs and RETURNS before discovery has
         // even started, not merely before it has settled.
         assert(
@@ -620,9 +620,9 @@ async function runTests() {
         // worth acting on — it never schedules its own timer, polling loop,
         // or subscription").
         for (const relativePath of [
-            'application/WorldSnapshotDiscoveryMonitor.js',
-            'application/AutomaticSnapshotEncounterCascade.js',
-            'application/AutomaticSnapshotEncounterRetentionReconciliation.js'
+            'application/snapshot/WorldSnapshotDiscoveryMonitor.js',
+            'application/snapshot/AutomaticSnapshotEncounterCascade.js',
+            'application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js'
         ]) {
             const source = await codeOnlySource(relativePath);
             for (const forbidden of ['setInterval(', 'setTimeout(', '.subscribe(', 'requestAnimationFrame(']) {

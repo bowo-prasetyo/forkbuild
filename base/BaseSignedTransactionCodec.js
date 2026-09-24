@@ -33,7 +33,7 @@ const EIP1559_ENVELOPE_TYPE = 0x02;
 // | { decoded: false, reason, cryptographicFailure }
 //
 // A STRUCTURED SIGNED TRANSACTION, NEVER A COMPARISON. This module knows
-// nothing about `application/BasePublicationTransactionReview.js`, a
+// nothing about `application/anchoring/base/BasePublicationTransactionReview.js`, a
 // `plan`, or what "matches the reviewed transaction" means — it turns
 // bytes into facts, and stops. Comparing those facts against an
 // already-constructed plan is `base/BaseSignedTransactionFinalizer.js`'s

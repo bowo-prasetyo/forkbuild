@@ -1,14 +1,14 @@
 import WorldDistributionDialog from './WorldDistributionDialog.js';
 import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';
-import { resolveSnapshotPublicationAttribution } from '../../application/SnapshotPublicationAttribution.js';
-import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/SnapshotOutcomeInspectionView.js';
-import { resolveSnapshotWorldPlacement } from '../../application/SnapshotWorldPlacement.js';
-import { registerMaterializedSnapshotWorldSource } from '../../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { resolveSnapshotWorldPositionClaim } from '../../application/SnapshotWorldPositionClaim.js';
-import { SnapshotWorldPositionClaimOutcome } from '../../application/SnapshotWorldPositionClaimOutcome.js';
+import { resolveSnapshotPublicationAttribution } from '../../application/snapshot/SnapshotPublicationAttribution.js';
+import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/snapshot/SnapshotOutcomeInspectionView.js';
+import { resolveSnapshotWorldPlacement } from '../../application/snapshot/placement/SnapshotWorldPlacement.js';
+import { registerMaterializedSnapshotWorldSource } from '../../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { resolveSnapshotWorldPositionClaim } from '../../application/snapshot/placement/SnapshotWorldPositionClaim.js';
+import { SnapshotWorldPositionClaimOutcome } from '../../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
 import { createId } from '../../core/createId.js';
-import { sanitizeDistributionErrorMessage } from '../../application/DistributionErrorMessageSanitizer.js';
-import { resolveSavedProviderDefault } from '../../application/SavedProviderDefaultChoice.js';
+import { sanitizeDistributionErrorMessage } from '../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
+import { resolveSavedProviderDefault } from '../../application/settings/SavedProviderDefaultChoice.js';
 
 // Actions on the local user's own current Publication in World View:
 // distribute it and its Snapshot, export the Snapshot, place or unpublish it,

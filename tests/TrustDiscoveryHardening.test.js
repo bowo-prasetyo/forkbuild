@@ -19,7 +19,7 @@ import { LocalSpatialIndexStore } from '../spatial/LocalSpatialIndexStore.js';
 import { SpatialIndexBuilder } from '../spatial/SpatialIndexBuilder.js';
 import { DecentralizedSpatialDiscoveryProvider } from '../spatial/DecentralizedSpatialDiscoveryProvider.js';
 import { ReplayGuard } from '../replication/ReplayGuard.js';
-import { CreateDelegationUseCase } from '../application/CreateDelegationUseCase.js';
+import { CreateDelegationUseCase } from '../application/identity/CreateDelegationUseCase.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
 // ---------------------------------------------------------------------

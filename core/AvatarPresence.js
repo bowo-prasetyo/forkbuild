@@ -40,7 +40,7 @@ import { AvatarAnimationState, isValidAnimationState } from './AvatarAnimationSt
 // signatures — over a canonical envelope, exactly like every other
 // signed object in this codebase — but the signature lives on
 // core/AvatarPresenceAdvertisement.js's wire shape, produced fresh
-// from an AvatarPresence every time (application/PresenceSigning.js),
+// from an AvatarPresence every time (application/presence/PresenceSigning.js),
 // never on AvatarPresence itself. AvatarPresence stays exactly what
 // it always was: the ephemeral, unsigned, unpersisted LOCAL fact of
 // where this avatar is right now. What changed is that a RECEIVER can

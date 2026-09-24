@@ -1,15 +1,15 @@
 import { ref } from 'vue';
 import {
     CreatePublisherPublicationAssociationRecordUseCase
-} from '../../../application/CreatePublisherPublicationAssociationRecordUseCase.js';
+} from '../../../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
 import {
     describePublisherPublicationAssociationRecordHistory
-} from '../../../application/PublisherPublicationAssociationRecordHistoryView.js';
+} from '../../../application/publisher/PublisherPublicationAssociationRecordHistoryView.js';
 import { sortLabels } from '../../../utils/sortOptionsByLabel.js';
 import {
     reconstructDistinctPublisherIdentifiers, reconstructPublisherAssociatedPublications
-} from '../../../application/PublisherAssociationView.js';
-import { PublisherIdentityRecord } from '../../../application/PublisherIdentityRecord.js';
+} from '../../../application/publisher/PublisherAssociationView.js';
+import { PublisherIdentityRecord } from '../../../application/publisher/PublisherIdentityRecord.js';
 
 // Publisher-publication associations: recording which publisher identifier a
 // known publication is associated with, and the per-publisher profile view.

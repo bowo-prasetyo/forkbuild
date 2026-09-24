@@ -1,8 +1,8 @@
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { SnapshotPlacementResolver } from '../application/SnapshotPlacementResolver.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -13,11 +13,11 @@ import {
     toPublicationSnapshotPlacementRequestMessage,
     toPublicationSnapshotPlacementResponseMessage,
     isValidPublicationSnapshotPlacementPeerMessage
-} from '../application/PublicationSnapshotPlacementPeerProtocol.js';
-import { PublicationSnapshotPlacementPeerExchange } from '../application/PublicationSnapshotPlacementPeerExchange.js';
+} from '../application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js';
+import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.8.19 — Snapshot Placement Discovery & Peer Synchronization.
@@ -391,7 +391,7 @@ async function run() {
             '27. the RESPONSE\'s own placement envelope carries no resolution result of any kind — only the signed claim itself, same restraint as ANNOUNCE');
 
         // A placement cataloged some OTHER way than this exchange's own
-        // importPlacement() (application/AddPublicationSnapshotPlacementUseCase.js
+        // importPlacement() (application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js
         // tolerates an unsigned one) is silently SKIPPED when building a
         // RESPONSE — never breaks the reply for a genuinely exportable
         // sibling naming the same publicationId.

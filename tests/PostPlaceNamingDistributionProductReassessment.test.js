@@ -5,14 +5,14 @@ import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import {
     buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag
 } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { NostrPlaceNamingDiscoveryPublisher } from '../application/NostrPlaceNamingDiscoveryPublisher.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
+import { NostrPlaceNamingDiscoveryPublisher } from '../application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -205,9 +205,9 @@ async function runTests() {
         assert(publishFnMatch && !publishFnMatch[0].includes('Nostr') && !publishFnMatch[0].includes('Publisher'),
             'A2. The full body of publishNamingClaim() contains no reference to Nostr or to any publisher class — clicking "Publish" today performs local persistence ONLY, exactly what 0.9.315 Section B/F already characterized this action as, before the write-side capability even existed.');
 
-        const navSessionCode = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));
+        const navSessionCode = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
         assert(!navSessionCode.includes('NostrPlaceNamingDiscoveryPublisher'),
-            'A2b. application/WorldNavigationSession.js — the one class publishNamingClaim() calls into — never references NostrPlaceNamingDiscoveryPublisher anywhere in its own code.');
+            'A2b. application/world/WorldNavigationSession.js — the one class publishNamingClaim() calls into — never references NostrPlaceNamingDiscoveryPublisher anywhere in its own code.');
 
         // A3. HISTORICAL RECORD, SUPERSEDED BY 0.9.320 — Explicit Place
         // Naming Publication Action. As of THIS milestone (0.9.318), the
@@ -216,7 +216,7 @@ async function runTests() {
         // composition root or UI file — the ONLY places its name appeared
         // anywhere in production source were its own file and one
         // forward-looking COMMENT in its read-side sibling. 0.9.320 closed
-        // exactly this gap: `application/PlaceNamingPublicationRuntimeComposition.js`,
+        // exactly this gap: `application/placeNaming/PlaceNamingPublicationRuntimeComposition.js`,
         // `ui/main.js`, `ui/views/WorldView.js`, and `ui/components/PlaceNamingPanel.js`
         // now all reference it as a genuine, live composition-root/UI
         // caller. This section's own checks are updated in place to record
@@ -225,14 +225,14 @@ async function runTests() {
         // left asserting a state that no longer holds, the same discipline
         // 0.9.316 already held for 0.9.315's own record.
         const publisherReferences = grepFiles('NostrPlaceNamingDiscoveryPublisher', ['application', 'ui', 'core', 'identity', 'server']);
-        const nonSelfReferences = publisherReferences.filter((f) => f !== 'application/NostrPlaceNamingDiscoveryPublisher.js');
-        assert(nonSelfReferences.includes('application/PlaceNamingPublicationRuntimeComposition.js') && nonSelfReferences.includes('application/NostrPlaceNamingDiscoverySource.js'),
+        const nonSelfReferences = publisherReferences.filter((f) => f !== 'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js');
+        assert(nonSelfReferences.includes('application/placeNaming/PlaceNamingPublicationRuntimeComposition.js') && nonSelfReferences.includes('application/placeNaming/NostrPlaceNamingDiscoverySource.js'),
             `A3a. As of 0.9.320, at least the composition-root file and the pre-existing read-side comment reference the publisher's name (found: ${nonSelfReferences.join(', ') || 'none'}) — no longer "exactly one," and the additional reference is real, live-composed code, not a second comment.`);
-        const compositionSourceRaw = await rawSource('application/PlaceNamingPublicationRuntimeComposition.js');
+        const compositionSourceRaw = await rawSource('application/placeNaming/PlaceNamingPublicationRuntimeComposition.js');
         assert(compositionSourceRaw.includes('new NostrPlaceNamingDiscoveryPublisher('),
             'A3b. 0.9.320\'s own composition-root file genuinely constructs the publisher, in code — not merely a comment reference, unlike the pre-existing read-side sibling\'s own forward-looking comment.');
         assert(grepCount('new NostrPlaceNamingDiscoveryPublisher(', ['ui', 'server']) === 0,
-            'A3c. Still zero UI or server files directly construct a NostrPlaceNamingDiscoveryPublisher — 0.9.320 reaches it only through application/PlaceNamingPublicationRuntimeComposition.js\'s own composed function, never a concrete class reference from ui/, mirroring the identical restraint Snapshot distribution already holds for ArweaveContentStore/NostrSnapshotDiscoveryPublisher (Section F2).');
+            'A3c. Still zero UI or server files directly construct a NostrPlaceNamingDiscoveryPublisher — 0.9.320 reaches it only through application/placeNaming/PlaceNamingPublicationRuntimeComposition.js\'s own composed function, never a concrete class reference from ui/, mirroring the identical restraint Snapshot distribution already holds for ArweaveContentStore/NostrSnapshotDiscoveryPublisher (Section F2).');
 
         // A4. HISTORICAL RECORD, SUPERSEDED BY 0.9.320. As of THIS
         // milestone, Nostr relay discovery was composed but there was no
@@ -321,7 +321,7 @@ async function runTests() {
         // tests/PlaceNamingClaimPublicationAction.test.js Section F.
         const uiWideNonTestPublisherConstruction = grepCount('new NostrPlaceNamingDiscoveryPublisher(', ['ui']);
         assert(uiWideNonTestPublisherConstruction === 0,
-            'B3. Still zero UI files directly construct the publisher — 0.9.320 reaches it only through the composed application/PlaceNamingPublicationRuntimeComposition.js function, the identical "never a concrete class reference from ui/" restraint Snapshot distribution already holds.');
+            'B3. Still zero UI files directly construct the publisher — 0.9.320 reaches it only through the composed application/placeNaming/PlaceNamingPublicationRuntimeComposition.js function, the identical "never a concrete class reference from ui/" restraint Snapshot distribution already holds.');
 
         console.log('✓ B: HISTORICAL RECORD, SUPERSEDED BY 0.9.320. As of THIS milestone (0.9.318), the write side (B1) and read side (B2) were both capability-complete but sat at two different reachability levels — the read side composed and live (B2a), the write side with no equivalent anywhere (B2b/B3). 0.9.320 closed that gap by providing a real publish command from the same composition root; see that milestone\'s own record.');
     }
@@ -367,9 +367,9 @@ async function runTests() {
         // could do that. This is the one genuine piece of user value the
         // still-unwired Nostr write path would add beyond what already
         // ships.
-        const exchangeHeader = await rawSource('application/PlaceNamingClaimExchange.js');
+        const exchangeHeader = await rawSource('application/placeNaming/PlaceNamingClaimExchange.js');
         assert(exchangeHeader.includes('Alice\'s claim --export--> Publication --import--> Bob\'s claim store'),
-            'C3. application/PlaceNamingClaimExchange.js\'s own header still describes export/import as a targeted, two-party hand-off — it was never designed to let an unknown stranger discover a claim with no prior relationship, the one capability that is genuinely unique to the still-unwired Nostr write path.');
+            'C3. application/placeNaming/PlaceNamingClaimExchange.js\'s own header still describes export/import as a targeted, two-party hand-off — it was never designed to let an unknown stranger discover a claim with no prior relationship, the one capability that is genuinely unique to the still-unwired Nostr write path.');
 
         // C4. Is there any recorded evidence (a real user complaint, a
         // support request, a product decision) that a Wanderer has
@@ -394,10 +394,10 @@ async function runTests() {
     // ===============================================================
     const candidateMatrix = [];
     {
-        const publisherCode = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
+        const publisherCode = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'));
 
         // D1. Automatic publication on creation.
-        const useCaseCode = codeOnlyLines(await rawSource('application/PlaceNamingClaimUseCase.js'));
+        const useCaseCode = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js'));
         assert(!useCaseCode.includes('NostrPlaceNamingDiscoveryPublisher'),
             'D1. PlaceNamingClaimUseCase#publish() still never references the publisher — creating a claim locally still triggers no network write, automatic or otherwise.');
         candidateMatrix.push(['Automatic publication on creation', 'DEFER — would remove the explicit-publish product decision 0.9.316 deliberately made; no evidence a Wanderer wants every local claim broadcast without an explicit act.']);
@@ -486,9 +486,9 @@ async function runTests() {
     // milestones predate.
     // ===============================================================
     {
-        const publisherCode = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
+        const publisherCode = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'));
         assert(!/RoleProviderPreference|RoleProviderRole|providerKey/.test(publisherCode),
-            'E1. application/NostrPlaceNamingDiscoveryPublisher.js references no provider-preference vocabulary of any kind — built entirely after 0.9.293\'s own RoleProviderPreference existed, and still never touches it.');
+            'E1. application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js references no provider-preference vocabulary of any kind — built entirely after 0.9.293\'s own RoleProviderPreference existed, and still never touches it.');
 
         const roleProviderRoleSource = await rawSource('core/RoleProviderRole.js');
         assert(!/PlaceNaming/i.test(roleProviderRoleSource),
@@ -532,16 +532,16 @@ async function runTests() {
         // F2. Snapshot distribution: same pattern, its own publisher
         // class with a real production caller.
         const snapshotPublisherReferences = grepFiles('NostrSnapshotDiscoveryPublisher', ['application', 'ui']);
-        const snapshotNonSelf = snapshotPublisherReferences.filter((f) => f !== 'application/NostrSnapshotDiscoveryPublisher.js');
+        const snapshotNonSelf = snapshotPublisherReferences.filter((f) => f !== 'application/nostr/NostrSnapshotDiscoveryPublisher.js');
         assert(snapshotNonSelf.length > 0,
-            `F2. application/NostrSnapshotDiscoveryPublisher.js has at least one real, non-self production reference (found: ${snapshotNonSelf.join(', ')}) — unlike Place Naming's own publisher (Section A3), Snapshot's write side IS reachable from production composition.`);
+            `F2. application/nostr/NostrSnapshotDiscoveryPublisher.js has at least one real, non-self production reference (found: ${snapshotNonSelf.join(', ')}) — unlike Place Naming's own publisher (Section A3), Snapshot's write side IS reachable from production composition.`);
 
         // F3. HISTORICAL RECORD, SUPERSEDED BY 0.9.320. As of THIS
         // milestone, Place Naming distribution had zero composition-root
         // reference for its publish half — the one genuine structural
         // difference among the three arcs at the time. 0.9.320 closed
         // that difference: Place Naming now has a real composition-root
-        // reference too (application/PlaceNamingPublicationRuntimeComposition.js,
+        // reference too (application/placeNaming/PlaceNamingPublicationRuntimeComposition.js,
         // reused by ui/main.js), the identical "composed function only,
         // never a concrete class reference from ui/" shape Snapshot
         // distribution already holds (F2).
@@ -566,8 +566,8 @@ async function runTests() {
         // NostrSnapshotDiscoveryPublisher extends anything, and no
         // generic DecentralizedPublisher/NostrPublisher base class exists
         // for either to be pulled toward.
-        const placeNamingPublisherCode = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
-        const snapshotPublisherCode = codeOnlyLines(await rawSource('application/NostrSnapshotDiscoveryPublisher.js'));
+        const placeNamingPublisherCode = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'));
+        const snapshotPublisherCode = codeOnlyLines(await rawSource('application/nostr/NostrSnapshotDiscoveryPublisher.js'));
         assert(!placeNamingPublisherCode.includes('extends') && !snapshotPublisherCode.includes('extends'),
             'F5a. Neither domain\'s own publisher class is a subclass of anything.');
         const genericPublisherFiles = grepFiles('class.*DecentralizedPublisher\\|class.*NostrPublisher\\b', ['application']);
@@ -602,7 +602,7 @@ async function runTests() {
         const classification = 'REACHABLE_BUT_INTERNAL';
         assert(CAPABILITY_TAXONOMY.includes(classification),
             'G1. The classification assigned to the publisher is drawn from this codebase\'s own existing six-value taxonomy, not a new vocabulary invented here.');
-        assert(await sourceExists('application/NostrPlaceNamingDiscoveryPublisher.js'),
+        assert(await sourceExists('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'),
             'G1b. The file this classification describes still exists.');
         assert(grepCount('new NostrPlaceNamingDiscoveryPublisher(', ['tests']) >= 2,
             'G1c. It is exercised by at least two independent test files (0.9.316\'s own two, plus 0.9.317\'s convergence audit and this file) — "internal" describes reachability from a real UI, never test coverage, which is thorough.');
@@ -614,17 +614,17 @@ async function runTests() {
         // real caller somewhere, OR is this same, already-classified
         // publisher.
         const filesFromThisArc = [
-            'core/PlaceNamingDiscoveryEnvelope.js', 'application/NostrPlaceNamingDiscoveryPublisher.js',
-            'application/NostrPlaceNamingDiscoverySource.js', 'application/PlaceNamingClaimUseCase.js'
+            'core/PlaceNamingDiscoveryEnvelope.js', 'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js',
+            'application/placeNaming/NostrPlaceNamingDiscoverySource.js', 'application/placeNaming/PlaceNamingClaimUseCase.js'
         ];
         for (const file of filesFromThisArc) {
             assert(await sourceExists(file), `G2a. ${file} still exists.`);
         }
         const envelopeBuilderCallers = grepFiles('buildPlaceNamingDiscoveryEnvelope', ['application']).filter((f) => f !== 'core/PlaceNamingDiscoveryEnvelope.js');
-        assert(envelopeBuilderCallers.length === 1 && envelopeBuilderCallers[0] === 'application/NostrPlaceNamingDiscoveryPublisher.js',
+        assert(envelopeBuilderCallers.length === 1 && envelopeBuilderCallers[0] === 'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js',
             'G2b. buildPlaceNamingDiscoveryEnvelope() still has exactly its one 0.9.316 production caller — no second orphan producer was introduced since 0.9.317.');
 
-        console.log('✓ G: application/NostrPlaceNamingDiscoveryPublisher.js is explicitly classified REACHABLE_BUT_INTERNAL — built, correct, and thoroughly tested, but with zero composition-root callers (G1) — using this codebase\'s own existing taxonomy rather than left as an unclassified fact for a future milestone to rediscover. No other orphan was introduced across the 0.9.315-0.9.317 arc (G2).');
+        console.log('✓ G: application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js is explicitly classified REACHABLE_BUT_INTERNAL — built, correct, and thoroughly tested, but with zero composition-root callers (G1) — using this codebase\'s own existing taxonomy rather than left as an unclassified fact for a future milestone to rediscover. No other orphan was introduced across the 0.9.315-0.9.317 arc (G2).');
     }
 
     // ===============================================================

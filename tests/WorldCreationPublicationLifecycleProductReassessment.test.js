@@ -13,18 +13,18 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Publication } from '../publisher/Publication.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { ForkPublishedWorldUseCase } from '../application/ForkPublishedWorldUseCase.js';
-import { ForkFailureReason } from '../application/ForkFailureReason.js';
-import { CreateDocumentManagerUseCase } from '../application/CreateDocumentManagerUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { DocumentManifest } from '../application/DocumentManifest.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { ForkPublishedWorldUseCase } from '../application/publication/ForkPublishedWorldUseCase.js';
+import { ForkFailureReason } from '../application/document/ForkFailureReason.js';
+import { CreateDocumentManagerUseCase } from '../application/document/CreateDocumentManagerUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { DocumentManifest } from '../application/document/DocumentManifest.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { LoadPublishedWorldSessionUseCase } from '../application/LoadPublishedWorldSessionUseCase.js';
+import { LoadPublishedWorldSessionUseCase } from '../application/publication/LoadPublishedWorldSessionUseCase.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.577 — World Creation & Publication Lifecycle Product Reassessment.
@@ -32,7 +32,7 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 // 0.9.576 closed World identity + session lifecycle, and landed the
 // central fact this milestone leans on throughout: in this codebase, a
 // Document has no id of its own — its only identity IS document.world.id
-// (application/DocumentCloneService.js's own header states this
+// (application/document/DocumentCloneService.js's own header states this
 // outright). This milestone asks the next, adjacent question 0.9.576's
 // own closing note named but deliberately left open: when a Wanderer
 // actually CREATES a World, EDITS it, and PUBLISHES it, does the system
@@ -41,11 +41,11 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 // coherent across create -> edit -> publish -> fork -> reload?
 //
 // Same structural constraint 0.9.574/0.9.575/0.9.576 already
-// established governs this file too: application/WorldNavigationSession.js
+// established governs this file too: application/world/WorldNavigationSession.js
 // (the real, live World View engine) transitively imports
 // renderer/Renderer.js, which imports `three` — not installed in this
 // checkout (reconfirmed directly for this milestone: `node
-// --input-type=module -e "import('./application/WorldNavigationSession.js")"`
+// --input-type=module -e "import('./application/world/WorldNavigationSession.js")"`
 // fails with "Cannot find package 'three'", and even
 // tests/RepositoryPublicationLifecycleProductReassessment.test.js — an
 // EARLIER milestone that imports it directly — fails to run standalone
@@ -55,7 +55,7 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 // citation (readSource() + exact line quotes), never by live import —
 // same discipline 0.9.576 already used. Everywhere else — core/Document.js,
 // core/World.js, core/DocumentMetadata.js, core/PlacementRecord.js,
-// application/CreateDocumentManagerUseCase.js, DocumentManager.js,
+// application/document/CreateDocumentManagerUseCase.js, DocumentManager.js,
 // SaveDocumentUseCase.js, PublishDocumentUseCase.js,
 // ForkDocumentUseCase.js, ForkPublishedWorldUseCase.js,
 // DocumentCloneService.js, publisher/LocalPublisherProvider.js,
@@ -456,7 +456,7 @@ async function main() {
         // F4. The sibling entry point — ForkDocumentUseCase, used for
         // forking a raw (possibly unpublished) saved document by id —
         // shares the exact same guarantees via the same
-        // DocumentCloneService (application/DocumentCloneService.js's
+        // DocumentCloneService (application/document/DocumentCloneService.js's
         // own header: "the shared core of both 'Duplicate' ... and
         // 'Fork'"). Exercised here against a saved (never published)
         // draft, distinct from the Publication-based fork above.
@@ -473,7 +473,7 @@ async function main() {
         // F5. A REJECTED fork must never mint a phantom identity: a
         // Publication under a no-derivatives license (forkAllowed:
         // false) is refused outright, with a structural reason code
-        // (application/ForkFailureReason.js), and leaves no new World
+        // (application/document/ForkFailureReason.js), and leaves no new World
         // behind at all — the strongest possible confirmation that
         // "Fork" and "a new identity now exists" are one atomic fact,
         // never two that could come apart under a rejection.
@@ -691,7 +691,7 @@ async function main() {
     {
         // J1. Zero import-level coupling: the real publish pipeline
         // never imports anything from collaboration/.
-        const publishSource = await readSource('application/PublishDocumentUseCase.js');
+        const publishSource = await readSource('application/publication/PublishDocumentUseCase.js');
         const providerSource = await readSource('publisher/LocalPublisherProvider.js');
         const publicationSource = await readSource('publisher/Publication.js');
         assert(!/from ['"].*collaboration/i.test(publishSource), 'J1a. PublishDocumentUseCase.js imports nothing from collaboration/.');
@@ -701,7 +701,7 @@ async function main() {
         // J2. Publication creation depends on nothing but the current,
         // synchronous state of the in-memory Document — whether that
         // state arrived via local edits or via a remote CRDT-merged
-        // edit (application/WorldNavigationSession.js's own header
+        // edit (application/world/WorldNavigationSession.js's own header
         // already states it plainly: publishDocument calls
         // PublishDocumentUseCase with "a duck-typed { document }
         // stand-in," identical regardless of how document got

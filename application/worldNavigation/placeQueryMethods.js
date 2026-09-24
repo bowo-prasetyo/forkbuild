@@ -467,7 +467,7 @@ export const placeQueryMethods = {
 
     // Every claim this replica has on file for any of `regions` —
     // gathered per (worldId, regionId), since
-    // application/LocalPlaceNamingClaimStore.js is scoped per World.
+    // application/placeNaming/LocalPlaceNamingClaimStore.js is scoped per World.
     // Returns [] when naming claims were never wired, the same
     // graceful-degradation posture getPlaceNamingClaims() itself keeps.
     _collectClaimsFor(regions) {

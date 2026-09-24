@@ -4,7 +4,7 @@ import { EventBus } from '../core/events/EventBus.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
 import { CompositionPreviewRenderer } from '../renderer/CompositionPreviewRenderer.js';
 import { CompositionPreviewState } from '../application/editor-state/CompositionPreviewState.js';
-import { TransformMath } from '../application/TransformMath.js';
+import { TransformMath } from '../application/editor/TransformMath.js';
 
 // 0.4.1 — Interactive Structure Composition UX: the rendering half.
 // tests/StructureCompositionPlacement.test.js covers everything that

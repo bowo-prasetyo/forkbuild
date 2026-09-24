@@ -3,15 +3,15 @@ import { readFile } from 'node:fs/promises';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView, describePublicationOutcome } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView, describePublicationOutcome } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -20,11 +20,11 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import {
     describeWorldEncounterMaterialLoadStatusLabel,
     describeWorldEncounterMaterialVerificationStatusLabel
-} from '../application/WorldEncounterMaterialInspectionView.js';
+} from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
 import {
     derivePublicationAuthorNameIdentityConvergence,
     describePublicationAuthorNameIdentityConvergence
-} from '../application/PublicationAuthorNameIdentityConvergence.js';
+} from '../application/publication/PublicationAuthorNameIdentityConvergence.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { stylesheetFiles } from './support/SourceFileGroups.js';
 
@@ -73,8 +73,8 @@ import { stylesheetFiles } from './support/SourceFileGroups.js';
 //               ownership — now reachable for Repository authorship
 //               under 0.9.339's merged, multi-identity discovery. Fixed
 //               with a small, detect-never-adjudicate convergence check
-//               (application/PublicationAuthorNameIdentityConvergence.js),
-//               the exact shape application/PublicationEvidenceConvergence.js
+//               (application/publication/PublicationAuthorNameIdentityConvergence.js),
+//               the exact shape application/publication/evidence/PublicationEvidenceConvergence.js
 //               (0.8.6) already established one concept over.
 //
 // VERDICT MODEL: PRODUCT_COMPLETE / PRODUCT_GAP / PRODUCT_AMBIGUITY /

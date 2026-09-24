@@ -26,7 +26,7 @@
 //
 // THUMBNAIL previews therefore carry an `image` — a local data: URL
 // produced by renderer/DocumentThumbnailRenderer.js from the real
-// Document, cached by application/PreviewService.js keyed on the
+// Document, cached by application/editor/PreviewService.js keyed on the
 // publication's own `contentHash` (same immutable content -> same
 // cached image; a genuinely different revision gets a different
 // key) — never anything transmitted, signed, or agreed upon between
@@ -62,7 +62,7 @@ export class DocumentPreview {
 
 // A rendered thumbnail — see renderer/DocumentThumbnailRenderer.js
 // (the only place that actually produces `dataUrl`) and
-// application/PreviewService.js (the only place that calls this).
+// application/editor/PreviewService.js (the only place that calls this).
 export function thumbnailPreview(dataUrl) {
     return new DocumentPreview({ type: PreviewType.THUMBNAIL, image: dataUrl });
 }

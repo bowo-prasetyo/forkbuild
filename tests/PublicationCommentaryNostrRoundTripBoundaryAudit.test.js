@@ -8,8 +8,8 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryDistributionEnvelope } from '../core/PublicationCommentaryDistributionEnvelope.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
-import { PublicationCommentaryDistributionPeerExchange } from '../application/PublicationCommentaryDistributionPeerExchange.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryDistributionPeerExchange } from '../application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js';
 
 import {
     PublicationCommentaryDeliveryStatus,
@@ -27,8 +27,8 @@ import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 // The two, real, unmodified, LOCATOR-shaped discovery classes this audit
 // deliberately never uses to carry Commentary — reconfirmed inert for this
 // job in Section A, exactly as 0.9.625/0.9.626 already found.
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQueryService.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
 
 // 0.9.627 — Publication Commentary Nostr Round-Trip Boundary Audit.
 //
@@ -52,8 +52,8 @@ import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQuerySe
 // backed) NIP-01 publish/subscribe round trip.
 //
 // THE HEADLINE FINDING, verified live below: Nostr's own DISCOVERY-SPECIFIC
-// classes (`application/NostrPublicationDiscoveryPublisher.js`,
-// `application/NostrDiscoveryQueryService.js`) remain exactly as
+// classes (`application/nostr/NostrPublicationDiscoveryPublisher.js`,
+// `application/nostr/NostrDiscoveryQueryService.js`) remain exactly as
 // ARCHITECTURAL_MISMATCH as 0.9.625/0.9.626 already found — they are
 // locator-envelope-only and never touch a Commentary envelope in this file
 // either. But one layer BELOW them, two already-existing, already-
@@ -110,7 +110,7 @@ import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQuerySe
 // below) was implemented next, exactly as named: 0.9.628 built "a single
 // small production adapter file wiring the two raw transport primitives
 // together exactly as this test's own ComposedNostrTransportCommentarySubstrate
-// does" (application/PublicationCommentaryNostrDistribution.js) plus its
+// does" (application/publication/commentary/PublicationCommentaryNostrDistribution.js) plus its
 // own admission boundary (application/
 // DiscoverPublicationCommentaryFromNostrUseCase.js) — a CONCRETE_PRODUCT_GAP
 // closed, never a NEW_SUBSTRATE_BOUNDARY crossed; Arweave remains untouched,
@@ -251,10 +251,10 @@ function erroringSocketCtor() {
 // `describesConformingPublicationCommentaryAsynchronousDeliverySubstrate()`
 // exactly like a real future adapter would be. It builds its own Nostr
 // event template (`{ kind, tags: [[tagName, discoveryTag]], content }`)
-// the identical way `application/NostrPublicationDiscoveryPublisher.js`'s
+// the identical way `application/nostr/NostrPublicationDiscoveryPublisher.js`'s
 // own header already documents for a locator envelope, held here for an
 // opaque Commentary envelope instead — never importing that file, or
-// `application/NostrDiscoveryQueryService.js`, at all (see Section H).
+// `application/nostr/NostrDiscoveryQueryService.js`, at all (see Section H).
 class ComposedNostrTransportCommentarySubstrate {
     constructor({ publish, queryImpl, relayUrl, discoveryTag, tagName = 't', kind = 1 }) {
         this._publish = publish;
@@ -360,7 +360,7 @@ async function run() {
 
         const readBack = await createNostrRelayQueryClient({ webSocketImpl: relay.FakeSocket })('wss://relay.example', { ids: [storedEvent.id] });
         assert(readBack.length === 1 && JSON.parse(readBack[0].content).nested.ok === true,
-            n('NostrRelayQueryClient likewise hands content back completely unexamined — no discovery-envelope parsing of any kind happens at this layer; that stays entirely application/NostrDiscoveryQueryService.js\'s own, separate, unused-here job'));
+            n('NostrRelayQueryClient likewise hands content back completely unexamined — no discovery-envelope parsing of any kind happens at this layer; that stays entirely application/nostr/NostrDiscoveryQueryService.js\'s own, separate, unused-here job'));
 
         console.log('✓ B: a Nostr event\'s own content field is a genuinely opaque application payload to both real transport primitives — "Nostr may transport Commentary; it must not become the authority defining Commentary" holds structurally, not merely by policy, because neither transport primitive parses content at all.');
     }
@@ -649,10 +649,10 @@ async function run() {
         assert(admitted === true && bobStore.getById(commentary.commentaryId) !== null,
             n('ADMITTED succeeds regardless — storage/PublicationCommentaryStore.js#save() performs no Publication-existence check of any kind; content validity and local referential availability stay genuinely independent, exactly as the requesting brief asked this section to prove'));
 
-        const canCommentSource = await readFile(new URL('../application/CanCommentOnPublicationUseCase.js', import.meta.url), 'utf8');
-        const exchangeSource = await readFile(new URL('../application/PublicationCommentaryDistributionExchange.js', import.meta.url), 'utf8');
+        const canCommentSource = await readFile(new URL('../application/publication/CanCommentOnPublicationUseCase.js', import.meta.url), 'utf8');
+        const exchangeSource = await readFile(new URL('../application/publication/commentary/PublicationCommentaryDistributionExchange.js', import.meta.url), 'utf8');
         assert(!/^\s*import[^\n]*CanCommentOnPublicationUseCase/m.test(exchangeSource),
-            n('application/PublicationCommentaryDistributionExchange.js (the real import path a remote envelope is admitted through) never IMPORTS CanCommentOnPublicationUseCase.js — that file\'s own header merely cites it in prose as "a separate, LOCAL-ONLY authoring-time gate, never a remote-admission gate"; this assertion confirms that separation holds structurally, not just in comment text'));
+            n('application/publication/commentary/PublicationCommentaryDistributionExchange.js (the real import path a remote envelope is admitted through) never IMPORTS CanCommentOnPublicationUseCase.js — that file\'s own header merely cites it in prose as "a separate, LOCAL-ONLY authoring-time gate, never a remote-admission gate"; this assertion confirms that separation holds structurally, not just in comment text'));
         assert(canCommentSource.length > 0, n('sanity: the file exists and was actually read, not silently skipped'));
 
         console.log('✓ F: a Commentary naming a publicationId the receiving device has no local record of is verified and ADMITTED exactly the same as any other — the Commentary is never discarded merely because the Publication is temporarily (or permanently) unavailable locally.');
@@ -698,14 +698,14 @@ async function run() {
         assert(!/NostrPublicationDiscoveryPublisher|NostrDiscoveryQueryService|parseDecentralizedDiscoveryEnvelope|describeDecentralizedDiscoveryEnvelope/.test(compositionSourceOnly),
             n('the composed substrate class this audit\'s own flagship uses never references either discovery-specific class or the locator-envelope parser/describer at all — Commentary travels through the raw transport layer exclusively'));
 
-        const peerExchangeSource = await readFile(new URL('../application/PublicationCommentaryDistributionPeerExchange.js', import.meta.url), 'utf8');
+        const peerExchangeSource = await readFile(new URL('../application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js', import.meta.url), 'utf8');
         assert(!/Nostr|Arweave/i.test(peerExchangeSource),
             n('the existing WebRTC peer exchange class still imports and references nothing Nostr- or Arweave-shaped — the live-dissemination path remains entirely unaware of this audit'));
 
-        const nostrDiscoveryPublisherSource = await readFile(new URL('../application/NostrPublicationDiscoveryPublisher.js', import.meta.url), 'utf8');
+        const nostrDiscoveryPublisherSource = await readFile(new URL('../application/nostr/NostrPublicationDiscoveryPublisher.js', import.meta.url), 'utf8');
         assert(!/Commentary/.test(nostrDiscoveryPublisherSource),
             n('the real NostrPublicationDiscoveryPublisher.js source still contains no reference to Commentary whatsoever'));
-        const nostrDiscoveryQueryServiceSource = await readFile(new URL('../application/NostrDiscoveryQueryService.js', import.meta.url), 'utf8');
+        const nostrDiscoveryQueryServiceSource = await readFile(new URL('../application/nostr/NostrDiscoveryQueryService.js', import.meta.url), 'utf8');
         assert(!/Commentary/.test(nostrDiscoveryQueryServiceSource),
             n('the real NostrDiscoveryQueryService.js source likewise contains no reference to Commentary whatsoever — this audit never made the existing Publication discovery provider responsible for Commentary retrieval'));
 
@@ -732,7 +732,7 @@ async function run() {
         const relaySetConfigSource = await readFile(new URL('../storage/NostrPublicationRelaySetConfigurationStore.js', import.meta.url), 'utf8');
         assert(relaySetConfigSource.includes('relayUrls'),
             n('storage/NostrPublicationRelaySetConfigurationStore.js already holds a Wanderer\'s own configured LIST of relay urls — a relay-set abstraction genuinely exists in this codebase today, for Publication distribution; this audit leaves it untouched and never wires Commentary to it'));
-        const multiRelayOrchestratorSource = await readFile(new URL('../application/NostrMultiRelayPublicationDistributionOrchestrator.js', import.meta.url), 'utf8');
+        const multiRelayOrchestratorSource = await readFile(new URL('../application/nostr/NostrMultiRelayPublicationDistributionOrchestrator.js', import.meta.url), 'utf8');
         assert(/fan.?out/i.test(multiRelayOrchestratorSource),
             n('an explicit multi-relay FAN-OUT policy already exists for Publication discovery ANNOUNCEMENT (0.9.444) — prior art this audit deliberately does not extend to Commentary; per the requesting brief, "selection is not fan-out, and configuration is not resilience," and no new ranking/fallback policy is introduced here'));
 
@@ -785,7 +785,7 @@ async function run() {
         // Bob comes online later. He was never told an event id (a
         // locator) out of band — only the discoveryTag convention both
         // sides already share (the identical "discoveryTag, never an
-        // envelope field" pattern application/NostrPublicationDiscoveryPublisher.js's
+        // envelope field" pattern application/nostr/NostrPublicationDiscoveryPublisher.js's
         // own header already documents, held here for Commentary).
         const bobComposition = makeComposition({ relay, extension: fakeExtension('journey-bob'), discoveryTag: sharedDiscoveryTag });
         const discovered = await bobComposition.retrieveByDiscoveryTag();
@@ -884,9 +884,9 @@ async function run() {
         assert(verdicts['Existing discovery-specific classes (NostrPublicationDiscoveryPublisher / NostrDiscoveryQueryService)'] === 'ARCHITECTURAL_MISMATCH',
             n('VERDICT: the discovery-specific classes remain a mismatch, reconfirmed live in Section A/H — never repurposed'));
         assert(verdicts['Relay durability: does one relay\'s OK == PERSISTENTLY_PUBLISHED in the contract\'s own strong sense'] === 'SEMANTIC_GAP',
-            n('VERDICT: a semantic gap exists — a relay\'s own OK acknowledgment, the only signal this milestone\'s own transport primitives ever observe, is documented by application/NostrPublicationDiscoveryPublisher.js\'s own existing header as meaning only "the relay accepted this event," explicitly NOT "the event is retained, confirmed, or ever actually queryable again"'));
+            n('VERDICT: a semantic gap exists — a relay\'s own OK acknowledgment, the only signal this milestone\'s own transport primitives ever observe, is documented by application/nostr/NostrPublicationDiscoveryPublisher.js\'s own existing header as meaning only "the relay accepted this event," explicitly NOT "the event is retained, confirmed, or ever actually queryable again"'));
 
-        const nostrPublisherHeader = await readFile(new URL('../application/NostrPublicationDiscoveryPublisher.js', import.meta.url), 'utf8');
+        const nostrPublisherHeader = await readFile(new URL('../application/nostr/NostrPublicationDiscoveryPublisher.js', import.meta.url), 'utf8');
         assert(nostrPublisherHeader.includes('is ever actually retained'),
             n('the exact, pre-existing sentence this SEMANTIC_GAP verdict rests on is really in the codebase today, not asserted fresh by this audit: "...appears in a relay\'s own query results, or is ever actually retained. A successful publish() means only \'the relay accepted this event\'..."'));
 

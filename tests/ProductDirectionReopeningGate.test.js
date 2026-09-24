@@ -279,7 +279,7 @@ async function run() {
         const iceConfig = await readSource('core/IceServerConfiguration.js');
         const notificationEventCode = await readSource('core/NotificationEvent.js');
         const sessionCode = await readSource('collaboration/CollaborationSession.js');
-        const searchCode = await readSource('application/SearchPublicationsUseCase.js');
+        const searchCode = await readSource('application/publication/SearchPublicationsUseCase.js');
         const rendezvousConfig = await readSource('core/RendezvousConfiguration.js');
         const uiFilesForCollab = listFiles(['ui']);
         const uiTextForCollab = await joinedSource(uiFilesForCollab);

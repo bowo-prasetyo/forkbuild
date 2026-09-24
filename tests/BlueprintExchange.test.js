@@ -5,17 +5,17 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Structure } from '../core/Structure.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
-import { CopyStructureIntoDocumentUseCase } from '../application/CopyStructureIntoDocumentUseCase.js';
-import { CreateStructureFromSelectionUseCase } from '../application/CreateStructureFromSelectionUseCase.js';
-import { LocalStructureLibraryStore } from '../application/LocalStructureLibraryStore.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { buildBlueprintPackage, CURRENT_SCHEMA_VERSION, BLUEPRINT_KIND } from '../application/BlueprintPackage.js';
-import { validateBlueprintPackage, BlueprintPackageError } from '../application/BlueprintImportValidator.js';
-import { ExportBlueprintUseCase } from '../application/ExportBlueprintUseCase.js';
-import { ImportBlueprintUseCase } from '../application/ImportBlueprintUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
+import { CopyStructureIntoDocumentUseCase } from '../application/editor/CopyStructureIntoDocumentUseCase.js';
+import { CreateStructureFromSelectionUseCase } from '../application/editor/CreateStructureFromSelectionUseCase.js';
+import { LocalStructureLibraryStore } from '../application/editor/LocalStructureLibraryStore.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { buildBlueprintPackage, CURRENT_SCHEMA_VERSION, BLUEPRINT_KIND } from '../application/blueprint/BlueprintPackage.js';
+import { validateBlueprintPackage, BlueprintPackageError } from '../application/blueprint/BlueprintImportValidator.js';
+import { ExportBlueprintUseCase } from '../application/blueprint/ExportBlueprintUseCase.js';
+import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprintUseCase.js';
 
 // 0.4.6 — Blueprint Sharing & Exchange.
 //
@@ -23,7 +23,7 @@ import { ImportBlueprintUseCase } from '../application/ImportBlueprintUseCase.js
 // extracted it: Alice's Personal Structure Library is StorageProvider-
 // backed, and StorageProvider is per-device. This milestone is the
 // mechanism that turns a Structure into a PORTABLE artifact — a plain
-// JSON blueprint package (application/BlueprintPackage.js) that can leave
+// JSON blueprint package (application/blueprint/BlueprintPackage.js) that can leave
 // Alice's device and become an ordinary "My Structures" entry on Bob's,
 // without ever becoming World content:
 //

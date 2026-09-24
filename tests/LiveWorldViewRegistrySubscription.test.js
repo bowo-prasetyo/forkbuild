@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
@@ -273,7 +273,7 @@ async function run() {
     //
     // 0.9.20 note: assertion 23 below no longer bans every `.origin`
     // occurrence outright. 0.9.19 deliberately built
-    // `application/WorldEncounterSelectionOutcome.js` (and 0.9.19's own
+    // `application/worldEncounter/WorldEncounterSelectionOutcome.js` (and 0.9.19's own
     // `WorldEncounterSelectionResolution.js` underneath it) as the one
     // sanctioned seam through which THIS component may learn provenance
     // — see that file's own header, "the choice belongs at the

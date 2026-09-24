@@ -64,7 +64,7 @@
 //               ('w', 'S', 'Alt', 'Shift', ...). Compared
 //               case-insensitively, matching every other raw-key
 //               comparison already in this codebase (see
-//               application/AvatarMovementController.js#_setKey).
+//               application/avatar/AvatarMovementController.js#_setKey).
 //   type      — 'keydown' or 'keyup'. Anything else is treated as
 //               'keydown', matching this codebase's "degrade
 //               gracefully" posture for malformed input.

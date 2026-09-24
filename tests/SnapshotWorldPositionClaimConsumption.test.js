@@ -1,17 +1,17 @@
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { resolveSnapshotWorldPositionClaim } from '../application/SnapshotWorldPositionClaim.js';
-import { SnapshotWorldPositionClaimOutcome } from '../application/SnapshotWorldPositionClaimOutcome.js';
-import { resolveSnapshotWorldPlacement } from '../application/SnapshotWorldPlacement.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { SnapshotCandidateMaterializationOutcome } from '../application/SnapshotCandidateMaterializationOutcome.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { resolveSnapshotWorldPositionClaim } from '../application/snapshot/placement/SnapshotWorldPositionClaim.js';
+import { SnapshotWorldPositionClaimOutcome } from '../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
+import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { SnapshotCandidateMaterializationOutcome } from '../application/snapshot/materialization/SnapshotCandidateMaterializationOutcome.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
@@ -23,7 +23,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //
 // 0.9.171 taught a Snapshot discovery candidate to optionally CARRY a
 // publisher's own `publicationId`/`claimedPosition` claim; nothing has ever
-// CONSUMED one — `application/SnapshotWorldPlacement.js` (0.9.159) remained
+// CONSUMED one — `application/snapshot/placement/SnapshotWorldPlacement.js` (0.9.159) remained
 // entirely unaware Nostr, or a position claim, exist at all. This suite
 // proves the narrow seam that closes that gap: `application/
 // SnapshotWorldPositionClaim.js#resolveSnapshotWorldPositionClaim()`, and
@@ -595,20 +595,20 @@ async function run() {
     {
         const { readFile } = await import('node:fs/promises');
 
-        const claimSource = await readFile(new URL('../application/SnapshotWorldPositionClaim.js', import.meta.url), 'utf8');
+        const claimSource = await readFile(new URL('../application/snapshot/placement/SnapshotWorldPositionClaim.js', import.meta.url), 'utf8');
         const claimImportLines = claimSource.split('\n').filter((line) => line.trim().startsWith('import '));
         assert(!claimImportLines.some((line) => /PlacementRegistry|SpatialIndex|ContentStore|WorldNavigationSession|NostrSnapshotDiscoveryQueryService|NostrSnapshotDiscoveryPublisher|Arweave|Renderer|WorldRenderer|SnapshotWorldPlacement/.test(line)),
-            '1. resolveSnapshotWorldPositionClaim() imports no I/O machinery, and never imports application/SnapshotWorldPlacement.js itself (never Nostr, never a placement lookup)');
+            '1. resolveSnapshotWorldPositionClaim() imports no I/O machinery, and never imports application/snapshot/placement/SnapshotWorldPlacement.js itself (never Nostr, never a placement lookup)');
         assert(!claimSource.includes('fetch(') && !claimSource.includes('await '),
             '2. resolveSnapshotWorldPositionClaim() performs no network/async I/O — it is a plain synchronous function');
 
-        // application/SnapshotWorldPlacement.js remains completely
+        // application/snapshot/placement/SnapshotWorldPlacement.js remains completely
         // unmodified/unaware of Nostr or a claim of any kind — the
         // milestone's own promise, "given a resolved placement input,"
         // never taught to understand Nostr.
-        const placementSource = await readFile(new URL('../application/SnapshotWorldPlacement.js', import.meta.url), 'utf8');
+        const placementSource = await readFile(new URL('../application/snapshot/placement/SnapshotWorldPlacement.js', import.meta.url), 'utf8');
         assert(!/nostr|claim|publicationid.*claimedposition/i.test(placementSource.replace(/\/\/.*$/gm, '').replace(/^\s*\*.*$/gm, '')),
-            '3. application/SnapshotWorldPlacement.js remains entirely unaware of Nostr or a position claim — it is never modified by this milestone');
+            '3. application/snapshot/placement/SnapshotWorldPlacement.js remains entirely unaware of Nostr or a position claim — it is never modified by this milestone');
 
         // No new verification vocabulary anywhere in the new domain files.
         assert(!/verified|trusted|authentic/i.test(claimSource.replace(/\/\/.*$/gm, '').replace(/^\s*\*.*$/gm, '')),
@@ -626,7 +626,7 @@ async function run() {
             '5. useClaimedSnapshotPosition() never calls the resolution or materialization command itself');
         assert(body.includes('resolveSnapshotWorldPositionClaim'), '6. useClaimedSnapshotPosition() is the one call site of resolveSnapshotWorldPositionClaim()');
 
-        console.log('✓ Section K: structural sweep — no I/O, no cryptographic re-verification, application/SnapshotWorldPlacement.js untouched, no new verification vocabulary');
+        console.log('✓ Section K: structural sweep — no I/O, no cryptographic re-verification, application/snapshot/placement/SnapshotWorldPlacement.js untouched, no new verification vocabulary');
     }
 
     console.log('\n✅ All Decentralized Snapshot Position Claim Consumption tests passed.');

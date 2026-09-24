@@ -38,7 +38,7 @@ import { isNonEmptyString } from '../utils/typeGuards.js';
 // 0.9.74 vehicle id to mount onto; one has to be minted for whatever
 // brand-new VehicleInstance is about to be created. That is an
 // application-layer job (ordinarily
-// application/AvatarVehicleInteractionController.js, using
+// application/avatar/AvatarVehicleInteractionController.js, using
 // core/createId.js exactly like a hand-placed World/Building/Brick
 // already does — see that file's own header on why a formula-derived id
 // would be wrong here), never this file's. This function only ever
@@ -57,7 +57,7 @@ import { isNonEmptyString } from '../utils/typeGuards.js';
 // it is not (a stale selection — see AvatarInventory#resolve()'s own
 // header). This file still never picks an entry by type or any other
 // criterion of its own — selection itself is entirely
-// application/AvatarVehicleInteractionController.js's own job (its
+// application/avatar/AvatarVehicleInteractionController.js's own job (its
 // cycle-selection keys), never a rule this pure transition invents.
 
 export function deriveAvatarVehicleDeployTransition({
@@ -106,7 +106,7 @@ export function deriveAvatarVehicleDeployTransition({
 // Deliberately not yet: id minting or VehicleInstance construction (an
 // application-layer job — see this file's own header); registering a
 // deployed vehicle into any runtime store
-// (application/VehicleRuntimeInstances.js's own `add()` is the caller's
+// (application/world/VehicleRuntimeInstances.js's own `add()` is the caller's
 // job); constructing the resulting AvatarVehicleMount itself (the caller
 // already has core/AvatarVehicleMount.js's own `createAvatarVehicleMount()`
 // for that, once it has a real id); store (its own mirror-image file,

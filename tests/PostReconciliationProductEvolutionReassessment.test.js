@@ -363,18 +363,18 @@ async function run() {
         // this arc's Workspace produces. Investigated fresh, not assumed
         // away.
         const historyFiles = [
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimelineView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatisticsView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryExchange.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimelineView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryExchange.js'
+            'application/claimSnapshotReconciliation/decision/History.js',
+            'application/claimSnapshotReconciliation/decision/HistoryView.js',
+            'application/claimSnapshotReconciliation/decision/HistoryTimelineView.js',
+            'application/claimSnapshotReconciliation/decision/HistoryStatisticsView.js',
+            'application/claimSnapshotReconciliation/decision/HistoryDifference.js',
+            'application/claimSnapshotReconciliation/decision/HistorySynchronization.js',
+            'application/claimSnapshotReconciliation/decision/HistoryExchange.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/History.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistoryTimelineView.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistoryDifference.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistorySynchronization.js',
+            'application/claimSnapshotReconciliation/revalidationObservation/HistoryExchange.js'
         ];
         for (const file of historyFiles) {
             const source = await readSource(file);
@@ -412,9 +412,9 @@ async function run() {
         // live in 0.9.412 Section B) is itself built through this SAME
         // append-only history module's own append function, re-derived
         // fresh here rather than trusted from that file's own header.
-        const archiveSource = await readSource('application/PublicationObservationArchive.js');
+        const archiveSource = await readSource('application/publication/observationArchive/PublicationObservationArchive.js');
         assert(
-            /import\s*\{\s*appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry\s*\}\s*from\s*'\.\/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory\.js'/.test(archiveSource),
+            /import\s*\{\s*appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry\s*\}\s*from\s*'\.\.\/\.\.\/claimSnapshotReconciliation\/decision\/History\.js'/.test(archiveSource),
             n('F4. the archive\'s own reconciliationDecisionRecords collection — the exact collection the Leaderboard already reads (0.9.412 Section B) — is itself built through this history module\'s own append function; the underlying HISTORY DATA is not missing, only a dedicated timeline/statistics UI over it')
         );
 
@@ -433,7 +433,7 @@ async function run() {
         // this arc's own journey" — applies here, at greater scale.
         const convergence412 = await readSource('tests/PublisherSnapshotClaimRoundTripProductConvergenceAudit.test.js');
         assert(
-            convergence412.includes("a separate, pre-existing, unrelated feature — application/LeaderboardClaimHistory.js — not part of this arc\\'s own journey"),
+            convergence412.includes("a separate, pre-existing, unrelated feature — application/leaderboard/LeaderboardClaimHistory.js — not part of this arc\\'s own journey"),
             n('F6. 0.9.412\'s own precedent for the sibling claim-history feature — pre-existing, unrelated to this arc\'s own journey — is still on file, and this section applies the identical reasoning to the larger reconciliation-decision-history family')
         );
 
@@ -482,7 +482,7 @@ async function run() {
     {
         // Within the reconciliation family itself: "selected" is a
         // mechanical candidate-selection outcome, not an endorsement.
-        const reconciliationSource = await readSource('application/PublisherLeaderboardClaimSnapshotReconciliation.js');
+        const reconciliationSource = await readSource('application/claimSnapshotReconciliation/ReconciliationCandidate.js');
         assert(
             reconciliationSource.includes('INVALID_SELECTION') && /selected:\s*true/.test(reconciliationSource),
             n('H1. `selected` on a reconciliation candidate is a plain boolean produced by mechanical selection logic (a candidate either matches the plan\'s own selection rule or it produces INVALID_SELECTION) — never a trust or endorsement flag')

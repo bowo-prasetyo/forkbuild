@@ -1,5 +1,5 @@
-import { IpfsRemotePublicationState } from '../../../application/IpfsRemotePublicationState.js';
-import { sanitizeDistributionErrorMessage } from '../../../application/DistributionErrorMessageSanitizer.js';
+import { IpfsRemotePublicationState } from '../../../application/ipfs/IpfsRemotePublicationState.js';
+import { sanitizeDistributionErrorMessage } from '../../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 
 // Distribution and Snapshot commands handed to WorldEncounterCanvas and
 // OwnPublicationPanel: each wraps an app-wide command with this World's material.

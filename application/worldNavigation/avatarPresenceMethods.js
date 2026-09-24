@@ -1,14 +1,14 @@
-import { PresenceSyncService } from '../PresenceSyncService.js';
-import { LocalPresenceStore } from '../LocalPresenceStore.js';
-import { PresenceTrustBoundary } from '../PresenceTrustBoundary.js';
-import { RemoteAvatarRegistry } from '../RemoteAvatarRegistry.js';
+import { PresenceSyncService } from '../presence/PresenceSyncService.js';
+import { LocalPresenceStore } from '../presence/LocalPresenceStore.js';
+import { PresenceTrustBoundary } from '../presence/PresenceTrustBoundary.js';
+import { RemoteAvatarRegistry } from '../avatar/RemoteAvatarRegistry.js';
 import { DEFAULT_AVATAR_TEMPLATE_ID } from '../../core/AvatarProfile.js';
-import { AvatarProfileSyncService } from '../AvatarProfileSyncService.js';
-import { LocalAvatarProfileStore } from '../LocalAvatarProfileStore.js';
-import { AvatarProfileTrustBoundary } from '../AvatarProfileTrustBoundary.js';
-import { RemoteAvatarAppearanceRegistry } from '../RemoteAvatarAppearanceRegistry.js';
-import { AvatarInteractionSyncService } from '../AvatarInteractionSyncService.js';
-import { AvatarInteractionTrustBoundary } from '../AvatarInteractionTrustBoundary.js';
+import { AvatarProfileSyncService } from '../avatar/AvatarProfileSyncService.js';
+import { LocalAvatarProfileStore } from '../avatar/LocalAvatarProfileStore.js';
+import { AvatarProfileTrustBoundary } from '../avatar/AvatarProfileTrustBoundary.js';
+import { RemoteAvatarAppearanceRegistry } from '../avatar/RemoteAvatarAppearanceRegistry.js';
+import { AvatarInteractionSyncService } from '../avatar/AvatarInteractionSyncService.js';
+import { AvatarInteractionTrustBoundary } from '../avatar/AvatarInteractionTrustBoundary.js';
 import { summarizePresenceDiagnostics } from '../../core/PresenceDiagnosticsSummary.js';
 import { computeNearbyAvatars } from '../../core/AvatarProximity.js';
 import { AvatarInteractionState } from '../spatial-state/AvatarInteractionState.js';
@@ -16,9 +16,9 @@ import { SpatialSelectionState } from '../spatial-state/SpatialSelectionState.js
 import { isValidInteractionKind, AvatarInteractionKind } from '../../core/AvatarInteractionKind.js';
 import { canPerformInteraction } from '../../core/AvatarInteractionCooldown.js';
 import { toAvatarInteractionAdvertisement } from '../../core/AvatarInteractionAdvertisement.js';
-import { signAvatarInteractionAdvertisement } from '../AvatarInteractionSigning.js';
+import { signAvatarInteractionAdvertisement } from '../avatar/AvatarInteractionSigning.js';
 import { toAvatarProfileAdvertisement } from '../../core/AvatarProfileAdvertisement.js';
-import { signAvatarProfileAdvertisement } from '../AvatarProfileSigning.js';
+import { signAvatarProfileAdvertisement } from '../avatar/AvatarProfileSigning.js';
 import { computeCameraFraming, isValidCameraPerspective } from '../../core/CameraPerspective.js';
 import { computeFacingYawDegrees } from '../../core/AvatarFacing.js';
 

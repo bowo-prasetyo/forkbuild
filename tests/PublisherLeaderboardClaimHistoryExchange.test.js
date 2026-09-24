@@ -1,13 +1,13 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreatePublicationReferenceRecordUseCase } from '../application/CreatePublicationReferenceRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
-import { verifyPublisherLeaderboardSnapshotClaim } from '../application/PublisherLeaderboardSnapshotClaimVerification.js';
-import { exportPublisherLeaderboardSnapshotClaim } from '../application/PublisherLeaderboardSnapshotClaimExchange.js';
-import { LeaderboardClaimRecord } from '../application/LeaderboardClaimRecord.js';
-import { appendLeaderboardClaimHistoryEntry } from '../application/LeaderboardClaimHistory.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
+import { verifyPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js';
+import { exportPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { appendLeaderboardClaimHistoryEntry } from '../application/leaderboard/LeaderboardClaimHistory.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
 import {
     PublisherLeaderboardClaimHistoryExchangeProtocolVersion,
     PublisherLeaderboardClaimHistoryImportOutcome,
@@ -15,7 +15,7 @@ import {
     exportPublisherLeaderboardClaimHistory,
     importPublisherLeaderboardClaimHistory,
     applyPublisherLeaderboardClaimHistoryExchange
-} from '../application/PublisherLeaderboardClaimHistoryExchange.js';
+} from '../application/leaderboard/PublisherLeaderboardClaimHistoryExchange.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';

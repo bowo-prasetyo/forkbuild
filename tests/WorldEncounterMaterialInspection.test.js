@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import {
     inspectWorldEncounterMaterial
-} from '../application/WorldEncounterMaterialInspection.js';
-import { WorldEncounterMaterialLoadStatus, WorldEncounterMaterialSource } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus, WorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerification.js';
+} from '../application/worldEncounter/WorldEncounterMaterialInspection.js';
+import { WorldEncounterMaterialLoadStatus, WorldEncounterMaterialSource } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus, WorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 
 // 0.9.39 — World Encounter Material Inspection Orchestration.
 // See docs/Roadmap.md, "0.9.39 — World Encounter Material Inspection
@@ -302,7 +302,7 @@ async function run() {
     //     resolution, and no rank/trust/score vocabulary.
     // ---------------------------------------------------------------------
     {
-        const source = await readFile(new URL('../application/WorldEncounterMaterialInspection.js', import.meta.url), 'utf8');
+        const source = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialInspection.js', import.meta.url), 'utf8');
         const importLines = source.split('\n').filter((line) => line.trim().startsWith('import '));
         const executableCode = source.slice(source.indexOf('export async function'));
 

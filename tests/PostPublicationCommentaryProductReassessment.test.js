@@ -110,11 +110,11 @@ async function runTests() {
     {
         const domain = await rawSource('core/PublicationCommentary.js');
         const store = await rawSource('storage/PublicationCommentaryStore.js');
-        const addUseCase = await rawSource('application/AddPublicationCommentaryUseCase.js');
-        const getUseCase = await rawSource('application/GetPublicationCommentariesUseCase.js');
-        const canComment = await rawSource('application/CanCommentOnPublicationUseCase.js');
-        const navSession = await rawSource('application/WorldNavigationSession.js');
-        const createWorldView = await rawSource('application/CreateWorldViewUseCase.js');
+        const addUseCase = await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
+        const getUseCase = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
+        const canComment = await rawSource('application/publication/CanCommentOnPublicationUseCase.js');
+        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const createWorldView = await rawSource('application/world/CreateWorldViewUseCase.js');
         const panel = await rawSource('ui/components/OwnPublicationPanel.js');
 
         // A1a. Publication, not Document — the one architectural decision
@@ -131,9 +131,9 @@ async function runTests() {
         // A1c. Authenticated authorship — resolved from the identity
         // infrastructure, never accepted as caller input.
         assert(addUseCase.includes('resolveSigningIdentityId(this._identityProvider)'),
-            'A1c. application/AddPublicationCommentaryUseCase.js still resolves authorIdentityId from resolveSigningIdentityId(identityProvider), never from caller input (0.9.245).');
+            'A1c. application/publication/commentary/AddPublicationCommentaryUseCase.js still resolves authorIdentityId from resolveSigningIdentityId(identityProvider), never from caller input (0.9.245).');
         assert(!/input\.authorIdentityId|\{\s*authorIdentityId[,\s]/.test(codeOnlyLines(addUseCase)),
-            'A1c\'. application/AddPublicationCommentaryUseCase.js\'s own execute() still never destructures or reads an authorIdentityId from its input.');
+            'A1c\'. application/publication/commentary/AddPublicationCommentaryUseCase.js\'s own execute() still never destructures or reads an authorIdentityId from its input.');
 
         // A1d. Authorization — enforced BEFORE construction, via an
         // injected collaborator, never inlined. Searched within
@@ -144,9 +144,9 @@ async function runTests() {
         const authIdx = addUseCaseCode.indexOf('_canCommentOnPublicationUseCase.execute(');
         const constructIdx = addUseCaseCode.indexOf('new PublicationCommentary(');
         assert(authIdx !== -1 && constructIdx !== -1 && authIdx < constructIdx,
-            'A1d. application/AddPublicationCommentaryUseCase.js still calls canCommentOnPublicationUseCase.execute() strictly before constructing a PublicationCommentary — a denied request never reaches domain construction (0.9.246).');
+            'A1d. application/publication/commentary/AddPublicationCommentaryUseCase.js still calls canCommentOnPublicationUseCase.execute() strictly before constructing a PublicationCommentary — a denied request never reaches domain construction (0.9.246).');
         assert(canComment.includes('discoveryProvider.findById(publicationId)'),
-            'A1d\'. application/CanCommentOnPublicationUseCase.js still enforces "the Publication actually resolves through discovery" as its one real policy, reusing discoveryProvider rather than a new permission table (0.9.246).');
+            'A1d\'. application/publication/CanCommentOnPublicationUseCase.js still enforces "the Publication actually resolves through discovery" as its one real policy, reusing discoveryProvider rather than a new permission table (0.9.246).');
 
         // A1e. Read command — no identity/authorization dependency at
         // all, deliberately thinner than the write side. Checked against
@@ -154,18 +154,18 @@ async function runTests() {
         // of identityProvider by name, which would otherwise defeat a
         // raw substring check.
         assert(/constructor\s*\(\s*store\s*\)/.test(getUseCase) && !codeOnlyLines(getUseCase).includes('identityProvider'),
-            'A1e. application/GetPublicationCommentariesUseCase.js still takes only a store — no identityProvider, no authorization check on the read path (0.9.247).');
+            'A1e. application/publication/commentary/GetPublicationCommentariesUseCase.js still takes only a store — no identityProvider, no authorization check on the read path (0.9.247).');
 
         // A1f. Write command — the one orchestrator tying identity,
         // authorization, domain, and storage together.
         assert(/constructor\s*\(\s*store,\s*identityProvider,\s*canCommentOnPublicationUseCase\s*\)/.test(addUseCase),
-            'A1f. application/AddPublicationCommentaryUseCase.js still requires exactly store, identityProvider, and canCommentOnPublicationUseCase — the full write-side chain, nothing more (0.9.244-0.9.246).');
+            'A1f. application/publication/commentary/AddPublicationCommentaryUseCase.js still requires exactly store, identityProvider, and canCommentOnPublicationUseCase — the full write-side chain, nothing more (0.9.244-0.9.246).');
 
         // A1g. WorldNavigationSession — thin delegation, no reimplemented
         // logic, asymmetric failure posture (read degrades, write throws).
         assert(navSession.includes('return this._getPublicationCommentariesUseCase.execute({ publicationId });') &&
                navSession.includes('return this._addPublicationCommentaryUseCase.execute({ publicationId, content, commentaryId, createdAt });'),
-            'A1g. application/WorldNavigationSession.js#getPublicationCommentaries()/addPublicationCommentary() still delegate their entire body to the injected use cases (0.9.248; commentaryId/createdAt passthrough added 0.9.542, still pure delegation).');
+            'A1g. application/world/WorldNavigationSession.js#getPublicationCommentaries()/addPublicationCommentary() still delegate their entire body to the injected use cases (0.9.248; commentaryId/createdAt passthrough added 0.9.542, still pure delegation).');
 
         // A1h. WorldView composition root — the SAME storageProvider/
         // discoveryProvider/identityProvider every other local
@@ -173,7 +173,7 @@ async function runTests() {
         assert(createWorldView.includes('new PublicationCommentaryStore(storageProvider)') &&
                createWorldView.includes('new CanCommentOnPublicationUseCase(discoveryProvider)') &&
                /new AddPublicationCommentaryUseCase\(\s*publicationCommentaryStore,\s*identityProvider,\s*canCommentOnPublicationUseCase\s*\)/.test(createWorldView),
-            'A1h. application/CreateWorldViewUseCase.js still composes the commentary chain from the exact same storageProvider/discoveryProvider/identityProvider variables every other local collaborator in this method already shares — no second storage key, no second discovery or identity mechanism (0.9.248).');
+            'A1h. application/world/CreateWorldViewUseCase.js still composes the commentary chain from the exact same storageProvider/discoveryProvider/identityProvider variables every other local collaborator in this method already shares — no second storage key, no second discovery or identity mechanism (0.9.248).');
 
         // A1i. OwnPublicationPanel — the UI never imports the domain,
         // storage, or use-case classes directly; only the two thin
@@ -222,9 +222,9 @@ async function runTests() {
         // WorldNavigationSession/use-case composition — 0.9.249 Section E
         // proved this live with Alice/Bob/Alice; this is the structural
         // precondition that result depends on).
-        const addUseCase = await rawSource('application/AddPublicationCommentaryUseCase.js');
+        const addUseCase = await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
         assert(!/this\._authorIdentityId\s*=/.test(addUseCase),
-            'B4. application/AddPublicationCommentaryUseCase.js still caches no authorIdentityId on itself — resolveSigningIdentityId() runs fresh inside execute() every call, the precondition 0.9.249 Section E\'s Alice/Bob/Alice authorship-isolation proof depends on.');
+            'B4. application/publication/commentary/AddPublicationCommentaryUseCase.js still caches no authorIdentityId on itself — resolveSigningIdentityId() runs fresh inside execute() every call, the precondition 0.9.249 Section E\'s Alice/Bob/Alice authorship-isolation proof depends on.');
 
         // B5. UI state is not a second source of truth: OwnPublicationPanel
         // still re-queries rather than optimistically appending on a
@@ -268,26 +268,26 @@ async function runTests() {
         // CreateWorldViewUseCase, which itself constructs the real
         // WorldNavigationSession composition root.
         const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
-        const createWorldView = await rawSource('application/CreateWorldViewUseCase.js');
+        const createWorldView = await rawSource('application/world/CreateWorldViewUseCase.js');
         assert(worldView.includes('CreateWorldViewUseCase') && createWorldView.includes('new WorldNavigationSession('),
-            'C2. ui/views/WorldView.js still reaches application/CreateWorldViewUseCase.js, which still constructs a real WorldNavigationSession.');
+            'C2. ui/views/WorldView.js still reaches application/world/CreateWorldViewUseCase.js, which still constructs a real WorldNavigationSession.');
         capabilityRegister.push(['World Navigation', 'COMPLETE']);
 
         // C3. World Presence — refreshWorldPresenceActivity() wired into
         // WorldView, CreateAvatarPresenceSessionUseCase wired into
         // CreateWorldViewUseCase (0.9.217-0.9.219).
         assert(worldView.includes('session.refreshWorldPresenceActivity(') && createWorldView.includes('CreateAvatarPresenceSessionUseCase'),
-            'C3. ui/views/WorldView.js still calls session.refreshWorldPresenceActivity(), and application/CreateWorldViewUseCase.js still wires CreateAvatarPresenceSessionUseCase.');
+            'C3. ui/views/WorldView.js still calls session.refreshWorldPresenceActivity(), and application/world/CreateWorldViewUseCase.js still wires CreateAvatarPresenceSessionUseCase.');
         capabilityRegister.push(['World Presence', 'COMPLETE']);
 
         // C4. Vehicles — AvatarVehicleInteractionController/
         // AvatarVehicleMovementController imported and used by
         // WorldNavigationSession, referenced live in WorldView.
-        const navSession = await rawSource('application/WorldNavigationSession.js');
+        const navSession = await rawSource('application/world/WorldNavigationSession.js');
         assert(navSession.includes("import { AvatarVehicleInteractionController }") &&
                navSession.includes("import { AvatarVehicleMovementController }") &&
                worldView.includes('vehicleInteractionState'),
-            'C4. application/WorldNavigationSession.js still imports both vehicle controllers, and ui/views/WorldView.js still reads vehicleInteractionState() live.');
+            'C4. application/world/WorldNavigationSession.js still imports both vehicle controllers, and ui/views/WorldView.js still reads vehicleInteractionState() live.');
         capabilityRegister.push(['Vehicles', 'COMPLETE']);
 
         // C5. Publication — the publish workflow's own composition root,
@@ -296,13 +296,13 @@ async function runTests() {
         // CreatePublisherUseCase call.
         assert(createWorldView.includes("import { PublishDocumentUseCase }") &&
                editorView.includes('new CreatePublisherUseCase()'),
-            'C5. application/CreateWorldViewUseCase.js still imports PublishDocumentUseCase, and ui/views/EditorView.js still constructs a real CreatePublisherUseCase.');
+            'C5. application/world/CreateWorldViewUseCase.js still imports PublishDocumentUseCase, and ui/views/EditorView.js still constructs a real CreatePublisherUseCase.');
         capabilityRegister.push(['Publication', 'COMPLETE']);
 
         // C6. Snapshot — CreateExternalSnapshotPlacementUseCase reached
         // live from WorldView (0.9.215/0.9.216 baseline).
         assert(worldView.includes('CreateExternalSnapshotPlacementUseCase'),
-            'C6. ui/views/WorldView.js still references application/CreateExternalSnapshotPlacementUseCase.js live.');
+            'C6. ui/views/WorldView.js still references application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js live.');
         capabilityRegister.push(['Snapshot', 'COMPLETE']);
 
         // C7. Commentary — Section A/B above, in full.
@@ -318,7 +318,7 @@ async function runTests() {
             'C8a. ui/views/EditorView.js still references DocumentCommandPropagationUseCase directly.');
         const legacyCollabCallers = await constructorCallerCount('CollaborationSession', ['application', 'ui'], { excludeSuffix: 'CreateCollaborationUseCase.js' });
         assert(legacyCollabCallers === 0,
-            `C8b. collaboration/CollaborationSession.js still has zero "new CollaborationSession(" callers in application/ or ui/ outside application/CreateCollaborationUseCase.js (found ${legacyCollabCallers}) — the 0.9.241 Section B2 OBSOLETE_CANDIDATE finding still holds, unchanged, nothing deleted.`);
+            `C8b. collaboration/CollaborationSession.js still has zero "new CollaborationSession(" callers in application/ or ui/ outside application/document/CreateCollaborationUseCase.js (found ${legacyCollabCallers}) — the 0.9.241 Section B2 OBSOLETE_CANDIDATE finding still holds, unchanged, nothing deleted.`);
         capabilityRegister.push(['Collaboration', 'COMPLETE (legacy 0.2.7-0.2.9 authority protocol: OBSOLETE_CANDIDATE, unchanged since 0.9.241)']);
 
         // C9. Discovery — PublicationCatalogDiscoveryProvider constructed
@@ -451,10 +451,10 @@ async function runTests() {
 
         // D9. Commentary synchronization (live updates, polling,
         // subscriptions, decentralized propagation). Re-verifies the
-        // exact claim application/GetPublicationCommentariesUseCase.js's
+        // exact claim application/publication/commentary/GetPublicationCommentariesUseCase.js's
         // own 0.9.247 header and ui/components/OwnPublicationPanel.js's
         // own 0.9.248 header both make.
-        const getUseCase = await rawSource('application/GetPublicationCommentariesUseCase.js');
+        const getUseCase = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
         // ui/components/OwnPublicationPanel.js is a large file covering
         // unrelated Snapshot/Nostr/Arweave distribution features — a
         // whole-file check would false-positive on that legitimate,
@@ -466,7 +466,7 @@ async function runTests() {
         assert(refreshMethod && submitMethod, 'D9a. Both real commentary methods still exist on ui/components/OwnPublicationPanel.js in their expected shape.');
         const syncVocab = /subscri|\bpoll(?:ing)?\b|websocket|nostr/i;
         assert(!syncVocab.test(codeOnlyLines(getUseCase)) && !syncVocab.test(refreshMethod[0]) && !syncVocab.test(submitMethod[0]),
-            'D9b. Neither application/GetPublicationCommentariesUseCase.js\'s own CODE nor OwnPublicationPanel\'s own refreshPublicationCommentaries()/submitPublicationCommentary() method bodies contain any subscription, polling, WebSocket, or Nostr vocabulary — reads are one-shot, on mount and on Publication change, never live.');
+            'D9b. Neither application/publication/commentary/GetPublicationCommentariesUseCase.js\'s own CODE nor OwnPublicationPanel\'s own refreshPublicationCommentaries()/submitPublicationCommentary() method bodies contain any subscription, polling, WebSocket, or Nostr vocabulary — reads are one-shot, on mount and on Publication change, never live.');
         seamRegister.push(['synchronization', 'MISSING_DOMAIN_CAPABILITY — deliberately absent, one-shot reads only']);
 
         assert(seamRegister.length === 9,
@@ -513,9 +513,9 @@ async function runTests() {
             'core/PublicationCommentary.js',
             'core/PublicationCommentaryCollection.js',
             'storage/PublicationCommentaryStore.js',
-            'application/AddPublicationCommentaryUseCase.js',
-            'application/GetPublicationCommentariesUseCase.js',
-            'application/CanCommentOnPublicationUseCase.js'
+            'application/publication/commentary/AddPublicationCommentaryUseCase.js',
+            'application/publication/commentary/GetPublicationCommentariesUseCase.js',
+            'application/publication/CanCommentOnPublicationUseCase.js'
         ];
 
         for (const path of commentaryFiles) {
@@ -527,7 +527,7 @@ async function runTests() {
         // E2. WorldNavigationSession's own commentary methods never touch
         // CommandHistory, EditorSession, or the causal chain — they
         // delegate exclusively to the two commentary use cases.
-        const navSession = await rawSource('application/WorldNavigationSession.js');
+        const navSession = await rawSource('application/world/WorldNavigationSession.js');
         const getMethodMatch = navSession.match(/getPublicationCommentaries\(publicationId\) \{[\s\S]*?\n    \}/);
         const addMethodMatch = navSession.match(/addPublicationCommentary\(\{ publicationId, content, commentaryId, createdAt \}\) \{[\s\S]*?\n    \}/);
         assert(getMethodMatch && addMethodMatch, 'E2a. Both commentary methods still exist on WorldNavigationSession in their expected shape (addPublicationCommentary\'s own signature grew commentaryId/createdAt in 0.9.542 — see that method\'s own header).');

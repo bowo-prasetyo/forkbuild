@@ -1,9 +1,9 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { PublicationAnchorError } from '../application/PublicationAnchorValidator.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { AddPublicationAnchorUseCase } from '../application/AddPublicationAnchorUseCase.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
+import { PublicationAnchorError } from '../application/anchoring/PublicationAnchorValidator.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { AddPublicationAnchorUseCase } from '../application/anchoring/AddPublicationAnchorUseCase.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';

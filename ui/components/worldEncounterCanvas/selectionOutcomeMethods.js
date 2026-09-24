@@ -1,8 +1,8 @@
-import { describeWorldEncounterSelectionOutcomeFromRegistry } from '../../../application/WorldEncounterSelectionOutcome.js';
-import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry } from '../../../application/DecentralizedWorldEncounterLeadSelection.js';
-import { describeWorldEncounterPresentationSourceFamily, WorldEncounterPresentationSourceFamily } from '../../../application/WorldEncounterPresentation.js';
-import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../../../application/WorldEncounterMaterialInspectionView.js';
-import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../../application/SnapshotOutcomeInspectionView.js';
+import { describeWorldEncounterSelectionOutcomeFromRegistry } from '../../../application/worldEncounter/WorldEncounterSelectionOutcome.js';
+import { describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry } from '../../../application/worldEncounter/DecentralizedWorldEncounterLeadSelection.js';
+import { describeWorldEncounterPresentationSourceFamily, WorldEncounterPresentationSourceFamily } from '../../../application/worldEncounter/WorldEncounterPresentation.js';
+import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../../../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
+import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../../application/snapshot/SnapshotOutcomeInspectionView.js';
 
 // WorldEncounterCanvas methods: selection and decentralized-lead outcomes, and their labels.
 // Spread into the component's `methods`, so `this` is the component instance.
@@ -168,7 +168,7 @@ export const selectionOutcomeMethods = {
         return `${schemeLabel} ${shortContentHash(identifier)}`;
     },
     // Template-callable wrappers around
-    // application/WorldEncounterMaterialInspectionView.js (the runtime-compiled
+    // application/worldEncounter/WorldEncounterMaterialInspectionView.js (the runtime-compiled
     // template can't call module imports). No logic of their own.
     describeMaterialLoadStatusLabel(status) {
         return describeWorldEncounterMaterialLoadStatusLabel(status);
@@ -176,7 +176,7 @@ export const selectionOutcomeMethods = {
     describeMaterialVerificationStatusLabel(status) {
         return describeWorldEncounterMaterialVerificationStatusLabel(status);
     },
-    // Same wrappers for application/SnapshotOutcomeInspectionView.js.
+    // Same wrappers for application/snapshot/SnapshotOutcomeInspectionView.js.
     describeSnapshotResolutionLabel(outcome) {
         return describeSnapshotResolutionOutcomeLabel(outcome);
     },

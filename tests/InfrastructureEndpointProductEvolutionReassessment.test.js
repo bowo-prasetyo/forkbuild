@@ -88,9 +88,9 @@ async function run() {
         // constructor-injectable with its own relayUrl default, distinct
         // from the write-path publishers.
         const nostrReadPathFiles = [
-            'application/NostrDiscoveryQueryService.js',
-            'application/NostrSnapshotDiscoveryQueryService.js',
-            'application/NostrPlaceNamingDiscoverySource.js'
+            'application/nostr/NostrDiscoveryQueryService.js',
+            'application/nostr/NostrSnapshotDiscoveryQueryService.js',
+            'application/placeNaming/NostrPlaceNamingDiscoverySource.js'
         ];
         for (const file of nostrReadPathFiles) {
             const fileSource = await source(file);
@@ -98,9 +98,9 @@ async function run() {
             assert(/relayUrl = DEFAULT_RELAY_URL,/.test(fileSource), `A2. ${file}'s own constructor destructures relayUrl with a named, overridable default`);
         }
         const nostrWritePathFiles = [
-            'application/NostrPublicationDiscoveryPublisher.js',
-            'application/NostrSnapshotDiscoveryPublisher.js',
-            'application/NostrPlaceNamingDiscoveryPublisher.js'
+            'application/nostr/NostrPublicationDiscoveryPublisher.js',
+            'application/nostr/NostrSnapshotDiscoveryPublisher.js',
+            'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'
         ];
         for (const file of nostrWritePathFiles) {
             const fileSource = await source(file);
@@ -150,12 +150,12 @@ async function run() {
         // A6. Place Naming discovery has NO other discovery source of any
         // kind — Nostr is not merely A source there, it is the ONLY source.
         const placeNamingRuntimeFiles = [
-            'application/PlaceNamingDiscoveryRuntimeComposition.js',
-            'application/NostrPlaceNamingDiscoverySource.js'
+            'application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js',
+            'application/placeNaming/NostrPlaceNamingDiscoverySource.js'
         ];
         let placeNamingSourceClassCount = 0;
         {
-            const grepTargets = ['application/NostrPlaceNamingDiscoverySource.js'];
+            const grepTargets = ['application/placeNaming/NostrPlaceNamingDiscoverySource.js'];
             for (const file of grepTargets) {
                 const fileSource = await source(file);
                 if (/class \w*PlaceNamingDiscoverySource/.test(fileSource)) placeNamingSourceClassCount += 1;
@@ -170,7 +170,7 @@ async function run() {
         // call sites now receive a resolved, settings-backed gatewayUrl
         // (see docs/Roadmap.md, "0.9.665") rather than zero arguments; the
         // call-site COUNT this section actually cares about is unchanged.
-        const worldEncounterCompositionSource = await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
+        const worldEncounterCompositionSource = await source('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(!/ipfs/i.test(worldEncounterCompositionSource), 'A7. World Encounter material discovery composition never references IPFS — Local + Nostr + Arweave only');
         // AMENDED FURTHER BY 0.9.666 — IPFS Gateway Read Failover routes
         // both call sites through composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls)
@@ -222,7 +222,7 @@ async function run() {
         // `[]`, never an error — a Wanderer opening an encounter marker
         // whose only announced lead lives on Nostr sees no candidate at all,
         // indistinguishable from "nothing was ever published here."
-        const nostrDiscoverySource = await source('application/NostrDiscoveryQueryService.js');
+        const nostrDiscoverySource = await source('application/nostr/NostrDiscoveryQueryService.js');
         assert(/catch\s*\{\s*\n\s*return \[\];\s*\n\s*\}/.test(nostrDiscoverySource), 'B1. NostrDiscoveryQueryService.search() silently collapses a relay failure to []');
         impact.nostrRelay = {
             x: 'resolve a decentralized lead for a World Encounter, discover a Snapshot, or find a Place Naming claim — three separate live surfaces',
@@ -288,7 +288,7 @@ async function run() {
         // already had before 0.9.364 gave it a durable, user-facing home.
         // No provider registry, no routing table — one string, three
         // constructors, exactly Arweave's own starting shape.
-        const { NostrDiscoveryQueryService } = await import('../application/NostrDiscoveryQueryService.js');
+        const { NostrDiscoveryQueryService } = await import('../application/nostr/NostrDiscoveryQueryService.js');
         const overridden = new NostrDiscoveryQueryService({ queryImpl: async () => [], relayUrl: 'wss://my-own-relay.example' });
         assert(overridden.relayUrl === 'wss://my-own-relay.example', 'C1. a caller-supplied relayUrl genuinely overrides NostrDiscoveryQueryService\'s own default, live, not just by pattern');
 
@@ -333,7 +333,7 @@ async function run() {
         // drew, reconfirmed unchanged.
         const nostrRelayClientSource = await source('nostr/NostrRelayQueryClient.js');
         assert(nostrRelayClientSource.includes('EXACTLY ONE RELAY, ONE SUBSCRIPTION, PER CALL'), 'D1. NostrRelayQueryClient explicitly documents single-relay-per-call as deliberate, unchanged');
-        const nostrDiscoverySource = await source('application/NostrDiscoveryQueryService.js');
+        const nostrDiscoverySource = await source('application/nostr/NostrDiscoveryQueryService.js');
         assert(!/relayUrls\s*=/.test(nostrDiscoverySource), 'D1. NostrDiscoveryQueryService still takes one relayUrl, never a relayUrls list');
 
         // D2. Replacement, not fallback: the smallest semantic matching
@@ -387,7 +387,7 @@ async function run() {
         // NostrPlaceNamingDiscoverySource, and this milestone recommends
         // none be added — explicit replacement only, matching every
         // non-TURN candidate's own existing uniform behavior.
-        const nostrDiscoverySource = await source('application/NostrDiscoveryQueryService.js');
+        const nostrDiscoverySource = await source('application/nostr/NostrDiscoveryQueryService.js');
         assert(!/fallback|secondary.*relay|retry.*relay/i.test(nostrDiscoverySource), 'F2. NostrDiscoveryQueryService has no fallback/secondary-relay concept of any kind');
 
         console.log('✓ Section F: explicit replacement remains correct for Nostr relay — no automatic "try another relay" behavior exists today, and none should be added; TURN stays the one deliberate, contained exception');
@@ -463,13 +463,13 @@ async function run() {
             'ui/router/index.js',
             'ui/main.js',
             'storage/ArweaveGatewayConfigurationStore.js',
-            'application/SetArweaveGatewayConfigurationUseCase.js',
+            'application/settings/SetArweaveGatewayConfigurationUseCase.js',
             'core/ArweaveGatewayConfiguration.js'
         ]);
         const otherInfrastructureFiles = [
-            'application/NostrDiscoveryQueryService.js',
-            'application/NostrSnapshotDiscoveryQueryService.js',
-            'application/NostrPlaceNamingDiscoverySource.js',
+            'application/nostr/NostrDiscoveryQueryService.js',
+            'application/nostr/NostrSnapshotDiscoveryQueryService.js',
+            'application/placeNaming/NostrPlaceNamingDiscoverySource.js',
             'content/IpfsGatewayContentStore.js',
             'content/IpfsContentStore.js',
             'peer/IceServerConfig.js',

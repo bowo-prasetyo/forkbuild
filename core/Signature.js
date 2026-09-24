@@ -224,7 +224,7 @@ export const SignatureType = Object.freeze({
     // PUBLICATION_ANCHOR, it says nothing about whether the placed
     // content is true, well-formed, authored by anyone in particular,
     // or actually still being served this very moment — see
-    // application/SnapshotPlacementResolver.js for that check. Several
+    // application/snapshot/placement/SnapshotPlacementResolver.js for that check. Several
     // placements, from different placing identities, on different
     // storage backends, can all name the SAME contentHash, and none of
     // them is ever more authoritative than another — see core/
@@ -238,13 +238,13 @@ export const SignatureType = Object.freeze({
     // X itself asserts that the leaderboard snapshot fingerprinting to
     // `snapshotFingerprint` is the exact snapshot its `evidenceFingerprint`
     // and `policyVersion` reproduce" — a claim ABOUT a reproducible
-    // conclusion (application/PublisherLeaderboardSnapshot.js, 0.8.119),
+    // conclusion (application/leaderboard/PublisherLeaderboardSnapshot.js, 0.8.119),
     // never about the achievement evidence beneath it, and never a
     // second, competing verdict alongside application/
     // PublisherLeaderboardSnapshotVerification.js's own independent,
     // unsigned comparison (0.8.120). Signed with a did:key
     // identity/SigningIdentity.js identity ONLY — deliberately never with
-    // an application/PublisherIdentityRecord.js label, which carries no
+    // an application/publisher/PublisherIdentityRecord.js label, which carries no
     // cryptographic meaning at all; see core/PublisherLeaderboardSnapshotClaim.js's
     // own header, "Do not use PublisherIdentityRecord as the signer."
     // Several claims, from different signing identities, can all name the

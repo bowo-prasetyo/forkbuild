@@ -1,20 +1,20 @@
 import { computeContentHash } from '../serializer/contentHash.js';
-import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/IpfsPublicationRecord.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
 import {
     PublicationObservationArchiveFingerprintAlgorithm,
     fingerprintPublicationObservationArchive
-} from '../application/PublicationObservationArchiveFingerprint.js';
-import { describePublicationObservationArchiveFingerprint } from '../application/PublicationObservationArchiveFingerprintView.js';
-import { describePublicationObservationArchive } from '../application/PublicationObservationArchiveView.js';
-import { reconstructBitcoinAnchorDurableEvidence } from '../application/BitcoinAnchorDurableEvidenceView.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
+} from '../application/publication/observationArchive/PublicationObservationArchiveFingerprint.js';
+import { describePublicationObservationArchiveFingerprint } from '../application/publication/observationArchive/PublicationObservationArchiveFingerprintView.js';
+import { describePublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveView.js';
+import { reconstructBitcoinAnchorDurableEvidence } from '../application/anchoring/bitcoin/BitcoinAnchorDurableEvidenceView.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import {
     exportPublicationObservationArchive,
     importPublicationObservationArchive,
     recordPublicationObservationArchiveImport
-} from '../application/PublicationObservationArchiveExport.js';
+} from '../application/publication/observationArchive/PublicationObservationArchiveExport.js';
 
 // 0.8.84 — Durable Publication Archive Fingerprint.
 //
@@ -104,7 +104,7 @@ function run() {
         // storage/LocalStoragePublicationObservationArchive.js performs to
         // restore a replica's own prior state across a page reload, a
         // browser restart, or a file backup. THIS restore path — unlike
-        // application/PublicationObservationArchiveExport.js's own
+        // application/publication/observationArchive/PublicationObservationArchiveExport.js's own
         // `importPublicationObservationArchive()` UI action — never
         // relabels provenance (see tests/
         // PublicationObservationArchiveProvenance.test.js, Section J): it

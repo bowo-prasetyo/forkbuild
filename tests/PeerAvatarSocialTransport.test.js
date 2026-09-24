@@ -1,12 +1,12 @@
 import { AvatarInteractionKind } from '../core/AvatarInteractionKind.js';
 import { PresenceVisibility } from '../core/PresenceVisibility.js';
-import { PresenceVisibilityUseCase } from '../application/PresenceVisibilityUseCase.js';
-import { AvatarProfileVisibilityUseCase } from '../application/AvatarProfileVisibilityUseCase.js';
+import { PresenceVisibilityUseCase } from '../application/presence/PresenceVisibilityUseCase.js';
+import { AvatarProfileVisibilityUseCase } from '../application/avatar/AvatarProfileVisibilityUseCase.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -16,11 +16,11 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -28,10 +28,10 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { License, LicenseId } from '../core/License.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
 import { FriendshipState } from '../core/FriendshipState.js';
 
 // 0.2.59 — Peer-Based Avatar Social Transport.
@@ -49,9 +49,9 @@ import { FriendshipState } from '../core/FriendshipState.js';
 // flagship built those predicates from a hand-rolled test closure).
 //
 // core/PresenceIngestion.js, core/PresenceEquivocation.js, core/
-// PresenceReplayWindow.js, application/PresenceSyncService.js,
-// application/LocalPresenceStore.js, application/PresenceTrustBoundary.js,
-// application/AvatarProfileSyncService.js, application/
+// PresenceReplayWindow.js, application/presence/PresenceSyncService.js,
+// application/presence/LocalPresenceStore.js, application/presence/PresenceTrustBoundary.js,
+// application/avatar/AvatarProfileSyncService.js, application/
 // AvatarInteractionSyncService.js, and application/
 // AvatarInteractionTrustBoundary.js are every one of them completely
 // untouched by this milestone — this file never re-proves their own
@@ -59,7 +59,7 @@ import { FriendshipState } from '../core/FriendshipState.js';
 // AvatarAppearanceSync.test.js, tests/AvatarInteractionSync.test.js),
 // only that the TRANSPORT migration around them is real.
 //
-// This flagship deliberately mirrors application/CreateWorldViewUseCase.js's
+// This flagship deliberately mirrors application/world/CreateWorldViewUseCase.js's
 // OWN transport-construction shape (one PeerAvatarPresenceBroadcastProvider
 // per protocol, sharing one PeerMessageBus, wired with the SAME
 // presence/profile visibility policies and the SAME isFriend/hasFriend
@@ -169,7 +169,7 @@ async function runTests() {
     // FLAGSHIP — Alice, Bob, and Charlie over a REAL peer network,
     // ALL THREE avatar-social protocols (presence, profile,
     // interaction) riding ONE authenticated peer connection per pair,
-    // exactly the shape application/CreateWorldViewUseCase.js now
+    // exactly the shape application/world/CreateWorldViewUseCase.js now
     // builds. Alice: Presence=FRIENDS, Profile=PUBLIC (the default).
     // Bob: real, mutual FriendshipState.FRIEND with Alice. Charlie:
     // authenticated, but never a friend.
@@ -248,7 +248,7 @@ async function runTests() {
 
         // --- One PeerMessageBus per node, shared between friendship,
         // presence, profile, AND interaction on that node — exactly
-        // the substrate application/CreateWorldViewUseCase.js now
+        // the substrate application/world/CreateWorldViewUseCase.js now
         // builds for the live app (one bus, four protocols).
         const aliceBus = new PeerMessageBus();
         const bobBus = new PeerMessageBus();

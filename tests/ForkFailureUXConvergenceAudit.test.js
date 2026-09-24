@@ -18,14 +18,14 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { FindPublicationUseCase } from '../application/FindPublicationUseCase.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { ForkFailureReason } from '../application/ForkFailureReason.js';
+import { FindPublicationUseCase } from '../application/publication/FindPublicationUseCase.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { ForkFailureReason } from '../application/document/ForkFailureReason.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import ForkFailureDialog from '../ui/components/ForkFailureDialog.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
@@ -124,8 +124,8 @@ function publishLocally(document, identityProvider, storage) {
 }
 
 // Wraps an already-published Publication in a real decentralized
-// resolution round trip — application/PublicationResolver.js#publish()
-// then application/PublicationResolutionView.js#resolvePublicationView()
+// resolution round trip — application/publication/PublicationResolver.js#publish()
+// then application/publication/PublicationResolutionView.js#resolvePublicationView()
 // — modeling "this replica learned about the publication over a
 // peer/decentralized channel," independent of whether ITS OWN local
 // storage ever received the publish record (that's `originStorage`
@@ -614,7 +614,7 @@ async function run() {
         // Peer-discovered: identical wiring to Section B's real
         // peer-discovery path — a SEPARATE DecentralizedPublicationDiscoveryProvider
         // instance, standing in for "announced by a connected peer,"
-        // composed the SAME way application/CreateDiscoveryUseCase.js
+        // composed the SAME way application/discovery/CreateDiscoveryUseCase.js
         // itself composes local + decentralized discovery in production.
         const peerOriginStorage = new InMemoryStorageProvider();
         const peerDoc = createDocument('Peer-Discovered ND Work', 'kate', ndLicense);
@@ -673,7 +673,7 @@ async function run() {
             assert(message === fallback, `3. an unevidenced reason ("${guess}") produces the SAME generic fallback as null — no speculative branch exists for it.`);
         }
 
-        for (const file of ['application/ForkFailureReason.js', 'application/ForkDocumentUseCase.js', 'ui/components/ForkFailureDialog.js']) {
+        for (const file of ['application/document/ForkFailureReason.js', 'application/document/ForkDocumentUseCase.js', 'ui/components/ForkFailureDialog.js']) {
             const source = await readSource(file);
             assert(!/RETRYING|BLOCKED|FORK_FAILED|NETWORK_ERROR|TIMEOUT|NOT_FOUND|setInterval|retry\(/i.test(source),
                 `4. ${file} still introduces no retry loop, no persistent lifecycle state, and no speculative reason vocabulary.`);

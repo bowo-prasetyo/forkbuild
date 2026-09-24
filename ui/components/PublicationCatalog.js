@@ -1,6 +1,6 @@
 import { ref, computed, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
-import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
+import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
 import { PublicationQuery } from '../../core/PublicationQuery.js';
 import { PublicationSort } from '../../core/PublicationSort.js';
 import { GroupBy, groupPublications } from '../../core/PublicationGrouping.js';

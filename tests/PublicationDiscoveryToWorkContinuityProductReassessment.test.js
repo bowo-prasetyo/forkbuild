@@ -9,16 +9,16 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { LoadFailureReason } from '../application/LoadFailureReason.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { LoadFailureReason } from '../application/document/LoadFailureReason.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
@@ -343,7 +343,7 @@ async function runTests() {
 
         // D2. focusWorld() itself: session.focusDocument() (an in-place
         // camera/active-document move within the SAME live session — see
-        // application/WorldNavigationSession.js#focusDocument(), which
+        // application/world/WorldNavigationSession.js#focusDocument(), which
         // never remounts anything) + router.replace (not push — this is
         // explicitly a same-session reposition, not a fresh navigation
         // entry) + a spatial UI refresh. No observerLocalEncounterStore
@@ -449,7 +449,7 @@ async function runTests() {
     // added.
     // ===============================================================
     {
-        const storeSource = await rawSource('application/ObserverLocalEncounterStore.js');
+        const storeSource = await rawSource('application/worldEncounter/ObserverLocalEncounterStore.js');
         assert(!/\bdispose\s*\(/.test(storeSource) && !/\bdestroy\s*\(/.test(storeSource) && !/\bclear\s*\(/.test(storeSource), 'F1. ObserverLocalEncounterStore still exposes no dispose/destroy/clear method of any kind — its own lifecycle is still "lives and dies with the one instance holding it," unchanged since 0.9.552.');
 
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
@@ -622,7 +622,7 @@ async function runTests() {
         // structurally (never a thrown error a Wanderer could hit mid-
         // Explore).
         {
-            const worldNavSource = await rawSource('application/WorldNavigationSession.js');
+            const worldNavSource = await rawSource('application/world/WorldNavigationSession.js');
             const posStart = worldNavSource.indexOf('_getWorldPosition(documentId) {');
             const posEnd = worldNavSource.indexOf('\n    }', posStart);
             const posBody = worldNavSource.slice(posStart, posEnd);
@@ -711,7 +711,7 @@ async function runTests() {
         //
         // AMENDED BY 0.9.574 — Repository Publication Lifecycle &
         // Currency Product Reassessment, the "future milestone" Section
-        // J's own verdict named. application/LoadFailureReason.js now
+        // J's own verdict named. application/document/LoadFailureReason.js now
         // gives LoadDocumentUseCase a real error.reason, and
         // ui/views/EditorView.js's own toast branches on it rather than
         // interpolating err.message — this section now reconfirms the
@@ -724,7 +724,7 @@ async function runTests() {
             new LoadDocumentUseCase(new InMemoryStorageProvider()).execute({ load() {} }, 'some-internal-doc-id-42');
         } catch (e) { openError = e; }
         assert(openError.reason === LoadFailureReason.MATERIAL_UNAVAILABLE,
-            'I2b. AMENDED BY 0.9.574 — LoadDocumentUseCase now attaches a structural error.reason (application/LoadFailureReason.js) that EditorView.js branches on, rather than a Wanderer-facing toast being built by interpolating the use case\'s own internal class name and a raw storage identifier, the exact leak this section originally found.');
+            'I2b. AMENDED BY 0.9.574 — LoadDocumentUseCase now attaches a structural error.reason (application/document/LoadFailureReason.js) that EditorView.js branches on, rather than a Wanderer-facing toast being built by interpolating the use case\'s own internal class name and a raw storage identifier, the exact leak this section originally found.');
 
         console.log('✓ I — the observer-local actions panel itself communicates in ordinary vocabulary (title + plain verbs), holding the standard this arc has held to since 0.9.554. The one real presentation paper-cut this milestone originally found OUTSIDE that panel — a failed Open/Fork\'s toast/dialog leaking a use case\'s own internal class name and a raw storage identifier — was named, not fixed, here; AMENDED BY 0.9.574, which closed it (reconfirmed live, I2a/I2b).');
     }
@@ -819,7 +819,7 @@ first time in this arc.
       milestone's own scope into general Editor error-message hygiene, a
       separate, larger, cross-cutting concern (the codebase's own
       precedent for exactly that shape of fix already exists —
-      application/DistributionErrorMessageSanitizer.js — should a future
+      application/publication/distribution/DistributionErrorMessageSanitizer.js — should a future
       milestone take it on).
 
       AMENDED BY 0.9.574 — Repository Publication Lifecycle & Currency

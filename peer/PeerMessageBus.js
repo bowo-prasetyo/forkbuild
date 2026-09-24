@@ -10,7 +10,7 @@ const DUPLICATE_WINDOW_SIZE = 256;
 // 0.2.52 — "once Alice and Bob have an authenticated peer connection, how
 // do different decentralized application protocols safely share that
 // connection?" This is the multiplexing substrate the design doc asked
-// for, sitting directly on top of application/ConnectedPeer.js and
+// for, sitting directly on top of application/peer/ConnectedPeer.js and
 // nothing else: a protocol (Presence, Avatar Profile, Avatar Interaction,
 // a future World Event or chat) subscribes here ONCE, by a namespaced
 // `protocol` string, and receives messages from every attached peer that
@@ -38,7 +38,7 @@ const DUPLICATE_WINDOW_SIZE = 256;
 // from an unknown protocol. Authentication itself is peer/
 // PeerAuthenticationSession.js's job, completely unmodified by this
 // milestone; this class only ever reads its result via
-// application/ConnectedPeer.js#getLifecycleState().
+// application/peer/ConnectedPeer.js#getLifecycleState().
 //
 // Deliberately generic, transport-level hygiene only, per the design
 // doc's own #6: a malformed envelope, an oversized one, or a duplicate
@@ -59,8 +59,8 @@ export class PeerMessageBus {
     // detach function; also detaches itself automatically the moment the
     // peer's own lifecycle reaches CLOSED or FAILED — the same
     // structural "no separate cleanup call required" discipline
-    // application/ConnectedPeerRegistry.js already applies one layer
-    // down to application/ConnectedPeer.js itself. Attaching the same
+    // application/peer/ConnectedPeerRegistry.js already applies one layer
+    // down to application/peer/ConnectedPeer.js itself. Attaching the same
     // connectionId twice is a no-op that returns a working detach
     // function for it.
     attach(connectedPeer) {

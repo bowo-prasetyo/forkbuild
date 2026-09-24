@@ -6,22 +6,22 @@ import { Position } from '../core/Position.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStore.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
-import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION } from '../application/PlaceNamingClaimPublication.js';
+import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION } from '../application/placeNaming/PlaceNamingClaimPublication.js';
 import { buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 import { namingView as deriveNamingView } from '../core/PlaceNamingView.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { PlaceNamingDiscoveryMonitor } from '../application/PlaceNamingDiscoveryMonitor.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
-import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
+import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.264 — Place Naming Claim Adoption Lifecycle Audit.
@@ -828,7 +828,7 @@ async function runTests() {
         // all (not merely switched away from) — the claim must still
         // adopt correctly scoped to its own worldId, proving World-
         // identity protection is a property of the STORE's own
-        // worldId-keying (application/LocalPlaceNamingClaimStore.js), not
+        // worldId-keying (application/placeNaming/LocalPlaceNamingClaimStore.js), not
         // an accident of "the World happened to have been loaded once."
         {
             const neverLoadedClaim = signedClaim(alice, { worldId: 'world-never-loaded', regionId: 'region-9', name: 'Claim For An Unseen World' });
@@ -1140,14 +1140,14 @@ async function runTests() {
         const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const rawWorldViewCode = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const proximitySource = codeOnlyLines(await rawSource('core/PlaceNamingProximitySelection.js'));
-        const monitorSource = codeOnlyLines(await rawSource('application/PlaceNamingDiscoveryMonitor.js'));
+        const monitorSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingDiscoveryMonitor.js'));
         const envelopeSource = codeOnlyLines(await rawSource('core/PlaceNamingDiscoveryEnvelope.js'));
-        const orchestrationSource = codeOnlyLines(await rawSource('application/DiscoverPlaceNamingClaimsCommand.js'));
+        const orchestrationSource = codeOnlyLines(await rawSource('application/placeNaming/DiscoverPlaceNamingClaimsCommand.js'));
 
         // 91. discovery -> adopted: never.
         for (const [name, source] of [
             ['core/PlaceNamingProximitySelection.js', proximitySource],
-            ['application/PlaceNamingDiscoveryMonitor.js', monitorSource],
+            ['application/placeNaming/PlaceNamingDiscoveryMonitor.js', monitorSource],
             ['core/PlaceNamingDiscoveryEnvelope.js', envelopeSource]
         ]) {
             assert(!/importPlaceNamingClaim|importClaim\(|adoptNearbyPlaceNamingClaim/.test(source),
@@ -1164,7 +1164,7 @@ async function runTests() {
         // 93. orchestration (automatic discovery triggering) -> adopted:
         // never.
         assert(!/importPlaceNamingClaim|importClaim\(|adoptNearbyPlaceNamingClaim/.test(orchestrationSource),
-            '93. application/DiscoverPlaceNamingClaimsCommand.js never references adoption — the automatic discovery-triggering boundary cannot cause one either.');
+            '93. application/placeNaming/DiscoverPlaceNamingClaimsCommand.js never references adoption — the automatic discovery-triggering boundary cannot cause one either.');
 
         // 94. navigation -> adopted: never (the exact block, re-extracted
         // fresh here rather than trusted from Section J's own extraction,

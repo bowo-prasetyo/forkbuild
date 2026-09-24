@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
-import { AvatarTreeConstraint } from '../application/AvatarTreeConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
+import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
 import { AvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 import { AvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
@@ -15,19 +15,19 @@ import {
 } from '../core/AvatarVehicleMovementCapability.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { Position } from '../core/Position.js';
 
 // 0.9.86 — Ground Vehicle Movement Speed Capability.
 //
 // 0.9.85 (this same file's own predecessor,
 // tests/AvatarVehicleMovementCapabilityIntegration.test.js) proved that
-// application/AvatarMovementController.js could CONSUME a resolved
+// application/avatar/AvatarMovementController.js could CONSUME a resolved
 // AvatarVehicleMovementCapability, while deliberately keeping
 // GROUND_VEHICLE numerically identical to WALK. This milestone makes
 // the numeric difference 0.9.85 explicitly deferred: GROUND_VEHICLE now
@@ -56,12 +56,12 @@ import { Position } from '../core/Position.js';
 //   Section H: architectural regression — zero vehicle-specific
 //              branching (VehicleType.BICYCLE/MOTORCYCLE/CAR/DRONE, or
 //              a movementKind-branched speed multiplier) anywhere in
-//              application/AvatarMovementController.js or
+//              application/avatar/AvatarMovementController.js or
 //              core/AvatarMovementSimulation.js
 //
 // Central architectural claim under test throughout: movement
 // CAPABILITY, never vehicle IDENTITY, controls movement behavior.
-// application/AvatarMovementController.js reads exactly one new number
+// application/avatar/AvatarMovementController.js reads exactly one new number
 // off a resolved capability (`movementSpeed`) and hands it to the ONE
 // existing simulation function; it still has no idea a bicycle, a
 // motorcycle, a car, or a drone exists. See docs/Roadmap.md, 0.9.86.
@@ -72,7 +72,7 @@ import { Position } from '../core/Position.js';
 // produce byte-identical positions" assertion. Section H's own
 // architectural regression sweep is otherwise unchanged and still
 // passes unmodified — 0.9.87 changed zero lines in
-// application/AvatarMovementController.js or
+// application/avatar/AvatarMovementController.js or
 // core/AvatarMovementSimulation.js, exactly as this milestone's own
 // brief requires. See docs/Roadmap.md, 0.9.87.
 
@@ -576,7 +576,7 @@ async function runTests() {
     // Section H — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/AvatarMovementController.js', import.meta.url);
+        const sourceUrl = new URL('../application/avatar/AvatarMovementController.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -584,15 +584,15 @@ async function runTests() {
             .join('\n');
 
         assert(!/\bBICYCLE\b|\bMOTORCYCLE\b|\bCAR\b|\bDRONE\b/.test(codeOnly),
-            '23. application/AvatarMovementController.js never references BICYCLE/MOTORCYCLE/CAR/DRONE — it knows only about a resolved capability\'s own movementSpeed, never which vehicle produced it');
+            '23. application/avatar/AvatarMovementController.js never references BICYCLE/MOTORCYCLE/CAR/DRONE — it knows only about a resolved capability\'s own movementSpeed, never which vehicle produced it');
         assert(!codeOnly.includes('GROUND_VEHICLE') && !codeOnly.includes('AERIAL_VEHICLE'),
-            '24. application/AvatarMovementController.js never branches on a specific AvatarMovementCapabilityKind value to decide speed — it only ever reads the generic .movementSpeed number');
+            '24. application/avatar/AvatarMovementController.js never branches on a specific AvatarMovementCapabilityKind value to decide speed — it only ever reads the generic .movementSpeed number');
         assert(!codeOnly.includes('RUN_SPEED') && !codeOnly.includes('WALK_SPEED'),
-            '25. application/AvatarMovementController.js still defines no speed constant of its own');
+            '25. application/avatar/AvatarMovementController.js still defines no speed constant of its own');
         assert(codeOnly.includes('_resolvedMovementSpeed') && codeOnly.includes('movementSpeed'),
-            '26. application/AvatarMovementController.js does expose the _resolvedMovementSpeed() seam this milestone exists to add');
+            '26. application/avatar/AvatarMovementController.js does expose the _resolvedMovementSpeed() seam this milestone exists to add');
         assert(!/\*\s*2\b|\*=\s*2\b/.test(codeOnly),
-            '27. application/AvatarMovementController.js contains no hardcoded "double the speed" arithmetic of its own — running\'s own multiplier still lives entirely in core/AvatarMovementSimulation.js');
+            '27. application/avatar/AvatarMovementController.js contains no hardcoded "double the speed" arithmetic of its own — running\'s own multiplier still lives entirely in core/AvatarMovementSimulation.js');
     }
     {
         const sourceUrl = new URL('../core/AvatarMovementSimulation.js', import.meta.url);
@@ -616,7 +616,7 @@ async function runTests() {
             .join('\n');
 
         assert(!codeOnly.includes('AvatarMovementSimulation') && !codeOnly.includes('AvatarMovementController'),
-            '30. core/AvatarVehicleMovementCapability.js still never imports core/AvatarMovementSimulation.js or application/AvatarMovementController.js — the base WALK speed it carries is a documented, independent constant, never a cross-module coupling');
+            '30. core/AvatarVehicleMovementCapability.js still never imports core/AvatarMovementSimulation.js or application/avatar/AvatarMovementController.js — the base WALK speed it carries is a documented, independent constant, never a cross-module coupling');
     }
 
     console.log('✅ All Ground Vehicle Movement Speed Capability Integration tests passed.');

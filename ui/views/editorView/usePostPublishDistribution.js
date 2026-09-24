@@ -1,6 +1,6 @@
 import { ref, inject } from 'vue';
-import { sanitizeDistributionErrorMessage } from '../../../application/DistributionErrorMessageSanitizer.js';
-import { IpfsRemotePublicationState } from '../../../application/IpfsRemotePublicationState.js';
+import { sanitizeDistributionErrorMessage } from '../../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
+import { IpfsRemotePublicationState } from '../../../application/ipfs/IpfsRemotePublicationState.js';
 
 // Post-publish distribution: after a publish, the Editor offers to distribute that exact
 // Publication (announcement/discovery plus content) and its snapshot bytes. Page-local,

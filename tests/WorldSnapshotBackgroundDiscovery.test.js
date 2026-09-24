@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/ShouldRefreshSnapshotDiscovery.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
+import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/snapshot/ShouldRefreshSnapshotDiscovery.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.186 — World Snapshot Background Discovery.
@@ -99,7 +99,7 @@ async function runTests() {
         assert(monitor.lastResult === fakeCandidates,
             '3. the monitor stores exactly what the injected discoverSnapshotCandidatesCommand resolved to — the same reference');
 
-        const source = await codeOnlySource('application/WorldSnapshotDiscoveryMonitor.js');
+        const source = await codeOnlySource('application/snapshot/WorldSnapshotDiscoveryMonitor.js');
         assert(!source.includes('NostrSnapshotDiscoveryQueryService') && !source.includes('new WebSocket') && !source.includes('window.nostr'),
             '4. the monitor never constructs a second Nostr/relay client or query service of its own');
 
@@ -287,7 +287,7 @@ async function runTests() {
     // Section J — structural boundary.
     // ---------------------------------------------------------------
     {
-        const source = await codeOnlySource('application/WorldSnapshotDiscoveryMonitor.js');
+        const source = await codeOnlySource('application/snapshot/WorldSnapshotDiscoveryMonitor.js');
         const forbidden = ['resolveCandidate', 'materialize(', 'materialize =', '.register(', 'unregister', 'distribution'];
         for (const term of forbidden) {
             assert(!source.toLowerCase().includes(term.toLowerCase()),

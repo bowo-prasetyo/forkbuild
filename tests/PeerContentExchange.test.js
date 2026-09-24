@@ -1,17 +1,17 @@
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND } from '../core/BlueprintAttribution.js';
-import { LocalBlueprintAttributionStore } from '../application/LocalBlueprintAttributionStore.js';
-import { createBlueprintAttributionPublicationKind } from '../application/BlueprintAttributionPublicationKind.js';
+import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
+import { createBlueprintAttributionPublicationKind } from '../application/blueprint/BlueprintAttributionPublicationKind.js';
 import {
     PeerContentMessageKind,
     MAX_CONTENT_BYTES,
@@ -19,11 +19,11 @@ import {
     toContentRequestMessage,
     toContentResponseMessage,
     isValidPeerContentMessage
-} from '../application/PeerContentProtocol.js';
-import { PeerContentExchange } from '../application/PeerContentExchange.js';
+} from '../application/peer/PeerContentProtocol.js';
+import { PeerContentExchange } from '../application/peer/PeerContentExchange.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.7.4 — Peer Content Retrieval.
@@ -81,7 +81,7 @@ function makeIdentity(label) {
 
 // Publishes real bytes into `contentStore` and returns a signed
 // DecentralizedPublication + catalog entry for them, mirroring what
-// application/PublicationResolver.js#publish() + LocalPublicationCatalog#
+// application/publication/PublicationResolver.js#publish() + LocalPublicationCatalog#
 // add() actually do — this file's own tests need a REAL, retrievable
 // content hash, never a fabricated one, since PeerContentExchange only
 // ever authorizes a hash the catalog genuinely knows.
@@ -99,7 +99,7 @@ async function publishAndCatalog(identityProvider, catalog, contentStore, text) 
 
 // A minimal stand-in for peer/PeerMessageBus.js, mirroring tests/
 // PublicationPeerExchange.test.js's own StubPeerMessageBus exactly —
-// real enough to exercise application/PeerContentExchange.js's own
+// real enough to exercise application/peer/PeerContentExchange.js's own
 // routing/gating logic deterministically, without a real handshake.
 // Section C below runs the identical class against the REAL bus.
 class StubPeerMessageBus {
@@ -324,7 +324,7 @@ async function run() {
         const bobAttributionStore = new LocalBlueprintAttributionStore(new InMemoryStorageProvider());
 
         // ONE PeerMessageBus per side, shared by both protocols — proves
-        // application/PublicationPeerExchange.js and application/
+        // application/publication/PublicationPeerExchange.js and application/
         // PeerContentExchange.js genuinely multiplex over the same
         // authenticated connection, exactly as peer/PeerMessageBus.js's
         // own header always promised.

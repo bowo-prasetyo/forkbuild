@@ -3,14 +3,14 @@ import { Building } from '../core/Building.js';
 import { Document } from '../core/Document.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { SpatialEditingService } from '../application/SpatialEditingService.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { SpatialEditingService } from '../application/editor/SpatialEditingService.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { TransformMath } from '../application/TransformMath.js';
-import { TransformGizmoUseCase } from '../application/TransformGizmoUseCase.js';
+import { TransformMath } from '../application/editor/TransformMath.js';
+import { TransformGizmoUseCase } from '../application/editor/TransformGizmoUseCase.js';
 import { TransformSelectionCommand } from '../application/commands/TransformSelectionCommand.js';
 
 // 0.1.46 — Interactive Transform Gizmo tests.

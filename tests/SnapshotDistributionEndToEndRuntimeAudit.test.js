@@ -1,16 +1,16 @@
 import { readFile, readdir } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.139 — Snapshot Distribution End-to-End Runtime & UI Audit.
@@ -43,7 +43,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //        │                                       tests/WorldViewSnapshotDistribution.test.js's
 //        │                                       own makeSnapshotDistributionAction() already is)
 //        ▼
-//   executeSnapshotDistributionCommand()   (application/SnapshotDistributionCommand.js, 0.9.136)
+//   executeSnapshotDistributionCommand()   (application/snapshot/SnapshotDistributionCommand.js, 0.9.136)
 //        │
 //        ├──► ArweaveContentStore.put()                       PLACEMENT
 //        │         │
@@ -441,11 +441,11 @@ async function run() {
             'DecentralizedDiscoveryEnvelope', 'ArweavePublicationMaterialUploader',
             'NostrPublicationDiscoveryPublisher'
         ];
-        const snapshotCommandCode = await codeOnlySource('application/SnapshotDistributionCommand.js');
-        const snapshotRuntimeCompositionCode = await codeOnlySource('application/SnapshotDistributionRuntimeComposition.js');
+        const snapshotCommandCode = await codeOnlySource('application/snapshot/SnapshotDistributionCommand.js');
+        const snapshotRuntimeCompositionCode = await codeOnlySource('application/snapshot/SnapshotDistributionRuntimeComposition.js');
         for (const term of snapshotForbiddenFromSignedClaim) {
-            assert(!snapshotCommandCode.includes(term), `C1. application/SnapshotDistributionCommand.js never references '${term}' — the Signed Claim lifecycle/envelope/orchestrator family`);
-            assert(!snapshotRuntimeCompositionCode.includes(term), `C2. application/SnapshotDistributionRuntimeComposition.js never references '${term}' either`);
+            assert(!snapshotCommandCode.includes(term), `C1. application/snapshot/SnapshotDistributionCommand.js never references '${term}' — the Signed Claim lifecycle/envelope/orchestrator family`);
+            assert(!snapshotRuntimeCompositionCode.includes(term), `C2. application/snapshot/SnapshotDistributionRuntimeComposition.js never references '${term}' either`);
         }
 
         // Conversely: the existing Signed Claim path stays untouched by
@@ -457,28 +457,28 @@ async function run() {
             'NostrSnapshotDiscoveryQueryService', 'DecentralizedSnapshotResolver',
             'SnapshotDiscoveryEnvelope'
         ];
-        const publicationCommandCode = await codeOnlySource('application/PublicationDistributionCommand.js');
-        const publicationLifecycleCode = await codeOnlySource('application/PublicationDistributionLifecycle.js');
-        const nostrPublicationPublisherCode = await codeOnlySource('application/NostrPublicationDiscoveryPublisher.js');
+        const publicationCommandCode = await codeOnlySource('application/publication/distribution/PublicationDistributionCommand.js');
+        const publicationLifecycleCode = await codeOnlySource('application/publication/distribution/PublicationDistributionLifecycle.js');
+        const nostrPublicationPublisherCode = await codeOnlySource('application/nostr/NostrPublicationDiscoveryPublisher.js');
         for (const term of signedClaimForbiddenFromSnapshot) {
-            assert(!publicationCommandCode.includes(term), `C3. application/PublicationDistributionCommand.js never references '${term}' — the Snapshot family`);
-            assert(!publicationLifecycleCode.includes(term), `C4. application/PublicationDistributionLifecycle.js never references '${term}' either — no shared lifecycle vocabulary`);
-            assert(!nostrPublicationPublisherCode.includes(term), `C5. application/NostrPublicationDiscoveryPublisher.js never references '${term}' — same physical substrate (Nostr), two disjoint publisher classes`);
+            assert(!publicationCommandCode.includes(term), `C3. application/publication/distribution/PublicationDistributionCommand.js never references '${term}' — the Snapshot family`);
+            assert(!publicationLifecycleCode.includes(term), `C4. application/publication/distribution/PublicationDistributionLifecycle.js never references '${term}' either — no shared lifecycle vocabulary`);
+            assert(!nostrPublicationPublisherCode.includes(term), `C5. application/nostr/NostrPublicationDiscoveryPublisher.js never references '${term}' — same physical substrate (Nostr), two disjoint publisher classes`);
         }
 
         // "Same substrate does not imply same protocol," proven for both
         // Nostr publishers concretely: neither imports the other.
-        const snapshotPublisherCode = await codeOnlySource('application/NostrSnapshotDiscoveryPublisher.js');
-        assert(!snapshotPublisherCode.includes('NostrPublicationDiscoveryPublisher'), 'C6. application/NostrSnapshotDiscoveryPublisher.js never imports the Signed Claim family\'s own Nostr publisher');
+        const snapshotPublisherCode = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryPublisher.js');
+        assert(!snapshotPublisherCode.includes('NostrPublicationDiscoveryPublisher'), 'C6. application/nostr/NostrSnapshotDiscoveryPublisher.js never imports the Signed Claim family\'s own Nostr publisher');
         assert(!nostrPublicationPublisherCode.includes('NostrSnapshotDiscoveryPublisher'), 'C7. ...and the reverse holds too — neither Nostr publisher class knows the other exists');
 
         // ArweaveContentStore.js (Snapshot placement) and
         // ArweavePublicationMaterialUploader.js (Signed Claim placement)
         // hold the identical mutual isolation, one substrate over.
         const arweaveStoreCode = await codeOnlySource('content/ArweaveContentStore.js');
-        const arweaveUploaderCode = await codeOnlySource('application/ArweavePublicationMaterialUploader.js');
+        const arweaveUploaderCode = await codeOnlySource('application/arweave/ArweavePublicationMaterialUploader.js');
         assert(!arweaveStoreCode.includes('ArweavePublicationMaterialUploader') && !arweaveStoreCode.includes('PublicationDistribution'), 'C8. content/ArweaveContentStore.js never references the Signed Claim family\'s own Arweave uploader or distribution vocabulary');
-        assert(!arweaveUploaderCode.includes('ArweaveContentStore') && !arweaveUploaderCode.includes('SnapshotDistribution'), 'C9. application/ArweavePublicationMaterialUploader.js never references the Snapshot family\'s own content store or distribution vocabulary');
+        assert(!arweaveUploaderCode.includes('ArweaveContentStore') && !arweaveUploaderCode.includes('SnapshotDistribution'), 'C9. application/arweave/ArweavePublicationMaterialUploader.js never references the Snapshot family\'s own content store or distribution vocabulary');
 
         console.log('✓ Section C: Snapshot Distribution and Signed Claim distribution share no class, lifecycle vocabulary, or envelope type in either direction — same substrate, two disjoint protocols');
     }
@@ -671,11 +671,11 @@ async function run() {
         // resolveLocator(), the identical rule extended from) must never
         // introduce ranking vocabulary — checked directly, not merely
         // inferred from this one scenario's own behavior.
-        const resolverCode = await codeOnlySource('application/DecentralizedSnapshotResolver.js');
-        const queryServiceCode = await codeOnlySource('application/NostrSnapshotDiscoveryQueryService.js');
+        const resolverCode = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
+        const queryServiceCode = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         const rankingVocabulary = /\bbest\b|\btrusted\b|\brank(ing|ed)?\b|\bfastest\b|\bnewest\b|\bwinner\b|\bpreferred\b/i;
-        assert(!rankingVocabulary.test(resolverCode), 'F8. application/DecentralizedSnapshotResolver.js\'s own CODE (comments excluded) contains no "best"/"trusted"/"rank"/"fastest"/"newest"/"winner"/"preferred" vocabulary');
-        assert(!rankingVocabulary.test(queryServiceCode), 'F9. application/NostrSnapshotDiscoveryQueryService.js\'s own CODE contains none of that vocabulary either');
+        assert(!rankingVocabulary.test(resolverCode), 'F8. application/snapshot/DecentralizedSnapshotResolver.js\'s own CODE (comments excluded) contains no "best"/"trusted"/"rank"/"fastest"/"newest"/"winner"/"preferred" vocabulary');
+        assert(!rankingVocabulary.test(queryServiceCode), 'F9. application/nostr/NostrSnapshotDiscoveryQueryService.js\'s own CODE contains none of that vocabulary either');
 
         console.log('✓ Section F: multiple independent candidates for one contentHash all survive, resolution is deterministic first-match, and no ranking vocabulary exists anywhere in the resolver\'s own code');
     }
@@ -865,7 +865,7 @@ async function run() {
 
         // 0.9.142 — World View Snapshot Discovery Command added a SECOND,
         // independent composition root over ArweaveContentStore:
-        // application/DiscoverSnapshotRuntimeComposition.js, the READ-side
+        // application/snapshot/DiscoverSnapshotRuntimeComposition.js, the READ-side
         // counterpart of this WRITE-side one (never importing or reusing
         // it — see that file's own header, "no coupling to... Snapshot
         // distribution"). The invariant this section protects — no OTHER
@@ -874,20 +874,20 @@ async function run() {
         // only the closed, recognized set of composition roots allowed to
         // do so has grown by the one this milestone legitimately added.
         assert(
-            constructions['new ArweaveContentStore('].sort().join(',') === 'application/DiscoverSnapshotRuntimeComposition.js,application/SnapshotDistributionRuntimeComposition.js',
+            constructions['new ArweaveContentStore('].sort().join(',') === 'application/snapshot/DiscoverSnapshotRuntimeComposition.js,application/snapshot/SnapshotDistributionRuntimeComposition.js',
             `I1. 'new ArweaveContentStore(' appears only in the two recognized composition roots (distribution + discovery) — found in: ${constructions['new ArweaveContentStore('].join(', ') || '(none)'}`
         );
         assert(
-            constructions['new NostrSnapshotDiscoveryPublisher('].sort().join(',') === 'application/SnapshotDistributionRuntimeComposition.js',
-            `I2. 'new NostrSnapshotDiscoveryPublisher(' appears in exactly ONE production file (application/SnapshotDistributionRuntimeComposition.js) — found in: ${constructions['new NostrSnapshotDiscoveryPublisher('].join(', ') || '(none)'}`
+            constructions['new NostrSnapshotDiscoveryPublisher('].sort().join(',') === 'application/snapshot/SnapshotDistributionRuntimeComposition.js',
+            `I2. 'new NostrSnapshotDiscoveryPublisher(' appears in exactly ONE production file (application/snapshot/SnapshotDistributionRuntimeComposition.js) — found in: ${constructions['new NostrSnapshotDiscoveryPublisher('].join(', ') || '(none)'}`
         );
         assert(
-            constructions['executeSnapshotDistributionCommand('].sort().join(',') === 'application/SnapshotDistributionCommand.js,ui/main.js',
-            `I3. 'executeSnapshotDistributionCommand(' appears ONLY where it is defined (application/SnapshotDistributionCommand.js) and where it is called (ui/main.js) — found in: ${constructions['executeSnapshotDistributionCommand('].join(', ') || '(none)'}`
+            constructions['executeSnapshotDistributionCommand('].sort().join(',') === 'application/snapshot/SnapshotDistributionCommand.js,ui/main.js',
+            `I3. 'executeSnapshotDistributionCommand(' appears ONLY where it is defined (application/snapshot/SnapshotDistributionCommand.js) and where it is called (ui/main.js) — found in: ${constructions['executeSnapshotDistributionCommand('].join(', ') || '(none)'}`
         );
         assert(
-            constructions['composeSnapshotDistributionRuntime('].sort().join(',') === 'application/SnapshotDistributionRuntimeComposition.js,ui/main.js',
-            `I4. 'composeSnapshotDistributionRuntime(' appears ONLY where it is defined (application/SnapshotDistributionRuntimeComposition.js) and where it is called (ui/main.js) — found in: ${constructions['composeSnapshotDistributionRuntime('].join(', ') || '(none)'}`
+            constructions['composeSnapshotDistributionRuntime('].sort().join(',') === 'application/snapshot/SnapshotDistributionRuntimeComposition.js,ui/main.js',
+            `I4. 'composeSnapshotDistributionRuntime(' appears ONLY where it is defined (application/snapshot/SnapshotDistributionRuntimeComposition.js) and where it is called (ui/main.js) — found in: ${constructions['composeSnapshotDistributionRuntime('].join(', ') || '(none)'}`
         );
 
         // Negative control, named explicitly: the one hidden-second-path

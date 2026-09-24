@@ -3,16 +3,16 @@ import { readFile } from 'node:fs/promises';
 import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL, isValidNostrRelayUrl } from '../core/NostrRelayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
-import { SetNostrRelayConfigurationUseCase } from '../application/SetNostrRelayConfigurationUseCase.js';
+import { SetNostrRelayConfigurationUseCase } from '../application/settings/SetNostrRelayConfigurationUseCase.js';
 import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
-import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQueryService.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
-import { composePlaceNamingPublicationRuntime } from '../application/PlaceNamingPublicationRuntimeComposition.js';
+import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
+import { composePlaceNamingPublicationRuntime } from '../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 
 // 0.9.371 — Nostr Relay Settings UI.
@@ -58,7 +58,7 @@ import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 //   Section M  — no live re-composition after Save.
 //   Section N  — architecture sweep of the new use case file.
 //
-// See application/SetNostrRelayConfigurationUseCase.js and
+// See application/settings/SetNostrRelayConfigurationUseCase.js and
 // ui/views/NostrRelaySettingsView.js for the full design rationale this
 // milestone carries out.
 
@@ -141,7 +141,7 @@ async function run() {
     // ===============================================================
     {
         const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { SetNostrRelayConfigurationUseCase } from '../application/SetNostrRelayConfigurationUseCase.js';"),
+        assert(mainSource.includes("import { SetNostrRelayConfigurationUseCase } from '../application/settings/SetNostrRelayConfigurationUseCase.js';"),
             '1. ui/main.js imports the new write use case');
         assert(/new SetNostrRelayConfigurationUseCase\(\{\s*nostrRelayConfigurationStore\s*\}\)/.test(mainSource),
             '2. ui/main.js wires SetNostrRelayConfigurationUseCase against the SAME shared nostrRelayConfigurationStore the 0.9.369 read-path composition already resolves through, never a second disconnected store');
@@ -538,7 +538,7 @@ async function run() {
     // composition (proven separately in Section I) does that.
     // ===============================================================
     {
-        const useCaseSource = await source('application/SetNostrRelayConfigurationUseCase.js');
+        const useCaseSource = await source('application/settings/SetNostrRelayConfigurationUseCase.js');
         const executable = useCaseSource.replace(/\/\/.*$/gm, '');
         assert(!/NostrDiscoveryQueryService|NostrSnapshotDiscoveryQueryService|NostrPlaceNamingDiscoverySource|NostrRelayQueryClient|createNostrRelayQueryClient/.test(executable),
             '76. the use case never imports or constructs any discovery adapter or transport client');
@@ -579,7 +579,7 @@ async function run() {
     // Section N — architecture sweep of the new use case file.
     // ===============================================================
     {
-        const useCaseSource = await source('application/SetNostrRelayConfigurationUseCase.js');
+        const useCaseSource = await source('application/settings/SetNostrRelayConfigurationUseCase.js');
         const executable = useCaseSource.replace(/\/\/.*$/gm, '');
         assert(!/\bfetch\s*\(/.test(executable), '81. no network call of any kind');
         assert(!/new WebSocket\(/.test(executable), '82. no WebSocket construction of any kind');

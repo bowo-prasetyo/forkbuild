@@ -1,12 +1,12 @@
 import { BitcoinWalletFundingObserver } from '../anchoring/BitcoinWalletFundingObserver.js';
 import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTransactionBuilder.js';
-import { BitcoinAnchorFundingObservationState } from '../application/BitcoinAnchorFundingObservationState.js';
-import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/BitcoinAnchorTransactionConstructionCoordinator.js';
-import { BitcoinAnchorTransactionConstructionState, isValidBitcoinAnchorTransactionConstructionState } from '../application/BitcoinAnchorTransactionConstructionState.js';
+import { BitcoinAnchorFundingObservationState } from '../application/anchoring/bitcoin/BitcoinAnchorFundingObservationState.js';
+import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionCoordinator.js';
+import { BitcoinAnchorTransactionConstructionState, isValidBitcoinAnchorTransactionConstructionState } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js';
 import {
     describeBitcoinAnchorTransactionConstruction,
     describeBitcoinAnchorTransactionConstructionStateLabel
-} from '../application/BitcoinAnchorTransactionConstructionView.js';
+} from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionView.js';
 
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
 //
@@ -14,7 +14,7 @@ import {
 // snapshot (0.8.60) becomes a real, deterministic transaction plan (0.8.47)
 // through exactly one explicit action — never automatically the moment
 // funding is observed — and that plan reaches a screen's worth of facts
-// (application/BitcoinAnchorTransactionConstructionView.js) unmodified,
+// (application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionView.js) unmodified,
 // through the exact sequence a real person would experience —
 //
 //   observe funding (0.8.60, unchanged) -> explicit "Create Transaction

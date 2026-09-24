@@ -3,17 +3,17 @@ import { readFile } from 'node:fs/promises';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { ReconstructPublicationDiscoveryUseCase } from '../application/ReconstructPublicationDiscoveryUseCase.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { ReconstructPublicationDiscoveryUseCase } from '../application/publication/ReconstructPublicationDiscoveryUseCase.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -23,9 +23,9 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // 0.9.607 (Publication Discovery Persistence Boundary Audit) was test-only:
 // it proved, against real production classes assembled inside that test
 // file, that a fresh discovery/DecentralizedPublicationDiscoveryProvider.js
-// CAN be rebuilt from application/LocalPublicationCatalog.js alone, with
+// CAN be rebuilt from application/publication/LocalPublicationCatalog.js alone, with
 // no new store and no network call. This milestone promotes that proof
-// into a real, reusable class — application/ReconstructPublicationDiscoveryUseCase.js
+// into a real, reusable class — application/publication/ReconstructPublicationDiscoveryUseCase.js
 // — and wires it into ui/main.js's own composition root, immediately after
 // the one DecentralizedPublicationDiscoveryProvider instance this replica
 // ever constructs. This file tests the PRODUCTION class and its wiring,
@@ -343,7 +343,7 @@ async function run() {
     {
         const mainSource = await readSource('ui/main.js');
 
-        assert(mainSource.includes("import { ReconstructPublicationDiscoveryUseCase } from '../application/ReconstructPublicationDiscoveryUseCase.js';"),
+        assert(mainSource.includes("import { ReconstructPublicationDiscoveryUseCase } from '../application/publication/ReconstructPublicationDiscoveryUseCase.js';"),
             '1. ui/main.js imports the production use case.');
 
         const constructionIndex = mainSource.indexOf('const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();');

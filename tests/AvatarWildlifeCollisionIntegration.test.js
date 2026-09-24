@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarWildlifeConstraint } from '../application/AvatarWildlifeConstraint.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarWildlifeConstraint } from '../application/avatar/AvatarWildlifeConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { wildlifeCollisionGeometryInRegion } from '../core/WildlifeCollisionGeometry.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
@@ -8,18 +8,18 @@ import { VehicleType } from '../core/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
-// Avatar Movement Wildlife Collision Integration, application/AvatarWildlifeConstraint.js
+// Avatar Movement Wildlife Collision Integration, application/avatar/AvatarWildlifeConstraint.js
 // — the direct structural twin of tests/AvatarTreeCollisionIntegration.test.js.
 //
-//   Section A: application/AvatarWildlifeConstraint.js — real animals
-//   Section B: application/AvatarMovementController.js — wildlife constraint wired into the movement pipeline
+//   Section A: application/avatar/AvatarWildlifeConstraint.js — real animals
+//   Section B: application/avatar/AvatarMovementController.js — wildlife constraint wired into the movement pipeline
 //   Section C: WorldNavigationSession integration
 //   Section D: FLAGSHIP — a real avatar walking straight at a real,
 //              deterministic animal through the entire chain
@@ -31,8 +31,8 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 // own resolveAvatarTreeMovement() (already generic over any list of
 // `{ center, radius }` circles) against a wildlife-specific candidate set
 // from core/AvatarWildlifeCollisionQuery.js, wired into the same
-// application/AvatarMovementController.js pipeline
-// application/AvatarTreeConstraint.js already plugs into.
+// application/avatar/AvatarMovementController.js pipeline
+// application/avatar/AvatarTreeConstraint.js already plugs into.
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }
@@ -99,7 +99,7 @@ async function runTests() {
     const realAnimal = findRealAnimal();
 
     // -------------------------------------------------------------
-    // Section A — application/AvatarWildlifeConstraint.js
+    // Section A — application/avatar/AvatarWildlifeConstraint.js
     // -------------------------------------------------------------
     {
         const constraint = new AvatarWildlifeConstraint();
@@ -185,7 +185,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — application/AvatarMovementController.js
+    // Section B — application/avatar/AvatarMovementController.js
     // -------------------------------------------------------------
     {
         // Existing movement regression: a controller built WITHOUT a
@@ -370,7 +370,7 @@ async function runTests() {
     // mathematics, no new status vocabulary
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/AvatarWildlifeConstraint.js', import.meta.url);
+        const sourceUrl = new URL('../application/avatar/AvatarWildlifeConstraint.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -389,18 +389,18 @@ async function runTests() {
             'CollisionEvent', 'velocity', 'acceleration', 'mass'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `32. application/AvatarWildlifeConstraint.js's own code never references "${term}" — a thin adapter only, never a second collision algorithm`);
+            assert(!codeOnly.includes(term), `32. application/avatar/AvatarWildlifeConstraint.js's own code never references "${term}" — a thin adapter only, never a second collision algorithm`);
         }
         assert(codeOnly.includes('wildlifeCollisionCandidatesForMovement'),
-            '33. application/AvatarWildlifeConstraint.js does consume wildlifeCollisionCandidatesForMovement() from core/AvatarWildlifeCollisionQuery.js');
+            '33. application/avatar/AvatarWildlifeConstraint.js does consume wildlifeCollisionCandidatesForMovement() from core/AvatarWildlifeCollisionQuery.js');
         assert(codeOnly.includes('resolveAvatarTreeMovement'),
-            '34. application/AvatarWildlifeConstraint.js reuses resolveAvatarTreeMovement() from core/AvatarTreeMovement.js — never a cloned copy of the same resolution math');
+            '34. application/avatar/AvatarWildlifeConstraint.js reuses resolveAvatarTreeMovement() from core/AvatarTreeMovement.js — never a cloned copy of the same resolution math');
     }
     {
-        const exportsModule = await import('../application/AvatarWildlifeConstraint.js');
+        const exportsModule = await import('../application/avatar/AvatarWildlifeConstraint.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['AvatarWildlifeConstraint']),
-            '35. application/AvatarWildlifeConstraint.js exports exactly the AvatarWildlifeConstraint class — nothing else');
+            '35. application/avatar/AvatarWildlifeConstraint.js exports exactly the AvatarWildlifeConstraint class — nothing else');
     }
 
     console.log('✅ All Avatar Movement Wildlife Collision Integration tests passed.');

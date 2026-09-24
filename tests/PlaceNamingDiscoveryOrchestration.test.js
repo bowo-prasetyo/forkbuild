@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
-import { PlaceNamingDiscoveryMonitor, DEFAULT_PLACE_NAMING_DISCOVERY_PROXIMITY_RADIUS } from '../application/PlaceNamingDiscoveryMonitor.js';
-import { shouldRefreshPlaceNamingDiscovery, DEFAULT_PLACE_NAMING_DISCOVERY_REFRESH_RADIUS } from '../application/ShouldRefreshPlaceNamingDiscovery.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
+import { PlaceNamingDiscoveryMonitor, DEFAULT_PLACE_NAMING_DISCOVERY_PROXIMITY_RADIUS } from '../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
+import { shouldRefreshPlaceNamingDiscovery, DEFAULT_PLACE_NAMING_DISCOVERY_REFRESH_RADIUS } from '../application/placeNaming/ShouldRefreshPlaceNamingDiscovery.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 
 // 0.9.256 — Automatic Place Naming Discovery Orchestration.
@@ -412,7 +412,7 @@ async function runTests() {
     // adopts, registers, or persists a claim.
     // ---------------------------------------------------------------
     {
-        const source = await codeOnlySource('application/PlaceNamingDiscoveryMonitor.js');
+        const source = await codeOnlySource('application/placeNaming/PlaceNamingDiscoveryMonitor.js');
         const forbiddenImports = [
             'LocalAuthorizationVerifier',
             'LocalPlaceNamingClaimStore',
@@ -557,7 +557,7 @@ async function runTests() {
         ]).then(([nearResults, farResults]) => [...nearResults, ...farResults]);
 
         // A stand-in for a future World-layout-aware resolver
-        // (application/WorldNavigationSession.js) — the one collaborator
+        // (application/world/WorldNavigationSession.js) — the one collaborator
         // this milestone deliberately never builds itself (see this
         // monitor's own header, "position resolution is injected, never
         // performed").

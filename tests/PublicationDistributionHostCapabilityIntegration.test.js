@@ -1,14 +1,14 @@
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
-import { createArweavePublicationDistributionRuntimeAdapter } from '../application/ArweavePublicationDistributionRuntimeAdapter.js';
-import { createNostrPublicationDistributionRuntimeAdapter } from '../application/NostrPublicationDistributionRuntimeAdapter.js';
-import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js';
-import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { createArweavePublicationDistributionRuntimeAdapter } from '../application/arweave/ArweavePublicationDistributionRuntimeAdapter.js';
+import { createNostrPublicationDistributionRuntimeAdapter } from '../application/nostr/NostrPublicationDistributionRuntimeAdapter.js';
+import { createPublicationDistributionRuntimeProvider } from '../application/publication/distribution/PublicationDistributionRuntimeProvider.js';
+import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -326,7 +326,7 @@ async function run() {
         await waitForSettled(ctx);
 
         assert(ctx.distributionExecuting === false, '13. missing capability — execution still returns to idle');
-        assert(ctx.distributionError === 'ArweavePublicationMaterialUploader: a signer with a sign() method is required', '14. missing capability — with no wallet/extension installed anywhere, the click now surfaces the sanitized underlying cause instead of the old generic notice — see application/DistributionErrorMessageSanitizer.js');
+        assert(ctx.distributionError === 'ArweavePublicationMaterialUploader: a signer with a sign() method is required', '14. missing capability — with no wallet/extension installed anywhere, the click now surfaces the sanitized underlying cause instead of the old generic notice — see application/publication/distribution/DistributionErrorMessageSanitizer.js');
         assert(lifecycleStore.get(publication.id) === null, '15. missing capability — the lifecycle store is left untouched');
 
         console.log('✓ Section C: with no injected wallet/extension anywhere, the click still degrades to exactly today\'s existing, honest plain notice');

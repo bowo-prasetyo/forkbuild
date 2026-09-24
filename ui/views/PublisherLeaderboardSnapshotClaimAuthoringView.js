@@ -1,6 +1,6 @@
-import { PublicationObservationArchive } from '../../application/PublicationObservationArchive.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../../application/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
-import { exportPublisherLeaderboardSnapshotClaim } from '../../application/PublisherLeaderboardSnapshotClaimExchange.js';
+import { PublicationObservationArchive } from '../../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
+import { exportPublisherLeaderboardSnapshotClaim } from '../../application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js';
 import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 

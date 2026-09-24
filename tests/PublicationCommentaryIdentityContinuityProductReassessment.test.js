@@ -2,13 +2,13 @@ import { readFile } from 'node:fs/promises';
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore, PublicationCommentaryConflictError } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { Publication } from '../publisher/Publication.js';
 import { Document } from '../core/Document.js';
@@ -156,7 +156,7 @@ function makeMinimalDocument(title = 'Atlas', author = 'alice') {
 }
 
 // The real write/read stack, wired exactly the way application/
-// CreateWorldViewUseCase.js and application/CreatePublicationCommentaryUseCase.js
+// CreateWorldViewUseCase.js and application/publication/commentary/CreatePublicationCommentaryUseCase.js
 // both wire it (0.9.246/0.9.247) — never a fake store or a fake use case
 // standing in for the actual pipeline. `commands` is the identical
 // `{ getPublicationCommentariesCommand, addPublicationCommentaryCommand }`
@@ -267,7 +267,7 @@ async function run() {
 
         // 0.9.245/0.9.246: authorship/authorization still gate exactly
         // where they did, still in that order.
-        const addSource = await readSource('application/AddPublicationCommentaryUseCase.js');
+        const addSource = await readSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
         assert(/resolveSigningIdentityId\(this\._identityProvider\)/.test(addSource)
             && addSource.indexOf('resolveSigningIdentityId') < addSource.indexOf('_canCommentOnPublicationUseCase.execute'),
             '2. STRUCTURAL (0.9.245/0.9.246, reconfirmed): authentication still resolves before authorization, in that order, in execute().');
@@ -287,10 +287,10 @@ async function run() {
         // 0.9.251/0.9.275/0.9.289/0.9.291/0.9.305: candidates 0.9.250's
         // own verdict ranked #1/#2 have since shipped — recorded here so
         // this milestone's own verdict does not repeat a now-stale claim.
-        const notificationProducerSource = await readSource('application/PublicationCommentaryNotificationProducer.js');
+        const notificationProducerSource = await readSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js');
         assert(/PUBLICATION_COMMENTED_EVENT_TYPE\s*=\s*'publication\.commented'/.test(notificationProducerSource)
             && /eventType:\s*PUBLICATION_COMMENTED_EVENT_TYPE/.test(notificationProducerSource),
-            '5. STRUCTURAL: 0.9.250 Section F ranked "notifications" candidate #1, calling Commentary notifications "still genuinely absent codebase-wide" — application/PublicationCommentaryNotificationProducer.js (0.9.275) has since closed exactly that gap; still present, unmodified, today.');
+            '5. STRUCTURAL: 0.9.250 Section F ranked "notifications" candidate #1, calling Commentary notifications "still genuinely absent codebase-wide" — application/publication/commentary/PublicationCommentaryNotificationProducer.js (0.9.275) has since closed exactly that gap; still present, unmodified, today.');
         assert(/publicationCommentaries\.length/.test(ownPanelSource),
             '6. STRUCTURAL: 0.9.250 Section D classified "count" MISSING_UI — 0.9.251 closed it; still rendered directly from the array\'s own length today, no separate count field or use case.');
     }
@@ -501,7 +501,7 @@ async function run() {
     // ===============================================================
     {
         const collectionSource = await readSource('core/PublicationCommentaryCollection.js');
-        const getUseCaseSource = await readSource('application/GetPublicationCommentariesUseCase.js');
+        const getUseCaseSource = await readSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
         assert(!/\.sort\(/.test(collectionSource) && !/\.sort\(/.test(getUseCaseSource),
             '1. STRUCTURAL: neither the collection functions nor the read use case contains a .sort() call anywhere — order is insertion order, full stop, still true against current source.');
 
@@ -580,10 +580,10 @@ async function run() {
     // Section I — Mutation boundary.
     // ===============================================================
     {
-        const addSource = await readSource('application/AddPublicationCommentaryUseCase.js');
-        const getSource = await readSource('application/GetPublicationCommentariesUseCase.js');
-        const canCommentSource = await readSource('application/CanCommentOnPublicationUseCase.js');
-        const notificationProducerSource = await readSource('application/PublicationCommentaryNotificationProducer.js');
+        const addSource = await readSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
+        const getSource = await readSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
+        const canCommentSource = await readSource('application/publication/CanCommentOnPublicationUseCase.js');
+        const notificationProducerSource = await readSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js');
         const commentaryDomainSource = await readSource('core/PublicationCommentary.js');
 
         assert(/this\._store\.save\(/.test(addSource), '1. STRUCTURAL: AddPublicationCommentaryUseCase.js is the one file that calls store.save() on commentary.');
@@ -729,9 +729,9 @@ domain object and the NotificationEvent-constructing decorator, purely observati
 This is a test-only milestone: one new file,
 tests/PublicationCommentaryIdentityContinuityProductReassessment.test.js, registered in tests.html. No production
 file was touched — core/PublicationCommentary.js, core/PublicationCommentaryCollection.js,
-storage/PublicationCommentaryStore.js, application/CanCommentOnPublicationUseCase.js,
-application/AddPublicationCommentaryUseCase.js, application/GetPublicationCommentariesUseCase.js,
-application/PublicationCommentaryNotificationProducer.js, ui/components/OwnPublicationPanel.js,
+storage/PublicationCommentaryStore.js, application/publication/CanCommentOnPublicationUseCase.js,
+application/publication/commentary/AddPublicationCommentaryUseCase.js, application/publication/commentary/GetPublicationCommentariesUseCase.js,
+application/publication/commentary/PublicationCommentaryNotificationProducer.js, ui/components/OwnPublicationPanel.js,
 ui/components/PublicationCard.js, and ui/components/WorldEncounterCanvas.js are all byte-for-byte unchanged. No
 comment editing/deletion, moderation, reputation, voting, threading redesign, notification-generation change, new
 synchronization protocol, ranking, deduplication beyond what already exists, new identity mechanism, new navigation

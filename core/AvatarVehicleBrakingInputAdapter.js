@@ -63,7 +63,7 @@
 // key's (Alt's) own state. Braking has no such chord to resolve: the
 // brake control's own down/up transition already IS the complete fact
 // this file needs, in the very same call that reports it — exactly the
-// same reason `application/AvatarMovementController.js`'s own
+// same reason `application/avatar/AvatarMovementController.js`'s own
 // `_setKey()` needs no cross-call bookkeeping to track `_keys.jumpHeld`
 // from Space's own keydown/keyup. So this function takes no caller-owned
 // state in, returns none out, and — because it remembers nothing between

@@ -1,18 +1,18 @@
 import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';
+import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
     composeDecentralizedWorldEncounterMaterialDiscoveryRuntime
-} from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
-import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
-import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
@@ -51,7 +51,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //   Section K: architectural regression — ui/main.js
 //
 // UPDATE (0.9.515): fixture fix, not a behavior change. 0.9.494 amended
-// `application/ArweaveGraphqlDiscoveryQueryService.js#search()` to perform
+// `application/arweave/ArweaveGraphqlDiscoveryQueryService.js#search()` to perform
 // one additional gateway fetch per discovered transaction — decoding it as
 // a real `core/DecentralizedDiscoveryEnvelope.js` envelope and reporting
 // THAT envelope's own claimed `uri`, never the announcement transaction's
@@ -532,7 +532,7 @@ async function runTests() {
         const mainSource = await readFile(mainUrl, 'utf8');
         const mainCodeOnly = mainSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(mainCodeOnly.includes("import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';"),
+        assert(mainCodeOnly.includes("import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';"),
             '39. ui/main.js imports the new 0.9.111 composition');
         assert(mainCodeOnly.includes('composeDiscoverWorldEncounterPublicationCommand({'),
             '40. ui/main.js actually calls it — not merely importing it unused');

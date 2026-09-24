@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
-import { AvatarTerrainConstraint } from '../application/AvatarTerrainConstraint.js';
-import { AvatarStepConstraint } from '../application/AvatarStepConstraint.js';
+import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
+import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
 import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 import { AvatarMovementState } from '../core/AvatarMovementState.js';
 import { AvatarAnimationState, isValidAnimationState } from '../core/AvatarAnimationState.js';
@@ -47,7 +47,7 @@ import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMov
 //              The answer turns out to be more structural than a
 //              missing `if` check — see this section's own findings.
 //   Section C: a minimal, TEST-LOCAL, render-time-only candidate rule,
-//              modeled directly on application/RenderWorldViewUseCase.js's
+//              modeled directly on application/world/RenderWorldViewUseCase.js's
 //              own existing withGroundElevation() formula — tested for
 //              shoreline continuity and depth fidelity, never installed
 //              anywhere.
@@ -66,7 +66,7 @@ import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMov
 // SUPERSEDED IN PART BY 0.9.615 — Avatar Basic Water Surface Constraint.
 // Section C's own candidate below (candidateWaterFloorRenderedY) was
 // installed for real, in this exact form, as
-// application/RenderWorldViewUseCase.js#withGroundElevation()'s new
+// application/world/RenderWorldViewUseCase.js#withGroundElevation()'s new
 // water-floor gate — see that file's own 0.9.615 header. Section C's
 // TEST-LOCAL function and its own assertions are left completely
 // unchanged below: they still independently verify the underlying
@@ -109,7 +109,7 @@ function findRiverCoordinate(seed, halfExtent) {
     return null;
 }
 
-// The SAME render-time formula application/RenderWorldViewUseCase.js's
+// The SAME render-time formula application/world/RenderWorldViewUseCase.js's
 // own withGroundElevation() already uses (position.y +
 // renderer.terrainHeightAt(x, z), which is itself a thin pass-through
 // to terrainHeightAt(seed, x, z) — see that file's own 0.2.76 header).
@@ -136,7 +136,7 @@ function realRenderedY(seed, position) {
 //
 // AMENDED BY 0.9.615 — this exact rule (same gate, same Math.max, same
 // two inputs) was independently installed for real inside
-// application/RenderWorldViewUseCase.js#withGroundElevation() — see
+// application/world/RenderWorldViewUseCase.js#withGroundElevation() — see
 // this file's own "SUPERSEDED IN PART BY 0.9.615" header note, above.
 // It was not extracted from this test file (production code never
 // imports a test); it was written fresh, to this same design, directly
@@ -277,10 +277,10 @@ async function runTests() {
         // Confirmed structurally, not just behaviorally: neither file
         // in the vertical-kinematics path references hydrology, or even
         // real terrain height, anywhere in its own code.
-        const stepConstraintSource = await readFile(new URL('../application/AvatarStepConstraint.js', import.meta.url), 'utf8');
+        const stepConstraintSource = await readFile(new URL('../application/avatar/AvatarStepConstraint.js', import.meta.url), 'utf8');
         const stepConstraintCode = stepConstraintSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!stepConstraintCode.includes('terrainHeightAt') && !stepConstraintCode.includes('Hydrology'),
-            '8. application/AvatarStepConstraint.js contains no reference to terrainHeightAt or Hydrology anywhere in its own code — this is a deliberate, named design boundary (0.3.2), not an oversight this milestone discovered');
+            '8. application/avatar/AvatarStepConstraint.js contains no reference to terrainHeightAt or Hydrology anywhere in its own code — this is a deliberate, named design boundary (0.3.2), not an oversight this milestone discovered');
 
         const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         const simulationCode = simulationSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -296,7 +296,7 @@ async function runTests() {
         // real, unmodified render-time formula reproduces exactly what
         // 0.9.613 already measured.
         assert(Math.abs(realRenderedY(seed, deepInterior) - (deepInterior.y + terrainHeightAt(seed, deepInterior.x, deepInterior.z))) < 1e-9,
-            '10. the real rendered Y (0.9.613\'s own measured quantity) is exactly position.y + terrainHeightAt(seed, x, z) — the same rendering-time formula application/RenderWorldViewUseCase.js already applies for ordinary hills, extended to a coordinate that happens to be a lake');
+            '10. the real rendered Y (0.9.613\'s own measured quantity) is exactly position.y + terrainHeightAt(seed, x, z) — the same rendering-time formula application/world/RenderWorldViewUseCase.js already applies for ordinary hills, extended to a coordinate that happens to be a lake');
     }
 
     // -------------------------------------------------------------
@@ -395,14 +395,14 @@ async function runTests() {
         assert(resolveAvatarVehicleMovementCapability.length === 1,
             '19. resolveAvatarVehicleMovementCapability() takes exactly one input — a VehicleType — with no seam for a ground/terrain fact of any kind');
 
-        // And application/WorldNavigationSession.js — the one place
+        // And application/world/WorldNavigationSession.js — the one place
         // that resolves a capability and calls setMovementCapability()
         // each frame — never once calls a hydrology or ground-category
         // function to do it.
-        const sessionSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const sessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
         const sessionCode = sessionSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!sessionCode.includes('hydrologyFeatureAt(') && !sessionCode.includes('surfaceCategoryAt('),
-            '20. application/WorldNavigationSession.js never calls hydrologyFeatureAt()/surfaceCategoryAt() anywhere in its own code — the ONLY existing movement-capability PRODUCER is vehicle-mount-derived; a terrain-derived producer would be genuinely new wiring, not a rewire of something already halfway there');
+            '20. application/world/WorldNavigationSession.js never calls hydrologyFeatureAt()/surfaceCategoryAt() anywhere in its own code — the ONLY existing movement-capability PRODUCER is vehicle-mount-derived; a terrain-derived producer would be genuinely new wiring, not a rewire of something already halfway there');
     }
 
     // -------------------------------------------------------------
@@ -437,7 +437,7 @@ async function runTests() {
         // ground under the avatar's CURRENT position WATER" — is a
         // pure, stateless, per-tick-recomputable function of (seed, x,
         // z) alone, unlike `_currentMovementSpeed`/`_vehicleBrakingIntent`
-        // (application/AvatarMovementController.js's own genuinely
+        // (application/avatar/AvatarMovementController.js's own genuinely
         // PERSISTED controller state, carried tick to tick). Two
         // independent calls with no shared object agree exactly,
         // because there is nothing to remember.
@@ -464,15 +464,15 @@ async function runTests() {
         assert(vehiclePlacementSource.includes('vehicle movement, speed, heading, or any physics'),
             '24. core/VehiclePlacement.js\'s own header names, in its own words, that vehicle movement/physics is explicitly not yet built — the ground gate cannot be a movement-time precedent for something that has no movement of its own to constrain');
 
-        // And application/AvatarMovementController.js — the file that
+        // And application/avatar/AvatarMovementController.js — the file that
         // WOULD need to consult a water rule during real-time movement
         // — never imports VehiclePlacement at all, confirming the gate
         // is genuinely placement-only, structurally unreachable from
         // the avatar's own movement pipeline.
-        const controllerSource = await readFile(new URL('../application/AvatarMovementController.js', import.meta.url), 'utf8');
+        const controllerSource = await readFile(new URL('../application/avatar/AvatarMovementController.js', import.meta.url), 'utf8');
         const controllerCode = controllerSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!controllerCode.includes('VehiclePlacement') && !controllerCode.includes('vehiclePresenceInRegion'),
-            '25. application/AvatarMovementController.js never references core/VehiclePlacement.js or vehiclePresenceInRegion() anywhere in its own code — the bicycle ground gate is a PLACEMENT restriction (procedural content-generation hygiene), never a real-time movement constraint this milestone could simply reuse');
+            '25. application/avatar/AvatarMovementController.js never references core/VehiclePlacement.js or vehiclePresenceInRegion() anywhere in its own code — the bicycle ground gate is a PLACEMENT restriction (procedural content-generation hygiene), never a real-time movement constraint this milestone could simply reuse');
     }
 
     // -------------------------------------------------------------

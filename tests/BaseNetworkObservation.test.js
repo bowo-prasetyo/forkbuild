@@ -1,16 +1,16 @@
-import { BaseChainId, baseNetworkForBaseChainId } from '../application/BaseChainId.js';
-import { BaseNetworkObservationState, isValidBaseNetworkObservationState } from '../application/BaseNetworkObservationState.js';
-import { BaseAccountObservation } from '../application/BaseAccountObservation.js';
-import { describeBaseAccountObservationStateLabel, describeBaseAccountObservation } from '../application/BaseAccountObservationView.js';
-import { BaseWalletConnectionState } from '../application/BaseWalletConnectionState.js';
-import { describeBaseWalletConnectionStateLabel, describeBaseWalletConnection } from '../application/BaseWalletConnectionView.js';
+import { BaseChainId, baseNetworkForBaseChainId } from '../application/anchoring/base/BaseChainId.js';
+import { BaseNetworkObservationState, isValidBaseNetworkObservationState } from '../application/anchoring/base/BaseNetworkObservationState.js';
+import { BaseAccountObservation } from '../application/anchoring/base/BaseAccountObservation.js';
+import { describeBaseAccountObservationStateLabel, describeBaseAccountObservation } from '../application/anchoring/base/BaseAccountObservationView.js';
+import { BaseWalletConnectionState } from '../application/anchoring/base/BaseWalletConnectionState.js';
+import { describeBaseWalletConnectionStateLabel, describeBaseWalletConnection } from '../application/anchoring/base/BaseWalletConnectionView.js';
 import { BaseWalletConnection } from '../base/BaseWalletConnection.js';
 import { BaseInjectedProviderWalletAdapter } from '../base/BaseInjectedProviderWalletAdapter.js';
 import { BaseJsonRpcClient } from '../base/BaseJsonRpcClient.js';
 import { BaseNetworkObserver } from '../base/BaseNetworkObserver.js';
-import { BlockchainKind } from '../application/BlockchainKind.js';
-import { BlockchainPublicationIdentity } from '../application/BlockchainPublicationIdentity.js';
-import { BitcoinAnchorPublicationRecord } from '../application/BitcoinAnchorPublicationRecord.js';
+import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
+import { BlockchainPublicationIdentity } from '../application/anchoring/BlockchainPublicationIdentity.js';
+import { BitcoinAnchorPublicationRecord } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js';
 import { BitcoinWalletConnection } from '../anchoring/BitcoinWalletConnection.js';
 
 // 0.8.90 — Explicit Base Network & Account Observation.

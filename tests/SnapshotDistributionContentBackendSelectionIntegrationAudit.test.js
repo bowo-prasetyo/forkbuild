@@ -5,35 +5,35 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import {
     SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES,
     availableSnapshotDistributionStorageTypes,
     resolveSnapshotDistributionContentStore
-} from '../application/SnapshotDistributionContentBackendSelection.js';
+} from '../application/snapshot/SnapshotDistributionContentBackendSelection.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 // 0.9.506 — Make Snapshot Distribution Content Backend Selectable.
 //
 // tests/SnapshotContentStorageChoiceCapabilityBoundaryAudit.test.js's own
 // 0.9.504 audit (Section G/H/J) proved the exact shape of this gap:
-// application/SnapshotDistributionCommand.js was already storage-agnostic,
+// application/snapshot/SnapshotDistributionCommand.js was already storage-agnostic,
 // but ui/main.js's own Distribution composition site always built exactly
 // one hardcoded ArweaveContentStore, with no selection parameter of any
-// kind, and never once read application/SnapshotPlacementStoreRegistry.js
+// kind, and never once read application/snapshot/placement/SnapshotPlacementStoreRegistry.js
 // — the SAME registry Placement's own creation/resolution coordinators
 // already share (tests/SnapshotPlacementArweaveStoreRegistrationIntegrationAudit
 // .test.js's own Section I). This milestone closes that gap the way both
 // audits' own verdicts recommended: reuse the existing registry, add no
 // second one, and add no new ContentStore implementation of any kind.
 //
-// application/SnapshotDistributionContentBackendSelection.js (0.9.506, this
+// application/snapshot/SnapshotDistributionContentBackendSelection.js (0.9.506, this
 // milestone's own only new production file) is the whole seam: a closed,
 // two-entry eligible list ('ipfs'/'ar' — never 'local', see that file's own
 // header for why) and one resolve() function that looks a caller's chosen
 // storage up in whatever SnapshotPlacementStoreRegistry-shaped registry it
-// is handed. application/SnapshotDistributionCommand.js itself is NOT
+// is handed. application/snapshot/SnapshotDistributionCommand.js itself is NOT
 // modified — it already accepted any contentStore duck-typed collaborator.
 //
 // LETTERED SECTIONS:
@@ -200,7 +200,7 @@ async function run() {
     {
         const mainSource = await codeOnlySource('ui/main.js');
 
-        check(mainSource.includes("import { availableSnapshotDistributionStorageTypes, resolveSnapshotDistributionContentStore } from '../application/SnapshotDistributionContentBackendSelection.js';"),
+        check(mainSource.includes("import { availableSnapshotDistributionStorageTypes, resolveSnapshotDistributionContentStore } from '../application/snapshot/SnapshotDistributionContentBackendSelection.js';"),
             'A. ui/main.js imports the new 0.9.506 selection module');
 
         // AMENDED BY 0.9.669 — `discoveryProvider` joined the parameter
@@ -360,7 +360,7 @@ async function run() {
 
         await expectRejects(
             executeSnapshotDistributionCommand({ bytes: JSON.stringify({ will: 'fail' }), contentStore: resolveSnapshotDistributionContentStore(registry, 'ar'), discoveryPublisher }),
-            'H. a failing Arweave signer causes the Distribution command to reject, exactly as application/SnapshotDistributionCommand.js\'s own contract already requires'
+            'H. a failing Arweave signer causes the Distribution command to reject, exactly as application/snapshot/SnapshotDistributionCommand.js\'s own contract already requires'
         );
         check(discoveryPublisher.calls.length === 0, 'H. placement failure prevents discovery — the fake publisher never saw a call for the failed attempt');
         check(arweaveNetwork.size === 0, 'H. nothing was actually written to the fake Arweave network on failure');

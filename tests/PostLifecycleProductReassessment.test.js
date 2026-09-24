@@ -8,17 +8,17 @@ import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { DocumentManifest } from '../application/DocumentManifest.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { DocumentManifest } from '../application/document/DocumentManifest.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { AutosaveDocumentUseCase } from '../application/AutosaveDocumentUseCase.js';
-import { AutosaveScheduler } from '../application/AutosaveScheduler.js';
-import { CheckRecoveryUseCase } from '../application/CheckRecoveryUseCase.js';
-import { RecoverDocumentUseCase } from '../application/RecoverDocumentUseCase.js';
-import { DiscardRecoveryUseCase } from '../application/DiscardRecoveryUseCase.js';
-import { CreatePersistenceUseCase } from '../application/CreatePersistenceUseCase.js';
-import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { AutosaveDocumentUseCase } from '../application/document/AutosaveDocumentUseCase.js';
+import { AutosaveScheduler } from '../application/document/AutosaveScheduler.js';
+import { CheckRecoveryUseCase } from '../application/document/CheckRecoveryUseCase.js';
+import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentUseCase.js';
+import { DiscardRecoveryUseCase } from '../application/document/DiscardRecoveryUseCase.js';
+import { CreatePersistenceUseCase } from '../application/document/CreatePersistenceUseCase.js';
+import { editorViewFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.203 — Post-Lifecycle Product Reassessment.
 //
@@ -132,8 +132,8 @@ async function runTests() {
         const vehicleTypeCode = codeOnlyLines(vehicleTypeSource).join('\n');
         assert(!/passenger|capacity|multi-?rider|\bfuel\b|\brange\b/i.test(vehicleTypeCode), 'B2. VehicleType.js\'s own CODE still declares no capacity/passenger/fuel vocabulary');
         const repoWideVehicleFiles = [
-            'application/AvatarVehicleInteractionController.js',
-            'application/AvatarVehicleMovementController.js',
+            'application/avatar/AvatarVehicleInteractionController.js',
+            'application/avatar/AvatarVehicleMovementController.js',
             'core/VehicleInstance.js',
             'core/VehiclePresence.js'
         ];
@@ -242,7 +242,7 @@ async function runTests() {
         // should be (the integration belongs in the one view that edits
         // documents, not spread across the app).
         const otherUiFiles = [
-            'ui/views/WorldView.js', 'ui/views/LiveWorldView.js',
+            'ui/views/WorldView.js', ...worldViewTemplateFiles(), 'ui/views/LiveWorldView.js',
             'ui/views/HomeView.js', 'ui/views/RecentWorldsView.js', 'ui/views/RepositoryView.js', 'ui/main.js'
         ];
         for (const identifier of ['AutosaveScheduler', 'recoverDocumentUseCase', 'discardRecoveryUseCase', 'checkRecoveryUseCase', 'autosaveDocumentUseCase']) {
@@ -281,7 +281,7 @@ async function runTests() {
         // Arweave/Nostr (never composing a signer/relay of their own) —
         // an explicit, previously-documented boundary, not a newly
         // discovered gap.
-        const walletSignerSource = await rawSource('application/CreateBitcoinAnchorWalletSignerUseCase.js');
+        const walletSignerSource = await rawSource('application/anchoring/bitcoin/CreateBitcoinAnchorWalletSignerUseCase.js');
         assert(/execute\(\{\s*wallet\s*\}/.test(walletSignerSource), 'D3. CreateBitcoinAnchorWalletSignerUseCase still requires the caller to supply the wallet — it constructs no wallet capability of its own');
 
         console.log(`✓ Section D: Publication workflow — COMPLETE. ${clickHandlers.size} wired actions cover the full publish/unpublish/anchor/distribute/Snapshot surface. Bitcoin anchor wallet signing remains an INTENTIONAL_BOUNDARY — real wallet/key management is out of scope, exactly as Arweave/Nostr signer/relay configuration already is for Snapshot distribution.`);

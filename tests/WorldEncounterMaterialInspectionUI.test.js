@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldEncounterMaterialLoadStatus, WorldEncounterMaterialSource } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus, WorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerification.js';
-import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
+import { WorldEncounterMaterialLoadStatus, WorldEncounterMaterialSource } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus, WorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.39 — World Encounter Material Inspection Orchestration & UI
@@ -16,7 +16,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // `materialVerifier` props, `materialInspection`/`materialInspectionRequestId`
 // page-local state, a `refreshMaterialInspection()` method (called from the
 // tail of `refreshSelectionOutcome()` and `chooseSelectionOrigin()`), and a
-// fourth `application/` import — `application/WorldEncounterMaterialInspection.js`'s
+// fourth `application/` import — `application/worldEncounter/WorldEncounterMaterialInspection.js`'s
 // own `inspectWorldEncounterMaterial()`. This file exercises that wiring
 // directly, the same `Component.methods.x.call(ctx)` discipline every other
 // UI test file in this chain already uses. `application/

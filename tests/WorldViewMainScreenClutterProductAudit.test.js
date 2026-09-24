@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldViewNavigationState, WorldViewPrimaryMode } from '../application/WorldViewNavigationState.js';
+import { WorldViewNavigationState, WorldViewPrimaryMode } from '../application/world/WorldViewNavigationState.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.359 — World View Main-Screen Clutter Product Audit.

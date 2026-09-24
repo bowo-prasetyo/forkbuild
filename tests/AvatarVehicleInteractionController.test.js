@@ -1,10 +1,10 @@
-import { AvatarVehicleInteractionController } from '../application/AvatarVehicleInteractionController.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarVehicleInteractionController } from '../application/avatar/AvatarVehicleInteractionController.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { Position } from '../core/Position.js';
 
 // 0.9.83 — Avatar-Vehicle Mount/Dismount Runtime Integration,
-// application/AvatarVehicleInteractionController.js.
+// application/avatar/AvatarVehicleInteractionController.js.
 //
 //   Section A: Mount integration — a real, deterministically-placed
 //              bicycle, approached and mounted through the entire chain
@@ -187,7 +187,7 @@ async function runTests() {
     // -------------------------------------------------------------
     // Section D — Held-key / key-repeat safety: the mount<->dismount
     // ping-pong this controller's own design specifically guards
-    // against (see application/AvatarVehicleInteractionController.js's
+    // against (see application/avatar/AvatarVehicleInteractionController.js's
     // own header, "Why held state alone is not enough").
     // -------------------------------------------------------------
     {
@@ -240,7 +240,7 @@ async function runTests() {
     {
         // A controller with no avatarPresenceSession at all is a
         // harmless no-op, the same graceful-absence posture
-        // application/AvatarMovementController.js#tick() already
+        // application/avatar/AvatarMovementController.js#tick() already
         // establishes for a null avatarPresenceSession.
         const controller = new AvatarVehicleInteractionController(null, { seed: SEED });
         controller.keyDown('e');
@@ -253,7 +253,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const { readFile } = await import('node:fs/promises');
-        const sourceUrl = new URL('../application/AvatarVehicleInteractionController.js', import.meta.url);
+        const sourceUrl = new URL('../application/avatar/AvatarVehicleInteractionController.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -261,12 +261,12 @@ async function runTests() {
             .join('\n');
 
         assert(!codeOnly.includes('AvatarMovementController'),
-            '24. application/AvatarVehicleInteractionController.js never imports or references AvatarMovementController — no movement coupling of any kind');
+            '24. application/avatar/AvatarVehicleInteractionController.js never imports or references AvatarMovementController — no movement coupling of any kind');
         assert(!/\bspeed\b/i.test(codeOnly),
-            '25. application/AvatarVehicleInteractionController.js never mentions vehicle speed');
+            '25. application/avatar/AvatarVehicleInteractionController.js never mentions vehicle speed');
         const forbidden = ['THREE', 'from \'three\'', 'Renderer', 'Math.random', 'localStorage', 'fetch(', 'WebSocket', 'setTimeout', 'setInterval', 'requestAnimationFrame'];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `26. application/AvatarVehicleInteractionController.js's own code never references "${term}" — no engine dependency, no persistence, no networking, no timers of its own`);
+            assert(!codeOnly.includes(term), `26. application/avatar/AvatarVehicleInteractionController.js's own code never references "${term}" — no engine dependency, no persistence, no networking, no timers of its own`);
         }
         assert(codeOnly.includes('deriveAvatarVehicleInteractionIntent')
             && codeOnly.includes('resolveAvatarVehicleInteractionTarget')

@@ -10,7 +10,7 @@ import { PublicationCommentary } from './PublicationCommentary.js';
 // repositories are fashionable. An in-memory collection is enough to
 // establish the domain seam; persistence, querying at scale, and a real
 // storage adapter are all later, separate milestones, exactly the same
-// deferral application/IpfsPublicationRecordHistory.js's own 0.8.71
+// deferral application/ipfs/IpfsPublicationRecordHistory.js's own 0.8.71
 // header already drew for a different domain one milestone family over.
 //
 // APPEND-ONLY, EXACTLY LIKE THAT FILE'S OWN DISCIPLINE:

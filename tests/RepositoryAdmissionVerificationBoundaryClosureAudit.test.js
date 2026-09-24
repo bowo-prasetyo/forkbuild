@@ -4,18 +4,18 @@ import { execSync } from 'node:child_process';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { WorldEncounterMaterialVerificationComposition } from '../application/WorldEncounterMaterialVerificationComposition.js';
+import { WorldEncounterMaterialVerificationComposition } from '../application/worldEncounter/WorldEncounterMaterialVerificationComposition.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
@@ -26,7 +26,7 @@ import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/Sour
 // admitted a resolved Publication into the app-wide Repository catalog on
 // `loading.status === 'AVAILABLE'` alone, never reading `verification.status`
 // — unlike its DecentralizedPublicationsView.js sibling, which only ever
-// admits after application/PublicationResolver.js's full signature
+// admits after application/publication/PublicationResolver.js's full signature
 // pipeline succeeds. The fix is one file, already merged. This milestone
 // does not reopen that finding — it asks the one question a "fix, then
 // audit again" arc always owes an answer to: is the fix actually
@@ -221,7 +221,7 @@ async function run() {
         assert(unavailableCtx.materialInspection.loading.status === 'UNAVAILABLE',
             '7. setup sanity: a load that finds nothing reports UNAVAILABLE.');
         assert(unavailableCtx.materialInspection.verification.status === 'UNVERIFIABLE',
-            '8. STRUCTURAL PROOF: even with a verifier that would say VERIFIED for real material, UNAVAILABLE material collapses to UNVERIFIABLE — application/WorldEncounterMaterialVerification.js\'s own isUsableMaterial() guard runs BEFORE the injected verifier is ever asked, so "UNAVAILABLE + VERIFIED" cannot occur through the real production pipeline no matter what any verifier decides.');
+            '8. STRUCTURAL PROOF: even with a verifier that would say VERIFIED for real material, UNAVAILABLE material collapses to UNVERIFIABLE — application/worldEncounter/WorldEncounterMaterialVerification.js\'s own isUsableMaterial() guard runs BEFORE the injected verifier is ever asked, so "UNAVAILABLE + VERIFIED" cannot occur through the real production pipeline no matter what any verifier decides.');
         assert(provider.list().length === 1 && provider.list()[0] === verifiedCtx.materialInspection.loading.material,
             '9. UNAVAILABLE + UNVERIFIABLE -> NOT admitted (provider still holds only the one genuinely admitted Publication from A1-A2).');
 
@@ -405,9 +405,9 @@ async function run() {
         // D2. The production wiring is exactly this composition, over
         // exactly the two real verifiers — structurally reconfirmed
         // from source, not re-derived.
-        const compositionUseSource = await readSource('application/WorldEncounterMaterialVerifierRuntimeComposition.js');
+        const compositionUseSource = await readSource('application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js');
         assert(/new WorldEncounterMaterialVerificationComposition\(\{\s*\n\s*verifiers: \[identityVerifier, signatureVerifier\]/.test(compositionUseSource),
-            '4. application/WorldEncounterMaterialVerifierRuntimeComposition.js still composes exactly WorldEncounterMaterialIdentityVerifier + WorldEncounterMaterialSignatureVerifier — the same class exercised structurally in D1-D3 above, not a stand-in this milestone invented.');
+            '4. application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js still composes exactly WorldEncounterMaterialIdentityVerifier + WorldEncounterMaterialSignatureVerifier — the same class exercised structurally in D1-D3 above, not a stand-in this milestone invented.');
         const mainSource = await readSource('ui/main.js');
         assert(mainSource.includes('composeWorldEncounterMaterialVerifier()') && mainSource.includes("app.provide('worldEncounterMaterialVerifier', worldEncounterMaterialVerifier)"),
             '5. ui/main.js provides that SAME composed verifier app-wide, under the name WorldView.js injects and passes into <WorldEncounterCanvas :materialVerifier>.');
@@ -418,10 +418,10 @@ async function run() {
         // tampered one does not); reconfirmed here only as a structural
         // citation, not re-run, to avoid duplicating Section C's own
         // live proof.
-        const resolverSource = await readSource('application/PublicationResolver.js');
+        const resolverSource = await readSource('application/publication/PublicationResolver.js');
         assert(resolverSource.includes('this._verifier.verifyDecentralizedPublication(publicationJson)')
             && resolverSource.includes('kindPlugin.verify(contentJson)'),
-            '6. application/PublicationResolver.js still calls the injected verifier for BOTH the envelope signature and the wrapped content\'s own signature — the two checks Section C\'s live tamper tests each independently defeated.');
+            '6. application/publication/PublicationResolver.js still calls the injected verifier for BOTH the envelope signature and the wrapped content\'s own signature — the two checks Section C\'s live tamper tests each independently defeated.');
     }
     console.log('✓ Section D: VERIFIED and RESOLVED both trace to real, unmodified, already-existing verification classes — a composed identity+signature AND gate for World Encounter, and PublicationResolver\'s own envelope+content signature pipeline for the sibling. No cryptography was reimplemented or duplicated by this audit. PRODUCT_COMPLETE.');
 
@@ -559,11 +559,11 @@ async function run() {
     {
         // H1. Repository search never becomes a second verification
         // pipeline — none of its own files import any verifier class.
-        const searchSource = await readSource('application/SearchPublicationsUseCase.js');
+        const searchSource = await readSource('application/publication/SearchPublicationsUseCase.js');
         const localProviderSource = await readSource('discovery/LocalDiscoveryProvider.js');
         const decentralizedProviderSource = await readSource('discovery/DecentralizedPublicationDiscoveryProvider.js');
         for (const [name, source] of [
-            ['application/SearchPublicationsUseCase.js', searchSource],
+            ['application/publication/SearchPublicationsUseCase.js', searchSource],
             ['discovery/LocalDiscoveryProvider.js', localProviderSource],
             ['discovery/DecentralizedPublicationDiscoveryProvider.js', decentralizedProviderSource]
         ]) {
@@ -636,7 +636,7 @@ async function run() {
         // the same reason). Amended to exclude exactly 0.9.597's own,
         // already-accounted-for files, while still catching any OTHER,
         // unexpected production drift.
-        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js']);
+        const expectedLaterMilestoneFiles = new Set(['application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js']);
         const unexpectedChangedFiles = changedFiles.filter((f) => !expectedLaterMilestoneFiles.has(f));
         assert(unexpectedChangedFiles.length === 0,
             `2. AMENDED BY 0.9.597 — this closure audit touches NO UNEXPECTED production file (0.9.597's own, separately-justified files excepted; found: ${JSON.stringify(unexpectedChangedFiles)}) — the 0.9.523 fix already closed the gap; this milestone only re-proves the boundary, from every angle the requesting brief named, without opening a new one.`);

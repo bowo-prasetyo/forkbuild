@@ -5,20 +5,20 @@ import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 
 import { ContentStore } from '../content/ContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/ArweaveWorldEncounterMaterialResolver.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 
-import { DecentralizedDiscoveryQueryService } from '../application/DecentralizedWorldDiscoveryQuery.js';
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
+import { DecentralizedDiscoveryQueryService } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 
 import { ProofVerifier } from '../anchoring/ProofVerifier.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
-import { ExternalProofVerifierRegistry } from '../application/ExternalProofVerifierRegistry.js';
-import { ExternalAnchorPublisherRegistry } from '../application/ExternalAnchorPublisherRegistry.js';
-import { PublicationAnchorCreationCoordinator } from '../application/PublicationAnchorCreationCoordinator.js';
+import { ExternalProofVerifierRegistry } from '../application/anchoring/ExternalProofVerifierRegistry.js';
+import { ExternalAnchorPublisherRegistry } from '../application/anchoring/ExternalAnchorPublisherRegistry.js';
+import { PublicationAnchorCreationCoordinator } from '../application/anchoring/PublicationAnchorCreationCoordinator.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.424 — Arweave Cross-Role Substrate Capability Audit.
@@ -194,8 +194,8 @@ async function run() {
         check(!(arweaveResolver instanceof ContentStore), 'A8. it does not extend ContentStore either — three Arweave Content classes, no shared base beyond one of the three');
 
         let mutualImports = 0;
-        const uploaderSource = await source('application/ArweavePublicationMaterialUploader.js');
-        const resolverSource = await source('application/ArweaveWorldEncounterMaterialResolver.js');
+        const uploaderSource = await source('application/arweave/ArweavePublicationMaterialUploader.js');
+        const resolverSource = await source('application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js');
         const storeSource = await source('content/ArweaveContentStore.js');
         const importsName = (text, name) => new RegExp(`^import[^\\n]*\\b${name}\\b[^\\n]*from`, 'm').test(text);
         if (importsName(uploaderSource, 'ArweaveWorldEncounterMaterialResolver') || importsName(uploaderSource, 'ArweaveContentStore')) mutualImports += 1;
@@ -212,7 +212,7 @@ async function run() {
     {
         const arweaveDiscovery = new ArweaveGraphqlDiscoveryQueryService({ fetchImpl: neverCalled });
         check(arweaveDiscovery instanceof DecentralizedDiscoveryQueryService, 'B1. ArweaveGraphqlDiscoveryQueryService is a real DecentralizedDiscoveryQueryService — the read half is real');
-        const discoverySource = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const discoverySource = await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         check(/this class never writes a[\s\S]{0,40}transaction or a[\s\S]{0,10}tag/i.test(discoverySource), 'B2. the class\'s own header states, in its own words, that it never writes — read from source, never inferred');
 
         let arweaveDiscoveryPublisherCount = 0;
@@ -224,7 +224,7 @@ async function run() {
         // The one real, live write pipeline for this role today.
         const nostrPublisher = new NostrPublicationDiscoveryPublisher({ relayUrl: 'wss://x', discoveryTag: 't', publishImpl: neverCalled });
         check(typeof nostrPublisher.publish === 'function', 'B4. Nostr\'s own discovery-write half is real and complete, for comparison');
-        const compositionSource = await source('application/PublicationDistributionRuntimeComposition.js');
+        const compositionSource = await source('application/publication/distribution/PublicationDistributionRuntimeComposition.js');
         check(/import\s*\{\s*NostrPublicationDiscoveryPublisher\s*\}/.test(compositionSource), 'B5. the one real production composition that builds the discovery-write collaborator imports NostrPublicationDiscoveryPublisher');
         check(!/ArweaveDiscoveryPublisher|ArweaveAnnouncement/.test(compositionSource), 'B6. that same composition names no Arweave discovery-write class at all — Arweave never occupies this pipeline\'s discoveryPublisher slot in current source, only its materialUploader slot');
 
@@ -325,10 +325,10 @@ async function run() {
         const bitcoinVerifierSource = await source('anchoring/BitcoinOpReturnProofVerifier.js');
         check(/verify\(proof,\s*\{\s*contentHash\s*\}/.test(bitcoinVerifierSource), 'D1. Bitcoin\'s real verify() contract, read from source: verify(proof, { contentHash }) — fetch the named transaction, require it confirmed, then match an embedded value against contentHash');
 
-        const arweaveDiscoverySource = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const arweaveDiscoverySource = await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         check(/arweave\.net\/graphql/.test(arweaveDiscoverySource), 'D2. this codebase already ships a real, live Arweave GraphQL tag-query mechanism (POST arweave.net/graphql, filter transactions by a named Tag) — the exact query shape a hypothetical Arweave ProofVerifier would need to fetch one transaction by id and inspect its own tags, never a new wire protocol this codebase would have to invent from nothing');
 
-        const arweaveUploaderSource = await source('application/ArweavePublicationMaterialUploader.js');
+        const arweaveUploaderSource = await source('application/arweave/ArweavePublicationMaterialUploader.js');
         check(/signer\.sign\(material\)/.test(arweaveUploaderSource) && /never knows what an Arweave transaction[\s\S]{0,80}owner, tags, signature/i.test(arweaveUploaderSource), 'D3. this codebase\'s real Arweave write path already delegates the transaction\'s own tags entirely to an injected, opaque signer — nothing in the uploader\'s own contract forbids that signer from attaching a discovery-envelope or a content-hash-committing tag; it simply is not asked to today');
 
         console.log('✓ Section D: a real Arweave ProofVerifier or a real Arweave discovery-write publisher, if ever built, would each reuse a wire pattern this codebase already runs live for Arweave today (tag-based GraphQL read; opaque-signer-carried tag write) — a plausible, evidence-grounded architectural fit, explicitly never asserted as existing capability');
@@ -356,13 +356,13 @@ async function run() {
     // Confirmed absent by source sweep, never merely undocumented.
     // ===============================================================
     {
-        const executorSource = await source('application/PublicationDistributionExecutor.js');
+        const executorSource = await source('application/publication/distribution/PublicationDistributionExecutor.js');
         check(/materialUploader,\s*distributionDescriptor,\s*discoveryPublisher/.test(executorSource.replace(/\s+/g, ' ')), 'F1. the real distribution executor takes materialUploader AND discoveryPublisher as two explicit, caller-supplied collaborators — neither is derived from, defaulted from, or triggered by the other');
 
-        const anchorCreationSource = await source('application/CreateExternalPublicationAnchorUseCase.js');
+        const anchorCreationSource = await source('application/anchoring/CreateExternalPublicationAnchorUseCase.js');
         check(!/ArweavePublicationMaterialUploader|PublicationDistribution/.test(anchorCreationSource), 'F2. anchor creation (PROOF_AND_ANCHORING\'s own real write path) imports nothing from Arweave Content or from the Publication distribution pipeline — creating an anchor is never triggered by, or derived from, an Arweave content upload');
 
-        const distributionRuntimeSource = await source('application/PublicationDistributionRuntimeComposition.js');
+        const distributionRuntimeSource = await source('application/publication/distribution/PublicationDistributionRuntimeComposition.js');
         check(!/PublicationAnchor|ExternalAnchorPublisherRegistry|CreateExternalPublicationAnchorUseCase/.test(distributionRuntimeSource), 'F3. the Content/Discovery distribution composition imports nothing from anchor creation either — the reverse direction is equally absent, confirming this is a genuine architectural boundary, not an accident of which file happened to import which');
 
         let multiSelectAnchorOrStorageMarkup = 0;
@@ -393,7 +393,7 @@ async function run() {
 
         const compositionSourcesToCheckForNewDiscoveryUiHook = [
             'ui/views/DecentralizedPublicationsView.js',
-            'application/PublicationDistributionOrchestrator.js'
+            'application/publication/distribution/PublicationDistributionOrchestrator.js'
         ];
         let discoveryUiHookExists = 0;
         for (const file of compositionSourcesToCheckForNewDiscoveryUiHook) {

@@ -1,4 +1,4 @@
-import { encodeBasePublicationCommitment } from '../application/BasePublicationCommitmentEncoding.js';
+import { encodeBasePublicationCommitment } from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
 
 const ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
 const DECIMAL_PATTERN = /^\d+$/;
@@ -63,7 +63,7 @@ const NATIVE_VALUE_HEX = '0x0';
 // validates an address beyond the caller-supplied `address`'s own shape,
 // and never holds custody of anything. `address`/`network`/`chainId`/
 // `nativeBalanceWei` always arrive from a caller's own, already-OBSERVED
-// `application/BaseAccountObservation.js` — real account facts are always
+// `application/anchoring/base/BaseAccountObservation.js` — real account facts are always
 // the CALLER's own, exactly as `anchoring/
 // BitcoinAnchorTransactionBuilder.js`'s own header already holds toward
 // its own caller-supplied `utxos`/`changeAddress`.

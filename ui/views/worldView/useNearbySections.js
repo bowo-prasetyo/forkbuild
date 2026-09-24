@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import { PlaceNamingClaim } from '../../../core/PlaceNamingClaim.js';
-import { buildPlaceNamingClaimPublication } from '../../../application/PlaceNamingClaimPublication.js';
+import { buildPlaceNamingClaimPublication } from '../../../application/placeNaming/PlaceNamingClaimPublication.js';
 
 // Explore mode's Nearby sections: places, landmarks, people, World encounters
 // and discovered place naming claims (with navigate and adopt).

@@ -3,7 +3,7 @@ import { buildGeographicPlaceView } from './GeographicPlaceView.js';
 
 // 0.5.5 — Geographic Place Directory & Identity UX.
 //
-// The world-wide counterpart to application/WorldLocationDirectory.js —
+// The world-wide counterpart to application/world/WorldLocationDirectory.js —
 // and deliberately a DIFFERENT question from the one that directory
 // answers:
 //

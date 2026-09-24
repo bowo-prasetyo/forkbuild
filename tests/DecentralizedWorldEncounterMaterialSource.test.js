@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { DecentralizedWorldEncounterMaterialSource } from '../application/DecentralizedWorldEncounterMaterialSource.js';
-import { WorldEncounterMaterialSource, loadWorldEncounterMaterial } from '../application/WorldEncounterMaterialLoading.js';
+import { DecentralizedWorldEncounterMaterialSource } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js';
+import { WorldEncounterMaterialSource, loadWorldEncounterMaterial } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 
 // 0.9.33 — Decentralized World Encounter Material Source.
@@ -193,7 +193,7 @@ function leadOf({ uri, origin = 'nostr', discoveryTag = 'forkbuild', storage = n
 //    the 0.9.21 boundary file itself is never modified.
 // ---------------------------------------------------------------------
 {
-    const path = '../application/DecentralizedWorldEncounterMaterialSource.js';
+    const path = '../application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js';
     const sourceUrl = new URL(path, import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -211,7 +211,7 @@ function leadOf({ uri, origin = 'nostr', discoveryTag = 'forkbuild', storage = n
         assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `25. code must never use "${term}" — retrieval only, no trust/verification vocabulary`);
     }
 
-    const loadingBoundarySource = await readFile(new URL('../application/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
+    const loadingBoundarySource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
     assert(!loadingBoundarySource.includes('DecentralizedWorldEncounterMaterialSource'), '26. the 0.9.21 loading boundary itself is never modified to know about this source');
 
     console.log('✓ Architectural regression: no rediscovery, no concrete backend, no trust vocabulary; 0.9.21 boundary untouched');

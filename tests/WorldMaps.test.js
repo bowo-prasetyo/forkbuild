@@ -16,17 +16,17 @@ import { StructurePlacement } from '../core/StructurePlacement.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 
 // 0.5.1 — World Maps & Geographic Navigation.
 //
@@ -35,7 +35,7 @@ import { WorldNavigationSession } from '../application/WorldNavigationSession.js
 //   - core/WorldMapProjection.js is pure arithmetic — project/unproject
 //     round-trip exactly, a region's screen radius always scales with
 //     the viewport, presentation tiers are labels only
-//   - application/WorldNavigationSession.js#getMapContent() gathers
+//   - application/world/WorldNavigationSession.js#getMapContent() gathers
 //     exactly what already exists (regions/landmarks/structures/
 //     collaborators), WORLD-WIDE — never limited to a streaming/
 //     proximity radius the way core/WorldSpatialContext.js's

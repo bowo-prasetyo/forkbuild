@@ -1,32 +1,32 @@
 import {
     describeLocalSnapshotContentAvailability, describeAvailabilityCheckButtonLabel
-} from '../../../application/LocalSnapshotContentAvailabilityView.js';
+} from '../../../application/snapshot/materialization/LocalSnapshotContentAvailabilityView.js';
 import { LOCAL_SNAPSHOT_AVAILABILITY_BADGE_CLASSES, MATERIALIZATION_BADGE_CLASSES } from './presentation.js';
-import { describePublicationSnapshotPossession } from '../../../application/PublicationSnapshotPossessionView.js';
+import { describePublicationSnapshotPossession } from '../../../application/snapshot/possession/PublicationSnapshotPossessionView.js';
 import {
     describePublicationReplicaContentKnowledge
-} from '../../../application/PublicationReplicaContentKnowledgeView.js';
-import { describePublicationSnapshotAcquisition } from '../../../application/PublicationSnapshotAcquisitionView.js';
+} from '../../../application/publication/replica/PublicationReplicaContentKnowledgeView.js';
+import { describePublicationSnapshotAcquisition } from '../../../application/snapshot/PublicationSnapshotAcquisitionView.js';
 import {
     LocalSnapshotContentAvailabilityOutcome
-} from '../../../application/LocalSnapshotContentAvailabilityOutcome.js';
-import { SnapshotContentTransferOutcome } from '../../../application/SnapshotContentTransferOutcome.js';
-import { createSnapshotMaterializationAttempt } from '../../../application/SnapshotMaterializationAttempt.js';
-import { StoreSnapshotContentOutcome } from '../../../application/StoreSnapshotContentOutcome.js';
-import { describeLocalSnapshotMaterializationSource } from '../../../application/SnapshotMaterializationView.js';
+} from '../../../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
+import { SnapshotContentTransferOutcome } from '../../../application/snapshot/materialization/SnapshotContentTransferOutcome.js';
+import { createSnapshotMaterializationAttempt } from '../../../application/snapshot/materialization/SnapshotMaterializationAttempt.js';
+import { StoreSnapshotContentOutcome } from '../../../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { describeLocalSnapshotMaterializationSource } from '../../../application/snapshot/materialization/SnapshotMaterializationView.js';
 import {
     SnapshotPlacementMaterializationOutcome
-} from '../../../application/SnapshotPlacementMaterializationOutcome.js';
-import { PeerSnapshotMaterializationOutcome } from '../../../application/PeerSnapshotMaterializationOutcome.js';
+} from '../../../application/snapshot/placement/SnapshotPlacementMaterializationOutcome.js';
+import { PeerSnapshotMaterializationOutcome } from '../../../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 import {
     appendSnapshotMaterializationHistoryEntry, describeSnapshotMaterializationSourceCounts
-} from '../../../application/SnapshotMaterializationHistory.js';
+} from '../../../application/snapshot/materialization/SnapshotMaterializationHistory.js';
 import {
     describeSnapshotMaterializationHistoryDetails
-} from '../../../application/SnapshotMaterializationHistoryDetailView.js';
+} from '../../../application/snapshot/materialization/SnapshotMaterializationHistoryDetailView.js';
 import {
     describeMaterializationAttempt, describeMaterializationButtonLabel
-} from '../../../application/SnapshotContentMaterializationView.js';
+} from '../../../application/snapshot/materialization/SnapshotContentMaterializationView.js';
 
 // Local snapshot content for one entry: checking availability, importing a
 // snapshot package, and the materialization history and source counts.

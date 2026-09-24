@@ -6,29 +6,29 @@ import { SpatialBounds } from '../core/SpatialBounds.js';
 import { Structure } from '../core/Structure.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
-import { CopyStructureIntoDocumentUseCase } from '../application/CopyStructureIntoDocumentUseCase.js';
-import { CreateStructureFromSelectionUseCase } from '../application/CreateStructureFromSelectionUseCase.js';
-import { LocalStructureLibraryStore } from '../application/LocalStructureLibraryStore.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
+import { CopyStructureIntoDocumentUseCase } from '../application/editor/CopyStructureIntoDocumentUseCase.js';
+import { CreateStructureFromSelectionUseCase } from '../application/editor/CreateStructureFromSelectionUseCase.js';
+import { LocalStructureLibraryStore } from '../application/editor/LocalStructureLibraryStore.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 
 // 0.4.3 — Personal Blueprint Library.
 //
 // 0.4.2 closed the recursive loop (Structure --copy/compose--> Document
 // --extract--> Structure) but left the extracted Structure with nowhere
 // to live beyond the caller's own variable. This is that "somewhere":
-// application/LocalStructureLibraryStore.js, a local, StorageProvider-
+// application/editor/LocalStructureLibraryStore.js, a local, StorageProvider-
 // backed catalog of the user's OWN Structures, architecturally separate
 // from both shared World state and the built-in Village Library.
 //
 //   Section A: LocalStructureLibraryStore — basic operations, guards,
 //              and the reload-from-persistence round trip
-//              (application/LocalStructureLibraryStore.js)
+//              (application/editor/LocalStructureLibraryStore.js)
 //   Section B: EditorSession wiring — saveStructureToPersonalLibrary()
 //              is a graceful no-op with nothing wired, and delegates to
-//              the store when it is (application/EditorSession.js)
+//              the store when it is (application/editor/EditorSession.js)
 //   Section C: FLAGSHIP — the full scenario: build, extract, save,
 //              reload, compose into two independent Documents, delete
 //              from the library, prove both Documents are untouched,
@@ -292,7 +292,7 @@ async function run() {
 
     // Phase F — Documents A and B remain unchanged: no live dependency
     // on the library entry that was just deleted (see
-    // application/LocalStructureLibraryStore.js's own header).
+    // application/editor/LocalStructureLibraryStore.js's own header).
     assert(bricksSnapshot(docA.building.getBricks()).join('|') === docASnapshotAfterCompose.join('|'),
         '35. PHASE F: Document A is byte-identical after Farmstead was deleted from the library');
     assert(bricksSnapshot(docB.building.getBricks()).join('|') === docBSnapshotAfterCompose.join('|'),

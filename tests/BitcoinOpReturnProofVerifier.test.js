@@ -10,7 +10,7 @@ import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofV
 // content/IpfsContentStore.js. tests/ExternalAnchorProofAdapters.test.js
 // builds on top of this same fake-network technique for the full
 // two-replica flagship, wiring this class in as one anchorType inside a
-// application/ExternalProofVerifierRegistry.js.
+// application/anchoring/ExternalProofVerifierRegistry.js.
 //
 //   Section A: a confirmed transaction whose OP_RETURN output carries
 //              the exact contentHash — VALID, with and without a `vout`

@@ -6,13 +6,13 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { EditorContext } from '../application/EditorContext.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { EditorContext } from '../application/editor/EditorContext.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
 
@@ -41,7 +41,7 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 // EditorSession and a REAL SpatialEditingService/GizmoGestureRouter
 // pair — the exact objects EditorView.js's pointer handlers call through
 // — using a lightweight stub in place of the THREE.js/DOM-backed render
-// session (application/RenderWorldUseCase.js), the same "stub the render
+// session (application/world/RenderWorldUseCase.js), the same "stub the render
 // session, keep everything else real" technique
 // tests/WorldEditorContinuity.test.js's own stubRenderSession() already
 // established. The stub reproduces the EXACT shape
@@ -128,7 +128,7 @@ function buildSession({ world, building }) {
     session._commandHistory = new CommandHistory({ world });
     session._editorCommandHistories.set(world.id, session._commandHistory);
 
-    // The stub render session (in place of application/RenderWorldUseCase.js
+    // The stub render session (in place of application/world/RenderWorldUseCase.js
     // — real THREE.js/a real <canvas> are not available here). Every
     // gizmoPointerDown/Move/Up/KeyDown call below drives the REAL
     // session._gizmoGestureRouter (constructed by EditorSession's own

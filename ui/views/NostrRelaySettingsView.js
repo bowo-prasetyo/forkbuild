@@ -22,7 +22,7 @@ import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 //      current override / Save / Use Deployment Default
 //      │
 //      ▼
-//   application/SetNostrRelayConfigurationUseCase.js (Save)   (this same milestone)
+//   application/settings/SetNostrRelayConfigurationUseCase.js (Save)   (this same milestone)
 //   storage/NostrRelayConfigurationStore.js#clear() (Use Deployment Default)   (0.9.369, unmodified)
 //      │
 //      ▼
@@ -41,7 +41,7 @@ import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 // validates the shape a second time itself.
 //
 // THIS VIEW NEVER TOUCHES DISCOVERY OR PUBLISHING. It never imports
-// application/NostrDiscoveryQueryService.js, application/
+// application/nostr/NostrDiscoveryQueryService.js, application/
 // NostrSnapshotDiscoveryQueryService.js, application/
 // NostrPlaceNamingDiscoverySource.js, nostr/NostrRelayQueryClient.js, or any
 // of the three Nostr WRITE-path publishers. `DEFAULT_NOSTR_RELAY_URL` is the

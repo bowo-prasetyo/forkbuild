@@ -158,7 +158,7 @@ export class PresenceVisibilityPolicy {
     // Pure and side-effect-free, exactly like shouldAdvertise() — this
     // answers a VISIBILITY question only. Whether a peer's claim, once
     // it arrives, is actually TRUSTED is a completely separate
-    // question application/PresenceTrustBoundary.js alone answers on
+    // question application/presence/PresenceTrustBoundary.js alone answers on
     // the receiving side — see docs/Principles.md, "Visibility Happens
     // Before Broadcasting, Never After" (0.2.40): visibility is the
     // SENDER asking "should I even send this," trust is the RECEIVER

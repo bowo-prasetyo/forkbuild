@@ -24,7 +24,7 @@ import { SignatureType } from './Signature.js';
 // OTHER, independent identity edit exactly this ONE World." Granting
 // Bob EDIT on Alice's World never makes Bob able to act AS Alice
 // anywhere else, and never makes Bob able to grant a THIRD identity
-// anything — see application/WorldMembershipUseCase.js's own header on
+// anything — see application/identity/WorldMembershipUseCase.js's own header on
 // why only the World's own cryptographic owner may ever produce a valid
 // grant for it, checked structurally on every replica, not merely
 // trusted from whoever relayed it.
@@ -89,7 +89,7 @@ export function getWorldEditAuthorizationGrantSigningDescriptor(record) {
 
 // A revocation is deliberately a SEPARATE, smaller record, the same
 // shape core/DeviceAuthorizationEnvelope.js's own revocation already
-// takes — see application/WorldMembershipUseCase.js and core/
+// takes — see application/identity/WorldMembershipUseCase.js and core/
 // WorldEditAuthority.js for how a receiver reconciles a grant and a
 // later revocation for the same (worldDocumentId, subjectIdentityId)
 // pair: timestamp comparison, never "permanent, first-one-wins." An

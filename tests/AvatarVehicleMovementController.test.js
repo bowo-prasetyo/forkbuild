@@ -2,13 +2,13 @@ import { readFile } from 'node:fs/promises';
 import {
     AvatarVehicleMovementController,
     isMovableVehicleType
-} from '../application/AvatarVehicleMovementController.js';
+} from '../application/avatar/AvatarVehicleMovementController.js';
 import { VehicleInstance } from '../core/VehicleInstance.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
 
-// 0.9.116 — Mounted Vehicle Movement, application/AvatarVehicleMovementController.js.
+// 0.9.116 — Mounted Vehicle Movement, application/avatar/AvatarVehicleMovementController.js.
 //
 //   Section A: canMove()/isMovableVehicleType() — BICYCLE, MOTORCYCLE
 //              (0.9.668), CAR (0.9.669), and DRONE (Aerial Movement
@@ -36,7 +36,7 @@ import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.
 //              no AvatarPresenceSession/rendering coupling
 //
 // A fake vehicle store, duck-typed to the exact {get(id), setPosition(id,
-// position)} contract application/VehicleRuntimeInstances.js itself
+// position)} contract application/world/VehicleRuntimeInstances.js itself
 // provides — this file tests AvatarVehicleMovementController in complete
 // isolation from the real store's own discovery/reconciliation policy
 // (covered separately by tests/VehicleRuntimeInstances.test.js), the same
@@ -343,7 +343,7 @@ async function runTests() {
     // directly tracked and ticked" scenario this section once tested
     // with DRONE (Section A4, above, now covers DRONE's own real
     // movement instead). The gate itself
-    // (application/AvatarVehicleMovementController.js's own
+    // (application/avatar/AvatarVehicleMovementController.js's own
     // `isMovableVehicleType()` check inside tick()) remains in place for
     // a future, not-yet-movable vehicle type.
 
@@ -433,7 +433,7 @@ async function runTests() {
     // Section H — architectural regression.
     // -------------------------------------------------------------
     {
-        const source = await readFile(new URL('../application/AvatarVehicleMovementController.js', import.meta.url), 'utf8');
+        const source = await readFile(new URL('../application/avatar/AvatarVehicleMovementController.js', import.meta.url), 'utf8');
         const codeOnly = source
             .split('\n')
             .filter((line) => !line.trim().startsWith('//'))
@@ -442,7 +442,7 @@ async function runTests() {
             '22. reuses core/AvatarMovementSimulation.js\'s own simulateAvatarMovement() — never a duplicated kinematics implementation');
         for (const term of ['AvatarPresenceSession', 'THREE', 'renderer/', 'avatarPresenceSession.update', '.rotation.y =']) {
             assert(!codeOnly.includes(term),
-                `23. application/AvatarVehicleMovementController.js's own code never references "${term}" — it has no idea an AvatarPresence or a renderer exists; see application/WorldNavigationSession.js for where the vehicle's result is applied to the avatar`);
+                `23. application/avatar/AvatarVehicleMovementController.js's own code never references "${term}" — it has no idea an AvatarPresence or a renderer exists; see application/world/WorldNavigationSession.js for where the vehicle's result is applied to the avatar`);
         }
         assert(codeOnly.includes('withPosition') || codeOnly.includes('setPosition'),
             '24. commits its result through VehicleRuntimeInstances#setPosition() (itself a VehicleInstance#withPosition() wrapper), never a direct field assignment');

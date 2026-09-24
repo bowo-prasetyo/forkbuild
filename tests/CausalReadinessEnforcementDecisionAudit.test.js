@@ -10,18 +10,18 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { RenameGroupCommand } from '../application/commands/RenameGroupCommand.js';
-import { DocumentCommandPropagationUseCase } from '../application/DocumentCommandPropagationUseCase.js';
-import { RemoteDocumentOperationApplicationUseCase } from '../application/RemoteDocumentOperationApplicationUseCase.js';
+import { DocumentCommandPropagationUseCase } from '../application/document/DocumentCommandPropagationUseCase.js';
+import { RemoteDocumentOperationApplicationUseCase } from '../application/document/RemoteDocumentOperationApplicationUseCase.js';
 import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
-import { DocumentOperationCausalGapObservationUseCase } from '../application/DocumentOperationCausalGapObservationUseCase.js';
-import { DocumentOperationRecoveryUseCase } from '../application/DocumentOperationRecoveryUseCase.js';
+import { DocumentOperationCausalGapObservationUseCase } from '../application/document/DocumentOperationCausalGapObservationUseCase.js';
+import { DocumentOperationRecoveryUseCase } from '../application/document/DocumentOperationRecoveryUseCase.js';
 import { DocumentOperationProvenance } from '../core/DocumentOperationProvenance.js';
 import {
     DocumentOperationApplicationEligibility,
@@ -53,7 +53,7 @@ import {
 // This fourth subscriber calls `evaluateApplicationReadiness()` against the
 // SAME `DocumentOperationCausalGapDetector` gap observation records into,
 // and against a REAL `executionHistory` backed by the receiving replica's
-// own `application/CommandHistory.js` instance — never a private, detached
+// own `application/editor/CommandHistory.js` instance — never a private, detached
 // copy of either. It only ever observes: it never calls `apply()` and
 // never withholds a call to it. `NOT_READY` gates nothing in this
 // codebase, before or after this milestone.
@@ -62,7 +62,7 @@ import {
 // the decision itself: no pending queue, no buffering, no delayed
 // execution, no automatic retry, no reordering, no rollback, no CRDT, no
 // OT, no synchronized undo, no conflict resolution, no convergence
-// guarantee, no change to `application/CommandHistory.js`, no change to
+// guarantee, no change to `application/editor/CommandHistory.js`, no change to
 // `ARRIVAL_ORDER`. See this file's own closing "Recommendation" for the
 // evidence this audit produces and the choice it leaves open.
 
@@ -173,7 +173,7 @@ function groupName(document) {
 
 // A small, shared, mutable execution-history query — the exact shape
 // `evaluateApplicationReadiness()` requires (`isExecuted(documentId,
-// operationId)`) — backed by REAL `application/CommandHistory.js`
+// operationId)`) — backed by REAL `application/editor/CommandHistory.js`
 // instances registered as documents are opened. TEST-ONLY glue, not a
 // change to `CommandHistory` itself, mirroring
 // `tests/DocumentOperationApplicationReadiness.test.js`'s own
@@ -234,7 +234,7 @@ function wireReceiver(receiver, target, executionHistoryRegistry, order = ['gap'
 }
 
 // A recovery-capable full stack (propagation + recovery + gap observation,
-// wired exactly the way `application/EditorSession.js` wires them:
+// wired exactly the way `application/editor/EditorSession.js` wires them:
 // recovery's own feed attaches to gap observation, never to application)
 // — mirrors `tests/CausalApplicationEligibilityPolicyAudit.test.js`'s own
 // Section 5 `makeFullStack()` helper.

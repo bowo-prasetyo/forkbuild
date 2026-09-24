@@ -5,7 +5,7 @@
 // deliberately the same THIRD-concept shape core/DeviceAuthority.js
 // already established for device authorization, applied one layer over:
 //
-//   application/WorldMembershipUseCase.js  "Given a live signed grant/
+//   application/identity/WorldMembershipUseCase.js  "Given a live signed grant/
 //   #grantEdit()/#revokeEdit()              revocation THIS replica's
 //                                            own owner produced, record
 //                                            it" — local, first-person,

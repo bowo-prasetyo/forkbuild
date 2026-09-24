@@ -1,12 +1,12 @@
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
-import { BitcoinAnchorBroadcastState } from '../application/BitcoinAnchorBroadcastState.js';
-import { BitcoinAnchorContentProofState } from '../application/BitcoinAnchorContentProofState.js';
-import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/BitcoinAnchorConfirmationObservationHistory.js';
-import { observeBitcoinAnchorChainPlacementChanges } from '../application/BitcoinAnchorChainPlacementObserver.js';
-import { analyzeBitcoinAnchorObservationConsistency } from '../application/BitcoinAnchorObservationConsistencyAnalyzer.js';
-import { composeBitcoinAnchorObservationEvidence } from '../application/BitcoinAnchorObservationEvidence.js';
-import { describeBitcoinAnchorObservationEvidence } from '../application/BitcoinAnchorObservationEvidenceView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
+import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js';
+import { observeBitcoinAnchorChainPlacementChanges } from '../application/anchoring/bitcoin/BitcoinAnchorChainPlacementObserver.js';
+import { analyzeBitcoinAnchorObservationConsistency } from '../application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyAnalyzer.js';
+import { composeBitcoinAnchorObservationEvidence } from '../application/anchoring/bitcoin/BitcoinAnchorObservationEvidence.js';
+import { describeBitcoinAnchorObservationEvidence } from '../application/anchoring/bitcoin/BitcoinAnchorObservationEvidenceView.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.78 — Bitcoin Anchor Observation Evidence Correlation.
 //
@@ -37,7 +37,7 @@ import { PublicationObservationArchive } from '../application/PublicationObserva
 // Section I: the view layer — counts, reused state labels, `index`
 //            carried through, no new vocabulary
 // Section J: persistence round trip — composing evidence over histories
-//            restored from application/PublicationObservationArchive.js's
+//            restored from application/publication/observationArchive/PublicationObservationArchive.js's
 //            own toJSON()/fromJSON() (0.8.75) matches composing over the
 //            live archive, byte-for-byte
 
@@ -198,7 +198,7 @@ async function run() {
         const proofB2 = contentProof({ contentHash: SHARED_CONTENT_HASH, observedAt: new Date('2026-01-02T09:45:00Z'), state: BitcoinAnchorContentProofState.HASH_MISMATCH });
 
         // A single, shared "candidate pool" — exactly the shape a caller
-        // scoping application/PublicationObservationArchive.js's own
+        // scoping application/publication/observationArchive/PublicationObservationArchive.js's own
         // anchorId-keyed maps down to one anchor would have to filter
         // through, one explicit anchorId at a time.
         const broadcastPool = [broadcastA, broadcastB];
@@ -375,21 +375,21 @@ async function run() {
 
         assert(described.anchorId === 'anchor-view', '54. the described view names the same anchorId');
         assert(described.broadcastObservations.count === 1, '55. broadcast section reports the correct count');
-        assert(described.broadcastObservations.observations[0].stateLabel === 'Transaction broadcasted', '56. the broadcast label reuses application/BitcoinAnchorBroadcastView.js\'s own vocabulary unchanged');
+        assert(described.broadcastObservations.observations[0].stateLabel === 'Transaction broadcasted', '56. the broadcast label reuses application/anchoring/bitcoin/BitcoinAnchorBroadcastView.js\'s own vocabulary unchanged');
         assert(described.broadcastObservations.observations[0].index === 1, '57. the broadcast entry carries its own index');
         assert(described.broadcastObservations.observations[0].broadcastedAt.getTime() === b1.broadcastedAt.getTime(), '58. broadcastedAt is carried through');
 
         assert(described.confirmationObservations.count === 1, '59. confirmation section reports the correct count');
-        assert(described.confirmationObservations.observations[0].stateLabel === 'Transaction confirmed', '60. the confirmation label reuses application/BitcoinAnchorConfirmationObservationHistoryView.js\'s own vocabulary unchanged');
+        assert(described.confirmationObservations.observations[0].stateLabel === 'Transaction confirmed', '60. the confirmation label reuses application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryView.js\'s own vocabulary unchanged');
         assert(described.confirmationObservations.observations[0].index === 1, '61. the confirmation entry carries its own index');
         assert(described.confirmationObservations.observations[0].blockHeight === 900000, '62. confirmation fields are carried through');
 
         assert(described.contentProofObservations.count === 1, '63. content-proof section reports the correct count');
-        assert(described.contentProofObservations.observations[0].stateLabel === 'Hash matches OP_RETURN', '64. the content-proof label reuses application/BitcoinAnchorContentProofView.js\'s own vocabulary unchanged');
+        assert(described.contentProofObservations.observations[0].stateLabel === 'Hash matches OP_RETURN', '64. the content-proof label reuses application/anchoring/bitcoin/BitcoinAnchorContentProofView.js\'s own vocabulary unchanged');
         assert(described.contentProofObservations.observations[0].index === 1, '65. the content-proof entry carries its own index');
 
-        assert(typeof described.chainPlacementObservations.count === 'number', '66. the chain-placement section is the same shape application/BitcoinAnchorChainPlacementObservationView.js already produces');
-        assert(typeof described.consistencyFindings.count === 'number', '67. the consistency section is the same shape application/BitcoinAnchorObservationConsistencyView.js already produces');
+        assert(typeof described.chainPlacementObservations.count === 'number', '66. the chain-placement section is the same shape application/anchoring/bitcoin/BitcoinAnchorChainPlacementObservationView.js already produces');
+        assert(typeof described.consistencyFindings.count === 'number', '67. the consistency section is the same shape application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyView.js already produces');
 
         assert(describeBitcoinAnchorObservationEvidence(null) === null, '68. describing a null evidence bundle returns null, never throws');
     }

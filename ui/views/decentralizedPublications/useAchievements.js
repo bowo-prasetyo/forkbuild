@@ -1,7 +1,7 @@
 import { ref, reactive } from 'vue';
-import { reconstructAchievementBadges } from '../../../application/AchievementBadgeView.js';
-import { BlockchainKind } from '../../../application/BlockchainKind.js';
-import { reconstructAchievementProfile } from '../../../application/AchievementProfileView.js';
+import { reconstructAchievementBadges } from '../../../application/achievement/AchievementBadgeView.js';
+import { BlockchainKind } from '../../../application/anchoring/BlockchainKind.js';
+import { reconstructAchievementProfile } from '../../../application/achievement/AchievementProfileView.js';
 
 // Achievement badges and the achievement profile, derived from the archive.
 export function useAchievements({

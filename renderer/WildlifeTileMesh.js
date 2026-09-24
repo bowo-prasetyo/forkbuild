@@ -168,7 +168,7 @@ function buildSpeciesMeshes(preset, animals) {
 // animal's own core/AnimalIdentity.js id, so this tile simply never
 // builds geometry for it, the same "renderer glue reads whatever the
 // application layer already decided" split
-// application/VehicleRuntimeInstances.js's own render sync already
+// application/world/VehicleRuntimeInstances.js's own render sync already
 // establishes for vehicles. This file still computes no catch/exclusion
 // policy of its own — it only ever filters a set it is handed.
 export function buildWildlifeTileMesh(tx, tz, seed, tileSize = TERRAIN_TILE_SIZE, excludedAnimalIds = EMPTY_EXCLUSION_SET) {

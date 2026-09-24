@@ -3,12 +3,12 @@ import {
     buildLeaderboardRows,
     default as ReconciliationCandidateLeaderboardTable
 } from '../ui/components/ReconciliationCandidateLeaderboardTable.js';
-import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation.js';
-import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreement } from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreementView.js';
-import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/claimSnapshotReconciliation/decision/History.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js';
+import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/claimSnapshotReconciliation/revalidationObservation/History.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreement } from '../application/claimSnapshotReconciliation/candidate/EvidenceAgreementView.js';
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.180 — Reconciliation Candidate Leaderboard UI Integration.
 //
@@ -18,7 +18,7 @@ import { PublicationObservationArchive } from '../application/PublicationObserva
 //            frozen rows, order preservation, no invented fields
 // Section C: FLAGSHIP — the identical asymmetric two-archive, three-
 //            candidate scenario tests/
-//            PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.test.js
+//            ReconciliationCandidateLeaderboardPage.test.js
 //            already exercises, carried one layer further: real archive ->
 //            0.8.176 -> 0.8.177 -> 0.8.178 -> 0.8.179 -> 0.8.180's own
 //            buildLeaderboardRows() -> the exact numbers a reader would
@@ -321,7 +321,7 @@ async function run() {
 
         const importedModules = [...moduleSource.matchAll(/^import\s[\s\S]*?from '([^']+)';/gm)].map((match) => match[1]);
         assert(importedModules.some((m) => m.endsWith('PublicationObservationArchive.js')), '56. imports PublicationObservationArchive.js (to build the honestly-empty targetArchive)');
-        assert(importedModules.some((m) => m.endsWith('PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js')), '57. imports 0.8.179\'s own page module');
+        assert(importedModules.some((m) => m.endsWith('application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js')), '57. imports 0.8.179\'s own page module');
         assert(importedModules.some((m) => m.endsWith('ReconciliationCandidateLeaderboardTable.js')), '58. imports 0.8.180\'s own presentational table component');
         assert(importedModules.every((m) => m === 'vue' || m.endsWith('.js')), '59. every import resolves to a real module specifier');
     }

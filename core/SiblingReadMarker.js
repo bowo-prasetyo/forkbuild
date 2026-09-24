@@ -7,7 +7,7 @@
 // about MY OWN messages"; this one answers "what has one of MY OWN OTHER
 // DEVICES told me about ITS OWN read position in a conversation with a
 // peer." Same shape, same monotonic discipline, completely different
-// question — see application/SiblingReadStateStore.js's own header, and
+// question — see application/chat/SiblingReadStateStore.js's own header, and
 // docs/Principles.md, "Per-Device Local Read State And Identity-Observed
 // Read State Are Never The Same Fact" (0.2.83).
 //

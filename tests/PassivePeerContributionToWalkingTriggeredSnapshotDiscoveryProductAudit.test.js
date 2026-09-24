@@ -2,21 +2,21 @@ import { execSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { PublicationSnapshotPlacementPeerExchange } from '../application/PublicationSnapshotPlacementPeerExchange.js';
-import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
-import { PublicationSnapshotPlacementPeerMessageKind } from '../application/PublicationSnapshotPlacementPeerProtocol.js';
-import { PlacementAcquisitionKind } from '../application/PlacementAcquisitionKind.js';
-import { SnapshotPlacementResolver } from '../application/SnapshotPlacementResolver.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';
+import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
+import { PublicationSnapshotPlacementPeerMessageKind } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js';
+import { PlacementAcquisitionKind } from '../application/placement/PlacementAcquisitionKind.js';
+import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 
 // 0.9.482 — Passive Peer Contribution to Walking-Triggered Snapshot
 // Discovery Product Audit.
@@ -59,7 +59,7 @@ import { executeDiscoverSnapshotCandidatesCommand } from '../application/Discove
 //   Section D — FLAGSHIP: end-to-end resolution. A candidate surfaced
 //               this way still carries enough identity to look its own
 //               full signed envelope back up in the SAME catalog and
-//               resolve it — via application/SnapshotPlacementResolver.js,
+//               resolve it — via application/snapshot/placement/SnapshotPlacementResolver.js,
 //               against a real content store — to actual, hash-verified
 //               bytes. Also corrects the originating brief's own
 //               "Publication / World View / Repository" framing: this
@@ -126,7 +126,7 @@ function grepFiles(pattern, dirs, { ignoreCase = false } = {}) {
     return hits.trim() ? hits.trim().split('\n') : [];
 }
 
-// application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
+// application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
 // constructs a real storage/LocalStorageProvider.js, which reads
 // window.localStorage — a minimal in-memory shim, installed ONLY when no
 // window already exists (a real browser test run never hits this
@@ -441,7 +441,7 @@ async function run() {
         assert(fullPlacement instanceof PublicationSnapshotPlacement && fullPlacement.locator === candidate.locator,
             '3. the FULL signed envelope for this exact candidate is still sitting in the catalog it came from, addressable by the candidate\'s own contentHash.');
 
-        // D5. Resolution, via application/SnapshotPlacementResolver.js
+        // D5. Resolution, via application/snapshot/placement/SnapshotPlacementResolver.js
         // (0.8.18, unmodified) — the SAME resolution machinery this
         // codebase already uses for a self-created placement, applied
         // here, unmodified, to a peer-discovered one.
@@ -457,15 +457,15 @@ async function run() {
         // D6. Correcting the originating brief's own framing: this
         // family's "end to end" stops at BYTES, never a
         // `publisher/Publication.js` object. Reaching a Publication is
-        // application/PublicationPeerProtocol.js's own, structurally
+        // application/publication/PublicationPeerProtocol.js's own, structurally
         // separate, ANNOUNCE-only pipeline (0.7.3) — confirmed live,
         // never merged with this one.
-        const publicationPeerProtocolSource = await readSource('application/PublicationPeerProtocol.js');
+        const publicationPeerProtocolSource = await readSource('application/publication/PublicationPeerProtocol.js');
         assert(!/PublicationSnapshotPlacement/.test(publicationPeerProtocolSource),
-            '6. application/PublicationPeerProtocol.js — the pipeline that would carry a full Publication object — never references PublicationSnapshotPlacement at all; the two remain two independent gossip families.');
-        const placementPeerProtocolSource = await readSource('application/PublicationSnapshotPlacementPeerProtocol.js');
+            '6. application/publication/PublicationPeerProtocol.js — the pipeline that would carry a full Publication object — never references PublicationSnapshotPlacement at all; the two remain two independent gossip families.');
+        const placementPeerProtocolSource = await readSource('application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js');
         assert(!/DecentralizedPublication/.test(placementPeerProtocolSource),
-            '7. ...and application/PublicationSnapshotPlacementPeerProtocol.js never references DecentralizedPublication either — resolving a discovered candidate answers "can these bytes be retrieved," never "here is the publication they belong to." A caller who wants that separately-attributed Publication object reuses application/SnapshotPublicationAttribution.js, unmodified, exactly as application/DiscoverSnapshotCandidatesCommand.js\'s own header already excludes doing here.');
+            '7. ...and application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js never references DecentralizedPublication either — resolving a discovered candidate answers "can these bytes be retrieved," never "here is the publication they belong to." A caller who wants that separately-attributed Publication object reuses application/snapshot/SnapshotPublicationAttribution.js, unmodified, exactly as application/snapshot/DiscoverSnapshotCandidatesCommand.js\'s own header already excludes doing here.');
 
         console.log('✓ Section D (FLAGSHIP): a candidate discovered entirely through passive ANNOUNCE resolves, end to end, to real, hash-verified bytes — through the catalog it came from (never the stripped candidate itself) and the existing, unmodified SnapshotPlacementResolver. The originating brief\'s own "-> Publication -> World View -> Repository" framing is corrected: this pipeline\'s own "end" is bytes, and reaching a Publication object is a structurally separate, ANNOUNCE-only pipeline this milestone does not merge.');
     }
@@ -489,7 +489,7 @@ async function run() {
             }
         }
         assert(placementAnnounceCallSites.length === 0,
-            `1. no production file anywhere in ui/ or application/ ever calls a placement peerExchange's own announce() — every one of the ${announceCallSites.length} \`.announce(\` call site(s) this audit found belongs to the PUBLICATION family (ui/views/EditorView.js's explicit "Publish to Network" click, application/PublicationPeerConnectionSync.js's automatic connection sync), never the placement one.`);
+            `1. no production file anywhere in ui/ or application/ ever calls a placement peerExchange's own announce() — every one of the ${announceCallSites.length} \`.announce(\` call site(s) this audit found belongs to the PUBLICATION family (ui/views/EditorView.js's explicit "Publish to Network" click, application/publication/PublicationPeerConnectionSync.js's automatic connection sync), never the placement one.`);
 
         // E2. The exact, already-shipped counterpart THIS family is
         // missing: 0.9.342's own PublicationPeerConnectionSync, and the
@@ -497,12 +497,12 @@ async function run() {
         // constructs one automatically, internally — a pattern this
         // audit confirms has NO placement-side sibling anywhere in this
         // codebase.
-        const publicationUseCaseSource = await readSource('application/CreatePublicationPeerExchangeUseCase.js');
+        const publicationUseCaseSource = await readSource('application/publication/CreatePublicationPeerExchangeUseCase.js');
         assert(/new PublicationPeerConnectionSync\(/.test(publicationUseCaseSource),
-            '2. application/CreatePublicationPeerExchangeUseCase.js really does construct a PublicationPeerConnectionSync internally, automatically, for every replica this app runs — Publications get connection-time sync for free.');
-        const placementUseCaseSource = await readSource('application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js');
+            '2. application/publication/CreatePublicationPeerExchangeUseCase.js really does construct a PublicationPeerConnectionSync internally, automatically, for every replica this app runs — Publications get connection-time sync for free.');
+        const placementUseCaseSource = await readSource('application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js');
         assert(!/ConnectionSync/.test(placementUseCaseSource),
-            '3. application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js constructs no such thing — no PublicationSnapshotPlacementPeerConnectionSync class exists anywhere in this codebase today.');
+            '3. application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js constructs no such thing — no PublicationSnapshotPlacementPeerConnectionSync class exists anywhere in this codebase today.');
         const anyPlacementSyncFile = grepFiles('PublicationSnapshotPlacementPeerConnectionSync|SnapshotPlacementConnectionSync', ['application', 'ui']);
         assert(anyPlacementSyncFile.length === 0,
             '4. confirmed by name across the whole application/ui surface: this class has never been built for placements.');
@@ -710,9 +710,9 @@ async function run() {
         // H3. Never a ranking or trust signal — reconfirming
         // PlacementAcquisitionKind.js's own header live, one more time,
         // in this composed context specifically.
-        const acquisitionSource = await readSource('application/PlacementAcquisitionKind.js');
+        const acquisitionSource = await readSource('application/placement/PlacementAcquisitionKind.js');
         assert(/THIS IS NOT A RANKING/.test(acquisitionSource),
-            '4. application/PlacementAcquisitionKind.js still states, verbatim, that no acquisition kind may ever be compared to decide which placement to prefer — a future composite candidate query service could expose this SAME pairing without ever letting PEER-acquired candidates rank above or below LOCAL/PACKAGE ones.');
+            '4. application/placement/PlacementAcquisitionKind.js still states, verbatim, that no acquisition kind may ever be compared to decide which placement to prefer — a future composite candidate query service could expose this SAME pairing without ever letting PEER-acquired candidates rank above or below LOCAL/PACKAGE ones.');
 
         console.log('✓ Section H: this codebase already has exactly the seam this milestone\'s own originating request asked for — provenance ("how did I learn this") lives in a genuinely SEPARATE collaborator (LocalPlacementKnowledgeStore, 0.8.24) from candidate knowledge ("what do I know"), so a future composite query service can compose the two without ever rewriting the catalog as "local, including peer" or adding a provenance field to the candidate shape itself.');
     }
@@ -723,11 +723,11 @@ async function run() {
     {
         const worldEncounterReferences = grepFiles(
             'WorldEncounterMaterialLoading|LocalWorldEncounterMaterialSource|AutomaticSnapshotEncounterCascade|registerMaterializedSnapshotWorldSource',
-            ['application/PublicationSnapshotPlacementPeerExchange.js',
-             'application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js',
-             'application/LocalPublicationSnapshotPlacementCatalog.js',
-             'application/LocalPlacementKnowledgeStore.js',
-             'application/SnapshotPlacementResolver.js']
+            ['application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js',
+             'application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js',
+             'application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js',
+             'application/placement/LocalPlacementKnowledgeStore.js',
+             'application/snapshot/placement/SnapshotPlacementResolver.js']
         );
         assert(worldEncounterReferences.length === 0,
             '1. none of the five production files this audit exercises reference the World Encounter material-loading, cascade, or registration families at all — passive peer contribution to Snapshot candidate discovery never becomes a second World Encounter engine, exactly like 0.9.480/0.9.481 already confirmed for the mechanisms alone.');
@@ -772,7 +772,7 @@ async function run() {
         // PublicationSnapshotPlacementPeerConnectionSync or any of the
         // files this section's own header names) is likewise expected,
         // same reasoning as the 0.9.597 files already excepted above.
-        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js', 'ui/views/EditorView.js']);
+        const expectedLaterMilestoneFiles = new Set(['application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js', 'ui/views/EditorView.js']);
         const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
             .filter((f) => !expectedLaterMilestoneFiles.has(f));
         assert(unexpectedNonTestFiles.length === 0, `1. AMENDED BY 0.9.597 — no UNEXPECTED production file is modified by this milestone (0.9.597's own, separately-justified files excepted) — found: ${unexpectedNonTestFiles.join(', ') || 'none'}.`);
@@ -800,13 +800,13 @@ async function run() {
 'bytes via the existing, unmodified SnapshotPlacementResolver, by going back to the catalog for the full signed\n' +
 "envelope the stripped candidate itself never carries (Section D). Section D also corrects the originating brief's\n" +
 'own diagram: this pipeline\'s "end" is bytes, never a `publisher/Publication.js` object -- reaching one is a\n' +
-'structurally separate, ANNOUNCE-only pipeline (application/PublicationPeerProtocol.js) this milestone does not, and\n' +
+'structurally separate, ANNOUNCE-only pipeline (application/publication/PublicationPeerProtocol.js) this milestone does not, and\n' +
 'should not, merge with placement discovery.\n' +
 '\n' +
 "Section E is this audit's own central correction, and the reason the verdict is neither of the brief's own two\n" +
 'named options. Grepping the ENTIRE production surface (ui/ + application/) for every `.announce(` call site, then\n' +
 'classifying each one, found zero that belong to the placement family -- every real call site belongs to the\n' +
-"Publication family instead (ui/views/EditorView.js's explicit click, and application/PublicationPeerConnectionSync.js's\n" +
+"Publication family instead (ui/views/EditorView.js's explicit click, and application/publication/PublicationPeerConnectionSync.js's\n" +
 "automatic, 0.9.342-built connection-time sync, which CreatePublicationPeerExchangeUseCase.js already constructs\n" +
 'internally for every replica this app runs). No placement-side equivalent exists anywhere in this codebase. Live\n' +
 "reproduction with the REAL, unmodified, production-composed exchange confirmed the consequence directly: a peer\n" +
@@ -827,7 +827,7 @@ async function run() {
 'in production, because the one seam that would make ANNOUNCE fire at the moment it matters (a peer connecting) was\n' +
 'never built for placements, unlike its already-shipped Publication-side precedent. This is NOT a reason to build\n' +
 'BROWSE_REQUEST/BROWSE_RESPONSE -- Section E\'s own gap is a small, narrow, already-precedented wiring seam (a\n' +
-'PublicationSnapshotPlacementPeerConnectionSync mirroring application/PublicationPeerConnectionSync.js almost\n' +
+'PublicationSnapshotPlacementPeerConnectionSync mirroring application/publication/PublicationPeerConnectionSync.js almost\n' +
 'exactly, plus threading announce() into wherever a placement is created, mirroring ui/views/EditorView.js\'s own\n' +
 'call for publications), never a new protocol, new message kind, or new responder. The roadmap this milestone\n' +
 'recommends: 0.9.483 closes Section E\'s own wiring gap (test-only until proven, then wired); only once that is done\n' +

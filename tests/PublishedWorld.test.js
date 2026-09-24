@@ -6,9 +6,9 @@ import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadPublishedWorldSessionUseCase } from '../application/LoadPublishedWorldSessionUseCase.js';
-import { PublishedWorldSession } from '../application/PublishedWorldSession.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadPublishedWorldSessionUseCase } from '../application/publication/LoadPublishedWorldSessionUseCase.js';
+import { PublishedWorldSession } from '../application/publication/PublishedWorldSession.js';
 
 class InMemoryStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }

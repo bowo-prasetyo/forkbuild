@@ -3,14 +3,14 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { IpfsPublicationRecord } from '../application/IpfsPublicationRecord.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
-import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js';
-import { LeaderboardClaimArchiveReceiptOutcome } from '../application/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
-import { RevalidationObservationArchiveOutcome } from '../application/RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationIntoArchiveUseCase.js';
-import { ReconcilePublisherLeaderboardSnapshotClaimOutcome } from '../application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { IpfsPublicationRecord } from '../application/ipfs/IpfsPublicationRecord.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
+import { LeaderboardClaimArchiveReceiptOutcome } from '../application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
+import { RevalidationObservationArchiveOutcome } from '../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
+import { ReconcilePublisherLeaderboardSnapshotClaimOutcome } from '../application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
@@ -506,16 +506,16 @@ async function run() {
         // this — never invented for this audit. Every one of the three
         // history files this use case appends to already documents "no
         // deduplication, multiplicity is the fact this file exists to
-        // preserve" (application/LeaderboardClaimHistory.js,
-        // application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js,
-        // application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js
+        // preserve" (application/leaderboard/LeaderboardClaimHistory.js,
+        // application/claimSnapshotReconciliation/decision/History.js,
+        // application/claimSnapshotReconciliation/revalidationObservation/History.js
         // — checked directly, below).
-        const claimHistorySource = await readSource('application/LeaderboardClaimHistory.js');
-        const decisionHistorySource = await readSource('application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js');
-        const observationHistorySource = await readSource('application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js');
-        assert(/NO DEDUPLICATION HERE/.test(claimHistorySource), n('F3. application/LeaderboardClaimHistory.js already documents "NO DEDUPLICATION HERE" — the SAME claim received twice is two independent records, by explicit, pre-existing design'));
-        assert(/DEDUPLICATED — MULTIPLICITY IS PRESERVED/.test(decisionHistorySource), n('F4. application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js already documents the identical restraint for decisions'));
-        assert(/DEDUPLICATED — THE IDENTICAL DISCIPLINE/.test(observationHistorySource), n('F5. application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js already documents the identical restraint for revalidation observations'));
+        const claimHistorySource = await readSource('application/leaderboard/LeaderboardClaimHistory.js');
+        const decisionHistorySource = await readSource('application/claimSnapshotReconciliation/decision/History.js');
+        const observationHistorySource = await readSource('application/claimSnapshotReconciliation/revalidationObservation/History.js');
+        assert(/NO DEDUPLICATION HERE/.test(claimHistorySource), n('F3. application/leaderboard/LeaderboardClaimHistory.js already documents "NO DEDUPLICATION HERE" — the SAME claim received twice is two independent records, by explicit, pre-existing design'));
+        assert(/DEDUPLICATED — MULTIPLICITY IS PRESERVED/.test(decisionHistorySource), n('F4. application/claimSnapshotReconciliation/decision/History.js already documents the identical restraint for decisions'));
+        assert(/DEDUPLICATED — THE IDENTICAL DISCIPLINE/.test(observationHistorySource), n('F5. application/claimSnapshotReconciliation/revalidationObservation/History.js already documents the identical restraint for revalidation observations'));
 
         // Live proof that the use case genuinely HONORS that existing
         // vocabulary — it does not silently collapse the second run.
@@ -533,7 +533,7 @@ async function run() {
 
         const duplicateExecutionClassification = {
             question: 'repeated execution ≠ duplicate bug — unless the domain says these executions represent the same fact',
-            domainAnswer: 'The domain (LeaderboardClaimHistory.js/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js/...RevalidationObservationHistory.js) ALREADY says, explicitly and by design, that repeated receipt of the identical claim is legitimate multiplicity, never a duplicate to collapse.',
+            domainAnswer: 'The domain (LeaderboardClaimHistory.js/claimSnapshotReconciliation/decision/History.js/...RevalidationObservationHistory.js) ALREADY says, explicitly and by design, that repeated receipt of the identical claim is legitimate multiplicity, never a duplicate to collapse.',
             thisAuditsOwnFinding: 'The Workspace\'s repeated-click behavior is CONSISTENT with that existing rule — it introduces no new duplication concern beyond what the domain already accepts.',
             verdict: 'VALID_BEHAVIOR',
             reason: 'not a bug, and not a policy question this milestone needs to open'
@@ -564,7 +564,7 @@ async function run() {
         // "RECONCILIATION_FAILED"-shaped literal anywhere.
         const filesToCheck = [
             'ui/views/ReconciliationWorkspaceView.js',
-            'application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js',
+            'application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js',
             'storage/LocalStoragePublicationObservationArchive.js'
         ];
         for (const file of filesToCheck) {
@@ -673,7 +673,7 @@ async function run() {
         assert(unauthorized.length === 0, n(`I1. every changed/added file is one this milestone explicitly authorized (found unauthorized: ${JSON.stringify(unauthorized)})`));
 
         const gitDiffStat = execSync(
-            'git diff --stat HEAD -- ui/views/ReconciliationWorkspaceView.js application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js storage/LocalStoragePublicationObservationArchive.js application/PublicationObservationArchive.js ui/views/DecentralizedPublicationsView.js ui/views/ReconciliationCandidateLeaderboardView.js application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js application/LeaderboardClaimHistory.js application/PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js 2>/dev/null || true',
+            'git diff --stat HEAD -- ui/views/ReconciliationWorkspaceView.js application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js storage/LocalStoragePublicationObservationArchive.js application/publication/observationArchive/PublicationObservationArchive.js ui/views/DecentralizedPublicationsView.js ui/views/ReconciliationCandidateLeaderboardView.js application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js application/leaderboard/LeaderboardClaimHistory.js application/claimSnapshotReconciliation/decision/History.js application/claimSnapshotReconciliation/revalidationObservation/History.js 2>/dev/null || true',
             { cwd: SOURCE_ROOT }
         ).toString().trim();
         assert(gitDiffStat === '', n(`I2. no production file this audit examines was modified by this test-only milestone. Found: ${gitDiffStat || '(none)'}.`));

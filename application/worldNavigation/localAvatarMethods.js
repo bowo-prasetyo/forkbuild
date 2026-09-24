@@ -1,20 +1,20 @@
-import { AvatarMovementController } from '../AvatarMovementController.js';
-import { AvatarVehicleInteractionController } from '../AvatarVehicleInteractionController.js';
-import { AvatarAnimalInteractionController } from '../AvatarAnimalInteractionController.js';
-import { AvatarVehicleMovementController } from '../AvatarVehicleMovementController.js';
+import { AvatarMovementController } from '../avatar/AvatarMovementController.js';
+import { AvatarVehicleInteractionController } from '../avatar/AvatarVehicleInteractionController.js';
+import { AvatarAnimalInteractionController } from '../avatar/AvatarAnimalInteractionController.js';
+import { AvatarVehicleMovementController } from '../avatar/AvatarVehicleMovementController.js';
 import { toAvatarPresenceAdvertisement } from '../../core/AvatarPresenceAdvertisement.js';
-import { signAvatarPresenceAdvertisement } from '../PresenceSigning.js';
+import { signAvatarPresenceAdvertisement } from '../presence/PresenceSigning.js';
 import { resolveAvatarVehicleMovementCapability } from '../../core/AvatarVehicleMovementCapability.js';
 import {
     VehicleSteeringIntent, isValidVehicleSteeringIntent, createVehicleSteeringIntent
 } from '../../core/VehicleSteeringIntent.js';
-import { AvatarMovementConstraint } from '../AvatarMovementConstraint.js';
+import { AvatarMovementConstraint } from '../avatar/AvatarMovementConstraint.js';
 import { DEFAULT_MAX_STEP_HEIGHT } from '../../core/BrickWalkability.js';
-import { AvatarTerrainConstraint } from '../AvatarTerrainConstraint.js';
-import { AvatarStepConstraint } from '../AvatarStepConstraint.js';
-import { AvatarTreeConstraint } from '../AvatarTreeConstraint.js';
-import { AvatarWaterConstraint } from '../AvatarWaterConstraint.js';
-import { AvatarWildlifeConstraint } from '../AvatarWildlifeConstraint.js';
+import { AvatarTerrainConstraint } from '../avatar/AvatarTerrainConstraint.js';
+import { AvatarStepConstraint } from '../avatar/AvatarStepConstraint.js';
+import { AvatarTreeConstraint } from '../avatar/AvatarTreeConstraint.js';
+import { AvatarWaterConstraint } from '../avatar/AvatarWaterConstraint.js';
+import { AvatarWildlifeConstraint } from '../avatar/AvatarWildlifeConstraint.js';
 import { ANIMAL_INTERACTION_RADIUS } from '../../core/AvatarAnimalCatchTarget.js';
 import { AvatarVehicleBrakingIntent, deriveAvatarVehicleBrakingIntent } from '../../core/AvatarVehicleBrakingIntent.js';
 import { deriveAvatarContinuousMovementInputEvent } from '../../core/AvatarContinuousMovementInputAdapter.js';
@@ -107,7 +107,7 @@ export const localAvatarMethods = {
             this._followAvatarIfEnabled(presence);
             // Publish only when AvatarPresenceSession accepted a new update; an idle
             // avatar publishes nothing here (the heartbeat below covers that). Signed
-            // whenever the identity provider can sign (see application/PresenceSigning.js).
+            // whenever the identity provider can sign (see application/presence/PresenceSigning.js).
             // Visibility is checked before anything reaches the transport, never as a
             // receiver-side filter (see docs/Principles.md, "Visibility Happens Before
             // Broadcasting, Never After"). Without a visibility use case, always
@@ -143,7 +143,7 @@ export const localAvatarMethods = {
             this._buildAvatarWaterConstraint(),
             // Avatar-only, same posture as terrainConstraint/stepConstraint/
             // waterConstraint above — see
-            // application/AvatarWildlifeConstraint.js's own header.
+            // application/avatar/AvatarWildlifeConstraint.js's own header.
             this._buildAvatarWildlifeConstraint()
         );
         // Built from the same avatarPresenceSession as the movement controller.

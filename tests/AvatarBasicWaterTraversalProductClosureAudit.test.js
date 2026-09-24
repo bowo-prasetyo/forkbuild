@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 
-import { AvatarTerrainConstraint } from '../application/AvatarTerrainConstraint.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
@@ -25,7 +25,7 @@ import { computeCameraFraming, CameraPerspective } from '../core/CameraPerspecti
 // 0.9.613 found a real avatar sinking, unclamped, below LAKE_SURFACE_HEIGHT
 // the farther it walked into a real lake. 0.9.614 traced the cause and
 // test-drove a minimal, render-time-only candidate fix. 0.9.615 installed
-// that candidate for real, in application/RenderWorldViewUseCase.js's own
+// that candidate for real, in application/world/RenderWorldViewUseCase.js's own
 // withGroundElevation(). This milestone is the final validation pass for
 // that arc: a test-only, decision-oriented audit (no production code
 // changes) asking whether the rendering-layer water constraint is a
@@ -167,9 +167,9 @@ async function run() {
     // source text — never re-typed — exactly as
     // tests/AvatarBasicWaterSurfaceConstraint.test.js's own Section A
     // already established.
-    const renderWorldViewSource = await readSource('application/RenderWorldViewUseCase.js');
+    const renderWorldViewSource = await readSource('application/world/RenderWorldViewUseCase.js');
     const withGroundElevationBody = extractFunctionBody(renderWorldViewSource, 'function withGroundElevation(position) {');
-    assert(withGroundElevationBody !== null, '1. application/RenderWorldViewUseCase.js#withGroundElevation() is located and extracted from its real, current source text');
+    assert(withGroundElevationBody !== null, '1. application/world/RenderWorldViewUseCase.js#withGroundElevation() is located and extracted from its real, current source text');
     // AMENDED BY 0.9.634 — the real, current source text now references
     // DEFAULT_MAX_WALKING_DEPTH (core/AvatarWaterWalkability.js) as a
     // free identifier; this dynamic extraction must supply it too, the
@@ -341,12 +341,12 @@ async function run() {
         assert(!collisionSource.includes('terrainHeightAt') && !collisionSource.includes('Hydrology'),
             '10. core/AvatarCollision.js contains no terrainHeightAt/Hydrology reference anywhere — collision is a closed, self-consistent flat-plane system, structurally unable to observe the render-only water floor');
 
-        // Consumer 2 — application/AvatarVehicleInteractionController.js:
+        // Consumer 2 — application/avatar/AvatarVehicleInteractionController.js:
         // its own nearby-vehicle/mount queries key off x/z only.
-        const vehicleInteractionSource = codeOnly(await readSource('application/AvatarVehicleInteractionController.js'));
+        const vehicleInteractionSource = codeOnly(await readSource('application/avatar/AvatarVehicleInteractionController.js'));
         const nearbyVehiclesBody = extractFunctionBody(vehicleInteractionSource, '_nearbyVehicles(avatarPosition) {');
         assert(nearbyVehiclesBody !== null && !nearbyVehiclesBody.includes('avatarPosition.y'),
-            '11. application/AvatarVehicleInteractionController.js#_nearbyVehicles() never reads avatarPosition.y — vehicle interaction range is an x/z-only query, structurally unaffected by the Y divergence');
+            '11. application/avatar/AvatarVehicleInteractionController.js#_nearbyVehicles() never reads avatarPosition.y — vehicle interaction range is an x/z-only query, structurally unaffected by the Y divergence');
 
         // Consumer 3 — core/WorldSpatialContext.js: every nearby-*
         // distance this facade computes is Math.sqrt(dx*dx + dz*dz) —
@@ -375,7 +375,7 @@ async function run() {
         // raw terrainHeightAt() elevation since its very first bridge from
         // a VehiclePresence, and a moving vehicle's own movement tick keeps
         // re-snapping it to that same raw sample every frame (see
-        // application/AvatarVehicleMovementController.js's own
+        // application/avatar/AvatarVehicleMovementController.js's own
         // 0.9.116/0.9.119 header) — so 0.9.607's own lift in syncVehicles()
         // was adding the real elevation a SECOND time, and the identical
         // mistake reached the avatar too: a mounted rider's presence is
@@ -400,16 +400,16 @@ async function run() {
         // it simply no longer runs a real value through the formula a
         // second time.
         assert(withGroundElevationCallSites === 4, // 1 definition + 1 inside resolveAvatarRenderPosition() (covering setLocalAvatar/updateLocalAvatarPresence) + 2 remote-avatar call sites (setRemoteAvatar, updateRemoteAvatarPresence) — syncVehicles() no longer calls it at all
-            `13. application/RenderWorldViewUseCase.js applies withGroundElevation() unconditionally only at its two remote-avatar call sites (setRemoteAvatar/updateRemoteAvatarPresence) and, via resolveAvatarRenderPosition(), at its two local-avatar call sites (setLocalAvatar/updateLocalAvatarPresence) whenever the avatar is not riding a vehicle — never at its vehicle call site (syncVehicles) at all, since a VehicleInstance's own position already IS real elevation — so every avatar visual (and therefore every avatar raycast target) is still built from the CORRECTED position, never a doubled or a raw one, so pickAvatar() cannot observe the divergence`);
+            `13. application/world/RenderWorldViewUseCase.js applies withGroundElevation() unconditionally only at its two remote-avatar call sites (setRemoteAvatar/updateRemoteAvatarPresence) and, via resolveAvatarRenderPosition(), at its two local-avatar call sites (setLocalAvatar/updateLocalAvatarPresence) whenever the avatar is not riding a vehicle — never at its vehicle call site (syncVehicles) at all, since a VehicleInstance's own position already IS real elevation — so every avatar visual (and therefore every avatar raycast target) is still built from the CORRECTED position, never a doubled or a raw one, so pickAvatar() cannot observe the divergence`);
 
         // Consumer 5 — core/CameraPerspective.js#computeCameraFraming(),
-        // invoked from application/WorldNavigationSession.js. THIS is the
+        // invoked from application/world/WorldNavigationSession.js. THIS is the
         // one real consumer that treats position.y as if it already were
         // the final render elevation.
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
         const sessionCode = codeOnly(sessionSource);
         const applyFramingBody = extractFunctionBody(sessionSource, '_applyCameraPerspectiveFraming(position, headingDegrees) {');
-        assert(applyFramingBody !== null, '14. application/WorldNavigationSession.js#_applyCameraPerspectiveFraming() is located and extracted from its real source');
+        assert(applyFramingBody !== null, '14. application/world/WorldNavigationSession.js#_applyCameraPerspectiveFraming() is located and extracted from its real source');
         assert(!applyFramingBody.includes('terrainHeightAt'),
             '15. ...and it calls computeCameraFraming() with its own `position` parameter completely unmodified — no terrainHeightAt() call anywhere in this function\'s own body');
         assert(sessionCode.includes('_applyCameraPerspectiveFraming(presence.position,'),
@@ -645,8 +645,8 @@ async function run() {
             'core/AvatarMovementState.js',
             'core/AvatarAnimationState.js',
             'core/AvatarMovementSimulation.js',
-            'application/AvatarStepConstraint.js',
-            'application/AvatarMovementController.js'
+            'application/avatar/AvatarStepConstraint.js',
+            'application/avatar/AvatarMovementController.js'
         ];
         for (const file of presenceFiles) {
             const src = codeOnly(await readSource(file));
@@ -654,7 +654,7 @@ async function run() {
                 `32. ${file} still introduces no SWIMMING/WADING/occupancy vocabulary of any kind, currently, not just as of 0.9.615`);
         }
         const forbiddenTerms = /\bbreath\b|\bdrown|\bstamina\b|\bbuoyan/i;
-        for (const file of [...presenceFiles, 'application/RenderWorldViewUseCase.js']) {
+        for (const file of [...presenceFiles, 'application/world/RenderWorldViewUseCase.js']) {
             const src = codeOnly(await readSource(file));
             assert(!forbiddenTerms.test(src), `33. ${file} still introduces no breath/drowning/stamina/buoyancy mechanic`);
         }

@@ -10,7 +10,7 @@ import * as THREE from 'three';
 // hit physically incapable of ever being mistaken for a brick hit.
 //
 // Only avatars CURRENTLY VISIBLE (already added to the scene) are
-// ever passed in — see application/RenderWorldViewUseCase.js's
+// ever passed in — see application/world/RenderWorldViewUseCase.js's
 // pickAvatar(), which builds the candidate map fresh from whichever
 // visuals are actually on screen right now. Raycasting against a
 // hidden avatar's root would still technically work in Three.js (it

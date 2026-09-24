@@ -56,7 +56,7 @@ import { distanceXZ } from './WorldSpatialAnchor.js';
 // prefers one author over another. Discovery order in, discovery order
 // out: survivors keep the exact relative order `claims` arrived in. A
 // duplicate entry (the same claim appearing twice — deduplication is
-// `application/PlaceNamingDiscoveryQueryService.js#search()`'s own job,
+// `application/placeNaming/PlaceNamingDiscoveryQueryService.js#search()`'s own job,
 // unchanged by this milestone) is not this file's concern either: if
 // both copies satisfy the spatial rule, both survive, exactly as given.
 // See docs/Principles.md, "Proximity Filtering Is Not Ranking, Is Not
@@ -71,7 +71,7 @@ import { distanceXZ } from './WorldSpatialAnchor.js';
 // excluded on its own, without discarding any other, otherwise-valid
 // claim in the same array — the identical "one bad entry never poisons
 // its neighbors" restraint every aggregation boundary in this codebase
-// already holds (see `application/PlaceNamingDiscoveryQueryService.js#
+// already holds (see `application/placeNaming/PlaceNamingDiscoveryQueryService.js#
 // search()`'s own "one failing source never discards another's
 // results").
 //
@@ -91,8 +91,8 @@ import { distanceXZ } from './WorldSpatialAnchor.js';
 // a trust decision.
 //
 // SYNCHRONOUS, PURE, NO STORAGE, NO NETWORK. This file never imports a
-// Nostr/peer/relay class, `application/PlaceNamingDiscoveryQueryService.js`,
-// `application/DiscoverPlaceNamingClaimsCommand.js`, any World View or
+// Nostr/peer/relay class, `application/placeNaming/PlaceNamingDiscoveryQueryService.js`,
+// `application/placeNaming/DiscoverPlaceNamingClaimsCommand.js`, any World View or
 // rendering module, or anything Snapshot-shaped (`application/
 // WorldSnapshotDiscoveryMonitor.js` included) — it depends on nothing
 // but its own `distanceXZ()` import and the plain data it is handed.

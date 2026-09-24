@@ -1,0 +1,51 @@
+import { EditorEvent } from '../../core/events/EditorEvent.js';
+
+// The single entry point for the Brick Palette. Deliberately holds no
+// state of its own: "what's available" already lives in BrickRegistry,
+// "what's currently selected" already lives in EditorContext.activeBrick
+// (built in 0.1.9 for exactly this). A separate PaletteModel duplicating
+// either would risk the two disagreeing.
+//
+// onActiveBrickChanged() wraps the event subscription too, so ui/ never
+// needs to import core/events/EditorEvent itself just to react when the
+// active brick changes from somewhere other than a palette click (e.g. a
+// future keyboard shortcut cycling through recently-used bricks).
+export class PaletteUseCase {
+    constructor(registry, editorContext) {
+        this._registry = registry;
+        this._editorContext = editorContext;
+    }
+
+    // Ordered [{ category, definitions }] — see
+    // core/BrickRegistry.js#groupByCategory().
+    getGroupedDefinitions() {
+        return this._registry.groupByCategory();
+    }
+
+    getSelectedDefinitionId() {
+        return this._editorContext.activeBrick.definitionId;
+    }
+
+    selectDefinition(definitionId) {
+        this._editorContext.setActiveBrick(definitionId);
+    }
+
+    // Choose Your Brick Color — the color chosen for the currently active
+    // brick type, or null when nothing overrides the type's own default.
+    getActiveColor() {
+        return this._editorContext.activeBrick.color;
+    }
+
+    setActiveColor(color) {
+        this._editorContext.setActiveBrickColor(color);
+    }
+
+    // Returns an unsubscribe function.
+    onActiveBrickChanged(callback) {
+        const subscription = this._editorContext.eventBus.subscribe(
+            EditorEvent.ACTIVE_BRICK_CHANGED,
+            ({ definitionId }) => callback(definitionId)
+        );
+        return () => subscription.unsubscribe();
+    }
+}

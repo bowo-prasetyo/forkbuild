@@ -1,27 +1,27 @@
-import { BaseAnchorPublicationRecord } from '../application/BaseAnchorPublicationRecord.js';
+import { BaseAnchorPublicationRecord } from '../application/anchoring/base/BaseAnchorPublicationRecord.js';
 import {
     appendBaseAnchorPublicationRecordHistoryEntry,
     findBaseAnchorPublicationRecordsByTxid,
     findBaseAnchorPublicationRecordByTxid
-} from '../application/BaseAnchorPublicationRecordHistory.js';
+} from '../application/anchoring/base/BaseAnchorPublicationRecordHistory.js';
 import {
     describeBaseAnchorPublicationRecordHistoryEntry,
     describeBaseAnchorPublicationRecordHistory
-} from '../application/BaseAnchorPublicationRecordHistoryView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { BlockchainKind } from '../application/BlockchainKind.js';
-import { BlockchainPublicationIdentity } from '../application/BlockchainPublicationIdentity.js';
-import { BaseTransactionInclusionObservationState } from '../application/BaseTransactionInclusionObservationState.js';
-import { describePublicationObservationArchive } from '../application/PublicationObservationArchiveView.js';
+} from '../application/anchoring/base/BaseAnchorPublicationRecordHistoryView.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
+import { BlockchainPublicationIdentity } from '../application/anchoring/BlockchainPublicationIdentity.js';
+import { BaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
+import { describePublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveView.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 
 // 0.8.99 — Durable Base Publication Identity Record.
 //
 // The flagship this milestone exists to prove: a Base publication's own
-// durable IDENTITY — mirroring application/BitcoinAnchorPublicationRecord.js's
+// durable IDENTITY — mirroring application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js's
 // own 0.8.80 flagship, one chain over — survives a full persist/destroy/
 // reload cycle as its own, independent record; two Base publications
 // sharing the exact same contentHash never merge; a Base publication and a

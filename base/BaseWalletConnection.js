@@ -1,4 +1,4 @@
-import { BaseWalletConnectionState } from '../application/BaseWalletConnectionState.js';
+import { BaseWalletConnectionState } from '../application/anchoring/base/BaseWalletConnectionState.js';
 
 // 0.8.90 — Explicit Base Network & Account Observation.
 //

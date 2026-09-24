@@ -10,7 +10,7 @@ import { DocumentOperationCausalGapDetector } from './DocumentOperationCausalGap
 // merely RECORDED as causally known (`DocumentOperationProvenance.RECOVERED`)
 // and one that has actually changed local state
 // (`DocumentOperationProvenance.EXECUTED`, present in
-// `application/CommandHistory.js#getExecutedCommands()`). 0.9.232 then built
+// `application/editor/CommandHistory.js#getExecutedCommands()`). 0.9.232 then built
 // `evaluateApplicationEligibility()` entirely on top of KNOWN — the causal
 // graph's own vocabulary — without ever asking whether a named predecessor
 // was EXECUTED. That was correct for what 0.9.232 set out to name (Q2/Q3,
@@ -45,7 +45,7 @@ import { DocumentOperationCausalGapDetector } from './DocumentOperationCausalGap
 // known, but actually applied" — its own name, separate from
 // `DocumentOperationApplicationEligibility` (which must keep meaning exactly
 // what 0.9.232 defined: KNOWN, nothing about EXECUTED) and separate from
-// `application/CommandHistory.js` itself (untouched — see "Deliberately
+// `application/editor/CommandHistory.js` itself (untouched — see "Deliberately
 // excluded" below).
 //
 //   readiness.READY      — every causal predecessor this operation names is
@@ -69,7 +69,7 @@ import { DocumentOperationCausalGapDetector } from './DocumentOperationCausalGap
 // for Q2) — it never re-walks `DocumentOperationCausalGraph` itself, and
 // never calls `record()`. Q4 is answered by delegating to an INJECTED
 // execution-history query, never by reaching into
-// `application/CommandHistory.js` directly. That seam is deliberate: this
+// `application/editor/CommandHistory.js` directly. That seam is deliberate: this
 // milestone does NOT introduce a new query method on `CommandHistory` (no
 // `CommandHistory#containsApplied()`), the same restraint
 // `core/DocumentOperationProvenance.js`'s own header already applied for
@@ -110,7 +110,7 @@ import { DocumentOperationCausalGapDetector } from './DocumentOperationCausalGap
 // `ARRIVAL_ORDER`, no production enforcement. In particular, this file does
 // not turn `NOT_READY` into a queue — nothing here gates, delays, or
 // otherwise alters any existing call to
-// `application/RemoteDocumentOperationApplicationUseCase.js#apply()`. That
+// `application/document/RemoteDocumentOperationApplicationUseCase.js#apply()`. That
 // remains the next, still-open, explicit product decision.
 export const DocumentOperationApplicationReadiness = Object.freeze({
     READY: 'READY',

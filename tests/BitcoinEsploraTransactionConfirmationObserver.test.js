@@ -161,7 +161,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const { BitcoinAnchorConfirmationObserver } = await import('../anchoring/BitcoinAnchorConfirmationObserver.js');
-        const { BitcoinAnchorConfirmationState } = await import('../application/BitcoinAnchorConfirmationState.js');
+        const { BitcoinAnchorConfirmationState } = await import('../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js');
 
         const { txs, fetchImpl } = makeFakeExplorer({ tipHeight: 800000 });
         txs.set(TXID, { txid: TXID, status: { confirmed: true, block_height: 800000, block_hash: 'c'.repeat(64) } });

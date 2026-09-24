@@ -6,20 +6,20 @@ import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { WorldPlacement } from '../core/WorldPlacement.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadPublishedSnapshotUseCase } from '../application/LoadPublishedSnapshotUseCase.js';
-import { ForkPublishedWorldUseCase } from '../application/ForkPublishedWorldUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadPublishedSnapshotUseCase } from '../application/snapshot/LoadPublishedSnapshotUseCase.js';
+import { ForkPublishedWorldUseCase } from '../application/publication/ForkPublishedWorldUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { LoadPublishedWorldSessionUseCase } from '../application/LoadPublishedWorldSessionUseCase.js';
+import { LoadPublishedWorldSessionUseCase } from '../application/publication/LoadPublishedWorldSessionUseCase.js';
 
 // ---------------------------------------------------------------------
 // Helpers

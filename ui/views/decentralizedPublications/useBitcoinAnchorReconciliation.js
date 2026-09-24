@@ -1,27 +1,27 @@
 import { inject } from 'vue';
 import {
     appendBitcoinAnchorConfirmationObservationHistoryEntry
-} from '../../../application/BitcoinAnchorConfirmationObservationHistory.js';
+} from '../../../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js';
 import {
     describeBitcoinAnchorConfirmationObservationDetail,
     describeBitcoinAnchorConfirmationObservationHistoryDetails
-} from '../../../application/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
-import { describeBitcoinAnchorContentProof } from '../../../application/BitcoinAnchorContentProofView.js';
+} from '../../../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
+import { describeBitcoinAnchorContentProof } from '../../../application/anchoring/bitcoin/BitcoinAnchorContentProofView.js';
 import {
     BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES, BITCOIN_ANCHOR_CONTENT_PROOF_BADGE_CLASSES
 } from './presentation.js';
 import {
     describeBitcoinAnchorChainPlacementObservations
-} from '../../../application/BitcoinAnchorChainPlacementObservationView.js';
-import { observeBitcoinAnchorChainPlacementChanges } from '../../../application/BitcoinAnchorChainPlacementObserver.js';
+} from '../../../application/anchoring/bitcoin/BitcoinAnchorChainPlacementObservationView.js';
+import { observeBitcoinAnchorChainPlacementChanges } from '../../../application/anchoring/bitcoin/BitcoinAnchorChainPlacementObserver.js';
 import {
     describeBitcoinAnchorObservationConsistency
-} from '../../../application/BitcoinAnchorObservationConsistencyView.js';
+} from '../../../application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyView.js';
 import {
     analyzeBitcoinAnchorObservationConsistency
-} from '../../../application/BitcoinAnchorObservationConsistencyAnalyzer.js';
-import { describeBitcoinAnchorObservationEvidence } from '../../../application/BitcoinAnchorObservationEvidenceView.js';
-import { composeBitcoinAnchorObservationEvidence } from '../../../application/BitcoinAnchorObservationEvidence.js';
+} from '../../../application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyAnalyzer.js';
+import { describeBitcoinAnchorObservationEvidence } from '../../../application/anchoring/bitcoin/BitcoinAnchorObservationEvidenceView.js';
+import { composeBitcoinAnchorObservationEvidence } from '../../../application/anchoring/bitcoin/BitcoinAnchorObservationEvidence.js';
 
 // Per-anchor Bitcoin reconciliation: an explicit re-read of an anchor's chain
 // placement and content proof, plus the confirmation history, chain placement

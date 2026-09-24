@@ -7,10 +7,10 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryDistributionEnvelope } from '../core/PublicationCommentaryDistributionEnvelope.js';
 import { PublicationCommentaryStore, PublicationCommentaryConflictError } from '../storage/PublicationCommentaryStore.js';
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
 
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 
 import {
     PublicationCommentaryDeliveryStatus,
@@ -114,8 +114,8 @@ import {
 // Distribution. Section H's own "Arweave remains untouched" half of point
 // (2), above, went stale the same way its Nostr half already had: 0.9.631
 // built exactly the Arweave adapter/admission-boundary pair this contract's
-// own header anticipated (application/PublicationCommentaryArweaveDistribution.js,
-// application/DiscoverPublicationCommentaryFromArweaveUseCase.js), also
+// own header anticipated (application/publication/commentary/PublicationCommentaryArweaveDistribution.js,
+// application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js), also
 // CONFORMING TO this unmodified contract — reconfirmed live in Section H,
 // below.
 
@@ -300,7 +300,7 @@ async function run() {
 
         // SIGNED — via the real, unmodified 0.9.618 exchange. This is the
         // EXACT SAME envelope-producing call
-        // application/PublicationCommentaryDistributionPeerExchange.js#
+        // application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js#
         // announce() already makes for the WebRTC path; this milestone
         // introduces no second signing path.
         const signedEnvelopeJson = aliceExchange.exportCommentary(commentary);
@@ -451,7 +451,7 @@ async function run() {
         );
         // Alice comments on a publicationId she has no relationship to at
         // all — this milestone's own security property never asks whether
-        // she may; that remains application/CanCommentOnPublicationUseCase.js's
+        // she may; that remains application/publication/CanCommentOnPublicationUseCase.js's
         // own, separate, local-only, unmodified concern.
         const commentary = new PublicationCommentary({
             publicationId: 'pub-0.9.626-bobs-publication-alice-never-touched',
@@ -515,7 +515,7 @@ async function run() {
         assert(/^0\.9\.626\b/.test(introducingCommitSubject),
             n(`that one introducing commit's own subject line is this milestone's own — "${introducingCommitSubject}" — confirming the file really was added by 0.9.626 and not by some later, unrelated milestone`));
 
-        console.log('✓ G: exactly one production file was ever added by this milestone (its own git history says so, durably, rather than a working-tree heuristic that only held true for as long as the file stayed uncommitted); every existing production file — including core/PublicationCommentary.js, core/PublicationCommentaryDistributionEnvelope.js, application/PublicationCommentaryDistributionExchange.js, application/PublicationCommentaryDistributionPeerExchange.js, storage/PublicationCommentaryStore.js, and identity/LocalAuthorizationVerifier.js — is untouched by it.');
+        console.log('✓ G: exactly one production file was ever added by this milestone (its own git history says so, durably, rather than a working-tree heuristic that only held true for as long as the file stayed uncommitted); every existing production file — including core/PublicationCommentary.js, core/PublicationCommentaryDistributionEnvelope.js, application/publication/commentary/PublicationCommentaryDistributionExchange.js, application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js, storage/PublicationCommentaryStore.js, and identity/LocalAuthorizationVerifier.js — is untouched by it.');
     }
 
     // ===============================================================
@@ -535,9 +535,9 @@ async function run() {
         // Two Nostr-flavored Commentary files now exist (0.9.628).
         //
         // AMENDED AGAIN BY 0.9.631 — three Arweave-flavored ones now exist
-        // too (application/PublicationCommentaryArweaveDistribution.js,
-        // application/DiscoverPublicationCommentaryFromArweaveUseCase.js,
-        // application/ArweaveTaggedTransactionSearch.js), built by that
+        // too (application/publication/commentary/PublicationCommentaryArweaveDistribution.js,
+        // application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js,
+        // application/arweave/ArweaveTaggedTransactionSearch.js), built by that
         // later milestone against this file's own unmodified contract,
         // exactly as 0.9.628 already did for Nostr.
         const commentaryNostrFiles = grepFiles('Commentary', ['nostr', 'application']).filter((f) => /Nostr/.test(f) && /Commentary/i.test(f));
@@ -551,11 +551,11 @@ async function run() {
             && commentaryArweaveFiles.some((f) => f.includes('DiscoverPublicationCommentaryFromArweaveUseCase.js')),
             n(`0.9.631's own two Arweave-flavored Commentary files (grep-matched on both "Arweave" and "Commentary" in the same filename) exist — found: ${commentaryArweaveFiles.join(', ') || 'none'}; built one further milestone later, against this file's own unmodified contract, exactly as 0.9.628 already did for Nostr`));
 
-        const nostrDistributionSource = execSync('cat application/PublicationCommentaryNostrDistribution.js', { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
+        const nostrDistributionSource = execSync('cat application/publication/commentary/PublicationCommentaryNostrDistribution.js', { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
         assert(/publish\(envelopeJson\)|async publish\(/.test(nostrDistributionSource) && /async retrieve\(/.test(nostrDistributionSource),
             n('the later Nostr adapter (0.9.628) exposes exactly the publish(envelopeJson)/retrieve(locator) shape this milestone\'s own contract describes — a real, live-verified conformance, never a coincidence of naming'));
 
-        const arweaveDistributionSource = execSync('cat application/PublicationCommentaryArweaveDistribution.js', { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
+        const arweaveDistributionSource = execSync('cat application/publication/commentary/PublicationCommentaryArweaveDistribution.js', { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
         assert(/publish\(envelopeJson\)|async publish\(/.test(arweaveDistributionSource) && /async retrieve\(/.test(arweaveDistributionSource),
             n('the later Arweave adapter (0.9.631) exposes the identical publish(envelopeJson)/retrieve(locator) shape too — a real, live-verified conformance one substrate over'));
 
@@ -573,7 +573,7 @@ async function run() {
         assert(!/nostrEventId|arweaveTransactionId|deliveryStatus|deliveryReceipt/i.test(envelopeSource),
             n('core/PublicationCommentaryDistributionEnvelope.js still carries no substrate-delivery-receipt field of any kind, and no embedded delivery-status field — this milestone tracks status externally, in the caller\'s own hands, never inside the envelope\'s own identity'));
 
-        const peerExchangeSource = execSync('cat application/PublicationCommentaryDistributionPeerExchange.js', { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
+        const peerExchangeSource = execSync('cat application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js', { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
         assert(!/AsynchronousDeliveryContract/.test(peerExchangeSource),
             n('the existing WebRTC peer exchange class does not import or reference this milestone\'s own new contract file at all — the live-dissemination path is completely unchanged and unaware of it'));
 

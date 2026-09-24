@@ -10,18 +10,18 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { RenameGroupCommand } from '../application/commands/RenameGroupCommand.js';
 import {
     DocumentCommandPropagationUseCase,
     DocumentOperationRejectionReason
-} from '../application/DocumentCommandPropagationUseCase.js';
-import { RemoteDocumentOperationApplicationUseCase } from '../application/RemoteDocumentOperationApplicationUseCase.js';
+} from '../application/document/DocumentCommandPropagationUseCase.js';
+import { RemoteDocumentOperationApplicationUseCase } from '../application/document/RemoteDocumentOperationApplicationUseCase.js';
 import {
     DOCUMENT_COLLABORATION_CONSISTENCY_POLICY,
     DeliveryOrderGuarantee,
@@ -38,7 +38,7 @@ import {
 import {
     DocumentOperationDeferralUseCase,
     DocumentOperationDeferralOutcome
-} from '../application/DocumentOperationDeferralUseCase.js';
+} from '../application/document/DocumentOperationDeferralUseCase.js';
 import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
 
 // 0.9.226 — Document Collaboration Consistency Policy Boundary.
@@ -252,7 +252,7 @@ function nextWorldId(label) { docCounter += 1; return `doc-${label}-${docCounter
     const deferral = new DocumentOperationDeferralUseCase({ causalGapDetector });
     deferral.attachCommandHistory({ documentId: worldId, commandHistory });
     const target = { documentId: worldId, commandHistory };
-    // Mirrors application/EditorSession.js's own wiring: a
+    // Mirrors application/editor/EditorSession.js's own wiring: a
     // DocumentOperationCausalGapObservationUseCase always records an
     // arriving operation's causal identity BEFORE readiness is evaluated
     // for anything naming it as a predecessor (see

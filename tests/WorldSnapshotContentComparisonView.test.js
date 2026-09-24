@@ -1,15 +1,15 @@
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
-import { WorldSnapshotContentComparison } from '../application/WorldSnapshotComparison.js';
-import { describeWorldSnapshotContentComparisonView } from '../application/WorldSnapshotContentComparisonView.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
+import { WorldSnapshotContentComparison } from '../application/snapshot/WorldSnapshotComparison.js';
+import { describeWorldSnapshotContentComparisonView } from '../application/snapshot/materialization/WorldSnapshotContentComparisonView.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -189,7 +189,7 @@ function comparison(overrides = {}) {
 
 async function run() {
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-    const descriptorSource = await readFile(new URL('../application/WorldSnapshotContentComparisonView.js', import.meta.url), 'utf8');
+    const descriptorSource = await readFile(new URL('../application/snapshot/materialization/WorldSnapshotContentComparisonView.js', import.meta.url), 'utf8');
 
     // ---------------------------------------------------------------
     // Section A — no comparison result, no descriptor.
@@ -573,7 +573,7 @@ async function run() {
 
         const descriptorCodeOnly = stripLineComments(descriptorSource);
         assert(!/inspectWorldEncounterMaterial|loadWorldEncounterMaterial|WorldDiscoverySourceRegistry|registerMaterializedSnapshotWorldSource/.test(descriptorCodeOnly),
-            '9. application/WorldSnapshotContentComparisonView.js never imports/references any loading or registry mechanism of its own');
+            '9. application/snapshot/materialization/WorldSnapshotContentComparisonView.js never imports/references any loading or registry mechanism of its own');
         assert(!/merge|duplicate|replace this/i.test(strippedCanvas.slice(strippedCanvas.indexOf('world-snapshot-content-comparison-panel'), strippedCanvas.indexOf('world-snapshot-content-comparison-panel') + 4000)),
             '10. the Content Comparison panel offers no merge/duplicate/replace action of any kind');
 

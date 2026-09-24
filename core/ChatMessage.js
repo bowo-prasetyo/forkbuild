@@ -2,7 +2,7 @@ import { createId } from './createId.js';
 
 // 0.2.61 — Direct Peer Messaging & Live Chat. The wire shape for ONE
 // chat message, carried as `peer/PeerMessage.js`'s own `payload` under
-// a dedicated `forkbuild:chat` protocol — see application/ChatUseCase.js's
+// a dedicated `forkbuild:chat` protocol — see application/chat/ChatUseCase.js's
 // own header for why chat is a protocol running OVER authenticated
 // peers, never a feature folded into the peer transport itself.
 //
@@ -15,7 +15,7 @@ import { createId } from './createId.js';
 //                      `sequence`'s own ordering role, the same
 //                      "message identity vs. sequence ordering vs.
 //                      delivery ordering" split
-//                      application/ChatUseCase.js's own header
+//                      application/chat/ChatUseCase.js's own header
 //                      documents.
 //   conversationId  — see deriveConversationId() below: a value BOTH
 //                      participants compute identically and
@@ -26,7 +26,7 @@ import { createId } from './createId.js';
 //                      never accepts whatever the payload says at face
 //                      value.
 //   senderIdentity  — who the message CLAIMS to be from. Never trusted
-//                      on its own — application/ChatUseCase.js's
+//                      on its own — application/chat/ChatUseCase.js's
 //                      ingestion boundary requires this to match the
 //                      sending connection's own already-proven
 //                      remoteIdentity before accepting anything.
@@ -71,7 +71,7 @@ export const MAX_CHAT_ID_LENGTH = 512;
 // independently from the two participants' own identityIds — never
 // assigned by either side alone, and never carried over the wire as
 // something to trust without re-deriving it locally first (see this
-// file's own header, and application/ChatUseCase.js's ingestion
+// file's own header, and application/chat/ChatUseCase.js's ingestion
 // boundary). Order-independent (sorted) so it is exactly the same
 // string on both devices regardless of who initiated.
 export function deriveConversationId(identityIdA, identityIdB) {
@@ -108,7 +108,7 @@ export function toChatMessage({ conversationId, senderIdentity, sequence, kind =
 // Structural validity ONLY — never anything about whether
 // `senderIdentity` is who it claims to be, or whether `conversationId`
 // is the one this receiver actually expects. Those are both trust-
-// boundary questions application/ChatUseCase.js's own ingestion answers
+// boundary questions application/chat/ChatUseCase.js's own ingestion answers
 // using facts THIS class has no access to (the connection's proven
 // remoteIdentity, this device's own identityId) — the same "shape here,
 // trust one layer up" division core/AvatarInteractionAdvertisement.js's

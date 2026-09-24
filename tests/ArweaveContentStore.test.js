@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 // 0.9.132 — Arweave Snapshot Content Store.

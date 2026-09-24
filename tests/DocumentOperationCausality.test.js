@@ -9,13 +9,13 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { DocumentCommandPropagationUseCase } from '../application/DocumentCommandPropagationUseCase.js';
+import { DocumentCommandPropagationUseCase } from '../application/document/DocumentCommandPropagationUseCase.js';
 import {
     toDocumentOperationEnvelope,
     isValidDocumentOperationEnvelope,
@@ -36,13 +36,13 @@ import {
 // A"? Sections 1-9 below are pure — no peers, no network, no documents
 // — and exercise `core/DocumentOperationCausality.js` directly. Section
 // 10 proves the one production behavior this milestone actually adds
-// (`application/DocumentCommandPropagationUseCase.js`'s own
+// (`application/document/DocumentCommandPropagationUseCase.js`'s own
 // `causalPredecessors` stamping and relay) against the REAL, unmodified
 // broadcast/receive chain 0.9.222-0.9.226 already built and audited —
 // never a hand-rolled substitute.
 //
 // Deliberately NOT tested here, because it deliberately does not exist:
-// reordering `application/CommandHistory.js`, buffering, retransmission,
+// reordering `application/editor/CommandHistory.js`, buffering, retransmission,
 // missing-operation requests, conflict resolution, or any claim of
 // convergence. See `core/DocumentOperationCausality.js`'s own header.
 

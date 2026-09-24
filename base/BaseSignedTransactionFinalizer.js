@@ -1,5 +1,5 @@
 import { decodeBaseSignedTransaction } from './BaseSignedTransactionCodec.js';
-import { requireRealBasePublicationTransactionPlan } from '../application/BasePublicationTransactionReview.js';
+import { requireRealBasePublicationTransactionPlan } from '../application/anchoring/base/BasePublicationTransactionReview.js';
 
 // 0.8.94 — Explicit Base Signed Transaction Verification & Finalization.
 //
@@ -132,7 +132,7 @@ import { requireRealBasePublicationTransactionPlan } from '../application/BasePu
 // "What I would deliberately exclude").
 //
 // `plan` MUST BE A REAL, ALREADY-CONSTRUCTED PLAN — NO DUCK TYPING.
-// Re-validated via `application/BasePublicationTransactionReview.js`'s
+// Re-validated via `application/anchoring/base/BasePublicationTransactionReview.js`'s
 // own exported `requireRealBasePublicationTransactionPlan()` — the
 // identical field-by-field, already-known-good-internal-artifact check
 // `base/BaseTransactionSigner.js` (0.8.93) already performs, reused

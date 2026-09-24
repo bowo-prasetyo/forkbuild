@@ -6,9 +6,9 @@ import { fileURLToPath } from 'node:url';
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { ExternalAnchorPublisherRegistry } from '../application/ExternalAnchorPublisherRegistry.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { ExternalAnchorPublisherRegistry } from '../application/anchoring/ExternalAnchorPublisherRegistry.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.422 — Decentralized Substrate Role Choice UI Reachability Audit.
@@ -37,7 +37,7 @@ import { publicationsPageFiles, editorViewFiles } from './support/SourceFileGrou
 // `availableAnchorTypes()`) that would present a SECOND button the moment a
 // second real provider were ever registered, with zero UI code change. No
 // third, equivalent registry exists for ANNOUNCEMENT_AND_DISCOVERY's own
-// real write action — `application/PublicationDistributionOrchestrator.js`
+// real write action — `application/publication/distribution/PublicationDistributionOrchestrator.js`
 // (0.9.58) takes one fixed `arweaveUploaderOptions`/`nostrPublisherOptions`
 // pair, composed once in ui/main.js, with no registry, no `availableX
 // Types()`, and no per-substrate button anywhere. This is a genuine,
@@ -153,11 +153,11 @@ async function run() {
         // now sit between the two fields this assertion originally matched
         // contiguously — still a fixed, explicit options shape a caller
         // states directly (never a registry lookup keyed by an opaque
-        // identifier); see `application/PublicationDistributionRuntimeComposition.js`'s
+        // identifier); see `application/publication/distribution/PublicationDistributionRuntimeComposition.js`'s
         // own header, "discoveryProvider itself is the one new option...
         // it is not, and does not require, a registry lookup."
-        const orchestratorSource = await readSource('application/PublicationDistributionOrchestrator.js');
-        assert(/arweaveUploaderOptions,\s*\n\s*discoveryProvider,\s*\n\s*nostrPublisherOptions/.test(orchestratorSource), n('A6. application/PublicationDistributionOrchestrator.js (0.9.58/0.9.430) takes one fixed arweaveUploaderOptions/discoveryProvider/nostrPublisherOptions/arweaveAnnouncementPublisherOptions set per call — an options object plus an explicit provider-selection string, never a registry lookup keyed by a caller-chosen identifier'));
+        const orchestratorSource = await readSource('application/publication/distribution/PublicationDistributionOrchestrator.js');
+        assert(/arweaveUploaderOptions,\s*\n\s*discoveryProvider,\s*\n\s*nostrPublisherOptions/.test(orchestratorSource), n('A6. application/publication/distribution/PublicationDistributionOrchestrator.js (0.9.58/0.9.430) takes one fixed arweaveUploaderOptions/discoveryProvider/nostrPublisherOptions/arweaveAnnouncementPublisherOptions set per call — an options object plus an explicit provider-selection string, never a registry lookup keyed by a caller-chosen identifier'));
         assert(!/\.register\(|\.get\(providerKey\)|Registry\b/.test(codeOnly(orchestratorSource)), n('A7. confirmed structurally: no register()/get()/Registry vocabulary of any kind appears in its own real code'));
 
         // Real registered provider counts today, from the one real

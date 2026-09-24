@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
@@ -54,7 +54,7 @@ import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFil
 //            unexpected collaborator failure in this function; no new
 //            error/retry vocabulary is invented for it.
 // Section H: structural fidelity — the real ui/views/WorldView.js and
-//            application/SnapshotDistributionCommand.js source actually
+//            application/snapshot/SnapshotDistributionCommand.js source actually
 //            implement the shape Sections A-G exercise.
 
 function assert(condition, message) {
@@ -99,7 +99,7 @@ function placeReal(placementRegistry, publicationId, position, owner = 'alice') 
     return record;
 }
 
-// Mirrors application/WorldNavigationSession.js's own
+// Mirrors application/world/WorldNavigationSession.js's own
 // getPlacementInfoForPublication(publicationId) logic exactly (reduced to
 // the one collaborator it actually reads, `_placementRegistry`) —
 // reproduced here rather than constructing that (large) class directly,
@@ -349,9 +349,9 @@ async function run() {
     // Section F — Authority preservation.
     // =======================================================================
     {
-        const commandSource = await readSource('application/SnapshotDistributionCommand.js');
+        const commandSource = await readSource('application/snapshot/SnapshotDistributionCommand.js');
         assert(!/PlacementRecord|LocalPlacementRegistry|WorldPlacement/.test(commandSource),
-            '1. application/SnapshotDistributionCommand.js still references no PlacementRecord/LocalPlacementRegistry/WorldPlacement — forwarding a claim is never itself a placement.');
+            '1. application/snapshot/SnapshotDistributionCommand.js still references no PlacementRecord/LocalPlacementRegistry/WorldPlacement — forwarding a claim is never itself a placement.');
 
         const publication = new Publication({ id: 'pub-F', documentId: 'doc-F', contentReference: { hash: 'pub-F' } });
         const placementRegistry = new LocalPlacementRegistry(new InMemoryStorageProvider());
@@ -405,7 +405,7 @@ async function run() {
     // Section H — Structural fidelity.
     // =======================================================================
     {
-        const commandSource = await readSource('application/SnapshotDistributionCommand.js');
+        const commandSource = await readSource('application/snapshot/SnapshotDistributionCommand.js');
         const runFnMatch = commandSource.match(/async function runSnapshotDistribution\([\s\S]*?\n\}/);
         assert(runFnMatch, '1. runSnapshotDistribution() exists as an isolable function.');
         assert(/discoveryPublisher\.publish\(\{\s*contentHash:\s*contentReference\.hash,\s*locator:\s*contentReference\.uri,\s*storage:\s*contentReference\.storage,\s*publicationId,\s*claimedPosition\s*\}\)/.test(runFnMatch[0]),

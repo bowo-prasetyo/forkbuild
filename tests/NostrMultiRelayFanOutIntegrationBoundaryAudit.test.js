@@ -2,15 +2,15 @@ import { readFile, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-import { NostrMultiRelayPublicationDiscoveryPublisher } from '../application/NostrMultiRelayPublicationDiscoveryPublisher.js';
-import { orchestrateMultiRelayNostrPublicationDistribution } from '../application/NostrMultiRelayPublicationDistributionOrchestrator.js';
+import { NostrMultiRelayPublicationDiscoveryPublisher } from '../application/nostr/NostrMultiRelayPublicationDiscoveryPublisher.js';
+import { orchestrateMultiRelayNostrPublicationDistribution } from '../application/nostr/NostrMultiRelayPublicationDistributionOrchestrator.js';
 import {
     executeMultiRelayNostrPublicationDistributionCommand,
     executePublicationDistributionCommand
-} from '../application/PublicationDistributionCommand.js';
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+} from '../application/publication/distribution/PublicationDistributionCommand.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.445 — Nostr Multi-Relay Fan-Out Integration Boundary Audit.
@@ -523,9 +523,9 @@ async function run() {
         // Arweave/Bitcoin anchoring, or Snapshot distribution.
         {
             const sweepTargets = [
-                ['application/NostrMultiRelayPublicationDiscoveryPublisher.js', await source('application/NostrMultiRelayPublicationDiscoveryPublisher.js')],
-                ['application/NostrMultiRelayPublicationDistributionOrchestrator.js', await source('application/NostrMultiRelayPublicationDistributionOrchestrator.js')],
-                ['application/PublicationDistributionCommand.js', await source('application/PublicationDistributionCommand.js')]
+                ['application/nostr/NostrMultiRelayPublicationDiscoveryPublisher.js', await source('application/nostr/NostrMultiRelayPublicationDiscoveryPublisher.js')],
+                ['application/nostr/NostrMultiRelayPublicationDistributionOrchestrator.js', await source('application/nostr/NostrMultiRelayPublicationDistributionOrchestrator.js')],
+                ['application/publication/distribution/PublicationDistributionCommand.js', await source('application/publication/distribution/PublicationDistributionCommand.js')]
             ];
             const forbiddenTerms = ['ArweaveGatewayFailover', 'BitcoinAnchor', 'SnapshotDistribution', 'ArweaveContentStore'];
             for (const [label, text] of sweepTargets) {
@@ -541,7 +541,7 @@ async function run() {
             const anchorSource = codeOnly(await source('anchoring/BitcoinAnchorPublisher.js'));
             assert(!/MultiRelay|NostrMultiRelay/.test(anchorSource), n('H3. BitcoinAnchorPublisher.js never references anything Nostr-multi-relay-shaped'));
 
-            const snapshotDistributionSource = codeOnly(await source('application/SnapshotDistributionCommand.js'));
+            const snapshotDistributionSource = codeOnly(await source('application/snapshot/SnapshotDistributionCommand.js'));
             assert(!/MultiRelay|NostrMultiRelay/.test(snapshotDistributionSource), n('H4. SnapshotDistributionCommand.js never references anything Nostr-multi-relay-shaped'));
         }
 
@@ -636,7 +636,7 @@ async function run() {
         // J3. Discovery-QUERY (read side) has no relay-list-shaped
         // constructor option at all — a source-level confirmation that the
         // read side was never touched.
-        const queryServiceSource = codeOnly(await source('application/NostrDiscoveryQueryService.js'));
+        const queryServiceSource = codeOnly(await source('application/nostr/NostrDiscoveryQueryService.js'));
         assert(!/relayUrls/.test(queryServiceSource), n('J3. NostrDiscoveryQueryService.js (the read-side discovery-query service) has no relayUrls-shaped option anywhere — read-side multiplicity remains completely untouched'));
 
         // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
@@ -646,7 +646,7 @@ async function run() {
         // later audit found that absence itself was the real gap, and
         // 0.9.447 closed it through the ordinary composition root, exactly
         // as every other substrate in this codebase already reaches ui/
-        // main.js: via `application/PublicationDistributionCommandComposition.js`'s
+        // main.js: via `application/publication/distribution/PublicationDistributionCommandComposition.js`'s
         // own new, additive composer, never a UI-side reimplementation. The
         // check below is narrowed rather than removed: it now allowlists
         // exactly the three files 0.9.447 legitimately touches for this
@@ -702,7 +702,7 @@ async function run() {
         assert(unexpectedUiFiles.length === 0, n(`J4. AMENDED BY 0.9.450 — no file under ui/ OUTSIDE this milestone's own six allowlisted files references "MultiRelay" or "nostrRelayUrls" — found unexpected: ${JSON.stringify(unexpectedUiFiles)}. The UI layer still has no independent, hidden fan-out capability of its own — the only reachability is through the existing, unmodified application-layer composer`));
         assert(new Set(uiFilesReferencingMultiRelay).size <= NOSTR_MULTI_RELAY_UI_REACHABILITY_ALLOWLIST.size, n('J4b. the allowlisted set itself has not silently grown beyond the six files this milestone actually added'));
         const mainSource = await source('ui/main.js');
-        assert(!/new NostrMultiRelayPublicationDiscoveryPublisher/.test(mainSource) && !mainSource.includes("from '../application/NostrMultiRelayPublicationDiscoveryPublisher.js'"),
+        assert(!/new NostrMultiRelayPublicationDiscoveryPublisher/.test(mainSource) && !mainSource.includes("from '../application/nostr/NostrMultiRelayPublicationDiscoveryPublisher.js'"),
             n('J4c. ui/main.js never constructs NostrMultiRelayPublicationDiscoveryPublisher directly and never imports it — it only calls composeMultiRelayNostrPublicationDistributionCommand(), the existing application-layer composer, exactly as it already does for the single-relay command'));
         // J4d. AMENDED BY 0.9.450 — the same "no direct construction, no
         // direct import" check, extended to the three real distribution
@@ -719,7 +719,7 @@ async function run() {
         for (const [label, text] of [['WorldView.js', worldViewSource], ['EditorView.js', editorViewSource], ['DecentralizedPublicationsView.js', publicationsViewSource]]) {
             assert(!/new NostrMultiRelayPublicationDiscoveryPublisher/.test(text) && !/orchestrateMultiRelayNostrPublicationDistribution/.test(text),
                 n(`J4d. ${label} never constructs NostrMultiRelayPublicationDiscoveryPublisher or calls orchestrateMultiRelayNostrPublicationDistribution directly — it only calls the injected multiRelayNostrPublicationDistributionCommand, exactly like every other admitted file`));
-            assert(!text.includes("from '../application/NostrMultiRelayPublicationDiscoveryPublisher.js'") && !text.includes("from '../application/NostrMultiRelayPublicationDistributionOrchestrator.js'"),
+            assert(!text.includes("from '../application/nostr/NostrMultiRelayPublicationDiscoveryPublisher.js'") && !text.includes("from '../application/nostr/NostrMultiRelayPublicationDistributionOrchestrator.js'"),
                 n(`J4e. ${label} imports neither NostrMultiRelayPublicationDiscoveryPublisher.js nor NostrMultiRelayPublicationDistributionOrchestrator.js`));
         }
 
@@ -730,9 +730,9 @@ async function run() {
     // Section K — Configuration remains external.
     // ===============================================================
     {
-        const publisherSource = codeOnly(await source('application/NostrMultiRelayPublicationDiscoveryPublisher.js'));
-        const orchestratorSource = codeOnly(await source('application/NostrMultiRelayPublicationDistributionOrchestrator.js'));
-        const commandSource = codeOnly(await source('application/PublicationDistributionCommand.js'));
+        const publisherSource = codeOnly(await source('application/nostr/NostrMultiRelayPublicationDiscoveryPublisher.js'));
+        const orchestratorSource = codeOnly(await source('application/nostr/NostrMultiRelayPublicationDistributionOrchestrator.js'));
+        const commandSource = codeOnly(await source('application/publication/distribution/PublicationDistributionCommand.js'));
 
         // No literal relay URL is hardcoded anywhere in the new files —
         // unlike NostrPublicationDiscoveryPublisher.js's own single-relay
@@ -747,7 +747,7 @@ async function run() {
         // no plural relay-list resolver — only the pre-existing singular
         // resolveNostrPublisherOptions(relayUrl), confirming there is no
         // new configuration SOURCE this milestone quietly wired itself to.
-        const configProviderSource = await source('application/PublicationDistributionConfigurationProvider.js');
+        const configProviderSource = await source('application/publication/distribution/PublicationDistributionConfigurationProvider.js');
         assert(!/resolveNostrRelayUrls|resolveNostrMultiRelay/.test(configProviderSource), n('K4. PublicationDistributionConfigurationProvider.js exposes no relay-LIST resolver of any kind — nostrRelayUrls has no persistent configuration source anywhere in this codebase yet'));
 
         // Behaviorally: omitting nostrRelayUrls throws, at construction
@@ -788,7 +788,7 @@ async function run() {
         // genuinely callable — already proven behaviorally by every
         // section above; restated here as the classification's own
         // starting fact.
-        assert(typeof executeMultiRelayNostrPublicationDistributionCommand === 'function', n('L1. executeMultiRelayNostrPublicationDistributionCommand is a real, callable export of application/PublicationDistributionCommand.js'));
+        assert(typeof executeMultiRelayNostrPublicationDistributionCommand === 'function', n('L1. executeMultiRelayNostrPublicationDistributionCommand is a real, callable export of application/publication/distribution/PublicationDistributionCommand.js'));
 
         // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
         // Section L's own original point-in-time classification was
@@ -806,8 +806,8 @@ async function run() {
         //
         // L2. The UI composition root now DOES expose a multi-relay
         // variant, additively, alongside the untouched single-relay one.
-        const compositionSource = await source('application/PublicationDistributionCommandComposition.js');
-        assert(/composeMultiRelayNostrPublicationDistributionCommand/.test(compositionSource), n('L2. AMENDED BY 0.9.447 — application/PublicationDistributionCommandComposition.js (the real UI composition root) now exposes composeMultiRelayNostrPublicationDistributionCommand(), the deliberate reachability seam this section originally found missing'));
+        const compositionSource = await source('application/publication/distribution/PublicationDistributionCommandComposition.js');
+        assert(/composeMultiRelayNostrPublicationDistributionCommand/.test(compositionSource), n('L2. AMENDED BY 0.9.447 — application/publication/distribution/PublicationDistributionCommandComposition.js (the real UI composition root) now exposes composeMultiRelayNostrPublicationDistributionCommand(), the deliberate reachability seam this section originally found missing'));
         assert(/executePublicationDistributionCommand/.test(compositionSource) && compositionSource.includes('executeMultiRelayNostrPublicationDistributionCommand'), n('L2b. AMENDED BY 0.9.447 — the composition root now wraps BOTH the single-relay command export (untouched) and the multi-relay command export (new, additive)'));
 
         // L3. Every real ui/ file is swept; only the three files 0.9.447
@@ -862,7 +862,7 @@ async function run() {
         // every sibling multi-relay class's own file self-matches) —
         // confirming the same original invariant: only the command
         // boundary that composes them
-        // (application/PublicationDistributionCommand.js, unchanged since
+        // (application/publication/distribution/PublicationDistributionCommand.js, unchanged since
         // 0.9.444) references either by name, outside their own files.
         const applicationFiles = await listJsFilesRecursive('application');
         const publicationMultiRelayClassNames = /\bNostrMultiRelayPublicationDiscoveryPublisher\b|\bNostrMultiRelayPublicationDistributionOrchestrator\b/;
@@ -876,18 +876,18 @@ async function run() {
                 referencingFiles.push(relPath);
             }
         }
-        // application/NostrMultiRelaySnapshotDiscoveryPublisher.js and
-        // application/NostrPublicationRelaySetDiscoveryQueryService.js each
+        // application/nostr/NostrMultiRelaySnapshotDiscoveryPublisher.js and
+        // application/nostr/NostrPublicationRelaySetDiscoveryQueryService.js each
         // name NostrMultiRelayPublicationDiscoveryPublisher.js once, in
         // their own header prose, as the precedent their own (unrelated,
         // Snapshot/Publication-discovery-scoped) fan-out class structurally
         // mirrors — never an import, never executable code.
-        const knownCommentOnlyReferences = ['application/NostrMultiRelaySnapshotDiscoveryPublisher.js', 'application/NostrPublicationRelaySetDiscoveryQueryService.js'];
+        const knownCommentOnlyReferences = ['application/nostr/NostrMultiRelaySnapshotDiscoveryPublisher.js', 'application/nostr/NostrPublicationRelaySetDiscoveryQueryService.js'];
         const unexpectedReferencingFiles = referencingFiles.filter((relPath) => !knownCommentOnlyReferences.includes(relPath));
-        assert(JSON.stringify(unexpectedReferencingFiles.sort()) === JSON.stringify(['application/PublicationDistributionCommand.js']),
-            n(`L4. only application/PublicationDistributionCommand.js (unchanged since 0.9.444) references either original Publication multi-relay class in executable code, outside their own files and the known comment-only cross-references above. Found: ${JSON.stringify(unexpectedReferencingFiles)}`));
+        assert(JSON.stringify(unexpectedReferencingFiles.sort()) === JSON.stringify(['application/publication/distribution/PublicationDistributionCommand.js']),
+            n(`L4. only application/publication/distribution/PublicationDistributionCommand.js (unchanged since 0.9.444) references either original Publication multi-relay class in executable code, outside their own files and the known comment-only cross-references above. Found: ${JSON.stringify(unexpectedReferencingFiles)}`));
 
-        console.log('✓ Section L: executeMultiRelayNostrPublicationDistributionCommand() is reachable through the ordinary application composition root (composeMultiRelayNostrPublicationDistributionCommand(), application/PublicationDistributionCommandComposition.js), wired at ui/main.js exactly like every other distribution command, with its relay set supplied by the SAME unified core/NostrRelayConfiguration.js the whole application now shares (see that file\'s own "unified" header) rather than a dedicated Publication-only configuration layer.');
+        console.log('✓ Section L: executeMultiRelayNostrPublicationDistributionCommand() is reachable through the ordinary application composition root (composeMultiRelayNostrPublicationDistributionCommand(), application/publication/distribution/PublicationDistributionCommandComposition.js), wired at ui/main.js exactly like every other distribution command, with its relay set supplied by the SAME unified core/NostrRelayConfiguration.js the whole application now shares (see that file\'s own "unified" header) rather than a dedicated Publication-only configuration layer.');
     }
 
     // ===============================================================
@@ -895,7 +895,7 @@ async function run() {
     // ===============================================================
     {
         console.log(`\n✅ All Nostr Multi-Relay Fan-Out Integration Boundary Audit (0.9.445) checks passed (${assertionCount} assertions).`);
-        console.log('VERDICT: NOSTR_MULTI_RELAY_FAN_OUT_INTEGRATION_COMPLETE — 0.9.444\'s fan-out capability survives the real application boundary: the real executeMultiRelayNostrPublicationDistributionCommand() delivers every configured field (relayUrls, discoveryTag, tagName, kind, publication identity, shared material URI, injected publishImpl) unmolested; material uploads exactly once regardless of relay count; independent relay success/failure is preserved in both directions; three relays\' own observations are simultaneously retrievable through the real 0.9.443 lifecycle path with no phantom entries on failure; repeated publication replaces rather than accumulates; relay order never changes the resulting set of facts; a one-element relay list is semantically identical to the pre-existing single-relay command; and every OTHER distribution surface — the existing single-relay Nostr command, Arweave content/gateway-failover, Arweave/Bitcoin anchoring, Snapshot distribution, and the discovery-query read side — remains structurally and behaviorally untouched. REACHABILITY CLASSIFICATION: the capability is reachable through the ordinary application composition root (application/PublicationDistributionCommandComposition.js\'s own composeMultiRelayNostrPublicationDistributionCommand()), configured through the SAME unified Nostr relay set (core/NostrRelayConfiguration.js, storage/NostrRelayConfigurationStore.js) and Settings surface (ui/views/NostrRelaySettingsView.js, /settings/nostr-relay) every other Nostr-facing feature now shares — see core/NostrRelayConfiguration.js\'s own "unified" header for the full rationale. A separate, Publication-only relay-set configuration existed briefly (0.9.447-0.9.9xx) and has since been merged back into this one.');
+        console.log('VERDICT: NOSTR_MULTI_RELAY_FAN_OUT_INTEGRATION_COMPLETE — 0.9.444\'s fan-out capability survives the real application boundary: the real executeMultiRelayNostrPublicationDistributionCommand() delivers every configured field (relayUrls, discoveryTag, tagName, kind, publication identity, shared material URI, injected publishImpl) unmolested; material uploads exactly once regardless of relay count; independent relay success/failure is preserved in both directions; three relays\' own observations are simultaneously retrievable through the real 0.9.443 lifecycle path with no phantom entries on failure; repeated publication replaces rather than accumulates; relay order never changes the resulting set of facts; a one-element relay list is semantically identical to the pre-existing single-relay command; and every OTHER distribution surface — the existing single-relay Nostr command, Arweave content/gateway-failover, Arweave/Bitcoin anchoring, Snapshot distribution, and the discovery-query read side — remains structurally and behaviorally untouched. REACHABILITY CLASSIFICATION: the capability is reachable through the ordinary application composition root (application/publication/distribution/PublicationDistributionCommandComposition.js\'s own composeMultiRelayNostrPublicationDistributionCommand()), configured through the SAME unified Nostr relay set (core/NostrRelayConfiguration.js, storage/NostrRelayConfigurationStore.js) and Settings surface (ui/views/NostrRelaySettingsView.js, /settings/nostr-relay) every other Nostr-facing feature now shares — see core/NostrRelayConfiguration.js\'s own "unified" header for the full rationale. A separate, Publication-only relay-set configuration existed briefly (0.9.447-0.9.9xx) and has since been merged back into this one.');
     }
 }
 

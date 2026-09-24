@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 
-import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
 import { computeContentHash } from '../serializer/contentHash.js';
@@ -50,7 +50,7 @@ function expectThrows(fn, message) {
 }
 
 // executeSnapshotDistributionCommand()'s own collaborator-contract checks
-// throw SYNCHRONOUSLY (see application/SnapshotDistributionCommand.js's
+// throw SYNCHRONOUSLY (see application/snapshot/SnapshotDistributionCommand.js's
 // own header, "Collaborator contract violations are caught at the start")
 // — a null contentStore/discoveryPublisher never even reaches a rejected
 // promise. This helper covers both that synchronous case and the ordinary
@@ -511,11 +511,11 @@ async function run() {
     // Section I — architectural regression.
     // ---------------------------------------------------------------
     {
-        const code = await codeOnlySource('application/SnapshotDistributionRuntimeComposition.js');
+        const code = await codeOnlySource('application/snapshot/SnapshotDistributionRuntimeComposition.js');
 
         const browserApiTerms = ['window.', 'navigator.', 'WebSocket', 'fetch('];
         for (const term of browserApiTerms) {
-            assert(!code.includes(term), `30. application/SnapshotDistributionRuntimeComposition.js never references '${term}' — no browser API of any kind`);
+            assert(!code.includes(term), `30. application/snapshot/SnapshotDistributionRuntimeComposition.js never references '${term}' — no browser API of any kind`);
         }
 
         assert(!code.includes('createArweaveInjectedProviderSigner') && !code.includes('createNostrInjectedProviderPublisher'), '31. never imports either injected-provider factory — those stay entirely a caller\'s own concern');
@@ -524,7 +524,7 @@ async function run() {
 
         const forbiddenCouplingTerms = ['PublicationDistribution', 'ArweavePublicationMaterialUploader', 'NostrPublicationDiscoveryPublisher'];
         for (const term of forbiddenCouplingTerms) {
-            assert(!code.includes(term), `34. application/SnapshotDistributionRuntimeComposition.js never references '${term}' — no coupling to the Signed Claim distribution family`);
+            assert(!code.includes(term), `34. application/snapshot/SnapshotDistributionRuntimeComposition.js never references '${term}' — no coupling to the Signed Claim distribution family`);
         }
 
         const forbiddenVocabTerms = ['retry', 'cache', 'dedup', 'trust', 'reputation', 'ranking', 'scoring'];
@@ -534,9 +534,9 @@ async function run() {
 
         const storeSource = await codeOnlySource('content/ArweaveContentStore.js');
         assert(!storeSource.includes('SnapshotDistributionRuntimeComposition'), '36. the 0.9.132 store itself is never modified to know about this composition file');
-        const publisherSource = await codeOnlySource('application/NostrSnapshotDiscoveryPublisher.js');
+        const publisherSource = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryPublisher.js');
         assert(!publisherSource.includes('SnapshotDistributionRuntimeComposition'), '37. the 0.9.133 publisher itself is never modified to know about this composition file');
-        const commandSource = await codeOnlySource('application/SnapshotDistributionCommand.js');
+        const commandSource = await codeOnlySource('application/snapshot/SnapshotDistributionCommand.js');
         assert(!commandSource.includes('SnapshotDistributionRuntimeComposition'), '38. the 0.9.136 command itself is never modified to know about this composition file — it remains, per this milestone\'s own brief, completely unchanged');
 
         // As of this milestone (0.9.137) itself, ui/main.js referenced none
@@ -558,7 +558,7 @@ async function run() {
         // ui/main.js now ALSO imports and directly constructs a real
         // ArweaveContentStore, but for an entirely different, unrelated
         // composition site: Snapshot PLACEMENT's own storage-selection
-        // registry (application/SnapshotPlacementStoreRegistry.js), never
+        // registry (application/snapshot/placement/SnapshotPlacementStoreRegistry.js), never
         // this file's own Distribution runtime. 'ArweaveContentStore' is
         // therefore no longer forbidden in ui/main.js as a whole — only
         // 'NostrSnapshotDiscoveryPublisher' remains unreferenced by name.
@@ -597,7 +597,7 @@ async function run() {
         const nostrDistributionSiteMatch = uiMainCode.match(/const \{ discoveryPublisher: nostrSnapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
         const arweaveDistributionSiteMatch = uiMainCode.match(/const \{ discoveryPublisher: arweaveSnapshotDiscoveryPublisher \} = composeSnapshotDistributionRuntime\(\{([\s\S]*?)\}\);/);
         assert(Boolean(nostrDistributionSiteMatch) && Boolean(arweaveDistributionSiteMatch), '39d. AMENDED BY 0.9.669 — ui/main.js\'s real Distribution composition call sites (one per substrate) are found and isolated for inspection — each destructures discoveryPublisher only');
-        assert(!nostrDistributionSiteMatch[1].includes('ArweaveContentStore') && !arweaveDistributionSiteMatch[1].includes('ArweaveContentStore'), "39e. THIS composition's own Distribution call sites in ui/main.js still never construct an ArweaveContentStore directly — Content resolution now goes through application/SnapshotDistributionContentBackendSelection.js instead");
+        assert(!nostrDistributionSiteMatch[1].includes('ArweaveContentStore') && !arweaveDistributionSiteMatch[1].includes('ArweaveContentStore'), "39e. THIS composition's own Distribution call sites in ui/main.js still never construct an ArweaveContentStore directly — Content resolution now goes through application/snapshot/SnapshotDistributionContentBackendSelection.js instead");
         assert(!nostrDistributionSiteMatch[1].includes('arweaveContentStoreOptions') && !arweaveDistributionSiteMatch[1].includes('arweaveContentStoreOptions'), "39f. 0.9.506 — neither Distribution call site passes composeSnapshotDistributionRuntime() an arweaveContentStoreOptions of its own at all, since neither consumes that function's contentStore half");
         // AMENDED BY 0.9.669 — `discoveryProvider` joined the parameter
         // list as a new, optional fifth argument.

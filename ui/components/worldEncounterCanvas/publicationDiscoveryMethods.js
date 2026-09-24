@@ -1,5 +1,5 @@
 import { createId } from '../../../core/createId.js';
-import { sanitizeDistributionErrorMessage } from '../../../application/DistributionErrorMessageSanitizer.js';
+import { sanitizeDistributionErrorMessage } from '../../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 
 // WorldEncounterCanvas methods: publication discovery and encounter commentary.
 // Spread into the component's `methods`, so `this` is the component instance.

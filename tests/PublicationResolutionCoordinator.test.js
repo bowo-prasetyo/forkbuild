@@ -1,23 +1,23 @@
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView, describePublicationOutcome } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView, describePublicationOutcome } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND } from '../core/BlueprintAttribution.js';
-import { LocalBlueprintAttributionStore } from '../application/LocalBlueprintAttributionStore.js';
-import { createBlueprintAttributionPublicationKind } from '../application/BlueprintAttributionPublicationKind.js';
-import { PeerContentExchange } from '../application/PeerContentExchange.js';
+import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
+import { createBlueprintAttributionPublicationKind } from '../application/blueprint/BlueprintAttributionPublicationKind.js';
+import { PeerContentExchange } from '../application/peer/PeerContentExchange.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.7.5 — Decentralized Publication UX & Resolution.
@@ -39,8 +39,8 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //              supplied, then RESOLVED the moment he supplies
 //              `bobConnectedPeer` — one call, no second exchange, no
 //              file
-//   Section D: application/PublicationResolutionView.js +
-//              application/CreatePublicationDisplayKindRegistryUseCase.js —
+//   Section D: application/publication/PublicationResolutionView.js +
+//              application/publication/CreatePublicationDisplayKindRegistryUseCase.js —
 //              a display-only kindPlugin (no `store`) resolves without
 //              ever importing into LocalBlueprintAttributionStore, and
 //              an unsupported contentKind is reported, not guessed at
@@ -76,11 +76,11 @@ function makeIdentity(label) {
     return provider;
 }
 
-// A stand-in for application/PublicationResolver.js that returns
+// A stand-in for application/publication/PublicationResolver.js that returns
 // whatever `nextResult` was set to, regardless of what it was called
 // with — Section A/B only need to prove application/
 // PublicationResolutionCoordinator.js's own SEQUENCING logic, never
-// application/PublicationResolver.js's own ten-step discipline, which
+// application/publication/PublicationResolver.js's own ten-step discipline, which
 // tests/DecentralizedPublicationDiscovery.test.js/tests/
 // IpfsPublicationResolution.test.js already cover directly.
 class StubResolver {
@@ -94,7 +94,7 @@ class StubResolver {
     }
 }
 
-// A stand-in for application/PeerContentExchange.js that never fires
+// A stand-in for application/peer/PeerContentExchange.js that never fires
 // onContentReceived — Section B's "the peer never answers" case.
 class SilentPeerContentExchange {
     constructor() { this.requested = []; }

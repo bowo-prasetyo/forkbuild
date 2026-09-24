@@ -10,16 +10,16 @@ import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWo
 import {
     DecentralizedDiscoveryQueryService,
     queryDecentralizedWorldDiscovery
-} from '../application/DecentralizedWorldDiscoveryQuery.js';
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
-import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQueryService.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes } from '../application/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js';
+} from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
+import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes } from '../application/discovery/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js';
 
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { executePublicationDistribution } from '../application/PublicationDistributionExecutor.js';
-import { describePublicationDistributionResult } from '../application/PublicationDistributionResult.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
+import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
 
 // 0.9.427 — Arweave Announcement/Discovery Publication Contract Audit.
 //
@@ -51,7 +51,7 @@ import { describePublicationDistributionResult } from '../application/Publicatio
 // — is smaller than 0.9.30's own envelope makes it look. `core/
 // DecentralizedDiscoveryEnvelope.js` (0.9.30) and `application/
 // DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js` (0.9.32)
-// both exist and both work, but `application/NostrDiscoveryQueryService.js`
+// both exist and both work, but `application/nostr/NostrDiscoveryQueryService.js`
 // (0.9.31) — the one production adapter that ever reads one — parses an
 // event's own envelope only long enough to pull out `uri`/`storage`; the
 // envelope's own `kind`/`objectId`, and the envelope object itself, are
@@ -131,12 +131,12 @@ import { describePublicationDistributionResult } from '../application/Publicatio
 // - **`application/ArweaveDiscoveryPublisher.js`, `application/
 //   ArweaveAnnouncementPublisher.js`, or any file by either name.** Section
 //   G's own stand-in is throwaway, test-local, never exported.
-// - **Any change to `application/PublicationDistributionRuntimeComposition.js`,
-//   `application/PublicationDistributionOrchestrator.js`, `application/
+// - **Any change to `application/publication/distribution/PublicationDistributionRuntimeComposition.js`,
+//   `application/publication/distribution/PublicationDistributionOrchestrator.js`, `application/
 //   PublicationDistributionCommand.js`, or `application/
 //   PublicationDistributionCommandComposition.js`.** Section H names the
 //   precise minimum shape a future change would need; it makes none.
-// - **Extending `application/ArweaveGraphqlDiscoveryQueryService.js`'s own
+// - **Extending `application/arweave/ArweaveGraphqlDiscoveryQueryService.js`'s own
 //   GraphQL query to request `tags` or a transaction's own data.** Section
 //   C names this as the exact, narrow future seam; this file does not build
 //   it, real or test-local.
@@ -206,9 +206,9 @@ async function run() {
 
         // Confirm production code never calls the evidence ingress with a
         // real envelopes array — only test files do.
-        const ingressSource = await source('application/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js');
+        const ingressSource = await source('application/discovery/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js');
         check(/A SECOND PRODUCER, NEVER A MERGE INTO THE FIRST/.test(ingressSource), 'A6. sanity check: reading the expected production file');
-        let nostrDiscoverySearchSource = await source('application/NostrDiscoveryQueryService.js');
+        let nostrDiscoverySearchSource = await source('application/nostr/NostrDiscoveryQueryService.js');
         check(!/deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes/.test(nostrDiscoverySearchSource), 'A7. NostrDiscoveryQueryService.js itself never imports or calls the evidence ingress — it discards the parsed envelope before returning');
 
         console.log('✓ Section A: the LIVE Announcement fact this codebase actually produces end-to-end, for its only real substrate (Nostr), is a bare DecentralizedWorldDiscoveryLead — { origin, discoveryTag, uri, storage } — never a reconstructed { kind, objectId }. The richer envelope/evidence contract is real and independently correct (A1-A2) but unwired into any live adapter for ANY substrate (A5-A7) — this is not an Arweave-specific gap, and any Arweave provider audit must be honest about which bar is actually live today.');
@@ -258,7 +258,7 @@ async function run() {
     // Section C — the Arweave discovery primitive, read from source.
     // ===============================================================
     {
-        const discoverySource = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const discoverySource = await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         check(/already indexes every[\s\S]{0,40}transaction's arbitrary key\/value Tags/.test(discoverySource), 'C1. the class\'s own header names Arweave Tags, in its own words, as the discovery primitive this codebase already uses — never a new vocabulary this milestone would have to invent');
 
         check(/edges \{ node \{ id \} \} \}/.test(discoverySource.replace(/\s+/g, ' ').replace(/'/g, '')) || /node\s*\{\s*id\s*\}/.test(discoverySource), 'C2. the actual GraphQL query built by this class requests only node { id } — read from the real query-building function, never from prose');
@@ -272,7 +272,7 @@ async function run() {
         // reader change as "extending the query to also select
         // node { tags { name value } }" — the real fix instead performs a
         // SEPARATE raw gateway fetch per candidate (the same primitive
-        // application/ArweaveWorldEncounterMaterialResolver.js already
+        // application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js already
         // shipped for content), never a GraphQL query-shape change. This
         // fakeFetch now answers both the GraphQL POST and that second GET,
         // so the assertion below reflects what the real reader actually
@@ -303,11 +303,11 @@ async function run() {
     // level, never the wire-protocol level.
     // ===============================================================
     {
-        const executorSource = await source('application/PublicationDistributionExecutor.js');
+        const executorSource = await source('application/publication/distribution/PublicationDistributionExecutor.js');
         check(/discoveryPublisher\.publish/.test(executorSource) && /discoveryPublisher\.discoveryTag/.test(executorSource), 'D1. the real executor\'s own contract for ANY discoveryPublisher, read from source: expose publish() and a non-empty discoveryTag — nothing Nostr-specific in that check');
         check(/relayUrl:\s*published\.relayUrl/.test(executorSource), 'D2. but the executor itself ALSO reads a field literally named relayUrl off whatever discoveryPublisher.publish() resolved with, by that exact name, to build the discovery fact it hands to describePublicationDistributionResult() — the Nostr wire term is not confined to the result boundary alone, it is read explicitly one layer earlier too');
 
-        const resultSource = await source('application/PublicationDistributionResult.js');
+        const resultSource = await source('application/publication/distribution/PublicationDistributionResult.js');
         check(/isNonEmptyString\(discovery\.relayUrl\)/.test(resultSource), 'D3. and PublicationDistributionResult.js\'s own describeDiscoveryFact() separately RE-validates that same field, by the same exact name — a Nostr wire term baked into two layers of what otherwise reads as a substrate-neutral pipeline');
         check(!/isNonEmptyString\(discovery\.origin\)|isNonEmptyString\(discovery\.gatewayUrl\)/.test(resultSource), 'D4. no substrate-neutral alternative field name (origin, gatewayUrl) is accepted instead — relayUrl is the one and only name either layer currently recognizes for that fact');
 
@@ -494,17 +494,17 @@ async function run() {
     // precisely: which layer is actually fixed.
     // ===============================================================
     {
-        const executorSource = await source('application/PublicationDistributionExecutor.js');
+        const executorSource = await source('application/publication/distribution/PublicationDistributionExecutor.js');
         check(!/new NostrPublicationDiscoveryPublisher|new ArweavePublicationMaterialUploader/.test(executorSource), 'H1. PublicationDistributionExecutor.js itself never constructs either concrete collaborator — Section G\'s own live proof already showed this slot accepts a substitute with zero change; this confirms it structurally, from source, not merely from one passing test');
 
-        const runtimeCompositionSource = await source('application/PublicationDistributionRuntimeComposition.js');
-        check(/import\s*\{\s*NostrPublicationDiscoveryPublisher\s*\}/.test(runtimeCompositionSource), 'H2. PublicationDistributionRuntimeComposition.js — the ONE file the real, UI-reachable command chain actually runs through (application/PublicationDistributionCommandComposition.js -> application/PublicationDistributionCommand.js -> application/PublicationDistributionOrchestrator.js -> THIS file) — imports NostrPublicationDiscoveryPublisher directly');
+        const runtimeCompositionSource = await source('application/publication/distribution/PublicationDistributionRuntimeComposition.js');
+        check(/import\s*\{\s*NostrPublicationDiscoveryPublisher\s*\}/.test(runtimeCompositionSource), 'H2. PublicationDistributionRuntimeComposition.js — the ONE file the real, UI-reachable command chain actually runs through (application/publication/distribution/PublicationDistributionCommandComposition.js -> application/publication/distribution/PublicationDistributionCommand.js -> application/publication/distribution/PublicationDistributionOrchestrator.js -> THIS file) — imports NostrPublicationDiscoveryPublisher directly');
         check(/new NostrPublicationDiscoveryPublisher\(nostrPublisherOptions\)/.test(runtimeCompositionSource), 'H3. and constructs it with a literal, unparameterized `new` call — not a lookup against any registry, not a branch on any providerKey; this is a genuinely fixed slot, not merely an unused-but-already-dynamic one');
 
-        const orchestratorSource = await source('application/PublicationDistributionOrchestrator.js');
+        const orchestratorSource = await source('application/publication/distribution/PublicationDistributionOrchestrator.js');
         check(!/RoleAwareProviderResolver|discoveryRegistry|providerKey/.test(orchestratorSource), 'H4. the orchestrator layer between RuntimeComposition and the real UI-facing command adds no provider-selection logic of its own either — the fixed `new` call in H3 is the ONLY place in the real, live call chain a substrate choice for this role is ever made');
 
-        const commandCompositionSource = await source('application/PublicationDistributionCommandComposition.js');
+        const commandCompositionSource = await source('application/publication/distribution/PublicationDistributionCommandComposition.js');
         check(!/NostrPublicationDiscoveryPublisher|ArweaveGraphqlDiscoveryQueryService|discoveryRegistry/.test(commandCompositionSource), 'H5. the composition-root file ui/main.js actually calls forwards only lifecycleStore/arweaveUploaderOptions/nostrPublisherOptions — it has no discoveryRegistry parameter to even receive an Arweave choice through today');
 
         console.log('✓ Section H: the fixed slot 0.9.423 already found ("two fixed collaborator slots... invoked together in a fixed order") is real, but it is ONE LAYER HIGHER than where Section G proved a substitute already works. PublicationDistributionExecutor.js\'s own discoveryPublisher parameter was NEVER fixed — it is, and always has been, an injected, duck-typed collaborator (H1, and Section G\'s live proof). What IS fixed, and would need to change for Arweave to become SELECTABLE through the real, UI-reachable command chain, is exactly one literal `new NostrPublicationDiscoveryPublisher(nostrPublisherOptions)` call inside PublicationDistributionRuntimeComposition.js (H2-H3), with no provider-selection logic anywhere between it and ui/main.js (H4-H5). Making the choice dynamic — not replacing the executor\'s own already-general slot, which needs no replacement — is the correctly-scoped future change: parameterize (or branch) that one construction on a providerKey, optionally through RoleAwareProviderResolver\'s own already-real discoveryRegistry parameter (still uninstantiated for real capability, per 0.9.424 Section B), never a rewrite of the executor, the descriptor, or the result boundary, all three of which Section G already proved need no change at all.');
@@ -533,7 +533,7 @@ async function run() {
         console.log('    already accepts an Arweave-flavored collaborator with ZERO change');
         console.log('    (Section G, live), given field-name compatibility (Section D).');
         console.log('  PROVIDER_GAP             : ONE MISSING CLASS');
-        console.log('    A real application/ArweaveAnnouncementPublisher.js — the smallest');
+        console.log('    A real application/arweave/ArweaveAnnouncementPublisher.js — the smallest');
         console.log('    version needs only what Section G\'s stand-in needed: publish(),');
         console.log('    discoveryTag, and a result exposing { published, relayUrl, id }.');
         console.log('  MECHANISM_GAP            : ONE FIXED CONSTRUCTION CALL, PRECISELY LOCATED');

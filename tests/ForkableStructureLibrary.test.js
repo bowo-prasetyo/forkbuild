@@ -1,14 +1,14 @@
 import { Structure } from '../core/Structure.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
-import { ForkStructureUseCase } from '../application/ForkStructureUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
+import { ForkStructureUseCase } from '../application/editor/ForkStructureUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { BrickRenderer } from '../renderer/BrickRenderer.js';
 

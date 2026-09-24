@@ -1,8 +1,8 @@
 import { inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
-import { LocalWorldExperienceStore } from '../../application/LocalWorldExperienceStore.js';
-import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
+import { LocalWorldExperienceStore } from '../../application/world/LocalWorldExperienceStore.js';
+import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
 import WorldCard from '../components/WorldCard.js';
 
 // 0.3.10 — World Persistence & Return Experience. "Recent Worlds": a
@@ -14,7 +14,7 @@ import WorldCard from '../components/WorldCard.js';
 // CreateWorldViewUseCase's own session would, directly through a
 // lightweight LocalWorldExperienceStore + LocalStorageProvider pair
 // (both cheap, stateless to construct — see
-// application/CreateDiscoveryUseCase.js's own identical posture for
+// application/discovery/CreateDiscoveryUseCase.js's own identical posture for
 // discoveryProvider).
 //
 // Deliberately excludes anything requiring a live connection: online

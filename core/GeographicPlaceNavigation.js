@@ -14,7 +14,7 @@ import { resolveCompassLabel } from './CompassHeading.js';
 // rather than inventing a new navigation mechanism (a
 // `focusGeographicPlace()`, a second camera system), this module exists
 // purely to let a geographic place candidate be addressed through the
-// SAME identifier space `application/WorldLocationDirectory.js`
+// SAME identifier space `application/world/WorldLocationDirectory.js`
 // already resolves for `focusLocation()` — a `WorldLocation` whose kind
 // is `GEOGRAPHIC_PLACE` (see core/WorldLocationKind.js), constructed
 // fresh on every read, never persisted, and never added to
@@ -72,7 +72,7 @@ export function geographicPlaceFingerprintKeyFromLocationId(locationId) {
 // position: a region's own position is layout-dependent (which
 // Worlds this replica happens to have loaded, and where its own
 // multi-document layout has placed each one — see
-// application/WorldLocationDirectory.js's own header), something only
+// application/world/WorldLocationDirectory.js's own header), something only
 // the application layer that actually knows the current layout can
 // resolve. This function's own job ends at "which region," exactly
 // where core/GeographicPlaceView.js's representativeRegion pick already
@@ -113,9 +113,9 @@ export const DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS = 300;
 //
 // `entries` is an array the CALLER has already resolved to actual,
 // layout-space navigable positions — see
-// application/WorldNavigationSession.js#getNearbyGeographicPlaces(),
+// application/world/WorldNavigationSession.js#getNearbyGeographicPlaces(),
 // the one place that resolution happens (by delegating back to
-// application/WorldLocationDirectory.js, the same single source of
+// application/world/WorldLocationDirectory.js, the same single source of
 // truth focusLocation() itself uses, so "how far away is it" and
 // "where does Go To Place actually take me" can never disagree). This
 // function does nothing but the pure distance math: filter to `radius`

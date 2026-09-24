@@ -1,40 +1,40 @@
 import { inject, reactive, ref } from 'vue';
-import { BitcoinWalletConnectionState } from '../../../application/BitcoinWalletConnectionState.js';
-import { describeBitcoinWalletConnection } from '../../../application/BitcoinWalletConnectionView.js';
+import { BitcoinWalletConnectionState } from '../../../application/anchoring/bitcoin/BitcoinWalletConnectionState.js';
+import { describeBitcoinWalletConnection } from '../../../application/anchoring/bitcoin/BitcoinWalletConnectionView.js';
 import {
     BITCOIN_WALLET_CONNECTION_BADGE_CLASSES, BITCOIN_ANCHOR_FUNDING_BADGE_CLASSES,
     BITCOIN_ANCHOR_REVIEWED_SIGNING_BADGE_CLASSES, BITCOIN_ANCHOR_SIGNED_PSBT_FINALIZATION_BADGE_CLASSES,
     CREATION_BADGE_CLASSES, BITCOIN_ANCHOR_BROADCAST_BADGE_CLASSES, BITCOIN_ANCHOR_CONFIRMATION_BADGE_CLASSES,
     BITCOIN_ANCHOR_TRANSACTION_CONSTRUCTION_BADGE_CLASSES
 } from './presentation.js';
-import { describeBitcoinAnchorTransactionReview } from '../../../application/BitcoinAnchorTransactionReviewView.js';
-import { describeBitcoinAnchorFunding } from '../../../application/BitcoinAnchorFundingView.js';
-import { BitcoinAnchorFundingObservationState } from '../../../application/BitcoinAnchorFundingObservationState.js';
+import { describeBitcoinAnchorTransactionReview } from '../../../application/anchoring/bitcoin/BitcoinAnchorTransactionReviewView.js';
+import { describeBitcoinAnchorFunding } from '../../../application/anchoring/bitcoin/BitcoinAnchorFundingView.js';
+import { BitcoinAnchorFundingObservationState } from '../../../application/anchoring/bitcoin/BitcoinAnchorFundingObservationState.js';
 import {
     BitcoinAnchorTransactionConstructionState
-} from '../../../application/BitcoinAnchorTransactionConstructionState.js';
-import { BitcoinAnchorReviewedSigningState } from '../../../application/BitcoinAnchorReviewedSigningState.js';
-import { describeBitcoinAnchorReviewedSigning } from '../../../application/BitcoinAnchorReviewedSigningView.js';
+} from '../../../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js';
+import { BitcoinAnchorReviewedSigningState } from '../../../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningState.js';
+import { describeBitcoinAnchorReviewedSigning } from '../../../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningView.js';
 import {
     BitcoinAnchorSignedPsbtFinalizationState
-} from '../../../application/BitcoinAnchorSignedPsbtFinalizationState.js';
+} from '../../../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationState.js';
 import {
     describeBitcoinAnchorSignedPsbtFinalization
-} from '../../../application/BitcoinAnchorSignedPsbtFinalizationView.js';
-import { BitcoinAnchorBroadcastState } from '../../../application/BitcoinAnchorBroadcastState.js';
-import { ExternalAnchorCreationOutcome } from '../../../application/ExternalAnchorCreationOutcome.js';
-import { describeCreationAttempt } from '../../../application/PublicationAnchorCreationView.js';
-import { describeBitcoinAnchorBroadcast } from '../../../application/BitcoinAnchorBroadcastView.js';
+} from '../../../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationView.js';
+import { BitcoinAnchorBroadcastState } from '../../../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { ExternalAnchorCreationOutcome } from '../../../application/anchoring/ExternalAnchorCreationOutcome.js';
+import { describeCreationAttempt } from '../../../application/anchoring/PublicationAnchorCreationView.js';
+import { describeBitcoinAnchorBroadcast } from '../../../application/anchoring/bitcoin/BitcoinAnchorBroadcastView.js';
 import {
     appendBitcoinAnchorConfirmationObservationHistoryEntry
-} from '../../../application/BitcoinAnchorConfirmationObservationHistory.js';
+} from '../../../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js';
 import {
     describeBitcoinAnchorConfirmationObservationDetail,
     describeBitcoinAnchorConfirmationObservationHistoryDetails
-} from '../../../application/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
+} from '../../../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
 import {
     describeBitcoinAnchorTransactionConstruction
-} from '../../../application/BitcoinAnchorTransactionConstructionView.js';
+} from '../../../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionView.js';
 
 // Bitcoin anchoring for the Publications page: wallet connection, funding
 // observation, and the construct / review / sign / finalize / broadcast /

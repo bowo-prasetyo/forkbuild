@@ -11,13 +11,13 @@ import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
 import { treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
 import { resolveAvatarTreeMovement } from '../core/AvatarTreeMovement.js';
 
-import { AvatarTerrainConstraint } from '../application/AvatarTerrainConstraint.js';
-import { AvatarWaterConstraint } from '../application/AvatarWaterConstraint.js';
-import { AvatarStepConstraint } from '../application/AvatarStepConstraint.js';
-import { AvatarMovementConstraint } from '../application/AvatarMovementConstraint.js';
-import { AvatarTreeConstraint } from '../application/AvatarTreeConstraint.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
+import { AvatarWaterConstraint } from '../application/avatar/AvatarWaterConstraint.js';
+import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
+import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
+import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -25,13 +25,13 @@ import { Position } from '../core/Position.js';
 
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
-// NOTE: application/WorldNavigationSession.js is deliberately never
+// NOTE: application/world/WorldNavigationSession.js is deliberately never
 // imported here, even though Section B reads its SOURCE TEXT (never
 // executes it). Importing it would transitively pull in
 // renderer/Renderer.js -> 'three', the exact missing-package environment
@@ -218,7 +218,7 @@ function buildAvatarStack(registry, username, position, rotation) {
 }
 
 // Assembles a real AvatarMovementController from the same five real,
-// unmodified constraint classes application/WorldNavigationSession.js#
+// unmodified constraint classes application/world/WorldNavigationSession.js#
 // _setupLocalAvatar() itself assembles (Section B proves this wiring
 // from that file's own current source) — an empty world (no real
 // buildings loaded) for movementConstraint/stepConstraint, exactly as a
@@ -282,7 +282,7 @@ async function run() {
     // Section B — the current avatar traversal capability contract.
     // ===============================================================
     {
-        const controllerSource = codeOnly(await readSource('application/AvatarMovementController.js'));
+        const controllerSource = codeOnly(await readSource('application/avatar/AvatarMovementController.js'));
         const tickStart = controllerSource.indexOf('tick(deltaSeconds) {');
         const orderMarkers = ['this._movementConstraint.apply(', 'this._terrainConstraint.apply(', 'this._waterConstraint.apply(', 'this._stepConstraint.apply(', 'this._treeConstraint.apply(']
             .map((marker) => controllerSource.indexOf(marker, tickStart));
@@ -303,14 +303,14 @@ async function run() {
         // terrainConstraint/stepConstraint/waterConstraint are never
         // handed to the vehicle movement path, which follows its own,
         // deliberately different (real terrain height, not flat-plane)
-        // Y model — see application/AvatarVehicleMovementController.js's
+        // Y model — see application/avatar/AvatarVehicleMovementController.js's
         // own 0.9.116 header. Reconfirmed, not re-litigated: vehicles are
         // out of scope for "avatar traversal."
-        const vehicleControllerSource = codeOnly(await readSource('application/AvatarVehicleMovementController.js'));
+        const vehicleControllerSource = codeOnly(await readSource('application/avatar/AvatarVehicleMovementController.js'));
         assert(vehicleControllerSource.includes('terrainHeightAt'),
-            n('application/AvatarVehicleMovementController.js still computes its own groundHeight directly from real terrainHeightAt() — a deliberately separate, already-scoped Y model from the on-foot avatar\'s flat-plane one, not something this milestone touches or needs to reconcile'));
+            n('application/avatar/AvatarVehicleMovementController.js still computes its own groundHeight directly from real terrainHeightAt() — a deliberately separate, already-scoped Y model from the on-foot avatar\'s flat-plane one, not something this milestone touches or needs to reconcile'));
         assert(!vehicleControllerSource.includes('AvatarWaterConstraint') && !vehicleControllerSource.includes('waterConstraint'),
-            n('the water constraint this arc built is never wired into vehicle movement — avatar-only scope, exactly as application/AvatarWaterConstraint.js\'s own header already states'));
+            n('the water constraint this arc built is never wired into vehicle movement — avatar-only scope, exactly as application/avatar/AvatarWaterConstraint.js\'s own header already states'));
 
         console.log('Section B: the five-constraint pipeline (building -> terrain -> water -> step -> tree) is the current, complete avatar traversal capability contract; vehicles remain a separate, already-scoped system.');
     }
@@ -345,10 +345,10 @@ async function run() {
         // classification, structurally isolated from the movement
         // constraint, exactly as core/TerrainSurface.js's own header
         // already states.
-        const terrainConstraintSource = codeOnly(await readSource('application/AvatarTerrainConstraint.js'));
+        const terrainConstraintSource = codeOnly(await readSource('application/avatar/AvatarTerrainConstraint.js'));
         const terrainWalkabilitySource = codeOnly(await readSource('core/TerrainWalkability.js'));
         assert(!terrainConstraintSource.includes('TerrainSurface') && !terrainWalkabilitySource.includes('TerrainSurface'),
-            n('neither application/AvatarTerrainConstraint.js nor core/TerrainWalkability.js imports core/TerrainSurface.js — a ROCK/SOIL-looking hillside is never treated as "unwalkable ground," only as a color, exactly the boundary core/TerrainSurface.js\'s own header names'));
+            n('neither application/avatar/AvatarTerrainConstraint.js nor core/TerrainWalkability.js imports core/TerrainSurface.js — a ROCK/SOIL-looking hillside is never treated as "unwalkable ground," only as a color, exactly the boundary core/TerrainSurface.js\'s own header names'));
 
         // --- lakes ---------------------------------------------------
         shoreline = findShoreline(seed, SCAN_HALF_EXTENT);
@@ -515,8 +515,8 @@ async function run() {
         // source inspection for terrain/water/step (each contains the
         // literal revert-to-`position` pattern already documented in
         // their own headers).
-        const terrainSrc = codeOnly(await readSource('application/AvatarTerrainConstraint.js'));
-        const waterSrc = codeOnly(await readSource('application/AvatarWaterConstraint.js'));
+        const terrainSrc = codeOnly(await readSource('application/avatar/AvatarTerrainConstraint.js'));
+        const waterSrc = codeOnly(await readSource('application/avatar/AvatarWaterConstraint.js'));
         const revertsToOriginalPosition = /x:\s*position\.x,\s*y:\s*desiredPosition\.y,\s*z:\s*position\.z/;
         assert(revertsToOriginalPosition.test(terrainSrc) && revertsToOriginalPosition.test(waterSrc),
             n('AvatarTerrainConstraint/AvatarWaterConstraint each revert to the ORIGINAL position on block — never to a third point neither the caller nor the previous constraint proposed'));
@@ -556,7 +556,7 @@ async function run() {
         // slightly to the shallower side of the avatar's path) —
         // core/AvatarTreeMovement.js's own real, unmodified
         // resolveAvatarTreeMovement(), the exact function
-        // application/AvatarTreeConstraint.js#apply() calls.
+        // application/avatar/AvatarTreeConstraint.js#apply() calls.
         const tree = { center: { x: (D - 0.1) - 0.9, z: 1.0 }, radius: 1.0 };
         const treeResolved = resolveAvatarTreeMovement({
             currentPosition: current, requestedPosition: waterResult.position, trees: [tree], avatarRadius: AVATAR_COLLISION_RADIUS
@@ -604,9 +604,9 @@ async function run() {
         const simulationSrc = codeOnly(await readSource('core/AvatarMovementSimulation.js'));
         assert(!simulationSrc.includes('terrainHeightAt') && !simulationSrc.includes('TerrainHeightField'),
             n('core/AvatarMovementSimulation.js still never imports or reads real terrain elevation — AvatarPresence.position.y remains flat-plane + jump/gravity only, unchanged by the entire water arc'));
-        const stepSrc = codeOnly(await readSource('application/AvatarStepConstraint.js'));
+        const stepSrc = codeOnly(await readSource('application/avatar/AvatarStepConstraint.js'));
         assert(!stepSrc.includes('terrainHeightAt') && !stepSrc.includes('TerrainHeightField'),
-            n('application/AvatarStepConstraint.js still computes supportHeightAt() from a flat FLAT_GROUND_Y baseline plus brick surfaces only — never real terrain elevation'));
+            n('application/avatar/AvatarStepConstraint.js still computes supportHeightAt() from a flat FLAT_GROUND_Y baseline plus brick surfaces only — never real terrain elevation'));
 
         // Live: walking the real AvatarTerrainConstraint (slope-gating
         // only) across two real coordinates with meaningfully different
@@ -662,7 +662,7 @@ async function run() {
         // (renderer/WorldRenderer.js#_terrainOffsetY(), reproduced here
         // via the same real terrainHeightAt() it itself calls) would lift
         // the whole building by that real elevation; the AVATAR COLLISION
-        // layer (application/AvatarStepConstraint.js#supportHeightAt())
+        // layer (application/avatar/AvatarStepConstraint.js#supportHeightAt())
         // never adds any such offset — confirmed structurally in Section
         // F, reconfirmed live here.
         let placement = null;

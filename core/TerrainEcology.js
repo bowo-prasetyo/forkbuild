@@ -254,7 +254,7 @@ export function ecologyGroundColorAt(seed, x, z) {
 // and core/TerrainSurface.js's own SURFACE_PALETTE already established);
 // simulated agriculture (FIELD is a deterministic ground-cover zone, not
 // a crop/growth system); consulting this file from
-// core/TerrainWalkability.js or application/AvatarTerrainConstraint.js
+// core/TerrainWalkability.js or application/avatar/AvatarTerrainConstraint.js
 // (walkability stays exactly the slope-only decision 0.2.77 established
 // — no ecology zone is "this ground is unwalkable"); and any change to
 // core/TerrainSurface.js's own SURFACE_CATEGORY/SURFACE_PALETTE (this

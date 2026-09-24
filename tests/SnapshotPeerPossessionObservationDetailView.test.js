@@ -3,20 +3,20 @@ import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
-import { LocalSnapshotContentAvailabilityOutcome } from '../application/LocalSnapshotContentAvailabilityOutcome.js';
-import { SnapshotPeerPossessionState } from '../application/SnapshotPeerPossessionState.js';
-import { toSnapshotPeerPossessionObservation } from '../application/SnapshotPeerPossessionObservation.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
+import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
+import { SnapshotPeerPossessionState } from '../application/snapshot/possession/SnapshotPeerPossessionState.js';
+import { toSnapshotPeerPossessionObservation } from '../application/snapshot/possession/SnapshotPeerPossessionObservation.js';
 import {
     appendSnapshotPeerPossessionObservationHistoryEntry,
     latestSnapshotPeerPossessionObservationsByPeer
-} from '../application/SnapshotPeerPossessionObservationHistory.js';
-import { describeSnapshotPeerPossessionComparison } from '../application/SnapshotPeerPossessionComparisonView.js';
+} from '../application/snapshot/possession/SnapshotPeerPossessionObservationHistory.js';
+import { describeSnapshotPeerPossessionComparison } from '../application/snapshot/possession/SnapshotPeerPossessionComparisonView.js';
 import {
     describeSnapshotPeerPossessionObservationDetail,
     describeSnapshotPeerPossessionObservationDetails
-} from '../application/SnapshotPeerPossessionObservationDetailView.js';
+} from '../application/snapshot/possession/SnapshotPeerPossessionObservationDetailView.js';
 
 // 0.8.45 — Explicit Peer Possession Observation Inspection.
 //
@@ -28,7 +28,7 @@ import {
 //              the same `state`: application/
 //              SnapshotPeerPossessionView.js#describePeerPossessionAttempt()'s
 //              own full-sentence `label` (here `stateLabel`) and
-//              application/SnapshotPeerPossessionComparisonView.js#
+//              application/snapshot/possession/SnapshotPeerPossessionComparisonView.js#
 //              describeSnapshotPeerPossessionStateLabel()'s own short word
 //              (here `stateShortLabel`). No availability percentage, no
 //              reliability, no ranking vocabulary anywhere.
@@ -119,7 +119,7 @@ async function run() {
         assert(details.entries[0].observedAt.getTime() === observedAt1.getTime(), '7. observedAt is carried through unchanged, oldest first — never sorted or reordered');
         assert(details.entries[0].stateShortLabel === 'Available', '8. AVAILABLE gets the short label "Available"');
         assert(details.entries[0].stateLabel === 'Peer reports snapshot available',
-            '9. AVAILABLE gets the SAME full-sentence label application/SnapshotPeerPossessionView.js#describePeerPossessionAttempt() already produces');
+            '9. AVAILABLE gets the SAME full-sentence label application/snapshot/possession/SnapshotPeerPossessionView.js#describePeerPossessionAttempt() already produces');
 
         // UNAVAILABLE deliberately stays "Could not determine," never "Not available."
         assert(details.entries[1].stateShortLabel === 'Could not determine', '10. UNAVAILABLE\'s short label is "Could not determine," never "Not available"');
@@ -163,7 +163,7 @@ async function run() {
         describeSnapshotPeerPossessionObservationDetail(observation);
 
         assert(JSON.stringify(history) === beforeJson, '1. INVARIANT: inspecting a history never mutates the history array or any observation inside it');
-        assert(Object.isFrozen(observation), '2. the individual observation record itself stays frozen, exactly as application/SnapshotPeerPossessionObservation.js already established');
+        assert(Object.isFrozen(observation), '2. the individual observation record itself stays frozen, exactly as application/snapshot/possession/SnapshotPeerPossessionObservation.js already established');
 
         // No network/store/coordinator dependency exists anywhere in this
         // module — both functions are synchronous and take no coordinator,

@@ -6,7 +6,7 @@ const ANIMAL_RUNTIME_INSTANCE_STORE_KEY = 'animal-runtime-instances';
 
 // World View Placed-Animal Persistence — the direct structural twin of
 // storage/VehicleRuntimeInstancePersistenceStore.js for
-// application/AnimalRuntimeInstances.js. See that file's own header for
+// application/world/AnimalRuntimeInstances.js. See that file's own header for
 // the full rationale; this one differs only in the value type persisted
 // (AnimalPresence, which has no heading/spawnPosition of its own — see
 // core/AnimalPresence.js's own header) and in `excludedIds` meaning

@@ -1,8 +1,8 @@
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 // 0.9.245 — Publication Commentary Authorship Boundary.
@@ -50,7 +50,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 // this file keeps exercising ONLY the authorship boundary. That
 // authorization question — and its own dedicated coverage — lives in
 // tests/PublicationCommentaryAuthorization.test.js, per
-// application/CanCommentOnPublicationUseCase.js's own header.
+// application/publication/CanCommentOnPublicationUseCase.js's own header.
 
 // ---------------------------------------------------------------------
 // Helpers

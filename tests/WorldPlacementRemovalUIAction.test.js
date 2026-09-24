@@ -7,7 +7,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { License, LicenseId } from '../core/License.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -15,17 +15,17 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
-import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
-import { DiscoverWorldsUseCase } from '../application/DiscoverWorldsUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
+import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
+import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.197 — World Placement Removal UI Action.
@@ -299,12 +299,12 @@ async function runTests() {
         // tests/ArchitectureReassessmentProductGapAudit.test.js already
         // applies to VehicleType.js) — so this checks the CODE only,
         // never the comments that explain the boundary.
-        const removeUseCaseSource = await rawSource('application/RemoveWorldPlacementUseCase.js');
+        const removeUseCaseSource = await rawSource('application/placement/RemoveWorldPlacementUseCase.js');
         const removeUseCaseCode = codeOnlyLines(removeUseCaseSource).join('\n');
         assert(!/Snapshot|Nostr|Arweave|Bitcoin|Anchor|Distribution|Unpublish/i.test(removeUseCaseCode),
             '1. RemoveWorldPlacementUseCase.js\'s own CODE carries no Snapshot/Nostr/Arweave/Anchor/Distribution/Unpublish vocabulary at all — it cannot withdraw decentralized content or retract a Publication because it has no path to reach either');
 
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
         const removePlacementBody = sessionSource.match(/removePlacement\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/);
         assert(removePlacementBody, '2. removePlacement() method body is found');
         assert(!/Snapshot|Nostr|Arweave|Unpublish|Discovery(?!Provider)/i.test(removePlacementBody[1]),

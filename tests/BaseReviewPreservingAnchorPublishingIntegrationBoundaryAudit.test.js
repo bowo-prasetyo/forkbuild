@@ -4,22 +4,22 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { BaseAnchorPublisher } from '../anchoring/BaseAnchorPublisher.js';
-import { CreateBaseAnchorPublisherUseCase } from '../application/CreateBaseAnchorPublisherUseCase.js';
-import { BaseReviewedSigningCoordinator } from '../application/BaseReviewedSigningCoordinator.js';
+import { CreateBaseAnchorPublisherUseCase } from '../application/anchoring/base/CreateBaseAnchorPublisherUseCase.js';
+import { BaseReviewedSigningCoordinator } from '../application/anchoring/base/BaseReviewedSigningCoordinator.js';
 import { BaseTransactionBroadcaster } from '../base/BaseTransactionBroadcaster.js';
 import { BaseSignedTransactionFinalizer } from '../base/BaseSignedTransactionFinalizer.js';
 import { BaseJsonRpcClient } from '../base/BaseJsonRpcClient.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { describeBasePublicationTransactionReview } from '../application/BasePublicationTransactionReview.js';
-import { encodeBasePublicationCommitment } from '../application/BasePublicationCommitmentEncoding.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { describeBasePublicationTransactionReview } from '../application/anchoring/base/BasePublicationTransactionReview.js';
+import { encodeBasePublicationCommitment } from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
 import { BaseProofVerifier } from '../anchoring/BaseProofVerifier.js';
-import { ExternalAnchorPublisherRegistry } from '../application/ExternalAnchorPublisherRegistry.js';
-import { CreatePublicationAnchorUseCase } from '../application/CreatePublicationAnchorUseCase.js';
+import { ExternalAnchorPublisherRegistry } from '../application/anchoring/ExternalAnchorPublisherRegistry.js';
+import { CreatePublicationAnchorUseCase } from '../application/anchoring/CreatePublicationAnchorUseCase.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -32,7 +32,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //
 // 0.9.470 built anchoring/BaseAnchorPublisher.js — a bridge from the
 // already-live, already-reviewed Base Publication Transaction pipeline into
-// application/CreatePublicationAnchorUseCase.js's own generic contract —
+// application/anchoring/CreatePublicationAnchorUseCase.js's own generic contract —
 // and its own header already commits to two things this audit takes as
 // given, never re-litigates:
 //
@@ -309,7 +309,7 @@ async function run() {
         // closed, rather than deleted, so this file's own historical
         // narrative stays intact and checkable.
         assert(/BaseAnchorPublisher/.test(await source('ui/main.js')), n('B5. AMENDED BY 0.9.472 — ui/main.js now imports anchoring/BaseAnchorPublisher.js (transitively, via CreateBaseAnchorPublisherUseCase)'));
-        assert(/CreateBaseAnchorPublisherUseCase/.test(await source('ui/main.js')), n('B6. AMENDED BY 0.9.472 — ui/main.js now imports application/CreateBaseAnchorPublisherUseCase.js'));
+        assert(/CreateBaseAnchorPublisherUseCase/.test(await source('ui/main.js')), n('B6. AMENDED BY 0.9.472 — ui/main.js now imports application/anchoring/base/CreateBaseAnchorPublisherUseCase.js'));
         assert(/baseAnchorPublisher/i.test(await source('ui/main.js')), n('B7. AMENDED BY 0.9.472 — ui/main.js now names a real baseAnchorPublisher, constructed and provided to the app'));
 
         console.log('✓ Section B: every non-network collaborator BaseAnchorPublisher composes is a real, live production instance in ui/main.js. AMENDED BY 0.9.472 — BaseAnchorPublisher itself is now also constructed there, from those same collaborators; the bridge no longer exists in isolation from the pipeline it was built to bridge.');
@@ -549,7 +549,7 @@ async function run() {
         const filesReferencingIt = grepOutput ? grepOutput.split('\n') : [];
         const EXPECTED_REFERENCING_FILES = new Set([
             'anchoring/BaseAnchorPublisher.js',
-            'application/CreateBaseAnchorPublisherUseCase.js',
+            'application/anchoring/base/CreateBaseAnchorPublisherUseCase.js',
             'ui/main.js',
             'ui/views/DecentralizedPublicationsView.js'
         ]);
@@ -578,7 +578,7 @@ async function run() {
 
         // I6: BaseAnchorPublisher's own header states this is deliberate.
         const baseSrc = await source('anchoring/BaseAnchorPublisher.js');
-        assert(/NOT REGISTERED IN application\/ExternalAnchorPublisherRegistry\.js — A\s*\n\/\/ DELIBERATE DEPARTURE/.test(baseSrc), n('I6. BaseAnchorPublisher\'s own header names this a deliberate departure, not an oversight this audit should treat as a defect to fix'));
+        assert(/NOT REGISTERED IN application\/anchoring\/ExternalAnchorPublisherRegistry\.js — A\s*\n\/\/ DELIBERATE DEPARTURE/.test(baseSrc), n('I6. BaseAnchorPublisher\'s own header names this a deliberate departure, not an oversight this audit should treat as a defect to fix'));
 
         console.log('✓ Section I: Base\'s absence from ExternalAnchorPublisherRegistry is confirmed, by design, both structurally (the registry itself imposes no such block) and by direct inspection of the real production registration call sites. Bitcoin and Arweave remain registered and unchanged. This audit does NOT recommend adding \'base\' to this registry — doing so would require BaseAnchorPublisher to either fabricate a reviewedTransaction internally or be permanently unavailable, exactly what 0.9.470 already rejected.');
     }

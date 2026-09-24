@@ -1,17 +1,17 @@
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { PublisherPublicationAssociationRecord } from '../application/PublisherPublicationAssociationRecord.js';
-import { BlockchainKind } from '../application/BlockchainKind.js';
-import { BlockchainPublicationIdentity } from '../application/BlockchainPublicationIdentity.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { AchievementKind, describeAchievementEvents, reconstructAchievementEvents } from '../application/AchievementEvent.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { PublisherPublicationAssociationRecord } from '../application/publisher/PublisherPublicationAssociationRecord.js';
+import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
+import { BlockchainPublicationIdentity } from '../application/anchoring/BlockchainPublicationIdentity.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { AchievementKind, describeAchievementEvents, reconstructAchievementEvents } from '../application/achievement/AchievementEvent.js';
 import {
     describePublisherAchievementProfile,
     reconstructPublisherAchievementProfile
-} from '../application/PublisherAchievementProfileView.js';
+} from '../application/achievement/PublisherAchievementProfileView.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 
@@ -256,7 +256,7 @@ async function run() {
 
         // Build reference records through the real class so
         // describeAchievementEvents() accepts them.
-        const { PublicationReferenceRecord } = await import('../application/PublicationReferenceRecord.js');
+        const { PublicationReferenceRecord } = await import('../application/publication/PublicationReferenceRecord.js');
         const referenceRecords = [
             new PublicationReferenceRecord(record1ReferencesElsewhere),
             new PublicationReferenceRecord(record2ReferencesElsewhere)

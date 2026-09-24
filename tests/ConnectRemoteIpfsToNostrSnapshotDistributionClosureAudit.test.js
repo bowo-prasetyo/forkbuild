@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 
-import { IpfsRemotePublicationCoordinator } from '../application/IpfsRemotePublicationCoordinator.js';
-import { IpfsRemotePublicationState } from '../application/IpfsRemotePublicationState.js';
+import { IpfsRemotePublicationCoordinator } from '../application/ipfs/IpfsRemotePublicationCoordinator.js';
+import { IpfsRemotePublicationState } from '../application/ipfs/IpfsRemotePublicationState.js';
 import { PinningRejectedError } from '../content/HttpPinningProvider.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
-import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/IpfsPublicationRecord.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
@@ -27,7 +27,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // its own; every section below is either a live run of real, unmodified
 // production classes (`IpfsRemotePublicationCoordinator`,
 // `NostrSnapshotDiscoveryPublisher`, `NostrSnapshotDiscoveryQueryService`,
-// `application/SnapshotDistributionCommand.js`) or a source-level
+// `application/snapshot/SnapshotDistributionCommand.js`) or a source-level
 // confirmation that the wiring described above genuinely exists in
 // `ui/main.js`/`ui/views/DecentralizedPublicationsView.js`.
 //
@@ -114,7 +114,7 @@ function makeFakeKuboContentStore({ network = new Map() } = {}) {
 
 // A tiny shared, in-memory Nostr relay: one Map, keyed by relayUrl, of
 // published events — the identical publishImpl/queryImpl SHAPE
-// application/NostrSnapshotDiscoveryPublisher.js/application/
+// application/nostr/NostrSnapshotDiscoveryPublisher.js/application/
 // NostrSnapshotDiscoveryQueryService.js already require, standing in only
 // for a real relay's own network boundary. Sections A/B/C/G bind a
 // publisher to it; Section H binds an INDEPENDENT query service to the
@@ -357,7 +357,7 @@ async function run() {
         assert(!/IpfsPublicationRecord\(\{[\s\S]{0,400}announcement/.test(fnBody),
             n('F3. IpfsPublicationRecord\'s own constructor call carries no announcement-shaped argument anywhere near it.'));
 
-        // F4 — application/IpfsPublicationRecord.js itself: this milestone
+        // F4 — application/ipfs/IpfsPublicationRecord.js itself: this milestone
         // touches it not at all. Its constructor still accepts exactly the
         // pre-existing four named fields — constructing one with a fifth,
         // unrecognized field is silently ignored (never throws, never

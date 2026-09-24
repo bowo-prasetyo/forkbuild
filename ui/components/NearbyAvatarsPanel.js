@@ -1,4 +1,4 @@
-import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../../application/AvatarPresenceLabels.js';
+import { describeLifecycleState, describeTrustStatus, describeAnimationState } from '../../application/avatar/AvatarPresenceLabels.js';
 
 // 0.2.43 — the design doc's own mockup, verbatim:
 //

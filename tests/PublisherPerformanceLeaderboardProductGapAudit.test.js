@@ -3,21 +3,21 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { reconstructPublisherAchievementStatistics } from '../application/PublisherAchievementStatisticsView.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { reconstructPublisherAchievementStatistics } from '../application/achievement/PublisherAchievementStatisticsView.js';
 import {
     describePublisherRankingPolicy,
     describePublisherRanking,
     reconstructPublisherRanking
-} from '../application/PublisherRankingPolicy.js';
+} from '../application/leaderboard/PublisherRankingPolicy.js';
 import {
     describePublisherLeaderboard,
     reconstructPublisherLeaderboard
-} from '../application/PublisherLeaderboardView.js';
+} from '../application/leaderboard/PublisherLeaderboardView.js';
 
 // 0.9.416 — Publisher Performance Leaderboard Product Gap Audit.
 //
@@ -40,7 +40,7 @@ import {
 // already names SEVENTY-SEVEN files in application/ (Section A/D below),
 // almost all of them the 0.8.114-0.9.411 reconciliation-evidence family —
 // a peer-to-peer evidence-diff diagnostic that happens to share a name
-// prefix with `application/PublisherLeaderboardView.js` (0.8.113) purely
+// prefix with `application/leaderboard/PublisherLeaderboardView.js` (0.8.113) purely
 // by naming-convention accident, not by shared purpose. 0.9.414's own
 // whole-product reassessment already inventoried that seventy-seven-file
 // family, by exactly this name-prefix heuristic, and classified the whole
@@ -49,7 +49,7 @@ import {
 // looking at — but Section A below shows the heuristic swept
 // `PublisherLeaderboardView.js` into that same bulk verdict for a reason
 // that has nothing to do with what that one file actually is, and never
-// separately inventoried `application/PublisherRankingPolicy.js` (0.8.112)
+// separately inventoried `application/leaderboard/PublisherRankingPolicy.js` (0.8.112)
 // AT ALL, because its filename does not carry the shared prefix. The two
 // genuinely distinct concepts this milestone's own brief names —
 //
@@ -132,12 +132,14 @@ async function run() {
         assert(/\{ path: '\/reconciliation-leaderboard', name: 'reconciliation-leaderboard', component: ReconciliationCandidateLeaderboardView \}/.test(routerCode), n('A1. /reconciliation-leaderboard is a real, currently-registered route, pointed at ReconciliationCandidateLeaderboardView'));
 
         const reconciliationViewCode = await readSource('ui/views/ReconciliationCandidateLeaderboardView.js');
-        const reconciliationImports = (reconciliationViewCode.match(/from '\.\.\/\.\.\/application\/([A-Za-z0-9]+)\.js'/g) || [])
-            .map((m) => m.match(/application\/([A-Za-z0-9]+)\.js/)[1]);
+        // Paths under application/, e.g. 'leaderboard/PublisherLeaderboardView'.
+        const reconciliationImports = (reconciliationViewCode.match(/from '\.\.\/\.\.\/application\/[A-Za-z0-9/]+\.js'/g) || [])
+            .map((m) => m.match(/application\/([A-Za-z0-9/]+)\.js/)[1]);
+        const importedNames = reconciliationImports.map((f) => f.split('/').pop());
         assert(reconciliationImports.length > 0, n('A2. ReconciliationCandidateLeaderboardView.js imports real application/ modules'));
-        assert(reconciliationImports.every((f) => f.startsWith('PublisherLeaderboardClaimSnapshot') || f === 'PublicationObservationArchive' || f === 'PublicationObservationArchiveExport'), n(`A3. every one of ReconciliationCandidateLeaderboardView.js's own application/ imports is either archive plumbing or a member of the PublisherLeaderboardClaimSnapshot* reconciliation-evidence family (found: ${JSON.stringify(reconciliationImports)}) — never PublisherRankingPolicy.js or PublisherLeaderboardView.js directly`));
-        assert(!reconciliationImports.includes('PublisherRankingPolicy'), n('A4. the reconciliation leaderboard view never imports PublisherRankingPolicy.js'));
-        assert(!reconciliationImports.includes('PublisherLeaderboardView'), n('A5. the reconciliation leaderboard view never imports PublisherLeaderboardView.js'));
+        assert(reconciliationImports.every((f) => f.startsWith('claimSnapshotReconciliation/') || f === 'publication/observationArchive/PublicationObservationArchive' || f === 'publication/observationArchive/PublicationObservationArchiveExport'), n(`A3. every one of ReconciliationCandidateLeaderboardView.js's own application/ imports is either archive plumbing or a member of the PublisherLeaderboardClaimSnapshot* reconciliation-evidence family (found: ${JSON.stringify(reconciliationImports)}) — never PublisherRankingPolicy.js or PublisherLeaderboardView.js directly`));
+        assert(!importedNames.includes('PublisherRankingPolicy'), n('A4. the reconciliation leaderboard view never imports PublisherRankingPolicy.js'));
+        assert(!importedNames.includes('PublisherLeaderboardView'), n('A5. the reconciliation leaderboard view never imports PublisherLeaderboardView.js'));
 
         // The reconciliation table itself explicitly, in its own header,
         // declines the very idea of ranking — not merely happens to omit
@@ -149,17 +151,20 @@ async function run() {
 
         // The seventy-seven-file family a naive name-prefix scan finds —
         // reconfirmed fresh, the identical methodology 0.9.414 Section C
-        // and 0.9.415 Section A10 already used.
-        leaderboardFamilyFiles = listFiles(['application']).filter((f) => path.basename(f).startsWith('PublisherLeaderboard'));
+        // and 0.9.415 Section A10 already used. The claim-snapshot
+        // reconciliation part of it now lives in its own folder, which also
+        // holds the two Record*IntoArchiveUseCase files the prefix never matched.
+        const inReconciliationFolder = (f) => f.startsWith('application/claimSnapshotReconciliation/') && !path.basename(f).endsWith('IntoArchiveUseCase.js');
+        leaderboardFamilyFiles = listFiles(['application']).filter((f) => path.basename(f).startsWith('PublisherLeaderboard') || inReconciliationFolder(f));
         assert(leaderboardFamilyFiles.length === 77, n(`A9. the PublisherLeaderboard* name-prefix family still numbers seventy-seven files, recomputed fresh (found ${leaderboardFamilyFiles.length})`));
-        assert(leaderboardFamilyFiles.includes('application/PublisherLeaderboardView.js'), n('A10. PublisherLeaderboardView.js — the genuine performance-ranking presentation file — is itself swept into that same seventy-seven-file, name-prefix-defined family'));
-        const reconciliationFamilyCount = leaderboardFamilyFiles.filter((f) => path.basename(f).includes('Reconciliation') || path.basename(f).includes('Snapshot') || path.basename(f).includes('Claim')).length;
+        assert(leaderboardFamilyFiles.includes('application/leaderboard/PublisherLeaderboardView.js'), n('A10. PublisherLeaderboardView.js — the genuine performance-ranking presentation file — is itself swept into that same seventy-seven-file, name-prefix-defined family'));
+        const reconciliationFamilyCount = leaderboardFamilyFiles.filter((f) => inReconciliationFolder(f) || path.basename(f).includes('Reconciliation') || path.basename(f).includes('Snapshot') || path.basename(f).includes('Claim')).length;
         assert(reconciliationFamilyCount >= 70, n(`A11. at least seventy of the seventy-seven are, by their own filenames, reconciliation-evidence/snapshot/claim machinery, not ranking machinery (found ${reconciliationFamilyCount})`));
 
         // PublisherRankingPolicy.js — the actual ranking ENGINE — does not
         // even carry the shared prefix, so no prior name-prefix scan ever
         // inventoried it at all.
-        assert(!path.basename('application/PublisherRankingPolicy.js').startsWith('PublisherLeaderboard'), n('A12. PublisherRankingPolicy.js\'s own filename does not start with "PublisherLeaderboard" — structurally invisible to the exact heuristic 0.9.414/0.9.415 used to inventory the family'));
+        assert(!path.basename('application/leaderboard/PublisherRankingPolicy.js').startsWith('PublisherLeaderboard'), n('A12. PublisherRankingPolicy.js\'s own filename does not start with "PublisherLeaderboard" — structurally invisible to the exact heuristic 0.9.414/0.9.415 used to inventory the family'));
 
         console.log('\n=== SECTION A: ESTABLISH THE TWO MEANINGS ===');
         console.log('  /reconciliation-leaderboard  -> ReconciliationCandidateLeaderboardView (evidence-diff diagnostic, self-declared "no candidate ranking")');
@@ -371,7 +376,7 @@ async function run() {
         // now confirm the gap they found is CLOSED, not still open, so D7
         // asserts the capability remains operational at the exact same
         // moment it is now confirmed REACHABLE, rather than unreachable.
-        assert(liveRanking.entries.length > 0 && leaderboardFamilyFiles.includes('application/PublisherLeaderboardView.js'), n('D7. the backend capability (PublisherRankingPolicy.js + PublisherLeaderboardView.js) is confirmed operational (Sections B/C) at the exact same moment D1-D6 confirm it is now genuinely reachable — 0.9.416\'s own gap is closed, not merely re-described'));
+        assert(liveRanking.entries.length > 0 && leaderboardFamilyFiles.includes('application/leaderboard/PublisherLeaderboardView.js'), n('D7. the backend capability (PublisherRankingPolicy.js + PublisherLeaderboardView.js) is confirmed operational (Sections B/C) at the exact same moment D1-D6 confirm it is now genuinely reachable — 0.9.416\'s own gap is closed, not merely re-described'));
 
         // The ONE, single, indirect path by which PublisherLeaderboardView.js
         // is ever composed at all: PublisherLeaderboardSnapshot.js (0.8.119),
@@ -380,12 +385,12 @@ async function run() {
         const applicationBundleFiles = listFiles(['application']);
         const realConsumers = [];
         for (const file of applicationBundleFiles) {
-            if (file === 'application/PublisherLeaderboardView.js') continue;
+            if (file === 'application/leaderboard/PublisherLeaderboardView.js') continue;
             const src = await readSource(file);
             if (/from '\.\/PublisherLeaderboardView\.js'/.test(src)) realConsumers.push(file);
         }
-        assert(realConsumers.length === 1 && realConsumers[0] === 'application/PublisherLeaderboardSnapshot.js', n(`D8. exactly one file in application/ imports PublisherLeaderboardView.js directly — PublisherLeaderboardSnapshot.js (0.8.119), for reproducibility, not display (found: ${JSON.stringify(realConsumers)})`));
-        const snapshotSource = await readSource('application/PublisherLeaderboardSnapshot.js');
+        assert(realConsumers.length === 1 && realConsumers[0] === 'application/leaderboard/PublisherLeaderboardSnapshot.js', n(`D8. exactly one file in application/ imports PublisherLeaderboardView.js directly — PublisherLeaderboardSnapshot.js (0.8.119), for reproducibility, not display (found: ${JSON.stringify(realConsumers)})`));
+        const snapshotSource = await readSource('application/leaderboard/PublisherLeaderboardSnapshot.js');
         assert(!/render|<div|<td|<th/i.test(snapshotSource), n('D9. PublisherLeaderboardSnapshot.js itself renders nothing — it composes the leaderboard purely as reproducibility data, confirming the indirect path never reaches a user-visible rank'));
 
         console.log('\n=== SECTION D: REACHABILITY AUDIT (AMENDED BY 0.9.417) ===');
@@ -651,7 +656,7 @@ async function run() {
         }
 
         console.log('\n=== SECTION I: PRODUCTION BOUNDARY ===');
-        console.log('✓ Section I: this milestone touches nothing but its own test file and tests.html\'s own registration. No route, view, component, application/core/storage symbol, or documentation file was added or modified — including application/PublisherRankingPolicy.js and application/PublisherLeaderboardView.js themselves, which remain byte-for-byte unchanged from 0.8.112/0.8.113.');
+        console.log('✓ Section I: this milestone touches nothing but its own test file and tests.html\'s own registration. No route, view, component, application/core/storage symbol, or documentation file was added or modified — including application/leaderboard/PublisherRankingPolicy.js and application/leaderboard/PublisherLeaderboardView.js themselves, which remain byte-for-byte unchanged from 0.8.112/0.8.113.');
     }
 
     // ===============================================================

@@ -3,24 +3,24 @@ import { execSync } from 'node:child_process';
 
 import PlaceNamingPanel from '../ui/components/PlaceNamingPanel.js';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
-import { composePlaceNamingPublicationRuntime } from '../application/PlaceNamingPublicationRuntimeComposition.js';
-import { NostrPlaceNamingDiscoveryPublisher } from '../application/NostrPlaceNamingDiscoveryPublisher.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
+import { composePlaceNamingPublicationRuntime } from '../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
+import { NostrPlaceNamingDiscoveryPublisher } from '../application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.321 — Place Naming Publication Action Convergence Audit.
 // See docs/Roadmap.md, "0.9.321 — Place Naming Publication Action
 // Convergence Audit," for the full milestone story.
 //
-// 0.9.320 made `application/NostrPlaceNamingDiscoveryPublisher.js` (0.9.316)
+// 0.9.320 made `application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js` (0.9.316)
 // reachable from an actual click — `ui/components/PlaceNamingPanel.js`'s own
 // new "Publish to Nostr" action, wired through `ui/views/WorldView.js`'s own
 // `publishNamingClaimToNostr()` and `ui/main.js`'s own composed command —
@@ -410,7 +410,7 @@ async function run() {
         // reconfirmed fresh, restricted to the exact directories a
         // regression could plausibly appear in.
         const publisherSites = grepFiles('new NostrPlaceNamingDiscoveryPublisher(', ['application', 'ui']);
-        assert(publisherSites.length === 1 && publisherSites[0] === 'application/PlaceNamingPublicationRuntimeComposition.js', `6. exactly one production file constructs NostrPlaceNamingDiscoveryPublisher — found: ${JSON.stringify(publisherSites)}`);
+        assert(publisherSites.length === 1 && publisherSites[0] === 'application/placeNaming/PlaceNamingPublicationRuntimeComposition.js', `6. exactly one production file constructs NostrPlaceNamingDiscoveryPublisher — found: ${JSON.stringify(publisherSites)}`);
         assert(mainJs.includes('composePlaceNamingPublicationRuntime('), '7. ui/main.js reaches the publisher only through the composition function, never by naming the concrete class');
 
         // The full call chain PlaceNamingPanel -> WorldView -> command ->
@@ -761,7 +761,7 @@ async function run() {
         // JSON, and no such vocabulary in the family's own source.
         assert(!Object.keys(claim.toJSON()).some((k) => /publish/i.test(k)), '5. the claim\'s own JSON carries no publication-status field of any kind');
         for (const bannedTerm of ['alreadyPublished', 'isPublished', 'publicationStatus', 'PublicationHistory'] ) {
-            assert(grepCount(bannedTerm, ['application/NostrPlaceNamingDiscoveryPublisher.js', 'application/PlaceNamingPublicationRuntimeComposition.js', 'ui/views/WorldView.js', 'ui/components/PlaceNamingPanel.js', 'core/PlaceNamingClaim.js']) === 0, `6. no "${bannedTerm}" vocabulary exists anywhere in the publication path`);
+            assert(grepCount(bannedTerm, ['application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js', 'application/placeNaming/PlaceNamingPublicationRuntimeComposition.js', 'ui/views/WorldView.js', ...worldViewTemplateFiles(), 'ui/components/PlaceNamingPanel.js', 'core/PlaceNamingClaim.js']) === 0, `6. no "${bannedTerm}" vocabulary exists anywhere in the publication path`);
         }
 
         console.log('✓ Section H: publishing the same claim repeatedly remains three independent, unrelated attempts — no client-side deduplication or "already published" state has appeared anywhere in the path');
@@ -771,15 +771,15 @@ async function run() {
     // Section I — Substrate boundary.
     // ---------------------------------------------------------------
     {
-        const compositionSource = codeOnlyLines(await rawSource('application/PlaceNamingPublicationRuntimeComposition.js'));
-        const publisherSource = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
+        const compositionSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingPublicationRuntimeComposition.js'));
+        const publisherSource = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'));
         const worldViewJs = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const panelJs = codeOnlyLines(await rawSource('ui/components/PlaceNamingPanel.js'));
 
         const bannedSubstrateTerms = ['Arweave', 'IPFS', 'Ipfs', 'Bitcoin', 'BasePublication', 'baseWallet', 'roleProviderPreference', 'SnapshotDistribution', 'ArweaveContentStore'];
         for (const term of bannedSubstrateTerms) {
-            assert(!compositionSource.includes(term), `1. application/PlaceNamingPublicationRuntimeComposition.js carries no "${term}" vocabulary`);
-            assert(!publisherSource.includes(term), `2. application/NostrPlaceNamingDiscoveryPublisher.js carries no "${term}" vocabulary`);
+            assert(!compositionSource.includes(term), `1. application/placeNaming/PlaceNamingPublicationRuntimeComposition.js carries no "${term}" vocabulary`);
+            assert(!publisherSource.includes(term), `2. application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js carries no "${term}" vocabulary`);
         }
         // The relevant SLICE of WorldView.js/PlaceNamingPanel.js devoted to
         // this milestone's own naming-publication feature carries none of
@@ -793,8 +793,8 @@ async function run() {
         // No coupling to the Snapshot family's own composition/publisher,
         // confirmed by import statements rather than mere string absence.
         assert(!compositionSource.includes("from './SnapshotDistributionRuntimeComposition.js'"), '4. no import of the Snapshot distribution composition file');
-        assert(!compositionSource.includes("from './NostrSnapshotDiscoveryPublisher.js'"), '5. no import of the Snapshot-domain Nostr publisher');
-        assert(!publisherSource.includes("from './NostrSnapshotDiscoveryPublisher.js'"), '6. the publisher itself imports no Snapshot-domain sibling');
+        assert(!compositionSource.includes("from '../nostr/NostrSnapshotDiscoveryPublisher.js'"), '5. no import of the Snapshot-domain Nostr publisher');
+        assert(!publisherSource.includes("from '../nostr/NostrSnapshotDiscoveryPublisher.js'"), '6. the publisher itself imports no Snapshot-domain sibling');
 
         console.log('✓ Section I: Place Naming publication remains specifically Nostr-based and carries no Snapshot, Arweave, IPFS, Bitcoin/Base, or provider-preference vocabulary anywhere in its own path');
     }

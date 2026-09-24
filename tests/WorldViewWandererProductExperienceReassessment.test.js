@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import WorldEncounterCanvasModule from '../ui/components/WorldEncounterCanvas.js';
-import { materializedSnapshotWorldOrigin } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { materializedSnapshotWorldOrigin } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.516 — World View / Wanderer Product Experience Reassessment.
@@ -132,7 +132,7 @@ async function run() {
     // selection -> resolution -> verification -> materialization ->
     // placement -> World Encounter. The three discovery sources
     // (Local/Nostr/Arweave) stay an implementation detail behind
-    // `application/SnapshotCandidateDiscoveryQueryService.js`'s own
+    // `application/snapshot/SnapshotCandidateDiscoveryQueryService.js`'s own
     // documented composition boundary — confirmed from that file's own
     // header, not re-derived here.
     // ===============================================================
@@ -140,7 +140,7 @@ async function run() {
         const result = runLive('tests/WalkingTriggeredMultiSourceSnapshotDiscoveryEndToEndIntegrationAudit.test.js');
         check(result.passed, `B1. the full walking-triggered discovery chain still passes live: ${result.output}`);
 
-        const querySource = await source('application/SnapshotCandidateDiscoveryQueryService.js');
+        const querySource = await source('application/snapshot/SnapshotCandidateDiscoveryQueryService.js');
         check(querySource.includes('PEER IS NOT A THIRD SOURCE HERE, ON PURPOSE'),
             'B2. SnapshotCandidateDiscoveryQueryService.js still documents exactly two composed query sources (Local, Nostr/Arweave via the same search(tag) shape) — Peer participates through the catalog, never as a third query source');
         check(querySource.includes('[ { contentHash, locator, storage, publicationId? }, ... ]'),
@@ -160,7 +160,7 @@ async function run() {
         const result = runLive('tests/PassivePeerContributionToWalkingTriggeredSnapshotDiscoveryProductAudit.test.js');
         check(result.passed, `C1. peer-contributed content still converges into ordinary walking-triggered discovery, live: ${result.output}`);
 
-        const querySource = await source('application/SnapshotCandidateDiscoveryQueryService.js');
+        const querySource = await source('application/snapshot/SnapshotCandidateDiscoveryQueryService.js');
         check(querySource.includes('indistinguishable there from a locally-created one'),
             'C2. this codebase\'s own source still documents that a peer-announced placement is indistinguishable from a local one once catalogued — no special "peer mode" is introduced downstream');
 
@@ -250,10 +250,10 @@ async function run() {
         // competes for the same encounter, or reads once resolved) rendered
         // `candidate.origin`/`resolvedSelection.origin` verbatim. That
         // string is `'local'`, but also `'peer:' + identityId` (a raw peer
-        // identity id — `application/PeerWorldEncounterMaterialSource.js`'s
+        // identity id — `application/worldEncounter/PeerWorldEncounterMaterialSource.js`'s
         // own PEER_ORIGIN_PREFIX) or `'snapshot:' + contentHash + ':' +
         // publicationId` (a raw content hash —
-        // `application/MaterializedSnapshotWorldDiscoveryBridge.js`'s own
+        // `application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js`'s own
         // `materializedSnapshotWorldOrigin()`, re-derived below rather than
         // hard-coded, to prove the exact shape live). This is a DIFFERENT
         // panel from the one 0.9.176 already fixed (that computed,

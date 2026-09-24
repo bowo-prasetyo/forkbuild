@@ -1,17 +1,17 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarVehicleInteractionController } from '../application/AvatarVehicleInteractionController.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarVehicleInteractionController } from '../application/avatar/AvatarVehicleInteractionController.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { Position } from '../core/Position.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.98 — Vehicle Mount/Dismount World View Integration.
 //
@@ -23,9 +23,9 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 // right next to a real, deterministic bicycle saw nothing indicating a
 // vehicle was even there. This suite proves the one new observation seam
 // this milestone adds, `vehicleInteractionState()`
-// (application/AvatarVehicleInteractionController.js) and its session-
+// (application/avatar/AvatarVehicleInteractionController.js) and its session-
 // level pass-through `avatarVehicleInteractionState()`
-// (application/WorldNavigationSession.js), genuinely closes that gap —
+// (application/world/WorldNavigationSession.js), genuinely closes that gap —
 // WITHOUT the observation seam ever recomputing proximity, target
 // resolution, or mount/dismount eligibility itself.
 //
@@ -82,7 +82,7 @@ function buildAvatarPresenceSession(startPosition) {
 
 // A genuine release + re-press, mirroring every other test in this
 // codebase that toggles mount/dismount — see
-// application/AvatarVehicleInteractionController.js's own header for why
+// application/avatar/AvatarVehicleInteractionController.js's own header for why
 // merely continuing to hold the key would not.
 function pressInteractionKeyOnce(controller) {
     controller.keyDown('e');
@@ -351,7 +351,7 @@ async function runTests() {
     // target-resolution logic anywhere in this seam
     // -------------------------------------------------------------
     {
-        const controllerSourceUrl = new URL('../application/AvatarVehicleInteractionController.js', import.meta.url);
+        const controllerSourceUrl = new URL('../application/avatar/AvatarVehicleInteractionController.js', import.meta.url);
         const controllerSource = await readFile(controllerSourceUrl, 'utf8');
         const controllerCodeOnly = controllerSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -365,7 +365,7 @@ async function runTests() {
             || controllerCodeOnly.includes('_nearbyVehicles'),
             '31. vehicleInteractionState() introduces no independent distance/ranking arithmetic of its own');
 
-        const sessionSourceUrl = new URL('../application/WorldNavigationSession.js', import.meta.url);
+        const sessionSourceUrl = new URL('../application/world/WorldNavigationSession.js', import.meta.url);
         const sessionSource = await readFile(sessionSourceUrl, 'utf8');
         const sessionCodeOnly = sessionSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

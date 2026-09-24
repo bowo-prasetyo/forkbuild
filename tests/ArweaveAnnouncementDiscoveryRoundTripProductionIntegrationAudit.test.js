@@ -4,18 +4,18 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { createArweaveTaggedTransactionUpload } from '../application/ArweaveTaggedTransactionUpload.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
     composeDecentralizedWorldEncounterMaterialDiscoveryRuntime
-} from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
-import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
-import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 
 // 0.9.495 — Arweave Announcement/Discovery Round-Trip Production
 // Integration Audit.
@@ -45,7 +45,7 @@ import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/
 //   A. Production composition — 0.9.492's write-side wire and 0.9.494's
 //      read-side envelope-aware fetch both present in current source,
 //      together, in the same real composition root.
-//   B. Real announcement path — application/ArweaveAnnouncementPublisher.js
+//   B. Real announcement path — application/arweave/ArweaveAnnouncementPublisher.js
 //      through the real 0.9.490 adapter and a real (fake-wallet-backed)
 //      signer, never a test-only publisher.
 //   C. Discovery — the real ArweaveGraphqlDiscoveryQueryService discovers
@@ -264,13 +264,13 @@ async function run() {
         check(providerCallMatch !== null && /uploadTaggedTransaction\s*:/.test(providerCallMatch[0]),
             'A2. ...and forwards it into the real distribution runtime provider call');
 
-        const discoveryServiceSource = codeOnlyOf(await source('application/ArweaveGraphqlDiscoveryQueryService.js'));
+        const discoveryServiceSource = codeOnlyOf(await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js'));
         check(/_fetchAnnouncementEnvelope\(/.test(discoveryServiceSource) && /parseDecentralizedDiscoveryEnvelope/.test(discoveryServiceSource),
-            'A3. application/ArweaveGraphqlDiscoveryQueryService.js still performs the envelope-aware per-candidate gateway fetch (0.9.494) — the read-side fix has not regressed');
+            'A3. application/arweave/ArweaveGraphqlDiscoveryQueryService.js still performs the envelope-aware per-candidate gateway fetch (0.9.494) — the read-side fix has not regressed');
         check(/candidates\.push\(\{\s*\n\s*uri:\s*envelope\.uri,/.test(discoveryServiceSource),
             'A4. ...and still reports the envelope\'s own claimed uri as candidate.uri, never a transaction id substituted in its place');
 
-        const compositionSource = codeOnlyOf(await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js'));
+        const compositionSource = codeOnlyOf(await source('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js'));
         check(/const arweave = new ArweaveGraphqlDiscoveryQueryService\(/.test(compositionSource),
             'A5. the real discovery-services composition root still unconditionally constructs the (now envelope-aware) real Arweave discovery service — both fixes coexist in the SAME real composition path a UI click actually reaches');
 
@@ -294,7 +294,7 @@ async function run() {
         check(entry.tags.length === 1 && decodeBase64Url(entry.tags[0].value) === 'roundtrip-campaign-b', 'B3. the real on-wire transaction carries exactly the configured discovery tag');
 
         sectionBResult = { net, published, envelope };
-        console.log('✓ Section B: real announcement path, from application/ArweaveAnnouncementPublisher.js through a real adapter and real signer, genuinely publishes — never a test-only publisher.');
+        console.log('✓ Section B: real announcement path, from application/arweave/ArweaveAnnouncementPublisher.js through a real adapter and real signer, genuinely publishes — never a test-only publisher.');
     }
 
     // ===============================================================
@@ -371,10 +371,10 @@ async function run() {
         // general-purpose Arweave uri retriever every ar:// uri already
         // used, unmodified since well before 0.9.428, never a new file this
         // arc introduced.
-        const resolverSource = await source('application/ArweaveWorldEncounterMaterialResolver.js');
+        const resolverSource = await source('application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js');
         check(!/0\.9\.49[0-5]/.test(resolverSource),
-            'E3. application/ArweaveWorldEncounterMaterialResolver.js carries no 0.9.490-through-0.9.495 milestone marker of its own — it was never touched by this announcement/discovery arc, confirming no new Arweave-specific resolver was built for it');
-        const materialCompositionSource = await source('application/DecentralizedWorldEncounterMaterialRuntimeComposition.js');
+            'E3. application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js carries no 0.9.490-through-0.9.495 milestone marker of its own — it was never touched by this announcement/discovery arc, confirming no new Arweave-specific resolver was built for it');
+        const materialCompositionSource = await source('application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js');
         check(!/Announcement|discoveryTag|ArweaveGraphqlDiscoveryQueryService/.test(materialCompositionSource),
             'E4. the material-source composition root that builds the resolver never imports or references announcement/discovery concepts at all — resolution and retrieval remain entirely ignorant of how a uri was found');
 

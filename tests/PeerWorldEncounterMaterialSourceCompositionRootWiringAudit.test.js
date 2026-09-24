@@ -4,18 +4,18 @@ import { execSync } from 'node:child_process';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { loadWorldEncounterMaterial, WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { PeerWorldEncounterMaterialSource } from '../application/PeerWorldEncounterMaterialSource.js';
+import { loadWorldEncounterMaterial, WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { PeerWorldEncounterMaterialSource } from '../application/worldEncounter/PeerWorldEncounterMaterialSource.js';
 import {
     PeerWorldEncounterMaterialMessageKind,
     toWorldEncounterMaterialResponseMessage
-} from '../application/PeerWorldEncounterMaterialProtocol.js';
-import { composeDecentralizedWorldEncounterMaterialDiscoveryRuntime } from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+} from '../application/worldEncounter/PeerWorldEncounterMaterialProtocol.js';
+import { composeDecentralizedWorldEncounterMaterialDiscoveryRuntime } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -179,9 +179,9 @@ async function run() {
             && typeof PeerWorldEncounterMaterialSource.prototype.load === 'function',
             '1. PeerWorldEncounterMaterialSource exposes a real load() method.');
 
-        const peerSourceModule = await readSource('application/PeerWorldEncounterMaterialSource.js');
+        const peerSourceModule = await readSource('application/worldEncounter/PeerWorldEncounterMaterialSource.js');
         assert(/class PeerWorldEncounterMaterialSource extends WorldEncounterMaterialSource/.test(peerSourceModule),
-            '2. it genuinely extends the SAME WorldEncounterMaterialSource contract application/WorldEncounterMaterialLoading.js (0.9.21) already defines — never a parallel, incompatible class.');
+            '2. it genuinely extends the SAME WorldEncounterMaterialSource contract application/worldEncounter/WorldEncounterMaterialLoading.js (0.9.21) already defines — never a parallel, incompatible class.');
 
         // A3. No test-only dependency: every import this file makes is a
         // real, production application/core/peer module — never anything
@@ -209,7 +209,7 @@ async function run() {
     // never the missing boundary.
     // ===============================================================
     {
-        const loadingSource = await readSource('application/WorldEncounterMaterialLoading.js');
+        const loadingSource = await readSource('application/worldEncounter/WorldEncounterMaterialLoading.js');
         assert(/origin\.startsWith\('peer:'\)/.test(loadingSource) || /PEER_ORIGIN_PREFIX/.test(loadingSource) || /startsWith\('peer:'\)/.test(loadingSource),
             '1. loadWorldEncounterMaterial() already recognizes a peer:-prefixed origin family, unmodified by this milestone.');
         assert(/materialSources\.peer/.test(loadingSource),
@@ -224,7 +224,7 @@ async function run() {
         const mainSource = await readSource('ui/main.js');
         const mainCodeOnly = codeOnly(mainSource);
 
-        assert(/import \{ PeerWorldEncounterMaterialSource \} from '\.\.\/application\/PeerWorldEncounterMaterialSource\.js';/.test(mainCodeOnly),
+        assert(/import \{ PeerWorldEncounterMaterialSource \} from '\.\.\/application\/worldEncounter\/PeerWorldEncounterMaterialSource\.js';/.test(mainCodeOnly),
             '1. ui/main.js imports the existing, unmodified PeerWorldEncounterMaterialSource — never a second implementation.');
 
         const constructions = (mainCodeOnly.match(/new PeerWorldEncounterMaterialSource\(/g) || []).length;
@@ -327,20 +327,20 @@ async function run() {
     // milestone touches only the one composition-root call site.
     // ===============================================================
     {
-        const peerSourceSrc = await readSource('application/PeerWorldEncounterMaterialSource.js');
-        const protocolSrc = await readSource('application/PeerWorldEncounterMaterialProtocol.js');
-        const loadingSrc = await readSource('application/WorldEncounterMaterialLoading.js');
+        const peerSourceSrc = await readSource('application/worldEncounter/PeerWorldEncounterMaterialSource.js');
+        const protocolSrc = await readSource('application/worldEncounter/PeerWorldEncounterMaterialProtocol.js');
+        const loadingSrc = await readSource('application/worldEncounter/WorldEncounterMaterialLoading.js');
         const canvasSrc = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
 
         // These four files each carry their own "0.9.23"/"0.9.21" milestone
         // header naming themselves as the source of truth for their own
         // unmodified behavior — reconfirmed present, not merely assumed.
         assert(/0\.9\.23 — Peer World Encounter Material Source\./.test(peerSourceSrc),
-            "1. application/PeerWorldEncounterMaterialSource.js is still its own original 0.9.23 self — this milestone changes not one line of it.");
+            "1. application/worldEncounter/PeerWorldEncounterMaterialSource.js is still its own original 0.9.23 self — this milestone changes not one line of it.");
         assert(/0\.9\.23 — Peer World Encounter Material Source\./.test(protocolSrc),
-            '2. application/PeerWorldEncounterMaterialProtocol.js is likewise untouched.');
+            '2. application/worldEncounter/PeerWorldEncounterMaterialProtocol.js is likewise untouched.');
         assert(/0\.9\.21 — World Encounter Material Loading Boundary\./.test(loadingSrc),
-            '3. application/WorldEncounterMaterialLoading.js — the router itself — is likewise untouched.');
+            '3. application/worldEncounter/WorldEncounterMaterialLoading.js — the router itself — is likewise untouched.');
         assert(!/PeerWorldEncounterMaterialSource/.test(canvasSrc),
             '4. ui/components/WorldEncounterCanvas.js still never references PeerWorldEncounterMaterialSource directly — it only ever consumes materialSources.peer through the existing prop, unchanged by where that slot is filled in.');
     }

@@ -5,7 +5,7 @@ import { createId } from './createId.js';
 // 0.9.272's own reassessment found several domains capable of producing
 // meaningful, user-directed events (Publication Commentary, Place Naming,
 // Document Collaboration, World Presence) and one real durable-delivery
-// precedent, application/ChatOutbox.js — but no domain-neutral
+// precedent, application/chat/ChatOutbox.js — but no domain-neutral
 // representation of "something happened that may warrant user awareness."
 // This file is that missing seam, and deliberately nothing more.
 //
@@ -40,7 +40,7 @@ import { createId } from './createId.js';
 //
 // Deliberately standalone: this file imports nothing but
 // core/createId.js (itself dependency-free). It must never import
-// application/ChatOutbox.js, anything Publication/Commentary-shaped,
+// application/chat/ChatOutbox.js, anything Publication/Commentary-shaped,
 // anything Place-Naming-shaped, anything Collaboration-shaped, or
 // anything Presence-shaped — see this file's own "architectural
 // import-boundary" test. A domain event becomes a NotificationEvent by

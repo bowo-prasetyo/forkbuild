@@ -3,16 +3,16 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
 import { FriendshipState } from '../core/FriendshipState.js';
-import { ChatUseCase } from '../application/ChatUseCase.js';
-import { ConversationReadTracker } from '../application/ConversationReadTracker.js';
-import { SiblingReadStateStore } from '../application/SiblingReadStateStore.js';
-import { DeviceConversationSyncUseCase } from '../application/DeviceConversationSyncUseCase.js';
+import { ChatUseCase } from '../application/chat/ChatUseCase.js';
+import { ConversationReadTracker } from '../application/chat/ConversationReadTracker.js';
+import { SiblingReadStateStore } from '../application/chat/SiblingReadStateStore.js';
+import { DeviceConversationSyncUseCase } from '../application/chat/DeviceConversationSyncUseCase.js';
 
 // 0.2.83 — Multi-Device Conversation & Read-State Synchronization.
 //
@@ -21,9 +21,9 @@ import { DeviceConversationSyncUseCase } from '../application/DeviceConversation
 // the SOCIAL consequence (a THIRD PARTY, Bob, resolves any of Alice's
 // authorized devices to the SAME conversation). Both deliberately left
 // standing the question this file answers: Alice's Phone and Alice's
-// Laptop are still two completely independent application/ChatUseCase.js
+// Laptop are still two completely independent application/chat/ChatUseCase.js
 // instances, each with its own local, disjoint storage — do THEY ever
-// converge with EACH OTHER? See application/DeviceConversationSyncUseCase.js's
+// converge with EACH OTHER? See application/chat/DeviceConversationSyncUseCase.js's
 // own header for the design this proves.
 class InMemoryStorageProvider extends StorageProvider {
     constructor() { super(); this._data = new Map(); }

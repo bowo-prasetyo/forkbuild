@@ -1,44 +1,44 @@
 import { readFile } from 'node:fs/promises';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { resolveSnapshotWorldPlacement } from '../application/SnapshotWorldPlacement.js';
-import { registerMaterializedSnapshotWorldSource } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
+import { registerMaterializedSnapshotWorldSource } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
-import { CreateDiscoveryUseCase } from '../application/CreateDiscoveryUseCase.js';
+import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscoveryUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License, LicenseId } from '../core/License.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
@@ -150,7 +150,7 @@ class InMemoryStorageProvider extends StorageProvider {
 
 // Same posture as tests/RepositoryAdmissionToPublicationActionContinuityAudit.test.js
 // (0.9.596) and tests/PublicationActionProviderContinuityFix.test.js (0.9.597):
-// application/CreateDiscoveryUseCase.js constructs a real
+// application/discovery/CreateDiscoveryUseCase.js constructs a real
 // storage/LocalStorageProvider.js, which reads window.localStorage — a
 // minimal in-memory shim, installed ONLY when no window already exists.
 if (typeof globalThis.window === 'undefined') {
@@ -316,7 +316,7 @@ async function encounterVerified(tag, { publicationId, claimedPosition, encounte
     return { host, worldModel, registry, store, reference, publication, materialSources: { local: localSource }, verifier };
 }
 
-// Replicates application/CreateWorldViewUseCase.js#execute()'s own
+// Replicates application/world/CreateWorldViewUseCase.js#execute()'s own
 // 0.9.597 wiring exactly (never the full factory itself — it spins up
 // avatar-presence/collaboration machinery with no clean Node-only
 // lifetime; see tests/RepositoryAdmissionToPublicationActionContinuityAudit.test.js's
@@ -511,7 +511,7 @@ async function run() {
         // production call site — PublishDocumentUseCase's own automatic
         // initial placement, at the moment of THIS replica's own
         // publish action.
-        const publishDocumentSource = await readSource('application/PublishDocumentUseCase.js');
+        const publishDocumentSource = await readSource('application/publication/PublishDocumentUseCase.js');
         assert(/this\._placePublicationUseCase\.execute\(publication\.id, position\);/.test(publishDocumentSource),
             'D1. PublishDocumentUseCase._placeInitially() is a real call site of PlacePublicationUseCase.execute() — confirmed against the current source.');
 
@@ -530,7 +530,7 @@ async function run() {
         // the codebase it inspects, the same posture 0.9.600 itself took
         // amending tests/PublicationMultiPlacementVisibility.test.js's own
         // superseded assertion in place rather than leaving it false.
-        const worldNavigationSessionSource = await readSource('application/WorldNavigationSession.js');
+        const worldNavigationSessionSource = await readSource('application/world/WorldNavigationSession.js');
         assert(/placePublicationUseCase = null,/.test(worldNavigationSessionSource) && /placePublication\(publicationId, position\) \{/.test(worldNavigationSessionSource),
             'D2. AS OF 0.9.600 (superseding this file\'s own original D2 finding): WorldNavigationSession.js now accepts an optional placePublicationUseCase collaborator and exposes a publicationId-keyed placePublication() method — the smallest legitimate next step this file\'s own Section H named. movePlacement()/removePlacement() (below) remain the only DOCUMENT-ID-keyed placement-mutating methods; placePublication() is PUBLICATION-ID-keyed and deliberately separate — see 0.9.600\'s own WorldNavigationSession.js header.');
         assert(/movePlacement\(documentId, newPosition\) \{[\s\S]{0,300}if \(!record\) \{\s*\n\s*throw new Error/.test(worldNavigationSessionSource),
@@ -564,12 +564,12 @@ async function run() {
         // names as reaching placement — never touch PlacementRecord or
         // LocalPlacementRegistry at all, confirmed against their own
         // source files.
-        const snapshotWorldPlacementSource = await readSource('application/SnapshotWorldPlacement.js');
-        const bridgeSource = await readSource('application/MaterializedSnapshotWorldDiscoveryBridge.js');
+        const snapshotWorldPlacementSource = await readSource('application/snapshot/placement/SnapshotWorldPlacement.js');
+        const bridgeSource = await readSource('application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js');
         assert(!/PlacementRecord|placementRegistry|LocalPlacementRegistry/.test(snapshotWorldPlacementSource),
-            'D6a. application/SnapshotWorldPlacement.js — resolveSnapshotWorldPlacement(), the only function "Place Materialized Snapshot" calls — never imports or references PlacementRecord/placementRegistry/LocalPlacementRegistry in any form.');
+            'D6a. application/snapshot/placement/SnapshotWorldPlacement.js — resolveSnapshotWorldPlacement(), the only function "Place Materialized Snapshot" calls — never imports or references PlacementRecord/placementRegistry/LocalPlacementRegistry in any form.');
         assert(!/PlacementRecord|placementRegistry|LocalPlacementRegistry/.test(bridgeSource),
-            'D6b. application/MaterializedSnapshotWorldDiscoveryBridge.js — registerMaterializedSnapshotWorldSource(), the only function "Register Placed Snapshot" calls — never references them either. It mutates ONLY a WorldDiscoverySourceRegistry.');
+            'D6b. application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js — registerMaterializedSnapshotWorldSource(), the only function "Register Placed Snapshot" calls — never references them either. It mutates ONLY a WorldDiscoverySourceRegistry.');
 
         // D7: THE MECHANISM ITSELF, LIVE. resolveSnapshotWorldPlacement()
         // BORROWS an already-existing placement's position — it never
@@ -610,8 +610,8 @@ async function run() {
         const principlesSource = await readSource('docs/Principles.md');
         assert(/PlacementRecord is the durable, discoverable truth of where a publication[\s\S]{0,20}exists/.test(principlesSource),
             'D8-0. Sanity: docs/Principles.md itself names PlacementRecord "the durable, discoverable truth of where a publication exists."');
-        assert(/Never a fabricated position of any kind — no placement is\s*\n\s*\/\/ ever invented/.test((await readSource('application/SnapshotWorldPlacementOutcome.js')).replace(/\r/g, '')),
-            'D8-1. application/SnapshotWorldPlacementOutcome.js\'s own header states this design choice explicitly: "no placement is ever invented" — the restraint D7 reproduced live was intentional, not an oversight this milestone is the first to notice existed.');
+        assert(/Never a fabricated position of any kind — no placement is\s*\n\s*\/\/ ever invented/.test((await readSource('application/snapshot/placement/SnapshotWorldPlacementOutcome.js')).replace(/\r/g, '')),
+            'D8-1. application/snapshot/placement/SnapshotWorldPlacementOutcome.js\'s own header states this design choice explicitly: "no placement is ever invented" — the restraint D7 reproduced live was intentional, not an oversight this milestone is the first to notice existed.');
 
         // D9: the negative facts the requesting brief asked to keep
         // separately true, both trivially confirmed now that D5-D7
@@ -752,7 +752,7 @@ async function run() {
         // a need for any of the eight items the requesting brief named.
         const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
 
-        assert(!/NotificationEvent/.test((await readSource('application/MaterializedSnapshotWorldDiscoveryBridge.js'))),
+        assert(!/NotificationEvent/.test((await readSource('application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js'))),
             'G1. No new notification: admission and the (no-op, per Section D) placement-labeled actions remain silent, exactly as 0.9.595\'s own header already established.');
         assert(!/ObserverLocalEncounterStore/.test((await readSource('discovery/DecentralizedPublicationDiscoveryProvider.js'))),
             'G2. No persistent "Unplaced Publications" list or observer-local persistence is needed for RECOVERY: discovery/DecentralizedPublicationDiscoveryProvider.js — the durable Repository catalog Sections A/B/F all resolved P1 through — has no dependency on ObserverLocalEncounterStore (the session-scoped, per-mount encounter store 0.9.554 already keeps this ephemeral) at all. Repository retention alone, with no client-side persistence of the encounter, already got a returning user back to the Publication (Section B/F, live).');
@@ -764,7 +764,7 @@ async function run() {
             'G5. No automatic placement — Section D live-proved every placement-labeled action available today either requires an existing placement or is a structural no-op without one; nothing anywhere silently creates one.');
         assert(!/new NostrSnapshotDiscoveryPublisher\(\{[^}]*discoveryTag: `\$\{|DiscoveryProtocolV2|discoveryProtocolVersion/.test(worldEncounterCanvasSource),
             'G6. No new discovery protocol — the same Nostr/Arweave Snapshot Discovery machinery (0.9.150-era) is reused verbatim throughout Sections A/B/E/F.');
-        assert(!/rankProviders|providerFallback|providerPriority/.test((await readSource('application/CreateWorldViewUseCase.js'))),
+        assert(!/rankProviders|providerFallback|providerPriority/.test((await readSource('application/world/CreateWorldViewUseCase.js'))),
             'G7. No provider ranking/fallback — CreateWorldViewUseCase.js still composes exactly one publicationActionDiscoveryProvider via CompositeDiscoveryProvider, never a ranked list of several.');
         assert(/an observer-local marker is suppressed[\s\S]{0,120}once an authoritative `PlacementRecord` exists/.test(((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'))),
             'G8. No automatic reappearance of old encounter markers — ghost suppression stays keyed on a real PlacementRecord (per WorldEncounterCanvas.js\'s own header), which Section D shows still cannot be created for this family through any UI action — so suppression behavior is simply unreachable for P1-shaped Publications today, never newly broken by anything this reassessment does. ' +

@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { VehicleRuntimeInstances } from '../application/VehicleRuntimeInstances.js';
-import { nearbyVehicleInstances, VEHICLE_RENDER_RADIUS } from '../application/NearbyVehicleInstances.js';
+import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
+import { nearbyVehicleInstances, VEHICLE_RENDER_RADIUS } from '../application/world/NearbyVehicleInstances.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { isValidVehicleInstance } from '../core/VehicleInstance.js';
 
-// 0.9.116 — Mounted Vehicle Movement, application/VehicleRuntimeInstances.js.
+// 0.9.116 — Mounted Vehicle Movement, application/world/VehicleRuntimeInstances.js.
 //
 //   Section A: sync() discovers exactly what nearbyVehicleInstances()
 //              itself would, on an empty store — position === spawnPosition
@@ -205,7 +205,7 @@ async function runTests() {
 
     // -------------------------------------------------------------
     // Section G2 — 0.9.700: discard()/isExcluded(). Added alongside
-    // application/AvatarAnimalInteractionController.js's own integration
+    // application/avatar/AvatarAnimalInteractionController.js's own integration
     // test, which found the real bug isExcluded() exists to let a
     // candidate-building call site fix for itself: a discarded id must
     // never resurface as a "fresh" deterministic candidate anywhere,
@@ -232,17 +232,17 @@ async function runTests() {
     // Section H — architectural regression.
     // -------------------------------------------------------------
     {
-        const source = await readFile(new URL('../application/VehicleRuntimeInstances.js', import.meta.url), 'utf8');
+        const source = await readFile(new URL('../application/world/VehicleRuntimeInstances.js', import.meta.url), 'utf8');
         const codeOnly = source
             .split('\n')
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
         for (const term of ['vehicleIdFor', 'VehicleIdentity', '.position =', '.position=', 'THREE']) {
             assert(!codeOnly.includes(term),
-                `21. application/VehicleRuntimeInstances.js's own CODE (comments aside) never references "${term}" — identity, direct mutation, and rendering all stay entirely someone else's job`);
+                `21. application/world/VehicleRuntimeInstances.js's own CODE (comments aside) never references "${term}" — identity, direct mutation, and rendering all stay entirely someone else's job`);
         }
         assert(!codeOnly.includes('vehiclePresenceInRegion'),
-            '21b. application/VehicleRuntimeInstances.js\'s own code never calls core/VehiclePlacement.js directly — discovery is exclusively through application/NearbyVehicleInstances.js\'s own bridge, never a second placement query');
+            '21b. application/world/VehicleRuntimeInstances.js\'s own code never calls core/VehiclePlacement.js directly — discovery is exclusively through application/world/NearbyVehicleInstances.js\'s own bridge, never a second placement query');
         assert(codeOnly.includes('withinRadiusXZ'), '22. removal reuses core/AvatarVehicleProximity.js\'s own withinRadiusXZ(), never a second distance primitive');
         assert(codeOnly.includes('withPosition'), '23. position replacement reuses VehicleInstance#withPosition(), never a direct field assignment');
         assert(codeOnly.includes('withHeading'), '23b. heading replacement reuses VehicleInstance#withHeading(), never a direct field assignment');

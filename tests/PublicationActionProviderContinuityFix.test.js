@@ -11,13 +11,13 @@ import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
@@ -38,8 +38,8 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // `_checkForkPolicy()`) or `LocalWorldLayoutProvider`'s own position
 // enrichment to that same catalog?
 //
-// THE FIX (see application/CreateWorldViewUseCase.js's own 0.9.597
-// header and application/WorldNavigationSession.js's own constructor
+// THE FIX (see application/world/CreateWorldViewUseCase.js's own 0.9.597
+// header and application/world/WorldNavigationSession.js's own constructor
 // comment on `publicationActionDiscoveryProvider`): CreateWorldViewUseCase.js
 // now accepts an optional `decentralizedPublicationDiscoveryProvider` and
 // composes it into a SEPARATE `publicationActionDiscoveryProvider` — via
@@ -99,7 +99,7 @@ if (typeof globalThis.window === 'undefined') {
     };
 }
 
-// Replicates application/CreateWorldViewUseCase.js#execute()'s own new
+// Replicates application/world/CreateWorldViewUseCase.js#execute()'s own new
 // wiring exactly (never the full factory itself — see
 // tests/RepositoryAdmissionToPublicationActionContinuityAudit.test.js's
 // own harness comment for why: it spins up avatar-presence/collaboration
@@ -149,7 +149,7 @@ async function run() {
     // Section A — Composition-root wiring, read from the real source.
     // ===============================================================
     {
-        const createWorldViewSource = await readSource('application/CreateWorldViewUseCase.js');
+        const createWorldViewSource = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(/const discoveryProvider = new LocalDiscoveryProvider\(storageProvider\);/.test(createWorldViewSource),
             'A1. `discoveryProvider` is still a bare, unmerged LocalDiscoveryProvider.');
         assert(/decentralizedPublicationDiscoveryProvider = null[\s\S]{0,400}\} = \{\}\) \{/.test(createWorldViewSource),
@@ -159,7 +159,7 @@ async function run() {
         assert(/publicationActionDiscoveryProvider,\s*\n\s*\/\/ 0\.2\.23: placement/.test(createWorldViewSource),
             'A4. publicationActionDiscoveryProvider is handed to WorldNavigationSession as its own, separate constructor argument, never folded into `discoveryProvider`.');
 
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
         assert(/this\._publicationActionDiscoveryProvider = publicationActionDiscoveryProvider \|\| discoveryProvider;/.test(sessionSource),
             'A5. WorldNavigationSession falls back to `discoveryProvider` itself when no separate provider is supplied.');
         assert(/getPublicationForDocument\(documentId\) \{\s*\n\s*if \(!this\._publicationActionDiscoveryProvider/.test(sessionSource),
@@ -333,8 +333,8 @@ publicationActionDiscoveryProvider composed only where 0.9.596's own Section D p
 (_isKnownPublication()/_checkForkPolicy()/getPublicationIdForDocument()) and LocalWorldLayoutProvider's own
 position enrichment remain exclusively on the narrow, local-only discoveryProvider, unwidened. No automatic
 placement is introduced; the existing, explicit placement action remains the sole authority that ever
-produces a PlacementRecord. Production changed in exactly three files: application/CreateWorldViewUseCase.js
-(composition root), application/WorldNavigationSession.js (the two repaired methods), and
+produces a PlacementRecord. Production changed in exactly three files: application/world/CreateWorldViewUseCase.js
+(composition root), application/world/WorldNavigationSession.js (the two repaired methods), and
 ui/views/WorldView.js (threading the already-injected decentralized provider through).
 `);
 }

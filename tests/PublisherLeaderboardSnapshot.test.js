@@ -1,21 +1,21 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreatePublicationReferenceRecordUseCase } from '../application/CreatePublicationReferenceRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { reconstructAchievementEvidenceFingerprint } from '../application/AchievementEvidenceFingerprint.js';
-import { exportAchievementEvidence, importAchievementEvidence } from '../application/AchievementEvidenceExport.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { reconstructAchievementEvidenceFingerprint } from '../application/achievement/AchievementEvidenceFingerprint.js';
+import { exportAchievementEvidence, importAchievementEvidence } from '../application/achievement/AchievementEvidenceExport.js';
 import {
     describeAchievementEvidenceExchangeRequest,
     reconstructAchievementEvidenceExchangeResponse,
     applyAchievementEvidenceExchange
-} from '../application/AchievementEvidenceExchange.js';
-import { describePublisherLeaderboard, reconstructPublisherLeaderboard } from '../application/PublisherLeaderboardView.js';
-import { describePublisherRanking } from '../application/PublisherRankingPolicy.js';
+} from '../application/achievement/AchievementEvidenceExchange.js';
+import { describePublisherLeaderboard, reconstructPublisherLeaderboard } from '../application/leaderboard/PublisherLeaderboardView.js';
+import { describePublisherRanking } from '../application/leaderboard/PublisherRankingPolicy.js';
 import {
     describePublisherLeaderboardSnapshot,
     reconstructPublisherLeaderboardSnapshot
-} from '../application/PublisherLeaderboardSnapshot.js';
+} from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
 
 // 0.8.119 — Reproducible Leaderboard Snapshot.
 //

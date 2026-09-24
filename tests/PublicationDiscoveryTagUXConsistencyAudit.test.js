@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';
-import { queryDecentralizedWorldDiscovery } from '../application/DecentralizedWorldDiscoveryQuery.js';
-import { resolveNostrPublisherOptions } from '../application/PublicationDistributionConfigurationProvider.js';
+import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
+import { queryDecentralizedWorldDiscovery } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
+import { resolveNostrPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.356 — Publication Discovery Tag UX Consistency Audit.
@@ -227,7 +227,7 @@ async function run() {
         assert(literalLine && !/\$\{|publication\.|world\.|objectId/.test(literalLine),
             '1. the discoveryTag constant\'s own declaration is a bare string literal on its own line — no interpolation, no reference to any Publication/World/objectId-scoped variable.');
 
-        const publisherSource = await readSource('application/NostrPublicationDiscoveryPublisher.js');
+        const publisherSource = await readSource('application/nostr/NostrPublicationDiscoveryPublisher.js');
         assert(publisherSource.includes('discoveryTag: the free-form tag value attached to every event this'),
             '2. NostrPublicationDiscoveryPublisher.js\'s own header documents discoveryTag as bound once per publisher INSTANCE and reused for every event that instance announces — an instance-wide, not a per-Publication, value.');
 
@@ -247,7 +247,7 @@ async function run() {
         // default value for an INPUT FIELD that feeds that same argument
         // requires no change to the command, the composition function, the
         // runtime, or the query layer.
-        const compositionSource = await readSource('application/DiscoverWorldEncounterPublicationCommandComposition.js');
+        const compositionSource = await readSource('application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js');
         assert(compositionSource.includes("({ objectId, discoveryTag } = {}) => executeDiscoverWorldEncounterPublicationCommand({"),
             '1. the composed command\'s own signature already accepts discoveryTag exactly as WorldEncounterCanvas.js already supplies it — no widening, narrowing, or reshaping needed.');
 

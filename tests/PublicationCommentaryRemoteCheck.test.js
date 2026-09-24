@@ -4,10 +4,10 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
-import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/DiscoverPublicationCommentaryFromNostrUseCase.js';
-import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/DiscoverPublicationCommentaryFromArweaveUseCase.js';
-import { composeRefreshPublicationCommentaryCommand } from '../application/RefreshPublicationCommentaryCommandComposition.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
+import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js';
+import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';
+import { composeRefreshPublicationCommentaryCommand } from '../application/publication/commentary/RefreshPublicationCommentaryCommandComposition.js';
 import PublicationCommentaryRemoteCheck from '../ui/components/PublicationCommentaryRemoteCheck.js';
 
 // Publication Commentary — fetch-on-open and "Check for new comments".
@@ -17,7 +17,7 @@ import PublicationCommentaryRemoteCheck from '../ui/components/PublicationCommen
 // viewer was offline (or from another device) never reached them — only
 // live WebRTC peers ever delivered one.
 //
-// Now: application/RefreshPublicationCommentaryCommandComposition.js
+// Now: application/publication/commentary/RefreshPublicationCommentaryCommandComposition.js
 // checks both networks for one Publication, and
 // ui/components/PublicationCommentaryRemoteCheck.js — mounted in every
 // Commentary section — runs it when the section opens and when the viewer

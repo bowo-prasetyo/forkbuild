@@ -1,9 +1,9 @@
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -82,7 +82,7 @@ function makeDocument(title, author) {
 }
 
 // The real application stack this audit exercises, mirroring
-// application/CreateWorldViewUseCase.js's own 0.9.248 composition exactly
+// application/world/CreateWorldViewUseCase.js's own 0.9.248 composition exactly
 // (same storageProvider, same discoveryProvider, same identityProvider
 // feeding all three commentary collaborators). Accepts an EXISTING
 // storageProvider/identityProvider pair so Section H (Persistence/Reload)
@@ -688,8 +688,8 @@ async function runTests() {
     // ===================================================================
     {
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const sessionCode = await codeOnlySource('application/WorldNavigationSession.js');
-        const addUseCaseCode = await codeOnlySource('application/AddPublicationCommentaryUseCase.js');
+        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
+        const addUseCaseCode = await codeOnlySource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
 
         // OwnPublicationPanel.js never imports the domain class, the
         // store, or either use case directly — it only ever calls the
@@ -697,9 +697,9 @@ async function runTests() {
         const forbiddenInPanel = [
             "from '../../core/PublicationCommentary.js'",
             "from '../../storage/PublicationCommentaryStore.js'",
-            "from '../../application/GetPublicationCommentariesUseCase.js'",
-            "from '../../application/AddPublicationCommentaryUseCase.js'",
-            "from '../../application/CanCommentOnPublicationUseCase.js'",
+            "from '../../application/publication/commentary/GetPublicationCommentariesUseCase.js'",
+            "from '../../application/publication/commentary/AddPublicationCommentaryUseCase.js'",
+            "from '../../application/publication/CanCommentOnPublicationUseCase.js'",
             "from '../../identity/resolveSigningIdentityId.js'",
             'new PublicationCommentary(',
             'PublicationCommentaryStore',
@@ -722,8 +722,8 @@ async function runTests() {
         // class either, and its own two commentary methods contain
         // nothing but a guard clause plus a single delegated call.
         const forbiddenInSession = [
-            "from '../core/PublicationCommentary.js'",
-            "from '../storage/PublicationCommentaryStore.js'",
+            "from '../../core/PublicationCommentary.js'",
+            "from '../../storage/PublicationCommentaryStore.js'",
             'new PublicationCommentary('
         ];
         for (const term of forbiddenInSession) {

@@ -2,16 +2,16 @@ import {
     ReconciliationCandidateLeaderboardEvidenceKind,
     ReconciliationCandidateLeaderboardReplicaRelation,
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceFilter.js';
+} from '../application/claimSnapshotReconciliation/leaderboard/EvidenceFilter.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetail
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetailView.js';
+} from '../application/claimSnapshotReconciliation/candidate/FilteredEvidenceDetailView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState.js';
+} from '../application/claimSnapshotReconciliation/leaderboard/ComparisonState.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.js';
+} from '../application/claimSnapshotReconciliation/leaderboard/EvidenceExport.js';
 
 // 0.8.187 — Reconciliation Candidate Leaderboard Evidence Export UI
 // Integration.
@@ -166,7 +166,7 @@ async function run() {
         );
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.js'"), '10. the view imports 0.8.186\'s own evidence-export module');
+        assert(codeOnly.includes("from '../../application/claimSnapshotReconciliation/leaderboard/EvidenceExport.js'"), '10. the view imports 0.8.186\'s own evidence-export module');
         assert((codeOnly.match(/describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport\(/g) || []).length === 1,
             '11. the view calls 0.8.186\'s own describeXxx() exactly once');
         assert(!codeOnly.includes('reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport'), '12. the view never calls 0.8.186\'s own reconstructXxx() — it already holds filteredEvidenceDetail/filter/comparisonState and passes them to describeXxx() directly, never re-reading either archive');

@@ -4,7 +4,7 @@
 // numbers. This component is the panel that opens underneath one candidate's
 // row and shows the actual records those numbers count — decision detail and
 // observation detail, each split Shared / Source-only / Target-only, in
-// application/PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetailView.js's
+// application/claimSnapshotReconciliation/candidate/EvidenceDetailView.js's
 // (0.8.182) own order.
 //
 // A PROJECTION RENDERER, NOT A SECOND AUTHORITY — THE IDENTICAL DISCIPLINE

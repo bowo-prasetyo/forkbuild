@@ -2,29 +2,29 @@ import WorldEncounterMarker from './WorldEncounterMarker.js';
 import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';
 import WandererMarker from './WandererMarker.js';
 import WorldDistributionDialog from './WorldDistributionDialog.js';
-import { describeWorldFromDiscoveryRegistry } from '../../application/WorldDiscoveryRegistryProjection.js';
-import { describeWorldEncounterInspection } from '../../application/WorldEncounterInspection.js';
-import { WorldEncounterSelectionOutcomeStatus } from '../../application/WorldEncounterSelectionOutcome.js';
-import { resolveSavedProviderDefault } from '../../application/SavedProviderDefaultChoice.js';
+import { describeWorldFromDiscoveryRegistry } from '../../application/discovery/WorldDiscoveryRegistryProjection.js';
+import { describeWorldEncounterInspection } from '../../application/worldEncounter/WorldEncounterInspection.js';
+import { WorldEncounterSelectionOutcomeStatus } from '../../application/worldEncounter/WorldEncounterSelectionOutcome.js';
+import { resolveSavedProviderDefault } from '../../application/settings/SavedProviderDefaultChoice.js';
 // `Publication` is needed for one check only: `loading.status === 'AVAILABLE'
 // && loading.material instanceof Publication`, the same admission gate
 // ui/views/DecentralizedPublicationsView.js's admitToRepositoryDiscovery()
 // uses. 'AVAILABLE' is compared as a literal
 // (WorldEncounterMaterialLoadStatus.AVAILABLE) so this file never imports
-// application/WorldEncounterMaterialLoading.js: it reacts only to
+// application/worldEncounter/WorldEncounterMaterialLoading.js: it reacts only to
 // inspectWorldEncounterMaterial()'s result.
 
 import { Publication } from '../../publisher/Publication.js';
-import { PublicationDistributionState } from '../../application/PublicationDistributionLifecycle.js';
-import { DecentralizedWorldEncounterLeadSelectionOutcomeStatus } from '../../application/DecentralizedWorldEncounterLeadSelection.js';
-import { describePublicationMaterialProvenanceFromInspection } from '../../application/PublicationMaterialProvenance.js';
-import { describeWorldEncounterPresentation } from '../../application/WorldEncounterPresentation.js';
-import { describeWorldSnapshotInspection } from '../../application/WorldSnapshotInspection.js';
-import { materializedSnapshotWorldOrigin } from '../../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { describeWorldEncounterComparisonCandidate } from '../../application/WorldEncounterComparisonCandidate.js';
-import { compareSnapshotWorldPublications } from '../../application/WorldSnapshotComparison.js';
-import { describeWorldSnapshotContentView } from '../../application/WorldSnapshotContentView.js';
-import { describeWorldSnapshotContentComparisonView } from '../../application/WorldSnapshotContentComparisonView.js';
+import { PublicationDistributionState } from '../../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { DecentralizedWorldEncounterLeadSelectionOutcomeStatus } from '../../application/worldEncounter/DecentralizedWorldEncounterLeadSelection.js';
+import { describePublicationMaterialProvenanceFromInspection } from '../../application/publication/distribution/PublicationMaterialProvenance.js';
+import { describeWorldEncounterPresentation } from '../../application/worldEncounter/WorldEncounterPresentation.js';
+import { describeWorldSnapshotInspection } from '../../application/snapshot/WorldSnapshotInspection.js';
+import { materializedSnapshotWorldOrigin } from '../../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { describeWorldEncounterComparisonCandidate } from '../../application/worldEncounter/WorldEncounterComparisonCandidate.js';
+import { compareSnapshotWorldPublications } from '../../application/snapshot/WorldSnapshotComparison.js';
+import { describeWorldSnapshotContentView } from '../../application/snapshot/materialization/WorldSnapshotContentView.js';
+import { describeWorldSnapshotContentComparisonView } from '../../application/snapshot/materialization/WorldSnapshotContentComparisonView.js';
 // Most methods live in ./worldEncounterCanvas/, grouped by concern.
 import { observerLocalEncounterMethods } from './worldEncounterCanvas/observerLocalEncounterMethods.js';
 import { selectionOutcomeMethods } from './worldEncounterCanvas/selectionOutcomeMethods.js';
@@ -57,9 +57,9 @@ import { publicationDiscoveryMethods } from './worldEncounterCanvas/publicationD
 // WorldMapPanel), and world `y` is ignored.
 //
 // INPUT: A `view` OR A LIVE `registry`. `view` is exactly
-// application/WorldEncounterView.js's describeWorldEncounterView() result;
+// application/worldEncounter/WorldEncounterView.js's describeWorldEncounterView() result;
 // this component never joins, fetches or recomputes encounter data (see
-// application/WorldEncounterReadModel.js, core/WorldEncounter.js). A live
+// application/worldEncounter/WorldEncounterReadModel.js, core/WorldEncounter.js). A live
 // WorldDiscoverySourceRegistry may be passed as `registry` instead:
 // `effectiveView` uses the registry-derived `worldView` when `registry` is
 // supplied, else `view`, never both. mounted() seeds, then subscribes;
@@ -110,7 +110,7 @@ import { publicationDiscoveryMethods } from './worldEncounterCanvas/publicationD
 // change so the previous selection's material can't be acted on in the gap.
 // A request counter guards against a stale async response overwriting a
 // newer one; it is not a cache and never retries. Load/verification status
-// render through application/WorldEncounterMaterialInspectionView.js labels,
+// render through application/worldEncounter/WorldEncounterMaterialInspectionView.js labels,
 // never as "trusted"/"authentic"/"safe".
 //
 // DECENTRALIZED LEADS. With a `worldDiscoveryLeadRegistry`,
@@ -124,7 +124,7 @@ import { publicationDiscoveryMethods } from './worldEncounterCanvas/publicationD
 // resolvedEncounterSelection (automatic when RESOLVED, explicit
 // chooseDecentralizedLead() when AMBIGUOUS) and, once set, is forwarded to
 // material inspection: resolving it is the routing decision (see
-// application/DecentralizedWorldEncounterLeadAwareMaterialLoading.js).
+// application/worldEncounter/DecentralizedWorldEncounterLeadAwareMaterialLoading.js).
 //
 // DISTRIBUTION. Observation: `distributionLifecycleStore` is read and
 // subscribed per selected Publication; `distributionMaterialState`/
@@ -192,7 +192,7 @@ import { publicationDiscoveryMethods } from './worldEncounterCanvas/publicationD
 // the compose form and a sign-in hint.
 //
 // OBSERVER-LOCAL ENCOUNTERS. `observerLocalEncounterRegistry` (an
-// application/ObserverLocalEncounterStore.js) is a separate prop and array,
+// application/worldEncounter/ObserverLocalEncounterStore.js) is a separate prop and array,
 // never merged into `registry`. Its markers are plain `<g>` elements
 // labelled "Discovered here", never a WorldEncounterMarker and never
 // `selectedEncounter`. `projectedObserverLocalEncounters` carries exactly
@@ -219,7 +219,7 @@ import { publicationDiscoveryMethods } from './worldEncounterCanvas/publicationD
 // comparison and observer-local inspections alike, each sink with its own
 // failure isolation. `claimedPosition` stays inert: admission says which
 // Publication is knowable, never where it belongs. A KNOWN, PRE-EXISTING LIMIT:
-// application/WorldNavigationSession.js's `_discoveryProvider` is a separate
+// application/world/WorldNavigationSession.js's `_discoveryProvider` is a separate
 // LocalDiscoveryProvider built in CreateWorldViewUseCase.js, so admission
 // makes a Publication findable in Repository search (via
 // CreateDiscoveryUseCase.js's CompositeDiscoveryProvider) but not resolvable
@@ -249,12 +249,12 @@ export default {
             })
         },
         // Optional live WorldDiscoverySourceRegistry
-        // (application/WorldDiscoverySourceRegistry.js); see the header.
+        // (application/discovery/WorldDiscoverySourceRegistry.js); see the header.
         registry: {
             type: Object,
             default: null
         },
-        // Optional ObserverLocalEncounterStore (application/ObserverLocalEncounterStore.js),
+        // Optional ObserverLocalEncounterStore (application/worldEncounter/ObserverLocalEncounterStore.js),
         // seeded and subscribed like `registry` but never the same object and never
         // merged with it.
         observerLocalEncounterRegistry: {
@@ -275,7 +275,7 @@ export default {
             default: null
         },
         // Optional DecentralizedWorldDiscoveryLeadRegistry
-        // (application/DecentralizedWorldDiscoveryLeadRegistry.js); without it, no
+        // (application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js); without it, no
         // lead resolution.
         worldDiscoveryLeadRegistry: {
             type: Object,
@@ -334,7 +334,7 @@ export default {
         // Optional `(publication) -> Promise<{ contentReference, announcement }>`,
         // called with the same `distributablePublication` (see WorldView.js's
         // distributeWorldEncounterSnapshot()). Unlike `distributionCommand`, the
-        // result is stored here: application/SnapshotDistributionCommand.js has no
+        // result is stored here: application/snapshot/SnapshotDistributionCommand.js has no
         // lifecycle store, so the resolved object is the only record.
         snapshotDistributionCommand: {
             type: Function,
@@ -658,7 +658,7 @@ export default {
         },
         // `{ kind: 'PUBLICATION', objectId: publicationId, origin }` for the
         // selected observer-local encounter, with `origin` from
-        // materializedSnapshotWorldOrigin() (application/MaterializedSnapshotWorldDiscoveryBridge.js).
+        // materializedSnapshotWorldOrigin() (application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js).
         // Never routed through the registry's candidate search, which would report
         // UNAVAILABLE. Null without a selection or when the pair fails validation.
         observerLocalEncounterResolvedSelection() {
@@ -706,7 +706,7 @@ export default {
         },
         // Which source family (LOCAL, PEER or SNAPSHOT) backs the selection, joined
         // from the inspection and resolved selection (see
-        // application/WorldEncounterPresentation.js). Null when nothing is
+        // application/worldEncounter/WorldEncounterPresentation.js). Null when nothing is
         // inspectable.
         selectedEncounterPresentation() {
             return describeWorldEncounterPresentation({
@@ -724,7 +724,7 @@ export default {
             return 'Unresolved';
         },
         // Snapshot detail for a resolved, SNAPSHOT-sourced PUBLICATION selection
-        // (see application/WorldSnapshotInspection.js); a publisher's claimed
+        // (see application/snapshot/WorldSnapshotInspection.js); a publisher's claimed
         // position and the Snapshot's locator/storage don't reach this boundary.
         selectedEncounterSnapshotInspection() {
             return describeWorldSnapshotInspection({
@@ -820,7 +820,7 @@ export default {
             });
         },
         // "Publication A": the primary selection's comparison candidate (see
-        // application/WorldEncounterComparisonCandidate.js); null unless it is a
+        // application/worldEncounter/WorldEncounterComparisonCandidate.js); null unless it is a
         // resolved PUBLICATION.
         selectedPublicationComparisonCandidate() {
             return describeWorldEncounterComparisonCandidate({
@@ -847,7 +847,7 @@ export default {
             );
         },
         // Content View for a Snapshot-sourced selection whose material is AVAILABLE
-        // (see application/WorldSnapshotContentView.js), recomputed on every read.
+        // (see application/snapshot/materialization/WorldSnapshotContentView.js), recomputed on every read.
         selectedSnapshotContentView() {
             return describeWorldSnapshotContentView({
                 inspection: this.selectedEncounterSnapshotInspection,
@@ -868,7 +868,7 @@ export default {
             });
         },
         // Side-by-side view data from the comparison fact and both Content Views
-        // (see application/WorldSnapshotContentComparisonView.js), recomputed on
+        // (see application/snapshot/materialization/WorldSnapshotContentComparisonView.js), recomputed on
         // every read.
         worldSnapshotContentComparisonView() {
             return describeWorldSnapshotContentComparisonView({
@@ -1510,7 +1510,7 @@ export default {
 
                 <!--
                     Where this observation's material came from (see
-                    application/PublicationMaterialProvenance.js).
+                    application/publication/distribution/PublicationMaterialProvenance.js).
                 -->
                 <dl v-if="materialProvenance" class="world-encounter-provenance-detail">
                     <dt>Source</dt>
@@ -1596,7 +1596,7 @@ export default {
 
                 <!--
                     Attribution result, separate from discovery (see
-                    application/SnapshotPublicationAttribution.js). Rendered as "Confirmed to
+                    application/snapshot/SnapshotPublicationAttribution.js). Rendered as "Confirmed to
                     match this Publication" rather than a bare "match": the identical wording
                     and narrow meaning (a content-hash correspondence, not authorship or
                     trust) as the Material/Verification panel (see docs/Principles.md).
@@ -1663,7 +1663,7 @@ export default {
 
                                 <!--
                                     Provenance computed by
-                                    application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js
+                                    application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js
                                     and rendered verbatim.
                                 -->
                                 <dl v-if="discoveryResult.provenance" class="world-encounter-provenance-detail">

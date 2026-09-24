@@ -117,16 +117,16 @@ async function runTests() {
     {
         const capabilities = [
             ['Editor', 'ui/views/EditorView.js', 'export default'],
-            ['Publication (create/publish)', 'application/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase'],
+            ['Publication (create/publish)', 'application/publication/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase'],
             ['Commentary', 'core/PublicationCommentary.js', 'export class PublicationCommentary'],
             ['World View', 'ui/views/WorldView.js', 'export default'],
-            ['Wanderer/vehicle', 'application/AvatarVehicleInteractionController.js', 'export class AvatarVehicleInteractionController'],
-            ['Placement', 'application/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
-            ['Snapshot discovery/materialization', 'application/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
-            ['Collaboration (live)', 'application/WorldCommandPropagationUseCase.js', 'export class WorldCommandPropagationUseCase'],
+            ['Wanderer/vehicle', 'application/avatar/AvatarVehicleInteractionController.js', 'export class AvatarVehicleInteractionController'],
+            ['Placement', 'application/placement/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
+            ['Snapshot discovery/materialization', 'application/snapshot/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
+            ['Collaboration (live)', 'application/document/WorldCommandPropagationUseCase.js', 'export class WorldCommandPropagationUseCase'],
             ['Place Naming', 'core/PlaceNamingClaim.js', 'export class PlaceNamingClaim'],
             ['Notifications', 'core/NotificationEvent.js', 'export class NotificationEvent'],
-            ['Decentralized distribution', 'application/NostrPublicationDistributionRuntimeAdapter.js', 'export function createNostrPublicationDistributionRuntimeAdapter'],
+            ['Decentralized distribution', 'application/nostr/NostrPublicationDistributionRuntimeAdapter.js', 'export function createNostrPublicationDistributionRuntimeAdapter'],
             ['Provider preferences', 'core/RoleProviderPreference.js', 'export class RoleProviderPreference'],
             ['Authentication/identity', 'identity/LocalIdentityProvider.js', 'export class LocalIdentityProvider']
         ];
@@ -154,9 +154,9 @@ async function runTests() {
         // fully-TESTED peer placement-replication protocol
         // (replication/ConflictResolver.js, replication/ReplicaMergeService.js,
         // replication/LocalReplicationStore.js,
-        // application/ReplicatePlacementUseCase.js,
-        // application/SynchronizeReplicaUseCase.js,
-        // application/CreateReplicationUseCase.js) has ZERO callers in
+        // application/placement/ReplicatePlacementUseCase.js,
+        // application/placement/SynchronizeReplicaUseCase.js,
+        // application/placement/CreateReplicationUseCase.js) has ZERO callers in
         // application/ or ui/ outside its own five files — confirmed with
         // a live, working proof, not merely a source reading, developed
         // fully in Section C.
@@ -169,7 +169,7 @@ async function runTests() {
         }
         const replicationCallers = await grepCount('new CreateReplicationUseCase', ['application', 'ui']);
         assert(replicationCallers === 0,
-            `A15b. Zero production call sites construct application/CreateReplicationUseCase.js — the pipeline's own top-level composition root — today (found ${replicationCallers}); it internally wires ReplicatePlacementUseCase/SynchronizeReplicaUseCase (real, but only ever reached FROM this unreached root) — implemented, working, and tested, but orphaned.`);
+            `A15b. Zero production call sites construct application/placement/CreateReplicationUseCase.js — the pipeline's own top-level composition root — today (found ${replicationCallers}); it internally wires ReplicatePlacementUseCase/SynchronizeReplicaUseCase (real, but only ever reached FROM this unreached root) — implemented, working, and tested, but orphaned.`);
 
         // A16. IMPLEMENTED + INTENTIONALLY INTERNAL, reconfirmed fresh:
         // Automatic Snapshot Encounter Retention still has at most one
@@ -274,9 +274,9 @@ async function runTests() {
         // that actually ships. Confirmed structurally distinct: the two
         // resolvers are different classes in different files, and the
         // live protocol's own file never imports the offline one.
-        const propagationSource = codeOnlyLines(await rawSource('application/WorldCommandPropagationUseCase.js'));
-        assert(propagationSource.includes("from '../replication/WorldConflictResolver.js'") &&
-            !propagationSource.includes("from '../replication/ConflictResolver.js'"),
+        const propagationSource = codeOnlyLines(await rawSource('application/document/WorldCommandPropagationUseCase.js'));
+        assert(propagationSource.includes("from '../../replication/WorldConflictResolver.js'") &&
+            !propagationSource.includes("from '../../replication/ConflictResolver.js'"),
             'C1. WorldCommandPropagationUseCase.js still imports WorldConflictResolver (the live protocol), never the offline ConflictResolver (A15\'s own orphan) — two genuinely separate mechanisms, not a duplicate.');
         classifications.push(['Peer placement-replication protocol (ConflictResolver/ReplicaMergeService/CreateReplicationUseCase family)', 'HISTORICAL — superseded by the live WorldConflictResolver-based collaboration protocol; no evidence any user needs BOTH an offline peer-sync model and a live one for the same PlacementRecord data.']);
 
@@ -285,7 +285,7 @@ async function runTests() {
         // true today: CreateWorldViewUseCase.js still builds the
         // identical collaborator set directly.
         const cprCallers = await grepCount('new CreatePlacementRegistryUseCase', ['application', 'ui']);
-        assert(cprCallers === 0, `C2. application/CreatePlacementRegistryUseCase.js still has zero production call sites (found ${cprCallers}).`);
+        assert(cprCallers === 0, `C2. application/placement/CreatePlacementRegistryUseCase.js still has zero production call sites (found ${cprCallers}).`);
         classifications.push(['CreatePlacementRegistryUseCase', 'INTERNAL — composition root bypassed, not broken; the underlying registry it would wire is already constructed directly elsewhere (0.9.307/0.9.310\'s own established finding, unchanged).']);
 
         // C3. A wider pattern than C2 alone: the identical "composition
@@ -295,8 +295,8 @@ async function runTests() {
         // reassessment.
         const bypassedRoots = [
             ['CreateIdentityUseCase', 'new CreateIdentityProviderUseCase().execute()', 'ui/main.js'],
-            ['CreateAuthorizationUseCase', 'new LocalAuthorizationVerifier();', 'application/CreatePublicationCatalogUseCase.js'],
-            ['CreateWorldLayoutUseCase', 'new LocalWorldLayoutProvider(', 'application/CreateWorldViewUseCase.js']
+            ['CreateAuthorizationUseCase', 'new LocalAuthorizationVerifier();', 'application/publication/CreatePublicationCatalogUseCase.js'],
+            ['CreateWorldLayoutUseCase', 'new LocalWorldLayoutProvider(', 'application/world/CreateWorldViewUseCase.js']
         ];
         for (const [rootClass, directConstructionSnippet, elsewhereFile] of bypassedRoots) {
             const rootCallers = await grepCount(`new ${rootClass}`, ['application', 'ui']);
@@ -317,7 +317,7 @@ async function runTests() {
         const bareFunctionCallers = await grepCount('createBrickRegistry\\(\\)', ['application', 'ui']);
         const classCallers = await grepCount('new CreateBrickRegistryUseCase', ['application', 'ui']);
         assert(bareFunctionCallers <= 1 && classCallers >= 10,
-            `C4. application/CreateBrickRegistryUseCase.js's own bare createBrickRegistry() function has at most its own declaration as a hit (found ${bareFunctionCallers}), while the class it wraps has ${classCallers} real call sites — a duplicate, unused entry point, not a missing capability.`);
+            `C4. application/editor/CreateBrickRegistryUseCase.js's own bare createBrickRegistry() function has at most its own declaration as a hit (found ${bareFunctionCallers}), while the class it wraps has ${classCallers} real call sites — a duplicate, unused entry point, not a missing capability.`);
         classifications.push(['createBrickRegistry() bare function', 'DUPLICATIVE — the class it wraps is already the codebase\'s own real, well-used entry point.']);
 
         // C5. getPlacementInfoForPublication() — already established
@@ -349,9 +349,9 @@ async function runTests() {
         // autosave-recovery parity — already established (0.9.307 C3/C4/D4)
         // as real, but LARGE-scope gaps. Reconfirmed unchanged, three
         // milestones later.
-        const editorSessionSource = codeOnlyLines(await rawSource('application/EditorSession.js'));
+        const editorSessionSource = codeOnlyLines(await rawSource('application/editor/EditorSession.js'));
         assert(!/ReplayDocumentUseCase|RestoreHistoryStateUseCase|getTimeline/.test(editorSessionSource),
-            'C7a. application/EditorSession.js still has zero references to ReplayDocumentUseCase/RestoreHistoryStateUseCase/getTimeline — unchanged since 0.9.307.');
+            'C7a. application/editor/EditorSession.js still has zero references to ReplayDocumentUseCase/RestoreHistoryStateUseCase/getTimeline — unchanged since 0.9.307.');
         assert(!/[Aa]utosave|[Rr]ecovery/i.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')),
             'C7b. ui/views/WorldView.js still carries no Autosave/Recovery vocabulary — unchanged since 0.9.307.');
         classifications.push(['Editor history-timeline parity / World autosave-recovery parity', 'DEFER — real product gaps, LARGE scope (0.9.307\'s own finding: would re-derive a multi-milestone arc, plus a genuine open collaboration-semantics question). Unchanged since 0.9.307; still not selected.']);
@@ -398,8 +398,8 @@ async function runTests() {
         // Leaderboard surfaces themselves (Section A/C's own reachability
         // check) are reached from their own dedicated views, never from
         // NotificationHistoryPanel or any commentary/placement flow.
-        const notifSource = await sourceExists('application/PublicationCommentaryNotificationProducer.js')
-            ? await rawSource('application/PublicationCommentaryNotificationProducer.js') : '';
+        const notifSource = await sourceExists('application/publication/commentary/PublicationCommentaryNotificationProducer.js')
+            ? await rawSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js') : '';
         assert(!/PublisherLeaderboard|Achievement/.test(notifSource),
             'D3. The one real notification-PRODUCING file this codebase has (Commentary\'s own producer) carries zero Leaderboard/Achievement vocabulary — the two subsystems have never been wired together, and this milestone does not wire them now: "both exist" is not a journey.');
 
@@ -417,13 +417,13 @@ async function runTests() {
         // stage.
         assert(await sourceExists('core/NotificationEvent.js'), 'E1a. Event fact: core/NotificationEvent.js still exists.');
         assert(await sourceExists('storage/NotificationEventStore.js'), 'E1b. Deduplication/durable history: storage/NotificationEventStore.js still exists.');
-        assert(await sourceExists('application/GetRecipientNotificationEventsUseCase.js'), 'E1c. Authenticated retrieval: application/GetRecipientNotificationEventsUseCase.js still exists.');
+        assert(await sourceExists('application/chat/GetRecipientNotificationEventsUseCase.js'), 'E1c. Authenticated retrieval: application/chat/GetRecipientNotificationEventsUseCase.js still exists.');
         assert(await sourceExists('ui/components/NotificationHistoryPanel.js'), 'E1d. History UI: ui/components/NotificationHistoryPanel.js still exists.');
 
         // E2. No unread/read, badge, push, or delivery vocabulary was
         // added since 0.9.306's own STOP — reconfirmed with a direct
         // sweep of the notification-family application files.
-        const notifFiles = ['storage/NotificationEventStore.js', 'application/GetRecipientNotificationEventsUseCase.js',
+        const notifFiles = ['storage/NotificationEventStore.js', 'application/chat/GetRecipientNotificationEventsUseCase.js',
             'ui/components/NotificationHistoryPanel.js'];
         for (const f of notifFiles) {
             const source = codeOnlyLines(await rawSource(f));
@@ -460,7 +460,7 @@ async function runTests() {
         // F2. Navigation — 0.9.310's own Section D finding (document-keyed,
         // never placement-keyed, proven on two independent existing
         // features) reconfirmed fresh with one signal.
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
         assert(sessionSource.includes('this._getWorldPosition(documentId)'),
             'F2. focusDocument() still resolves its camera target through the per-DOCUMENT _getWorldPosition(), never a per-placement one — 0.9.310\'s own finding holds unchanged.');
 
@@ -534,7 +534,7 @@ async function runTests() {
         // DiscoverPeersUseCase and consumed by PeerSessionManager, reached
         // through the always-mounted /peers nav destination (Section A14).
         assert(await sourceExists('peer/PeerInvitation.js'), 'G5. peer/PeerInvitation.js still exists.');
-        const discoverPeersSource = await rawSource('application/DiscoverPeersUseCase.js');
+        const discoverPeersSource = await rawSource('application/peer/DiscoverPeersUseCase.js');
         assert(discoverPeersSource.includes('PeerInvitation.create'),
             'G5b. DiscoverPeersUseCase.js still constructs a real PeerInvitation — invitations are already a live, shipped capability.');
 
@@ -553,8 +553,8 @@ async function runTests() {
         // Notification file families.
         const roleProviderFiles = await grepCount('RoleProviderPreference', ['application']);
         const roleProviderInCommentaryOrNotif = await grepCount('RoleProviderPreference',
-            ['application/PublicationCommentaryNotificationProducer.js', 'storage/NotificationEventStore.js',
-                'application/GetRecipientNotificationEventsUseCase.js', 'core/PublicationCommentary.js']);
+            ['application/publication/commentary/PublicationCommentaryNotificationProducer.js', 'storage/NotificationEventStore.js',
+                'application/chat/GetRecipientNotificationEventsUseCase.js', 'core/PublicationCommentary.js']);
         assert(roleProviderInCommentaryOrNotif === 0,
             `H1. RoleProviderPreference (referenced in ${roleProviderFiles} application/ files total) still has zero references in any Commentary/Notification file — 0.9.304's boundary holds.`);
 

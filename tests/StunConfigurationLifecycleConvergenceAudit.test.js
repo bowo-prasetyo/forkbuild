@@ -7,7 +7,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
 import { NostrRelayConfigurationStore } from '../storage/NostrRelayConfigurationStore.js';
-import { SetIceServerConfigurationUseCase } from '../application/SetIceServerConfigurationUseCase.js';
+import { SetIceServerConfigurationUseCase } from '../application/settings/SetIceServerConfigurationUseCase.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { WebRtcPeerConnection } from '../peer/WebRtcPeerConnection.js';
 import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
@@ -224,7 +224,7 @@ async function run() {
     {
         const configSource = await source('core/IceServerConfiguration.js');
         const storeSource = await source('storage/IceServerConfigurationStore.js');
-        const useCaseSource = await source('application/SetIceServerConfigurationUseCase.js');
+        const useCaseSource = await source('application/settings/SetIceServerConfigurationUseCase.js');
         const viewSource = await source('ui/views/StunSettingsView.js');
         const mainSource = await source('ui/main.js');
 
@@ -246,7 +246,7 @@ async function run() {
         }
 
         assert(storeSource.includes("'ice-server-configuration'"), 'A6. the store owns the one storage key literal');
-        for (const [label, src] of [['core/IceServerConfiguration.js', configSource], ['application/SetIceServerConfigurationUseCase.js', useCaseSource], ['ui/views/StunSettingsView.js', viewSource], ...otherFiles]) {
+        for (const [label, src] of [['core/IceServerConfiguration.js', configSource], ['application/settings/SetIceServerConfigurationUseCase.js', useCaseSource], ['ui/views/StunSettingsView.js', viewSource], ...otherFiles]) {
             assert(!src.includes('ice-server-configuration'), `A7 (${label}). no second file hardcodes the storage key — one key, one owner`);
         }
 
@@ -485,12 +485,12 @@ async function run() {
         // boundary.
         const iceConfigSource = executableOf(await source('core/IceServerConfiguration.js'));
         const storeSource = executableOf(await source('storage/IceServerConfigurationStore.js'));
-        const useCaseSource = executableOf(await source('application/SetIceServerConfigurationUseCase.js'));
+        const useCaseSource = executableOf(await source('application/settings/SetIceServerConfigurationUseCase.js'));
         const viewSource = executableOf(await source('ui/views/StunSettingsView.js'));
         for (const [label, src] of [
             ['core/IceServerConfiguration.js', iceConfigSource],
             ['storage/IceServerConfigurationStore.js', storeSource],
-            ['application/SetIceServerConfigurationUseCase.js', useCaseSource],
+            ['application/settings/SetIceServerConfigurationUseCase.js', useCaseSource],
             ['ui/views/StunSettingsView.js', viewSource]
         ]) {
             assert(!/fetchIceServers|METERED_TURN_ENDPOINT|METERED_API_KEY/.test(src), `F5 (${label}). never references the TURN-fetching seam or its credential constants`);
@@ -523,12 +523,12 @@ async function run() {
         // reference Rendezvous by name in executable code.
         const iceConfigSource = executableOf(await source('core/IceServerConfiguration.js'));
         const storeSource = executableOf(await source('storage/IceServerConfigurationStore.js'));
-        const useCaseSource = executableOf(await source('application/SetIceServerConfigurationUseCase.js'));
+        const useCaseSource = executableOf(await source('application/settings/SetIceServerConfigurationUseCase.js'));
         const viewSource = executableOf(await source('ui/views/StunSettingsView.js'));
         for (const [label, src] of [
             ['core/IceServerConfiguration.js', iceConfigSource],
             ['storage/IceServerConfigurationStore.js', storeSource],
-            ['application/SetIceServerConfigurationUseCase.js', useCaseSource],
+            ['application/settings/SetIceServerConfigurationUseCase.js', useCaseSource],
             ['ui/views/StunSettingsView.js', viewSource]
         ]) {
             assert(!/Rendezvous|DiscoveryBootstrap/.test(src), `G4 (${label}). never references Rendezvous or DiscoveryBootstrap in executable code`);
@@ -670,14 +670,14 @@ async function run() {
     {
         const configSource = executableOf(await source('core/IceServerConfiguration.js'));
         const storeSource = executableOf(await source('storage/IceServerConfigurationStore.js'));
-        const useCaseSource = executableOf(await source('application/SetIceServerConfigurationUseCase.js'));
+        const useCaseSource = executableOf(await source('application/settings/SetIceServerConfigurationUseCase.js'));
         const viewSource = executableOf(await source('ui/views/StunSettingsView.js'));
 
         const forbiddenPattern = /healthCheck|latencyRank|autoSelect|automaticFallback|reconnectionPolicy|pingServer|probeServer|rankServers/i;
         for (const [label, src] of [
             ['core/IceServerConfiguration.js', configSource],
             ['storage/IceServerConfigurationStore.js', storeSource],
-            ['application/SetIceServerConfigurationUseCase.js', useCaseSource],
+            ['application/settings/SetIceServerConfigurationUseCase.js', useCaseSource],
             ['ui/views/StunSettingsView.js', viewSource]
         ]) {
             assert(!forbiddenPattern.test(src), `J1 (${label}). no health-check/latency-ranking/auto-selection/reconnection-policy identifier of any kind exists`);

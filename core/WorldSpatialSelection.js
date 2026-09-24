@@ -3,7 +3,7 @@
 // Deliberately NOT application/spatial-state/SpatialSelectionState.js.
 // That class answers "what is THIS replica currently selecting, for
 // editing/inspection purposes" — it is a live, mutable-by-replacement
-// piece of session state that feeds application/SpatialEditingService.js,
+// piece of session state that feeds application/editor/SpatialEditingService.js,
 // the transform gizmo, and every mutation command in application/commands/.
 // WorldSpatialSelection answers a completely different, much narrower
 // question: "what is a REMOTE participant reporting they have selected,"
@@ -14,7 +14,7 @@
 // Selection Must Never Imply Editing Authority" (0.2.95) — remote
 // selection observation must imply even LESS than that: it is never even
 // eligible to become an editing target, by construction, because nothing
-// in application/SpatialEditingService.js, application/commands/, or the
+// in application/editor/SpatialEditingService.js, application/commands/, or the
 // transform gizmo pipeline knows this class exists.
 //
 // A closed, tiny vocabulary, mirroring SpatialSelectionState's own two

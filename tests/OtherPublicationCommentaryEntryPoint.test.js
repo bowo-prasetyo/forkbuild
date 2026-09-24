@@ -1,10 +1,10 @@
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -31,9 +31,9 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // ui/components/PublicationCatalog.js under both RepositoryView (a
 // user's own Publications) and AuthorView (a NAMED author's — i.e.
 // typically another Wanderer's own) — and wires
-// application/CreatePublicationCommentaryUseCase.js (NEW) as the second
+// application/publication/commentary/CreatePublicationCommentaryUseCase.js (NEW) as the second
 // composition of the SAME unmodified application layer
-// application/CreateWorldViewUseCase.js already composes for
+// application/world/CreateWorldViewUseCase.js already composes for
 // OwnPublicationPanel.js.
 //
 // This file exercises the milestone's own named sections (A-K) against
@@ -66,10 +66,10 @@ function makeDocument(title, author) {
     return new Document({ world, metadata: new DocumentMetadata({ title, author }) });
 }
 
-// The real application stack application/CreatePublicationCommentaryUseCase.js
+// The real application stack application/publication/commentary/CreatePublicationCommentaryUseCase.js
 // itself composes, reproduced here with an injectable (in-memory) storage
 // backend the same way tests/PublicationCommentaryUIIntegration.test.js's
-// own makeBackend() reproduces application/CreateWorldViewUseCase.js's own
+// own makeBackend() reproduces application/world/CreateWorldViewUseCase.js's own
 // 0.9.248/0.9.285 composition — CreatePublicationCommentaryUseCase.js
 // itself always constructs a real, window.localStorage-backed
 // LocalStorageProvider (see its own header), which this Node-run test
@@ -98,7 +98,7 @@ function makeBackend({ notificationSink } = {}) {
     );
 
     // The IDENTICAL thin wrappers
-    // application/CreatePublicationCommentaryUseCase.js's own
+    // application/publication/commentary/CreatePublicationCommentaryUseCase.js's own
     // getPublicationCommentariesCommand()/addPublicationCommentaryCommand()
     // are, reproduced here for the identical reason
     // tests/PublicationCommentaryUIIntegration.test.js's own makeBackend()
@@ -254,8 +254,8 @@ async function runTests() {
         const forbidden = [
             "from '../../core/PublicationCommentary.js'",
             "from '../../storage/PublicationCommentaryStore.js'",
-            "from '../../application/GetPublicationCommentariesUseCase.js'",
-            "from '../../application/AddPublicationCommentaryUseCase.js'",
+            "from '../../application/publication/commentary/GetPublicationCommentariesUseCase.js'",
+            "from '../../application/publication/commentary/AddPublicationCommentaryUseCase.js'",
             'new PublicationCommentary(', 'PublicationCommentaryStore',
             // The two explicitly-forbidden domain classes named by this
             // milestone's own brief — never introduced anywhere in this
@@ -471,7 +471,7 @@ async function runTests() {
         assert(viewCode.includes(':addPublicationCommentaryCommand="addPublicationCommentaryCommand"'),
             '38. WorldView.js still wires its own addPublicationCommentaryCommand onto OwnPublicationPanel, unmodified');
 
-        const compositionCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
+        const compositionCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
         assert(compositionCode.includes('new PublicationCommentaryStore(storageProvider)') && compositionCode.includes('new PublicationCommentaryNotificationProducer('),
             '39. CreateWorldViewUseCase.js still composes its own, independent commentary path, unmodified by this milestone');
 
@@ -498,7 +498,7 @@ async function runTests() {
                mainCode.includes("app.provide('addPublicationCommentaryCommand', addPublicationCommentaryCommand)"),
             '42. ui/main.js provides both commands app-wide, the same way every other cross-view capability already is');
 
-        const compositionCode = await codeOnlySource('application/CreatePublicationCommentaryUseCase.js');
+        const compositionCode = await codeOnlySource('application/publication/commentary/CreatePublicationCommentaryUseCase.js');
         assert(compositionCode.includes('new CanCommentOnPublicationUseCase(discoveryProvider)'),
             '43. the new composition reuses the SAME, unmodified CanCommentOnPublicationUseCase');
         assert(compositionCode.includes('new GetPublicationCommentariesUseCase(publicationCommentaryStore)'),
@@ -513,7 +513,7 @@ async function runTests() {
         // own brief — never introduced anywhere by this milestone's own
         // new/changed files.
         for (const file of [
-            'application/CreatePublicationCommentaryUseCase.js',
+            'application/publication/commentary/CreatePublicationCommentaryUseCase.js',
             'ui/components/PublicationCard.js',
             'ui/components/PublicationCommentarySection.js',
             'ui/main.js'

@@ -15,9 +15,9 @@ import { ConflictResolver, ConflictRelation } from '../replication/ConflictResol
 import { ConflictPolicy } from '../replication/ConflictPolicy.js';
 import { ReplicaMergeService, MergeResult } from '../replication/ReplicaMergeService.js';
 import { LocalReplicationStore } from '../replication/LocalReplicationStore.js';
-import { CreateReplicationUseCase } from '../application/CreateReplicationUseCase.js';
-import { ReplicatePlacementUseCase } from '../application/ReplicatePlacementUseCase.js';
-import { SynchronizeReplicaUseCase } from '../application/SynchronizeReplicaUseCase.js';
+import { CreateReplicationUseCase } from '../application/placement/CreateReplicationUseCase.js';
+import { ReplicatePlacementUseCase } from '../application/placement/ReplicatePlacementUseCase.js';
+import { SynchronizeReplicaUseCase } from '../application/placement/SynchronizeReplicaUseCase.js';
 
 import { World } from '../core/World.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
@@ -25,7 +25,7 @@ import { MoveStructurePlacementCommand } from '../application/commands/MoveStruc
 import { SetStructurePlacementTransformCommand } from '../application/commands/SetStructurePlacementTransformCommand.js';
 import { compareWorldOperations, worldOperationSortKey } from '../core/WorldOperationOrder.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
-import { WorldCommandPropagationUseCase } from '../application/WorldCommandPropagationUseCase.js';
+import { WorldCommandPropagationUseCase } from '../application/document/WorldCommandPropagationUseCase.js';
 
 // 0.9.312 — Historical Placement Replication Boundary Audit.
 //
@@ -35,11 +35,11 @@ import { WorldCommandPropagationUseCase } from '../application/WorldCommandPropa
 // complete, working, fully-tested peer placement-replication protocol —
 // `replication/ConflictResolver.js` / `replication/ReplicaMergeService.js`
 // / `replication/LocalReplicationStore.js` /
-// `application/ReplicatePlacementUseCase.js` /
-// `application/SynchronizeReplicaUseCase.js` /
-// `application/CreateReplicationUseCase.js` — with zero production
+// `application/placement/ReplicatePlacementUseCase.js` /
+// `application/placement/SynchronizeReplicaUseCase.js` /
+// `application/placement/CreateReplicationUseCase.js` — with zero production
 // callers, superseded by the live, currently-shipping World collaboration
-// protocol (`application/WorldCommandPropagationUseCase.js` /
+// protocol (`application/document/WorldCommandPropagationUseCase.js` /
 // `replication/WorldConflictResolver.js`).
 //
 // The goal here is NOT to revive the historical protocol, migrate data,
@@ -135,9 +135,9 @@ const HISTORICAL_FAMILY_FILES = new Set([
     'replication/ConflictResolver.js',
     'replication/ReplicaMergeService.js',
     'replication/LocalReplicationStore.js',
-    'application/ReplicatePlacementUseCase.js',
-    'application/SynchronizeReplicaUseCase.js',
-    'application/CreateReplicationUseCase.js'
+    'application/placement/ReplicatePlacementUseCase.js',
+    'application/placement/SynchronizeReplicaUseCase.js',
+    'application/placement/CreateReplicationUseCase.js'
 ]);
 
 function outsideFamily(files) {
@@ -218,9 +218,9 @@ async function runTests() {
             ['replication/ConflictResolver.js', 'export class ConflictResolver'],
             ['replication/ReplicaMergeService.js', 'export class ReplicaMergeService'],
             ['replication/LocalReplicationStore.js', 'export class LocalReplicationStore'],
-            ['application/ReplicatePlacementUseCase.js', 'export class ReplicatePlacementUseCase'],
-            ['application/SynchronizeReplicaUseCase.js', 'export class SynchronizeReplicaUseCase'],
-            ['application/CreateReplicationUseCase.js', 'export class CreateReplicationUseCase']
+            ['application/placement/ReplicatePlacementUseCase.js', 'export class ReplicatePlacementUseCase'],
+            ['application/placement/SynchronizeReplicaUseCase.js', 'export class SynchronizeReplicaUseCase'],
+            ['application/placement/CreateReplicationUseCase.js', 'export class CreateReplicationUseCase']
         ];
         for (const [path, marker] of family) {
             assert(await sourceExists(path), `A1. ${path} still exists.`);
@@ -249,10 +249,10 @@ async function runTests() {
 
         // A3. No composition-root construction. The two real composition
         // roots the live collaboration path is wired from — ui/main.js
-        // (top-level app wiring) and application/CreateWorldViewUseCase.js
+        // (top-level app wiring) and application/world/CreateWorldViewUseCase.js
         // (the World-session composition root, Section B2 below) — carry
         // zero reference to any historical family name.
-        const compositionRoots = ['ui/main.js', 'application/CreateWorldViewUseCase.js'];
+        const compositionRoots = ['ui/main.js', 'application/world/CreateWorldViewUseCase.js'];
         const familyNames = ['ConflictResolver', 'ReplicaMergeService', 'CreateReplicationUseCase',
             'ReplicatePlacementUseCase', 'SynchronizeReplicaUseCase', 'LocalReplicationStore'];
         for (const rootPath of compositionRoots) {
@@ -322,7 +322,7 @@ async function runTests() {
     {
         // B1. The live collaboration classes exist and export what the
         // composition root actually constructs.
-        assert((await rawSource('application/WorldCommandPropagationUseCase.js')).includes('export class WorldCommandPropagationUseCase'),
+        assert((await rawSource('application/document/WorldCommandPropagationUseCase.js')).includes('export class WorldCommandPropagationUseCase'),
             'B1a. WorldCommandPropagationUseCase.js still exports the live propagation use case.');
         assert((await rawSource('replication/WorldConflictResolver.js')).includes('export class WorldConflictResolver'),
             'B1b. WorldConflictResolver.js still exports the live conflict resolver.');
@@ -330,15 +330,15 @@ async function runTests() {
         // B2. The composition root genuinely constructs it — this is the
         // real seam that makes this the LIVE path, not merely another
         // file that compiles.
-        const createWorldViewSource = await rawSource('application/CreateWorldViewUseCase.js');
+        const createWorldViewSource = await rawSource('application/world/CreateWorldViewUseCase.js');
         assert(createWorldViewSource.includes('new WorldCommandPropagationUseCase('),
-            'B2. application/CreateWorldViewUseCase.js — the real World-session composition root — constructs a live WorldCommandPropagationUseCase.');
+            'B2. application/world/CreateWorldViewUseCase.js — the real World-session composition root — constructs a live WorldCommandPropagationUseCase.');
 
         // B3. Execute a REPRESENTATIVE LIVE OPERATION — not merely
         // inspect filenames. A real World, a real StructurePlacement, a
         // real Command, reconciled through the real, unmodified
         // WorldConflictResolver#applyRemote(), exactly the mechanism
-        // application/WorldCommandPropagationUseCase.js's own
+        // application/document/WorldCommandPropagationUseCase.js's own
         // _handleIncoming() calls at step 6 of its trust chain.
         const world = buildThreePlacementWorld({ worldId: 'w-boundary-audit', houseId: 'house', barnId: 'barn' });
         const resolver = new WorldConflictResolver();
@@ -350,7 +350,7 @@ async function runTests() {
         // B4. The live path is wired to the SAME command/application
         // pipeline every other collaborator uses — CommandHistory's own
         // COMMAND_EXECUTED event, not a bespoke propagation trigger.
-        const propagationSource = await rawSource('application/WorldCommandPropagationUseCase.js');
+        const propagationSource = await rawSource('application/document/WorldCommandPropagationUseCase.js');
         assert(propagationSource.includes('attachCommandHistory') && propagationSource.includes('CommandHistoryEvent.COMMAND_EXECUTED'),
             'B4. WorldCommandPropagationUseCase.js still attaches to the real CommandHistory event stream — the current application pipeline, not a parallel one.');
 
@@ -440,9 +440,9 @@ async function runTests() {
             "from '.*replication/ConflictResolver.js'",
             "from '.*replication/ReplicaMergeService.js'",
             "from '.*replication/LocalReplicationStore.js'",
-            "from '.*application/ReplicatePlacementUseCase.js'",
-            "from '.*application/SynchronizeReplicaUseCase.js'",
-            "from '.*application/CreateReplicationUseCase.js'"
+            "from '.*application/placement/ReplicatePlacementUseCase.js'",
+            "from '.*application/placement/SynchronizeReplicaUseCase.js'",
+            "from '.*application/placement/CreateReplicationUseCase.js'"
         ];
         for (const pattern of historicalImportPatterns) {
             const importers = outsideFamily(grepFiles(pattern, ['application', 'ui', 'replication', 'core', 'placement']));
@@ -561,7 +561,7 @@ async function runTests() {
         // its own composition root (Section B2), and genuinely executes
         // (Section B3) — this is what makes "superseded," not "merely
         // unused," the correct classification.
-        assert((await rawSource('application/CreateWorldViewUseCase.js')).includes('new WorldCommandPropagationUseCase('),
+        assert((await rawSource('application/world/CreateWorldViewUseCase.js')).includes('new WorldCommandPropagationUseCase('),
             'F3. NOT an orphaned capability awaiting a UI — a live, composed replacement already exists for the adjacent collaborative-reconciliation problem.');
 
         // F4. NOT a deferred feature: nothing in docs/Roadmap.md schedules
@@ -596,10 +596,10 @@ async function runTests() {
             ['Encounter → Comment → Notification → History', ['ui/components/WorldEncounterCanvas.js', 'ui/components/NotificationHistoryPanel.js']],
             ['Snapshot → Distribution → Materialization → Placement', ['ui/components/OwnPublicationPanel.js', 'ui/components/WorldEncounterCanvas.js']],
             ['Publication → Placement visibility', ['ui/components/OwnPublicationPanel.js']],
-            ['Collaboration → World changes', ['ui/views/WorldView.js', 'application/WorldCommandPropagationUseCase.js']]
+            ['Collaboration → World changes', ['ui/views/WorldView.js', 'application/document/WorldCommandPropagationUseCase.js']]
         ];
         // Checked against actual IMPORT/CONSTRUCTION sites, never bare
-        // prose — application/WorldCommandPropagationUseCase.js's own
+        // prose — application/document/WorldCommandPropagationUseCase.js's own
         // header comment describes its pipeline stage as "the
         // ConflictResolver stage" in plain English (referring to the
         // LIVE WorldConflictResolver conceptually); a bare text search
@@ -608,8 +608,8 @@ async function runTests() {
         // importable modules — this checks for exactly that.
         const historicalImportOrConstruct = [
             "replication/ConflictResolver.js", "replication/ReplicaMergeService.js",
-            "replication/LocalReplicationStore.js", "application/ReplicatePlacementUseCase.js",
-            "application/SynchronizeReplicaUseCase.js", "application/CreateReplicationUseCase.js",
+            "replication/LocalReplicationStore.js", "application/placement/ReplicatePlacementUseCase.js",
+            "application/placement/SynchronizeReplicaUseCase.js", "application/placement/CreateReplicationUseCase.js",
             "new ConflictResolver(", "new ReplicaMergeService(", "new CreateReplicationUseCase(",
             "new ReplicatePlacementUseCase(", "new SynchronizeReplicaUseCase(", "new LocalReplicationStore("
         ];
@@ -672,9 +672,9 @@ async function runTests() {
             "from '.*replication/ConflictResolver.js'",
             "from '.*replication/ReplicaMergeService.js'",
             "from '.*replication/LocalReplicationStore.js'",
-            "from '.*application/ReplicatePlacementUseCase.js'",
-            "from '.*application/SynchronizeReplicaUseCase.js'",
-            "from '.*application/CreateReplicationUseCase.js'",
+            "from '.*application/placement/ReplicatePlacementUseCase.js'",
+            "from '.*application/placement/SynchronizeReplicaUseCase.js'",
+            "from '.*application/placement/CreateReplicationUseCase.js'",
             'new ConflictResolver(', 'new ReplicaMergeService(', 'new CreateReplicationUseCase(',
             'new ReplicatePlacementUseCase(', 'new SynchronizeReplicaUseCase(', 'new LocalReplicationStore('
         ];

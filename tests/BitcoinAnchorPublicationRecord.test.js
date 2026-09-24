@@ -1,19 +1,19 @@
-import { BitcoinAnchorPublicationRecord } from '../application/BitcoinAnchorPublicationRecord.js';
+import { BitcoinAnchorPublicationRecord } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js';
 import {
     appendBitcoinAnchorPublicationRecordHistoryEntry,
     findBitcoinAnchorPublicationRecordsByAnchorId,
     findBitcoinAnchorPublicationRecordByAnchorId
-} from '../application/BitcoinAnchorPublicationRecordHistory.js';
+} from '../application/anchoring/bitcoin/BitcoinAnchorPublicationRecordHistory.js';
 import {
     describeBitcoinAnchorPublicationRecordHistoryEntry,
     describeBitcoinAnchorPublicationRecordHistory
-} from '../application/BitcoinAnchorPublicationRecordHistoryView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { inspectBitcoinAnchorPublication } from '../application/BitcoinAnchorPublicationInspectionView.js';
-import { BitcoinAnchorBroadcastState } from '../application/BitcoinAnchorBroadcastState.js';
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
-import { BitcoinAnchorContentProofState } from '../application/BitcoinAnchorContentProofState.js';
+} from '../application/anchoring/bitcoin/BitcoinAnchorPublicationRecordHistoryView.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { inspectBitcoinAnchorPublication } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationInspectionView.js';
+import { BitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 
@@ -362,7 +362,7 @@ async function run() {
         // consistency findings) are unchanged by this milestone — they are
         // still derived fresh, scoped correctly per anchor. A single
         // confirmation still produces one "no prior observation to
-        // compare to" entry (application/BitcoinAnchorChainPlacementObserver.js's
+        // compare to" entry (application/anchoring/bitcoin/BitcoinAnchorChainPlacementObserver.js's
         // own, unchanged 0.8.76 behavior); two or more produce one
         // comparison per adjacent pair.
         assert(postReloadA.evidence.chainPlacementObservations.count === 1, '68. Publication A, with only one confirmation, reports the single unchanged "no prior observation" entry, never a second one borrowed from Publication B');

@@ -1,9 +1,9 @@
 import { BasePublicationTransactionPlanner } from '../base/BasePublicationTransactionPlanner.js';
-import { BasePublicationTransactionPlanCoordinator } from '../application/BasePublicationTransactionPlanCoordinator.js';
-import { BasePublicationTransactionPlanState } from '../application/BasePublicationTransactionPlanState.js';
-import { BaseNetworkObservationState } from '../application/BaseNetworkObservationState.js';
-import { BaseAccountObservation } from '../application/BaseAccountObservation.js';
-import { describeBasePublicationTransactionReview } from '../application/BasePublicationTransactionReview.js';
+import { BasePublicationTransactionPlanCoordinator } from '../application/anchoring/base/BasePublicationTransactionPlanCoordinator.js';
+import { BasePublicationTransactionPlanState } from '../application/anchoring/base/BasePublicationTransactionPlanState.js';
+import { BaseNetworkObservationState } from '../application/anchoring/base/BaseNetworkObservationState.js';
+import { BaseAccountObservation } from '../application/anchoring/base/BaseAccountObservation.js';
+import { describeBasePublicationTransactionReview } from '../application/anchoring/base/BasePublicationTransactionReview.js';
 
 // 0.8.92 — Explicit Base Transaction Review.
 //

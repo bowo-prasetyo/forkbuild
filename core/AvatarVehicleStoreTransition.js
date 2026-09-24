@@ -49,7 +49,7 @@ import { isNonEmptyString } from '../utils/typeGuards.js';
 // is never compared against `vehicleId`. That question belongs upstream,
 // to whatever call site resolved which vehicle the avatar is currently
 // mounted on in the first place (ordinarily
-// application/AvatarVehicleInteractionController.js's own
+// application/avatar/AvatarVehicleInteractionController.js's own
 // `_currentMountedVehicle()`) — the identical restraint
 // core/AvatarVehicleDismountTransition.js's own header already models
 // for `dismountPosition`.
@@ -106,7 +106,7 @@ export function deriveAvatarVehicleStoreTransition({
 
 // Deliberately not yet: comparing `currentMount.vehicleId` against
 // `vehicleId` (see this file's own header); removing the vehicle from
-// any runtime store (application/VehicleRuntimeInstances.js's own
+// any runtime store (application/world/VehicleRuntimeInstances.js's own
 // `discard()` is the caller's job — this file has no world/rendering
 // awareness at all); deploy (its own mirror-image file,
 // core/AvatarVehicleDeployTransition.js); id minting; capacity limits;

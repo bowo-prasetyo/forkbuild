@@ -1,19 +1,19 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { describePublicationOutcome, describeRetrieval } from '../application/PublicationResolutionView.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { describeVerificationOutcome, describeAnchorEvidence, describeKnownEvidenceCount } from '../application/PublicationEvidenceView.js';
-import { PublicationEvidenceDiscoveryUiState } from '../application/PublicationEvidenceDiscoveryUiState.js';
-import { describeEvidenceDiscoveryAttempt } from '../application/PublicationEvidenceDiscoveryView.js';
-import { IpfsPublicationContentVerificationCoordinatorState } from '../application/IpfsPublicationContentVerificationCoordinatorState.js';
-import { describeIpfsPublicationContentVerificationStateLabel } from '../application/IpfsPublicationContentVerificationView.js';
-import { ExternalAnchorCreationOutcome } from '../application/ExternalAnchorCreationOutcome.js';
-import { describeCreationAttempt } from '../application/PublicationAnchorCreationView.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
-import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../application/WorldEncounterMaterialInspectionView.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { describePublicationOutcome, describeRetrieval } from '../application/publication/PublicationResolutionView.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { describeVerificationOutcome, describeAnchorEvidence, describeKnownEvidenceCount } from '../application/publication/evidence/PublicationEvidenceView.js';
+import { PublicationEvidenceDiscoveryUiState } from '../application/publication/evidence/PublicationEvidenceDiscoveryUiState.js';
+import { describeEvidenceDiscoveryAttempt } from '../application/publication/evidence/PublicationEvidenceDiscoveryView.js';
+import { IpfsPublicationContentVerificationCoordinatorState } from '../application/ipfs/IpfsPublicationContentVerificationCoordinatorState.js';
+import { describeIpfsPublicationContentVerificationStateLabel } from '../application/ipfs/IpfsPublicationContentVerificationView.js';
+import { ExternalAnchorCreationOutcome } from '../application/anchoring/ExternalAnchorCreationOutcome.js';
+import { describeCreationAttempt } from '../application/anchoring/PublicationAnchorCreationView.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
 import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.519 — Publication Evidence & Trust Experience Product Reassessment.
@@ -185,7 +185,7 @@ async function run() {
             'A5b. THE FIX: the Verification panel now routes verification.status through describeMaterialVerificationStatusLabel() rather than interpolating the raw enum constant');
         check(!/\{\{\s*materialInspection\.loading\.status\s*\}\}/.test(canvasSource) && !/\{\{\s*materialInspection\.verification\.status\s*\}\}/.test(canvasSource),
             'A5c. neither raw status is interpolated directly into the template anywhere in current source');
-        check(canvasSource.includes("import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../../../application/WorldEncounterMaterialInspectionView.js';"),
+        check(canvasSource.includes("import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../../../application/worldEncounter/WorldEncounterMaterialInspectionView.js';"),
             'A5d. the humanizing view is imported from a new, dedicated application/ view file, mirroring this codebase\'s own established pattern (PublicationResolutionView.js, PublicationEvidenceView.js, IpfsPublicationContentVerificationView.js)');
 
         // A6. FOUND and VERIFIED stay two structurally separate axes for
@@ -223,7 +223,7 @@ async function run() {
         // same object — re-read live from application/
         // ArweaveGraphqlDiscoveryQueryService.js's own current source
         // (re-confirmed structurally here; live-exercised in Section D).
-        const arweaveDiscoverySource = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const arweaveDiscoverySource = await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         check(arweaveDiscoverySource.includes('uri: envelope.uri,') && arweaveDiscoverySource.includes('announcementId'),
             'B3. a discovered candidate\'s own uri still comes from the envelope\'s own claimed location, with announcementId preserved as a genuinely separate field — never substituted for one another');
 
@@ -316,7 +316,7 @@ async function run() {
     {
         const matrix = [
             ['Discovery announcement', 'Someone announced a candidate', 'Authorship', describeEvidenceDiscoveryAttempt({ result: { attemptedPeers: ['p'], newlyImportedCount: 1, alreadyKnownCount: 0 } }).message],
-            ['Locator', 'Where material may be retrieved', 'Authenticity', 'application/ArweaveGraphqlDiscoveryQueryService.js: candidate.uri'],
+            ['Locator', 'Where material may be retrieved', 'Authenticity', 'application/arweave/ArweaveGraphqlDiscoveryQueryService.js: candidate.uri'],
             ['Retrieved bytes', 'Material was obtained', 'Correctness', describeRetrieval({ retrieval: { retrieved: true, attemptedPeers: ['p'] } })],
             ['Hash match', 'Retrieved bytes match claimed content', 'Authorship', describeIpfsPublicationContentVerificationStateLabel(IpfsPublicationContentVerificationCoordinatorState.HASH_MATCH)],
             ['Anchor', 'Hash was committed to substrate', 'Ownership/authorship', describeVerificationOutcome(AnchorVerificationOutcome.VALID)],
@@ -343,7 +343,7 @@ async function run() {
         // F1. Structural independence — re-confirmed live, mirroring
         // 0.9.517 Section D exactly (never re-derived from that
         // milestone\'s own prose).
-        const anchorUseCaseSource = codeOnly(await source('application/CreateExternalPublicationAnchorUseCase.js'));
+        const anchorUseCaseSource = codeOnly(await source('application/anchoring/CreateExternalPublicationAnchorUseCase.js'));
         const executeSignatureMatch = anchorUseCaseSource.match(/async execute\(([^)]*)\)/);
         check(Boolean(executeSignatureMatch), 'F1a. CreateExternalPublicationAnchorUseCase.js still exposes a single execute() entry point');
         check(!/storage|discoveryProvider/.test(executeSignatureMatch[1]),
@@ -523,7 +523,7 @@ async function run() {
     // precedent exactly.
     // ===============================================================
     {
-        const fixedSource = await source('application/WorldEncounterMaterialInspectionView.js');
+        const fixedSource = await source('application/worldEncounter/WorldEncounterMaterialInspectionView.js');
         check(!/\b(rank|ranking|trust|score|winner|fallback|automatic|confidence)\b/i.test(codeOnly(fixedSource)),
             'J1. this milestone\'s own fix introduces no rank/trust/score/fallback/automatic-selection vocabulary');
 
@@ -599,7 +599,7 @@ async function run() {
         // other legitimate change this repository makes from now on.
         // Demoted to a historical record rather than deleted or grown into
         // an ever-longer exclude list.
-        console.log('  (historical) K2 — as of this milestone\'s own original commit, its only two real production changes were application/WorldEncounterMaterialInspectionView.js and ui/components/WorldEncounterCanvas.js, proven structurally by Sections A/I. Preferred Proof & Anchoring Provider Creation Integration legitimately extended production afterward — this is no longer a live constraint.');
+        console.log('  (historical) K2 — as of this milestone\'s own original commit, its only two real production changes were application/worldEncounter/WorldEncounterMaterialInspectionView.js and ui/components/WorldEncounterCanvas.js, proven structurally by Sections A/I. Preferred Proof & Anchoring Provider Creation Integration legitimately extended production afterward — this is no longer a live constraint.');
 
         const testsHtmlSource = await source('tests.html');
         check(testsHtmlSource.includes('./tests/PublicationEvidenceTrustExperienceProductReassessment.test.js'),
@@ -621,7 +621,7 @@ async function run() {
     console.log('Section I (The fix): closed this same milestone, live-exercised.');
     console.log('Section J: one pre-existing, unrelated regression-guard staleness finding NAMED, not fixed (out of scope).');
     console.log('');
-    console.log('VERDICT: PRESENTATION_GAP found and fixed — a single, minimal, presentation-only production change (a new application/WorldEncounterMaterialInspectionView.js, and its two call sites in ui/components/WorldEncounterCanvas.js). Every other question this milestone\'s own brief asked — discovery evidence, anchor evidence, transaction identity, the evidence/verification matrix, cross-substrate evidence, failure comprehension, and the wider vocabulary sweep — resolves PRODUCT_COMPLETE, re-confirmed against real, live-exercised production source. No semantic gap (no case where the architecture itself fails to establish what the UI claims) was found anywhere in this chain. No second, separate reassessment file is warranted. STOP.');
+    console.log('VERDICT: PRESENTATION_GAP found and fixed — a single, minimal, presentation-only production change (a new application/worldEncounter/WorldEncounterMaterialInspectionView.js, and its two call sites in ui/components/WorldEncounterCanvas.js). Every other question this milestone\'s own brief asked — discovery evidence, anchor evidence, transaction identity, the evidence/verification matrix, cross-substrate evidence, failure comprehension, and the wider vocabulary sweep — resolves PRODUCT_COMPLETE, re-confirmed against real, live-exercised production source. No semantic gap (no case where the architecture itself fails to establish what the UI claims) was found anywhere in this chain. No second, separate reassessment file is warranted. STOP.');
 }
 
 run().catch((error) => {

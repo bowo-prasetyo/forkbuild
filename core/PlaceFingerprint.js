@@ -63,7 +63,7 @@ function quantize(value, quantum) {
 
 // Extracts a region-like object's raw geometry, tolerant of either a
 // core/WorldRegion.js instance or a plain duck-typed object (e.g.
-// application/WorldNavigationSession.js#_collectRawRegions()'s own
+// application/world/WorldNavigationSession.js#_collectRawRegions()'s own
 // shape) — the same tolerance core/WorldRegionGeography.js#
 // regionsContaining() already keeps for `region.contains`.
 function regionGeometry(region) {

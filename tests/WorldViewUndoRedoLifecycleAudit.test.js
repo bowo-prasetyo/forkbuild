@@ -5,29 +5,29 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { ReplayDocumentUseCase } from '../application/ReplayDocumentUseCase.js';
-import { RestoreHistoryStateUseCase } from '../application/RestoreHistoryStateUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
+import { RestoreHistoryStateUseCase } from '../application/document/RestoreHistoryStateUseCase.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { AutosaveDocumentUseCase } from '../application/AutosaveDocumentUseCase.js';
-import { CheckRecoveryUseCase } from '../application/CheckRecoveryUseCase.js';
-import { RecoverDocumentUseCase } from '../application/RecoverDocumentUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { AutosaveDocumentUseCase } from '../application/document/AutosaveDocumentUseCase.js';
+import { CheckRecoveryUseCase } from '../application/document/CheckRecoveryUseCase.js';
+import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentUseCase.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
-import { InputRouter } from '../application/InputRouter.js';
+import { InputRouter } from '../application/editor/InputRouter.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.211 — World View Undo/Redo Lifecycle Audit.
@@ -54,12 +54,12 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // Sections C, E, F, and I are wholly new ground:
 //
 //   * Section F found the actual shape of the "Autosave/Recovery" question:
-//     ui/views/WorldView.js and application/WorldNavigationSession.js carry
+//     ui/views/WorldView.js and application/world/WorldNavigationSession.js carry
 //     ZERO autosave/recovery references (grep confirms it, and the
 //     structural assertion at the end of this section locks it down) — the
 //     only place undo/redo and autosave/recovery currently coexist in this
-//     codebase is the Editor (application/DocumentManager.js +
-//     application/AutosaveScheduler.js + application/RecoveryObserver.js,
+//     codebase is the Editor (application/document/DocumentManager.js +
+//     application/document/AutosaveScheduler.js + application/document/RecoveryObserver.js,
 //     already fully audited by 0.9.204/0.9.205's own test files, including
 //     undo/redo interaction). Section F therefore proves the underlying
 //     invariant — "Undo/Redo are ordinary document mutations, observed by
@@ -592,9 +592,9 @@ async function run() {
         // this wired up at all — no special path exists because no path
         // exists, period.
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-        const navSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const navSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
         assert(!/autosave|recovery/i.test(worldViewSource), '66. ui/views/WorldView.js contains no autosave/recovery reference of any kind (case-insensitive) — World View\'s Undo/Redo has no autosave/recovery surface to interact with');
-        assert(!/autosave|recovery/i.test(navSource), '67. application/WorldNavigationSession.js likewise contains no autosave/recovery reference — confirms the invariant holds by construction (nothing exists to special-case), not merely by omission of a bug');
+        assert(!/autosave|recovery/i.test(navSource), '67. application/world/WorldNavigationSession.js likewise contains no autosave/recovery reference — confirms the invariant holds by construction (nothing exists to special-case), not merely by omission of a bug');
 
         console.log('✓ F. Undo/Redo compose with Autosave/Recovery as ordinary document mutations wherever that machinery exists (proven on the real DocumentManager+CommandHistory integration point); World View itself has no such surface at all, confirmed structurally');
     }
@@ -612,7 +612,7 @@ async function run() {
     //    added to CommandHistory.
     // -------------------------------------------------------------
     {
-        const navSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const navSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
 
         function extractMethod(name) {
             const re = new RegExp(`\\b${name}\\s*\\([^)]*\\)\\s*\\{`);
@@ -857,7 +857,7 @@ async function run() {
     {
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = worldViewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-        const navSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const navSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
         const panelSource = await readFile(new URL('../ui/components/HistoryTimelinePanel.js', import.meta.url), 'utf8');
 
         // 1. WorldView.js has no CommandHistory import.

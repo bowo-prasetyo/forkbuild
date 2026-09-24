@@ -4,7 +4,7 @@ import { MAX_CHAT_ID_LENGTH } from './ChatMessage.js';
 //
 // A tiny, SEPARATE wire vocabulary from core/ChatMessage.js AND from
 // core/ChatDeliveryAck.js — the exact same "own protocol, own trust
-// boundary" precedent application/ChatUseCase.js's own header already
+// boundary" precedent application/chat/ChatUseCase.js's own header already
 // set for 0.2.63's delivery ack ("Sent Is Not Delivered"): a read
 // acknowledgement never rides the `forkbuild:chat` protocol string,
 // never rides `forkbuild:chat-delivery-ack` either, and never gets
@@ -13,7 +13,7 @@ import { MAX_CHAT_ID_LENGTH } from './ChatMessage.js';
 // distinguish a third kind of payload by inspecting it. It has its own
 // protocol, `application/ChatUseCase.READ_PROTOCOL`, and its own
 // (equally small) trust boundary — see
-// application/ChatUseCase.js#_handleIncomingRead().
+// application/chat/ChatUseCase.js#_handleIncomingRead().
 //
 // This is a NETWORK fact — "Alice is telling Bob what she has seen" —
 // and is deliberately never derived from, or a transmission of,
@@ -22,10 +22,10 @@ import { MAX_CHAT_ID_LENGTH } from './ChatMessage.js';
 // Read Receipt Is Computed Independently From The Local Read Marker,
 // Never Transmitted From It" (0.2.71) — the sender recomputes "the
 // highest incoming sequence I currently hold for this peer" itself
-// (application/ChatUseCase.js#sendReadReceipt(), from its own live
+// (application/chat/ChatUseCase.js#sendReadReceipt(), from its own live
 // conversation), the exact same computation
-// application/PeerPresenceUseCase.js#markRead() independently performs
-// against application/ConversationStore.js for the LOCAL marker. Two
+// application/presence/PeerPresenceUseCase.js#markRead() independently performs
+// against application/chat/ConversationStore.js for the LOCAL marker. Two
 // independent computations of one underlying fact, feeding two
 // genuinely different stores, is deliberate: it is what makes it
 // structurally true, not merely documented, that this milestone never
@@ -38,7 +38,7 @@ import { MAX_CHAT_ID_LENGTH } from './ChatMessage.js';
 //                          identical to core/ChatDeliveryAck.js's own
 //                          rule.
 //   readerIdentity       — who is doing the acknowledging. Never trusted
-//                          on its own: application/ChatUseCase.js's
+//                          on its own: application/chat/ChatUseCase.js's
 //                          ingestion requires this to match the sending
 //                          connection's own already-proven
 //                          remoteIdentity, the same "claimed sender must
@@ -53,7 +53,7 @@ import { MAX_CHAT_ID_LENGTH } from './ChatMessage.js';
 //                          RECIPIENT OF THIS RECEIPT sent up through
 //                          this number." Deliberately never a list of
 //                          individual message ids — see
-//                          application/ConversationReadOutbox.js's own
+//                          application/chat/ConversationReadOutbox.js's own
 //                          header on why a high-water mark needs no
 //                          replay window at all: an out-of-order or
 //                          duplicate delivery of a LOWER or EQUAL value

@@ -1,10 +1,10 @@
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 
 // 0.9.247 — Publication Commentary Query / Observation Boundary. Covers
-// application/GetPublicationCommentariesUseCase.js — the one place a
+// application/publication/commentary/GetPublicationCommentariesUseCase.js — the one place a
 // future Publication UI reads commentary back, rather than depending on
 // storage/PublicationCommentaryStore.js directly. No UI, no
 // subscription/observer, no sorting or pagination exists yet for this

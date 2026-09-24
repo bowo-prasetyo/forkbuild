@@ -3,12 +3,12 @@ import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { RoleAwareProviderResolver } from '../application/RoleAwareProviderResolver.js';
-import { ResolvePreferredRoleProviderUseCase } from '../application/ResolvePreferredRoleProviderUseCase.js';
+import { RoleAwareProviderResolver } from '../application/settings/RoleAwareProviderResolver.js';
+import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';
 import {
     PreferredSnapshotPlacementCreationCoordinator,
     NON_PREFERABLE_CONTENT_STORAGE_TYPES
-} from '../application/PreferredSnapshotPlacementCreationCoordinator.js';
+} from '../application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js';
 
 // Content Provider settings no longer offer "Local".
 //
@@ -109,7 +109,7 @@ async function run() {
             "a saved 'local' preference is displayed as nothing selected");
         assert(/previously saved "Local" preference no longer applies/.test(source),
             'the view explains why a legacy Local preference is no longer selected');
-        assert(!/from '\.\.\/\.\.\/application\/PreferredSnapshotPlacementCreationCoordinator\.js'/.test(source),
+        assert(!/from '\.\.\/\.\.\/application\/snapshot\/placement\/PreferredSnapshotPlacementCreationCoordinator\.js'/.test(source),
             'the view never imports the coordinator module directly — it only uses the injected instance');
     }
     console.log('✓ Section D: the settings view never offers Local');

@@ -1,19 +1,19 @@
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { resolveSnapshotWorldPlacement } from '../application/SnapshotWorldPlacement.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotCandidateMaterializationOutcome } from '../application/SnapshotCandidateMaterializationOutcome.js';
-import { SnapshotMaterializationSourceKind } from '../application/SnapshotMaterializationSourceKind.js';
-import { SnapshotPlacementMaterializationOutcome } from '../application/SnapshotPlacementMaterializationOutcome.js';
-import { PeerSnapshotMaterializationOutcome } from '../application/PeerSnapshotMaterializationOutcome.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotCandidateMaterializationOutcome } from '../application/snapshot/materialization/SnapshotCandidateMaterializationOutcome.js';
+import { SnapshotMaterializationSourceKind } from '../application/snapshot/materialization/SnapshotMaterializationSourceKind.js';
+import { SnapshotPlacementMaterializationOutcome } from '../application/snapshot/placement/SnapshotPlacementMaterializationOutcome.js';
+import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
@@ -28,7 +28,7 @@ import { ContentReference } from '../core/ContentReference.js';
 // VERIFY -> ATTRIBUTE -> MATERIALIZE. Every one of those seams answers a
 // question about BYTES; none of them ever answers a question about SPACE.
 // This milestone adds exactly one small seam over materialization's own
-// output — application/SnapshotWorldPlacement.js#resolveSnapshotWorldPlacement()
+// output — application/snapshot/placement/SnapshotWorldPlacement.js#resolveSnapshotWorldPlacement()
 // — which composes an already-materialized Snapshot with this replica's
 // PRE-EXISTING spatial authority for the relevant Publication (core/
 // WorldPlacement.js, reached through WorldNavigationSession#getPlacementInfo()'s
@@ -180,7 +180,7 @@ async function placeAndAnnounce(host, bytes) {
 
 // Builds a `placementInfo`-shaped object from a REAL LocalPlacementRegistry —
 // field for field the same projection WorldNavigationSession#getPlacementInfo()
-// itself performs (application/WorldNavigationSession.js, `_resolvePlacementRecord()`
+// itself performs (application/world/WorldNavigationSession.js, `_resolvePlacementRecord()`
 // + `getPlacementInfo()`): find every PlacementRecord for `publicationId`,
 // pick the most-recently-updated one, and flatten its own `position` to a
 // plain `{x,y,z}`. Never a new projection of this test's own invention —
@@ -572,7 +572,7 @@ async function run() {
         // PlacementRegistry, spatial index, content store, network, or
         // rendering import.
         const { readFile } = await import('node:fs/promises');
-        const domainSource = await readFile(new URL('../application/SnapshotWorldPlacement.js', import.meta.url), 'utf8');
+        const domainSource = await readFile(new URL('../application/snapshot/placement/SnapshotWorldPlacement.js', import.meta.url), 'utf8');
         const domainImportLines = domainSource.split('\n').filter((line) => line.trim().startsWith('import '));
         assert(!domainImportLines.some((line) => /PlacementRegistry|SpatialIndex|ContentStore|WorldNavigationSession|NostrSnapshotDiscovery|Arweave|Renderer|WorldRenderer/.test(line)),
             '2. resolveSnapshotWorldPlacement() imports no PlacementRegistry, spatial index, content store, discovery, or rendering machinery of its own');

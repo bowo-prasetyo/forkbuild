@@ -1,11 +1,11 @@
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { PeerSessionManager } from '../application/PeerSessionManager.js';
+import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
 
 // 0.2.55 — Peer Connections & Rendezvous UI.
 //
-// This file tests application/PeerSessionManager.js — the one new
+// This file tests application/peer/PeerSessionManager.js — the one new
 // application-layer class this milestone adds — end to end over a REAL
 // WebRTC transport (peer/WebRtcPeerConnectionProvider.js, unmodified),
 // proving the exact flow the design doc's own flagship scenario asked

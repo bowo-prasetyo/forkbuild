@@ -1,26 +1,26 @@
-import { buildPublicationReplicaPackage, PUBLICATION_REPLICA_PACKAGE_KIND, CURRENT_SCHEMA_VERSION } from '../application/PublicationReplicaPackage.js';
-import { validatePublicationReplicaPackage, PublicationReplicaPackageError } from '../application/PublicationReplicaPackageValidator.js';
-import { BuildPublicationReplicaPackageUseCase } from '../application/BuildPublicationReplicaPackageUseCase.js';
-import { ImportPublicationReplicaPackageUseCase } from '../application/ImportPublicationReplicaPackageUseCase.js';
-import { describePublicationReplicaKnowledge } from '../application/PublicationReplicaKnowledgeView.js';
-import { derivePublicationEvidenceConvergence } from '../application/PublicationEvidenceConvergence.js';
-import { publicationEvidenceConvergenceView } from '../application/PublicationEvidenceConvergenceView.js';
-import { derivePublicationSnapshotPlacementConvergence } from '../application/PublicationSnapshotPlacementConvergence.js';
-import { publicationSnapshotPlacementConvergenceView } from '../application/PublicationSnapshotPlacementConvergenceView.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
+import { buildPublicationReplicaPackage, PUBLICATION_REPLICA_PACKAGE_KIND, CURRENT_SCHEMA_VERSION } from '../application/publication/replica/PublicationReplicaPackage.js';
+import { validatePublicationReplicaPackage, PublicationReplicaPackageError } from '../application/publication/replica/PublicationReplicaPackageValidator.js';
+import { BuildPublicationReplicaPackageUseCase } from '../application/publication/replica/BuildPublicationReplicaPackageUseCase.js';
+import { ImportPublicationReplicaPackageUseCase } from '../application/publication/replica/ImportPublicationReplicaPackageUseCase.js';
+import { describePublicationReplicaKnowledge } from '../application/publication/replica/PublicationReplicaKnowledgeView.js';
+import { derivePublicationEvidenceConvergence } from '../application/publication/evidence/PublicationEvidenceConvergence.js';
+import { publicationEvidenceConvergenceView } from '../application/publication/evidence/PublicationEvidenceConvergenceView.js';
+import { derivePublicationSnapshotPlacementConvergence } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergence.js';
+import { publicationSnapshotPlacementConvergenceView } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergenceView.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { PublicationAnchorPeerExchange } from '../application/PublicationAnchorPeerExchange.js';
-import { PublicationAnchorDiscoveryCoordinator } from '../application/PublicationAnchorDiscoveryCoordinator.js';
-import { LocalAnchorKnowledgeStore } from '../application/LocalAnchorKnowledgeStore.js';
-import { AnchorAcquisitionKind } from '../application/AnchorAcquisitionKind.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { LocalPlacementKnowledgeStore } from '../application/LocalPlacementKnowledgeStore.js';
-import { PlacementAcquisitionKind } from '../application/PlacementAcquisitionKind.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { PublicationAnchorPeerExchange } from '../application/anchoring/PublicationAnchorPeerExchange.js';
+import { PublicationAnchorDiscoveryCoordinator } from '../application/anchoring/PublicationAnchorDiscoveryCoordinator.js';
+import { LocalAnchorKnowledgeStore } from '../application/anchoring/LocalAnchorKnowledgeStore.js';
+import { AnchorAcquisitionKind } from '../application/anchoring/AnchorAcquisitionKind.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { LocalPlacementKnowledgeStore } from '../application/placement/LocalPlacementKnowledgeStore.js';
+import { PlacementAcquisitionKind } from '../application/placement/PlacementAcquisitionKind.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -28,7 +28,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.8.29 — Publication Replica Export & Offline Transfer.
@@ -450,7 +450,7 @@ async function run() {
         assert(result2.importedAnchors.length === 1 && result2.importedAnchors[0].id === anchorForForgedPub.id,
             '7. its bundled anchor — independently signed by Alice, naming the same publicationId — still imports even though the publication itself was rejected');
         assert(bob2AnchorCatalog.findByPublicationId('pub-tolerance-forged-publication').length === 1,
-            '8. the anchor is cataloged under the publicationId it names, even though this replica has no cataloged publication for it — the identical "claims outlive whether the publication itself is known" posture application/PublicationAnchorExchange.js already holds for a peer-delivered anchor');
+            '8. the anchor is cataloged under the publicationId it names, even though this replica has no cataloged publication for it — the identical "claims outlive whether the publication itself is known" posture application/anchoring/PublicationAnchorExchange.js already holds for a peer-delivered anchor');
     }
     console.log('✓ Section D: per-claim import tolerance — a forged anchor never blocks the rest of a package, and a forged publication never blocks its otherwise-valid bundled anchors/placements');
 

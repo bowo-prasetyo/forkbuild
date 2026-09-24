@@ -1,32 +1,32 @@
-import { LocalSnapshotContentAvailabilityOutcome } from '../../../application/LocalSnapshotContentAvailabilityOutcome.js';
-import { SnapshotContentMaterializationUiState } from '../../../application/SnapshotContentMaterializationUiState.js';
-import { SnapshotPlacementMaterializationUiState } from '../../../application/SnapshotPlacementMaterializationUiState.js';
-import { SnapshotPeerMaterializationUiState } from '../../../application/SnapshotPeerMaterializationUiState.js';
-import { SnapshotPeerPossessionUiState } from '../../../application/SnapshotPeerPossessionUiState.js';
-import { SnapshotPlacementResolutionOutcome } from '../../../application/SnapshotPlacementResolutionOutcome.js';
-import { PublicationEvidenceDiscoveryUiState } from '../../../application/PublicationEvidenceDiscoveryUiState.js';
-import { PublicationKnowledgeSynchronizationUiState } from '../../../application/PublicationKnowledgeSynchronizationUiState.js';
-import { PublicationResolutionOutcome } from '../../../application/PublicationResolutionOutcome.js';
-import { AnchorVerificationOutcome } from '../../../application/AnchorVerificationOutcome.js';
-import { ExternalAnchorCreationUiState } from '../../../application/ExternalAnchorCreationUiState.js';
-import { SnapshotPlacementCreationUiState } from '../../../application/SnapshotPlacementCreationUiState.js';
-import { BitcoinAnchorConfirmationState } from '../../../application/BitcoinAnchorConfirmationState.js';
-import { BitcoinAnchorContentProofState } from '../../../application/BitcoinAnchorContentProofState.js';
-import { BitcoinWalletConnectionState } from '../../../application/BitcoinWalletConnectionState.js';
-import { BitcoinAnchorFundingObservationState } from '../../../application/BitcoinAnchorFundingObservationState.js';
-import { BaseWalletConnectionState } from '../../../application/BaseWalletConnectionState.js';
-import { BaseNetworkObservationState } from '../../../application/BaseNetworkObservationState.js';
-import { BitcoinAnchorReviewedSigningState } from '../../../application/BitcoinAnchorReviewedSigningState.js';
-import { BitcoinAnchorSignedPsbtFinalizationState } from '../../../application/BitcoinAnchorSignedPsbtFinalizationState.js';
-import { BitcoinAnchorBroadcastState } from '../../../application/BitcoinAnchorBroadcastState.js';
-import { BitcoinAnchorTransactionConstructionState } from '../../../application/BitcoinAnchorTransactionConstructionState.js';
-import { BasePublicationTransactionPlanState } from '../../../application/BasePublicationTransactionPlanState.js';
-import { BaseReviewedSigningState } from '../../../application/BaseReviewedSigningState.js';
-import { BaseSignedTransactionFinalizationState } from '../../../application/BaseSignedTransactionFinalizationState.js';
-import { BaseTransactionBroadcastState } from '../../../application/BaseTransactionBroadcastState.js';
-import { BaseTransactionInclusionObservationState } from '../../../application/BaseTransactionInclusionObservationState.js';
-import { IpfsRemotePublicationState } from '../../../application/IpfsRemotePublicationState.js';
-import { IpfsPublicationContentVerificationCoordinatorState } from '../../../application/IpfsPublicationContentVerificationCoordinatorState.js';
+import { LocalSnapshotContentAvailabilityOutcome } from '../../../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
+import { SnapshotContentMaterializationUiState } from '../../../application/snapshot/materialization/SnapshotContentMaterializationUiState.js';
+import { SnapshotPlacementMaterializationUiState } from '../../../application/snapshot/placement/SnapshotPlacementMaterializationUiState.js';
+import { SnapshotPeerMaterializationUiState } from '../../../application/snapshot/materialization/SnapshotPeerMaterializationUiState.js';
+import { SnapshotPeerPossessionUiState } from '../../../application/snapshot/possession/SnapshotPeerPossessionUiState.js';
+import { SnapshotPlacementResolutionOutcome } from '../../../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
+import { PublicationEvidenceDiscoveryUiState } from '../../../application/publication/evidence/PublicationEvidenceDiscoveryUiState.js';
+import { PublicationKnowledgeSynchronizationUiState } from '../../../application/publication/evidence/PublicationKnowledgeSynchronizationUiState.js';
+import { PublicationResolutionOutcome } from '../../../application/publication/PublicationResolutionOutcome.js';
+import { AnchorVerificationOutcome } from '../../../application/anchoring/AnchorVerificationOutcome.js';
+import { ExternalAnchorCreationUiState } from '../../../application/anchoring/ExternalAnchorCreationUiState.js';
+import { SnapshotPlacementCreationUiState } from '../../../application/snapshot/placement/SnapshotPlacementCreationUiState.js';
+import { BitcoinAnchorConfirmationState } from '../../../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorContentProofState } from '../../../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
+import { BitcoinWalletConnectionState } from '../../../application/anchoring/bitcoin/BitcoinWalletConnectionState.js';
+import { BitcoinAnchorFundingObservationState } from '../../../application/anchoring/bitcoin/BitcoinAnchorFundingObservationState.js';
+import { BaseWalletConnectionState } from '../../../application/anchoring/base/BaseWalletConnectionState.js';
+import { BaseNetworkObservationState } from '../../../application/anchoring/base/BaseNetworkObservationState.js';
+import { BitcoinAnchorReviewedSigningState } from '../../../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningState.js';
+import { BitcoinAnchorSignedPsbtFinalizationState } from '../../../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationState.js';
+import { BitcoinAnchorBroadcastState } from '../../../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { BitcoinAnchorTransactionConstructionState } from '../../../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js';
+import { BasePublicationTransactionPlanState } from '../../../application/anchoring/base/BasePublicationTransactionPlanState.js';
+import { BaseReviewedSigningState } from '../../../application/anchoring/base/BaseReviewedSigningState.js';
+import { BaseSignedTransactionFinalizationState } from '../../../application/anchoring/base/BaseSignedTransactionFinalizationState.js';
+import { BaseTransactionBroadcastState } from '../../../application/anchoring/base/BaseTransactionBroadcastState.js';
+import { BaseTransactionInclusionObservationState } from '../../../application/anchoring/base/BaseTransactionInclusionObservationState.js';
+import { IpfsRemotePublicationState } from '../../../application/ipfs/IpfsRemotePublicationState.js';
+import { IpfsPublicationContentVerificationCoordinatorState } from '../../../application/ipfs/IpfsPublicationContentVerificationCoordinatorState.js';
 
 // Badge colors reuse the .peer-badge palette: green = good (an "already
 // available" duplicate counts as good), amber = honestly inconclusive (nothing
@@ -171,7 +171,7 @@ export const CREATION_BADGE_CLASSES = {
 };
 
 // The placement side has no REJECTED state (see
-// application/SnapshotPlacementCreationUiState.js).
+// application/snapshot/placement/SnapshotPlacementCreationUiState.js).
 export const PLACEMENT_CREATION_BADGE_CLASSES = {
     [SnapshotPlacementCreationUiState.CREATING]: 'peer-badge--pending',
     [SnapshotPlacementCreationUiState.CREATED]: 'peer-badge--authenticated',

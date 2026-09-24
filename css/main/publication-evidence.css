@@ -291,7 +291,7 @@
    shape "Local Knowledge" already uses) for the two-row "New claims" /
    "Already known" breakdown sitting under the combined synchronization
    message — no new visual language, since this is the same kind of plain
-   fact application/PublicationKnowledgeSynchronizationView.js's own
+   fact application/publication/evidence/PublicationKnowledgeSynchronizationView.js's own
    message text already states, just also broken out by dimension. */
 .replica-sync-breakdown {
     margin-top: 0.5rem;

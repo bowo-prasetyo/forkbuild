@@ -1,31 +1,31 @@
-import { derivePublicationEvidenceConvergence } from '../application/PublicationEvidenceConvergence.js';
-import { publicationEvidenceConvergenceView } from '../application/PublicationEvidenceConvergenceView.js';
-import { derivePublicationSnapshotPlacementConvergence } from '../application/PublicationSnapshotPlacementConvergence.js';
-import { publicationSnapshotPlacementConvergenceView } from '../application/PublicationSnapshotPlacementConvergenceView.js';
+import { derivePublicationEvidenceConvergence } from '../application/publication/evidence/PublicationEvidenceConvergence.js';
+import { publicationEvidenceConvergenceView } from '../application/publication/evidence/PublicationEvidenceConvergenceView.js';
+import { derivePublicationSnapshotPlacementConvergence } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergence.js';
+import { publicationSnapshotPlacementConvergenceView } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergenceView.js';
 import {
     describePublicationDecentralization, describeDecentralizationRelationshipContrast
-} from '../application/PublicationDecentralizationView.js';
-import { createVerificationObservation } from '../application/PublicationAnchorVerificationObservation.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { createResolutionObservation } from '../application/SnapshotPlacementResolutionObservation.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { PublicationAnchorPeerExchange } from '../application/PublicationAnchorPeerExchange.js';
-import { PublicationAnchorDiscoveryCoordinator } from '../application/PublicationAnchorDiscoveryCoordinator.js';
-import { LocalAnchorKnowledgeStore } from '../application/LocalAnchorKnowledgeStore.js';
-import { AnchorAcquisitionKind } from '../application/AnchorAcquisitionKind.js';
-import { ImportPackageAnchorsUseCase } from '../application/ImportPackageAnchorsUseCase.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { PublicationSnapshotPlacementPeerExchange } from '../application/PublicationSnapshotPlacementPeerExchange.js';
-import { PublicationSnapshotPlacementDiscoveryCoordinator } from '../application/PublicationSnapshotPlacementDiscoveryCoordinator.js';
-import { LocalPlacementKnowledgeStore } from '../application/LocalPlacementKnowledgeStore.js';
-import { PlacementAcquisitionKind } from '../application/PlacementAcquisitionKind.js';
+} from '../application/publication/PublicationDecentralizationView.js';
+import { createVerificationObservation } from '../application/anchoring/PublicationAnchorVerificationObservation.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { createResolutionObservation } from '../application/snapshot/placement/SnapshotPlacementResolutionObservation.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { PublicationAnchorPeerExchange } from '../application/anchoring/PublicationAnchorPeerExchange.js';
+import { PublicationAnchorDiscoveryCoordinator } from '../application/anchoring/PublicationAnchorDiscoveryCoordinator.js';
+import { LocalAnchorKnowledgeStore } from '../application/anchoring/LocalAnchorKnowledgeStore.js';
+import { AnchorAcquisitionKind } from '../application/anchoring/AnchorAcquisitionKind.js';
+import { ImportPackageAnchorsUseCase } from '../application/anchoring/ImportPackageAnchorsUseCase.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';
+import { PublicationSnapshotPlacementDiscoveryCoordinator } from '../application/snapshot/placement/PublicationSnapshotPlacementDiscoveryCoordinator.js';
+import { LocalPlacementKnowledgeStore } from '../application/placement/LocalPlacementKnowledgeStore.js';
+import { PlacementAcquisitionKind } from '../application/placement/PlacementAcquisitionKind.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { buildBlueprintPackage } from '../application/BlueprintPackage.js';
-import { validateBlueprintPackage } from '../application/BlueprintImportValidator.js';
+import { buildBlueprintPackage } from '../application/blueprint/BlueprintPackage.js';
+import { validateBlueprintPackage } from '../application/blueprint/BlueprintImportValidator.js';
 import { Structure } from '../core/Structure.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
@@ -34,7 +34,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.8.27 — Unified Publication Decentralization View.
@@ -72,7 +72,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //              Historical peer discovery converges all four replicas
 //              onto the identical evidence set AND the identical
 //              placement set. Every replica's own independently derived
-//              application/PublicationDecentralizationView.js result is
+//              application/publication/PublicationDecentralizationView.js result is
 //              byte-identical: evidence CONFLICTS (Anchor A vs. Anchor
 //              B), placements AGREE (Alice's and Carol's placements
 //              claim the same content hash) — the exact asymmetry

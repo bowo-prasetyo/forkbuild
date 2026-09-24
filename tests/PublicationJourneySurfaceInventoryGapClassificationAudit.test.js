@@ -323,14 +323,14 @@ async function runTests() {
         // evidence-restraint doctrine 0.9.519/0.9.528 established, for
         // Publication placement trust: WorldLocationBrowser.js
         // deliberately built its OWN label map rather than reuse
-        // describeTrustStatus() (application/AvatarPresenceLabels.js),
+        // describeTrustStatus() (application/avatar/AvatarPresenceLabels.js),
         // specifically because that helper's "Trusted." label would
         // overclaim for a placement-record signature check — a fifth
         // file, never named by either milestone, that reached the
         // identical restraint independently.
         const worldLocationBrowserSource = await rawSource('ui/components/WorldLocationBrowser.js');
         assert(worldLocationBrowserSource.includes('TRUST_OBSERVATION_LABELS'), 'E3a. WorldLocationBrowser.js defines its own local trust-observation label map.');
-        assert(!worldLocationBrowserSource.includes("from '../../application/AvatarPresenceLabels.js'"), 'E3b. It deliberately never imports the Avatar-domain describeTrustStatus() helper — a self-aware, independent instance of the same restraint, not a copy (its own header names and rejects that helper in prose, precisely to explain why it built its own map instead).');
+        assert(!worldLocationBrowserSource.includes("from '../../application/avatar/AvatarPresenceLabels.js'"), 'E3b. It deliberately never imports the Avatar-domain describeTrustStatus() helper — a self-aware, independent instance of the same restraint, not a copy (its own header names and rejects that helper in prose, precisely to explain why it built its own map instead).');
 
         console.log(`✓ E — evidence/trust boundary reconfirmed via the shared 0.9.522 sweep module (never redefined): ${allHits.length} live raw-status hits today, all already classified, zero new/unaccounted-for leaks (E1). A stale-table size mismatch in 0.9.522\'s OWN closure test is noted as an out-of-scope, pre-existing maintenance item (E2) — not this milestone\'s to fix. A fifth file (WorldLocationBrowser.js), never named by 0.9.519/0.9.528, is confirmed to independently uphold the identical restraint (E3).`);
     }
@@ -398,11 +398,11 @@ async function runTests() {
     // ===============================================================
     {
         const arrows = [
-            ['application/PublishDocumentUseCase.js', 'Document -> Publication'],
-            ['application/PublicationDistributionCommand.js', 'Publication -> Distribution'],
-            ['application/PlacePublicationUseCase.js', 'Repository -> World'],
-            ['application/ForkPublishedWorldUseCase.js', 'World -> Fork'],
-            ['application/ForkDocumentUseCase.js', 'Fork (mechanism reused for Fork -> Publication\'s own eventual re-publish)']
+            ['application/publication/PublishDocumentUseCase.js', 'Document -> Publication'],
+            ['application/publication/distribution/PublicationDistributionCommand.js', 'Publication -> Distribution'],
+            ['application/placement/PlacePublicationUseCase.js', 'Repository -> World'],
+            ['application/publication/ForkPublishedWorldUseCase.js', 'World -> Fork'],
+            ['application/document/ForkDocumentUseCase.js', 'Fork (mechanism reused for Fork -> Publication\'s own eventual re-publish)']
         ];
         for (const [path, arrow] of arrows) {
             const exists = await rawSource(path).then(() => true).catch(() => false);
@@ -415,7 +415,7 @@ async function runTests() {
         // fact, not a gap: this is the identical "per-substrate adapter,
         // one shared consumer" shape 0.9.560 Section B/E already found
         // correct for Open/Fork.
-        const distributionRuntimeProviderSource = await rawSource('application/PublicationDistributionRuntimeProvider.js');
+        const distributionRuntimeProviderSource = await rawSource('application/publication/distribution/PublicationDistributionRuntimeProvider.js');
         assert(distributionRuntimeProviderSource.length > 0, 'H2a. Distribution -> Discovery converges on a real, named runtime provider file, regardless of which substrate adapter (Arweave/Nostr) fed it.');
 
         // H3. Fork -> Publication (closing the loop) has NO single,
@@ -427,7 +427,7 @@ async function runTests() {
         // file would be the ONLY lifecycle stage requiring a special case
         // for "the Document happens to have been forked," which none of
         // PublishDocumentUseCase.js's own callers need to distinguish.
-        const publishDocumentUseCaseSource = await rawSource('application/PublishDocumentUseCase.js');
+        const publishDocumentUseCaseSource = await rawSource('application/publication/PublishDocumentUseCase.js');
         assert(!/forkedFrom|isForked|parentDocumentId/.test(publishDocumentUseCaseSource), 'H3. PublishDocumentUseCase.js takes no fork-specific parameter or branch — the SAME publish path closes the loop for a forked Document as for any other, with no special-cased "re-publish" file required.');
 
         console.log('✓ H — every lifecycle arrow has a real, named implementing file, except Fork -> Publication, which deliberately closes through the SAME Document -> Publication file rather than a dedicated re-publish path — confirmed by that file\'s own lack of any fork-specific branch, so this is the lifecycle correctly avoiding a needless special case, not a missing owner.');

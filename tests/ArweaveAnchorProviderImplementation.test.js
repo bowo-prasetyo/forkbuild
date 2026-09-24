@@ -3,16 +3,16 @@ import { readFile } from 'node:fs/promises';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/CreateExternalPublicationAnchorOrchestratorUseCase.js';
-import { ExternalAnchorPublisherRegistry } from '../application/ExternalAnchorPublisherRegistry.js';
-import { ExternalProofVerifierRegistry } from '../application/ExternalProofVerifierRegistry.js';
-import { ExternalAnchorEvidenceViewRegistry } from '../application/ExternalAnchorEvidenceViewRegistry.js';
-import { ExternalAnchorCreationOutcome } from '../application/ExternalAnchorCreationOutcome.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { PublicationAnchorCreationCoordinator } from '../application/PublicationAnchorCreationCoordinator.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/anchoring/CreateExternalPublicationAnchorOrchestratorUseCase.js';
+import { ExternalAnchorPublisherRegistry } from '../application/anchoring/ExternalAnchorPublisherRegistry.js';
+import { ExternalProofVerifierRegistry } from '../application/anchoring/ExternalProofVerifierRegistry.js';
+import { ExternalAnchorEvidenceViewRegistry } from '../application/anchoring/ExternalAnchorEvidenceViewRegistry.js';
+import { ExternalAnchorCreationOutcome } from '../application/anchoring/ExternalAnchorCreationOutcome.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { PublicationAnchorCreationCoordinator } from '../application/anchoring/PublicationAnchorCreationCoordinator.js';
 import { ProofVerifier } from '../anchoring/ProofVerifier.js';
 import { ArweaveAnchorPublisher } from '../anchoring/ArweaveAnchorPublisher.js';
 import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransactionDataProofVerifier.js';
@@ -365,7 +365,7 @@ async function run() {
         assert(!/ArweavePublicationMaterialUploader|PublicationDistribution|ArweaveContentStore|ArweaveWorldEncounterMaterialResolver/.test(codeOnly(verifierSource)),
             '45. ArweaveTransactionDataProofVerifier.js imports nothing from those classes either — verification never triggers or depends on a content upload');
 
-        const orchestratorSource = await readFile(new URL('../application/CreateExternalPublicationAnchorOrchestratorUseCase.js', import.meta.url), 'utf8');
+        const orchestratorSource = await readFile(new URL('../application/anchoring/CreateExternalPublicationAnchorOrchestratorUseCase.js', import.meta.url), 'utf8');
         assert(!/ArweaveAnchorPublisher|ArweaveTransactionDataProofVerifier/.test(orchestratorSource),
             '46. the generic orchestrator still names no concrete Arweave (or Bitcoin) class of its own — publishers remain caller-supplied plugins, never hard-coded');
 

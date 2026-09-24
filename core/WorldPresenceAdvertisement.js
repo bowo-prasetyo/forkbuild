@@ -2,7 +2,7 @@ import { isValidWorldPresenceActivity } from './WorldPresenceActivity.js';
 
 // 0.2.98 — Shared World Membership & Collaborative Presence.
 //
-// The wire shape of `application/WorldPresenceUseCase.js`'s own protocol
+// The wire shape of `application/presence/WorldPresenceUseCase.js`'s own protocol
 // (`forkbuild:world-presence`) — a SEPARATE protocol from
 // `forkbuild:chat`, `forkbuild:device-conversation-sync`, and
 // `forkbuild:world-sync`, never a new message riding any of those. See
@@ -15,7 +15,7 @@ import { isValidWorldPresenceActivity } from './WorldPresenceActivity.js';
 // on beyond the single, currently-live, mutually-AUTHENTICATED
 // peer/PeerConnection.js it travels over. It is never gossiped through
 // an intermediary the way a core/WorldEditAuthorizationEnvelope.js grant
-// is, and it is never durable — see application/WorldPresenceUseCase.js's
+// is, and it is never durable — see application/presence/WorldPresenceUseCase.js's
 // own header for why identity, for THIS protocol, comes entirely from
 // `meta.connectedPeer.remoteIdentity`, exactly like core/AvatarPresence.js
 // already reads it from the live connection rather than from a claim on
@@ -31,7 +31,7 @@ import { isValidWorldPresenceActivity } from './WorldPresenceActivity.js';
 //                      heartbeat/activity change); false: "I have left
 //                      this World" — an explicit LEAVE, never merely
 //                      inferred from silence. See
-//                      application/WorldPresenceUseCase.js's own
+//                      application/presence/WorldPresenceUseCase.js's own
 //                      leaveWorld().
 //   activity         — core/WorldPresenceActivity.js's own closed
 //                      EXPLORING/EDITING vocabulary. Only meaningful

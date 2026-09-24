@@ -1,9 +1,9 @@
-import { derivePublicationEvidenceConvergence } from '../application/PublicationEvidenceConvergence.js';
+import { derivePublicationEvidenceConvergence } from '../application/publication/evidence/PublicationEvidenceConvergence.js';
 import {
     publicationEvidenceConvergenceView, describeContentBindingSetRelationship, describeContentGroupCount
-} from '../application/PublicationEvidenceConvergenceView.js';
-import { ContentBindingSetRelationship } from '../application/ContentBindingSetRelationship.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
+} from '../application/publication/evidence/PublicationEvidenceConvergenceView.js';
+import { ContentBindingSetRelationship } from '../application/publication/evidence/ContentBindingSetRelationship.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
 
 // 0.8.13 — Multi-Evidence Comparison & Conflict UX.
 //

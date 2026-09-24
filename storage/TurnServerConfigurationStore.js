@@ -25,7 +25,7 @@ const TURN_SERVER_CONFIGURATION_STORE_KEY = 'turn-server-configuration';
 //        to storage/LocalStorageProvider.js, the identical seam every
 //        sibling configuration store already uses)
 //
-//   (0.9.454, sibling file) application/TurnServerConfigurationProvider.js
+//   (0.9.454, sibling file) application/settings/TurnServerConfigurationProvider.js
 //        reads get() and hands back the result verbatim — see that file's
 //        own header for why no default is ever fabricated here.
 //

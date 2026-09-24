@@ -4,9 +4,9 @@ import { resolveVehicleMovementDirectionFromSteering } from '../core/VehicleStee
 import { VehicleSteeringIntent } from '../core/VehicleSteeringIntent.js';
 import { VehicleInstance } from '../core/VehicleInstance.js';
 import { VehicleType } from '../core/VehicleType.js';
-import { VehicleRuntimeInstances } from '../application/VehicleRuntimeInstances.js';
-import { AvatarVehicleMovementController } from '../application/AvatarVehicleMovementController.js';
-import { AvatarMovementConstraint } from '../application/AvatarMovementConstraint.js';
+import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
+import { AvatarVehicleMovementController } from '../application/avatar/AvatarVehicleMovementController.js';
+import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { DEFAULT_WORLD_SEED, terrainHeightAt } from '../core/TerrainHeightField.js';
 import { World } from '../core/World.js';
@@ -18,24 +18,24 @@ import { VehicleRenderer } from '../renderer/VehicleRenderer.js';
 import { VehicleFieldRenderer } from '../renderer/VehicleFieldRenderer.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.127 — Vehicle Steering Integration Audit.
 //
 // 0.9.125 (core/VehicleSteeringIntent.js) named the driver's request.
 // 0.9.126 (core/VehicleSteeringSimulation.js) turned that request into a
 // pure, stateless ATTEMPTED direction, and deliberately stopped there —
-// "no wiring into application/AvatarVehicleMovementController.js or any
+// "no wiring into application/avatar/AvatarVehicleMovementController.js or any
 // other real controller," per that file's own closing header. This
 // milestone is that wiring, plus the audit that proves it stays inside
-// its own lane: `application/AvatarVehicleMovementController.js#tick()`
+// its own lane: `application/avatar/AvatarVehicleMovementController.js#tick()`
 // now accepts an optional `steeringIntent`, and
-// `application/WorldNavigationSession.js` now holds one
+// `application/world/WorldNavigationSession.js` now holds one
 // (`setVehicleSteeringIntent()`/`vehicleSteeringIntent()`) and passes it
 // through, every frame — see both files' own 0.9.127 headers for exactly
 // what changed and why every EXISTING caller (every test predating this
@@ -103,8 +103,8 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //              remains the ONLY heading-resolution authority
 //
 // NO NEW PRODUCTION FILES. Every change lives inside the two files this
-// milestone's own header names — application/AvatarVehicleMovementController.js
-// and application/WorldNavigationSession.js — reusing
+// milestone's own header names — application/avatar/AvatarVehicleMovementController.js
+// and application/world/WorldNavigationSession.js — reusing
 // core/VehicleSteeringSimulation.js's pure function VERBATIM. See
 // docs/Roadmap.md, 0.9.127.
 
@@ -334,7 +334,7 @@ async function runTests() {
         // existing pure transformation VERBATIM — exactly ONE call site
         // each — rather than growing a second position/speed formula of
         // its own inside the controller.
-        const codeOnly = await sourceOf('../application/AvatarVehicleMovementController.js');
+        const codeOnly = await sourceOf('../application/avatar/AvatarVehicleMovementController.js');
         const countOf = (needle) => codeOnly.split(needle).length - 1;
         assert(countOf('simulateAvatarMovement(') === 1, '7. exactly ONE call site for the existing movement kinematics — no second copy');
         assert(countOf('resolveVehicleMovementDirectionFromSteering(') === 1, '8. exactly ONE call site for the existing steering transformation — no second copy');
@@ -522,7 +522,7 @@ async function runTests() {
         assert(store.get('vehicle:e1').heading !== 10, '26. the SAME VehicleRuntimeInstances store this codebase has always used reflects the steering-driven heading change — no second, parallel store was introduced');
     }
     {
-        const orientationFiles = ['../core/VehicleInstance.js', '../application/VehicleRuntimeInstances.js'];
+        const orientationFiles = ['../core/VehicleInstance.js', '../application/world/VehicleRuntimeInstances.js'];
         const forbidden = ['steering', 'Steering', 'SteeringIntent', 'steeringAngle', 'SteeringAngle', 'steeringRate', 'SteeringRate'];
         for (const path of orientationFiles) {
             const codeOnly = await sourceOf(path);
@@ -695,10 +695,10 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const integrationFiles = [
-            '../application/AvatarVehicleMovementController.js',
-            '../application/WorldNavigationSession.js',
+            '../application/avatar/AvatarVehicleMovementController.js',
+            '../application/world/WorldNavigationSession.js',
             '../core/VehicleInstance.js',
-            '../application/VehicleRuntimeInstances.js',
+            '../application/world/VehicleRuntimeInstances.js',
             '../renderer/VehicleVisual.js',
             '../renderer/VehicleFieldRenderer.js'
         ];
@@ -712,7 +712,7 @@ async function runTests() {
             // Deliberately NOT 'steeringRate'/'SteeringRate': the avatar's
             // own PRE-EXISTING, 0.9.94 `capability.steering.steeringRate`
             // (its held-turn-key facing rate) legitimately still appears
-            // in application/AvatarVehicleMovementController.js — see
+            // in application/avatar/AvatarVehicleMovementController.js — see
             // this milestone's own header, "0.9.127 — Vehicle Steering
             // Integration Audit," for why that stays untouched, and
             // Section A's own structural check for what DID change there.
@@ -735,7 +735,7 @@ async function runTests() {
         // `steeringIntent` is a fresh, per-call parameter (the direct
         // structural twin of `movementIntent` itself), never assigned to
         // `this.` anywhere.
-        const codeOnly = await sourceOf('../application/AvatarVehicleMovementController.js');
+        const codeOnly = await sourceOf('../application/avatar/AvatarVehicleMovementController.js');
         assert(!codeOnly.includes('this._steeringIntent') && !codeOnly.includes('this._steering'),
             '45. AvatarVehicleMovementController holds no persistent steering-intent field of its own — steering is a fresh, per-tick parameter, exactly like movementIntent');
     }
@@ -746,15 +746,15 @@ async function runTests() {
         // files, and `core/VehicleSteeringSimulation.js` — reused for
         // this milestone's integration — still never calls it itself
         // (0.9.126's own boundary, unchanged).
-        const controllerCode = await sourceOf('../application/AvatarVehicleMovementController.js');
+        const controllerCode = await sourceOf('../application/avatar/AvatarVehicleMovementController.js');
         assert(controllerCode.split('resolveVehicleHeadingFromMovement(').length - 1 === 1,
             '46. exactly one call to resolveVehicleHeadingFromMovement() in the real controller — heading resolution was never duplicated for the steered path');
         const steeringSimCode = await sourceOf('../core/VehicleSteeringSimulation.js');
         assert(!steeringSimCode.includes('resolveVehicleHeadingFromMovement'),
             '47. core/VehicleSteeringSimulation.js still never calls resolveVehicleHeadingFromMovement() itself — this milestone\'s own integration reused it at the CONTROLLER layer, never inside the pure steering-simulation file');
-        const sessionCode = await sourceOf('../application/WorldNavigationSession.js');
+        const sessionCode = await sourceOf('../application/world/WorldNavigationSession.js');
         assert(!sessionCode.includes('resolveVehicleHeadingFromMovement') && !sessionCode.includes('resolveVehicleMovementDirectionFromSteering'),
-            '48. application/WorldNavigationSession.js itself never calls either heading or steering math directly — it only ever threads a VehicleSteeringIntent value through to the controller, exactly like it already does for movementIntent');
+            '48. application/world/WorldNavigationSession.js itself never calls either heading or steering math directly — it only ever threads a VehicleSteeringIntent value through to the controller, exactly like it already does for movementIntent');
     }
 
     console.log('✅ All Vehicle Steering Integration Audit tests passed.');

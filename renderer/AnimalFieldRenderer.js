@@ -8,15 +8,15 @@ import { AnimalPresence } from '../core/AnimalPresence.js';
 //
 // setAnimal(instance) IS THE ONE ENTRY POINT, AND ITS ONLY DOMAIN INPUT
 // IS AN AnimalPresence. It never decides which animals should exist or
-// be visible — a caller (application/WorldNavigationSession.js, via
-// application/AnimalRuntimeInstances.js#releasedNearby()) supplies the
+// be visible — a caller (application/world/WorldNavigationSession.js, via
+// application/world/AnimalRuntimeInstances.js#releasedNearby()) supplies the
 // real, already-resolved set; this class only ever turns one into
 // something visible.
 //
 // releasedNearby(), NEVER THE STORE'S FULL nearby()/sync() RESULT. This
 // is the one thing a caller must get right, and this file's own header
 // says so loudly precisely because it cannot enforce it: passing every
-// tracked animal here — including ones application/AnimalRuntimeInstances.js
+// tracked animal here — including ones application/world/AnimalRuntimeInstances.js
 // merely DISCOVERED from the deterministic field, never released —
 // would render a second, individually-tracked copy of an animal
 // renderer/WildlifeTileMesh.js's own tile system is already drawing,

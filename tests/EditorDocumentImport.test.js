@@ -18,16 +18,16 @@ import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { DocumentManifest } from '../application/DocumentManifest.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { ExportDocumentUseCase } from '../application/ExportDocumentUseCase.js';
-import { ImportDocumentUseCase } from '../application/ImportDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { DocumentManifest } from '../application/document/DocumentManifest.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { ExportDocumentUseCase } from '../application/document/ExportDocumentUseCase.js';
+import { ImportDocumentUseCase } from '../application/document/ImportDocumentUseCase.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
 
-// Deliberately does NOT import application/EditorSession.js — same reason
+// Deliberately does NOT import application/editor/EditorSession.js — same reason
 // tests/EditorDocumentExport.test.js gives: that class pulls in the
 // renderer stack (`three`), only resolvable through tests.html's browser
 // import map, not plain `node`. EditorSession.importDocument() is instead
@@ -43,7 +43,7 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 // and 0.9.641 (Export) left open: Import runs exactly the audit's own
 // Section F flagship pipeline — DocumentSerializer.deserialize()
 // (migrate -> validate -> construct) then DocumentCloneService.execute()
-// (fresh local identity) — via application/ImportDocumentUseCase.js, with
+// (fresh local identity) — via application/document/ImportDocumentUseCase.js, with
 // no new document format, no new identity mechanism, and no new
 // persistence path.
 //
@@ -242,7 +242,7 @@ async function run() {
         // catalog, exactly as the audit live-proved. Confirm this
         // implementation is immune, using the manifest's own real
         // constant, not a guessed string.
-        const manifestSource = await rawSource('application/DocumentManifest.js');
+        const manifestSource = await rawSource('application/document/DocumentManifest.js');
         const manifestKeyMatch = manifestSource.match(/MANIFEST_KEY = '([^']+)'/);
         assert(manifestKeyMatch !== null, n('DocumentManifest\'s own reserved storage key constant is found in its real source'));
         const manifestKey = manifestKeyMatch[1];
@@ -434,7 +434,7 @@ async function run() {
         // StorageProvider or DocumentManifest, exactly the "structurally
         // impossible, not merely well-behaved" standard the 0.9.640 audit
         // and EditorDocumentExport.test.js both already hold Export to.
-        const useCaseSource = codeOnly(await rawSource('application/ImportDocumentUseCase.js'));
+        const useCaseSource = codeOnly(await rawSource('application/document/ImportDocumentUseCase.js'));
         assert(!/storageProvider|StorageProvider|DocumentManifest/.test(useCaseSource),
             n('ImportDocumentUseCase has no reference to any StorageProvider or DocumentManifest anywhere in its own source'));
         assert(!/from ['"].*publisher\//.test(useCaseSource) && !/from ['"].*\bdiscovery\//.test(useCaseSource)
@@ -463,7 +463,7 @@ async function run() {
 
         // Structural proof: Import invents no second migration mechanism
         // of its own — DocumentSchemaMigrator remains the only one.
-        const useCaseSource = codeOnly(await rawSource('application/ImportDocumentUseCase.js'));
+        const useCaseSource = codeOnly(await rawSource('application/document/ImportDocumentUseCase.js'));
         assert(!/DocumentSchemaMigrator/.test(useCaseSource),
             n('ImportDocumentUseCase never references DocumentSchemaMigrator directly — it inherits migration for free from DocumentSerializer.deserialize(), exactly like every other caller of that method'));
 
@@ -518,7 +518,7 @@ async function run() {
         const toolbarSource = codeOnly(await rawSource('ui/components/Toolbar.js'));
         assert(!/confirm\(/.test(toolbarSource), n('Toolbar.js\'s own New/Load actions carry no confirm()-based dirty guard today — the existing baseline this milestone must not silently diverge from'));
 
-        const editorSessionSource = codeOnly(await rawSource('application/EditorSession.js'));
+        const editorSessionSource = codeOnly(await rawSource('application/editor/EditorSession.js'));
         const importDocumentFnMatch = editorSessionSource.match(/importDocument\(json\)\s*\{[\s\S]*?\n {4}\}/);
         assert(importDocumentFnMatch !== null, n('EditorSession#importDocument() is found in its own real source'));
         const importDocumentFnBody = importDocumentFnMatch[0];
@@ -567,7 +567,7 @@ async function run() {
         assert(cloneCalls === 1, n('ImportDocumentUseCase.execute() calls DocumentCloneService.execute() exactly once'));
         assert(result instanceof Document, n('...and the result is a real Document produced by that real pipeline'));
 
-        const useCaseSource = codeOnly(await rawSource('application/ImportDocumentUseCase.js'));
+        const useCaseSource = codeOnly(await rawSource('application/document/ImportDocumentUseCase.js'));
         assert(/this\._documentSerializer\.deserialize\(json\)/.test(useCaseSource),
             n('ImportDocumentUseCase\'s own source calls documentSerializer.deserialize() — the real seam, not a re-derived shortcut'));
         assert(/this\._documentCloneService\.execute\(sourceDocument/.test(useCaseSource),
@@ -578,7 +578,7 @@ async function run() {
             n('ImportDocumentUseCase never constructs a Document/World or mints an id directly — every domain object it returns came from the injected collaborators'));
 
         // EditorSession.importDocument() delegates rather than reimplementing.
-        const editorSessionSource = codeOnly(await rawSource('application/EditorSession.js'));
+        const editorSessionSource = codeOnly(await rawSource('application/editor/EditorSession.js'));
         assert(/importDocument\(json\)\s*\{[\s\S]*?this\._importDocumentUseCase\.execute\(json\)/.test(editorSessionSource),
             n('EditorSession.importDocument() delegates straight to this._importDocumentUseCase.execute() — it does not deserialize or clone anything itself'));
         assert(!/this\._loadDocumentUseCase\.execute\(this\._documentManager, json/.test(editorSessionSource),

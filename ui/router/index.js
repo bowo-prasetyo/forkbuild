@@ -69,7 +69,7 @@ const routes = [
     // (unlike /chat/:identityId above): the one place this app reconciles
     // identity/relationship/friendship/connection/conversation for every
     // peer worth showing, independent of whether any of them are online
-    // right now — see application/PeerPresenceUseCase.js's own header.
+    // right now — see application/presence/PeerPresenceUseCase.js's own header.
     { path: '/conversations', name: 'conversations', component: ConversationsView },
     // 0.7.5 — Decentralized Publication UX & Resolution. The "Publication
     // Center" — see ui/views/DecentralizedPublicationsView.js's own
@@ -218,7 +218,7 @@ const routes = [
     // /reconciliation-leaderboard, still never a top-nav destination.
     { path: '/evidence-export-comparison', name: 'evidence-export-comparison', component: ReconciliationCandidateLeaderboardEvidenceExportComparisonView },
     // 0.9.408 — Reconciliation Workspace UI. The first user-facing surface
-    // over application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js
+    // over application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js
     // (0.9.407, UNCHANGED) — see ui/views/ReconciliationWorkspaceView.js's
     // own header. Deliberately its own route, one hop from /publications
     // (the same "Publication Archive" card that already links to
@@ -242,8 +242,8 @@ const routes = [
     { path: '/publisher-snapshot-claim', name: 'publisher-snapshot-claim', component: PublisherLeaderboardSnapshotClaimAuthoringView },
     // 0.9.417 — Publisher Performance Leaderboard UI. 0.9.416's own audit
     // (tests/PublisherPerformanceLeaderboardProductGapAudit.test.js)
-    // proved application/PublisherRankingPolicy.js (0.8.112) and
-    // application/PublisherLeaderboardView.js (0.8.113), both UNCHANGED,
+    // proved application/leaderboard/PublisherRankingPolicy.js (0.8.112) and
+    // application/leaderboard/PublisherLeaderboardView.js (0.8.113), both UNCHANGED,
     // real and correct but reachable by zero UI paths, and named this
     // exact shape — a distinct route, contextual, not top-nav — as its
     // preferred entry-point candidate (that audit's own Section E).

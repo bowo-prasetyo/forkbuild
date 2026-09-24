@@ -1,16 +1,16 @@
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.js';
+} from '../application/claimSnapshotReconciliation/leaderboard/EvidenceExport.js';
 import {
     ReconciliationCandidateLeaderboardEvidenceImportOutcome,
     importPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport,
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.js';
+} from '../application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js';
 
 // 0.8.188 — Reconciliation Candidate Leaderboard Evidence Export Import.
 //
 // 0.8.188's own application module (tested independently in
-// tests/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.test.js)
+// tests/ReconciliationCandidateLeaderboardEvidenceImport.test.js)
 // gained a UI counterpart on ReconciliationCandidateLeaderboardView: an
 // "Import Evidence" control that reads a pasted export document and shows
 // a read-only summary, never merging it into the live leaderboard.
@@ -99,7 +99,7 @@ async function run() {
         );
         codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.js'"), '6. the view imports 0.8.188\'s own evidence-import module');
+        assert(codeOnly.includes("from '../../application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js'"), '6. the view imports 0.8.188\'s own evidence-import module');
         assert((codeOnly.match(/importPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport\(/g) || []).length === 1, '7. the view calls 0.8.188\'s own importXxx() exactly once');
         assert((codeOnly.match(/describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport\(/g) || []).length === 1, '8. the view calls 0.8.188\'s own describeXxx() exactly once');
 

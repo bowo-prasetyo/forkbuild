@@ -8,11 +8,11 @@ import { BlueprintAttribution, getBlueprintAttributionSigningDescriptor } from '
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalBlueprintAttributionStore } from '../application/LocalBlueprintAttributionStore.js';
-import { BlueprintAttributionUseCase } from '../application/BlueprintAttributionUseCase.js';
-import { buildBlueprintPackage } from '../application/BlueprintPackage.js';
-import { ExportBlueprintUseCase } from '../application/ExportBlueprintUseCase.js';
-import { ImportBlueprintUseCase } from '../application/ImportBlueprintUseCase.js';
+import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
+import { BlueprintAttributionUseCase } from '../application/blueprint/BlueprintAttributionUseCase.js';
+import { buildBlueprintPackage } from '../application/blueprint/BlueprintPackage.js';
+import { ExportBlueprintUseCase } from '../application/blueprint/ExportBlueprintUseCase.js';
+import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprintUseCase.js';
 
 // 0.6.5 — Blueprint Identity & Attribution.
 //
@@ -205,7 +205,7 @@ async function run() {
     console.log('✓ Section C: identity/LocalAuthorizationVerifier.js#verifyBlueprintAttribution — required-signature discipline');
 
     // -------------------------------------------------------------
-    // Section D: application/LocalBlueprintAttributionStore.js
+    // Section D: application/blueprint/LocalBlueprintAttributionStore.js
     // -------------------------------------------------------------
     {
         const storage = new InMemoryStorageProvider();
@@ -229,10 +229,10 @@ async function run() {
         assert(store.list('bp:abc').length === 1, 'retracted attribution is gone');
         assert(store.retract('bp:abc', a1.id) === false, 'retract() is idempotent-false for an already-removed attribution');
     }
-    console.log('✓ Section D: application/LocalBlueprintAttributionStore.js — per-fingerprint persistence, round-trip, retraction');
+    console.log('✓ Section D: application/blueprint/LocalBlueprintAttributionStore.js — per-fingerprint persistence, round-trip, retraction');
 
     // -------------------------------------------------------------
-    // Section E: application/BlueprintAttributionUseCase.js — publish/retract/summarize
+    // Section E: application/blueprint/BlueprintAttributionUseCase.js — publish/retract/summarize
     // -------------------------------------------------------------
     {
         const storage = new InMemoryStorageProvider();
@@ -285,7 +285,7 @@ async function run() {
 
         assert(aliceUseCase.summarize(null).fingerprint === null, 'summarize(null) degrades to an empty, non-throwing summary');
     }
-    console.log('✓ Section E: application/BlueprintAttributionUseCase.js — required signing, author-only retraction, summarize()');
+    console.log('✓ Section E: application/blueprint/BlueprintAttributionUseCase.js — required signing, author-only retraction, summarize()');
 
     // -------------------------------------------------------------
     // Section F — CAPSTONE: Alice exports; Bob imports under a fresh id;
@@ -323,7 +323,7 @@ async function run() {
 
         // Bob did not author it, but nothing stops him from claiming he
         // did — this layer establishes what a claim MEANS, not whether
-        // it is true (see application/BlueprintAttributionUseCase.js's
+        // it is true (see application/blueprint/BlueprintAttributionUseCase.js's
         // own header). What it DOES let a future reader do is see that
         // two DIFFERENT identities both signed an attribution for the
         // exact same design.

@@ -4,10 +4,10 @@ import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import {
     buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag
 } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION } from '../application/PlaceNamingClaimPublication.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION } from '../application/placeNaming/PlaceNamingClaimPublication.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -147,12 +147,12 @@ async function runTests() {
             'A1. tests/PlaceNamingEndToEndLifecycleAudit.test.js (0.9.258) still exists as the authoritative pipeline-closure record this section reuses rather than reproduces.');
 
         const envelope = await rawSource('core/PlaceNamingDiscoveryEnvelope.js');
-        const monitor = await rawSource('application/PlaceNamingDiscoveryMonitor.js');
+        const monitor = await rawSource('application/placeNaming/PlaceNamingDiscoveryMonitor.js');
         const proximity = await rawSource('core/PlaceNamingProximitySelection.js');
         assert(envelope.includes("const SUPPORTED_ENVELOPE_PROTOCOL = 'forkbuild-place-naming-discovery';"),
             'A2a. core/PlaceNamingDiscoveryEnvelope.js still carries the same protocol string (0.9.253), unchanged.');
         assert(monitor.includes('export class PlaceNamingDiscoveryMonitor') && monitor.includes('_requestId'),
-            'A2b. application/PlaceNamingDiscoveryMonitor.js still exists with its own request-id race guard (0.9.256), unchanged.');
+            'A2b. application/placeNaming/PlaceNamingDiscoveryMonitor.js still exists with its own request-id race guard (0.9.256), unchanged.');
         assert(proximity.includes('export function selectNearbyPlaceNamingClaims'),
             'A2c. core/PlaceNamingProximitySelection.js still exports the same pure spatial filter (0.9.255), unchanged.');
 
@@ -178,12 +178,12 @@ async function runTests() {
         register.push(['core (domain)', 'COMPLETE — claim, view, proximity, discovery envelope, geographic identity']);
 
         const applicationFiles = [
-            'application/LocalPlaceNamingClaimStore.js', 'application/PlaceNamingClaimUseCase.js',
-            'application/PlaceNamingClaimExchange.js', 'application/PlaceNamingClaimPublication.js',
-            'application/PlaceNamingClaimPublicationValidator.js', 'application/NostrPlaceNamingDiscoverySource.js',
-            'application/PlaceNamingDiscoveryQueryService.js', 'application/DiscoverPlaceNamingClaimsCommand.js',
-            'application/PlaceNamingDiscoveryMonitor.js', 'application/PlaceNamingDiscoveryRuntimeComposition.js',
-            'application/LocalNamePreferenceStore.js', 'application/ShouldRefreshPlaceNamingDiscovery.js'
+            'application/placeNaming/LocalPlaceNamingClaimStore.js', 'application/placeNaming/PlaceNamingClaimUseCase.js',
+            'application/placeNaming/PlaceNamingClaimExchange.js', 'application/placeNaming/PlaceNamingClaimPublication.js',
+            'application/placeNaming/PlaceNamingClaimPublicationValidator.js', 'application/placeNaming/NostrPlaceNamingDiscoverySource.js',
+            'application/placeNaming/PlaceNamingDiscoveryQueryService.js', 'application/placeNaming/DiscoverPlaceNamingClaimsCommand.js',
+            'application/placeNaming/PlaceNamingDiscoveryMonitor.js', 'application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js',
+            'application/identity/LocalNamePreferenceStore.js', 'application/placeNaming/ShouldRefreshPlaceNamingDiscovery.js'
         ];
         for (const file of applicationFiles) {
             assert(await sourceExists(file), `B2. ${file} exists.`);
@@ -196,9 +196,9 @@ async function runTests() {
         // generic storage/StorageProvider.js, the same pattern most
         // Local*Store classes in this codebase already follow. Absence
         // here is architectural consistency, never a gap.
-        const claimStore = await rawSource('application/LocalPlaceNamingClaimStore.js');
+        const claimStore = await rawSource('application/placeNaming/LocalPlaceNamingClaimStore.js');
         assert(/StorageProvider/.test(claimStore) || claimStore.includes('storageProvider'),
-            'B3. application/LocalPlaceNamingClaimStore.js persists through the generic storage/StorageProvider.js — no dedicated storage/ file needed, matching this codebase\'s own Local*Store convention.');
+            'B3. application/placeNaming/LocalPlaceNamingClaimStore.js persists through the generic storage/StorageProvider.js — no dedicated storage/ file needed, matching this codebase\'s own Local*Store convention.');
         register.push(['storage', 'COMPLETE — via generic StorageProvider, no dedicated file needed (architectural pattern, not a gap)']);
 
         // B4. Identity. verifyPlaceNamingClaim() is real and load-bearing.
@@ -232,8 +232,8 @@ async function runTests() {
         // ("every future transport... plugs into THIS class's
         // importClaim()/exportClaim()"), never a gap this milestone's
         // brief asks to close.
-        const exchangeCode = codeOnlyLines(await rawSource('application/PlaceNamingClaimExchange.js'));
-        const nostrCode = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoverySource.js'));
+        const exchangeCode = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js'));
+        const nostrCode = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoverySource.js'));
         assert(!/RTCPeerConnection|new\s*WebRTC/i.test(exchangeCode) && !/RTCPeerConnection|new\s*WebRTC/i.test(nostrCode),
             'B7b. Neither Place Naming transport file actually CONSTRUCTS a WebRTC/peer connection in real code — both files only mention "WebRTC peer exchange" in prose, as named future work, never as a live transport. File exchange and Nostr discovery remain the only two ACTUAL transports.');
         register.push(['peer exchange', 'DEFERRED — file-exchange (0.5.3) and Nostr discovery (0.9.254) are the only transports; a live peer transport was named as future work at 0.5.3, never scheduled since']);
@@ -335,10 +335,10 @@ async function runTests() {
         // reads ONLY event.content (the payload string) off a Nostr event
         // — event.pubkey/event.sig/event.id (Nostr's own transport-level
         // identity/signature) are never read anywhere in this file.
-        const nostrSource = await rawSource('application/NostrPlaceNamingDiscoverySource.js');
-        assert(nostrSource.includes('event.content'), 'D2a. application/NostrPlaceNamingDiscoverySource.js reads event.content.');
+        const nostrSource = await rawSource('application/placeNaming/NostrPlaceNamingDiscoverySource.js');
+        assert(nostrSource.includes('event.content'), 'D2a. application/placeNaming/NostrPlaceNamingDiscoverySource.js reads event.content.');
         assert(!codeOnlyLines(nostrSource).includes('event.pubkey') && !codeOnlyLines(nostrSource).includes('event.sig'),
-            'D2b. application/NostrPlaceNamingDiscoverySource.js never reads event.pubkey or event.sig — Nostr\'s own transport identity/signature never enters this pipeline at all, structurally preventing "who relayed this" from ever being confused with "who claims this."');
+            'D2b. application/placeNaming/NostrPlaceNamingDiscoverySource.js never reads event.pubkey or event.sig — Nostr\'s own transport identity/signature never enters this pipeline at all, structurally preventing "who relayed this" from ever being confused with "who claims this."');
 
         // D3. Discovery source itself is not part of the claim's own
         // identity — a claim carries no field naming which source (Nostr,
@@ -445,7 +445,7 @@ async function runTests() {
         // publishing source would (buildPlaceNamingDiscoveryEnvelope(),
         // 0.9.253, unmodified), then round-trip it through
         // parsePlaceNamingDiscoveryEnvelope() on a JSON string — EXACTLY
-        // what application/NostrPlaceNamingDiscoverySource.js does with a
+        // what application/placeNaming/NostrPlaceNamingDiscoverySource.js does with a
         // real relay event's own `.content` (see that file's own D2a
         // above). This is not a hand-built fixture; it is the identical
         // shape genuine discovery already produces.
@@ -460,7 +460,7 @@ async function runTests() {
         // has an empty store — reshapes ONLY the already-discovered
         // envelope's own `.claim` (never re-signed, never re-constructed,
         // never touched) into the EXACT publication-package shape
-        // application/PlaceNamingClaimPublication.js#buildPlaceNamingClaimPublication()
+        // application/placeNaming/PlaceNamingClaimPublication.js#buildPlaceNamingClaimPublication()
         // already defines, and hands it to the REAL, UNMODIFIED
         // PlaceNamingClaimExchange#importClaim() — the exact same method
         // ui/components/PlaceNamingPanel.js's own "Import Claim" button
@@ -529,8 +529,8 @@ async function runTests() {
         // G4. The command propagation path that DOES mutate a
         // WorldRegion's own name (RegionFormModal -> a World Command)
         // never imports anything Place-Naming-shaped.
-        const commandPropagation = await rawSource('application/WorldCommandPropagationUseCase.js');
-        assert(!/PlaceNaming/.test(commandPropagation), 'G4. application/WorldCommandPropagationUseCase.js — the real path that DOES propagate a WorldRegion rename — carries zero Place Naming vocabulary.');
+        const commandPropagation = await rawSource('application/document/WorldCommandPropagationUseCase.js');
+        assert(!/PlaceNaming/.test(commandPropagation), 'G4. application/document/WorldCommandPropagationUseCase.js — the real path that DOES propagate a WorldRegion rename — carries zero Place Naming vocabulary.');
 
         console.log('✓ G: The World-location-naming vs. decentralized-naming-claim boundary docs/Principles.md already names ("A Name Is A Claim, Not A Fact," 0.5.2) is frozen — reconfirmed structurally (no import path exists in either direction) rather than merely quoted. Per this milestone\'s own brief: this boundary already exists, so nothing about it is created here.');
     }
@@ -542,11 +542,11 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const pipelineFiles = [
-            'application/PlaceNamingDiscoveryMonitor.js',
-            'application/PlaceNamingDiscoveryQueryService.js',
-            'application/DiscoverPlaceNamingClaimsCommand.js',
-            'application/NostrPlaceNamingDiscoverySource.js',
-            'application/PlaceNamingDiscoveryRuntimeComposition.js',
+            'application/placeNaming/PlaceNamingDiscoveryMonitor.js',
+            'application/placeNaming/PlaceNamingDiscoveryQueryService.js',
+            'application/placeNaming/DiscoverPlaceNamingClaimsCommand.js',
+            'application/placeNaming/NostrPlaceNamingDiscoverySource.js',
+            'application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js',
             'core/PlaceNamingProximitySelection.js',
             'core/PlaceNamingDiscoveryEnvelope.js'
         ];
@@ -602,7 +602,7 @@ async function runTests() {
                 }]);
             }
         })();
-        const { PlaceNamingDiscoveryMonitor } = await import('../application/PlaceNamingDiscoveryMonitor.js');
+        const { PlaceNamingDiscoveryMonitor } = await import('../application/placeNaming/PlaceNamingDiscoveryMonitor.js');
         const monitor = new PlaceNamingDiscoveryMonitor({
             discoverPlaceNamingClaimsCommand: () => nostrSourceStub.search(),
             resolveClaimPosition: () => region.position
@@ -635,12 +635,12 @@ async function runTests() {
         gaps.push({
             name: 'set a local preference for a discovered claim\'s name',
             classification: 'MISSING_UI',
-            evidence: 'application/LocalNamePreferenceStore.js#setPreferredName(worldId, regionId, name) (existing, unmodified) takes a plain name string and needs no prior adoption — it already works today for any regionId this replica knows a WorldRegion for. regionId is no longer dropped from the row as of 0.9.260 (the same fix that closed the navigate gap); only a "Prefer" button and its click handler remain unbuilt.'
+            evidence: 'application/identity/LocalNamePreferenceStore.js#setPreferredName(worldId, regionId, name) (existing, unmodified) takes a plain name string and needs no prior adoption — it already works today for any regionId this replica knows a WorldRegion for. regionId is no longer dropped from the row as of 0.9.260 (the same fix that closed the navigate gap); only a "Prefer" button and its click handler remain unbuilt.'
         });
         gaps.push({
             name: 'export/share a discovered claim before adopting it',
             classification: 'MISSING_UI (smaller, optional)',
-            evidence: 'application/PlaceNamingClaimPublication.js#buildPlaceNamingClaimPublication() requires a real PlaceNamingClaim instance (Section F1), so exporting a merely-discovered plain envelope needs either PlaceNamingClaim.fromJSON(entry.claim) first (already exported, unmodified) or exporting the raw envelope.claim object directly, matching the exact shape Section F already proved importable elsewhere. Lower priority than the two above — a claim worth sharing is presumably worth adopting first.'
+            evidence: 'application/placeNaming/PlaceNamingClaimPublication.js#buildPlaceNamingClaimPublication() requires a real PlaceNamingClaim instance (Section F1), so exporting a merely-discovered plain envelope needs either PlaceNamingClaim.fromJSON(entry.claim) first (already exported, unmodified) or exporting the raw envelope.claim object directly, matching the exact shape Section F already proved importable elsewhere. Lower priority than the two above — a claim worth sharing is presumably worth adopting first.'
         });
 
         for (const gap of gaps) {
@@ -677,9 +677,9 @@ async function runTests() {
         // called from ui/ directly (the session always mediates).
         const verifierCallSitesByFile = new Map();
         for (const file of [
-            'application/PlaceNamingClaimUseCase.js',
-            'application/PlaceNamingClaimPublicationKind.js',
-            'application/PlaceNamingClaimExchange.js'
+            'application/placeNaming/PlaceNamingClaimUseCase.js',
+            'application/placeNaming/PlaceNamingClaimPublicationKind.js',
+            'application/placeNaming/PlaceNamingClaimExchange.js'
         ]) {
             const code = codeOnlyLines(await rawSource(file));
             const matches = code.match(/verifyPlaceNamingClaim\(/g) || [];
@@ -703,7 +703,7 @@ async function runTests() {
         // J3. Moderation. No removal/tombstone/report vocabulary anywhere
         // in the Place Naming domain or storage layer.
         const claimSource = await rawSource('core/PlaceNamingClaim.js');
-        const storeSource = await rawSource('application/LocalPlaceNamingClaimStore.js');
+        const storeSource = await rawSource('application/placeNaming/LocalPlaceNamingClaimStore.js');
         assert(!/moderat|tombstone|report(?:ed)?\(|flag(?:ged)?\(/i.test(codeOnlyLines(claimSource) + codeOnlyLines(storeSource)),
             'J3. Neither the domain nor the store carries moderation/tombstone/report/flag vocabulary — still genuinely absent.');
         candidates.push(['moderation/reporting', 'MISSING_DOMAIN_CAPABILITY']);
@@ -735,17 +735,17 @@ async function runTests() {
         // exchange is bidirectional (export AND import) and requires a
         // deliberate hand-off; Nostr discovery is read-only (this
         // codebase never publishes TO Nostr, only queries) and automatic.
-        const nostrSource = await rawSource('application/NostrPlaceNamingDiscoverySource.js');
+        const nostrSource = await rawSource('application/placeNaming/NostrPlaceNamingDiscoverySource.js');
         assert(!/publish|announce/i.test(codeOnlyLines(nostrSource).replace(/\/\/.*$/gm, '')) || nostrSource.includes('Publishing, tagging, or signing a Nostr event'),
-            'K1. application/NostrPlaceNamingDiscoverySource.js is explicitly read-only (its own header excludes publishing) — it does not duplicate PlaceNamingClaimExchange\'s own export half, it only duplicates (deliberately) the DISCOVERY half exchange never had.');
+            'K1. application/placeNaming/NostrPlaceNamingDiscoverySource.js is explicitly read-only (its own header excludes publishing) — it does not duplicate PlaceNamingClaimExchange\'s own export half, it only duplicates (deliberately) the DISCOVERY half exchange never had.');
 
         // K2. PlaceNamingDiscoveryMonitor (0.9.256) vs
         // WorldSnapshotDiscoveryMonitor (0.9.186) — already explicitly
         // NOT a shared abstraction, per that file's own header, and still
         // true: neither imports the other.
-        const monitorSource = await rawSource('application/PlaceNamingDiscoveryMonitor.js');
+        const monitorSource = await rawSource('application/placeNaming/PlaceNamingDiscoveryMonitor.js');
         assert(!monitorSource.includes("from './WorldSnapshotDiscoveryMonitor.js'"),
-            'K2. application/PlaceNamingDiscoveryMonitor.js still does not import WorldSnapshotDiscoveryMonitor.js — the deliberate non-reuse this file\'s own header argues for still holds one milestone later.');
+            'K2. application/placeNaming/PlaceNamingDiscoveryMonitor.js still does not import WorldSnapshotDiscoveryMonitor.js — the deliberate non-reuse this file\'s own header argues for still holds one milestone later.');
 
         // K3. No second naming-claims store, naming-preference store, or
         // naming panel exists anywhere in the repository.

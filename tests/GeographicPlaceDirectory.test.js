@@ -12,13 +12,13 @@ import { World } from '../core/World.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStore.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 
 // 0.5.5 — Geographic Place Directory & Identity UX.
 //
@@ -43,7 +43,7 @@ import { WorldNavigationSession } from '../application/WorldNavigationSession.js
 // Section B: core/GeographicPlaceDirectory.js — buildGeographicPlaceDirectory()
 //            ordering, geographicPlaceByKey(), geographicPlaceForRegionId(),
 //            graceful degradation on empty/unknown input
-// Section C: application/WorldNavigationSession.js wiring —
+// Section C: application/world/WorldNavigationSession.js wiring —
 //            getGeographicPlaceDirectory()/getGeographicPlace(), nothing
 //            loaded/wired, once regions ARE loaded
 // Section D: regression — nothing here ever mutates a WorldRegion or a
@@ -216,7 +216,7 @@ async function run() {
     console.log('✓ Section B: core/GeographicPlaceDirectory.js — deterministic alphabetical ordering, byKey/forRegionId lookups, same name never merges different ground');
 
     // -------------------------------------------------------------
-    // Section C: application/WorldNavigationSession.js wiring
+    // Section C: application/world/WorldNavigationSession.js wiring
     // -------------------------------------------------------------
     {
         // Nothing loaded, nothing wired -> graceful empties, never a throw.
@@ -247,7 +247,7 @@ async function run() {
         assert(place && place.fingerprintKey === directory[0].fingerprintKey, '38. getGeographicPlace() finds the same entry the directory itself listed');
         assert(noClaimsSession.getGeographicPlace('not-a-real-key') === null, '39. getGeographicPlace() is null for an unknown key, never a partial or thrown result');
     }
-    console.log('✓ Section C: application/WorldNavigationSession.js — graceful degradation, correct delegation once regions are loaded');
+    console.log('✓ Section C: application/world/WorldNavigationSession.js — graceful degradation, correct delegation once regions are loaded');
 
     // -------------------------------------------------------------
     // Section D: regression — nothing here mutates World content

@@ -15,14 +15,14 @@ import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMov
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { Position } from '../core/Position.js';
 import { withinRadiusXZ } from '../core/AvatarVehicleProximity.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
-import { AvatarVehicleMovementController, isMovableVehicleType } from '../application/AvatarVehicleMovementController.js';
-import { VehicleRuntimeInstances } from '../application/VehicleRuntimeInstances.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { SpatialCameraController } from '../application/SpatialCameraController.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
+import { AvatarVehicleMovementController, isMovableVehicleType } from '../application/avatar/AvatarVehicleMovementController.js';
+import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
@@ -40,7 +40,7 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 //
 // A note on what this file can and cannot import directly, matching the
 // EXACT constraint 0.9.549's own header already documented for itself:
-// application/WorldNavigationSession.js's own first import
+// application/world/WorldNavigationSession.js's own first import
 // (RenderWorldViewUseCase.js) transitively reaches renderer/Renderer.js,
 // which imports 'three' — not installed in this Node-only harness
 // (checked fresh: `node -e "import('three')"` still throws "Cannot find
@@ -51,7 +51,7 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 // SpatialCameraController, AvatarPresenceSession — imports cleanly under
 // plain Node (individually confirmed). So rather than hand-simulate
 // production behavior, this file composes those real classes DIRECTLY,
-// in the exact sequence application/WorldNavigationSession.js's own real
+// in the exact sequence application/world/WorldNavigationSession.js's own real
 // source performs — quoted and cited by line/method name at each site —
 // never a second, invented composition. Where this file needs a fact
 // that only exists inside WorldNavigationSession.js's own source text
@@ -144,7 +144,7 @@ function stubCameraRenderer(initial) {
 }
 
 // Replicates, verbatim, the ONE composition
-// application/WorldNavigationSession.js's own onAnimationFrame handler
+// application/world/WorldNavigationSession.js's own onAnimationFrame handler
 // performs while a movable vehicle is mounted (see that file's own
 // 0.9.116/0.9.123/0.9.127 sections, lines ~1297-1360: "const moved =
 // this._avatarVehicleMovementController.tick({...}); ... if (moved) {
@@ -176,7 +176,7 @@ function tickMountedVehicle({ avatarVehicleMovementController, avatarPresenceSes
     return moved;
 }
 
-// Replicates, verbatim, application/WorldNavigationSession.js's own
+// Replicates, verbatim, application/world/WorldNavigationSession.js's own
 // setCameraPerspective()/_applyCameraPerspectiveFraming() ("turning a
 // Perspective ON immediately re-frames toward the local avatar's
 // CURRENT position/facing... turning a Perspective OFF deliberately
@@ -266,7 +266,7 @@ async function main() {
         assert(Math.abs(facingEast.position.z) < 1e-9 && facingEast.position.x < 0,
             '2. LIVE: facing 90deg (+X), THIRD_PERSON sits behind the avatar along -X instead — the SAME offset formula, rotated with heading, never a fixed-world-direction camera.');
 
-        // B2 — composed exactly like application/WorldNavigationSession.js
+        // B2 — composed exactly like application/world/WorldNavigationSession.js
         // itself: with a Perspective ACTIVE, turning the avatar re-frames
         // the camera on the very next presence update.
         {
@@ -287,12 +287,12 @@ async function main() {
             const afterTurn = spatialCameraController.getSpatialCameraState();
             assert(avatarPresenceSession.current.rotation.y !== 0, '3. setup: the avatar genuinely turned.');
             assert(afterTurn.position.x !== beforeTurn.position.x || afterTurn.position.z !== beforeTurn.position.z,
-                '4. LIVE, COHERENT: with a Camera Perspective active, re-applying computeCameraFraming() on every presence update (exactly application/WorldNavigationSession.js#_followAvatarIfEnabled()\'s own real rule) visibly moves the camera to follow the avatar\'s new heading — orientation stays coherent by construction while a Perspective is locked on.');
+                '4. LIVE, COHERENT: with a Camera Perspective active, re-applying computeCameraFraming() on every presence update (exactly application/world/WorldNavigationSession.js#_followAvatarIfEnabled()\'s own real rule) visibly moves the camera to follow the avatar\'s new heading — orientation stays coherent by construction while a Perspective is locked on.');
         }
 
         // B3 — Perspective OFF (free/orbit): the free camera is
         // deliberately orientation-BLIND to the avatar — documented, not
-        // accidental (application/WorldNavigationSession.js's own
+        // accidental (application/world/WorldNavigationSession.js's own
         // setCameraPerspective() header: "turning a perspective OFF
         // deliberately does NOT snap the camera anywhere").
         {
@@ -323,11 +323,11 @@ async function main() {
         // understanding of it.
         const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(sessionSrc.includes('does NOT snap the camera anywhere'),
-            '7. LIVE: application/WorldNavigationSession.js\'s own real setCameraPerspective() header states, verbatim, that turning a Perspective off does not snap the camera — B3\'s own live behavior matches the documented intent exactly.');
+            '7. LIVE: application/world/WorldNavigationSession.js\'s own real setCameraPerspective() header states, verbatim, that turning a Perspective off does not snap the camera — B3\'s own live behavior matches the documented intent exactly.');
         assert(/if \(this\._cameraPerspective && this\._spatialCameraController\)/.test(sessionSrc),
             '8. LIVE: _followAvatarIfEnabled()\'s own real guard is "a Perspective, if set, always wins" — the identical priority this section\'s B2/B3 pair just demonstrated.');
 
-        console.log('✓ Section B: avatar<->camera orientation coherence is Perspective-conditional, exactly as core/CameraPerspective.js and application/WorldNavigationSession.js already document and this section verified against their real source text — a locked Perspective re-frames the camera to the avatar\'s own heading on every tick (live-proven), while the free/orbit camera is deliberately orientation-blind to it (live-proven), never a partial or inconsistent mix of the two.');
+        console.log('✓ Section B: avatar<->camera orientation coherence is Perspective-conditional, exactly as core/CameraPerspective.js and application/world/WorldNavigationSession.js already document and this section verified against their real source text — a locked Perspective re-frames the camera to the avatar\'s own heading on every tick (live-proven), while the free/orbit camera is deliberately orientation-blind to it (live-proven), never a partial or inconsistent mix of the two.');
     }
 
     // ===================================================================
@@ -337,14 +337,14 @@ async function main() {
     {
         // C1 — no strafe vocabulary exists anywhere in the movement
         // pipeline, and A/D are TURN keys, never lateral-offset keys.
-        const controllerSrc = await readSource('application/AvatarMovementController.js');
+        const controllerSrc = await readSource('application/avatar/AvatarMovementController.js');
         const simulationSrc = await readSource('core/AvatarMovementSimulation.js');
         assert(!/strafe/i.test(controllerSrc) && !/strafe/i.test(simulationSrc),
-            '1. LIVE: neither application/AvatarMovementController.js nor core/AvatarMovementSimulation.js contains any "strafe" vocabulary — confirming this codebase has no screen/camera-relative lateral movement concept at all, by inspecting the real, current source text rather than assuming it from the design docs.');
+            '1. LIVE: neither application/avatar/AvatarMovementController.js nor core/AvatarMovementSimulation.js contains any "strafe" vocabulary — confirming this codebase has no screen/camera-relative lateral movement concept at all, by inspecting the real, current source text rather than assuming it from the design docs.');
         assert(/turnAxis:\s*\(this\._keys\.right/.test(controllerSrc),
             '2. LIVE: the real _currentMovementState() derives turnAxis from the right/left keys — A/D ROTATE the avatar, they never produce a sideways position offset.');
         assert(!controllerSrc.includes('CameraPerspective') && !controllerSrc.includes('SpatialCameraController') && !controllerSrc.includes('CameraController'),
-            '3. LIVE: application/AvatarMovementController.js imports/references no camera module of any kind — W/A/S/D resolution structurally cannot consult where the camera is looking, even in principle.');
+            '3. LIVE: application/avatar/AvatarMovementController.js imports/references no camera module of any kind — W/A/S/D resolution structurally cannot consult where the camera is looking, even in principle.');
 
         // C2 — turn-then-step, live: within a SINGLE tick, the step is
         // taken along the just-updated heading, not the heading the
@@ -463,7 +463,7 @@ async function main() {
         assert(anchorViaCameraHeading.presentationMode === WorldSpatialPresentationMode.HIDDEN,
             '6. LIVE, THE STRONGER BOUNDARY: judged by the free-orbited camera\'s heading instead, derivePresentationMode()\'s own real rule (`visible === false` -> HIDDEN) makes the IDENTICAL participant, at the IDENTICAL distance, disappear from presentation ENTIRELY — not merely demoted to a quieter marker. Outside the view cone is not "shown more quietly," it is not shown at all.');
 
-        console.log('✓ Section E: whether a remote participant\'s marker is shown AT ALL is decided by the CAMERA\'s own current orientation, never the Wanderer\'s own walking heading — a real, deliberate (core/WorldSpatialAnchor.js\'s own header already says so) design, confirmed here as a live product fact against real application/WorldNavigationSession.js source and against derivePresentationMode()\'s own real HIDDEN rule: after free-orbiting the camera to look behind them, a Wanderer\'s own field of view for OTHER PEOPLE tracks where they are LOOKING, not where they are WALKING — someone standing squarely in the Wanderer\'s own walking path can be rendered fully invisible for as long as the camera looks elsewhere. DOCUMENTATION_GAP: this asymmetry is architecturally sound but nowhere explained to the Wanderer.');
+        console.log('✓ Section E: whether a remote participant\'s marker is shown AT ALL is decided by the CAMERA\'s own current orientation, never the Wanderer\'s own walking heading — a real, deliberate (core/WorldSpatialAnchor.js\'s own header already says so) design, confirmed here as a live product fact against real application/world/WorldNavigationSession.js source and against derivePresentationMode()\'s own real HIDDEN rule: after free-orbiting the camera to look behind them, a Wanderer\'s own field of view for OTHER PEOPLE tracks where they are LOOKING, not where they are WALKING — someone standing squarely in the Wanderer\'s own walking path can be rendered fully invisible for as long as the camera looks elsewhere. DOCUMENTATION_GAP: this asymmetry is architecturally sound but nowhere explained to the Wanderer.');
     }
 
     // ===================================================================
@@ -485,7 +485,7 @@ async function main() {
 
         // F2 — THE FLAGSHIP: a real bicycle, a real
         // AvatarVehicleMovementController, a real AvatarPresenceSession,
-        // composed EXACTLY as application/WorldNavigationSession.js's own
+        // composed EXACTLY as application/world/WorldNavigationSession.js's own
         // frame loop composes them (see tickMountedVehicle()'s own
         // header) — hold ONLY a turn key (no forward/backward at all),
         // and observe two real, independently-tracked facts diverge.
@@ -524,7 +524,7 @@ async function main() {
         const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(sessionSrc.includes('this._avatarVehicleMovementController.tick({') && sessionSrc.includes('position: moved.vehicleInstance.position,')
             && sessionSrc.includes('rotation: { y: moved.rotationY }'),
-            '8. LIVE: application/WorldNavigationSession.js\'s own real frame loop performs exactly this sequence — this test\'s tickMountedVehicle() helper reproduces real production wiring, not an invented one.');
+            '8. LIVE: application/world/WorldNavigationSession.js\'s own real frame loop performs exactly this sequence — this test\'s tickMountedVehicle() helper reproduces real production wiring, not an invented one.');
 
         // Close the rendering loop with real, cited production source,
         // rather than asserting a THREE.js-dependent visual claim this
@@ -538,7 +538,7 @@ async function main() {
             '10. LIVE: renderer/VehicleVisual.js\'s own real setHeading() writes straight to the vehicle mesh\'s own root.rotation.y from that same heading value.');
 
         // F3 — continuity check: a capability switch (dismount) preserves
-        // the avatar's OWN heading exactly — application/AvatarMovementController.js's
+        // the avatar's OWN heading exactly — application/avatar/AvatarMovementController.js's
         // own setMovementCapability() never touches rotationY, and while
         // riding, the presence update above only ever wrote
         // moved.rotationY, never a reset value.
@@ -546,7 +546,7 @@ async function main() {
         const walkController = new AvatarMovementController(avatarPresenceSession);
         walkController.setMovementCapability(resolveAvatarVehicleMovementCapability(VehicleType.NONE));
         assert(avatarPresenceSession.current.rotation.y === headingBeforeDismount,
-            '11. LIVE, ALREADY_CORRECT: switching back to an on-foot (WALK) capability — the exact transition a dismount performs — leaves the avatar\'s own rotation exactly as it was; the Wanderer\'s sense of which way they are facing survives the vehicle transition untouched, confirming application/AvatarMovementController.js\'s own 0.9.94 header claim ("capability switching preserves the avatar\'s own physical heading, never resets it") as a live product fact, not merely a comment.');
+            '11. LIVE, ALREADY_CORRECT: switching back to an on-foot (WALK) capability — the exact transition a dismount performs — leaves the avatar\'s own rotation exactly as it was; the Wanderer\'s sense of which way they are facing survives the vehicle transition untouched, confirming application/avatar/AvatarMovementController.js\'s own 0.9.94 header claim ("capability switching preserves the avatar\'s own physical heading, never resets it") as a live product fact, not merely a comment.');
 
         console.log('✓ Section F, FLAGSHIP: while turning in place on a mounted, steerable vehicle with no forward/backward held, the avatar\'s own rendered facing (and, per Section B, any Perspective-locked camera framed from it) rotates continuously — while the vehicle body\'s own rendered heading stays completely frozen at its last realized-movement value, for as long as that holds, cited through to the real renderer source that draws the vehicle mesh from exactly that frozen field. This is a real, live, previously product-untested divergence between two orientation-bearing facts that share one rider, composed through the exact real production sequence (verified against its own source, assertion 8). ARCHITECTURAL_GAP: sound, deliberate, unit-tested at the controller level (tests/VehicleOrientationAudit.test.js) — but never before checked as a whole-composition, camera-and-renderer-reaching product fact, and nowhere documented as something a Wanderer might actually notice. Mount/dismount heading continuity, by contrast, is confirmed ALREADY_CORRECT.');
     }
@@ -589,9 +589,9 @@ async function main() {
         }
 
         assert(/getAvatarPosition\(\)\s*\|\|\s*this\.getCameraPosition\(\)/.test(sessionSrc),
-            '6. LIVE: application/WorldNavigationSession.js DOES use an "avatar position, falling back to camera" preference elsewhere in this same file (getNearbyGeographicPlaces()/getCurrentRegionPath(), among others) — confirming the outbound multiplayer-presence broadcast (assertion 5) is a genuine, specific asymmetry, not merely "this whole file only ever knows about the camera."');
+            '6. LIVE: application/world/WorldNavigationSession.js DOES use an "avatar position, falling back to camera" preference elsewhere in this same file (getNearbyGeographicPlaces()/getCurrentRegionPath(), among others) — confirming the outbound multiplayer-presence broadcast (assertion 5) is a genuine, specific asymmetry, not merely "this whole file only ever knows about the camera."');
 
-        console.log('✓ Section G, FLAGSHIP: a real Wanderer\'s own avatar position/heading (which this milestone proved, live, can differ substantially from the free-look camera\'s) is never what gets broadcast to other Wanderers — application/WorldNavigationSession.js\'s own enterWorldSpatialPresence()/syncWorldSpatialPresence() report the CAMERA\'s position/heading exclusively, unlike every single-player-facing "where am I" reading in this same file, which prefers the avatar\'s own position first. ARCHITECTURAL_GAP: reasonable for a camera-only spectator with no avatar, but for a Wanderer who has an avatar and has walked or free-orbited away from it, other participants are told the wrong story about where that Wanderer is and which way they are facing.');
+        console.log('✓ Section G, FLAGSHIP: a real Wanderer\'s own avatar position/heading (which this milestone proved, live, can differ substantially from the free-look camera\'s) is never what gets broadcast to other Wanderers — application/world/WorldNavigationSession.js\'s own enterWorldSpatialPresence()/syncWorldSpatialPresence() report the CAMERA\'s position/heading exclusively, unlike every single-player-facing "where am I" reading in this same file, which prefers the avatar\'s own position first. ARCHITECTURAL_GAP: reasonable for a camera-only spectator with no avatar, but for a Wanderer who has an avatar and has walked or free-orbited away from it, other participants are told the wrong story about where that Wanderer is and which way they are facing.');
     }
 
     // ===================================================================
@@ -647,7 +647,7 @@ async function main() {
             // (core/AvatarMovementSimulation.js's own resolveMovementHeading()
             // branch) — a real, harmless floating-point epsilon (~1e-15),
             // not a genuine change. This file's own EPSILON tolerance
-            // mirrors application/AvatarMovementController.js's own
+            // mirrors application/avatar/AvatarMovementController.js's own
             // identically-purposed EPSILON=1e-6 constant, used there for
             // the exact same "did rotation really change" question.
             const EPSILON = 1e-6;
@@ -764,7 +764,7 @@ async function main() {
 
         // "Enter the vehicle, drive": switch composition from
         // AvatarMovementController to tickMountedVehicle(), exactly as
-        // application/WorldNavigationSession.js's own frame loop does
+        // application/world/WorldNavigationSession.js's own frame loop does
         // the instant a mount resolves.
         const beforeRide = runtimeStore.get(REAL_VEHICLE_ID).position;
         const FORWARD_INTENT = Object.freeze({ direction: 1, turnAxis: 0, running: false, brakingRequested: false });
@@ -867,7 +867,7 @@ before checked as a whole-composition, product-visible fact: (F) a mounted vehic
 the instant movement stops advancing, while the avatar's own rendered facing (and any Perspective-locked camera
 framed from it) keeps turning under a held steering key with no forward/backward — live-proven through the real
 production composition (cited against its own source), through to the exact renderer source lines that draw the
-frozen vehicle mesh; (G) the position/heading application/WorldNavigationSession.js's own
+frozen vehicle mesh; (G) the position/heading application/world/WorldNavigationSession.js's own
 enterWorldSpatialPresence()/syncWorldSpatialPresence() broadcast to every OTHER Wanderer is the local CAMERA's,
 never the avatar's own — even though this same file already knows how to prefer the avatar's position elsewhere,
 and even though this milestone live-proved the two can genuinely differ. Both are classified ARCHITECTURAL_GAP, not

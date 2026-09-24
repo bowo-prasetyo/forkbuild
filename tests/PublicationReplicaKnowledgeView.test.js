@@ -1,36 +1,36 @@
-import { derivePublicationEvidenceConvergence } from '../application/PublicationEvidenceConvergence.js';
-import { publicationEvidenceConvergenceView } from '../application/PublicationEvidenceConvergenceView.js';
-import { derivePublicationSnapshotPlacementConvergence } from '../application/PublicationSnapshotPlacementConvergence.js';
-import { publicationSnapshotPlacementConvergenceView } from '../application/PublicationSnapshotPlacementConvergenceView.js';
+import { derivePublicationEvidenceConvergence } from '../application/publication/evidence/PublicationEvidenceConvergence.js';
+import { publicationEvidenceConvergenceView } from '../application/publication/evidence/PublicationEvidenceConvergenceView.js';
+import { derivePublicationSnapshotPlacementConvergence } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergence.js';
+import { publicationSnapshotPlacementConvergenceView } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergenceView.js';
 import {
     describePublicationReplicaKnowledge, describeDecentralizationRelationshipContrast
-} from '../application/PublicationReplicaKnowledgeView.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { createVerificationObservation } from '../application/PublicationAnchorVerificationObservation.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
-import { createResolutionObservation } from '../application/SnapshotPlacementResolutionObservation.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
+} from '../application/publication/replica/PublicationReplicaKnowledgeView.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { createVerificationObservation } from '../application/anchoring/PublicationAnchorVerificationObservation.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
+import { createResolutionObservation } from '../application/snapshot/placement/SnapshotPlacementResolutionObservation.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { PublicationAnchorPeerExchange } from '../application/PublicationAnchorPeerExchange.js';
-import { PublicationAnchorDiscoveryCoordinator } from '../application/PublicationAnchorDiscoveryCoordinator.js';
-import { LocalAnchorKnowledgeStore } from '../application/LocalAnchorKnowledgeStore.js';
-import { AnchorAcquisitionKind } from '../application/AnchorAcquisitionKind.js';
-import { ImportPackageAnchorsUseCase } from '../application/ImportPackageAnchorsUseCase.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { PublicationSnapshotPlacementPeerExchange } from '../application/PublicationSnapshotPlacementPeerExchange.js';
-import { PublicationSnapshotPlacementDiscoveryCoordinator } from '../application/PublicationSnapshotPlacementDiscoveryCoordinator.js';
-import { LocalPlacementKnowledgeStore } from '../application/LocalPlacementKnowledgeStore.js';
-import { PlacementAcquisitionKind } from '../application/PlacementAcquisitionKind.js';
-import { ImportPackageSnapshotPlacementsUseCase } from '../application/ImportPackageSnapshotPlacementsUseCase.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { PublicationAnchorPeerExchange } from '../application/anchoring/PublicationAnchorPeerExchange.js';
+import { PublicationAnchorDiscoveryCoordinator } from '../application/anchoring/PublicationAnchorDiscoveryCoordinator.js';
+import { LocalAnchorKnowledgeStore } from '../application/anchoring/LocalAnchorKnowledgeStore.js';
+import { AnchorAcquisitionKind } from '../application/anchoring/AnchorAcquisitionKind.js';
+import { ImportPackageAnchorsUseCase } from '../application/anchoring/ImportPackageAnchorsUseCase.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';
+import { PublicationSnapshotPlacementDiscoveryCoordinator } from '../application/snapshot/placement/PublicationSnapshotPlacementDiscoveryCoordinator.js';
+import { LocalPlacementKnowledgeStore } from '../application/placement/LocalPlacementKnowledgeStore.js';
+import { PlacementAcquisitionKind } from '../application/placement/PlacementAcquisitionKind.js';
+import { ImportPackageSnapshotPlacementsUseCase } from '../application/snapshot/placement/ImportPackageSnapshotPlacementsUseCase.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { buildBlueprintPackage } from '../application/BlueprintPackage.js';
-import { validateBlueprintPackage } from '../application/BlueprintImportValidator.js';
+import { buildBlueprintPackage } from '../application/blueprint/BlueprintPackage.js';
+import { validateBlueprintPackage } from '../application/blueprint/BlueprintImportValidator.js';
 import { Structure } from '../core/Structure.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
@@ -39,13 +39,13 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.8.28 — Offline Publication Reconstruction & Replica Knowledge.
 //
 //   Section A: describePublicationReplicaKnowledge() argument handling —
-//              delegates to application/PublicationDecentralizationView.js
+//              delegates to application/publication/PublicationDecentralizationView.js
 //              unchanged for the evidence/placement dimensions, adds
 //              exactly one new fact (`hasPublication`), coerces whatever
 //              it is handed to a plain boolean, and defaults to false
@@ -153,7 +153,7 @@ async function run() {
         const bare = describePublicationReplicaKnowledge({ publicationId: 'pub-bare' });
         assert(bare.hasPublication === false, '1. hasPublication defaults to false when omitted');
         assert(bare.evidence.known === false && bare.placements.known === false,
-            '2. no convergence views supplied -> both dimensions degrade exactly as application/PublicationDecentralizationView.js already does');
+            '2. no convergence views supplied -> both dimensions degrade exactly as application/publication/PublicationDecentralizationView.js already does');
 
         expectThrows(() => describePublicationReplicaKnowledge({}), '3. still requires a publicationId (delegated to PublicationDecentralizationView)');
 
@@ -172,7 +172,7 @@ async function run() {
             evidenceConvergenceView: fakeConvergenceView({ anchorCount: 3, relationship: 'agreement' })
         });
         assert(withEvidence.evidence.known === true && withEvidence.evidence.anchorCount === 3,
-            '7. evidence dimension is reported exactly as application/PublicationDecentralizationView.js would report it, unmodified');
+            '7. evidence dimension is reported exactly as application/publication/PublicationDecentralizationView.js would report it, unmodified');
         assert(withEvidence.placements.known === false, '8. placements dimension is independently known:false — hasPublication never leaks into it');
 
         assert(!('decentralizationScore' in bare) && !('confidence' in bare) && !('completeness' in bare) && !('trustLevel' in bare),
@@ -181,7 +181,7 @@ async function run() {
         assert(describeDecentralizationRelationshipContrast(withEvidence) === null,
             '10. the re-exported contrast helper still works unmodified over a replica knowledge view (one dimension unknown -> no contrast)');
     }
-    console.log('✓ Section A: describePublicationReplicaKnowledge() argument handling — hasPublication coerces to a plain boolean, defaults to false, and is the only field added over application/PublicationDecentralizationView.js\'s own shape');
+    console.log('✓ Section A: describePublicationReplicaKnowledge() argument handling — hasPublication coerces to a plain boolean, defaults to false, and is the only field added over application/publication/PublicationDecentralizationView.js\'s own shape');
 
     // ---------------------------------------------------------------
     // Section B — FLAGSHIP: offline reconstruction, growth, outage,

@@ -1,10 +1,10 @@
 import PublicationList from '../ui/components/PublicationList.js';
 import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -69,7 +69,7 @@ function knowPublicationsLocally(storageProvider, publications) {
     storageProvider.save('forkbuild-publications', publications.map((p) => p.toJSON()));
 }
 
-// The real application stack application/CreatePublicationCommentaryUseCase.js
+// The real application stack application/publication/commentary/CreatePublicationCommentaryUseCase.js
 // itself composes, reproduced here the same way
 // tests/OtherPublicationCommentaryEntryPoint.test.js's own makeBackend()
 // already reproduces it for PublicationCard.js.
@@ -385,8 +385,8 @@ async function runTests() {
         const forbidden = [
             "from '../../core/PublicationCommentary.js'",
             "from '../../storage/PublicationCommentaryStore.js'",
-            "from '../../application/GetPublicationCommentariesUseCase.js'",
-            "from '../../application/AddPublicationCommentaryUseCase.js'",
+            "from '../../application/publication/commentary/GetPublicationCommentariesUseCase.js'",
+            "from '../../application/publication/commentary/AddPublicationCommentaryUseCase.js'",
             'new PublicationCommentary(', 'PublicationCommentaryStore',
             'OtherPublicationCommentaryUseCase', 'AddCommentToOtherPublicationUseCase',
             'ListPublicationCommentaryUseCase', 'PublicationListCommentaryStore'
@@ -479,12 +479,12 @@ async function runTests() {
                sectionCode.includes('this.pendingCommentaryDraft = { content, commentaryId: createId(), createdAt: new Date() };'),
             '42. the shared section carries the 0.9.289 read/submit methods and the 0.9.542 stable-retry-identity pattern');
 
-        const compositionCode = await codeOnlySource('application/CreatePublicationCommentaryUseCase.js');
+        const compositionCode = await codeOnlySource('application/publication/commentary/CreatePublicationCommentaryUseCase.js');
         assert(compositionCode.includes('new CanCommentOnPublicationUseCase(discoveryProvider)') &&
                compositionCode.includes('new GetPublicationCommentariesUseCase(publicationCommentaryStore)') &&
                compositionCode.includes('new AddPublicationCommentaryUseCase(') &&
                compositionCode.includes('new PublicationCommentaryNotificationProducer('),
-            '43. application/CreatePublicationCommentaryUseCase.js still composes the identical, unmodified application layer');
+            '43. application/publication/commentary/CreatePublicationCommentaryUseCase.js still composes the identical, unmodified application layer');
 
         // Live: a commentary written through PublicationCard.js's own
         // exact call shape is immediately visible through

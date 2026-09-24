@@ -3,9 +3,9 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerIdentity } from '../peer/PeerIdentity.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { PeerSessionManager } from '../application/PeerSessionManager.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
+import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
 import { FriendshipRecord } from '../core/FriendshipRecord.js';
 import { FriendshipState, deriveFriendshipState } from '../core/FriendshipState.js';
 import {
@@ -20,7 +20,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //
 // "How can Alice and Bob become friends without a central server
 // deciding that they are?" This file proves the answer end to end,
-// over a REAL WebRTC connection (application/PeerSessionManager.js,
+// over a REAL WebRTC connection (application/peer/PeerSessionManager.js,
 // 0.2.55, unmodified) — not a mock, matching this codebase's standing
 // rule that a real transport is exercised with real code.
 //
@@ -189,7 +189,7 @@ async function runTests() {
 }
 
 // ---------------------------------------------------------------------
-// 4. application/FriendRelationshipUseCase.js — the local security
+// 4. application/identity/FriendRelationshipUseCase.js — the local security
 //    boundary: only a currently AUTHENTICATED connection may send or
 //    accept, and acceptance requires a genuinely pending request.
 // ---------------------------------------------------------------------

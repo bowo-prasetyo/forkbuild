@@ -18,7 +18,7 @@ const IPFS_URI_PREFIX = 'ipfs://';
 // SnapshotPlacementResolver.js's own job, unchanged. `describe()` is a
 // pure string/URL transform over whatever `locator` the placement
 // already carries, exactly as synchronous and side-effect-free as
-// application/PublicationSnapshotPlacementDetailView.js's own
+// application/snapshot/placement/PublicationSnapshotPlacementDetailView.js's own
 // `publicationSnapshotPlacementDetailView()`.
 //
 // A malformed or missing `locator` (a peer-supplied placement this
@@ -38,7 +38,7 @@ export class IpfsSnapshotPlacementView {
     // `externalLocator` is null whenever `locator` is not a recognizable
     // `ipfs://<cid>` string — there is nothing honest to link to. The
     // gateway URL construction lives HERE and nowhere else — never in
-    // application/PublicationSnapshotPlacementDetailView.js, whose own
+    // application/snapshot/placement/PublicationSnapshotPlacementDetailView.js, whose own
     // header states it never reinterprets `locator` at all.
     describe(placement) {
         const locator = placement && typeof placement.locator === 'string' ? placement.locator : '';

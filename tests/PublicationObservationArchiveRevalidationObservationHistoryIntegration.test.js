@@ -1,26 +1,26 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation.js';
-import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js';
+import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/claimSnapshotReconciliation/revalidationObservation/History.js';
 import {
     RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationIntoArchiveUseCase,
     RevalidationObservationArchiveOutcome
-} from '../application/RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationIntoArchiveUseCase.js';
-import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory } from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryView.js';
+} from '../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
+import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory } from '../application/claimSnapshotReconciliation/revalidationObservation/HistoryView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplicationView.js';
+} from '../application/claimSnapshotReconciliation/revalidationObservation/DeduplicationView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimelineView.js';
+} from '../application/claimSnapshotReconciliation/revalidationObservation/HistoryTimelineView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference.js';
-import { fingerprintPublicationObservationArchive } from '../application/PublicationObservationArchiveFingerprint.js';
-import { reconstructAchievementEvidenceFingerprint } from '../application/AchievementEvidenceFingerprint.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
+} from '../application/claimSnapshotReconciliation/revalidationObservation/HistoryDifference.js';
+import { fingerprintPublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveFingerprint.js';
+import { reconstructAchievementEvidenceFingerprint } from '../application/achievement/AchievementEvidenceFingerprint.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -313,7 +313,7 @@ async function run() {
         // use case's own module imports nothing from the revalidation
         // family.
         const moduleSource = await (await import('node:fs/promises')).readFile(
-            new URL('../application/RecordPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationIntoArchiveUseCase.js', import.meta.url), 'utf8'
+            new URL('../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js', import.meta.url), 'utf8'
         );
         const importLines = moduleSource.split('\n').filter((line) => line.trim().startsWith('import ')).join('\n');
         assert(!importLines.includes('RevalidationObservation.js'), '42. the use case never imports 0.8.162\'s own observation boundary');

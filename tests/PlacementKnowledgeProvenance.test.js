@@ -1,18 +1,18 @@
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { PublicationSnapshotPlacementPeerExchange } from '../application/PublicationSnapshotPlacementPeerExchange.js';
-import { CreatePublicationSnapshotPlacementUseCase } from '../application/CreatePublicationSnapshotPlacementUseCase.js';
-import { ImportPackageSnapshotPlacementsUseCase, PackagePlacementImportReason } from '../application/ImportPackageSnapshotPlacementsUseCase.js';
-import { PlacementAcquisitionKind, isValidPlacementAcquisitionKind } from '../application/PlacementAcquisitionKind.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';
+import { CreatePublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js';
+import { ImportPackageSnapshotPlacementsUseCase, PackagePlacementImportReason } from '../application/snapshot/placement/ImportPackageSnapshotPlacementsUseCase.js';
+import { PlacementAcquisitionKind, isValidPlacementAcquisitionKind } from '../application/placement/PlacementAcquisitionKind.js';
 import {
     createSnapshotPlacementKnowledgeRecord,
     snapshotPlacementKnowledgeRecordFromJSON,
     snapshotPlacementKnowledgeRecordToJSON
-} from '../application/SnapshotPlacementKnowledgeRecord.js';
-import { LocalPlacementKnowledgeStore } from '../application/LocalPlacementKnowledgeStore.js';
-import { describePlacementKnowledge } from '../application/PublicationSnapshotPlacementKnowledgeView.js';
-import { derivePublicationSnapshotPlacementConvergence } from '../application/PublicationSnapshotPlacementConvergence.js';
+} from '../application/snapshot/placement/SnapshotPlacementKnowledgeRecord.js';
+import { LocalPlacementKnowledgeStore } from '../application/placement/LocalPlacementKnowledgeStore.js';
+import { describePlacementKnowledge } from '../application/snapshot/placement/PublicationSnapshotPlacementKnowledgeView.js';
+import { derivePublicationSnapshotPlacementConvergence } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergence.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -482,7 +482,7 @@ async function run() {
         // regardless of the acquisition assignment, because
         // derivePublicationSnapshotPlacementConvergence() has no
         // parameter capable of receiving acquisition data in the first
-        // place — see application/PublicationSnapshotPlacementConvergence.js's
+        // place — see application/snapshot/placement/PublicationSnapshotPlacementConvergence.js's
         // own header.
         const publicationId = 'pub-convergence-h';
         const placementsA = [

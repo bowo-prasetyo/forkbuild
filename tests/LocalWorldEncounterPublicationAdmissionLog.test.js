@@ -1,13 +1,13 @@
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalWorldEncounterPublicationAdmissionLog } from '../application/LocalWorldEncounterPublicationAdmissionLog.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { LocalWorldEncounterPublicationAdmissionLog } from '../application/worldEncounter/LocalWorldEncounterPublicationAdmissionLog.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
 // 0.9.651 — Persist World-Encounter Publication Admissions.
 //
 // Unit tests for the new durable log itself — the small, purpose-built
-// sibling to application/LocalPublicationCatalog.js that exists because
+// sibling to application/publication/LocalPublicationCatalog.js that exists because
 // reusing that class directly for a plain publisher/Publication.js
 // instance is unsafe (see this class's own header, and
 // tests/DistributionResultPublicationCenterDeepLinkAudit.test.js's own

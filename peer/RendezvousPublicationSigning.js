@@ -2,7 +2,7 @@ import { getRendezvousPublicationSigningDescriptor } from '../core/RendezvousPub
 
 // 0.2.66 — the ONE place a peer/RendezvousPublication.js gains a real
 // Ed25519 signature before it ever reaches a peer/RendezvousTransport.js.
-// Exactly the same shape as application/PresenceSigning.js's own
+// Exactly the same shape as application/presence/PresenceSigning.js's own
 // signAvatarPresenceAdvertisement(): optional by construction (an
 // identityProvider that cannot sign, or isn't currently authenticated,
 // simply returns the publication UNCHANGED — signing a publication is

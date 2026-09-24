@@ -124,7 +124,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // tolerated at THIS layer (structural verification only) — see
     // core/PresenceTrustPolicy.js for whether a receiver's policy
     // actually accepts an unsigned claim, and
-    // application/PresenceTrustBoundary.js for the identity-binding
+    // application/presence/PresenceTrustBoundary.js for the identity-binding
     // check ("is this signer allowed to speak for this avatarId at
     // all") that a merely-VALID signature does not by itself answer.
     verifyPresenceAdvertisement(advertisement) {
@@ -152,7 +152,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // a valid signature IS the public key. Unsigned is tolerated at
     // THIS layer (structural verification only) — 0.2.41 introduces no
     // policy knob equivalent to core/PresenceTrustPolicy.js, so
-    // application/AvatarProfileTrustBoundary.js always tolerates an
+    // application/avatar/AvatarProfileTrustBoundary.js always tolerates an
     // unsigned profile claim, exactly like presence's own permissive
     // default.
     verifyAvatarProfileAdvertisement(advertisement) {
@@ -182,7 +182,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // (structural verification only) — see
     // core/AvatarInteractionTrustPolicy.js for whether a receiver's
     // policy actually accepts an unsigned claim, and
-    // application/AvatarInteractionTrustBoundary.js for the
+    // application/avatar/AvatarInteractionTrustBoundary.js for the
     // identity-binding check a merely-VALID signature does not by
     // itself answer.
     verifyAvatarInteractionAdvertisement(advertisement) {
@@ -404,7 +404,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // is pointless unless the identity it claims grants EDIT is provably
     // the one that signed it. This is STRUCTURAL verification only —
     // whether `grantingIdentityId` is actually THIS World's owner is a
-    // separate question application/WorldMembershipUseCase.js answers by
+    // separate question application/identity/WorldMembershipUseCase.js answers by
     // consulting the World document itself, never here (this class has
     // no notion of "a World" at all).
     verifyWorldEditAuthorizationGrant(record) {
@@ -573,7 +573,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // verification only: it proves the named identity really did sign
     // exactly this ContentReference/contentKind pair, and nothing about
     // whether the bytes it points at are true, well-formed, or even
-    // retrievable — see application/PublicationResolver.js for every
+    // retrievable — see application/publication/PublicationResolver.js for every
     // check that happens after this one succeeds.
     verifyDecentralizedPublication(record) {
         if (!record) {
@@ -605,7 +605,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // anchorType/locator/proof tuple, and nothing about whether the
     // external system it names actually recorded anything, nothing
     // about whether the referenced content is authentic, and nothing
-    // about who authored it — see application/ExternalAnchorVerifier.js
+    // about who authored it — see application/anchoring/ExternalAnchorVerifier.js
     // for the cross-checks that happen after this one succeeds.
     verifyPublicationAnchor(record) {
         if (!record) {
@@ -636,7 +636,7 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
     // verification only: it proves the named identity really did sign
     // exactly this publicationId/contentHash/storage/locator tuple, and
     // nothing about whether that locator can actually still serve those
-    // bytes right now — see application/SnapshotPlacementResolver.js
+    // bytes right now — see application/snapshot/placement/SnapshotPlacementResolver.js
     // for the retrieval and content-hash check that happens after this
     // one succeeds.
     verifyPublicationSnapshotPlacement(record) {

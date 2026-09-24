@@ -17,7 +17,7 @@ const CLOSE_SENTINEL = '__forkbuild_webrtc_close__';
 // 0.3.5 history: a SINGLE ICE server that never resolves (neither a
 // candidate nor an error — a silently dropped connection attempt,
 // "blackholed" rather than refused) blocks EVERY offer and answer this
-// class ever produces, for as long as application/PeerSessionManager.js's
+// class ever produces, for as long as application/peer/PeerSessionManager.js's
 // own outer SIGNAL_TIMEOUT_MS allows (30s) — one bad entry in
 // DEFAULT_ICE_SERVERS was enough to break "Invite Someone" and "Be
 // Discoverable" entirely, for every connection, regardless of how many
@@ -81,7 +81,7 @@ const ICE_GATHERING_TIMEOUT_MS = 8000;
 // renegotiate it in place. This class still knows nothing about WHO is
 // on the other end (that stays peer/PeerAuthenticationSession.js's job)
 // and nothing about WHY a track was added (that is
-// application/VoiceUseCase.js's job, one layer up, which is also the
+// application/chat/VoiceUseCase.js's job, one layer up, which is also the
 // only place that decides WHEN to call these methods, gated by
 // authentication and social eligibility exactly like every other
 // protocol layered on peer/PeerMessageBus.js). This class only performs
@@ -89,7 +89,7 @@ const ICE_GATHERING_TIMEOUT_MS = 8000;
 // on request, setRemoteDescription/createAnswer/setLocalDescription on
 // request — never decides to call itself, never sends anything over any
 // transport (the renegotiation SDP text is handed back to the caller,
-// which is application/VoiceUseCase.js relaying it over
+// which is application/chat/VoiceUseCase.js relaying it over
 // peer/PeerMessageBus.js's own `forkbuild:voice-media` protocol — see
 // that file's own header on why renegotiation deliberately travels
 // IN-BAND over the connection it is renegotiating, rather than through
@@ -234,7 +234,7 @@ export class WebRtcPeerConnection extends PeerConnection {
     // 0.2.73 — attaches ONE local audio MediaStreamTrack to this SAME
     // RTCPeerConnection. Throws if a track is already attached — this
     // class holds at most one outgoing audio sender at a time, matching
-    // application/VoiceUseCase.js's own "one call at a time, per peer"
+    // application/chat/VoiceUseCase.js's own "one call at a time, per peer"
     // scope; a caller that wants to swap tracks (e.g. muting by
     // replacing with a silent track) uses the returned RTCRtpSender's own
     // `replaceTrack()`, not a second addAudioTrack(). Does NOT
@@ -258,7 +258,7 @@ export class WebRtcPeerConnection extends PeerConnection {
     // switch is exactly that caller. `replaceTrack()` changes only which
     // MediaStreamTrack feeds an EXISTING `m=audio` section — never its
     // presence, direction, or codec negotiation — so no SDP offer/answer
-    // round trip is needed at all, and application/VoiceUseCase.js never
+    // round trip is needed at all, and application/chat/VoiceUseCase.js never
     // has to ask "am I the offerer" the way it must for
     // renegotiate()/applyRemoteOffer(). Throws if no audio track is
     // attached yet — this is a SWAP, not a first attach; a caller with no
@@ -272,7 +272,7 @@ export class WebRtcPeerConnection extends PeerConnection {
 
     // The mirror of addAudioTrack() — detaches and stops whatever local
     // audio track was attached. A no-op if none was ever attached
-    // (harmless to call from application/VoiceUseCase.js's own teardown
+    // (harmless to call from application/chat/VoiceUseCase.js's own teardown
     // path regardless of how far a call actually got).
     removeAudioTrack() {
         if (!this._audioSender) {
@@ -294,7 +294,7 @@ export class WebRtcPeerConnection extends PeerConnection {
     // Returns an unsubscribe function. `callback(track, stream)` fires
     // for every remote track this connection receives — in 0.2.73,
     // always exactly one audio track per call, since
-    // application/VoiceUseCase.js never attaches more than one local
+    // application/chat/VoiceUseCase.js never attaches more than one local
     // track at a time on either side.
     onRemoteTrack(callback) {
         this._trackListeners.add(callback);
@@ -307,7 +307,7 @@ export class WebRtcPeerConnection extends PeerConnection {
     // connection first reached CONNECTED, not only once at construction.
     // See this class's own header on why no ICE gathering wait is needed
     // here. Resolves with the raw SDP offer text for the caller
-    // (application/VoiceUseCase.js) to relay over
+    // (application/chat/VoiceUseCase.js) to relay over
     // peer/PeerMessageBus.js — this class never sends it anywhere itself.
     async renegotiate() {
         if (this._transportState !== PeerConnectionState.CONNECTED) {

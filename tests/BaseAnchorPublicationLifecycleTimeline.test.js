@@ -1,14 +1,14 @@
-import { BaseAnchorPublicationRecord } from '../application/BaseAnchorPublicationRecord.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { BaseTransactionInclusionObservationState } from '../application/BaseTransactionInclusionObservationState.js';
+import { BaseAnchorPublicationRecord } from '../application/anchoring/base/BaseAnchorPublicationRecord.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { BaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import {
     BaseAnchorPublicationLifecycleTimelineEntryKind,
     describeBaseAnchorPublicationLifecycleTimeline,
     reconstructBaseAnchorPublicationLifecycleTimeline
-} from '../application/BaseAnchorPublicationLifecycleTimelineView.js';
+} from '../application/anchoring/base/BaseAnchorPublicationLifecycleTimelineView.js';
 
 // 0.8.101 — Base Anchor Publication Lifecycle Timeline.
 //

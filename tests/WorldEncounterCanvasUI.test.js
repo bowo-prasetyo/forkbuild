@@ -2,8 +2,8 @@ import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import WorldEncounterMarker from '../ui/components/WorldEncounterMarker.js';
 import WandererMarker from '../ui/components/WandererMarker.js';
-import { describeWorldEncounterView } from '../application/WorldEncounterView.js';
-import { describeWorldEncounterReadModel } from '../application/WorldEncounterReadModel.js';
+import { describeWorldEncounterView } from '../application/worldEncounter/WorldEncounterView.js';
+import { describeWorldEncounterReadModel } from '../application/worldEncounter/WorldEncounterReadModel.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
@@ -116,7 +116,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // ui/views/DecentralizedPublicationsView.js's own admitToRepositoryDiscovery()
 // (0.9.337) already established. No new application/ import: this file
 // deliberately compares `loading.status` against the literal `'AVAILABLE'`
-// rather than importing application/WorldEncounterMaterialLoading.js's own
+// rather than importing application/worldEncounter/WorldEncounterMaterialLoading.js's own
 // WorldEncounterMaterialLoadStatus enum, so Section J's own "never imports
 // ... either loading/verification boundary directly" guarantee stays true,
 // unchanged. Discovery admission is covered end-to-end, live, in
@@ -405,7 +405,7 @@ async function run() {
         // `publisher/Publication.js`'s own `Publication` — deliberately
         // NOT an application/ import (so 48/40's own fifteen-module count
         // stays true, unchanged), and deliberately NOT
-        // application/WorldEncounterMaterialLoading.js either (44's own
+        // application/worldEncounter/WorldEncounterMaterialLoading.js either (44's own
         // blocklist above still holds: this file reaches `loading.status`
         // through inspectWorldEncounterMaterial()'s own orchestration
         // result, comparing it to the literal `'AVAILABLE'`, never

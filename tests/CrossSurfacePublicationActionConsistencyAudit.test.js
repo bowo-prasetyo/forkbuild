@@ -9,21 +9,21 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { FindPublicationUseCase } from '../application/FindPublicationUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { FindPublicationUseCase } from '../application/publication/FindPublicationUseCase.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.560 — Cross-Surface Publication Action Consistency Audit.
@@ -214,7 +214,7 @@ async function runTests() {
         assert(forkBranchMatches.length === 1, `B3b. Exactly one route.query.fork BRANCH in EditorView.js (found ${forkBranchMatches.length}) — a single consumer for every Fork entry point, whichever surface it came from.`);
 
         // B4. Commentary has TWO independent composition roots
-        // (application/CreatePublicationCommentaryUseCase.js for
+        // (application/publication/commentary/CreatePublicationCommentaryUseCase.js for
         // Repository/Author's PublicationCard, application/
         // CreateWorldViewUseCase.js for World's OwnPublicationPanel/
         // WorldEncounterCanvas) — by the codebase's own design (no
@@ -280,7 +280,7 @@ async function runTests() {
         // ever carries a bare publicationId string
         // (`route.query.publication`), independently RE-RESOLVED through
         // FindPublicationUseCase (the SAME class
-        // application/CreateDiscoveryUseCase.js composes for every
+        // application/discovery/CreateDiscoveryUseCase.js composes for every
         // other Publication lookup in the app, PublicationCatalog.js's
         // own search included) before ForkDocumentUseCase ever sees it.
         assert(editorViewSource.includes('sourcePublication = findPublicationUseCase.execute(route.query.publication);'), 'C2a. The fork destination re-resolves publicationId through the canonical discovery lookup — never deserializes a caller-supplied Publication shape from the URL.');
@@ -348,7 +348,7 @@ async function runTests() {
         // "most recent publication governs" reduction. There is
         // structurally no way for one to see a governing Publication
         // the other does not.
-        const worldNavSource = await rawSource('application/WorldNavigationSession.js');
+        const worldNavSource = await rawSource('application/world/WorldNavigationSession.js');
         const checkForkPolicyStart = worldNavSource.indexOf('_checkForkPolicy(documentId) {');
         const checkForkPolicyEnd = worldNavSource.indexOf('\n    }', checkForkPolicyStart);
         const checkForkPolicyBody = worldNavSource.slice(checkForkPolicyStart, checkForkPolicyEnd);

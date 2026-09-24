@@ -7,7 +7,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { License, LicenseId } from '../core/License.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -15,17 +15,17 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
-import { DiscoverWorldsUseCase } from '../application/DiscoverWorldsUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
+import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.199 — Removal & Retraction Lifecycle Convergence Audit.
@@ -371,8 +371,8 @@ async function runTests() {
     // exercising BOTH in the same file introduce any such coupling?
     // -------------------------------------------------------------
     {
-        const removeUseCaseSource = await rawSource('application/RemoveWorldPlacementUseCase.js');
-        const unpublishUseCaseSource = await rawSource('application/UnpublishDocumentUseCase.js');
+        const removeUseCaseSource = await rawSource('application/placement/RemoveWorldPlacementUseCase.js');
+        const unpublishUseCaseSource = await rawSource('application/publication/UnpublishDocumentUseCase.js');
         const distributionVocabulary = /Snapshot|Nostr|Arweave|Bitcoin|Anchor|Distribution/i;
         assert(!distributionVocabulary.test(codeOnlyLines(removeUseCaseSource).join('\n')),
             'F1. RemoveWorldPlacementUseCase.js\'s own CODE carries no Snapshot/Nostr/Arweave/Anchor/Distribution vocabulary');
@@ -381,7 +381,7 @@ async function runTests() {
 
         // Neither method's body in WorldNavigationSession reaches for a
         // snapshot/distribution/discovery-registration collaborator.
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
         const removeBody = sessionSource.match(/removePlacement\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         const unpublishBody = sessionSource.match(/unpublishDocument\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         assert(!distributionVocabulary.test(removeBody), 'F3. removePlacement()\'s own body touches no Snapshot/Nostr/Arweave/distribution collaborator');
@@ -411,7 +411,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const noNewFlagVocabulary = /\borphan(ed)?\b|\bisOrphaned\b|\bplacementOrphaned\b/i;
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
         assert(!noNewFlagVocabulary.test(codeOnlyLines(sessionSource).join('\n')),
             'G1. WorldNavigationSession.js introduces no orphaned/isOrphaned vocabulary in CODE — the word appears only in comments (this audit\'s own, and 0.9.198\'s), never as a field a read model returns');
         const placementInfoPanelSource = await rawSource('ui/components/PlacementInfoPanel.js');
@@ -511,12 +511,12 @@ async function runTests() {
     // other's event.
     // -------------------------------------------------------------
     {
-        const removeUseCaseSource = await rawSource('application/RemoveWorldPlacementUseCase.js');
-        const unpublishUseCaseSource = await rawSource('application/UnpublishDocumentUseCase.js');
+        const removeUseCaseSource = await rawSource('application/placement/RemoveWorldPlacementUseCase.js');
+        const unpublishUseCaseSource = await rawSource('application/publication/UnpublishDocumentUseCase.js');
         assert(countReferences(removeUseCaseSource, 'UnpublishDocumentUseCase') === 0, 'I1. RemoveWorldPlacementUseCase.js never references UnpublishDocumentUseCase');
         assert(countReferences(unpublishUseCaseSource, 'RemoveWorldPlacementUseCase') === 0, 'I2. UnpublishDocumentUseCase.js never references RemoveWorldPlacementUseCase');
 
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
         const removeBody = sessionSource.match(/removePlacement\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         const unpublishBody = sessionSource.match(/unpublishDocument\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         assert(!/_unpublishDocumentUseCase/.test(removeBody), 'I3. removePlacement()\'s own body never calls this._unpublishDocumentUseCase');

@@ -22,7 +22,7 @@ import { describePeerWorldDiscoverySource, derivePeerWorldOrigin } from './PeerW
 //      registerPeerWorldSource()               unregisterPeerWorldSource()
 //          │                                        │
 //          ▼                                        ▼
-//   application/WorldDiscoverySourceRegistry.js   (0.9.9, unchanged)
+//   application/discovery/WorldDiscoverySourceRegistry.js   (0.9.9, unchanged)
 //      registry.setSource()                     registry.removeSource()
 //
 // TWO FUNCTIONS, ONE JOB EACH, BOTH PLAIN TRANSLATION.
@@ -92,8 +92,8 @@ import { describePeerWorldDiscoverySource, derivePeerWorldOrigin } from './PeerW
 //
 // NO WORLD ENCOUNTER DERIVATION OF ANY KIND. This file never imports
 // `core/WorldEncounter.js`, `core/WorldDiscoverySourceAssembly.js`,
-// `application/WorldEncounterIntegration.js`, or
-// `application/WorldDiscoveryRegistryProjection.js`, and never calls
+// `application/worldEncounter/WorldEncounterIntegration.js`, or
+// `application/discovery/WorldDiscoveryRegistryProjection.js`, and never calls
 // `deriveWorldEncounters()`, `assembleWorldDiscoveryInputs()`,
 // `describeWorldFromDiscoverySources()`, or
 // `describeWorldFromDiscoveryRegistry()`. Its job ends the moment

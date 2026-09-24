@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeWorldFromDiscoveryRegistry } from '../application/WorldDiscoveryRegistryProjection.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
 import {
     describeLocalWorldDiscoverySource,
     describeWorldFromDiscoverySources
-} from '../application/WorldEncounterIntegration.js';
+} from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 
@@ -285,7 +285,7 @@ function connectedPeerOf(identityId) {
 //     second World computation, event-payload model, or trust engine.
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../application/WorldDiscoverySourceRegistry.js', import.meta.url);
+    const sourceUrl = new URL('../application/discovery/WorldDiscoverySourceRegistry.js', import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource
         .split('\n')

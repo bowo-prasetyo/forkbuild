@@ -1,6 +1,6 @@
-import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
-import { EditorActionContext } from '../application/EditorActionContext.js';
-import { InputRouter } from '../application/InputRouter.js';
+import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { EditorActionContext } from '../application/editor/EditorActionContext.js';
+import { InputRouter } from '../application/editor/InputRouter.js';
 
 // 0.1.50 — Editor action architecture tests. Deliberately architectural
 // rather than visual: unique ids, unique shortcuts, shared definitions
@@ -76,7 +76,7 @@ function buildHarness(sessionState = {}, sessionOverride = null) {
         focusNumeric: null,
         // group.rename can no longer rename to undefined by calling
         // renameSelectedGroup() with nothing — it now collects a name
-        // through this hook first (application/EditorActionRegistry.js's
+        // through this hook first (application/editor/EditorActionRegistry.js's
         // own 0.6.2 comment on group.rename). A fixed non-null return is
         // enough for every test below that only cares whether
         // renameSelectedGroup ends up called at all.

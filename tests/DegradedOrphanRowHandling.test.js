@@ -7,7 +7,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { License, LicenseId } from '../core/License.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -15,19 +15,19 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
-import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
-import { DiscoverWorldsUseCase } from '../application/DiscoverWorldsUseCase.js';
-import { SpatialCameraController } from '../application/SpatialCameraController.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
+import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
+import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
+import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
 
 // 0.9.201 — Degraded Orphan Row Handling.
 //
@@ -40,7 +40,7 @@ import { SpatialCameraController } from '../application/SpatialCameraController.
 // one degraded row there: a title falling back to a raw publicationId
 // string, with an already-disabled Focus button.
 //
-// This file is the production fix (application/WorldNavigationSession.js's
+// This file is the production fix (application/world/WorldNavigationSession.js's
 // getDocumentsAtPosition() now omits an occupant it cannot resolve to a
 // Publication) plus the focused E2E audit proving the fix is exactly as
 // narrow as 0.9.200 recommended:
@@ -355,7 +355,7 @@ async function runTests() {
     // collaborators elsewhere for unrelated features).
     // -------------------------------------------------------------
     {
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
         const dialogSource = await rawSource('ui/components/LocationDocumentsDialog.js');
 
         const getDocumentsAtPositionBody = codeOnlyLines(extractMethodBody(sessionSource, 'getDocumentsAtPosition')).join('\n');
@@ -425,7 +425,7 @@ an orphaned placement (a PlacementRecord surviving its own Publication
 being unpublished) producing one degraded, opaque-id row in "Documents
 Here" — is now resolved, narrowly, at exactly the seam recommended:
 
-  getDocumentsAtPosition() [application/WorldNavigationSession.js]
+  getDocumentsAtPosition() [application/world/WorldNavigationSession.js]
       occupant → _describeSpatialOccupant() → publication lookup → null
                                                       │
                                                       ▼

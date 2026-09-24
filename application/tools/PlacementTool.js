@@ -1,7 +1,7 @@
 import { Tool } from './Tool.js';
 import { PlacementValidator } from '../../core/PlacementValidator.js';
 import { PlaceBrickCommand } from '../commands/PlaceBrickCommand.js';
-import { PlacementPositionService } from '../PlacementPositionService.js';
+import { PlacementPositionService } from '../editor/PlacementPositionService.js';
 
 // Pointer move -> read pointerEvent.pickedBrick/worldPosition (already
 // computed by InputDispatcher) -> snap -> PreviewUseCase.show(). Pointer

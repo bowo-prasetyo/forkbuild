@@ -4,7 +4,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { DocumentOperationCausalGapDetector, CausalGapStatus } from '../core/DocumentOperationCausalGapDetector.js';
 import {
@@ -25,7 +25,7 @@ import {
 // — the same "pure query, exercised directly" posture
 // `tests/DocumentOperationCausalGapDetector.test.js`'s own Sections A-G
 // already established for its sibling file. The one section that touches
-// `application/CommandHistory.js` (the negative test at the end) does so
+// `application/editor/CommandHistory.js` (the negative test at the end) does so
 // only to PROVE this milestone never touches it — never to exercise a new
 // production wiring, because there isn't one.
 //
@@ -33,7 +33,7 @@ import {
 // operation buffering, delayed/automatic application, causal reordering,
 // automatic replay, rollback, history rewriting, retransmission, retry,
 // CRDT, OT, conflict resolution, synchronized undo, or a convergence
-// guarantee. `application/CommandHistory.js` is untouched by this
+// guarantee. `application/editor/CommandHistory.js` is untouched by this
 // milestone.
 
 function assert(condition, message) {

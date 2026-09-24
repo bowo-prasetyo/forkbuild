@@ -1,17 +1,17 @@
 import { BaseJsonRpcClient } from '../base/BaseJsonRpcClient.js';
 import { BaseTransactionInclusionObserver } from '../base/BaseTransactionInclusionObserver.js';
-import { BaseTransactionInclusionObservationCoordinator } from '../application/BaseTransactionInclusionObservationCoordinator.js';
-import { BaseTransactionInclusionObservationState, isValidBaseTransactionInclusionObservationState } from '../application/BaseTransactionInclusionObservationState.js';
+import { BaseTransactionInclusionObservationCoordinator } from '../application/anchoring/base/BaseTransactionInclusionObservationCoordinator.js';
+import { BaseTransactionInclusionObservationState, isValidBaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import {
     describeBaseTransactionInclusionObservation,
     describeBaseTransactionInclusionObservationHistory,
     describeBaseTransactionInclusionStateLabel,
     describeBaseTransactionInclusionStateShortLabel
-} from '../application/BaseTransactionInclusionObservationView.js';
+} from '../application/anchoring/base/BaseTransactionInclusionObservationView.js';
 import {
     appendBaseTransactionInclusionObservationHistoryEntry,
     latestBaseTransactionInclusionObservation
-} from '../application/BaseTransactionInclusionObservationHistory.js';
+} from '../application/anchoring/base/BaseTransactionInclusionObservationHistory.js';
 import { BitcoinAnchorConfirmationObserver } from '../anchoring/BitcoinAnchorConfirmationObserver.js';
 
 // 0.8.96 — Explicit Base Transaction Inclusion & Confirmation Observation.

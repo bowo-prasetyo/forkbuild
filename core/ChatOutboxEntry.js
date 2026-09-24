@@ -4,9 +4,9 @@ import { ChatDeliveryState, isValidChatDeliveryState } from './ChatDeliveryState
 // 0.2.63 — Reliable Offline Messaging & Delivery State.
 //
 // The durable half of what a live core/ChatMessage.js (0.2.61) becomes
-// once application/ChatUseCase.js#sendOrQueue() decides it is worth
+// once application/chat/ChatUseCase.js#sendOrQueue() decides it is worth
 // tracking until delivery is actually confirmed — see
-// application/ChatOutbox.js's own header for the store this belongs
+// application/chat/ChatOutbox.js's own header for the store this belongs
 // to. Deliberately NOT a second copy of the message's own content or
 // identity: `message` is carried verbatim, exactly the same
 // core/ChatMessage.js shape 0.2.61 already validates and sends
@@ -17,7 +17,7 @@ import { ChatDeliveryState, isValidChatDeliveryState } from './ChatDeliveryState
 //
 // Immutable, like core/PeerRelationship.js and core/AvatarProfile.js —
 // a state transition is always a NEW entry (`withState()`), never a
-// mutation in place, and `application/ChatOutbox.js` is the only thing
+// mutation in place, and `application/chat/ChatOutbox.js` is the only thing
 // that ever calls the constructor or `withState()` for a message this
 // device actually sent.
 export const DEFAULT_OUTBOX_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days — best-effort, not forever.
@@ -36,7 +36,7 @@ export class ChatOutboxEntry {
             throw new Error('ChatOutboxEntry: a valid ChatMessage is required');
         }
         // Never a connectionId, never an endpoint — see
-        // application/ChatOutbox.js's own header, "A Durable Outbox Is
+        // application/chat/ChatOutbox.js's own header, "A Durable Outbox Is
         // Addressed To An Identity, Never A Connection" (0.2.63).
         if (!peerIdentityId || typeof peerIdentityId !== 'string') {
             throw new Error('ChatOutboxEntry: peerIdentityId is required');
@@ -64,7 +64,7 @@ export class ChatOutboxEntry {
     get deliveredAt() { return this._deliveredAt; }
 
     // A DELIVERED entry never expires — its own job is already done,
-    // and application/ChatOutbox.js#acknowledge() removes it from
+    // and application/chat/ChatOutbox.js#acknowledge() removes it from
     // storage the instant it gets there anyway (see that method's own
     // header) — this only matters for the brief window between a
     // decision being made and being persisted.
@@ -102,10 +102,10 @@ export class ChatOutboxEntry {
 
     // Never throws — a corrupted or unrecognized stored record simply
     // isn't restored, the same "validate strictly on write, degrade
-    // gracefully on read" split application/AvatarProfileUseCase.js's
+    // gracefully on read" split application/avatar/AvatarProfileUseCase.js's
     // own header already documents, and the exact same shape
     // core/PeerRelationship.js#fromJSON already uses one layer over in
-    // application/PeerRelationshipUseCase.js#_loadAll's own
+    // application/peer/PeerRelationshipUseCase.js#_loadAll's own
     // `.filter(Boolean)`.
     static fromJSON(json) {
         if (!json || typeof json !== 'object') {

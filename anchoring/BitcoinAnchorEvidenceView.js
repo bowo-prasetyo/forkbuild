@@ -18,7 +18,7 @@ const TXID_PATTERN = /^[0-9a-f]{64}$/i;
 // three stay anchoring/BitcoinOpReturnProofVerifier.js's own job,
 // unchanged. `describe()` is a pure string/URL transform over whatever
 // `proof` the anchor already carries, exactly as synchronous and
-// side-effect-free as application/PublicationAnchorDetailView.js's own
+// side-effect-free as application/anchoring/PublicationAnchorDetailView.js's own
 // `publicationAnchorDetailView()`. See tests/
 // PublicationAnchorInspectionUX.test.js's own invariant section.
 //
@@ -38,7 +38,7 @@ export class BitcoinAnchorEvidenceView {
     // `externalLocator` is null whenever `proof.txid` is not a
     // recognizable 32-byte hex transaction id — there is nothing honest
     // to link to. The explorer URL construction lives HERE and nowhere
-    // else — never in application/PublicationAnchorDetailView.js, whose
+    // else — never in application/anchoring/PublicationAnchorDetailView.js, whose
     // own header states it never reinterprets `proof` at all.
     describe(anchor) {
         const proof = anchor && anchor.proof && typeof anchor.proof === 'object' ? anchor.proof : {};

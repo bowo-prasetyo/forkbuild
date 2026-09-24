@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
-import { composePlaceNamingPublicationRuntime } from '../application/PlaceNamingPublicationRuntimeComposition.js';
-import { NostrPlaceNamingDiscoveryPublisher } from '../application/NostrPlaceNamingDiscoveryPublisher.js';
+import { composePlaceNamingPublicationRuntime } from '../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
+import { NostrPlaceNamingDiscoveryPublisher } from '../application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
@@ -232,11 +232,11 @@ async function run() {
     // Section H — architectural regression.
     // ---------------------------------------------------------------
     {
-        const code = await codeOnlySource('application/PlaceNamingPublicationRuntimeComposition.js');
+        const code = await codeOnlySource('application/placeNaming/PlaceNamingPublicationRuntimeComposition.js');
 
         const browserApiTerms = ['window.', 'navigator.', 'WebSocket', 'fetch('];
         for (const term of browserApiTerms) {
-            assert(!code.includes(term), `17. application/PlaceNamingPublicationRuntimeComposition.js never references '${term}' — no browser API of any kind`);
+            assert(!code.includes(term), `17. application/placeNaming/PlaceNamingPublicationRuntimeComposition.js never references '${term}' — no browser API of any kind`);
         }
 
         assert(!code.includes('createNostrInjectedProviderPublisher'), '18. never imports the injected-provider factory — that stays entirely a caller\'s own concern');
@@ -244,7 +244,7 @@ async function run() {
 
         const forbiddenCouplingTerms = ['ArweaveContentStore', 'NostrSnapshotDiscoveryPublisher', 'SnapshotDistributionCommand', 'PublicationDistribution'];
         for (const term of forbiddenCouplingTerms) {
-            assert(!code.includes(term), `20. application/PlaceNamingPublicationRuntimeComposition.js never references '${term}' — no coupling to the Snapshot or Signed Claim distribution families`);
+            assert(!code.includes(term), `20. application/placeNaming/PlaceNamingPublicationRuntimeComposition.js never references '${term}' — no coupling to the Snapshot or Signed Claim distribution families`);
         }
 
         const forbiddenVocabTerms = ['retry', 'cache', 'dedup', 'trust', 'reputation', 'ranking', 'scoring'];
@@ -252,7 +252,7 @@ async function run() {
             assert(!code.toLowerCase().includes(term), `21. code must never use "${term}" — composition only, no execution/state/trust vocabulary`);
         }
 
-        const publisherSource = await codeOnlySource('application/NostrPlaceNamingDiscoveryPublisher.js');
+        const publisherSource = await codeOnlySource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js');
         assert(!publisherSource.includes('PlaceNamingPublicationRuntimeComposition'), '22. the 0.9.316 publisher itself is never modified to know about this composition file');
 
         // Composed into ui/main.js by this same milestone — proving the

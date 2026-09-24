@@ -1,17 +1,17 @@
 import { BitcoinAnchorConfirmationObserver } from '../anchoring/BitcoinAnchorConfirmationObserver.js';
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
 import {
     appendBitcoinAnchorConfirmationObservationHistoryEntry,
     latestBitcoinAnchorConfirmationObservation
-} from '../application/BitcoinAnchorConfirmationObservationHistory.js';
+} from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js';
 import {
     describeBitcoinAnchorConfirmationStateLabel,
     describeBitcoinAnchorConfirmationObservationHistory
-} from '../application/BitcoinAnchorConfirmationObservationHistoryView.js';
+} from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryView.js';
 import {
     describeBitcoinAnchorConfirmationObservationHistoryDetails,
     describeBitcoinAnchorConfirmationObservationDetail
-} from '../application/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
+} from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistoryDetailView.js';
 
 // 0.8.56 — Bitcoin Anchor Confirmation Observation History & Per-Observation
 // Inspection.

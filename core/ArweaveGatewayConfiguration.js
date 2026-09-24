@@ -5,7 +5,7 @@ const DEFAULT_ARWEAVE_GATEWAY_URL = 'https://arweave.net';
 // 0.9.363's own audit named the exact gap this closes: every Arweave-facing
 // retrieval adapter in this codebase already accepts its own `gatewayUrl`
 // through ordinary constructor injection (content/ArweaveContentStore.js,
-// application/ArweaveWorldEncounterMaterialResolver.js — mechanical,
+// application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js — mechanical,
 // code-level configurability, Section C), but nothing gave a USER's own
 // choice of gateway a durable, validated shape to travel in from a settings
 // surface down to those constructors. This file is that shape, and nothing
@@ -39,7 +39,7 @@ const DEFAULT_ARWEAVE_GATEWAY_URL = 'https://arweave.net';
 // A SEPARATE OBJECT, NEVER A REUSE OF `PublicationDistributionRuntimeConfiguration`.
 // That file's own `gatewayUrl` field (inside `arweaveUploaderOptions`,
 // resolved from `resolveArweaveUploaderOptions()`) configures the
-// DISTRIBUTION WRITE path — `application/ArweavePublicationMaterialUploader.js`
+// DISTRIBUTION WRITE path — `application/arweave/ArweavePublicationMaterialUploader.js`
 // posting a Signed Claim's own material to a gateway a HOST capability
 // chose. This file configures the RETRIEVAL READ path — a USER's own
 // choice of which gateway serves already-published content back. Sharing
@@ -73,7 +73,7 @@ const DEFAULT_ARWEAVE_GATEWAY_URL = 'https://arweave.net';
 // Arweave content, and never rejects a syntactically valid URL for being
 // "probably wrong" — a configured-but-currently-unreachable gateway is a
 // retrieval-time failure for the EXISTING content/ArweaveContentStore.js /
-// application/ArweaveWorldEncounterMaterialResolver.js failure semantics
+// application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js failure semantics
 // to report, never something this file tries to predict up front.
 //
 // TRAILING SLASHES ARE NORMALIZED AWAY, mirroring content/
@@ -111,8 +111,8 @@ const DEFAULT_ARWEAVE_GATEWAY_URL = 'https://arweave.net';
 //
 // WHY THE SINGLE-VALUE SHAPE ISN'T JUST "A LIST OF ONE" EVERYWHERE. Every
 // existing caller of `.gatewayUrl` — content/ArweaveContentStore.js,
-// application/ArweaveWorldEncounterMaterialResolver.js,
-// application/CreateArweaveAnchorPublisherUseCase.js, application/
+// application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js,
+// application/anchoring/CreateArweaveAnchorPublisherUseCase.js, application/
 // CreateArweaveAnchorProofVerifierUseCase.js — keeps working unmodified,
 // reading exactly the same field, holding exactly the same value it always
 // did. A caller that wants the new ordered-failover behavior explicitly
@@ -151,7 +151,7 @@ const DEFAULT_ARWEAVE_GATEWAY_URL = 'https://arweave.net';
 // - **Choosing WHICH order to try gateways in, or what "unavailable"
 //   means.** That policy lives in the read collaborator that consumes
 //   `.gatewayUrls` (content/ArweaveGatewayFailoverContentStore.js /
-//   application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js),
+//   application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js),
 //   never in this plain value object.
 // - **A settings UI, or any `ui/` import.** See ui/views/
 //   ArweaveGatewaySettingsView.js, this same milestone, for the reachable
@@ -232,7 +232,7 @@ export class ArweaveGatewayConfiguration {
 
 // The one deployment default this codebase's Arweave-facing retrieval
 // adapters already hardcode individually (content/ArweaveContentStore.js's
-// own DEFAULT_GATEWAY_URL, application/ArweaveWorldEncounterMaterialResolver.js's
+// own DEFAULT_GATEWAY_URL, application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js's
 // own DEFAULT_GATEWAY_URL) — byte-identical here, deliberately never
 // imported from either: the same per-file "no cross-import of a sibling's
 // own constant" restraint content/ArweaveContentStore.js's own header

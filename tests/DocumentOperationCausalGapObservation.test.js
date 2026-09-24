@@ -9,19 +9,19 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { DocumentCommandPropagationUseCase } from '../application/DocumentCommandPropagationUseCase.js';
+import { DocumentCommandPropagationUseCase } from '../application/document/DocumentCommandPropagationUseCase.js';
 import {
     RemoteDocumentOperationApplicationUseCase,
     DocumentOperationApplicationOutcome
-} from '../application/RemoteDocumentOperationApplicationUseCase.js';
+} from '../application/document/RemoteDocumentOperationApplicationUseCase.js';
 import { CausalGapStatus } from '../core/DocumentOperationCausalGapDetector.js';
-import { DocumentOperationCausalGapObservationUseCase } from '../application/DocumentOperationCausalGapObservationUseCase.js';
+import { DocumentOperationCausalGapObservationUseCase } from '../application/document/DocumentOperationCausalGapObservationUseCase.js';
 
 // 0.9.229 — Causal Gap Observation at the Propagation Boundary.
 //
@@ -31,8 +31,8 @@ import { DocumentOperationCausalGapObservationUseCase } from '../application/Doc
 // — so every operation this replica actually accepts over the network
 // produces one observable causal-gap result, without changing whether or
 // how that operation gets applied. Every section below exercises the new
-// `application/DocumentOperationCausalGapObservationUseCase.js` wired the
-// SAME way `application/RemoteDocumentOperationApplicationUseCase.js`
+// `application/document/DocumentOperationCausalGapObservationUseCase.js` wired the
+// SAME way `application/document/RemoteDocumentOperationApplicationUseCase.js`
 // already attaches to that identical feed — two independent subscribers,
 // neither one aware of the other.
 //
@@ -165,7 +165,7 @@ function wireBob(target) {
     const observations = [];
     gapObservation.onGapObserved((descriptor) => observations.push(descriptor));
     // 0.9.229 — registered BEFORE the application subscription, exactly
-    // the order application/EditorSession.js now wires these two in
+    // the order application/editor/EditorSession.js now wires these two in
     // production (see that file's own 0.9.229 comment).
     const unsubscribeGap = gapObservation.attachToPropagation(bob.propagation);
     const unsubscribeApplication = applicationUseCase.attachToPropagation(bob.propagation, () => target);
@@ -197,7 +197,7 @@ function wireBob(target) {
     assert(JSON.stringify(wired.observations[1].causalPredecessors) === JSON.stringify([opA.id]), '4. the descriptor carries B\'s own causal predecessors unchanged');
     assert(Object.keys(wired.observations[1]).sort().join(',') === 'causalGap,causalPredecessors,documentId,operationId', '5. the descriptor is exactly the small, flat shape this milestone specifies — no lifecycle fields');
     assert(target.commandHistory.getExecutedCommands().length === 2, '6. both operations were applied, unaffected by gap observation');
-    assert(target.commandHistory.getExecutedCommands()[0].id === opA.id && target.commandHistory.getExecutedCommands()[1].id === opB.id, '7. applied in arrival order — application/CommandHistory.js is untouched');
+    assert(target.commandHistory.getExecutedCommands()[0].id === opA.id && target.commandHistory.getExecutedCommands()[1].id === opB.id, '7. applied in arrival order — application/editor/CommandHistory.js is untouched');
 
     wired.dispose();
     console.log('✓ Section A: an operation whose predecessor was already accepted is observed as NO_GAP and applies normally');

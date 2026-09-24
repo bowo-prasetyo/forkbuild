@@ -1,14 +1,14 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
-import { verifyPublisherLeaderboardSnapshotClaim } from '../application/PublisherLeaderboardSnapshotClaimVerification.js';
-import { LeaderboardClaimRecord } from '../application/LeaderboardClaimRecord.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
+import { verifyPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
 import {
     describePublisherLeaderboardClaimHistoryStatistics,
     reconstructPublisherLeaderboardClaimHistoryStatistics
-} from '../application/PublisherLeaderboardClaimHistoryStatisticsView.js';
+} from '../application/leaderboard/PublisherLeaderboardClaimHistoryStatisticsView.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -40,7 +40,7 @@ function assert(condition, message) {
 
 // 0.8.130 — reconstructPublisherLeaderboardClaimHistoryStatistics() now
 // reads its history from an archive rather than accepting one directly
-// (see application/PublisherLeaderboardClaimHistoryStatisticsView.js's own
+// (see application/leaderboard/PublisherLeaderboardClaimHistoryStatisticsView.js's own
 // 0.8.130 update). This helper folds a plain claim-record array into a
 // fresh `PublicationObservationArchive`, preserving each record's own
 // `origin` as the archive-level provenance tag it was appended under.

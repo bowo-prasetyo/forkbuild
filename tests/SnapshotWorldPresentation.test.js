@@ -1,20 +1,20 @@
 import { readFile } from 'node:fs/promises';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { registerMaterializedSnapshotWorldSource } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+import { registerMaterializedSnapshotWorldSource } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { WorldEncounterPresentationSourceFamily } from '../application/WorldEncounterPresentation.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { WorldEncounterPresentationSourceFamily } from '../application/worldEncounter/WorldEncounterPresentation.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
@@ -29,7 +29,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // sound. Nothing in that chain ever let a Wanderer tell, once selected,
 // that a particular encounter came from a materialized Snapshot rather
 // than an ordinary local or peer-contributed Publication. This file proves
-// the one new, additive fact `application/WorldEncounterPresentation.js`
+// the one new, additive fact `application/worldEncounter/WorldEncounterPresentation.js`
 // introduces — `sourceFamily` — reaches a REAL, mounted
 // `WorldEncounterCanvas`'s own inspection panel for a REAL, Nostr-
 // discovered, resolved, materialized, PLACED, and REGISTERED Snapshot, and
@@ -53,7 +53,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              never guesses.
 //   Section E — structural sweep: no production file other than
 //              ui/components/WorldEncounterCanvas.js, css/main.css, and the
-//              new application/WorldEncounterPresentation.js was touched;
+//              new application/worldEncounter/WorldEncounterPresentation.js was touched;
 //              the registration bridge and WorldEncounterMarker.js remain
 //              entirely untouched by this milestone.
 
@@ -438,16 +438,16 @@ async function run() {
     // Section E — structural sweep.
     // ---------------------------------------------------------------
     {
-        const bridgeSource = await readFile(new URL('../application/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
+        const bridgeSource = await readFile(new URL('../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
         assert(!bridgeSource.includes('WorldEncounterPresentation'), '1. the registration bridge is untouched by this milestone — it knows nothing about presentation');
 
         const markerSource = await readFile(new URL('../ui/components/WorldEncounterMarker.js', import.meta.url), 'utf8');
         assert(!/^\s*import /m.test(markerSource), '2. WorldEncounterMarker.js still imports nothing at all — no Snapshot-specific marker component was introduced, and pre-selection marker rendering is untouched by this milestone');
 
-        const presentationSource = await readFile(new URL('../application/WorldEncounterPresentation.js', import.meta.url), 'utf8');
+        const presentationSource = await readFile(new URL('../application/worldEncounter/WorldEncounterPresentation.js', import.meta.url), 'utf8');
         const presentationCodeOnly = presentationSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/fetch\(|localStorage|WebRTC|WorldDiscoverySourceRegistry|deriveWorldEncounters\(/.test(presentationCodeOnly),
-            '3. application/WorldEncounterPresentation.js performs no I/O and never recomputes the World from scratch — it is a pure join over two already-computed facts');
+            '3. application/worldEncounter/WorldEncounterPresentation.js performs no I/O and never recomputes the World from scratch — it is a pure join over two already-computed facts');
         assert(!/rank|trust|verified|best|preferred|reliable|freshness|quality|score/i.test(presentationCodeOnly),
             '4. no rank/trust/verified/best/preferred/reliable/freshness/quality/score vocabulary anywhere in the new module\'s own executable code');
 

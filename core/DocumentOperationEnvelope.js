@@ -1,6 +1,6 @@
 // 0.9.222 — Shared Document Edit Operation Boundary.
 //
-// The wire vocabulary for `application/DocumentCommandPropagationUseCase.js`'s
+// The wire vocabulary for `application/document/DocumentCommandPropagationUseCase.js`'s
 // own protocol (`forkbuild:document-sync`) — a SEPARATE protocol from
 // `forkbuild:world-sync` (core/WorldOperationEnvelope.js), never a rename or
 // generalization of it. See docs/Roadmap.md, 0.9.222's own header for why:
@@ -8,7 +8,7 @@
 // exact shape for World documents; this file brings the SAME closed
 // discipline to the OTHER kind of Document this codebase edits live — the
 // Editor's own Structure/blueprint documents (ui/views/EditorView.js,
-// application/EditorSession.js) — which had no propagation protocol of
+// application/editor/EditorSession.js) — which had no propagation protocol of
 // any kind before this milestone. Kept as its own file rather than
 // widening WorldOperationEnvelope's own `worldDocumentId` field, the same
 // "own file per subsystem, even when nearly identical in shape to a
@@ -17,7 +17,7 @@
 //
 // A single, closed shape — there is only one kind of thing that ever
 // travels here: one already-executed local `application/commands/Command.js`
-// instance, serialized exactly the way `application/CommandHistory.js`
+// instance, serialized exactly the way `application/editor/CommandHistory.js`
 // already persists it (`command.toJSON()`), addressed at a specific
 // Document. Nothing here ever carries a Document snapshot or a diff — see
 // core/WorldOperationEnvelope.js's own header, "do not synchronize the
@@ -34,7 +34,7 @@
 //   documentId        — the Document this operation targets (a Document's
 //                        own identity IS its `world.id` — see
 //                        core/Document.js's own header and
-//                        application/SaveDocumentUseCase.js, `const id =
+//                        application/document/SaveDocumentUseCase.js, `const id =
 //                        document.world.id`). Always compared against the
 //                        RECEIVER's own locally-known Document for this
 //                        id — an operation naming a Document the receiver
@@ -45,7 +45,7 @@
 //                        identity) — checked against the connection's own
 //                        proven identity BEFORE any device-aware
 //                        resolution happens, the same two-step discipline
-//                        application/WorldCommandPropagationUseCase.js's
+//                        application/document/WorldCommandPropagationUseCase.js's
 //                        own header describes.
 //   command           — the serialized command (`command.toJSON()`),
 //                        reconstructed on the receiving side through the
@@ -53,7 +53,7 @@
 //                        every local undo/redo/replay path already uses.
 //
 // Deliberately absent, on purpose, for THIS milestone (see
-// application/DocumentCommandPropagationUseCase.js's own header for the
+// application/document/DocumentCommandPropagationUseCase.js's own header for the
 // full boundary-vs-convergence argument): no `logicalClock`. World's own
 // ordering/conflict-resolution field (core/WorldOperationEnvelope.js's own
 // 0.2.97 addition) answers a question this milestone deliberately does not

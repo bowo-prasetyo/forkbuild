@@ -2,12 +2,12 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
 import { FriendshipRecord } from '../core/FriendshipRecord.js';
-import { VoiceUseCase } from '../application/VoiceUseCase.js';
+import { VoiceUseCase } from '../application/chat/VoiceUseCase.js';
 import { VoiceSessionState } from '../core/VoiceSessionState.js';
 import { VoiceCallEndReason } from '../core/VoiceCallEndReason.js';
 
@@ -16,7 +16,7 @@ import { VoiceCallEndReason } from '../core/VoiceCallEndReason.js';
 // The first test file in this codebase to combine BOTH established
 // multi-device harnesses at once: `tests/VoiceCallReliability.test.js`'s
 // REAL `WebRtcPeerConnectionProvider` pairs (voice needs genuine media-
-// capable connections — `application/VoiceUseCase.js#supportsVoice()`
+// capable connections — `application/chat/VoiceUseCase.js#supportsVoice()`
 // is false for anything else) and `tests/MultiDevicePresenceSemantics.test.js`'s
 // real `DeviceAuthorizationPropagationUseCase`/`resolveSocialIdentity`
 // wiring (an identity-targeted call needs to discover MULTIPLE of Alice's
@@ -204,11 +204,11 @@ async function pairDeviceWithHub(deviceConnect, hubConnect) {
 }
 
 // One device's own full voice-capable social stack: device-authorization
-// gossip (application/DeviceAuthorizationPropagationUseCase.js), friendship
+// gossip (application/identity/DeviceAuthorizationPropagationUseCase.js), friendship
 // resolved through it, and VoiceUseCase itself — the exact same
 // resolveConnectionIdentity() wiring tests/MultiDeviceSocialSemantics.test.js/
 // tests/MultiDevicePresenceSemantics.test.js already established, extended
-// with application/VoiceUseCase.js.
+// with application/chat/VoiceUseCase.js.
 function makeVoiceStack(device, registry, { ringingTimeoutMs = 8000, audio = new SyntheticAudioTrackProvider() } = {}) {
     const peerMessageBus = new PeerMessageBus();
     const deviceAuth = new DeviceAuthorizationPropagationUseCase(new InMemoryStorageProvider(), device.provider, {
@@ -235,7 +235,7 @@ async function becomeFriends(requesterFriends, requesterToTarget, targetFriends,
 
 // Each of Alice's devices is a fully independent LocalIdentityProvider
 // with its OWN separate, unsynchronized FriendRelationshipUseCase store —
-// see SETUP's own note. `application/FriendRelationshipUseCase.js`'s
+// see SETUP's own note. `application/identity/FriendRelationshipUseCase.js`'s
 // REQUEST/ACCEPT wire protocol is built around exactly ONE completed
 // handshake per resolved identity — a genuinely real, pre-existing
 // limitation this milestone did not introduce and is not in scope to fix

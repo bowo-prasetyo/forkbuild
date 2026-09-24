@@ -5,16 +5,16 @@ import { surfaceCategoryAt, SURFACE_CATEGORY, WATER_LEVEL } from '../core/Terrai
 import { LAKE_SURFACE_HEIGHT, isRiverAt } from '../core/Hydrology.js';
 import { AVATAR_COLLISION_HEIGHT } from '../core/AvatarCollision.js';
 import { DEFAULT_MAX_WALKING_DEPTH, isWalkableWaterDepth, waterDepthSpeedFactor } from '../core/AvatarWaterWalkability.js';
-import { AvatarWaterConstraint } from '../application/AvatarWaterConstraint.js';
-import { AvatarTerrainConstraint } from '../application/AvatarTerrainConstraint.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarWaterConstraint } from '../application/avatar/AvatarWaterConstraint.js';
+import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 import { AvatarMovementState } from '../core/AvatarMovementState.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -28,11 +28,11 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // anywhere. This milestone installs exactly that:
 //
 //   core/AvatarWaterWalkability.js         — pure depth/speed math
-//   application/AvatarWaterConstraint.js   — the application-layer half
-//   application/AvatarMovementController.js — a fifth, optional,
+//   application/avatar/AvatarWaterConstraint.js   — the application-layer half
+//   application/avatar/AvatarMovementController.js — a fifth, optional,
 //                                              append-only waterConstraint
 //   core/AvatarMovementSimulation.js       — a waterSpeedFactor multiplier
-//   application/RenderWorldViewUseCase.js  — withGroundElevation() now
+//   application/world/RenderWorldViewUseCase.js  — withGroundElevation() now
 //                                              follows the lakebed within
 //                                              DEFAULT_MAX_WALKING_DEPTH
 //
@@ -40,7 +40,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // test-local stand-in — against real generated terrain under
 // DEFAULT_WORLD_SEED, plus a small number of synthetic/injected
 // coordinates (the same "engineered boundary, never a hand-hunted real
-// one" discipline application/AvatarTerrainConstraint.js's own tests
+// one" discipline application/avatar/AvatarTerrainConstraint.js's own tests
 // already established) purely to exercise the exact walkable/blocked
 // boundary precisely.
 //
@@ -217,10 +217,10 @@ async function run() {
     // -------------------------------------------------------------
     let realWithGroundElevation;
     let withGroundElevationBody;
-    const renderWorldViewSource = await readSource('application/RenderWorldViewUseCase.js');
+    const renderWorldViewSource = await readSource('application/world/RenderWorldViewUseCase.js');
     {
         withGroundElevationBody = extractFunctionBody(renderWorldViewSource, 'function withGroundElevation(position) {');
-        assert(withGroundElevationBody !== null, '6. application/RenderWorldViewUseCase.js#withGroundElevation() is located and extracted from its real, current source text');
+        assert(withGroundElevationBody !== null, '6. application/world/RenderWorldViewUseCase.js#withGroundElevation() is located and extracted from its real, current source text');
         const buildWithGroundElevation = new Function(
             'renderer', 'surfaceCategoryAt', 'SURFACE_CATEGORY', 'LAKE_SURFACE_HEIGHT', 'DEFAULT_WORLD_SEED', 'DEFAULT_MAX_WALKING_DEPTH',
             `${withGroundElevationBody}\nreturn withGroundElevation;`
@@ -529,11 +529,11 @@ async function run() {
         // No SWIMMING/WADING vocabulary anywhere this milestone touches.
         const files = [
             'core/AvatarWaterWalkability.js',
-            'application/AvatarWaterConstraint.js',
+            'application/avatar/AvatarWaterConstraint.js',
             'core/AvatarPresence.js',
             'core/AvatarMovementState.js',
             'core/AvatarAnimationState.js',
-            'application/AvatarMovementController.js'
+            'application/avatar/AvatarMovementController.js'
         ];
         for (const file of files) {
             const src = await readSource(file);

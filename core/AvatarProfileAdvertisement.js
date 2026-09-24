@@ -39,7 +39,7 @@ export function toAvatarProfileAdvertisement(profile) {
 }
 
 // A defensive shape check applied at the ingestion boundary — see
-// application/LocalAvatarProfileStore.js. Nothing arriving over a
+// application/avatar/LocalAvatarProfileStore.js. Nothing arriving over a
 // broadcast transport is trusted structurally, let alone
 // authoritatively; a malformed message is simply discarded, the same
 // failure-isolation posture core/AvatarPresenceAdvertisement.js's own

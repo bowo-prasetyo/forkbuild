@@ -14,12 +14,12 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.128 — Vehicle Steering Input Binding.
 //
@@ -220,7 +220,7 @@ async function runTests() {
     {
         // Case-insensitivity, matching every other raw-key comparison
         // already in this codebase (core/AvatarContinuousMovementInputAdapter.js,
-        // application/AvatarMovementController.js#_setKey, and 0.9.96's own
+        // application/avatar/AvatarMovementController.js#_setKey, and 0.9.96's own
         // brake-key binding).
         const registry = buildRegistry();
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'steer-a2');
@@ -294,7 +294,7 @@ async function runTests() {
     // VehicleSteeringIntent once steering has engaged, never null/
     // undefined; a session that has never steered at all reports no
     // active request (`null`, the pre-0.9.127 default this milestone
-    // never changes — see application/WorldNavigationSession.js's own
+    // never changes — see application/world/WorldNavigationSession.js's own
     // `setVehicleSteeringIntent()` header for exactly why that
     // distinction matters).
     // -------------------------------------------------------------
@@ -439,7 +439,7 @@ async function runTests() {
         assert(adapterCode.includes('import') && adapterCode.split('import').length - 1 === 1,
             '26. sanity: exactly one import (VehicleSteeringDirection) — no Three.js, no heading math, no vehicle runtime access');
 
-        const rawSessionSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const rawSessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
         const methodMatch = rawSessionSource.match(/_processVehicleSteeringInput\(key, type\)\s*\{([\s\S]*?)\n {4}\}/);
         assert(methodMatch !== null, '27. sanity: _processVehicleSteeringInput() exists and is extractable as a single method body');
         const methodBody = methodMatch[1];
@@ -454,7 +454,7 @@ async function runTests() {
 
         const sessionCodeOnly = rawSessionSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!sessionCodeOnly.includes('resolveVehicleMovementDirectionFromSteering') && !sessionCodeOnly.includes('resolveVehicleHeadingFromMovement'),
-            '31. application/WorldNavigationSession.js itself never calls either heading or steering math directly, this milestone included — it only ever threads a VehicleSteeringIntent value through to the controller');
+            '31. application/world/WorldNavigationSession.js itself never calls either heading or steering math directly, this milestone included — it only ever threads a VehicleSteeringIntent value through to the controller');
 
         // Exactly the two arrow keys, no other existing movement/
         // interaction key repurposed for steering.
@@ -553,7 +553,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const adapterCode = await sourceOf('../core/VehicleSteeringInputAdapter.js');
-        const rawSessionSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const rawSessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
         const methodMatch = rawSessionSource.match(/_processVehicleSteeringInput\(key, type\)\s*\{([\s\S]*?)\n {4}\}/);
         const methodBody = methodMatch[1];
 
@@ -588,9 +588,9 @@ async function runTests() {
         const simulationSource = await sourceOf('../core/VehicleSteeringSimulation.js');
         assert(!simulationSource.includes('key') && !simulationSource.includes('KeyboardEvent') && !simulationSource.includes('Arrow'),
             '50. core/VehicleSteeringSimulation.js remains completely untouched too');
-        const controllerCodeOnly = await sourceOf('../application/AvatarVehicleMovementController.js');
+        const controllerCodeOnly = await sourceOf('../application/avatar/AvatarVehicleMovementController.js');
         assert(!controllerCodeOnly.includes('Arrow') && !controllerCodeOnly.includes('VehicleSteeringInputAdapter'),
-            '51. application/AvatarVehicleMovementController.js never learns a key exists — steering still reaches it only as an already-resolved VehicleSteeringIntent parameter');
+            '51. application/avatar/AvatarVehicleMovementController.js never learns a key exists — steering still reaches it only as an already-resolved VehicleSteeringIntent parameter');
     }
 
     console.log('✅ All Vehicle Steering Input Integration tests passed.');

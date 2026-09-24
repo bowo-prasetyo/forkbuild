@@ -7,16 +7,16 @@ import { VehicleInstance } from '../core/VehicleInstance.js';
 import { createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
-// 0.9.116 — Mounted Vehicle Movement, application/WorldNavigationSession.js's
-// own wiring of application/AvatarVehicleMovementController.js +
-// application/VehicleRuntimeInstances.js.
+// 0.9.116 — Mounted Vehicle Movement, application/world/WorldNavigationSession.js's
+// own wiring of application/avatar/AvatarVehicleMovementController.js +
+// application/world/VehicleRuntimeInstances.js.
 //
 //   Section A: FLAGSHIP — mount a real bicycle, hold movement, its
 //              VehicleInstance's own runtime position actually changes
@@ -134,7 +134,7 @@ function findRealVehicle() {
 // real single render loop would call every subscriber once per frame.
 // Using only the avatar's own listener (as earlier, narrower vehicle
 // tests in this codebase do) would never let `_vehicleRuntimeInstances`
-// discover a vehicle at all — see application/WorldNavigationSession.js's
+// discover a vehicle at all — see application/world/WorldNavigationSession.js's
 // own `_setupVehicleRendering()`.
 function fireFrame(session, deltaSeconds) {
     for (const callback of session._session.calls.onAnimationFrameCallbacks) {

@@ -7,9 +7,9 @@ import { PreviewType, derivePlaceholderPreview } from '../../core/DocumentPrevie
 const ROOT_MARGIN = '200px';
 
 // 0.2.84 (Building Library & Palette UX) — the Build Library's own
-// small thumbnail, built on application/LibraryPreviewService.js the
+// small thumbnail, built on application/editor/LibraryPreviewService.js the
 // same way ui/components/PublicationPreview.js is built on
-// application/PreviewService.js. The deterministic PLACEHOLDER (a
+// application/editor/PreviewService.js. The deterministic PLACEHOLDER (a
 // color + initial derived from the item's own id/name — reusing
 // core/DocumentPreview.js#derivePlaceholderPreview() verbatim, since it
 // only ever reads `.id`/`.title` and a BrickDefinition/Structure's

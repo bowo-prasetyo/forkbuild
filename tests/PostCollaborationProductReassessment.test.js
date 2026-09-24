@@ -116,48 +116,48 @@ async function runTests() {
     // A1 freezes the eleven-stage pipeline as one representative source
     // signal per stage — the same "fingerprint, not re-derivation"
     // discipline 0.9.221 Section A used for the first arc. Every signal
-    // below is the exact call site application/EditorSession.js's own
+    // below is the exact call site application/editor/EditorSession.js's own
     // wiring method already uses, cited by line-shape, not paraphrased.
     // A2 reads the full GUARANTEED / NOT GUARANTEED matrix directly off
     // the real, frozen DOCUMENT_COLLABORATION_CONSISTENCY_POLICY object.
     // ---------------------------------------------------------------
     {
-        const editorSession = await rawSource('application/EditorSession.js');
-        const propagation = await rawSource('application/DocumentCommandPropagationUseCase.js');
-        const deferral = await rawSource('application/DocumentOperationDeferralUseCase.js');
-        const recovery = await rawSource('application/DocumentOperationRecoveryUseCase.js');
+        const editorSession = await rawSource('application/editor/EditorSession.js');
+        const propagation = await rawSource('application/document/DocumentCommandPropagationUseCase.js');
+        const deferral = await rawSource('application/document/DocumentOperationDeferralUseCase.js');
+        const recovery = await rawSource('application/document/DocumentOperationRecoveryUseCase.js');
         const readiness = await rawSource('core/DocumentOperationApplicationReadiness.js');
 
         // A1a. Authentication — DocumentCommandPropagationUseCase never
         // trusts a peer that has not reached AUTHENTICATED.
         assert(/PeerLifecycleState\.AUTHENTICATED/.test(propagation),
-            'A1a. application/DocumentCommandPropagationUseCase.js still gates on PeerLifecycleState.AUTHENTICATED before trusting an incoming operation (0.9.222).');
+            'A1a. application/document/DocumentCommandPropagationUseCase.js still gates on PeerLifecycleState.AUTHENTICATED before trusting an incoming operation (0.9.222).');
 
         // A1b. Identity / authorization — the same class resolves a
         // signing identity and checks it against WorldAccessLevel before
         // an operation is ever accepted.
         assert(propagation.includes('resolveSigningIdentityId') && propagation.includes('WorldAccessLevel'),
-            'A1b. application/DocumentCommandPropagationUseCase.js still resolves the signing identity and checks WorldAccessLevel before accepting an operation (0.9.222).');
+            'A1b. application/document/DocumentCommandPropagationUseCase.js still resolves the signing identity and checks WorldAccessLevel before accepting an operation (0.9.222).');
 
         // A1c. Operation verification — the one _verify() chokepoint both
         // the live-receive and recovery-response paths funnel through.
         assert(/_verify\(payload, meta\)\s*\{/.test(propagation) && propagation.includes('verifyEnvelope(envelope, connectedPeer)'),
-            'A1c. application/DocumentCommandPropagationUseCase.js still exposes one _verify() chokepoint, reused by verifyEnvelope() for the recovery path (0.9.222/0.9.230).');
+            'A1c. application/document/DocumentCommandPropagationUseCase.js still exposes one _verify() chokepoint, reused by verifyEnvelope() for the recovery path (0.9.222/0.9.230).');
 
         // A1d. ReplayGuard — duplicate suppression sits inside that same
         // verification chain, not bolted on separately.
-        assert(propagation.includes("import { ReplayGuard } from '../replication/ReplayGuard.js'"),
-            'A1d. application/DocumentCommandPropagationUseCase.js still imports and consumes replication/ReplayGuard.js inside its own verification chain (0.9.222).');
+        assert(propagation.includes("import { ReplayGuard } from '../../replication/ReplayGuard.js'"),
+            'A1d. application/document/DocumentCommandPropagationUseCase.js still imports and consumes replication/ReplayGuard.js inside its own verification chain (0.9.222).');
 
         // A1e. Causal-gap observation — wired onto the propagation feed
         // in EditorSession's own composition.
         assert(editorSession.includes('this._documentOperationCausalGapObservation.attachToPropagation(this._documentCommandPropagation)'),
-            'A1e. application/EditorSession.js still attaches DocumentOperationCausalGapObservationUseCase directly to documentCommandPropagation (0.9.229).');
+            'A1e. application/editor/EditorSession.js still attaches DocumentOperationCausalGapObservationUseCase directly to documentCommandPropagation (0.9.229).');
 
         // A1f. Recovery — wired onto the gap-observation feed, the very
         // next composition step.
         assert(editorSession.includes('this._documentOperationRecovery.attachToGapObservation(this._documentOperationCausalGapObservation)'),
-            'A1f. application/EditorSession.js still attaches DocumentOperationRecoveryUseCase directly to the gap-observation feed (0.9.230).');
+            'A1f. application/editor/EditorSession.js still attaches DocumentOperationRecoveryUseCase directly to the gap-observation feed (0.9.230).');
 
         // A1g. Causal eligibility — the pure query readiness delegates
         // to, never re-implemented.
@@ -167,23 +167,23 @@ async function runTests() {
         // A1h. Execution readiness — the deferral boundary's own gate,
         // imported and called, not re-implemented.
         assert(deferral.includes('evaluateApplicationReadiness') && /from\s+'.*DocumentOperationApplicationReadiness\.js'/.test(deferral),
-            'A1h. application/DocumentOperationDeferralUseCase.js still imports and calls evaluateApplicationReadiness() from core/DocumentOperationApplicationReadiness.js (0.9.234/0.9.237).');
+            'A1h. application/document/DocumentOperationDeferralUseCase.js still imports and calls evaluateApplicationReadiness() from core/DocumentOperationApplicationReadiness.js (0.9.234/0.9.237).');
 
         // A1i. Causal deferral — the one class standing between
         // "authorized and verified" and "actually applied."
         assert(editorSession.includes('this._documentOperationDeferral.attachToPropagation('),
-            'A1i. application/EditorSession.js still attaches DocumentOperationDeferralUseCase to the propagation feed as the real application chokepoint (0.9.237).');
+            'A1i. application/editor/EditorSession.js still attaches DocumentOperationDeferralUseCase to the propagation feed as the real application chokepoint (0.9.237).');
 
         // A1j. CommandHistory — the one mutation surface every released
         // operation, local or remote, ultimately reaches.
         assert(deferral.includes('target.commandHistory.execute()') || /commandHistory\.execute\(/.test(deferral),
-            'A1j. application/DocumentOperationDeferralUseCase.js still releases a ready operation through target.commandHistory.execute() — the same chokepoint every other path in this codebase uses (0.9.237).');
+            'A1j. application/document/DocumentOperationDeferralUseCase.js still releases a ready operation through target.commandHistory.execute() — the same chokepoint every other path in this codebase uses (0.9.237).');
 
         // A1k. Document mutation — CommandHistory acts on the real
         // Document's own World, never a shadow copy.
-        const commandHistorySource = await rawSource('application/CommandHistory.js');
+        const commandHistorySource = await rawSource('application/editor/CommandHistory.js');
         assert(/command\.execute\(this\._context\)/.test(commandHistorySource),
-            'A1k. application/CommandHistory.js still executes commands directly against the real World context it was constructed with (unchanged since long before this arc).');
+            'A1k. application/editor/CommandHistory.js still executes commands directly against the real World context it was constructed with (unchanged since long before this arc).');
 
         console.log('✓ A1: All eleven collaboration pipeline stages — authentication (a), identity/authorization (b), operation verification (c), ReplayGuard (d), causal-gap observation (e), recovery (f), causal eligibility (g), execution readiness (h), causal deferral (i), CommandHistory (j), and Document mutation (k) — still hold their one representative wiring signal in the real, unmodified source.');
 
@@ -219,7 +219,7 @@ async function runTests() {
         // action, A1f above), but RETRY is not — DocumentOperationRecoveryUseCase
         // sends exactly one request per gap and never schedules another.
         assert(!/setTimeout|setInterval/.test(codeOnlyLines(recovery)),
-            'A2k. application/DocumentOperationRecoveryUseCase.js\'s own CODE still contains no setTimeout/setInterval anywhere — "no retry, no backoff" is a structural fact about the file, not merely its own header\'s claim (0.9.230).');
+            'A2k. application/document/DocumentOperationRecoveryUseCase.js\'s own CODE still contains no setTimeout/setInterval anywhere — "no retry, no backoff" is a structural fact about the file, not merely its own header\'s claim (0.9.230).');
 
         console.log('✓ A2: Full closure matrix confirmed against the real, frozen policy object — GUARANTEED: causal deferral (c), duplicate suppression (a), document isolation (b); NOT GUARANTEED: delivery order (d), convergence (f); UNDEFINED: conflict resolution (e); NEVER: undo propagation (g, scope h); NONE: missing-operation detection in its narrow sense (i); ARRIVAL_ORDER: history ordering (j). Recovery-on-gap is automatic (A1f); retry of a recovery request is not (k) — a refinement of the brief\'s own proposed table against the real code, not a restatement of it.');
     }
@@ -299,15 +299,15 @@ async function runTests() {
         for (const name of legacyCollaborationClasses) {
             const count = await constructorCallerCount(name, ['application', 'ui'], { excludeSuffix: `CreateCollaborationUseCase.js` });
             assert(count === 0,
-                `B2a. collaboration/${name}.js still has zero "new ${name}(" callers in application/ or ui/ outside application/CreateCollaborationUseCase.js (found ${count}) — this 0.2.7-0.2.9 authority-based protocol is not wired into the real product.`);
+                `B2a. collaboration/${name}.js still has zero "new ${name}(" callers in application/ or ui/ outside application/document/CreateCollaborationUseCase.js (found ${count}) — this 0.2.7-0.2.9 authority-based protocol is not wired into the real product.`);
         }
 
-        // B2b. application/CreateCollaborationUseCase.js — the one DI
+        // B2b. application/document/CreateCollaborationUseCase.js — the one DI
         // wiring file for the entire legacy protocol above — is itself
         // never referenced by anything else in application/ or ui/.
         const wiringCallers = await referenceCount('CreateCollaborationUseCase', ['application', 'ui'], { excludeSuffix: '/CreateCollaborationUseCase.js' });
         assert(wiringCallers === 0,
-            `B2b. application/CreateCollaborationUseCase.js — the sole entry point for the legacy authority-based protocol — is still referenced by zero other files in application/ or ui/ (found ${wiringCallers}); its only callers anywhere in the repository are its own two test files.`);
+            `B2b. application/document/CreateCollaborationUseCase.js — the sole entry point for the legacy authority-based protocol — is still referenced by zero other files in application/ or ui/ (found ${wiringCallers}); its only callers anywhere in the repository are its own two test files.`);
 
         // B2c. core/CollaborationEnvelope.js — the wire-format data type
         // the legacy protocol above depends on — is consumed only by
@@ -328,7 +328,7 @@ async function runTests() {
         assert(architectureDoc.includes('Collaboration Protocol Foundation (0.2.7)') && architectureDoc.includes('Multi-client Synchronization (0.2.9)'),
             'B2d. docs/Architecture.md still documents the legacy protocol under its own unedited 0.2.7/0.2.9 historical section headers.');
 
-        console.log('✓ B2: One real reachability finding — the entire 0.2.7-0.2.9 authority-based collaboration protocol (collaboration/CollaborationSession.js, DocumentAuthority.js, AuthorityCollaborationTransport.js, LocalCollaborationTransport.js, core/CollaborationEnvelope.js, application/CreateCollaborationUseCase.js — six files) has zero callers anywhere in application/ or ui/ (a-c), is documented only under its own unedited historical section (d), and is architecturally superseded by the shipped 0.9.222-0.9.240 peer-to-peer causal chain B1 just reconfirmed live: the old model rejects conflicting operations centrally, the new one allows divergence and names that divergence explicitly (0.9.226/0.9.240). Classified OBSOLETE_CANDIDATE, consistent with 0.9.216/0.9.219/0.9.221\'s own register — nothing deleted here; deletion is a deliberate, later, human decision.');
+        console.log('✓ B2: One real reachability finding — the entire 0.2.7-0.2.9 authority-based collaboration protocol (collaboration/CollaborationSession.js, DocumentAuthority.js, AuthorityCollaborationTransport.js, LocalCollaborationTransport.js, core/CollaborationEnvelope.js, application/document/CreateCollaborationUseCase.js — six files) has zero callers anywhere in application/ or ui/ (a-c), is documented only under its own unedited historical section (d), and is architecturally superseded by the shipped 0.9.222-0.9.240 peer-to-peer causal chain B1 just reconfirmed live: the old model rejects conflicting operations centrally, the new one allows divergence and names that divergence explicitly (0.9.226/0.9.240). Classified OBSOLETE_CANDIDATE, consistent with 0.9.216/0.9.219/0.9.221\'s own register — nothing deleted here; deletion is a deliberate, later, human decision.');
     }
 
     // ---------------------------------------------------------------
@@ -352,10 +352,10 @@ async function runTests() {
         // Section A/B just reconfirmed proves the capability itself now
         // exists, one layer below the save path, in the propagation/
         // deferral/recovery chain instead.
-        const saveDocumentUseCase = await rawSource('application/SaveDocumentUseCase.js');
+        const saveDocumentUseCase = await rawSource('application/document/SaveDocumentUseCase.js');
         assert(!/\block\b|\bmerge\b|\bCRDT\b|operational.transform/i.test(saveDocumentUseCase),
-            'C1a. application/SaveDocumentUseCase.js still names no session-lock, merge, or CRDT/OT concept — collaboration was built beside the save path, exactly as designed, never inside it (0.9.222\'s own header).');
-        assert(await sourceExists('application/DocumentCommandPropagationUseCase.js') && await sourceExists('application/EditorSession.js'),
+            'C1a. application/document/SaveDocumentUseCase.js still names no session-lock, merge, or CRDT/OT concept — collaboration was built beside the save path, exactly as designed, never inside it (0.9.222\'s own header).');
+        assert(await sourceExists('application/document/DocumentCommandPropagationUseCase.js') && await sourceExists('application/editor/EditorSession.js'),
             'C1b. The capability itself — real-time propagation, causal ordering, deferral, and recovery — now exists and is wired (Section A/B above). 0.9.221\'s C1 candidate is CLOSED.');
 
         // C2. Asynchronous commentary/annotation on a Publication.
@@ -391,7 +391,7 @@ async function runTests() {
         // notifying about. Commentary/annotation carries no such
         // dependency: a Comment attached to an immutable Publication is
         // structurally the same shape as the already-shipped
-        // PublicationObservationArchive (application/PublicationObservationArchive.js)
+        // PublicationObservationArchive (application/publication/observationArchive/PublicationObservationArchive.js)
         // — a local, append-only record a Wanderer can read without any
         // peer-online-state, delivery-guarantee, or real-time
         // propagation question at all. It also directly serves the
@@ -403,9 +403,9 @@ async function runTests() {
         // could ever surface — meaning commentary is not merely
         // independent of notifications, it is a plausible PREREQUISITE
         // for a well-motivated one, while the reverse is not true.
-        const observationArchiveExists = await sourceExists('application/PublicationObservationArchive.js');
+        const observationArchiveExists = await sourceExists('application/publication/observationArchive/PublicationObservationArchive.js');
         assert(observationArchiveExists,
-            'C4. application/PublicationObservationArchive.js still exists as the real, shipped precedent for "a local, append-only record attached to an immutable Publication" — the exact shape a Comment/Annotation type would reuse, supporting the ranking below with a concrete architectural analog rather than assertion alone.');
+            'C4. application/publication/observationArchive/PublicationObservationArchive.js still exists as the real, shipped precedent for "a local, append-only record attached to an immutable Publication" — the exact shape a Comment/Annotation type would reuse, supporting the ranking below with a concrete architectural analog rather than assertion alone.');
 
         console.log('✓ C: 0.9.221\'s three candidates re-visited — live multi-editor collaboration (C1) is now CLOSED; commentary/annotation (C2) and notifications (C3) are both re-confirmed genuinely absent with fresh evidence, extended to ui/ this time. Explicitly ranked (C4, not attempted by 0.9.221): commentary/annotation first — it has a concrete shipped architectural analog (PublicationObservationArchive) and no delivery-guarantee dependency; notifications second — they are fundamentally a delivery-guarantee question this arc spent 19 milestones being careful not to assume, and are better motivated by a first real cross-user event (a comment) than built speculatively ahead of one.');
     }
@@ -434,11 +434,11 @@ async function runTests() {
             'core/DocumentOperationApplicationEligibility.js',
             'core/DocumentOperationApplicationReadiness.js',
             'core/DocumentCollaborationConsistencyPolicy.js',
-            'application/DocumentCommandPropagationUseCase.js',
-            'application/DocumentOperationDeferralUseCase.js',
-            'application/RemoteDocumentOperationApplicationUseCase.js',
-            'application/DocumentOperationRecoveryUseCase.js',
-            'application/RecoveredOperationReplayUseCase.js'
+            'application/document/DocumentCommandPropagationUseCase.js',
+            'application/document/DocumentOperationDeferralUseCase.js',
+            'application/document/RemoteDocumentOperationApplicationUseCase.js',
+            'application/document/DocumentOperationRecoveryUseCase.js',
+            'application/document/RecoveredOperationReplayUseCase.js'
         ];
         const forbidden = /\bCRDT\b|operational.transform|vectorClock|lamportClock|totalOrder|mergeOperation|conflictResolver|resolveConflict/i;
         for (const path of collaborationCoreFiles) {

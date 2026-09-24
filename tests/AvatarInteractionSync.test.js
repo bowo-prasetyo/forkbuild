@@ -12,15 +12,15 @@ import { TrustStatus } from '../core/TrustObservation.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { signAvatarInteractionAdvertisement } from '../application/AvatarInteractionSigning.js';
-import { AvatarInteractionTrustBoundary } from '../application/AvatarInteractionTrustBoundary.js';
-import { AvatarInteractionSyncService } from '../application/AvatarInteractionSyncService.js';
+import { signAvatarInteractionAdvertisement } from '../application/avatar/AvatarInteractionSigning.js';
+import { AvatarInteractionTrustBoundary } from '../application/avatar/AvatarInteractionTrustBoundary.js';
+import { AvatarInteractionSyncService } from '../application/avatar/AvatarInteractionSyncService.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { AvatarInteractionState } from '../application/spatial-state/AvatarInteractionState.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -29,11 +29,11 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -48,9 +48,9 @@ import { License, LicenseId } from '../core/License.js';
 //   Section C: core/AvatarInteractionReplayWindow.js — bounded id+sequence bookkeeping
 //   Section D: core/AvatarInteractionTrustPolicy.js — the one real policy axis
 //   Section E: identity/LocalAuthorizationVerifier.verifyAvatarInteractionAdvertisement — REAL Ed25519
-//   Section F: application/AvatarInteractionSigning.js
-//   Section G: application/AvatarInteractionTrustBoundary.js — the orchestrated gate
-//   Section H: application/AvatarInteractionSyncService.js — publish/pull, events not state
+//   Section F: application/avatar/AvatarInteractionSigning.js
+//   Section G: application/avatar/AvatarInteractionTrustBoundary.js — the orchestrated gate
+//   Section H: application/avatar/AvatarInteractionSyncService.js — publish/pull, events not state
 //   Section I: WorldNavigationSession integration (publish on gesture, render on receipt)
 //   Section J: FLAGSHIP — two real replicas, a real BroadcastChannel, and an attacker
 //
@@ -304,7 +304,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section F — application/AvatarInteractionSigning.js
+    // Section F — application/avatar/AvatarInteractionSigning.js
     // -------------------------------------------------------------
     {
         const ad = makeAdvertisement({ avatarId: 'af1' });
@@ -322,7 +322,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section G — application/AvatarInteractionTrustBoundary.js
+    // Section G — application/avatar/AvatarInteractionTrustBoundary.js
     // -------------------------------------------------------------
     {
         // G1 — permissive default: unsigned interactions work.
@@ -384,7 +384,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section H — application/AvatarInteractionSyncService.js
+    // Section H — application/avatar/AvatarInteractionSyncService.js
     // -------------------------------------------------------------
     {
         function fakeBroadcastProvider() {

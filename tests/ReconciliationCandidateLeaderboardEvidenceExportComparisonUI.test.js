@@ -1,25 +1,25 @@
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport.js';
+} from '../application/claimSnapshotReconciliation/leaderboard/EvidenceExport.js';
 import {
     ReconciliationCandidateLeaderboardEvidenceImportOutcome,
     importPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.js';
+} from '../application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison.js';
+} from '../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparison.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel.js';
+} from '../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonReadModel.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.js';
+} from '../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetail
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.js';
+} from '../application/claimSnapshotReconciliation/evidenceExportComparison/DetailView.js';
 import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentity
-} from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.js';
+} from '../application/claimSnapshotReconciliation/evidenceExportComparison/RecordIdentityView.js';
 import default_ReconciliationCandidateLeaderboardEvidenceExportComparisonTable from '../ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js';
 
 // 0.8.192/0.8.194 — Reconciliation Candidate Leaderboard Evidence Export
@@ -486,12 +486,12 @@ async function run() {
     // ---------------------------------------------------------------
     {
         for (const modulePath of [
-            "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.js'",
-            "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison.js'",
-            "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel.js'",
-            "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.js'",
-            "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.js'",
-            "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.js'"
+            "from '../../application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js'",
+            "from '../../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparison.js'",
+            "from '../../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonReadModel.js'",
+            "from '../../application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonView.js'",
+            "from '../../application/claimSnapshotReconciliation/evidenceExportComparison/DetailView.js'",
+            "from '../../application/claimSnapshotReconciliation/evidenceExportComparison/RecordIdentityView.js'"
         ]) {
             assert(viewCodeOnly.includes(modulePath), `38. the view imports ${modulePath}`);
         }

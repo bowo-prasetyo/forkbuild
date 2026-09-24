@@ -1,9 +1,9 @@
 import { BaseJsonRpcClient } from '../base/BaseJsonRpcClient.js';
 import { BaseSignedTransactionFinalizer } from '../base/BaseSignedTransactionFinalizer.js';
 import { BaseTransactionBroadcaster } from '../base/BaseTransactionBroadcaster.js';
-import { BaseTransactionBroadcastCoordinator } from '../application/BaseTransactionBroadcastCoordinator.js';
-import { BaseTransactionBroadcastState, isValidBaseTransactionBroadcastState } from '../application/BaseTransactionBroadcastState.js';
-import { describeBaseTransactionBroadcast, describeBaseTransactionBroadcastStateLabel } from '../application/BaseTransactionBroadcastView.js';
+import { BaseTransactionBroadcastCoordinator } from '../application/anchoring/base/BaseTransactionBroadcastCoordinator.js';
+import { BaseTransactionBroadcastState, isValidBaseTransactionBroadcastState } from '../application/anchoring/base/BaseTransactionBroadcastState.js';
+import { describeBaseTransactionBroadcast, describeBaseTransactionBroadcastStateLabel } from '../application/anchoring/base/BaseTransactionBroadcastView.js';
 import { BitcoinAnchorTransactionBroadcaster } from '../anchoring/BitcoinAnchorTransactionBroadcaster.js';
 
 // 0.8.95 — Explicit Base Transaction Broadcast.

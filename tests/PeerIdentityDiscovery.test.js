@@ -5,9 +5,9 @@ import { PeerInvitation } from '../peer/PeerInvitation.js';
 import { PeerDiscoveryRecord } from '../peer/PeerDiscoveryRecord.js';
 import { LocalPeerDiscoveryProvider } from '../peer/LocalPeerDiscoveryProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
 
 // 0.2.64 — Decentralized Peer Discovery.
 //
@@ -23,7 +23,7 @@ import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
 //   imported — never a live network lookup, see that provider's own
 //   header on why 0.2.64 is deliberately a bootstrap milestone.
 //
-//   application/FindPeerUseCase.js — composes that search with a REAL
+//   application/peer/FindPeerUseCase.js — composes that search with a REAL
 //   connection attempt, always expecting the searched-for identityId
 //   regardless of what the candidate's own (untrusted) identityHint
 //   claims — reusing 0.2.62's `expectedIdentityId` guard for a peer this
@@ -32,13 +32,13 @@ import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
 //
 // Built over peer/LocalPeerConnectionProvider.js, the same real,
 // in-process, bidirectional transport tests/PeerConnectionResilience.test.js
-// already trusts for this purpose. application/PeerSessionManager.js's own
+// already trusts for this purpose. application/peer/PeerSessionManager.js's own
 // real-WebRTC connectToDiscovered()/importCandidate()/discoverCandidates()
 // plumbing is exercised in-browser via tests/PeerConnectionsUI.test.js's
 // own established split (WebRTC has no Node runtime in this environment);
 // this file instead stands in a minimal, honestly-labeled fake
 // PeerSessionManager over the SAME real ConnectToPeerUseCase/
-// LocalPeerDiscoveryProvider pair, so application/FindPeerUseCase.js's own
+// LocalPeerDiscoveryProvider pair, so application/peer/FindPeerUseCase.js's own
 // real logic runs against genuine authentication, not a mock pretending to
 // authenticate.
 
@@ -70,9 +70,9 @@ function makeDevice(label, network) {
 // A minimal, honestly-labeled stand-in for application/
 // PeerSessionManager.js's own importCandidate()/discoverCandidates()/
 // connectToDiscovered()/onIdentityMismatch() surface — the only four
-// methods application/FindPeerUseCase.js ever calls on it. Backed by a
+// methods application/peer/FindPeerUseCase.js ever calls on it. Backed by a
 // REAL peer/LocalPeerDiscoveryProvider.js and a REAL
-// application/ConnectToPeerUseCase.js over peer/LocalPeerConnectionProvider.js
+// application/peer/ConnectToPeerUseCase.js over peer/LocalPeerConnectionProvider.js
 // — see this file's own header on why this stands in only for the
 // WebRTC-specific two-step signal relay, never for discovery or
 // authentication themselves.
@@ -201,7 +201,7 @@ let flagship;
     assert(connectedPeer.remoteIdentity && connectedPeer.remoteIdentity.identityId === bob.id, "the PROVEN identity is genuinely bob — not merely the candidate's own claim");
 
     // Discovery still never creates a relationship on its own — see
-    // application/PeerRelationshipUseCase.js's own header, unchanged by
+    // application/peer/PeerRelationshipUseCase.js's own header, unchanged by
     // 0.2.64. Remembering stays a deliberate, separate act.
     assert(relationships.getRelationship(bob.id) === null, "even a SUCCESSFUL discovery-led connection never auto-creates a PeerRelationship");
     const remembered = relationships.rememberPeer(connectedPeer.remoteIdentity);
@@ -270,7 +270,7 @@ let flagship;
 // ---------------------------------------------------------------------
 // 6. onCandidateRejected never fires for a mismatch this class didn't
 //    start — the same "don't attribute someone else's mismatch to
-//    yourself" discipline application/PeerReconnectionUseCase.js already
+//    yourself" discipline application/peer/PeerReconnectionUseCase.js already
 //    established for its own onReconnectRejected.
 // ---------------------------------------------------------------------
 {

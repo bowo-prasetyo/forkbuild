@@ -8,7 +8,7 @@ import { isValidDocumentOperationEnvelope, MAX_DOCUMENT_SYNC_ID_LENGTH } from '.
 // know. Nothing before this milestone could act on that fact: a replica
 // could know it was missing an operation, with no way to ask for it. This
 // file is the wire vocabulary for that ask — the pull-based counterpart
-// `application/PeerContentProtocol.js` (0.7.4) already proved for content
+// `application/peer/PeerContentProtocol.js` (0.7.4) already proved for content
 // bytes, brought here for document OPERATIONS instead. A SEPARATE
 // protocol namespace ('forkbuild:document-operation-recovery'), never a
 // third `kind` folded into `core/DocumentOperationEnvelope.js`'s own
@@ -26,7 +26,7 @@ import { isValidDocumentOperationEnvelope, MAX_DOCUMENT_SYNC_ID_LENGTH } from '.
 //   RESPONSE — "here are the operation envelopes I actually have."
 //
 // There is no NOT_FOUND kind, on purpose, for the identical reason
-// `application/PeerContentProtocol.js`'s own header gives: a peer that
+// `application/peer/PeerContentProtocol.js`'s own header gives: a peer that
 // cannot or will not help a REQUEST simply never sends a RESPONSE, or
 // sends one naming only the subset it actually has — an operationId
 // absent from every RESPONSE this replica ever receives for it IS the
@@ -46,9 +46,9 @@ import { isValidDocumentOperationEnvelope, MAX_DOCUMENT_SYNC_ID_LENGTH } from '.
 // and never reconstructed/rewritten from one. That preserves operation
 // identity, authorship, and causal metadata exactly as they existed on
 // the responder's own side, so the receiver can run the SAME verification
-// machinery (`application/DocumentCommandPropagationUseCase.js#
+// machinery (`application/document/DocumentCommandPropagationUseCase.js#
 // verifyEnvelope()`) an ordinarily-arrived operation already goes
-// through — see `application/DocumentOperationRecoveryUseCase.js`'s own
+// through — see `application/document/DocumentOperationRecoveryUseCase.js`'s own
 // header for why that machinery, not a second trust path, is what a
 // RESPONSE must survive before this replica accepts anything it carries.
 //
@@ -56,11 +56,11 @@ import { isValidDocumentOperationEnvelope, MAX_DOCUMENT_SYNC_ID_LENGTH } from '.
 // nothing invented: a REQUEST already names the exact operationIds it
 // wants, and a RESPONSE's own `operations[].operationId` values are
 // self-identifying — the identical "the content hash itself is the
-// correlation key" restraint `application/PeerContentProtocol.js` already
+// correlation key" restraint `application/peer/PeerContentProtocol.js` already
 // applies instead of a requestId of its own.
 //
 // No `requestingIdentityId` either. Precisely because — see
-// `application/DocumentCommandPropagationUseCase.js`'s own header on
+// `application/document/DocumentCommandPropagationUseCase.js`'s own header on
 // steps 1-2 of its trust chain — this codebase never trusts a
 // self-asserted identity field inside a payload; a REQUEST's requester is
 // always the AUTHENTICATED connection it arrived over
@@ -146,7 +146,7 @@ export function toDocumentOperationRecoveryResponseMessage({ documentId, operati
 // Says nothing about whether a REQUEST's operationIds are ones the
 // receiver is authorized to answer, or whether a RESPONSE's envelopes
 // will actually pass `DocumentCommandPropagationUseCase#verifyEnvelope()`
-// — both of those are `application/DocumentOperationRecoveryUseCase.js`'s
+// — both of those are `application/document/DocumentOperationRecoveryUseCase.js`'s
 // own ingestion-boundary questions, asked one layer up.
 export function isValidDocumentOperationRecoveryMessage(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {

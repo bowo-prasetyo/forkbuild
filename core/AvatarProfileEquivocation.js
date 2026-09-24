@@ -17,7 +17,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 // currently stored — exactly core/PresenceEquivocation.js's own
 // reasoning for why no separate accumulating detector is needed here
 // either: a profile has exactly one "current" slot to compare
-// against. Only meaningful once application/AvatarProfileTrustBoundary.js
+// against. Only meaningful once application/avatar/AvatarProfileTrustBoundary.js
 // has already confirmed the incoming claim shares the SAME bound
 // authority as the currently-stored one — a forged claim from a
 // different signer is rejected earlier, as UNAUTHORIZED/

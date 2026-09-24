@@ -7,12 +7,12 @@ import { RoleProviderRole, isValidRoleProviderRole } from '../core/RoleProviderR
 import { RoleProviderPreference, isValidRoleProviderKey } from '../core/RoleProviderPreference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
-import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/RoleAwareProviderResolver.js';
-import { ResolvePreferredRoleProviderUseCase } from '../application/ResolvePreferredRoleProviderUseCase.js';
-import { PreferredSnapshotPlacementCreationCoordinator } from '../application/PreferredSnapshotPlacementCreationCoordinator.js';
+import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
+import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';
+import { PreferredSnapshotPlacementCreationCoordinator } from '../application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { describePublicationDistributionResult } from '../application/PublicationDistributionResult.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
 
 // 0.9.421 — Multi-Substrate Publication Preference Product Direction Audit.
 //
@@ -142,18 +142,18 @@ async function run() {
         const roleSource = await readSource('core/RoleProviderRole.js');
         const preferenceSource = await readSource('core/RoleProviderPreference.js');
         const storeSource = await readSource('storage/RoleProviderPreferenceStore.js');
-        const resolverSource = await readSource('application/RoleAwareProviderResolver.js');
-        const useCaseSource = await readSource('application/ResolvePreferredRoleProviderUseCase.js');
-        const setUseCaseSource = await readSource('application/SetRoleProviderPreferenceUseCase.js');
-        const coordinatorSource = await readSource('application/PreferredSnapshotPlacementCreationCoordinator.js');
+        const resolverSource = await readSource('application/settings/RoleAwareProviderResolver.js');
+        const useCaseSource = await readSource('application/settings/ResolvePreferredRoleProviderUseCase.js');
+        const setUseCaseSource = await readSource('application/settings/SetRoleProviderPreferenceUseCase.js');
+        const coordinatorSource = await readSource('application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js');
 
         const layers = [
             { file: 'core/RoleProviderPreference.js', present: /providerKey/.test(preferenceSource) && !/providerKeys\b/.test(preferenceSource), what: 'exactly one `providerKey` field, a bare string, never `providerKeys`/an array/a Set' },
             { file: 'storage/RoleProviderPreferenceStore.js', present: /\{ \[role\]: providerKey \}/.test(storeSource), what: 'persists one flat `{ [role]: providerKey }` map — one scalar value per role, structurally, not by convention' },
-            { file: 'application/RoleAwareProviderResolver.js', present: /const provider = registry\.get\(preference\.providerKey\) \|\| null;/.test(resolverSource), what: 'resolve(role) looks up exactly one providerKey in exactly one registry per call' },
-            { file: 'application/ResolvePreferredRoleProviderUseCase.js', present: /provider = outcome\.provider;/.test(useCaseSource) && !/providers\b/i.test(codeOnly(useCaseSource)), what: 'the decision it returns carries a single `provider`, never a `providers` collection' },
-            { file: 'application/SetRoleProviderPreferenceUseCase.js', present: /execute\(\{ role, providerKey \}/.test(setUseCaseSource), what: 'the write side accepts one `providerKey` per call, symmetric with the read side' },
-            { file: 'application/PreferredSnapshotPlacementCreationCoordinator.js', present: /async create\(publicationId, storage = null\)/.test(coordinatorSource), what: 'the one real, wired consumer resolves to at most one storage per create() call' }
+            { file: 'application/settings/RoleAwareProviderResolver.js', present: /const provider = registry\.get\(preference\.providerKey\) \|\| null;/.test(resolverSource), what: 'resolve(role) looks up exactly one providerKey in exactly one registry per call' },
+            { file: 'application/settings/ResolvePreferredRoleProviderUseCase.js', present: /provider = outcome\.provider;/.test(useCaseSource) && !/providers\b/i.test(codeOnly(useCaseSource)), what: 'the decision it returns carries a single `provider`, never a `providers` collection' },
+            { file: 'application/settings/SetRoleProviderPreferenceUseCase.js', present: /execute\(\{ role, providerKey \}/.test(setUseCaseSource), what: 'the write side accepts one `providerKey` per call, symmetric with the read side' },
+            { file: 'application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js', present: /async create\(publicationId, storage = null\)/.test(coordinatorSource), what: 'the one real, wired consumer resolves to at most one storage per create() call' }
         ];
         for (const layer of layers) {
             assert(layer.present, n(`A1. ${layer.file} — ${layer.what}`));
@@ -177,8 +177,8 @@ async function run() {
     // ===============================================================
     {
         const preferenceSource = await readSource('core/RoleProviderPreference.js');
-        const resolverSource = await readSource('application/RoleAwareProviderResolver.js');
-        const coordinatorSource = await readSource('application/PreferredSnapshotPlacementCreationCoordinator.js');
+        const resolverSource = await readSource('application/settings/RoleAwareProviderResolver.js');
+        const coordinatorSource = await readSource('application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js');
 
         // Preference: a pure description, proven by construction to do
         // nothing but hold role+providerKey.
@@ -204,16 +204,16 @@ async function run() {
     // Section C — Fan-out vs. fallback, already drawn.
     // ===============================================================
     {
-        const orchestratorSource = await readSource('application/PublicationDistributionOrchestrator.js');
-        const executorSource = await readSource('application/PublicationDistributionExecutor.js');
-        const discoveryQuerySource = await readSource('application/DecentralizedWorldDiscoveryQuery.js');
-        const resolverSource = await readSource('application/RoleAwareProviderResolver.js');
+        const orchestratorSource = await readSource('application/publication/distribution/PublicationDistributionOrchestrator.js');
+        const executorSource = await readSource('application/publication/distribution/PublicationDistributionExecutor.js');
+        const discoveryQuerySource = await readSource('application/discovery/DecentralizedWorldDiscoveryQuery.js');
+        const resolverSource = await readSource('application/settings/RoleAwareProviderResolver.js');
 
         const exclusions = [
-            { file: 'application/PublicationDistributionOrchestrator.js', pattern: /EXACTLY ONE ARWEAVE UPLOADER, ONE NOSTR PUBLISHER, PER CALL — NO\s*\n\/\/ MULTI-RELAY FAN-OUT, NO RELAY SELECTION/, source: orchestratorSource, what: '"no multi-relay fan-out" (0.9.58)' },
-            { file: 'application/PublicationDistributionExecutor.js', pattern: /Multi-relay fan-out, relay selection, or relay preference\/fallback\s*\n\/\/\s*policy/, source: executorSource, what: '"multi-relay fan-out... deliberately excluded" (0.9.49)' },
-            { file: 'application/DecentralizedWorldDiscoveryQuery.js', pattern: /EXACTLY ONE SERVICE PER CALL — NO FAN-OUT, NO RACE, NO FALLBACK/, source: discoveryQuerySource, what: '"no fan-out, no race, no fallback" (0.9.25)' },
-            { file: 'application/RoleAwareProviderResolver.js', pattern: /NO FALLBACK, IN EITHER DIRECTION/, source: resolverSource, what: '"no fallback, in either direction" (0.9.295)' }
+            { file: 'application/publication/distribution/PublicationDistributionOrchestrator.js', pattern: /EXACTLY ONE ARWEAVE UPLOADER, ONE NOSTR PUBLISHER, PER CALL — NO\s*\n\/\/ MULTI-RELAY FAN-OUT, NO RELAY SELECTION/, source: orchestratorSource, what: '"no multi-relay fan-out" (0.9.58)' },
+            { file: 'application/publication/distribution/PublicationDistributionExecutor.js', pattern: /Multi-relay fan-out, relay selection, or relay preference\/fallback\s*\n\/\/\s*policy/, source: executorSource, what: '"multi-relay fan-out... deliberately excluded" (0.9.49)' },
+            { file: 'application/discovery/DecentralizedWorldDiscoveryQuery.js', pattern: /EXACTLY ONE SERVICE PER CALL — NO FAN-OUT, NO RACE, NO FALLBACK/, source: discoveryQuerySource, what: '"no fan-out, no race, no fallback" (0.9.25)' },
+            { file: 'application/settings/RoleAwareProviderResolver.js', pattern: /NO FALLBACK, IN EITHER DIRECTION/, source: resolverSource, what: '"no fallback, in either direction" (0.9.295)' }
         ];
         for (const row of exclusions) {
             assert(row.pattern.test(row.source), n(`C1. ${row.file} — ${row.what} — appears verbatim in real, current source`));
@@ -263,13 +263,13 @@ async function run() {
         const storages = forThisPublication.map((p) => p.storage).sort();
         assert(storages[0] === 'ar' && storages[1] === 'ipfs', n('D5. the two coexisting placements name two different storage backends — "content on Arweave AND IPFS" is a real, present, queryable fact right now, not a hypothetical a future fan-out feature would first make possible'));
 
-        assert(/Multiple independent placements[\s\S]{0,220}all coexist\s*\n\/\/ here/.test(await readSource('application/LocalPublicationSnapshotPlacementCatalog.js')), n('D6. the catalog\'s own header documents this as deliberate, unbounded plurality, since 0.8.18 — "all coexist here," never a cap of one'));
+        assert(/Multiple independent placements[\s\S]{0,220}all coexist\s*\n\/\/ here/.test(await readSource('application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js')), n('D6. the catalog\'s own header documents this as deliberate, unbounded plurality, since 0.8.18 — "all coexist here," never a cap of one'));
 
         // The mechanism that produced each half of this state is a single-
         // provider action, unmodified — the same
         // SnapshotPlacementCreationCoordinator.create(publicationId, storage)
         // shape PreferredSnapshotPlacementCreationCoordinator wraps.
-        const coordinatorSource = await readSource('application/SnapshotPlacementCreationCoordinator.js');
+        const coordinatorSource = await readSource('application/snapshot/placement/SnapshotPlacementCreationCoordinator.js');
         assert(/create\(publicationId, storage\)/.test(coordinatorSource), n('D7. the real placement-creation entry point takes exactly one storage per call — the "multi-substrate" outcome above was built from two ORDINARY single-provider calls, made twice, never from one call fanning out'));
 
         console.log('\n=== SECTION D: THE GOAL IS ALREADY ACHIEVABLE ===');
@@ -321,7 +321,7 @@ async function run() {
     // Section F — Discovery is not execution.
     // ===============================================================
     {
-        const compositionSource = await readSource('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
+        const compositionSource = await readSource('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(/EACH CONFIGURED SERVICE IS QUERIED INDEPENDENTLY, NEVER COMBINED OR\s*\n\/\/ RANKED/.test(compositionSource), n('F1. discovery composition\'s own header: each configured service (Arweave, Nostr) is queried independently — real, already-shipped multiplicity, on the READ side'));
         assert(/never a `Promise\.all\(\)` that merges results/.test(compositionSource), n('F2. and explicitly never merged/ranked into one decision — every lead lands in a shared registry, side by side'));
 
@@ -333,7 +333,7 @@ async function run() {
         // a WRITE-time ANNOUNCEMENT_AND_DISCOVERY preference is an
         // entirely different object than the discovery COMPOSITION this
         // section reads from — the resolver is never wired into it.
-        const resolverSource = await readSource('application/RoleAwareProviderResolver.js');
+        const resolverSource = await readSource('application/settings/RoleAwareProviderResolver.js');
         assert(/NOT WIRED INTO ANY COMPOSITION ROOT/.test(resolverSource), n('F4. RoleAwareProviderResolver\'s own header confirms it is not wired into DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js or any other real composition root — the read-side query fan-out and a hypothetical write-side preference are structurally disconnected today, not merely unrelated in this file\'s own prose'));
 
         console.log('\n=== SECTION F: DISCOVERY IS NOT EXECUTION ===');
@@ -344,7 +344,7 @@ async function run() {
     // Section G — partial-success semantics, already representable.
     // ===============================================================
     {
-        const resultSource = await readSource('application/PublicationDistributionResult.js');
+        const resultSource = await readSource('application/publication/distribution/PublicationDistributionResult.js');
         assert(/Any `status`, `success`, `failed`, or `distributed` field/.test(resultSource), n('G1. PublicationDistributionResult.js\'s own header names, and explicitly excludes, exactly the SUCCESS/PARTIAL_SUCCESS/FAILURE vocabulary the proposal\'s own Section G worries about inventing prematurely'));
         assert(/two independent, independently-absent facts/i.test(resultSource), n('G2. and documents the pattern it uses INSTEAD: independently-nullable per-fact fields, never a computed status enum'));
 
@@ -359,7 +359,7 @@ async function run() {
         assert(partial !== null, n('G3. a result with one fact present and the other absent is itself a valid, describable result today — never a rejected call'));
         assert(!('status' in partial) && !('success' in partial), n('G4. confirmed live: the real result object carries no status/success field of any kind — "one succeeded, one did not yet" is representable purely by which facts are null'));
 
-        const executorSource = await readSource('application/PublicationDistributionExecutor.js');
+        const executorSource = await readSource('application/publication/distribution/PublicationDistributionExecutor.js');
         assert(/PARTIAL COMPLETION IS A FACT TO REPORT, NEVER A STATUS TO COMPUTE/.test(executorSource), n('G5. the executor that actually runs a multi-step sequence draws the identical line one layer up: partial completion is reported, never classified'));
 
         // The identical pattern already generalizes past two facts, to

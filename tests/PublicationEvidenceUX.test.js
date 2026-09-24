@@ -1,13 +1,13 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { AddPublicationAnchorUseCase } from '../application/AddPublicationAnchorUseCase.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { PublicationEvidenceCoordinator } from '../application/PublicationEvidenceCoordinator.js';
-import { CreatePublicationEvidenceCoordinatorUseCase } from '../application/CreatePublicationEvidenceCoordinatorUseCase.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { AddPublicationAnchorUseCase } from '../application/anchoring/AddPublicationAnchorUseCase.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { PublicationEvidenceCoordinator } from '../application/publication/evidence/PublicationEvidenceCoordinator.js';
+import { CreatePublicationEvidenceCoordinatorUseCase } from '../application/publication/evidence/CreatePublicationEvidenceCoordinatorUseCase.js';
 import {
     publicationEvidenceView, describeAnchorEvidence, describeVerificationOutcome, describeKnownEvidenceCount
-} from '../application/PublicationEvidenceView.js';
+} from '../application/publication/evidence/PublicationEvidenceView.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -25,7 +25,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //              several independent anchors for the SAME publication all
 //              coexist in the discovered/derived list, in the catalog's
 //              own order, never ranked or narrowed to "the" anchor.
-//   Section C: every application/AnchorVerificationOutcome.js value
+//   Section C: every application/anchoring/AnchorVerificationOutcome.js value
 //              reachable through the coordinator gets its own distinct
 //              label — never collapsed into a shared "unverified."
 //   Section D: separation — discover() never consults a verifier,

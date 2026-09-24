@@ -25,7 +25,7 @@ import { Brick } from './Brick.js';
 // A Structure never stores world placement, terrain, or a parent
 // document — see docs/Principles.md, "A Structure Is The Next Rung On
 // The Brick Ladder, Not An Escape From It (0.2.81)." Forking a Structure into an
-// editable, independent Document is application/ForkStructureUseCase.js.
+// editable, independent Document is application/editor/ForkStructureUseCase.js.
 export class Structure {
     constructor({
         id,

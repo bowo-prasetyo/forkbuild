@@ -1,4 +1,4 @@
-import { BitcoinAnchorFundingObservationState } from '../application/BitcoinAnchorFundingObservationState.js';
+import { BitcoinAnchorFundingObservationState } from '../application/anchoring/bitcoin/BitcoinAnchorFundingObservationState.js';
 
 const TXID_PATTERN = /^[0-9a-f]{64}$/i;
 
@@ -31,7 +31,7 @@ const TXID_PATTERN = /^[0-9a-f]{64}$/i;
 // BitcoinAnchorPublicationCoordinator.js calls this class, and this class
 // never calls back into any of them — the identical restraint anchoring/
 // BitcoinAnchorConfirmationObserver.js's own header already holds toward
-// application/BitcoinAnchorPublicationCoordinator.js, one stage earlier in
+// application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js, one stage earlier in
 // the pipeline. A caller decides when to ask, and asks again, explicitly,
 // whenever it wants a fresher answer — there is no polling loop, timer, or
 // automatic refresh anywhere in this file.

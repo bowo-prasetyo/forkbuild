@@ -7,9 +7,9 @@
 // This is NOT a role, and NOT itself an authorization decision — it is
 // a self-reported, purely descriptive UI hint ("what is this connected
 // participant probably doing right now"), never trusted as proof of
-// EDIT authority. See application/WorldPresenceUseCase.js's own header
+// EDIT authority. See application/presence/WorldPresenceUseCase.js's own header
 // for why a roster entry's actual `canEdit` is always RECOMPUTED locally
-// through application/WorldAuthorizationService.js, never read off this
+// through application/identity/WorldAuthorizationService.js, never read off this
 // field: "Being online is not the same as being authorized to edit."
 //
 //   EXPLORING — the default: this participant is present in the World,

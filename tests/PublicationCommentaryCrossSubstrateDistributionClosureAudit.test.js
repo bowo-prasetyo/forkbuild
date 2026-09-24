@@ -10,14 +10,14 @@ import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { Publication } from '../publisher/Publication.js';
 
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
-import { PublicationCommentaryDistributionPeerExchange } from '../application/PublicationCommentaryDistributionPeerExchange.js';
-import { PublicationCommentaryNostrDistribution } from '../application/PublicationCommentaryNostrDistribution.js';
-import { PublicationCommentaryArweaveDistribution } from '../application/PublicationCommentaryArweaveDistribution.js';
-import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/DiscoverPublicationCommentaryFromNostrUseCase.js';
-import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/DiscoverPublicationCommentaryFromArweaveUseCase.js';
-import { PublicationCommentaryRemoteNotificationBridge } from '../application/PublicationCommentaryRemoteNotificationBridge.js';
-import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/PublicationCommentaryNotificationProducer.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryDistributionPeerExchange } from '../application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js';
+import { PublicationCommentaryNostrDistribution } from '../application/publication/commentary/PublicationCommentaryNostrDistribution.js';
+import { PublicationCommentaryArweaveDistribution } from '../application/publication/commentary/PublicationCommentaryArweaveDistribution.js';
+import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js';
+import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';
+import { PublicationCommentaryRemoteNotificationBridge } from '../application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js';
+import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 
 import {
@@ -30,7 +30,7 @@ import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.9.632 — Publication Commentary Cross-Substrate Distribution Closure
@@ -644,10 +644,10 @@ async function run() {
         // Signed Commentary ≠ proof of Publication ownership: neither
         // discovery use case ever consults CanCommentOnPublicationUseCase
         // or a Publication's own publisherIdentity before admitting.
-        const nostrUseCaseSource = codeOnly(await rawSource('application/DiscoverPublicationCommentaryFromNostrUseCase.js'));
-        const arweaveUseCaseSource = codeOnly(await rawSource('application/DiscoverPublicationCommentaryFromArweaveUseCase.js'));
+        const nostrUseCaseSource = codeOnly(await rawSource('application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js'));
+        const arweaveUseCaseSource = codeOnly(await rawSource('application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js'));
         assert(!/CanCommentOnPublicationUseCase|publisherIdentity/.test(nostrUseCaseSource) && !/CanCommentOnPublicationUseCase|publisherIdentity/.test(arweaveUseCaseSource),
-            n('neither discovery use case imports CanCommentOnPublicationUseCase or inspects publisherIdentity — a verified signature is never conflated with authorization to comment, on either asynchronous substrate; that boundary remains exactly where it already was (application/CanCommentOnPublicationUseCase.js, untouched)'));
+            n('neither discovery use case imports CanCommentOnPublicationUseCase or inspects publisherIdentity — a verified signature is never conflated with authorization to comment, on either asynchronous substrate; that boundary remains exactly where it already was (application/publication/CanCommentOnPublicationUseCase.js, untouched)'));
 
         findings.admissionEquivalence = true;
         console.log('✓ E: discover -> retrieve -> verify -> admit converges to the same behavior on both asynchronous substrates — an unknown Publication never blocks admission, and a verified signature never establishes Publication ownership on either one.');
@@ -1051,8 +1051,8 @@ async function run() {
     // Section M — architecture guard.
     // ===============================================================
     {
-        const nostrDistSource = codeOnly(await rawSource('application/PublicationCommentaryNostrDistribution.js'));
-        const arweaveDistSource = codeOnly(await rawSource('application/PublicationCommentaryArweaveDistribution.js'));
+        const nostrDistSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryNostrDistribution.js'));
+        const arweaveDistSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryArweaveDistribution.js'));
         assert(!/PublicationCommentary\b|PublicationCommentaryDistributionEnvelope|PublicationCommentaryDistributionExchange/.test(nostrDistSource)
             && !/PublicationCommentary\b|PublicationCommentaryDistributionEnvelope|PublicationCommentaryDistributionExchange/.test(arweaveDistSource),
             n('neither PublicationCommentaryNostrDistribution.js nor PublicationCommentaryArweaveDistribution.js imports Commentary\'s own domain classes — both remain OPAQUE envelope carriers, never Commentary business-logic owners'));
@@ -1061,7 +1061,7 @@ async function run() {
             && !/LocalAuthorizationVerifier|verifyPublicationCommentaryDistributionEnvelope/.test(arweaveDistSource),
             n('neither adapter implements or calls its own verification — verification remains centralized in identity/LocalAuthorizationVerifier.js via PublicationCommentaryDistributionExchange, never a substrate-specific alternative'));
 
-        const peerExchangeSource = codeOnly(await rawSource('application/PublicationCommentaryDistributionPeerExchange.js'));
+        const peerExchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js'));
         assert(!/Nostr|Arweave/i.test(peerExchangeSource), n('the WebRTC peer exchange remains entirely unaware of Nostr and Arweave — it is not a fourth place verification could diverge'));
 
         // Discovery tags remain transport mechanisms, never Commentary

@@ -4,8 +4,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
-import { orchestratePublicationDistribution } from '../application/PublicationDistributionOrchestrator.js';
-import { describePublicationDistributionResult } from '../application/PublicationDistributionResult.js';
+import { orchestratePublicationDistribution } from '../application/publication/distribution/PublicationDistributionOrchestrator.js';
+import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -45,7 +45,7 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 //
 //   (2) The one real place `arweaveUploaderOptions`/`nostrPublisherOptions`
 //       are ever constructed — `ui/main.js` — feeds a composed command
-//       (`application/PublicationDistributionCommandComposition.js`, 0.9.105)
+//       (`application/publication/distribution/PublicationDistributionCommandComposition.js`, 0.9.105)
 //       that is built EXACTLY ONCE, at application boot, and `provide()`d
 //       app-wide as one fixed value. That composition's own header states,
 //       verbatim, that its three bound collaborators "always win over
@@ -230,10 +230,10 @@ async function run() {
     // ===============================================================
     {
         const mainSource = await readSource('ui/main.js');
-        const compositionSource = await readSource('application/PublicationDistributionCommandComposition.js');
-        const commandSource = await readSource('application/PublicationDistributionCommand.js');
-        const orchestratorSource = await readSource('application/PublicationDistributionOrchestrator.js');
-        const runtimeSource = await readSource('application/PublicationDistributionRuntimeComposition.js');
+        const compositionSource = await readSource('application/publication/distribution/PublicationDistributionCommandComposition.js');
+        const commandSource = await readSource('application/publication/distribution/PublicationDistributionCommand.js');
+        const orchestratorSource = await readSource('application/publication/distribution/PublicationDistributionOrchestrator.js');
+        const runtimeSource = await readSource('application/publication/distribution/PublicationDistributionRuntimeComposition.js');
 
         // The chain, import by import, real and current.
         // AMENDED BY 0.9.447 — Nostr Publication Relay Set Configuration.
@@ -244,7 +244,7 @@ async function run() {
         // order, while still requiring the original name this section
         // actually traces to be present in the SAME import statement, from
         // the SAME file.
-        assert(/import \{ composePublicationDistributionCommand(, composeMultiRelayNostrPublicationDistributionCommand)? \} from '\.\.\/application\/PublicationDistributionCommandComposition\.js';/.test(mainSource), n('B1. AMENDED BY 0.9.447 — ui/main.js imports composePublicationDistributionCommand — the real, current entry point (now alongside its new, additive multi-relay sibling)'));
+        assert(/import \{ composePublicationDistributionCommand(, composeMultiRelayNostrPublicationDistributionCommand)? \} from '\.\.\/application\/publication\/distribution\/PublicationDistributionCommandComposition\.js';/.test(mainSource), n('B1. AMENDED BY 0.9.447 — ui/main.js imports composePublicationDistributionCommand — the real, current entry point (now alongside its new, additive multi-relay sibling)'));
         assert(/import \{ resolvePublicationDistributionRuntimeConfiguration \}/.test(mainSource), n('B2. ui/main.js imports the one real resolver that turns host capabilities into arweaveUploaderOptions/nostrPublisherOptions'));
         assert(/import \{ executePublicationDistributionCommand(, executeMultiRelayNostrPublicationDistributionCommand)? \} from '\.\/PublicationDistributionCommand\.js';/.test(compositionSource), n('B3. AMENDED BY 0.9.447 — PublicationDistributionCommandComposition.js imports executePublicationDistributionCommand (now alongside its new, additive multi-relay sibling)'));
         assert(/import \{ orchestratePublicationDistribution \} from '\.\/PublicationDistributionOrchestrator\.js';/.test(commandSource), n('B4. PublicationDistributionCommand.js imports orchestratePublicationDistribution'));
@@ -259,9 +259,9 @@ async function run() {
         // itself imports the concrete collaborator. The publisher half is
         // untouched — `NostrPublicationDiscoveryPublisher` is still imported
         // directly, right here.
-        const materialUploaderCompositionSource = await readSource('application/PublicationMaterialUploaderComposition.js');
+        const materialUploaderCompositionSource = await readSource('application/publication/distribution/PublicationMaterialUploaderComposition.js');
         assert(/import \{ composePublicationMaterialUploader \} from '\.\/PublicationMaterialUploaderComposition\.js';/.test(runtimeSource) && /import \{ NostrPublicationDiscoveryPublisher \}/.test(runtimeSource), n('B6. PublicationDistributionRuntimeComposition.js imports composePublicationMaterialUploader (0.9.670) and the concrete Nostr publisher directly'));
-        assert(/import \{ ArweavePublicationMaterialUploader \}/.test(materialUploaderCompositionSource), n('B6b. AMENDED BY 0.9.670 — application/PublicationMaterialUploaderComposition.js imports the concrete Arweave uploader — the bottom of the chain moved one file deeper, never removed'));
+        assert(/import \{ ArweavePublicationMaterialUploader \}/.test(materialUploaderCompositionSource), n('B6b. AMENDED BY 0.9.670 — application/publication/distribution/PublicationMaterialUploaderComposition.js imports the concrete Arweave uploader — the bottom of the chain moved one file deeper, never removed'));
 
         // Identity is constructed exactly once, in ui/main.js.
         const composeCallCount = (mainSource.match(/composePublicationDistributionCommand\(\{/g) || []).length;
@@ -320,7 +320,7 @@ async function run() {
     // slot.
     // ===============================================================
     {
-        const executorSource = await readSource('application/PublicationDistributionExecutor.js');
+        const executorSource = await readSource('application/publication/distribution/PublicationDistributionExecutor.js');
         assert(/const materialUri = await materialUploader\.upload\(serializedMaterial\);/.test(executorSource), n('C1. the real executor always attempts materialUploader.upload() first'));
         assert(/const published = await discoveryPublisher\.publish\(distribution\.discoveryEnvelope\);/.test(executorSource), n('C2. and, when that succeeds, always attempts discoveryPublisher.publish() next — the SAME real call, real sequence, this audit\'s own Section A live proof exercised'));
         assert(/if \(materialUri === null\) \{/.test(executorSource), n('C3. an upload decline stops the sequence — the two slots are ordered, not independent'));
@@ -340,8 +340,8 @@ async function run() {
     // Section D — self-declared-identity census on each slot.
     // ===============================================================
     {
-        const arweaveSource = await readSource('application/ArweavePublicationMaterialUploader.js');
-        const nostrSource = await readSource('application/NostrPublicationDiscoveryPublisher.js');
+        const arweaveSource = await readSource('application/arweave/ArweavePublicationMaterialUploader.js');
+        const nostrSource = await readSource('application/nostr/NostrPublicationDiscoveryPublisher.js');
 
         assert(/get storage\(\) \{ return 'ar'; \}/.test(arweaveSource), n('D1. ArweavePublicationMaterialUploader already exposes a fixed, self-declared `storage` getter returning a literal — the identical shape content/ContentStore.js\'s own subclasses use, and SnapshotPlacementStoreRegistry already keys on'));
         assert(/just a stable self-identifying label a caller may\s*\n\s*\/\/\s*use however it likes/.test(arweaveSource), n('D2. its own header names this explicitly: a stable, self-identifying label, not read by the uploader itself — exactly the shape a registry key wants'));
@@ -360,9 +360,9 @@ async function run() {
     // Section E — boot-time composition vs. per-call resolution.
     // ===============================================================
     {
-        const compositionSource = await readSource('application/PublicationDistributionCommandComposition.js');
-        const coordinatorSource = await readSource('application/PreferredSnapshotPlacementCreationCoordinator.js');
-        const resolverSource = await readSource('application/RoleAwareProviderResolver.js');
+        const compositionSource = await readSource('application/publication/distribution/PublicationDistributionCommandComposition.js');
+        const coordinatorSource = await readSource('application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js');
+        const resolverSource = await readSource('application/settings/RoleAwareProviderResolver.js');
 
         assert(/ALWAYS WIN OVER ANYTHING A\s*\n\/\/ CALLER'S OWN `request` HAPPENS TO CARRY/.test(compositionSource), n('E1. PublicationDistributionCommandComposition.js\'s own header states, verbatim, that its three bound collaborators always win over anything a caller\'s own request carries'));
         // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
@@ -486,20 +486,20 @@ async function run() {
         // to an options pair, one layer up, needs no change this deep
         // either.
         const untouchedByModel1 = [
-            'application/PublicationDistributionCommand.js',
-            'application/PublicationDistributionOrchestrator.js',
-            'application/PublicationDistributionRuntimeComposition.js'
+            'application/publication/distribution/PublicationDistributionCommand.js',
+            'application/publication/distribution/PublicationDistributionOrchestrator.js',
+            'application/publication/distribution/PublicationDistributionRuntimeComposition.js'
         ];
         for (const file of untouchedByModel1) {
             const source = await readSource(file);
             assert(/arweaveUploaderOptions/.test(source) && /nostrPublisherOptions/.test(source), n(`G1. ${file} already names arweaveUploaderOptions/nostrPublisherOptions as opaque per-call parameters — a registry lookup that resolves to the SAME two names, one layer up, needs no change here`));
         }
-        const executorSource = await readSource('application/PublicationDistributionExecutor.js');
+        const executorSource = await readSource('application/publication/distribution/PublicationDistributionExecutor.js');
         assert(!/arweaveUploaderOptions|nostrPublisherOptions/.test(executorSource), n('G1b. PublicationDistributionExecutor.js never even sees arweaveUploaderOptions/nostrPublisherOptions — it takes already-constructed materialUploader/discoveryPublisher instances (Section C4), one layer further removed from where a future registry lookup would sit, so it needs no change under Model 1 either'));
 
         // What WOULD need to change — confirmed from Section E's own
         // boot-time-override evidence.
-        const compositionSource = await readSource('application/PublicationDistributionCommandComposition.js');
+        const compositionSource = await readSource('application/publication/distribution/PublicationDistributionCommandComposition.js');
         assert(/return \(request\) => executePublicationDistributionCommand/.test(compositionSource), n('G2. PublicationDistributionCommandComposition.js\'s own returned closure takes no per-call key today — enabling Model 1 means this file\'s own contract (or a new, sibling composition with a different contract) must accept one, e.g. a providerKey read from `request` rather than only lifecycleStore/arweaveUploaderOptions/nostrPublisherOptions fixed at composition time'));
 
         // The minimum seam is therefore two named, disjoint concerns, never

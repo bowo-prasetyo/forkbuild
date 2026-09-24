@@ -15,18 +15,18 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { AddPublicationSnapshotPlacementUseCase } from '../application/AddPublicationSnapshotPlacementUseCase.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { SnapshotPlacementResolver } from '../application/SnapshotPlacementResolver.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
-import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
-import { publicationSnapshotPlacementDetailView, describePlacementBinding } from '../application/PublicationSnapshotPlacementDetailView.js';
-import { SnapshotPlacementViewRegistry } from '../application/SnapshotPlacementViewRegistry.js';
+import { AddPublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
+import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { publicationSnapshotPlacementDetailView, describePlacementBinding } from '../application/snapshot/placement/PublicationSnapshotPlacementDetailView.js';
+import { SnapshotPlacementViewRegistry } from '../application/snapshot/placement/SnapshotPlacementViewRegistry.js';
 import { IpfsSnapshotPlacementView } from '../content/IpfsSnapshotPlacementView.js';
 import { LocalSnapshotPlacementView } from '../content/LocalSnapshotPlacementView.js';
-import { snapshotPlacementView, describeSnapshotPlacement } from '../application/SnapshotPlacementView.js';
-import { createResolutionObservation } from '../application/SnapshotPlacementResolutionObservation.js';
+import { snapshotPlacementView, describeSnapshotPlacement } from '../application/snapshot/placement/SnapshotPlacementView.js';
+import { createResolutionObservation } from '../application/snapshot/placement/SnapshotPlacementResolutionObservation.js';
 
 // 0.8.20 — Snapshot Placement Inspection & Explicit Resolution UX.
 //
@@ -47,11 +47,11 @@ import { createResolutionObservation } from '../application/SnapshotPlacementRes
 //   Section D: FLAGSHIP — Alice publishes a World locally and places its
 //              snapshot on a fake IPFS network; Bob receives the
 //              placement through the same structural-only ingestion
-//              boundary application/PublicationSnapshotPlacementPeerExchange.js's
+//              boundary application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js's
 //              own arrival path uses (application/
 //              AddPublicationSnapshotPlacementUseCase.js) and discovers
 //              it. Bob opens "Inspect Placement" — proven NOT to call
-//              application/SnapshotPlacementResolver.js, not to touch
+//              application/snapshot/placement/SnapshotPlacementResolver.js, not to touch
 //              the network, not to modify the catalog, and not to
 //              mutate the placement — then, separately, clicks "Resolve
 //              Snapshot," which is proven to be the only action that
@@ -63,7 +63,7 @@ import { createResolutionObservation } from '../application/SnapshotPlacementRes
 //              STORE_UNAVAILABLE for the exact same claim Bob just
 //              resolved. Two independent createResolutionObservation()
 //              records, for the two different outcomes, prove
-//              application/SnapshotPlacementResolutionObservation.js's
+//              application/snapshot/placement/SnapshotPlacementResolutionObservation.js's
 //              own restraint: neither observation is ever shared, and
 //              neither ever changes the other replica's own answer.
 //
@@ -285,7 +285,7 @@ async function run() {
         // Bob's own, completely separate replica. The placement "arrives
         // through peer exchange" the identical boundary application/
         // PublicationSnapshotPlacementPeerExchange.js's own ingestion
-        // already uses — application/AddPublicationSnapshotPlacementUseCase.js,
+        // already uses — application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js,
         // fed the plain wire envelope Alice's placement serializes to.
         const bobPlacementCatalog = new LocalPublicationSnapshotPlacementCatalog(new InMemoryStorageProvider());
         const { placement: bobReceivedPlacement } = new AddPublicationSnapshotPlacementUseCase(bobPlacementCatalog).execute(alicePlacement.toJSON());

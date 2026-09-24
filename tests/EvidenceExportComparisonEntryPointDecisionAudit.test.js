@@ -103,16 +103,16 @@ async function run() {
         );
 
         const backendFiles = [
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparison.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonReadModel.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairsView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceView.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel.js',
-            'application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonPairedRecordDifferenceView.js',
+            'application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js',
+            'application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparison.js',
+            'application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonReadModel.js',
+            'application/claimSnapshotReconciliation/evidenceExportComparison/EvidenceExportComparisonView.js',
+            'application/claimSnapshotReconciliation/evidenceExportComparison/DetailView.js',
+            'application/claimSnapshotReconciliation/evidenceExportComparison/RecordIdentityView.js',
+            'application/claimSnapshotReconciliation/evidenceExportComparison/RecordPairsView.js',
+            'application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceView.js',
+            'application/claimSnapshotReconciliation/evidenceExportComparison/RecordDifferenceReadModel.js',
+            'application/claimSnapshotReconciliation/evidenceExportComparison/PairedRecordDifferenceView.js',
             'ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonTable.js',
             'ui/components/ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordPairSelector.js'
         ];
@@ -183,7 +183,7 @@ async function run() {
         // own "Export Evidence" panel produces a document that round-trips
         // through the byte-identical function, the predecessor claim is a
         // verified source fact, not a narrative assumption.
-        const sharedImportPath = "from '../../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceImport.js';";
+        const sharedImportPath = "from '../../application/claimSnapshotReconciliation/leaderboard/EvidenceImport.js';";
         assert(
             leaderboardViewSource.includes('importPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExport') &&
             leaderboardViewSource.includes(sharedImportPath),

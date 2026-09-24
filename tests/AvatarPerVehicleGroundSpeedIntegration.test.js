@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { VehicleType } from '../core/VehicleType.js';
 import {
     AvatarMovementCapabilityKind,
@@ -7,8 +7,8 @@ import {
 } from '../core/AvatarVehicleMovementCapability.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -167,12 +167,12 @@ async function runTests() {
     // Section D — controller independence
     // -------------------------------------------------------------
     {
-        const controllerSource = await readFile(new URL('../application/AvatarMovementController.js', import.meta.url), 'utf8');
+        const controllerSource = await readFile(new URL('../application/avatar/AvatarMovementController.js', import.meta.url), 'utf8');
         const controllerCodeOnly = controllerSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/\bVehicleType\.(BICYCLE|MOTORCYCLE|CAR)\b/.test(controllerCodeOnly),
-            '8. application/AvatarMovementController.js never references VehicleType.BICYCLE/MOTORCYCLE/CAR — it consumes only a resolved capability\'s own generic movementSpeed number');
+            '8. application/avatar/AvatarMovementController.js never references VehicleType.BICYCLE/MOTORCYCLE/CAR — it consumes only a resolved capability\'s own generic movementSpeed number');
         assert(!/\bBICYCLE\b|\bMOTORCYCLE\b|\bCAR\b/.test(controllerCodeOnly),
-            '9. application/AvatarMovementController.js contains no BICYCLE/MOTORCYCLE/CAR literal of any kind, per-vehicle numeric differentiation included');
+            '9. application/avatar/AvatarMovementController.js contains no BICYCLE/MOTORCYCLE/CAR literal of any kind, per-vehicle numeric differentiation included');
 
         const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         const simulationCodeOnly = simulationSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -240,7 +240,7 @@ async function runTests() {
     {
         // 0.9.91 note: this used to drive a single 40-tick (2s) burst
         // from rest. CAR's own RUNNING target (24 units/second, double
-        // its 12 unit/second base — see application/AvatarMovementController.js's
+        // its 12 unit/second base — see application/avatar/AvatarMovementController.js's
         // own 0.9.91 header) now takes a full 6 seconds to actually ramp
         // up to at CAR's own 4 units/second^2 rate — see this file's own
         // Section E note above for why TOTAL distance from rest no
@@ -279,7 +279,7 @@ async function runTests() {
         // 0.9.91 note: each phase used to be a single 20-tick (1s) burst.
         // setMovementCapability() still resets the controller's own
         // transient _currentMovementSpeed to 0 on every one of these
-        // genuine capability changes (see application/AvatarMovementController.js's
+        // genuine capability changes (see application/avatar/AvatarMovementController.js's
         // own 0.9.91 header) — so each phase below still starts from
         // rest, exactly as before — but CAR's own 3s ramp-to-12 no
         // longer completes within a 1s window. See this file's own

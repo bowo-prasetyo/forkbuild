@@ -1,12 +1,12 @@
 import { computeContentHash } from '../serializer/contentHash.js';
-import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/IpfsPublicationRecord.js';
-import { IpfsPublicationContentVerificationState } from '../application/IpfsPublicationContentVerificationState.js';
-import { appendIpfsPublicationRecordHistoryEntry } from '../application/IpfsPublicationRecordHistory.js';
-import { appendIpfsPublicationContentVerificationHistoryEntry } from '../application/IpfsPublicationContentVerificationHistory.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
+import { IpfsPublicationContentVerificationState } from '../application/ipfs/IpfsPublicationContentVerificationState.js';
+import { appendIpfsPublicationRecordHistoryEntry } from '../application/ipfs/IpfsPublicationRecordHistory.js';
+import { appendIpfsPublicationContentVerificationHistoryEntry } from '../application/ipfs/IpfsPublicationContentVerificationHistory.js';
 import {
     IpfsPublicationObservationTimelineEntryKind,
     describeIpfsPublicationObservationTimeline
-} from '../application/IpfsPublicationObservationTimelineView.js';
+} from '../application/ipfs/IpfsPublicationObservationTimelineView.js';
 
 // 0.8.73 — IPFS Publication Observation Timeline.
 //
