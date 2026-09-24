@@ -8,6 +8,9 @@ storage and announcement providers, and explored in a shared 3D world. There is
 no central server: identities are key pairs held on your device, and people
 connect to each other directly over authenticated peer connections.
 
+**Version 0.9.703.** Every milestone is recorded in
+[docs/Roadmap.md](docs/Roadmap.md).
+
 See [docs/VISION.md](docs/VISION.md) for the longer-term aim ("Git for 3D
 models").
 
