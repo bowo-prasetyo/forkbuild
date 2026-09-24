@@ -44,8 +44,9 @@ import { createId } from '../core/createId.js';
 // physical press to one transition, otherwise the tick after a dismount would
 // immediately remount the vehicle still within reach.
 //
-// `mount` lives here: not in AvatarPresence (see core/AvatarVehicleMount.js) and
-// not in AvatarMovementController.
+// `mount` lives here: growing AvatarPresence with a `mountedVehicleId` was explicitly
+// rejected (see core/AvatarVehicleMount.js), and AvatarMovementController only
+// owns movement keys and kinematics.
 //
 // Once mounted, the vehicle is found by identity in VehicleRuntimeInstances (its
 // current position), never by re-querying spawn positions around the avatar. A
