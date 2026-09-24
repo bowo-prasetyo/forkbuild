@@ -10,7 +10,7 @@ import { CanCommentOnPublicationUseCase } from '../application/publication/CanCo
 import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.637 — Publication Commentary Distribution Provider Selection UI
 // Boundary Audit.
@@ -254,7 +254,7 @@ async function run() {
         assert(!/nostr|arweave|Distribution|peerExchange|announce/i.test(worldViewSource.match(/function addPublicationCommentaryCommand[\s\S]*?\n {8}\}/)[0]),
             n('confirmed by direct text search: that function body contains zero distribution vocabulary of any kind'));
 
-        const sessionSource = codeOnly(await rawSource('application/world/WorldNavigationSession.js'));
+        const sessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         const sessionMethodMatch = sessionSource.match(/addPublicationCommentary\(\{ publicationId, content, commentaryId, createdAt \}\) \{[\s\S]*?\n {4}\}/);
         assert(sessionMethodMatch !== null, n('WorldNavigationSession.addPublicationCommentary() is found, source-level'));
         assert(/this\._addPublicationCommentaryUseCase\.execute\(\{ publicationId, content, commentaryId, createdAt \}\)/.test(sessionMethodMatch[0]),

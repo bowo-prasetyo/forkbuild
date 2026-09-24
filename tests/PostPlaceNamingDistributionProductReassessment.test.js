@@ -16,7 +16,7 @@ import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingC
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.318 — Post-Place-Naming Distribution Product Reassessment.
 //
@@ -205,7 +205,7 @@ async function runTests() {
         assert(publishFnMatch && !publishFnMatch[0].includes('Nostr') && !publishFnMatch[0].includes('Publisher'),
             'A2. The full body of publishNamingClaim() contains no reference to Nostr or to any publisher class — clicking "Publish" today performs local persistence ONLY, exactly what 0.9.315 Section B/F already characterized this action as, before the write-side capability even existed.');
 
-        const navSessionCode = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
+        const navSessionCode = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!navSessionCode.includes('NostrPlaceNamingDiscoveryPublisher'),
             'A2b. application/world/WorldNavigationSession.js — the one class publishNamingClaim() calls into — never references NostrPlaceNamingDiscoveryPublisher anywhere in its own code.');
 

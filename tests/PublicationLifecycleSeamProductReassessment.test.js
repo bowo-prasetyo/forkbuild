@@ -38,7 +38,7 @@ import {
     describePublicationMaterialProvenanceFromInspection
 } from '../application/publication/distribution/PublicationMaterialProvenance.js';
 import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.533 — Publication Lifecycle Seam Product Reassessment.
 //
@@ -592,7 +592,7 @@ async function main() {
         // body never references a discovery provider or catalog at all
         // — the two subsystems are structurally disjoint, not merely
         // coincidentally unaffected in this one test run.
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const focusDocumentBody = sessionSrc.match(/focusDocument\(documentId, \{ setActive = true \} = \{\}\) \{([\s\S]*?)\n {4}\}/);
         assert(focusDocumentBody && !/discoveryProvider|DiscoveryProvider/.test(focusDocumentBody[1]),
             '2. focusDocument()\'s own body never references a discovery provider — structurally incapable of touching Repository catalog state.');

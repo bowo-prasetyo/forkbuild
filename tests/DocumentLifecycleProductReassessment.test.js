@@ -35,7 +35,7 @@ import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeer
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { toWorldOperationEnvelope } from '../core/WorldOperationEnvelope.js';
-import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.546 — Document Lifecycle Product Reassessment.
 //
@@ -241,7 +241,7 @@ async function main() {
         const toolbarSrc = await readSource('ui/components/Toolbar.js');
         assert(/props\.publishDocumentUseCase\.execute\(props\.documentManager\)/.test(toolbarSrc),
             '12. ui/components/Toolbar.js#publish() calls publishDocumentUseCase.execute(documentManager) directly — the Editor\'s one real publish entry point.');
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/this\._publishDocumentUseCase\.execute\(\{\s*document:\s*doc\s*\}\)/.test(sessionSrc),
             '13. application/world/WorldNavigationSession.js#publishDocument() calls the SAME PublishDocumentUseCase — World View\'s one real publish entry point, never a second class.');
 

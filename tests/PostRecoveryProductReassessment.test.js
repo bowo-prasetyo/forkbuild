@@ -15,7 +15,7 @@ import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from '../application/document/RestoreHistoryStateUseCase.js';
 import { RecoveryObserver } from '../application/document/RecoveryObserver.js';
-import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.206 — Post-Recovery Product Reassessment.
 //
@@ -348,7 +348,7 @@ async function runTests() {
         // exportStructure()/importBlueprint() handlers call, wired to
         // BuildLibraryPanel's 'export-personal-structure'/'import-blueprint'
         // events in the template.
-        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         // ForkStructureUseCase/CopyStructureIntoDocumentUseCase are
         // EditorSession's own constructor defaults (EditorView no longer
         // builds duplicate instances to pass in).

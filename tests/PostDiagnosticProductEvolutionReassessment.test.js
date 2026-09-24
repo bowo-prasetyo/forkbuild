@@ -21,7 +21,7 @@ import { World } from '../core/World.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.326 — Post-Diagnostic Product Evolution Reassessment.
 //
@@ -373,7 +373,7 @@ async function runTests() {
 
         // B5. Collaboration -> Remote Operation -> Causal Readiness ->
         // Application.
-        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(editorSessionSource.includes("import { RemoteDocumentOperationApplicationUseCase } from '../document/RemoteDocumentOperationApplicationUseCase.js'")
             && editorSessionSource.includes('new RemoteDocumentOperationApplicationUseCase()'),
             'B5a. application/editor/EditorSession.js still constructs a live RemoteDocumentOperationApplicationUseCase directly.');

@@ -16,7 +16,7 @@ import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNam
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.315 — Place Naming Distribution Gap Audit.
 //
@@ -198,7 +198,7 @@ async function runTests() {
     // production caller path into it.
     // ===============================================================
     {
-        const sessionSource = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         const publishIdx = sessionSource.indexOf('publishPlaceNamingClaim(regionId, name) {');
         const publishBody = sessionSource.slice(publishIdx, publishIdx + 400);
         assert(publishIdx > -1 && publishBody.includes('return this._placeNamingClaimUseCase.publish('),

@@ -28,7 +28,7 @@ import { CheckRecoveryUseCase } from '../application/document/CheckRecoveryUseCa
 import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentUseCase.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
 import { InputRouter } from '../application/editor/InputRouter.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.211 — World View Undo/Redo Lifecycle Audit.
 //
@@ -592,7 +592,7 @@ async function run() {
         // this wired up at all — no special path exists because no path
         // exists, period.
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-        const navSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const navSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         assert(!/autosave|recovery/i.test(worldViewSource), '66. ui/views/WorldView.js contains no autosave/recovery reference of any kind (case-insensitive) — World View\'s Undo/Redo has no autosave/recovery surface to interact with');
         assert(!/autosave|recovery/i.test(navSource), '67. application/world/WorldNavigationSession.js likewise contains no autosave/recovery reference — confirms the invariant holds by construction (nothing exists to special-case), not merely by omission of a bug');
 
@@ -612,7 +612,7 @@ async function run() {
     //    added to CommandHistory.
     // -------------------------------------------------------------
     {
-        const navSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const navSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
 
         function extractMethod(name) {
             const re = new RegExp(`\\b${name}\\s*\\([^)]*\\)\\s*\\{`);
@@ -857,7 +857,7 @@ async function run() {
     {
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = worldViewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-        const navSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const navSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const panelSource = await readFile(new URL('../ui/components/HistoryTimelinePanel.js', import.meta.url), 'utf8');
 
         // 1. WorldView.js has no CommandHistory import.

@@ -27,7 +27,7 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.198 — Publication Unpublish/Retract UI Action.
 //
@@ -357,7 +357,7 @@ async function runTests() {
         // file's own header does exactly that, in prose, to explain the
         // restraint) — same "prose vs. code" distinction Section E's own
         // sweep already applies, so this checks the CODE only.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/isUnpublished|publicationRemoved/i.test(codeOnlyLines(sessionSource).join('\n')),
             '3. WorldNavigationSession.js introduces no isUnpublished/publicationRemoved vocabulary in code — the existing getPublicationForDocument()/getPlacementInfo() read models remain the sole source of truth');
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
@@ -394,7 +394,7 @@ async function runTests() {
         assert(removed === true, '1. a session authenticated as a DIFFERENT identity (bob) can still retract alice\'s Publication — session.unpublishDocument() enforces no ownership check UnpublishDocumentUseCase itself does not already skip');
         assert(discoveryProvider.findById(pub.id) === null, '2. the retraction genuinely took effect');
 
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const unpublishBody = sessionSource.match(/unpublishDocument\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/);
         assert(unpublishBody, '3. unpublishDocument() method body is found');
         assert(!/owner|ownedByCurrentUser|currentUser/i.test(unpublishBody[1]),
@@ -426,7 +426,7 @@ async function runTests() {
         assert(/session\.unpublishDocument\(/.test(handlerMatch[1]),
             '5. unpublishOwnPublication() calls session.unpublishDocument() — the UI requests retraction, WorldNavigationSession/UnpublishDocumentUseCase remain the sole authority that performs it');
 
-        const unpublishBodySource = await rawSource('application/world/WorldNavigationSession.js');
+        const unpublishBodySource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const unpublishBody = unpublishBodySource.match(/unpublishDocument\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         assert(!/Snapshot|Nostr|Arweave|spatialIndexProvider|placementRegistry|removeWorldPlacementUseCase/i.test(unpublishBody),
             '6. unpublishDocument()\'s own body touches only publication resolution and UnpublishDocumentUseCase — no Snapshot/Nostr/Arweave/spatial/placement call sites, confirming it never removes a placement itself');

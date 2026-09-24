@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.221 — Product Evolution Selection / Architecture Baseline.
 //
@@ -124,7 +124,7 @@ async function runTests() {
         // A6. Undo/redo — reachable (0.9.210/0.9.211, reconfirmed
         // 0.9.212/0.9.216). WorldNavigationSession still exposes real
         // undo()/redo() methods gated on a real CommandHistory.
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(/\bundo\(\)\s*\{/.test(navSession) && /\bredo\(\)\s*\{/.test(navSession),
             'A6. application/world/WorldNavigationSession.js still exposes undo()/redo() (0.9.210/0.9.211).');
 

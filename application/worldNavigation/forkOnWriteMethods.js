@@ -6,6 +6,11 @@ import { SpatialHoverState } from '../spatial-state/SpatialHoverState.js';
 // WorldNavigationSession fork-on-write: a published snapshot is never edited
 // in place; its first mutation forks a new Document and remaps selection,
 // focus and hover onto it.
+//
+// A published World View is immutable; a World View session is editable.
+// Navigation, camera, selection, hover and inspection never fork; only an
+// actual document mutation does. See docs/Principles.md, "A published
+// snapshot is never mutated in place".
 export const forkOnWriteMethods = {
     // True while `documentId` is still a straight, unforked view of a
     // published snapshot — i.e. still immutable as far as this session

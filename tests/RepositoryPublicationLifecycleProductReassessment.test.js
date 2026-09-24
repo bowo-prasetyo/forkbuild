@@ -36,6 +36,7 @@ import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
 import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.534 — Repository Publication Lifecycle Product Reassessment.
 //
@@ -545,7 +546,7 @@ async function main() {
         // focusDocument() references a storage-mutating method — World
         // navigation cannot itself rewrite what a later Repository read
         // would find, under either catalog shape.
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.
         // findPublicationById() now delegates to `_publicationActionDiscoveryProvider`
         // (a separate, optional capability falling back to `discoveryProvider`

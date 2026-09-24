@@ -28,6 +28,7 @@ import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorl
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
 import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.200 — Orphaned World Placement Lifecycle Audit.
 //
@@ -530,7 +531,7 @@ async function runTests() {
         // No orphan-specific vocabulary was introduced anywhere in
         // production by writing THIS file's own new production-facing
         // read models — there are none; this file adds test code only.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const noNewFlagVocabulary = /\borphan(ed)?\b|\bisOrphaned\b|\bplacementOrphaned\b/i;
         assert(!noNewFlagVocabulary.test(codeOnlyLines(sessionSource).join('\n')),
             'H3. WorldNavigationSession.js still introduces no orphaned/isOrphaned vocabulary in code (0.9.199\'s own Section G, reconfirmed unchanged)');

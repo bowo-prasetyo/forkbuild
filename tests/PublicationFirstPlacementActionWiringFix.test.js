@@ -15,7 +15,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.600 — Publication First-Placement Action Wiring Fix.
 //
@@ -140,7 +140,7 @@ async function run() {
         assert(sessionCtorIndex !== -1 && placePublicationUseCaseArgIndex !== -1,
             'A2/A3. The SAME placePublicationUseCase instance PublishDocumentUseCase already uses is now ALSO handed to WorldNavigationSession\'s own constructor call.');
 
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/placePublicationUseCase = null,/.test(sessionSrc),
             'A4. WorldNavigationSession accepts an optional placePublicationUseCase collaborator.');
         assert(/placePublication\(publicationId, position\) \{/.test(sessionSrc),
@@ -248,7 +248,7 @@ async function run() {
             'E2. Live: the narrow discoveryProvider — what fork-policy/_findPublications() still reads (world-layout was separately widened by 0.9.605, unrelated to this fork-policy boundary) — genuinely cannot see a Repository-admitted-only Publication.');
         // _isKnownPublication()/_checkForkPolicy() both key off _findPublications(documentId),
         // which reads _discoveryProvider (narrow) — confirmed structurally in WorldNavigationSession.js.
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),
             'E4. _findPublications() — the shared choke point behind fork-policy — reads ONLY this._discoveryProvider, never this._publicationActionDiscoveryProvider. This milestone never touches that boundary.');

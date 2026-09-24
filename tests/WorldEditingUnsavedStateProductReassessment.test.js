@@ -29,7 +29,7 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { ForkPublishedWorldUseCase } from '../application/publication/ForkPublishedWorldUseCase.js';
 import { LifecycleStatus, computeLifecycleStatus, describeLifecycleStatus } from '../application/document/DocumentLifecycleStatus.js';
-import { worldNavigationSessionFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.579 — World Editing & Unsaved-State Product Reassessment.
 //
@@ -584,7 +584,7 @@ async function main() {
         // `node --input-type=module -e "import('./application/
         // EditorSession.js')"` fails with "Cannot find package 'three'
         // imported from .../renderer/Renderer.js").
-        const editorSessionSource = await readSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/loadDocument\(id\) \{\s*this\._rebuild\(\(eventBus\) => \{/.test(editorSessionSource),
             'H2a. loadDocument() really does route through _rebuild() — the same rebuild path openDocument()/newDocument() also use, quoted verbatim.');
         const rebuildMatch = editorSessionSource.match(/_rebuild\(populateWorldFn\) \{[\s\S]*?const world = populateWorldFn\(eventBus\);/);

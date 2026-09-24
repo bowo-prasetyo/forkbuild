@@ -54,6 +54,10 @@ export function worldNavigationSessionFiles() {
     return fileGroup('application/world/WorldNavigationSession.js', 'application/worldNavigation');
 }
 
+export function editorSessionFiles() {
+    return fileGroup('application/editor/EditorSession.js', 'application/editorSession');
+}
+
 // css/main.css only @imports its parts, in cascade order.
 export function stylesheetFiles() {
     const entry = readFileSync(join(root, 'css/main.css'), 'utf8');

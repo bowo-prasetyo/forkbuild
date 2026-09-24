@@ -19,6 +19,7 @@ import { DEFAULT_MAX_WALKING_DEPTH } from '../core/AvatarWaterWalkability.js';
 import { buildWaterTileMesh } from '../renderer/WaterTileMesh.js';
 import { TERRAIN_TILE_SIZE, tileCoordinateForPosition } from '../core/TerrainTiling.js';
 import { computeCameraFraming, CameraPerspective } from '../core/CameraPerspective.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.616 — Avatar Basic Water Traversal Product Closure Audit.
 //
@@ -406,7 +407,7 @@ async function run() {
         // invoked from application/world/WorldNavigationSession.js. THIS is the
         // one real consumer that treats position.y as if it already were
         // the final render elevation.
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const sessionCode = codeOnly(sessionSource);
         const applyFramingBody = extractFunctionBody(sessionSource, '_applyCameraPerspectiveFraming(position, headingDegrees) {');
         assert(applyFramingBody !== null, '14. application/world/WorldNavigationSession.js#_applyCameraPerspectiveFraming() is located and extracted from its real source');

@@ -18,7 +18,7 @@ import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNaming
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.272 — Post-Place-Naming Product Evolution Reassessment.
 //
@@ -258,7 +258,7 @@ async function runTests() {
         const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const mainJs = await rawSource('ui/main.js');
         const worldEncounterCanvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
 
         assert(/new\s+EditorSession\s*\(/.test(editorView), 'B1. Editor: ui/views/EditorView.js still constructs a real EditorSession.');
         macroMatrix.push(['Editor', 'COMPLETE']);

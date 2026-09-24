@@ -2,6 +2,16 @@ import { computeCompassHeading } from '../../core/CompassHeading.js';
 
 // WorldNavigationSession methods for this replica's local, per-World camera
 // experience: whether a World was visited, and saving/restoring its framing.
+//
+// Local, per-user camera framing for Worlds this replica has visited; never
+// a Document or WorldPlacement field, never broadcast. See
+// core/LocalWorldExperience.js and docs/Principles.md, "Personal Experience
+// Is Not Shared World State". No-ops without localWorldExperienceStore.
+//
+// Independent of enterWorldPresence()/leaveWorldPresence(), which broadcast
+// a shared "I am here". Callers wire both at the same active-document change
+// (see WorldView.js _syncWorldExperience()). Never consulted for
+// authorization: a prior visit is a convenience, not a claim.
 export const worldExperienceMethods = {
     hasVisitedWorld(documentId) {
         if (!this._localWorldExperienceStore || !documentId) {

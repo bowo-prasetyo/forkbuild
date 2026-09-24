@@ -20,6 +20,7 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.128 — Vehicle Steering Input Binding.
 //
@@ -439,7 +440,7 @@ async function runTests() {
         assert(adapterCode.includes('import') && adapterCode.split('import').length - 1 === 1,
             '26. sanity: exactly one import (VehicleSteeringDirection) — no Three.js, no heading math, no vehicle runtime access');
 
-        const rawSessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const rawSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const methodMatch = rawSessionSource.match(/_processVehicleSteeringInput\(key, type\)\s*\{([\s\S]*?)\n {4}\}/);
         assert(methodMatch !== null, '27. sanity: _processVehicleSteeringInput() exists and is extractable as a single method body');
         const methodBody = methodMatch[1];
@@ -553,7 +554,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const adapterCode = await sourceOf('../core/VehicleSteeringInputAdapter.js');
-        const rawSessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const rawSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const methodMatch = rawSessionSource.match(/_processVehicleSteeringInput\(key, type\)\s*\{([\s\S]*?)\n {4}\}/);
         const methodBody = methodMatch[1];
 

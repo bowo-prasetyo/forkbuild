@@ -27,6 +27,7 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.467 — Orphaned Placement Lifecycle Semantics Reconciliation Audit.
 //
@@ -344,7 +345,7 @@ async function runTests() {
     {
         const unpublishUseCaseSource = await rawSource('application/publication/UnpublishDocumentUseCase.js');
         const publisherProviderSource = await rawSource('publisher/LocalPublisherProvider.js');
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const registrySource = await rawSource('placement/LocalPlacementRegistry.js');
 
         const cleanupVocabulary = /RemoveWorldPlacementUseCase|PlacementRegistry|SpatialIndexProvider|_placementRegistry|_spatialIndexProvider/;

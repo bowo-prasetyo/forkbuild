@@ -11,6 +11,7 @@ import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRe
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.287 — Post-Notification Product Reassessment.
 //
@@ -461,7 +462,7 @@ async function runTests() {
     {
         // E1. The one real, existing consumer: NotificationHistoryPanel,
         // reached exclusively through WorldView's own thin command.
-        const worldNavSession = await rawSource('application/world/WorldNavigationSession.js');
+        const worldNavSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldNavSession.includes('getRecipientNotificationEvents'),
             'E1a. application/world/WorldNavigationSession.js still exposes the one thin read method this arc built.');
         const historyPanelCallers = await grepCount('NotificationHistoryPanel', ['ui']);

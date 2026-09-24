@@ -28,6 +28,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.605 — Wire Publication Discovery into World Rendering.
 //
@@ -207,7 +208,7 @@ async function run() {
         assert(!/new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*discoveryProvider\s*\);/.test(compositionSrc),
             'A4. The OLD, narrow wiring no longer appears anywhere in this file — replaced, not duplicated alongside a second worldLayoutProvider.');
 
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/loadPublishedWorldSessionUseCase = null,/.test(sessionSrc),
             'A5. WorldNavigationSession accepts loadPublishedWorldSessionUseCase as a new, OPTIONAL constructor parameter — a caller that never wires one (every pre-0.9.605 caller/test) gets no fallback, exactly the same degrade-gracefully posture every other optional collaborator in this class already follows.');
         assert(/_resolveWorldDocument\(documentId\)/.test(sessionSrc) && /_resolvePublicationMaterial\(documentId\)/.test(sessionSrc),
@@ -386,7 +387,7 @@ async function run() {
         assert(harness.session.getPublicationIdForDocument(collisionDocId) === null,
             'D3. fork-policy (getPublicationIdForDocument -> _findPublications -> the narrow discoveryProvider) does not know collisionDocId — 0.9.605\'s widening of worldLayoutProvider/the material fallback is a COMPLETELY SEPARATE constructor argument/code path from the one _findPublications() reads.');
 
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0])
             && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),

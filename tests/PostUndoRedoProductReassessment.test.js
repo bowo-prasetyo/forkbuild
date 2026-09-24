@@ -9,7 +9,7 @@ import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
-import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.212 — Post-Undo/Redo Product Reassessment.
 //
@@ -325,7 +325,7 @@ async function runTests() {
         assert(new Set(commandHistoryImports.map((m) => m[1].split('/').pop())).size === 1, 'F1a. WorldNavigationSession.js and its method modules import exactly one CommandHistory-shaped class');
         assert(/avoids maintaining a second/.test(navigationSessionSource) || !/_undoStack|_redoStack/.test(navigationSessionSource), 'F1b. WorldNavigationSession.js still maintains no second undo/redo stack of its own');
 
-        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/_undoStack|_redoStack/.test(editorSessionSource), 'F2. EditorSession.js also maintains no second undo/redo stack — CommandHistory stays the sole authority for the Editor too');
 
         const commandHistorySource = await rawSource('application/editor/CommandHistory.js');
@@ -370,7 +370,7 @@ async function runTests() {
         assert(/_readGestureFeedback\(\)\s*\{/.test(gizmoControllerSource), 'G1b. TransformGizmoController still reads gesture feedback from the service');
         assert(/feedback:\s*this\._readGestureFeedback\(\)/.test(gizmoControllerSource), 'G1c. ...and still returns it as `feedback` on its pointer-event results');
 
-        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         const onPointerMoveMethod = editorSessionSource.slice(editorSessionSource.indexOf('    onPointerMove(event) {'), editorSessionSource.indexOf('    onPointerUp(event) {'));
         assert(/const result = this\._session\.gizmoPointerMove\(/.test(onPointerMoveMethod), 'G1d. EditorSession.onPointerMove() still reads the gizmo\'s result...');
         assert(/if \(result && result\.consumed\) {\s*return result;/.test(onPointerMoveMethod), 'G1e. ...and still forwards the WHOLE result (including feedback) to its own caller when the gizmo consumed the event');

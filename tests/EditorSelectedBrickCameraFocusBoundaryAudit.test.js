@@ -15,6 +15,7 @@ import { SelectionState } from '../application/editor-state/SelectionState.js';
 import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
 import { EditorActionContext } from '../application/editor/EditorActionContext.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { editorSessionFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.660 — Editor Selected-Brick Camera Focus Boundary Audit.
 //
@@ -120,8 +121,7 @@ async function run() {
         // A2. focusLocation()'s own real offset constant, read via the
         // exact module this codebase already imports it from, never a
         // re-typed literal that could silently drift from the source.
-        const worldModuleSource = await (await import('node:fs/promises')).readFile(
-            new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const worldModuleSource = await (await import('node:fs/promises')).(await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         assert(worldModuleSource.includes('const LOCATION_FOCUS_OFFSET = { x: 12, y: 12, z: 12 };'),
             n('A2. WorldNavigationSession\'s real focus offset is a FIXED { x: 12, y: 12, z: 12 } box — never derived from any target\'s own size'));
         assert(worldModuleSource.includes('const CAMERA_FOCUS_DURATION_MS = 900;'),
@@ -233,8 +233,7 @@ async function run() {
     {
         // D1. frameCameraOn()'s real offset is byte-identical to World's
         // LOCATION_FOCUS_OFFSET — one shared convention, not a second.
-        const editorModuleSource = await (await import('node:fs/promises')).readFile(
-            new URL('../application/editor/EditorSession.js', import.meta.url), 'utf8');
+        const editorModuleSource = await (await import('node:fs/promises')).(await Promise.all(editorSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         assert(editorModuleSource.includes('const ENTRY_CAMERA_OFFSET = { x: 12, y: 12, z: 12 };'),
             n('D1. EditorSession\'s real ENTRY_CAMERA_OFFSET is { x: 12, y: 12, z: 12 } — the exact same fixed box World uses'));
 
@@ -538,8 +537,7 @@ async function run() {
     // Section J — Animation asymmetry.
     // ===============================================================
     {
-        const editorModuleSource = await (await import('node:fs/promises')).readFile(
-            new URL('../application/editor/EditorSession.js', import.meta.url), 'utf8');
+        const editorModuleSource = await (await import('node:fs/promises')).(await Promise.all(editorSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         assert(!editorModuleSource.includes('CameraFocusAnimator'),
             n('J1. application/editor/EditorSession.js never imports CameraFocusAnimator — Editor camera framing has no animation machinery today'));
         assert(!editorModuleSource.includes('onAnimationFrame'),

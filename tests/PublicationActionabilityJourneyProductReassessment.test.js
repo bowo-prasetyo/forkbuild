@@ -47,7 +47,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.598 — Publication Actionability Journey Product Reassessment.
 //
@@ -530,7 +530,7 @@ async function run() {
         // the codebase it inspects, the same posture 0.9.600 itself took
         // amending tests/PublicationMultiPlacementVisibility.test.js's own
         // superseded assertion in place rather than leaving it false.
-        const worldNavigationSessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const worldNavigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/placePublicationUseCase = null,/.test(worldNavigationSessionSource) && /placePublication\(publicationId, position\) \{/.test(worldNavigationSessionSource),
             'D2. AS OF 0.9.600 (superseding this file\'s own original D2 finding): WorldNavigationSession.js now accepts an optional placePublicationUseCase collaborator and exposes a publicationId-keyed placePublication() method — the smallest legitimate next step this file\'s own Section H named. movePlacement()/removePlacement() (below) remain the only DOCUMENT-ID-keyed placement-mutating methods; placePublication() is PUBLICATION-ID-keyed and deliberately separate — see 0.9.600\'s own WorldNavigationSession.js header.');
         assert(/movePlacement\(documentId, newPosition\) \{[\s\S]{0,300}if \(!record\) \{\s*\n\s*throw new Error/.test(worldNavigationSessionSource),

@@ -22,7 +22,7 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.216 — Post-Snapshot-Export Product Reassessment.
 //
@@ -229,7 +229,7 @@ async function runTests() {
         const commandHistoryImports = [...navigationSessionSource.matchAll(/import\s*\{[^}]*\bCommandHistory\b[^}]*\}\s*from\s*['"]([^'"]+)['"]/g)];
         assert(new Set(commandHistoryImports.map((m) => m[1].split('/').pop())).size === 1, 'C4a. WorldNavigationSession.js and its method modules import exactly one CommandHistory-shaped class');
         assert(!/_undoStack|_redoStack/.test(navigationSessionSource), 'C4b. WorldNavigationSession.js still maintains no second undo/redo stack of its own');
-        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/_undoStack|_redoStack/.test(editorSessionSource), 'C4c. EditorSession.js also maintains no second undo/redo stack');
 
         console.log('✓ Section C: World material/document lifecycle — COMPLETE, reconfirmed. Autosave/recovery, history/replay/restore, and placement/publication/naming all remain composed and UI-reachable; CommandHistory remains the sole undo/redo authority for both sessions.');

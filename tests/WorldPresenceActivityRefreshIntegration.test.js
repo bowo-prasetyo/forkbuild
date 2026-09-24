@@ -21,7 +21,7 @@ import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { WorldCommandPropagationUseCase } from '../application/document/WorldCommandPropagationUseCase.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.217 — Wire World Presence Activity Refresh.
 //
@@ -192,7 +192,7 @@ async function runTests() {
 // ---------------------------------------------------------------------
 {
     const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-    const navigationSessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+    const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
 
     // A1 — the method itself is unchanged: still a real implementation,
     // never a stub, still delegating to WorldPresenceUseCase#setActivity

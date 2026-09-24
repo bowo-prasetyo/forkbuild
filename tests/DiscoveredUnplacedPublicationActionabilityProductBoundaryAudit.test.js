@@ -41,7 +41,7 @@ import { PublishDocumentUseCase } from '../application/publication/PublishDocume
 import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.594 — Discovered-Unplaced Publication Actionability Product Boundary
 // Audit.
@@ -402,7 +402,7 @@ async function run() {
         // Trace the structural bridge itself in real, unmodified source,
         // confirming B2/B3 are not an artifact of this test's own fixture
         // but a real property of the wiring between these three files.
-        const worldNavSrc = await source('application/world/WorldNavigationSession.js');
+        const worldNavSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => source(file)))).join('\n');
         // B5 AMENDED BY 0.9.597 — Publication Action Provider Continuity
         // Fix. At the time this audit was written, getPublicationForDocument()
         // was a thin wrapper over _resolvePublicationForPlacement() (and

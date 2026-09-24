@@ -21,7 +21,7 @@ import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNam
 import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.270 — Place Naming Adoption Status Lifecycle Audit.
 //
@@ -1249,7 +1249,7 @@ async function runTests() {
         assert(worldViewCode.includes('function hasPlaceNamingClaim') === false,
             '84. WorldView.js defines no LOCAL hasPlaceNamingClaim()-shaped function of its own — it only ever calls the session\'s.');
 
-        const sessionCode = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
+        const sessionCode = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(sessionCode.includes('hasPlaceNamingClaim(worldId, claimId) {'),
             '85. WorldNavigationSession exposes a real hasPlaceNamingClaim(worldId, claimId) method, still taking exactly those two arguments.');
         const sessionMethodBlock = extractBetween(sessionCode, 'hasPlaceNamingClaim(worldId, claimId) {', '\n    }');

@@ -9,7 +9,7 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.310 — Post-Placement-Visibility Product Evolution Reassessment.
 //
@@ -290,7 +290,7 @@ async function runTests() {
         // "placement resolution," "placement verification," or
         // "placement materialization" concept anywhere in this
         // codebase's own vocabulary to complete.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/PlacementResolution|PlacementVerification|PlacementMaterialization/.test(sessionSource),
             'B3. No "PlacementResolution/Verification/Materialization" vocabulary exists anywhere — unlike Snapshot, there is no further named protocol stage this journey stops short of.');
 
@@ -390,7 +390,7 @@ async function runTests() {
         // own SINGLE position per document — never through the
         // placement registry, and never by placementId or by an
         // explicit Position at all.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const sessionCode = codeOnlyLines(sessionSource);
         const focusDocumentBody = methodBody(sessionCode, 'focusDocument\\(documentId, \\{ setActive = true \\} = \\{\\}\\)', 4);
         assert(focusDocumentBody.includes('this._getWorldPosition(documentId)'),
@@ -559,7 +559,7 @@ async function runTests() {
         // this coordinate," reached via PlacementInfoPanel's own "View"
         // link on a nonzero overlapCount.
         assert(await sourceExists('ui/components/LocationDocumentsDialog.js'), 'G1. LocationDocumentsDialog.js already exists.');
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(sessionSource.includes('getDocumentsAtPosition(position)'), 'G1b. getDocumentsAtPosition() already exists on WorldNavigationSession.');
         const dialogSource = await rawSource('ui/components/LocationDocumentsDialog.js');
         assert(dialogSource.includes("name: 'LocationDocumentsDialog'") && dialogSource.includes('occupants'),
@@ -615,7 +615,7 @@ async function runTests() {
         // plural read path or its shared enrichment helper — visibility
         // in OwnPublicationPanel's sense is a database fact, never a
         // live-session fact.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const sessionCode = codeOnlyLines(sessionSource);
         const pluralBody = methodBody(sessionCode, 'getPlacementsForPublication\\(publicationId\\)', 4);
         const enrichBody = methodBody(sessionCode, '_enrichPlacementRecord\\(record\\)', 4);

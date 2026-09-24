@@ -26,7 +26,7 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.199 — Removal & Retraction Lifecycle Convergence Audit.
 //
@@ -381,7 +381,7 @@ async function runTests() {
 
         // Neither method's body in WorldNavigationSession reaches for a
         // snapshot/distribution/discovery-registration collaborator.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const removeBody = sessionSource.match(/removePlacement\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         const unpublishBody = sessionSource.match(/unpublishDocument\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         assert(!distributionVocabulary.test(removeBody), 'F3. removePlacement()\'s own body touches no Snapshot/Nostr/Arweave/distribution collaborator');
@@ -411,7 +411,7 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const noNewFlagVocabulary = /\borphan(ed)?\b|\bisOrphaned\b|\bplacementOrphaned\b/i;
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(!noNewFlagVocabulary.test(codeOnlyLines(sessionSource).join('\n')),
             'G1. WorldNavigationSession.js introduces no orphaned/isOrphaned vocabulary in CODE — the word appears only in comments (this audit\'s own, and 0.9.198\'s), never as a field a read model returns');
         const placementInfoPanelSource = await rawSource('ui/components/PlacementInfoPanel.js');
@@ -516,7 +516,7 @@ async function runTests() {
         assert(countReferences(removeUseCaseSource, 'UnpublishDocumentUseCase') === 0, 'I1. RemoveWorldPlacementUseCase.js never references UnpublishDocumentUseCase');
         assert(countReferences(unpublishUseCaseSource, 'RemoveWorldPlacementUseCase') === 0, 'I2. UnpublishDocumentUseCase.js never references RemoveWorldPlacementUseCase');
 
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const removeBody = sessionSource.match(/removePlacement\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         const unpublishBody = sessionSource.match(/unpublishDocument\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         assert(!/_unpublishDocumentUseCase/.test(removeBody), 'I3. removePlacement()\'s own body never calls this._unpublishDocumentUseCase');

@@ -1,3 +1,4 @@
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { readFile } from 'node:fs/promises';
 import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
@@ -550,8 +551,7 @@ async function runTests() {
         }
     }
     {
-        const sourceUrl = new URL('../application/world/WorldNavigationSession.js', import.meta.url);
-        const source = await readFile(sourceUrl, 'utf8');
+        const source = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source
             .split('\n')
             .filter((line) => !line.trim().startsWith('//'))

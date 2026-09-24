@@ -28,6 +28,7 @@ import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorl
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
 import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.201 — Degraded Orphan Row Handling.
 //
@@ -355,7 +356,7 @@ async function runTests() {
     // collaborators elsewhere for unrelated features).
     // -------------------------------------------------------------
     {
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const dialogSource = await rawSource('ui/components/LocationDocumentsDialog.js');
 
         const getDocumentsAtPositionBody = codeOnlyLines(extractMethodBody(sessionSource, 'getDocumentsAtPosition')).join('\n');

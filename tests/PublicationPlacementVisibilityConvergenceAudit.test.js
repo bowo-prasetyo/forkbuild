@@ -25,6 +25,7 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.309 — Publication Placement Visibility Convergence Audit.
 //
@@ -202,7 +203,7 @@ async function runTests() {
 
         // Structural: both routes terminate at the exact same one-line
         // registry call — never two independent queries.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const discoverSource = await rawSource('application/placement/DiscoverPlacementsUseCase.js');
         assert(codeOnly(sessionSource).includes('this._placementRegistry.findByPublicationId(publicationId)'),
             'A4. getPlacementsForPublication() calls the registry\'s own findByPublicationId()');
@@ -315,7 +316,7 @@ async function runTests() {
         // (unlike _resolvePlacementRecord/getPlacementInfoForPublication,
         // which both deliberately DO) — proving 0.9.308 added a capability
         // rather than silently redefining an existing one.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const pluralBody = methodBody(codeOnly(sessionSource), 'getPlacementsForPublication\\(publicationId\\)', 4);
         assert(!pluralBody.includes('.reduce('), 'D6. getPlacementsForPublication()\'s own body performs no "latest" reduction');
         assert(!pluralBody.includes('getPlacementInfoForPublication'), 'D7. getPlacementsForPublication() does not call the singular method internally — the two are independent readers of the same registry, not one wrapping the other');
@@ -436,7 +437,7 @@ async function runTests() {
         // Structural: neither the plural reader nor the shared enrichment
         // helper ever touches the World-facing collaborators — only the
         // placement registry.
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const source = codeOnly(sessionSource);
         const pluralBody = methodBody(source, 'getPlacementsForPublication\\(publicationId\\)', 4);
         const enrichBody = methodBody(source, '_enrichPlacementRecord\\(record\\)', 4);
@@ -547,7 +548,7 @@ async function runTests() {
     // lifecycle semantics, no new placement domain model.
     // -----------------------------------------------------------------
     {
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         const sessionCode = codeOnly(sessionSource);
         const panelCode = codeOnly(panelSource);

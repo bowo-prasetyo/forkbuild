@@ -23,7 +23,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.285 — Wire Publication Commentary Notification Producer.
 //
@@ -367,7 +367,7 @@ async function runTests() {
         // no idea, and no need to know, that its own
         // addPublicationCommentaryUseCase collaborator now also produces
         // a notification.
-        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!/PublicationCommentaryNotificationProducer/.test(sessionCode),
             'A7. application/world/WorldNavigationSession.js never imports or references PublicationCommentaryNotificationProducer.');
         const gitDiffStat = execSync(
@@ -734,7 +734,7 @@ async function runTests() {
         // independent production trigger that store-side deduplication
         // (Section F) could silently mask by identity, never by catching
         // the double call itself.
-        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
         const addCommentaryMethodBody = extractMethodBody(sessionCode, /addPublicationCommentary\(\{ publicationId, content \}\) \{/);
         assert(addCommentaryMethodBody, 'L2a. WorldNavigationSession#addPublicationCommentary() still exists in its own, single, recognizable shape.');
         const executeCallsInMethod = (addCommentaryMethodBody.match(/\.execute\(/g) || []).length;

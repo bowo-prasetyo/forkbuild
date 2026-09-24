@@ -17,7 +17,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.473 — World Encounter -> Repository Continuity Boundary Audit.
 //
@@ -526,7 +526,7 @@ async function run() {
         // the cascade fires at all. Assertions 1/3 are amended to prove
         // the new, narrower fact directly rather than assert the
         // now-superseded absence.
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/findPublicationById\(publicationId\) \{[\s\S]{0,300}_publicationActionDiscoveryProvider\.findById\(publicationId\)/.test(sessionSource),
             '1. AMENDED BY 0.9.597 — WorldNavigationSession#findPublicationById() now delegates to its own `_publicationActionDiscoveryProvider.findById()` — a SEPARATE collaborator from fork-policy/world-layout\'s own `_discoveryProvider` (see that constructor\'s own comment) — the exact collaborator application/snapshot/AutomaticSnapshotEncounterCascade.js reads, unchanged (still "null ... when ... the publication is not locally known", now meaning "not known to EITHER local or Repository-admitted discovery").');
 

@@ -12,7 +12,7 @@ import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
-import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.209 — Post-History Product Reassessment.
 //
@@ -334,7 +334,7 @@ async function runTests() {
             assert(countReferences(editorViewSource, varName) >= 2, `E1b. ${varName} is referenced beyond its own construction`);
         }
 
-        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         // ForkStructureUseCase/CopyStructureIntoDocumentUseCase are
         // EditorSession's own constructor defaults (EditorView no longer
         // builds duplicate instances to pass in).

@@ -7,7 +7,7 @@ import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnaps
 import { ArweaveSnapshotDiscoveryPublisher } from '../application/arweave/ArweaveSnapshotDiscoveryPublisher.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.565 — Decentralized Publication Position Claim Distribution Boundary
 // Audit.
@@ -102,7 +102,7 @@ async function run() {
     // Section A — Authoritative position source already exists.
     // =======================================================================
     {
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/getPlacementInfoForPublication\(publicationId\)\s*\{/.test(sessionSource),
             '1. application/world/WorldNavigationSession.js exposes getPlacementInfoForPublication(publicationId) — a publisher-side lookup keyed by the exact Publication identity a distribution claim would need to be bound to.');
         assert(/getPlacementInfo\(documentId\)\s*\{/.test(sessionSource),

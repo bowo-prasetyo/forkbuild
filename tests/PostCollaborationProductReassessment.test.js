@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { editorViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
 import {
     DOCUMENT_COLLABORATION_CONSISTENCY_POLICY,
     DeliveryOrderGuarantee,
@@ -122,7 +122,7 @@ async function runTests() {
     // the real, frozen DOCUMENT_COLLABORATION_CONSISTENCY_POLICY object.
     // ---------------------------------------------------------------
     {
-        const editorSession = await rawSource('application/editor/EditorSession.js');
+        const editorSession = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         const propagation = await rawSource('application/document/DocumentCommandPropagationUseCase.js');
         const deferral = await rawSource('application/document/DocumentOperationDeferralUseCase.js');
         const recovery = await rawSource('application/document/DocumentOperationRecoveryUseCase.js');

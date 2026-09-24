@@ -24,7 +24,7 @@ import { PublicationCommentaryNotificationProducer } from '../application/public
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.560 — Cross-Surface Publication Action Consistency Audit.
 //
@@ -348,7 +348,7 @@ async function runTests() {
         // "most recent publication governs" reduction. There is
         // structurally no way for one to see a governing Publication
         // the other does not.
-        const worldNavSource = await rawSource('application/world/WorldNavigationSession.js');
+        const worldNavSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const checkForkPolicyStart = worldNavSource.indexOf('_checkForkPolicy(documentId) {');
         const checkForkPolicyEnd = worldNavSource.indexOf('\n    }', checkForkPolicyStart);
         const checkForkPolicyBody = worldNavSource.slice(checkForkPolicyStart, checkForkPolicyEnd);

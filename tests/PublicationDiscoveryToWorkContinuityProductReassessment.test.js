@@ -20,7 +20,7 @@ import { AddPublicationCommentaryUseCase } from '../application/publication/comm
 import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
 import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.559 — Publication Discovery-to-Work Continuity Product Reassessment.
 //
@@ -622,7 +622,7 @@ async function runTests() {
         // structurally (never a thrown error a Wanderer could hit mid-
         // Explore).
         {
-            const worldNavSource = await rawSource('application/world/WorldNavigationSession.js');
+            const worldNavSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
             const posStart = worldNavSource.indexOf('_getWorldPosition(documentId) {');
             const posEnd = worldNavSource.indexOf('\n    }', posStart);
             const posBody = worldNavSource.slice(posStart, posEnd);

@@ -29,7 +29,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.606 — Publication Placement-to-World Presence Product Closure Audit.
 //
@@ -612,7 +612,7 @@ async function run() {
         assert(harness.session.isDocumentPublished(localPub.documentId) === true,
             'H2. Still correctly marked published via _isKnownPublication()/_findPublications() (the narrow, unwidened discoveryProvider) — fork-policy\'s own choke point, unchanged.');
 
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),
             'H3. Source-reconfirmed: fork-policy\'s own _findPublications() still reads only the narrow discoveryProvider — this audit touched nothing.');

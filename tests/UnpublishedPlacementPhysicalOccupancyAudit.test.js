@@ -27,6 +27,7 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { SpatialAllocationPolicy } from '../core/SpatialAllocationPolicy.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.202 — Unpublished Placement Physical-Occupancy Audit.
 //
@@ -463,7 +464,7 @@ async function runTests() {
         const policySource = codeOnlyLines(await rawSource('core/SpatialAllocationPolicy.js')).join('\n');
         const placeSource = codeOnlyLines(await rawSource('application/placement/PlacePublicationUseCase.js')).join('\n');
         const moveSource = codeOnlyLines(await rawSource('application/placement/MoveWorldPlacementUseCase.js')).join('\n');
-        const sessionSource = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js')).join('\n');
+        const sessionSource = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n')).join('\n');
 
         const unpublishAwareness = /UnpublishDocumentUseCase|isPublished|publicationExists|\bunpublish(ed)?\b/i;
         assert(!unpublishAwareness.test(overlapSource), 'H1. core/SpatialOverlap.js never references UnpublishDocumentUseCase or any unpublish/isPublished concept');

@@ -14,7 +14,7 @@ import { LocalNamePreferenceStore } from '../application/identity/LocalNamePrefe
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.265 — Post-Adoption Place Naming Product Reassessment.
 //
@@ -226,7 +226,7 @@ async function runTests() {
         // entire file, below, tests the exchange directly rather than
         // constructing a full WorldNavigationSession/World for every
         // section.
-        const sessionSource = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         const importBody = sessionSource.slice(sessionSource.indexOf('importPlaceNamingClaim(pkg)'), sessionSource.indexOf('importPlaceNamingClaim(pkg)') + 260);
         assert(importBody.includes('return this._placeNamingClaimExchange.importClaim(pkg);'),
             'A5. WorldNavigationSession#importPlaceNamingClaim() still does nothing but forward to PlaceNamingClaimExchange#importClaim(pkg) — testing the exchange directly is testing the real adoption boundary, not a simplification of it.');
@@ -329,7 +329,7 @@ async function runTests() {
         const storeSource = codeOnlyLines(await rawSource('application/placeNaming/LocalPlaceNamingClaimStore.js'));
         assert(!/getById|findById|getClaim\(/.test(storeSource),
             'C1a. application/placeNaming/LocalPlaceNamingClaimStore.js exposes no getById()/findById()/getClaim() — single-claim lookup by id is not a named capability at the storage layer at all (unlike storage/PublicationCommentaryStore.js#getById(), which exists but is REACHABLE_BUT_INTERNAL).');
-        const sessionSource = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         const exportBody = sessionSource.slice(sessionSource.indexOf('exportPlaceNamingClaim(regionId, claimId)'), sessionSource.indexOf('exportPlaceNamingClaim(regionId, claimId)') + 560);
         assert(exportBody.includes('.find((c) => c.id === claimId)'),
             'C1b. The only by-id claim lookup anywhere in this layer is this private, inline filter inside exportPlaceNamingClaim() — never its own named method, never reused elsewhere.');
@@ -424,7 +424,7 @@ async function runTests() {
         // not only ones reached via Adopt.
         assert(/alreadySaved/.test(nearbyBlock) && /Already saved/i.test(nearbyBlock),
             'D2a. UPDATED at 0.9.269 — BUILT: the Nearby row template now renders a passive "Already saved" status in place of Adopt once claim.alreadySaved is true.');
-        const sessionSource = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(sessionSource.includes('hasPlaceNamingClaim(worldId, claimId) {'),
             'D2b. UPDATED at 0.9.269 — BUILT: WorldNavigationSession now exposes hasPlaceNamingClaim(worldId, claimId), a thin pass-through onto PlaceNamingClaimUseCase#hasClaim() -> the exact, unmodified LocalPlaceNamingClaimStore#has(worldId, claimId) this section\'s own D3 below already proved correct — no new domain concept, exactly the precisely-scoped seam this reassessment named.');
 

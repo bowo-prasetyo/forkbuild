@@ -20,7 +20,7 @@ import { WorldAuthorizationService } from '../application/identity/WorldAuthoriz
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.218 — World Presence Membership-Refresh Lifecycle Audit.
 //
@@ -603,7 +603,7 @@ async function runTests() {
 // ---------------------------------------------------------------------
 {
     const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-    const navigationSessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+    const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
 
     const membershipCallbackMatch = worldViewSource.match(/session\.onWorldMembershipChanged\(presentWorldDocumentId, \(\) => \{([\s\S]*?)\n\s{12}\}\);/);
     assert(membershipCallbackMatch, 'F0. the onWorldMembershipChanged(presentWorldDocumentId, ...) callback is still present');

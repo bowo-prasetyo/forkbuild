@@ -19,7 +19,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.284 — Notification History UI Boundary.
 //
@@ -527,7 +527,7 @@ async function runTests() {
             '39. WorldView.js\'s own command forwards to WorldNavigationSession, never a use case directly.');
 
         // K7. WorldNavigationSession delegates to the unmodified use case.
-        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(sessionCode.includes('this._getRecipientNotificationEventsUseCase.execute()'),
             '40. WorldNavigationSession delegates reads to the unmodified GetRecipientNotificationEventsUseCase, with no arguments.');
 

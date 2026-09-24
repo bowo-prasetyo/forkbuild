@@ -16,7 +16,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.248 — Publication Commentary UI Integration.
 //
@@ -449,7 +449,7 @@ async function runTests() {
         assert(viewCode.includes('session.addPublicationCommentary({ publicationId, content, commentaryId, createdAt })'),
             '44. WorldView.js\'s own command forwards to WorldNavigationSession, never a use case directly');
 
-        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(sessionCode.includes('this._getPublicationCommentariesUseCase.execute({ publicationId })'),
             '45. WorldNavigationSession delegates reads to the unmodified use case');
         assert(sessionCode.includes('this._addPublicationCommentaryUseCase.execute({ publicationId, content, commentaryId, createdAt })'),

@@ -29,7 +29,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.602 — Post-Placement World Visibility Product Boundary Audit.
 //
@@ -425,7 +425,7 @@ and materially larger piece of work.
         assert(!/forkPolicy|isKnownPublication|license|authoriz/i.test(worldLayoutSrc),
             'E1. world-layout/LocalWorldLayoutProvider.js itself contains no fork-policy, licensing, or authorization logic of any kind — structurally reconfirmed here, not merely assumed. Widening its OWN discoveryProvider argument therefore cannot, by construction, touch fork-policy at all.');
 
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),
             'E2. RECONFIRMED (0.9.601 Section F2): _findPublications() — fork-policy\'s own choke point (_isKnownPublication()/_checkForkPolicy()) — still reads ONLY the narrow discoveryProvider. A worldLayoutProvider widening (Section D3/D4\'s own hypothetical) is a COMPLETELY SEPARATE constructor argument in application/world/CreateWorldViewUseCase.js from the one _findPublications() reads — the two have never been the same object since 0.9.597, and this audit changes nothing about that.');
@@ -444,7 +444,7 @@ and materially larger piece of work.
         const loadDocSrc = await readSource('application/publication/LoadPublicationDocumentUseCase.js');
         assert(/this\._storageProvider\.load\(documentId\)/.test(loadDocSrc),
             'F1. LoadPublicationDocumentUseCase — what WorldNavigationSession#_loadWorld() actually calls to stream a document in (see F2) — reads storage[documentId] DIRECTLY. No discoveryProvider, no contentStore, no contentHash anywhere in this class.');
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/this\._loadPublicationDocumentUseCase\.execute\(documentId, this\._eventBus\)/.test(sessionSrc),
             'F2. _loadWorld(documentId) — the real method updateSpatialView() calls for every document entering the streamed/visible set — calls exactly that use case, with the streamed documentId, and nothing else.');
 

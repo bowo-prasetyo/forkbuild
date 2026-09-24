@@ -6,7 +6,7 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
-import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.307 — Post-Arc Product Evolution Reassessment.
 //
@@ -263,7 +263,7 @@ async function runTests() {
         // composed for World Documents (CreateWorldViewUseCase.js), but
         // EditorSession.js never constructs ReplayDocumentUseCase or
         // RestoreHistoryStateUseCase at all.
-        const editorSessionSource = codeOnlyLines(await rawSource('application/editor/EditorSession.js'));
+        const editorSessionSource = codeOnlyLines((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!/ReplayDocumentUseCase|RestoreHistoryStateUseCase|getTimeline/.test(editorSessionSource),
             'C3. application/editor/EditorSession.js still has zero references to ReplayDocumentUseCase/RestoreHistoryStateUseCase/getTimeline.');
         classifications.push(['History Timeline for Editor/Structure Documents', 'NO_REAL_USER_VALUE-CANDIDATE — never composed, not merely un-wired']);
@@ -341,7 +341,7 @@ async function runTests() {
         // has Review history, not Recover) — reconfirmed fresh here.
         const hasEditorRecovery = /RecoveryObserver/.test((await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n'));
         const hasEditorHistory = await sourceExists('application/editor/EditorSession.js') &&
-            /getTimeline/.test(codeOnlyLines(await rawSource('application/editor/EditorSession.js')));
+            /getTimeline/.test(codeOnlyLines((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n')));
         const hasWorldRecovery = /Recovery/i.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const hasWorldHistory = /HistoryTimelinePanel/.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(hasEditorRecovery && !hasEditorHistory, 'D4a. Editor surface: Recover yes, Review-history no.');

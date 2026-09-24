@@ -22,7 +22,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.140 — Own Publication Distribution Entry Point.
 //
@@ -488,7 +488,7 @@ async function runTests() {
     // Section J — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(sessionCode.includes('getPublicationForDocument(documentId)'),
             '34. WorldNavigationSession.js exposes getPublicationForDocument()');
 

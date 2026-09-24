@@ -1,3 +1,4 @@
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { readFile } from 'node:fs/promises';
 import { AvatarVehicleInteractionController } from '../application/avatar/AvatarVehicleInteractionController.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
@@ -365,8 +366,7 @@ async function runTests() {
             || controllerCodeOnly.includes('_nearbyVehicles'),
             '31. vehicleInteractionState() introduces no independent distance/ranking arithmetic of its own');
 
-        const sessionSourceUrl = new URL('../application/world/WorldNavigationSession.js', import.meta.url);
-        const sessionSource = await readFile(sessionSourceUrl, 'utf8');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const sessionCodeOnly = sessionSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(sessionCodeOnly.includes('avatarVehicleInteractionState'),

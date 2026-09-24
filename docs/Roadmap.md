@@ -98385,3 +98385,17 @@ modules: `lerp()`/`smoothstep()` (`utils/interpolation.js`), `isFiniteCoordinate
 reconciliation helpers are import-free leaf modules, so the views that use them still import no plan or discovery
 code. Copies whose bodies differ were left alone. Source-pinning tests that count import lines now skip these
 shared-helper imports, through `tests/support/SharedHelperImports.js`.
+
+**EditorSession and WorldNavigationSession split further.** `application/editor/EditorSession.js` (1,420 → 465
+lines) keeps its constructor, lifecycle, context queries and gizmo presentation. Its other 60 methods live in five
+modules under a new `application/editorSession/`: selection editing, transforms, clipboard and groups, structures
+and blueprints, and pointer input. `application/world/WorldNavigationSession.js` (1,805 → 791 lines) keeps its
+constructor, `start()`, runtime setup and `dispose()`. Its other 64 methods live in five more modules under
+`application/worldNavigation/`: navigation, selection, state queries, World streaming, and document operations.
+`installMethods()` moved to `utils/installMethods.js`, since both classes use it now. Section headers the earlier
+split left behind (Local World Experience, Fork-on-write, World Location Browser) now head the modules that hold
+those methods. Leading tabs in `WorldNavigationSession.js` and three of its modules are now spaces. Verified by
+snapshotting every prototype member (name, flags and source text) before and after: all 82 EditorSession and 264
+WorldNavigationSession members are identical, as are both constructors. Tests that read either class's source now
+read it with its modules through `tests/support/SourceFileGroups.js` (129 reads in 85 files). 35 of those tests
+had been failing because they read only `WorldNavigationSession.js` after the earlier split; they pass now.

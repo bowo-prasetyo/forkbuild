@@ -9,6 +9,7 @@ import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSessi
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.115 — Vehicle Rendering, World View integration.
 //
@@ -210,7 +211,7 @@ async function runTests() {
             assert(!controllerSource.includes(term),
                 `19. application/avatar/AvatarVehicleInteractionController.js never references "${term}" — mount/dismount stays entirely independent of rendering`);
         }
-        const sessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         assert(sessionSource.includes('avatarVehicleInteractionState'),
             '20. the existing mount/dismount observation seam is still exposed, untouched by this milestone');
     }

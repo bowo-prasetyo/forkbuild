@@ -15,7 +15,7 @@ import { World } from '../core/World.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.323 — Post-Place-Naming-Publication-Arc Product Evolution Reassessment.
 //
@@ -286,7 +286,7 @@ async function runTests() {
         // Application. The Editor-document collaboration protocol
         // (0.9.223-0.9.240-era), distinct from the World's own
         // Command-propagation protocol B6 below exercises live.
-        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        const editorSessionSource = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(editorSessionSource.includes("import { RemoteDocumentOperationApplicationUseCase } from '../document/RemoteDocumentOperationApplicationUseCase.js'")
             && editorSessionSource.includes('new RemoteDocumentOperationApplicationUseCase()'),
             'B5a. application/editor/EditorSession.js — the real Editor composition — still constructs a live RemoteDocumentOperationApplicationUseCase directly, not through a bypassed root.');

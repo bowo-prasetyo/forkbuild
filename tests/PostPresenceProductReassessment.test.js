@@ -25,7 +25,7 @@ import { WorldAuthorizationService } from '../application/identity/WorldAuthoriz
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.219 — Post-Presence Product Reassessment.
 //
@@ -471,7 +471,7 @@ async function runTests() {
         // B8 — Cross-cutting infrastructure. COMPLETE for cross-document
         // isolation (reconfirmed); the event/error-boundary question
         // gets its own dedicated Section C rather than a footnote here.
-        const navigationSessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(/this\._historyPreview\.documentId === docId/.test(navigationSessionSource), 'B8a. history preview restore still scoped to its own documentId');
         assert(/checkPlacementOverlap\(documentId,\s*newPosition\)/.test(navigationSessionSource), 'B8b. placement overlap check still takes an explicit documentId');
 
@@ -634,7 +634,7 @@ async function runTests() {
         // documented intent name a user-facing workflow that is
         // currently unreachable, for a reason that is NOT already an
         // established INTENTIONAL_BOUNDARY or a redundant wrapper?
-        const navigationSessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         // AMENDED by the My Worlds dead-code cleanup: the redundant
         // getRecentlyVisitedWorlds() wrapper was deleted outright (its

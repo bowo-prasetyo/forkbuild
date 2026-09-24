@@ -23,7 +23,7 @@ import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.597 — Publication Action Provider Continuity Fix.
 //
@@ -159,7 +159,7 @@ async function run() {
         assert(/publicationActionDiscoveryProvider,\s*\n\s*\/\/ 0\.2\.23: placement/.test(createWorldViewSource),
             'A4. publicationActionDiscoveryProvider is handed to WorldNavigationSession as its own, separate constructor argument, never folded into `discoveryProvider`.');
 
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/this\._publicationActionDiscoveryProvider = publicationActionDiscoveryProvider \|\| discoveryProvider;/.test(sessionSource),
             'A5. WorldNavigationSession falls back to `discoveryProvider` itself when no separate provider is supplied.');
         assert(/getPublicationForDocument\(documentId\) \{\s*\n\s*if \(!this\._publicationActionDiscoveryProvider/.test(sessionSource),

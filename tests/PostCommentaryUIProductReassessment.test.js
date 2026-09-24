@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.252 — Post-Commentary-UI Product Reassessment.
 //
@@ -120,7 +120,7 @@ async function runTests() {
         const store = await rawSource('storage/PublicationCommentaryStore.js');
         const addUseCase = await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
         const getUseCase = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const panel = await rawSource('ui/components/OwnPublicationPanel.js');
 
         assert(/publicationId/.test(domain) && !/\bdocumentId\b/.test(codeOnlyLines(domain)),
@@ -204,7 +204,7 @@ async function runTests() {
         const canComment = await rawSource('application/publication/CanCommentOnPublicationUseCase.js');
         assert(canComment.includes('ANY authenticated identity may comment on ANY Publication') || /publication\s*=\s*this\._discoveryProvider\.findById\(publicationId\)/.test(canComment),
             'B12a. application/publication/CanCommentOnPublicationUseCase.js still enforces no ownership restriction — only "does this Publication resolve" (0.9.246, unchanged).');
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const getCommentaryMethod = navSession.match(/getPublicationCommentaries\(publicationId\) \{[\s\S]*?\n    \}/)[0];
         assert(!/isOwn|owner|myIdentityId/i.test(getCommentaryMethod),
             'B12b. WorldNavigationSession#getPublicationCommentaries() still takes a bare publicationId with no "is this mine" check of its own.');

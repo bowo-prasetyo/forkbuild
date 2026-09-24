@@ -26,7 +26,7 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.197 — World Placement Removal UI Action.
 //
@@ -304,7 +304,7 @@ async function runTests() {
         assert(!/Snapshot|Nostr|Arweave|Bitcoin|Anchor|Distribution|Unpublish/i.test(removeUseCaseCode),
             '1. RemoveWorldPlacementUseCase.js\'s own CODE carries no Snapshot/Nostr/Arweave/Anchor/Distribution/Unpublish vocabulary at all — it cannot withdraw decentralized content or retract a Publication because it has no path to reach either');
 
-        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const removePlacementBody = sessionSource.match(/removePlacement\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/);
         assert(removePlacementBody, '2. removePlacement() method body is found');
         assert(!/Snapshot|Nostr|Arweave|Unpublish|Discovery(?!Provider)/i.test(removePlacementBody[1]),

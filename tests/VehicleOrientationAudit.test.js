@@ -25,6 +25,7 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.124 — Vehicle Orientation Audit.
 //
@@ -814,7 +815,7 @@ async function runTests() {
         // rotation. The avatar's rotation while mounted comes ONLY from
         // `moved.rotationY` (steering); `moved.vehicleInstance.heading`
         // is never read there at all.
-        const sessionCode = await sourceOf('../application/world/WorldNavigationSession.js');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => sourceOf(`../${file}`)))).join('\n');
         assert(sessionCode.includes('rotation: { y: moved.rotationY }'),
             '80. sanity: the avatar\'s own rotation while riding still comes from moved.rotationY, exactly as before 0.9.123');
         assert(!sessionCode.includes('moved.vehicleInstance.heading') && !sessionCode.includes('vehicleInstance.heading'),

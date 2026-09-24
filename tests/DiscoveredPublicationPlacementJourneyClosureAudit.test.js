@@ -40,7 +40,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.601 — Discovered Publication Placement Journey Closure Audit.
 //
@@ -607,7 +607,7 @@ async function run() {
         // nor WorldNavigationSession.placePublication() ever reads a
         // "claimed" or "encounter" position from anywhere — position is
         // purely the second, caller-supplied argument.
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const placePublicationMethod = sessionSrc.match(/placePublication\(publicationId, position\) \{[\s\S]*?\n {4}\}/);
         assert(placePublicationMethod !== null && !/claimedPosition|encounterPosition/.test(placePublicationMethod[0]),
             'E4. WorldNavigationSession#placePublication() itself never references claimedPosition/encounterPosition — position is exclusively its own second parameter, forwarded verbatim.');
@@ -632,7 +632,7 @@ async function run() {
         assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(composition),
             'F1. UPDATED BY 0.9.605 (Wire Publication Discovery into World Rendering): worldLayoutProvider is now built from publicationActionDiscoveryProvider — this exact composition point was still the plain, narrow discoveryProvider when this audit was written (0.9.596/0.9.599/0.9.600 each reconfirmed that, then), and the finding below (F2-F5) is unaffected: it concerns _findPublications()/getPlacementInfo(), a completely separate call path this milestone left untouched.');
 
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),
             'F2. _findPublications() — the shared choke point behind fork-policy AND (see F3-F5, below) getPlacementInfo()/_loadWorld() — still reads ONLY the narrow discoveryProvider.');
@@ -916,7 +916,7 @@ async function run() {
         const executeBody = placePublicationSrc.match(/execute\(publicationId, position, options = \{\}\) \{[\s\S]*\n {4}\}/);
         assert(executeBody !== null && !/authoriz|permission|canPlace|isAllowed/i.test(executeBody[0]),
             'K1. PlacePublicationUseCase.execute()\'s own method body contains no authorization/permission gate of any kind — confirmed against current source, not merely asserted.');
-        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const placePublicationMethod = sessionSrc.match(/placePublication\(publicationId, position\) \{[\s\S]*?\n {4}\}/);
         assert(placePublicationMethod !== null && !/authoriz|permission|canPlace|isAllowed/i.test(placePublicationMethod[0]),
             'K2. WorldNavigationSession#placePublication() itself introduces no authorization/permission check either.');

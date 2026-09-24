@@ -25,7 +25,7 @@ import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase
 import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
 import { ExportDocumentUseCase } from '../application/document/ExportDocumentUseCase.js';
 import { ImportDocumentUseCase } from '../application/document/ImportDocumentUseCase.js';
-import { editorViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
 
 // Deliberately does NOT import application/editor/EditorSession.js — same reason
 // tests/EditorDocumentExport.test.js gives: that class pulls in the
@@ -518,7 +518,7 @@ async function run() {
         const toolbarSource = codeOnly(await rawSource('ui/components/Toolbar.js'));
         assert(!/confirm\(/.test(toolbarSource), n('Toolbar.js\'s own New/Load actions carry no confirm()-based dirty guard today — the existing baseline this milestone must not silently diverge from'));
 
-        const editorSessionSource = codeOnly(await rawSource('application/editor/EditorSession.js'));
+        const editorSessionSource = codeOnly((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n'));
         const importDocumentFnMatch = editorSessionSource.match(/importDocument\(json\)\s*\{[\s\S]*?\n {4}\}/);
         assert(importDocumentFnMatch !== null, n('EditorSession#importDocument() is found in its own real source'));
         const importDocumentFnBody = importDocumentFnMatch[0];
@@ -578,7 +578,7 @@ async function run() {
             n('ImportDocumentUseCase never constructs a Document/World or mints an id directly — every domain object it returns came from the injected collaborators'));
 
         // EditorSession.importDocument() delegates rather than reimplementing.
-        const editorSessionSource = codeOnly(await rawSource('application/editor/EditorSession.js'));
+        const editorSessionSource = codeOnly((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/importDocument\(json\)\s*\{[\s\S]*?this\._importDocumentUseCase\.execute\(json\)/.test(editorSessionSource),
             n('EditorSession.importDocument() delegates straight to this._importDocumentUseCase.execute() — it does not deserialize or clone anything itself'));
         assert(!/this\._loadDocumentUseCase\.execute\(this\._documentManager, json/.test(editorSessionSource),

@@ -22,6 +22,7 @@ import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase
 
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.645 — Editor Document Portability Post-Fix Closure Audit.
 //
@@ -450,7 +451,7 @@ async function run() {
             // anywhere in either method body. This is the identical
             // standard 0.9.643 Section A/C already established for
             // EditorSession-adjacent code it likewise could not run live.
-            const navSource = codeOnly(await rawSource('application/world/WorldNavigationSession.js'));
+            const navSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
             const cloneMethodMatch = navSource.match(/\bcloneDocument\(documentId\)\s*\{[\s\S]*?\n    \}/);
             const forkMethodMatch = navSource.match(/\bforkDocument\(documentId\)\s*\{[\s\S]*?\n    \}/);
             assert(cloneMethodMatch !== null && forkMethodMatch !== null, n('G2: both cloneDocument() and forkDocument() are found, in isolation, in real source'));

@@ -21,7 +21,7 @@ import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvid
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.210 — World View Undo/Redo UI Integration.
 //
@@ -409,7 +409,7 @@ async function run() {
         assert(worldViewSource.includes("window.addEventListener('keydown', onKeyDown)"), 'keydown is attached through the existing single listener');
         assert(worldViewSource.includes("window.removeEventListener('keydown', onKeyDown)"), 'the same listener is torn down on unmount — no stale undo/redo shortcut survives');
 
-        const sessionSource = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/canUndo\(\)\s*\{[\s\S]*?_getActiveCommandHistory\(\)/.test(sessionSource), 'canUndo() delegates to _getActiveCommandHistory(), not a duplicated stack');
         assert(/canRedo\(\)\s*\{[\s\S]*?_getActiveCommandHistory\(\)/.test(sessionSource), 'canRedo() delegates to _getActiveCommandHistory(), not a duplicated stack');
         const canUndoMatch = sessionSource.match(/canUndo\(\)\s*\{[\s\S]*?\n    \}/);

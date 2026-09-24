@@ -24,6 +24,7 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.127 — Vehicle Steering Integration Audit.
 //
@@ -752,7 +753,7 @@ async function runTests() {
         const steeringSimCode = await sourceOf('../core/VehicleSteeringSimulation.js');
         assert(!steeringSimCode.includes('resolveVehicleHeadingFromMovement'),
             '47. core/VehicleSteeringSimulation.js still never calls resolveVehicleHeadingFromMovement() itself — this milestone\'s own integration reused it at the CONTROLLER layer, never inside the pure steering-simulation file');
-        const sessionCode = await sourceOf('../application/world/WorldNavigationSession.js');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => sourceOf(`../${file}`)))).join('\n');
         assert(!sessionCode.includes('resolveVehicleHeadingFromMovement') && !sessionCode.includes('resolveVehicleMovementDirectionFromSteering'),
             '48. application/world/WorldNavigationSession.js itself never calls either heading or steering math directly — it only ever threads a VehicleSteeringIntent value through to the controller, exactly like it already does for movementIntent');
     }

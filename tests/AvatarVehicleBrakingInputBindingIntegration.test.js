@@ -15,6 +15,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { Position } from '../core/Position.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.96 — Vehicle Braking Input Binding.
 //
@@ -493,7 +494,7 @@ async function runTests() {
     // Section E — architectural sweep
     // -------------------------------------------------------------
     {
-        const sessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
 
         const methodMatch = sessionSource.match(/_processVehicleBrakingInput\(key, type\)\s*\{([\s\S]*?)\n {4}\}/);
         assert(methodMatch !== null, '37. sanity: _processVehicleBrakingInput() exists and is extractable as a single method body');

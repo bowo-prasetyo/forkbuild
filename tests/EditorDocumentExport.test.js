@@ -20,7 +20,7 @@ import { DocumentManifest } from '../application/document/DocumentManifest.js';
 import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
 import { ExportDocumentUseCase } from '../application/document/ExportDocumentUseCase.js';
-import { editorViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
 
 // Deliberately does NOT import application/editor/EditorSession.js: that class
 // pulls in the renderer stack (ultimately `three`), which this repo only
@@ -153,7 +153,7 @@ async function run() {
             '14. ExportDocumentUseCase defaults to the REAL, production DocumentSerializer, not a stub');
 
         // EditorSession.exportDocument() delegates rather than reimplementing.
-        const editorSessionSource = codeOnly(await rawSource('application/editor/EditorSession.js'));
+        const editorSessionSource = codeOnly((await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/exportDocument\(\)\s*\{[\s\S]*?this\._exportDocumentUseCase\.execute\(this\._documentManager\.document\)/.test(editorSessionSource),
             '15. EditorSession.exportDocument() delegates straight to this._exportDocumentUseCase.execute() — it does not serialize anything itself');
 

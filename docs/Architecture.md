@@ -52,6 +52,12 @@ core/ and renderer/ only ever meet through events. The main sessions:
 - WorldNavigationSession (application/world/WorldNavigationSession.js): World
   View's runtime graph. It observes and navigates; see "World View"
   below.
+
+Both session classes keep their constructor, lifecycle and runtime setup;
+their other methods live in one module per concern
+(application/editorSession/ and application/worldNavigation/), which
+utils/installMethods.js puts on the prototype as if written in the class
+body.
 - PublishedWorldSession (application/publication/PublishedWorldSession.js): a
   read-only projection of one Publication, with selection and
   inspection but no mutation path at all.

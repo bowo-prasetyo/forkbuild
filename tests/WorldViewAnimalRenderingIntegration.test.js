@@ -11,6 +11,7 @@ import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSessi
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.701 — Released Animal Rendering, World View integration.
 //
@@ -207,7 +208,7 @@ async function runTests() {
             assert(!controllerSource.includes(term),
                 `14. application/avatar/AvatarAnimalInteractionController.js never references "${term}" — catch/release stays entirely independent of rendering`);
         }
-        const sessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         assert(sessionSource.includes('avatarAnimalInteractionState'),
             '15. the existing catch/release observation seam is still exposed, untouched by this milestone');
     }

@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.250 — Post-Publication-Commentary Product Reassessment.
 //
@@ -113,7 +113,7 @@ async function runTests() {
         const addUseCase = await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
         const getUseCase = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
         const canComment = await rawSource('application/publication/CanCommentOnPublicationUseCase.js');
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const createWorldView = await rawSource('application/world/CreateWorldViewUseCase.js');
         const panel = await rawSource('ui/components/OwnPublicationPanel.js');
 
@@ -283,7 +283,7 @@ async function runTests() {
         // C4. Vehicles — AvatarVehicleInteractionController/
         // AvatarVehicleMovementController imported and used by
         // WorldNavigationSession, referenced live in WorldView.
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(navSession.includes("import { AvatarVehicleInteractionController }") &&
                navSession.includes("import { AvatarVehicleMovementController }") &&
                worldView.includes('vehicleInteractionState'),
@@ -527,7 +527,7 @@ async function runTests() {
         // E2. WorldNavigationSession's own commentary methods never touch
         // CommandHistory, EditorSession, or the causal chain — they
         // delegate exclusively to the two commentary use cases.
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const getMethodMatch = navSession.match(/getPublicationCommentaries\(publicationId\) \{[\s\S]*?\n    \}/);
         const addMethodMatch = navSession.match(/addPublicationCommentary\(\{ publicationId, content, commentaryId, createdAt \}\) \{[\s\S]*?\n    \}/);
         assert(getMethodMatch && addMethodMatch, 'E2a. Both commentary methods still exist on WorldNavigationSession in their expected shape (addPublicationCommentary\'s own signature grew commentaryId/createdAt in 0.9.542 — see that method\'s own header).');

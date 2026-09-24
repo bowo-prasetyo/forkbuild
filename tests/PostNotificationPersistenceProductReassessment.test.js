@@ -15,6 +15,7 @@ import {
 } from '../core/NotificationDeduplicationPolicy.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.282 — Post-Persistence Notification Product Reassessment.
 //
@@ -926,7 +927,7 @@ async function runTests() {
         // finding originally named. The honest scope check: it is a
         // thin, read-only delegate to GetRecipientNotificationEventsUseCase
         // — no lifecycle/delivery vocabulary was introduced alongside it.
-        const navSession = await rawSource('application/world/WorldNavigationSession.js');
+        const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(navSession.includes('getRecipientNotificationEvents()'),
             'J5. application/world/WorldNavigationSession.js now exposes getRecipientNotificationEvents() (0.9.284) — the orchestration layer already carrying Commentary\'s own use cases now carries notification retrieval too.');
         assert(!/markRead|isRead|\breadAt\b|delivered|acknowledg/i.test(codeOnlyLines(navSession)),

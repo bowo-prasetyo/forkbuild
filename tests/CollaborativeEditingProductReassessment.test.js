@@ -43,7 +43,7 @@ import {
 } from '../core/DocumentCollaborationConsistencyPolicy.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
-import { editorViewFiles, peerConnectionsViewSource } from './support/SourceFileGroups.js';
+import { editorViewFiles, peerConnectionsViewSource, editorSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.545 — Collaborative Editing Product Reassessment.
 //
@@ -256,7 +256,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
-        const editorSession = await rawSource('application/editor/EditorSession.js');
+        const editorSession = (await Promise.all(editorSessionFiles().map((file) => rawSource(file)))).join('\n');
         const propagation = await rawSource('application/document/DocumentCommandPropagationUseCase.js');
         const publishUseCase = await rawSource('application/publication/PublishDocumentUseCase.js');
 

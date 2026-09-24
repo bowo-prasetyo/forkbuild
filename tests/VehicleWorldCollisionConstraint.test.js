@@ -22,6 +22,7 @@ import { WorldNavigationSession } from '../application/world/WorldNavigationSess
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.119 — Vehicle–World Collision Constraint.
 //
@@ -486,7 +487,7 @@ async function runTests() {
         assert((controllerSource.match(/capability\.collisionRadius/g) || []).length >= 2,
             '29. AvatarVehicleMovementController.js hands capability.collisionRadius to BOTH constraints — never a hardcoded radius for either');
 
-        const sessionSource = await sourceOf('../application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => sourceOf(`../${file}`)))).join('\n');
         assert(sessionSource.includes('new AvatarVehicleMovementController(') && sessionSource.includes('movementConstraint,') && sessionSource.includes('treeConstraint'),
             '30. WorldNavigationSession.js wires movementConstraint/treeConstraint into AvatarVehicleMovementController — never a second, vehicle-only pair of constraint instances');
     }

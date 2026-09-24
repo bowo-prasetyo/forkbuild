@@ -14,7 +14,7 @@ import {
     WorldEncounterMaterialVerifier
 } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { describeWorldEncounterMaterialVerificationStatusLabel } from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import {
     PublicationMaterialProvenanceOrigin,
     describePublicationMaterialProvenanceFromInspection
@@ -262,7 +262,7 @@ async function main() {
         // WorldNavigationSession.js defines as a one-line alias for
         // focusDocument() itself — confirmed against real source, not
         // assumed.
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(sessionSource.includes('navigateToDocument(documentId) {\n        return this.focusDocument(documentId);\n    }'),
             '4. navigateToDocument() (WorldView\'s own mount-time entry) is a verbatim alias for focusDocument() (focusWorld()\'s own target) — Repository\'s router.push and every focusWorld() caller converge on the identical session primitive, never two navigation models.');
     }
@@ -391,7 +391,7 @@ async function main() {
     // discovery or verification.
     // ===============================================================
     {
-        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const focusDocumentBody = sessionSource.match(/focusDocument\(documentId, \{ setActive = true \} = \{\}\) \{([\s\S]*?)\n {4}\}/);
         assert(focusDocumentBody && focusDocumentBody[1],
             '1. focusDocument()\'s own body is present and extractable.');

@@ -16,6 +16,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.249 — Publication Commentary Lifecycle & Isolation Audit.
 //
@@ -688,7 +689,7 @@ async function runTests() {
     // ===================================================================
     {
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
         const addUseCaseCode = await codeOnlySource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
 
         // OwnPublicationPanel.js never imports the domain class, the

@@ -7,7 +7,7 @@ import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.308 — Publication Multi-Placement Visibility.
 //
@@ -129,7 +129,7 @@ async function runTests() {
         // WorldNavigationSession.getPlacementsForPublication(), which
         // itself delegates to the registry's own findByPublicationId() —
         // never a second, parallel discovery path.
-        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
+        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(sessionCode.includes('getPlacementsForPublication(publicationId)'),
             '4. WorldNavigationSession exposes getPlacementsForPublication()');
         assert(sessionCode.includes('this._placementRegistry.findByPublicationId(publicationId)'),

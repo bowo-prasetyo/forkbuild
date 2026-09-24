@@ -10,7 +10,7 @@ import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMa
 import { TrustStatus } from '../core/TrustObservation.js';
 import { describeTrustStatus } from '../application/avatar/AvatarPresenceLabels.js';
 import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.521 — Close Remaining Raw Status Rendering Boundaries.
 //
@@ -203,7 +203,7 @@ async function run() {
         check(trustObservationSource.includes("VALID: 'VALID',                       // integrity + signature + authorization all hold"),
             'B2c. VALID\'s own documented meaning is a compound fact (integrity + signature + authorization), never a generic "trustworthy" claim');
 
-        const navigationSessionSource = await source('application/world/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => source(file)))).join('\n');
         check(navigationSessionSource.includes('trust: this._lookupTrustObservation(placementInfo)'),
             'B2d. inspectDocument() populates `trust` from _lookupTrustObservation() — confirmed live, not assumed');
         check(navigationSessionSource.includes("o.subjectType === 'placement-record' && o.subjectId === placementInfo.placementId"),
@@ -448,7 +448,7 @@ async function run() {
         check(locationBrowserTestSource.includes("inspected.trust === null"),
             'G3. tests/WorldLocationBrowser.test.js\'s own only trust-related assertion is data-level (trust === null) — it never asserts on rendered template text, so this milestone\'s wording change cannot disturb it');
         const preFixNavSource = sourceAtCommit(PRE_FIX_COMMIT, 'application/world/WorldNavigationSession.js');
-        const currentNavSource = await source('application/world/WorldNavigationSession.js');
+        const currentNavSource = (await Promise.all(worldNavigationSessionFiles().map((file) => source(file)))).join('\n');
         check(preFixNavSource === currentNavSource,
             'G3b. application/world/WorldNavigationSession.js (inspectDocument()\'s own file, and what tests/WorldLocationBrowser.test.js actually exercises) is byte-identical to the pre-fix commit');
 
