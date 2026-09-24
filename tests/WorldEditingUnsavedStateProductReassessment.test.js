@@ -725,7 +725,7 @@ async function main() {
         // as a presentation fact (what does the Editor show?), not as
         // new error infrastructure.
         const editorViewSource = await readSource('ui/views/EditorView.js');
-        const loadCatchMatch = editorViewSource.match(/} catch \(err\) \{\s*\/\/ 0\.9\.574[\s\S]*?feedback\.show\(err\.reason === LoadFailureReason\.MATERIAL_UNAVAILABLE[\s\S]*?\);/);
+        const loadCatchMatch = editorViewSource.match(/} catch \(err\) \{\s*\/\/[\s\S]*?feedback\.show\(err\.reason === LoadFailureReason\.MATERIAL_UNAVAILABLE[\s\S]*?\);/);
         assert(loadCatchMatch !== null, 'J3a. EditorView.js\'s own route.query.load catch block located.');
         assert(/"This Publication's material is currently unavailable\."/.test(loadCatchMatch[0]),
             'J3b. A MATERIAL_UNAVAILABLE load failure shows a plain, safe, Wanderer-facing sentence — never a raw class name or storage key (the exact leak 0.9.559/0.9.574 named and this same file already fixed, reconfirmed still true here).');

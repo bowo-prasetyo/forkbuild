@@ -157,7 +157,7 @@ function buildEditorHarness(editorViewSource, { multiRelayNostrPublicationDistri
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- 0.2.21 document lifecycle ------------',
+        '// ------------------------- document lifecycle ------------',
         '0.9.377/0.9.450/0.9.502/0.9.526 post-publish distribution block'
     );
     function ref(initial) { return { value: initial }; }

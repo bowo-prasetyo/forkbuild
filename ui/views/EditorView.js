@@ -1228,7 +1228,7 @@ export default {
 
         // ------------------------- document lifecycle ------------
         // The Editor's document is always editable (fork-on-edit is a World View
-        // concern), so status only distinguishes Draft/Saved.
+        // concern), so status only ever distinguishes Draft/Saved.
 
         const updateDocumentMetadataUseCase = new UpdateDocumentMetadataUseCase();
         const documentInfo = ref(null);

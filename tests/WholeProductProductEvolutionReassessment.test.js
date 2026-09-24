@@ -166,7 +166,7 @@ function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDi
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- 0.2.21 document lifecycle ------------',
+        '// ------------------------- document lifecycle ------------',
         '0.9.377/0.9.381/0.9.450 post-publish distribution + navigation block'
     );
     let pushedRoute = null;
@@ -388,7 +388,7 @@ async function run() {
         const publicationsViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
         const editorPostPublishBlock = extractRange(editorViewSource,
             "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-            '// ------------------------- 0.2.21 document lifecycle ------------',
+            '// ------------------------- document lifecycle ------------',
             'post-publish block');
         assert(editorPostPublishBlock.includes('router.push') && editorPostPublishBlock.includes("path: `/world/"),
             n('C2. the local-publish side bridges directly into /world/:documentId (0.9.381), never through LocalPublicationCatalog'));
@@ -476,7 +476,7 @@ async function run() {
     function editorPostPublishRouterPushIsReplace(source) {
         const block = extractRange(source,
             "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-            '// ------------------------- 0.2.21 document lifecycle ------------',
+            '// ------------------------- document lifecycle ------------',
             'post-publish block');
         return block.includes('router.replace');
     }

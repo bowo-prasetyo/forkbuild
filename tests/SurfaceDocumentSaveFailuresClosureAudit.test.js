@@ -102,7 +102,7 @@ function makeCtrlSHandler(editorViewSource) {
     const blockSource = extractRange(
         editorViewSource,
         "if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {",
-        '// 4.1 — Editor UX Consolidation',
+        '// 4.1. ',
         'EditorView.js Ctrl+S block'
     );
     return new Function('event', 'saveDocumentUseCase', 'documentManager', 'feedback', 'console', 'SAVE_FAILURE_MESSAGE', blockSource);
@@ -398,7 +398,7 @@ async function run() {
         assert(toolbarMessage === editorViewMessage, n('G1. SAVE_FAILURE_MESSAGE is byte-identical between the two files (reconfirms B8).'));
         assert(!/QuotaExceeded|DOMException|storage backend unavailable|storage unavailable/.test(toolbarSource),
             n('G2. Toolbar.js never names a specific storage exception anywhere in its own source, including comments — the boundary stays storage-agnostic by construction, not merely by the one message string it happens to show today.'));
-        assert(!/QuotaExceeded|DOMException/.test(extractRange(editorViewSource, "if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {", '// 4.1 — Editor UX Consolidation', 'Ctrl+S block')),
+        assert(!/QuotaExceeded|DOMException/.test(extractRange(editorViewSource, "if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {", '// 4.1. ', 'Ctrl+S block')),
             n('G3. ...neither does EditorView.js\'s own Ctrl+S block.'));
         assert(!/class \w*SaveError|new Notification\(|errorBus|EventBus|window\.onerror\s*=/.test(toolbarSource + editorViewSource),
             n('G4. no new notification system, SaveError class, or global error bus was introduced anywhere in either changed file — the pre-existing feedback.show() boundary was reused, exactly as scoped.'));
