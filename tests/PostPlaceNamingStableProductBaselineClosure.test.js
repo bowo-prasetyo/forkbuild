@@ -18,7 +18,7 @@ import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.319 — Post-Place-Naming Stable Product Baseline Closure.
 //

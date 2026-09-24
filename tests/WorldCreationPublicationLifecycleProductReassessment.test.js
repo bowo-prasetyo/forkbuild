@@ -25,6 +25,7 @@ import { DocumentManifest } from '../application/DocumentManifest.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LoadPublishedWorldSessionUseCase } from '../application/LoadPublishedWorldSessionUseCase.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.577 — World Creation & Publication Lifecycle Product Reassessment.
 //
@@ -270,7 +271,7 @@ async function main() {
         // a published World is therefore never an in-place mutation at
         // this layer at all — see Section H below for the fork-first
         // mechanism that makes editing possible.
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/is a published snapshot and cannot be saved directly — edit it to fork first/.test(sessionSource),
             'B3a. WorldNavigationSession.saveDocument() literally refuses to save a document while it is still a published id — quoted verbatim from the real source.');
         assert(/is already a published snapshot — fork it to publish an edited copy/.test(sessionSource),
@@ -535,7 +536,7 @@ async function main() {
         // This section confirms EXISTING navigation correctly reflects
         // the identity transitions already proven live above — it does
         // not invent a new navigation mechanism to test.
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
 
         // H1. "World -> Edit -> Publish -> Explore -> return to World":
         // publishDocument() funds the exact same PublishDocumentUseCase

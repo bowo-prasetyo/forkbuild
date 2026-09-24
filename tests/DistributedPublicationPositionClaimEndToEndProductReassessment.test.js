@@ -35,7 +35,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.567 — Distributed Publication Position Claim End-to-End Product
 // Reassessment.
@@ -433,7 +433,7 @@ async function run() {
         placeReal(publisherPlacementRegistry, publication.id, new Position(10, 0, 20));
         const session = makeRealSession(publisherPlacementRegistry);
 
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         const methodMatch = sessionSource.match(/getPlacementInfoForPublication\(publicationId\)\s*\{[\s\S]*?\n    \}/);
         assert(methodMatch && /return\s*\{\s*\n\s*placementId:\s*record\.placementId,\s*\n\s*publicationId:\s*record\.publicationId,\s*\n\s*position:\s*\{\s*x:\s*record\.position\.x,\s*y:\s*record\.position\.y,\s*z:\s*record\.position\.z\s*\}\s*\n\s*\};/.test(methodMatch[0]),
             'A1. WorldNavigationSession#getPlacementInfoForPublication() genuinely implements the shape reproduced above as makeRealSession() (source-verified, not merely asserted by comment).');

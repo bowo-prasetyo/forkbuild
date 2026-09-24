@@ -9,7 +9,7 @@ import { describeWorldEncounterMaterialVerificationStatusLabel } from '../applic
 import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
 import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/ShouldRefreshSnapshotDiscovery.js';
 import { materializedSnapshotWorldOrigin } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.528 — Snapshot Encounter & Placement Product Experience
 // Reassessment.

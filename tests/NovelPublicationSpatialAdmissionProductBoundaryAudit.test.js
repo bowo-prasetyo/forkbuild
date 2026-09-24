@@ -25,6 +25,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.551 — Novel Publication Spatial Admission Product Boundary Audit.
 //
@@ -431,7 +432,7 @@ async function runTests() {
         assert(/resolvePlacementInfo:\s*\(publicationId\)\s*=>\s*session\.getPlacementInfoForPublication\(publicationId\)/.test(worldViewSource),
             'C2. The real composition root wires resolvePlacementInfo to session.getPlacementInfoForPublication(publicationId) — never a claim, never a signature check performed inline.');
 
-        const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/getPlacementInfoForPublication\s*\(/.test(sessionSource), 'C3. getPlacementInfoForPublication exists on the real session class.');
         // It is keyed purely by publicationId against the PlacementRegistry
         // — never consulting the candidate's own claimed identity, owner

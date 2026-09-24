@@ -14,7 +14,7 @@ import { describeCreationAttempt } from '../application/PublicationAnchorCreatio
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
 import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../application/WorldEncounterMaterialInspectionView.js';
-import { publicationsPageFiles } from './support/ViewSourceFiles.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.519 — Publication Evidence & Trust Experience Product Reassessment.
 //

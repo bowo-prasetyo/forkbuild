@@ -32,7 +32,7 @@ import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAn
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { publicationsPageFiles } from './support/ViewSourceFiles.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.512 — Bitcoin Granular Pipeline Anchor Publication Integration Audit.
 //

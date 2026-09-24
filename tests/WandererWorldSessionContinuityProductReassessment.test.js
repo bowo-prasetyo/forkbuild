@@ -34,6 +34,7 @@ import {
     PublicationMaterialProvenanceOrigin,
     describePublicationMaterialProvenanceFromInspection
 } from '../application/PublicationMaterialProvenance.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.535 — Wanderer World Session Continuity Product Reassessment.
 //
@@ -297,7 +298,7 @@ async function main() {
         // placed object" layer) — the same boundary 0.9.532 Section G
         // already established, re-checked against current HEAD rather
         // than assumed to still hold.
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(!/WorldEncounter|selectedEncounter|resolvedEncounterSelection/.test(sessionSource),
             '1. application/WorldNavigationSession.js names no World Encounter concept anywhere in its own source — session/camera state and encounter-selection state are two files, not two facets of one.');
 
@@ -351,7 +352,7 @@ async function main() {
         // rendering layer generally (see Section C's own note). The two
         // real facts this Section needs about it are checked precisely,
         // by reading its own unmodified source, rather than assumed:
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         // (a) findPublicationById() is confirmed, verbatim, to be a
         // one-line delegate to an injected discovery capability's own
         // findById() — so exercising discoveryProvider.findById() twice,

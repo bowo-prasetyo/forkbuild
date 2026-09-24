@@ -12,7 +12,7 @@ import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.320 — Explicit Place Naming Publication Action.
 // See docs/Roadmap.md, "0.9.320 — Explicit Place Naming Publication

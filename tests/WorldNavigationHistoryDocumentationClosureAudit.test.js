@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.587 — World Navigation History Documentation Closure Audit.
 //
@@ -181,7 +181,7 @@ async function main() {
     // confirmed, not assumed absent.
     // ===============================================================
     {
-        const sessionSource = codeOnly(await readSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n'));
 
         // C1. No navigation-position/back-stack field of any plausible
         // name exists.
@@ -232,7 +232,7 @@ async function main() {
         // D2. Camera restoration is a SEPARATE effect of the same
         // navigateToDocument() call, driven by LocalWorldExperienceStore
         // — not by anything the router or route.query carried.
-        const sessionSource = codeOnly(await readSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n'));
         assert(/restoreWorldExperience\(documentId\)/.test(sessionSource),
             'D2. application/WorldNavigationSession.js#restoreWorldExperience(documentId) is real and keyed by documentId alone — never by a route query, a history entry, or anything Section A/B\'s navigation primitives carry.');
 
@@ -264,7 +264,7 @@ async function main() {
             try { await readFile(new URL('tests/WorldNavigationReturnJourneyProductReassessment.test.js', SOURCE_ROOT)); return true; } catch { return false; }
         })(), 'F1 setup: tests/WorldNavigationReturnJourneyProductReassessment.test.js exists on disk to cite.');
 
-        const sessionSource = codeOnly(await readSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n'));
         assert(!/\bawait\b|\basync\b|\.then\(|new Promise\(/.test(sessionSource),
             'F1. application/WorldNavigationSession.js contains zero await/async/.then()/Promise anywhere — reconfirming (not re-deriving) 0.9.584 Section G1\'s own live proof that the entire navigation path is synchronous, so a "stale operation from a left World mutates the newly active one" race is structurally impossible inside this class.');
 

@@ -11,7 +11,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/Decentral
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.138 — World View Snapshot Distribution Action.
 //

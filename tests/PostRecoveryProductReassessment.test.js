@@ -15,7 +15,7 @@ import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { ReplayDocumentUseCase } from '../application/ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from '../application/RestoreHistoryStateUseCase.js';
 import { RecoveryObserver } from '../application/RecoveryObserver.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.206 — Post-Recovery Product Reassessment.
 //
@@ -111,7 +111,7 @@ async function runTests() {
         // regression to re-litigate — the finding, filed under Section C
         // below, is that 0.5.9's own stated REASON for keeping it never
         // got a caller in WorldView.js).
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         for (const method of ['undo(', 'redo(', 'beginHistoryPreview(', 'previewHistoryAt(', 'cancelHistoryPreview(', 'restoreHistoryAt(', 'getTimeline(']) {
             assert(navigationSessionSource.includes(method), `A5. WorldNavigationSession.js still declares ${method} — 0.5.9's own two kept exceptions and their history/timeline machinery are all still present`);
         }
@@ -218,7 +218,7 @@ async function runTests() {
         assert(/new RestoreHistoryStateUseCase\(/.test(createWorldViewSource), 'C3b. CreateWorldViewUseCase.js still composes RestoreHistoryStateUseCase');
         assert(/replayDocumentUseCase,\s*\n?\s*restoreHistoryStateUseCase,/.test(createWorldViewSource) || (/replayDocumentUseCase/.test(createWorldViewSource) && /restoreHistoryStateUseCase/.test(createWorldViewSource)), 'C3c. both are handed onward into the session it constructs');
 
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         for (const method of ['getTimeline(documentId)', 'restoreHistoryAt(cursor, documentId)', 'beginHistoryPreview()', 'previewHistoryAt(cursor)', 'cancelHistoryPreview()', 'getHistoryPreview()']) {
             assert(navigationSessionSource.includes(method), `C3d. WorldNavigationSession.js still declares ${method}`);
         }

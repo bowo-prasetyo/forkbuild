@@ -15,7 +15,7 @@ import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchang
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.266 — Nearby Place Naming Claim Metadata Presentation.
 //

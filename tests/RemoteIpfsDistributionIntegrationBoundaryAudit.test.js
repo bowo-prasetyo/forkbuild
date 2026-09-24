@@ -14,7 +14,7 @@ import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacement
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { publicationsPageFiles } from './support/ViewSourceFiles.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.662 — Remote IPFS Distribution Integration Boundary Audit.
 //

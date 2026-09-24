@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import { publicationsPageFiles } from './support/ViewSourceFiles.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.514 — Proof/Anchoring Product Completion Reassessment.
 //

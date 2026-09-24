@@ -10,7 +10,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/Decentral
 import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
 import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
-import { publicationsPageFiles } from './support/ViewSourceFiles.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.664 — Node-less Distribution Product Reassessment.
 //

@@ -13,7 +13,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { RendezvousTransport } from '../peer/RendezvousTransport.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.392 — Post-Infrastructure-Arc Product Evolution Reassessment.
 //

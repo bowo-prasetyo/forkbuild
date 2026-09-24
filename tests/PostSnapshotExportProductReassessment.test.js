@@ -21,7 +21,7 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.216 — Post-Snapshot-Export Product Reassessment.
 //
@@ -224,9 +224,9 @@ async function runTests() {
             assert(countReferences(worldViewSource, method) > 0, `C3. WorldView.js still calls session.${method}(...)`);
         }
 
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const commandHistoryImports = [...navigationSessionSource.matchAll(/import\s*\{[^}]*\bCommandHistory\b[^}]*\}\s*from\s*['"]([^'"]+)['"]/g)];
-        assert(commandHistoryImports.length === 1, 'C4a. WorldNavigationSession.js still imports exactly one CommandHistory-shaped class');
+        assert(new Set(commandHistoryImports.map((m) => m[1].split('/').pop())).size === 1, 'C4a. WorldNavigationSession.js and its method modules import exactly one CommandHistory-shaped class');
         assert(!/_undoStack|_redoStack/.test(navigationSessionSource), 'C4b. WorldNavigationSession.js still maintains no second undo/redo stack of its own');
         const editorSessionSource = await rawSource('application/EditorSession.js');
         assert(!/_undoStack|_redoStack/.test(editorSessionSource), 'C4c. EditorSession.js also maintains no second undo/redo stack');
@@ -531,7 +531,7 @@ async function runTests() {
     // arc built is reconfirmed present, in one place.
     // ---------------------------------------------------------------
     {
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         // History preview stays scoped to the document it was opened
         // for — the 0.9.208 fix tests/PostHistoryProductReassessment.test.js's
         // own Section C2b already regression-checks; reconfirmed here as
@@ -586,7 +586,7 @@ async function runTests() {
     // exactly ONE genuine ACTUAL_GAP among them.
     // ---------------------------------------------------------------
     {
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
 
         // UPDATE (0.9.217): refreshWorldPresenceActivity now HAS a
@@ -651,7 +651,7 @@ async function runTests() {
         // this codebase has never promised gating WORLD VIEW RENDERING
         // by read level, only gating EDIT.
         const authServiceSource = await rawSource('application/WorldAuthorizationService.js');
-        assert(/the ONE seam/.test(authServiceSource) || /consulted from BOTH the LOCAL mutation chokepoint/i.test(await rawSource('application/WorldNavigationSession.js')), 'L4a. the authorization architecture still documents edit-gating (canEditDocument), not read-gating, as its own seam');
+        assert(/the ONE seam/.test(authServiceSource) || /consulted from BOTH the LOCAL mutation chokepoint/i.test((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n')), 'L4a. the authorization architecture still documents edit-gating (canEditDocument), not read-gating, as its own seam');
         assert(countReferences(worldViewSource, 'getWorldAccessLevel') === 0 && countReferences(worldViewSource, 'canReadDocument') === 0, 'L4b. neither is called from WorldView.js — consistent with the documented boundary, not an oversight');
         assert(/canEditDocument/.test(worldViewSource), 'L4c. ...while canEditDocument(), the ONE dimension the architecture actually gates UI with, IS called from WorldView.js');
 
@@ -770,7 +770,7 @@ async function runTests() {
         // trigger condition all ALREADY EXIST — this is "it already
         // works, but nobody calls it," the OLD pattern, not a missing
         // capability.
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(/refreshWorldPresenceActivity\(documentId\)\s*\{/.test(navigationSessionSource), 'N1a. the Section L5 finding is a fully IMPLEMENTED method, not a missing one');
         assert(/this\._worldPresenceUseCase\.setActivity\(documentId,/.test(navigationSessionSource), 'N1b. ...whose body genuinely performs the real work (re-derives and sets activity) — not a stub');
 
@@ -788,7 +788,7 @@ async function runTests() {
     // needing a UI terminus.
     // ---------------------------------------------------------------
     {
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
 
         // O1 — INTENTIONAL INTERNAL CAPABILITY, worked example.
         // WorldNavigationSession carries dozens of underscore-prefixed

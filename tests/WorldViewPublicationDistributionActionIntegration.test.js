@@ -7,7 +7,7 @@ import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterM
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.104 — World View Publication Distribution Action.
 //

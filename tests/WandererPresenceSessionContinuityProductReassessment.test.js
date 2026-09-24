@@ -35,6 +35,7 @@ import { isValidWorldSpatialPresenceAdvertisement } from '../core/WorldSpatialPr
 import { WorldPlacement } from '../core/WorldPlacement.js';
 import { Position } from '../core/Position.js';
 import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.582 — Wanderer Presence & Session Continuity Product Reassessment.
 //
@@ -447,7 +448,7 @@ async function main() {
         // default staleAfterMs — see application/LocalPresenceStore.js's
         // own constructor default), so an idle Wanderer is never
         // mistaken for a disconnected one.
-        const wnsSource = await readSource('application/WorldNavigationSession.js');
+        const wnsSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/const PRESENCE_HEARTBEAT_INTERVAL_MS = 2000;/.test(wnsSource),
             'C5a. WorldNavigationSession.js schedules a 2000ms idle presence heartbeat.');
         assert(/periodic presence HEARTBEAT: republishes the\s*\n\s*\/\/ CURRENT, UNCHANGED presence once the local avatar has\s*\n\s*\/\/ been idle/.test(wnsSource),

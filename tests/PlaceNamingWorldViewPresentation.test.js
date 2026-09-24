@@ -4,7 +4,7 @@ import { executeDiscoverPlaceNamingClaimsCommand } from '../application/Discover
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.257 — World View Place Naming Presentation.
 // See docs/Roadmap.md, "0.9.257 — World View Place Naming Presentation."

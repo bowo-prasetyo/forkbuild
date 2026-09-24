@@ -12,6 +12,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.599 — First Publication Placement Capability Boundary Audit.
 //
@@ -136,7 +137,7 @@ async function run() {
         const placePublicationSrc = await readSource('application/PlacePublicationUseCase.js');
         const placementRecordSrc = await readSource('core/PlacementRecord.js');
         const localRegistrySrc = await readSource('placement/LocalPlacementRegistry.js');
-        const worldNavSrc = await readSource('application/WorldNavigationSession.js');
+        const worldNavSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
 
         assert(/this\._spatialIndexProvider\.add\(placement\)/.test(placePublicationSrc) && /this\._placementRegistry\.add\(record\)/.test(placePublicationSrc),
             'A1. CREATION: PlacePublicationUseCase is the sole class that constructs a fresh WorldPlacement + PlacementRecord and adds (never updates) both the spatial index and the placement registry.');
@@ -298,7 +299,7 @@ async function run() {
         // not the Publication's — so once this capability is wired in,
         // "who may move/remove THIS placement later" already means "the
         // person who placed it," never "the person who published it."
-        const worldNavSrc = await readSource('application/WorldNavigationSession.js');
+        const worldNavSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/const ownerName = record\.owner \|\| \(record\.ownerIdentity/.test(worldNavSrc),
             'D4. Confirmed in real source: _enrichPlacementRecord()\'s own movable/removable computation reads record.owner (the placement\'s own owner) — never any Publication-level author/identity field.');
 

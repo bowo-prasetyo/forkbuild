@@ -98312,3 +98312,13 @@ of each view (logged out, stubbed injections) produces byte-identical HTML befor
 now read each view together with its modules through `tests/support/ViewSourceFiles.js`; a handful of function-body
 regexes were adjusted for the composables' indentation, and three single-file checks now accept the view's own
 modules.
+
+**WorldNavigationSession split by concern.** `application/WorldNavigationSession.js` (5,573 → 1,806 lines) keeps
+its constructor, lifecycle (`start()`, `dispose()`), frame-loop setup, navigation, selection and streaming. Its
+other 210 methods now live in ten modules under `application/worldNavigation/`: local avatar, avatar presence,
+place queries, world experience, collaboration, placements, fork-on-write, World content, place naming and document
+history. `installMethods()` puts them on the prototype as ordinary non-enumerable methods, so the class's public
+shape, `this` and `instanceof` are unchanged; defining a name twice throws. Verified by snapshotting every prototype
+member (name, flags and source text) before and after: all 264 are identical. Source-reading tests read the class
+with its modules through `tests/support/SourceFileGroups.js` (renamed from `ViewSourceFiles.js`); three checks that
+it imports exactly one CommandHistory class now count distinct modules rather than import statements.

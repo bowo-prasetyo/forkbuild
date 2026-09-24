@@ -29,6 +29,7 @@ import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
 import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // NOTE: application/WorldNavigationSession.js is deliberately never
 // imported here, even though Section B reads its SOURCE TEXT (never
@@ -288,7 +289,7 @@ async function run() {
         assert(orderMarkers.every((idx) => idx !== -1) && orderMarkers.every((idx, i) => i === 0 || idx > orderMarkers[i - 1]),
             n('AvatarMovementController#tick() still applies building collision, terrain slope, water depth, step height, and tree collision in that strict order — unchanged by the water arc'));
 
-        const sessionSource = codeOnly(await readSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n'));
         const setupStart = sessionSource.indexOf('_setupLocalAvatar()');
         const controllerCallEnd = sessionSource.indexOf('this._buildAvatarWaterConstraint()', setupStart);
         assert(setupStart !== -1 && controllerCallEnd !== -1,

@@ -9,7 +9,7 @@ import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { CommandHistory } from '../application/CommandHistory.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.212 — Post-Undo/Redo Product Reassessment.
 //
@@ -108,7 +108,7 @@ async function runTests() {
         // session.redo() directly, has a ctrl/meta+Z (and +Y/+Shift+Z)
         // keydown branch, and canUndo()/canRedo()/getUndoLabel()/
         // getRedoLabel() are all consumed by refreshSpatialUI().
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(/session\.undo\(\)/.test(worldView) && /session\.redo\(\)/.test(worldView), 'A5a. WorldView.js still calls session.undo()/session.redo()');
         assert(/(ctrl|meta)Key[\s\S]{0,200}(['"]z['"]|['"]y['"])/i.test(worldView), 'A5b. WorldView.js\'s keydown handling still branches on ctrl/meta+Z (and +Y/+Shift+Z for redo)');
         for (const identifier of ['canUndo', 'canRedo', 'getUndoLabel', 'getRedoLabel']) {
@@ -320,9 +320,9 @@ async function runTests() {
     // brief's own diagram: Undo/Redo, Timeline, Preview, Restore).
     // ---------------------------------------------------------------
     {
-        const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
+        const navigationSessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const commandHistoryImports = [...navigationSessionSource.matchAll(/import\s*\{[^}]*\bCommandHistory\b[^}]*\}\s*from\s*['"]([^'"]+)['"]/g)];
-        assert(commandHistoryImports.length === 1, 'F1a. WorldNavigationSession.js still imports exactly one CommandHistory-shaped class');
+        assert(new Set(commandHistoryImports.map((m) => m[1].split('/').pop())).size === 1, 'F1a. WorldNavigationSession.js and its method modules import exactly one CommandHistory-shaped class');
         assert(/avoids maintaining a second/.test(navigationSessionSource) || !/_undoStack|_redoStack/.test(navigationSessionSource), 'F1b. WorldNavigationSession.js still maintains no second undo/redo stack of its own');
 
         const editorSessionSource = await rawSource('application/EditorSession.js');

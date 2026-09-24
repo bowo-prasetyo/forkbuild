@@ -12,7 +12,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { namingView as deriveNamingView } from '../core/PlaceNamingView.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.262 — Post-Navigation Place Naming Product Reassessment.
 //
@@ -357,7 +357,7 @@ async function runTests() {
         // its own header states this, and it takes no regionId/worldId
         // parameter of its own at all, relying entirely on the pkg's own
         // signed claim.
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(sessionSource.includes('Deliberately NOT scoped to `regionId` or to whatever\n\t// World is currently active'),
             'E3. WorldNavigationSession#importPlaceNamingClaim()\'s own header still states it is deliberately not scoped to the currently active World — the pkg\'s own claim.worldId is the only identity that matters.');
 

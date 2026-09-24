@@ -1,5 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises';
-import { publicationsPageFiles } from './support/ViewSourceFiles.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.300 — Content Provider Preference Reachability Audit.
 //

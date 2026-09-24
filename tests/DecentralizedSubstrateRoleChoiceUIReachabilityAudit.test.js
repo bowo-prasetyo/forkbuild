@@ -9,7 +9,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
 import { ExternalAnchorPublisherRegistry } from '../application/ExternalAnchorPublisherRegistry.js';
 import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { publicationsPageFiles } from './support/ViewSourceFiles.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.422 — Decentralized Substrate Role Choice UI Reachability Audit.
 //

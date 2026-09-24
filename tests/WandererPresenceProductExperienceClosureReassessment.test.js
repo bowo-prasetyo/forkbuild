@@ -25,6 +25,7 @@ import WorldMembersPanel from '../ui/components/WorldMembersPanel.js';
 import WorldPresenceIndicator from '../ui/components/WorldPresenceIndicator.js';
 import { buildWorldCollaborationRoster, WorldCollaborationAccess } from '../ui/components/WorldCollaborationRoster.js';
 import { buildSpatialCollaboratorRows } from '../ui/components/WorldCollaboratorIndicator.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.583 — Wanderer Presence Product Experience Closure Reassessment.
 //
@@ -305,7 +306,7 @@ async function main() {
         // WorldNavigationSession.js's own getAvatarDisplayName(): real
         // displayName, then ownerIdentity, then the avatarId itself,
         // then (local only) "You" — never throws, never blank.
-        const sessionSource = codeOnly(await readSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnly((await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n'));
         assert(/getAvatarDisplayName\(avatarId\) \{\s*\n\s*if \(this\.isLocalAvatarId\(avatarId\)\) \{\s*\n\s*const profile = this\._avatarProfileUseCase[\s\S]{0,120}return \(profile && \(profile\.displayName \|\| profile\.ownerIdentity\)\) \|\| 'You';/.test(sessionSource),
             "B3a. getAvatarDisplayName(), for the LOCAL avatar, degrades displayName -> ownerIdentity -> 'You' — never an empty string, never a raw avatarId shown for yourself.");
         assert(sessionSource.includes('if (knownProfile && knownProfile.displayName) {')

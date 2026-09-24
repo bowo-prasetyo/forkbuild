@@ -8,7 +8,7 @@ import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPubli
 import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
 import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.288 — Cross-Arc Product Evolution Reassessment.
 //
@@ -404,7 +404,7 @@ async function runTests() {
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/function getPublicationCommentariesCommand\(publicationId\)\s*\{\s*return session\.getPublicationCommentaries\(publicationId\);/.test(worldViewSource),
             'E3a. getPublicationCommentariesCommand(publicationId) still forwards WHATEVER publicationId it is given — no implicit "own publication" narrowing.');
-        assert(/getPublicationCommentaries\(publicationId\)\s*\{/.test(await rawSource('application/WorldNavigationSession.js')),
+        assert(/getPublicationCommentaries\(publicationId\)\s*\{/.test((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n')),
             'E3b. WorldNavigationSession#getPublicationCommentaries(publicationId) still takes an explicit, caller-supplied publicationId.');
 
         // E4. The ONE UI component these commands are bound to.

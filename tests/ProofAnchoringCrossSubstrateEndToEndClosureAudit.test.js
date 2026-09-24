@@ -42,7 +42,7 @@ import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransac
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { publicationsPageFiles } from './support/ViewSourceFiles.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.513 — Proof/Anchoring Cross-Substrate End-to-End Closure Audit.
 //

@@ -16,6 +16,7 @@ import { DEFAULT_PLACE_NAMING_DISCOVERY_PROXIMITY_RADIUS } from '../application/
 import { DEFAULT_NEARBY_GEOGRAPHIC_PLACE_RADIUS } from '../core/GeographicPlaceNavigation.js';
 import { Position } from '../core/Position.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.547 — World Unit Metric Convention Boundary Audit.
 //
@@ -93,7 +94,7 @@ async function main() {
         gridPlacementSrc = await readSource('core/DeterministicGridPlacement.js');
         curationSrc = await readSource('core/WorldCurationContext.js');
         welcomeSrc = await readSource('core/WorldWelcomeContext.js');
-        navigationSessionSrc = await readSource('application/WorldNavigationSession.js');
+        navigationSessionSrc = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         anchorSrc = await readSource('core/WorldSpatialAnchor.js');
 
         // world-length

@@ -14,6 +14,7 @@ import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStor
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.271 — Post-Adoption-Status Place Naming Product Reassessment.
 //
@@ -216,7 +217,7 @@ async function runTests() {
         assert(validateIdx > -1 && constructIdx > validateIdx && verifyIdx > constructIdx && saveIdx > verifyIdx,
             'A4. importClaim() still runs validate -> construct -> verify -> persist, in that exact order, unchanged.');
 
-        const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         const importBody = sessionSource.slice(sessionSource.indexOf('importPlaceNamingClaim(pkg)'), sessionSource.indexOf('importPlaceNamingClaim(pkg)') + 260);
         assert(importBody.includes('return this._placeNamingClaimExchange.importClaim(pkg);'),
             'A5. WorldNavigationSession#importPlaceNamingClaim() still does nothing but forward to PlaceNamingClaimExchange#importClaim(pkg).');

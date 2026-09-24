@@ -29,6 +29,7 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { ForkPublishedWorldUseCase } from '../application/ForkPublishedWorldUseCase.js';
 import { LifecycleStatus, computeLifecycleStatus, describeLifecycleStatus } from '../application/DocumentLifecycleStatus.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.579 — World Editing & Unsaved-State Product Reassessment.
 //
@@ -769,7 +770,7 @@ async function main() {
         // published directly at the WorldNavigationSession layer) is
         // still the real, cited fact — reconfirmed here as this
         // section's own dirty+published defensive check (A3e).
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/is a published snapshot and cannot be saved directly — edit it to fork first/.test(sessionSource),
             'K4. Reconfirmed, verbatim: the World View surface structurally refuses to save an already-published id in place — a dirty+published combination (A3e\'s defensive concern) can never actually arise at THAT surface.');
 
@@ -802,7 +803,7 @@ async function main() {
 
         // L2. The World View surface computes isPublished correctly —
         // quoted verbatim.
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/const isPublished = this\.isDocumentPublished\(id\);/.test(sessionSource),
             'L2. WorldNavigationSession.getDocumentInfo() correctly derives isPublished from the real isDocumentPublished(id) check — quoted verbatim.');
         assert(/editable: !isPublished,/.test(sessionSource), 'L2b. And correctly gates editability on it — a published document\'s info panel says PUBLISHED and is marked non-editable, forcing a fork.');

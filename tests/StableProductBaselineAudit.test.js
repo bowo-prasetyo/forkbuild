@@ -17,6 +17,7 @@ import { WorldConflictResolver, WorldOperationOutcome } from '../replication/Wor
 
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderRole, isValidRoleProviderRole } from '../core/RoleProviderRole.js';
+import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.313 — Stable Product Baseline Audit.
 //
@@ -271,7 +272,7 @@ async function runTests() {
             'B3c. WorldEncounterCanvas.js still registers a materialized Snapshot as a World source — Materialization -> Placement, the journey\'s own terminus.');
 
         // B4. Publication -> Multiple Placements -> Placement Visibility.
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(sessionSource.includes('getPlacementsForPublication(publicationId)'),
             'B4a. WorldNavigationSession.js still exposes getPlacementsForPublication() returning the PLURAL set — Publication -> Multiple Placements.');
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');

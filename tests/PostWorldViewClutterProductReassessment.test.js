@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.362 — Post-World-View-Clutter Product Reassessment.
 //

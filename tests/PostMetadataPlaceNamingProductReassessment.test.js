@@ -14,7 +14,7 @@ import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStor
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/ViewSourceFiles.js';
+import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.268 — Post-Metadata Place Naming Product Reassessment.
 //
@@ -319,7 +319,7 @@ async function runTests() {
             'B3a. Each of the three real call sites still invokes verifyPlaceNamingClaim() exactly once, each as part of a mutating operation (publish/kind-registry-verify/import) — never a separate check-only call alongside the mutating one.');
         const uiVerifyHits = await grepCount('verifyPlaceNamingClaim(', ['ui']);
         assert(uiVerifyHits === 0, 'B3b. No ui/ file calls verifyPlaceNamingClaim() directly, still — a check-only UI action would need a NEW use case, not merely new wiring, since every existing caller also mutates state.');
-        const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!/verifyPlaceNamingClaim|checkPlaceNamingClaim|previewPlaceNamingClaim/.test(sessionSource),
             'B3c. WorldNavigationSession — the one boundary the UI actually talks to — exposes no read-only verification query of any kind for a Place Naming claim.');
 
@@ -517,7 +517,7 @@ async function runTests() {
         const nearbyBlock = worldViewCode.match(/<CollapsibleSection\s+title="Nearby Place Names"[\s\S]*?<\/CollapsibleSection>/)[0];
         assert(/alreadySaved/.test(nearbyBlock) && /Already saved/i.test(nearbyBlock),
             'F3a. UPDATED at 0.9.269 — BUILT: the Nearby row template now renders a passive "Already saved" status in place of Adopt once claim.alreadySaved is true — a viewer can now tell BEFORE clicking Adopt.');
-        const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines((await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n'));
         assert(sessionSource.includes('hasPlaceNamingClaim(worldId, claimId) {'),
             'F3b. UPDATED at 0.9.269 — BUILT: WorldNavigationSession now exposes hasPlaceNamingClaim(worldId, claimId), a thin read-only pass-through onto PlaceNamingClaimUseCase#hasClaim() -> LocalPlaceNamingClaimStore#has().');
         // LIVE PROOF the underlying data — and now the session-level door
