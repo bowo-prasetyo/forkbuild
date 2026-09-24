@@ -48,6 +48,7 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.598 — Publication Actionability Journey Product Reassessment.
@@ -591,7 +592,7 @@ async function run() {
         // rediscovering YOUR OWN previously-published work via Snapshot
         // Discovery on a fresh device — never to originate a placement
         // for material that has none.
-        const principlesSource = await readSource('docs/Principles.md');
+        const principlesSource = await readDoc('docs/Principles.md');
         assert(/PlacementRecord is the durable, discoverable truth of where a publication[\s\S]{0,20}exists/.test(principlesSource),
             'D8-0. Sanity: docs/Principles.md itself names PlacementRecord "the durable, discoverable truth of where a publication exists."');
         assert(/Never a fabricated position of any kind — no placement is\s*\n\s*\/\/ ever invented/.test((await readSource('application/snapshot/placement/SnapshotWorldPlacementOutcome.js')).replace(/\r/g, '')),

@@ -31,6 +31,7 @@ import { WorldEncounterMaterialVerificationStatus } from '../application/worldEn
 import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { makeIdentity } from './support/TestIdentity.js';
 
 // 0.9.586 — Product Capability Surface Inventory & Gap Classification
@@ -381,8 +382,8 @@ async function main() {
     // against the actual doc file at test-run time.
     // ===============================================================
     {
-        const principles = await readSource('docs/Principles.md');
-        const roadmap = await readSource('docs/Roadmap.md');
+        const principles = await readDoc('docs/Principles.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
 
         const deliberateBoundaries = [
             { name: 'Automatic placement of novel publications', doc: principles, needle: 'Automatic Collision Resolution Is Deferred, Not Solved' },

@@ -16,6 +16,7 @@ import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anch
 import { BaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import { publicationsViewSourceWithTemplate, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.327 — Bitcoin Anchor Observation Product Gap Audit.
 //
@@ -158,7 +159,7 @@ async function run() {
 
         // 0.8.100's own Roadmap entry named its own, deliberate successor
         // up front — never left implicit for a future audit to guess at.
-        const roadmap = await readFile(new URL('docs/Roadmap.md', SOURCE_ROOT), 'utf8');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('equivalent lifecycle timeline projection remains the deliberate,') &&
                roadmap.includes('separate follow-up 0.8.99 already named'),
             '5. 0.8.100\'s own Roadmap entry explicitly named its own follow-up as a deliberate, separate, not-yet-decided next step — this was never presented as a finished, UI-bound feature.');
@@ -422,7 +423,7 @@ async function run() {
         // No production file is touched by this milestone — verified by
         // this test file's own git status at commit time; asserted here
         // as the milestone's own explicit, load-bearing constraint.
-        const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html" ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */,
+        const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap" ":(exclude)tests.html" ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */,
             { cwd: SOURCE_ROOT.pathname }).toString().trim();
         // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.
         // This guard is a live, point-in-time git-diff check at test-run

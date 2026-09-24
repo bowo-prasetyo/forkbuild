@@ -687,7 +687,7 @@ async function run() {
     // ===============================================================
     {
         const changedFiles = execSync(
-            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
+            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap" ":(exclude)tests.html"',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim().split('\n').filter(Boolean).sort();
         const expectedChangedFiles = [

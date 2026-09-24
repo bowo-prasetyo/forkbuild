@@ -8,6 +8,7 @@ import { MoveStructurePlacementCommand } from '../application/commands/MoveStruc
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.314 — Product Baseline Closure Record.
 //
@@ -224,7 +225,7 @@ async function runTests() {
     // stronger than a bare "deferred" label.
     // ===============================================================
     {
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         const DEFERRED_CANDIDATES = [
             {
                 candidate: 'Placement navigation / placement management ("go to placement" / "remove this placement")',

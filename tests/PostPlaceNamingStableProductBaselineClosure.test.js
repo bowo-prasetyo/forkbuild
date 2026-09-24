@@ -20,6 +20,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { worldViewFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.319 — Post-Place-Naming Stable Product Baseline Closure.
@@ -337,7 +338,7 @@ async function runTests() {
     // decision, not a "gap" it has to rediscover from scratch.
     // ===============================================================
     {
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('publishing is **never automatic**'),
             'D. docs/Roadmap.md still carries 0.9.316\'s own explicit product decision that publication is never automatic.');
         assert(/whether and how to surface an explicit "Publish naming\s+claim" UI action/.test(roadmap),
@@ -500,7 +501,7 @@ async function runTests() {
     // register, reconfirmed present and still not READY.
     // ===============================================================
     {
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         const DEFERRED_CANDIDATES = [
             {
                 candidate: 'Placement navigation / placement management',

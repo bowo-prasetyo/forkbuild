@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.406 — Reconciliation Front-Door Product Direction Audit.
 //
@@ -284,7 +285,7 @@ async function run() {
     {
         leaderboardSource = await readSource('ui/views/ReconciliationCandidateLeaderboardView.js');
         const productionGapAudit = await readSource('tests/ReconciliationCandidateProductionProductGapAudit.test.js');
-        const principlesSource = await readSource('docs/Principles.md');
+        const principlesSource = await readDoc('docs/Principles.md');
 
         // F1. The Leaderboard already has the EXACT UX pattern this
         // operation would need — paste an external artifact, parse it,

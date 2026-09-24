@@ -6,6 +6,7 @@ import { Position } from '../core/Position.js';
 import { compareBlueprintSimilarity, isPossibleLineageCandidate, DEFAULT_SIMILARITY_THRESHOLD } from '../core/BlueprintSimilarity.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
 import { readSource as source } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.592 — Editor Similarity Ranking Boundary Audit.
 //
@@ -247,7 +248,7 @@ async function run() {
         const similaritySource = await source('core/BlueprintSimilarity.js');
         assert(/itself decides that one blueprint was derived from another/.test(similaritySource),
             n('B8. core/BlueprintSimilarity.js\'s own header states, in its own words, that it never decides derivation — the number is evidence, never a verdict'));
-        const principlesSource = await source('docs/Principles.md');
+        const principlesSource = await readDoc('docs/Principles.md');
         assert(/A similarity score is CANDIDACY for a human's attention, never proof of\nanything\./.test(principlesSource),
             n('B9. docs/Principles.md\'s own "Similarity Is Evidence; It Never Becomes Lineage (0.6.8)" section states the identical meaning in the project\'s own design record, not just in a source comment'));
 

@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import { readSource as source } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.395 — Product Integrity Boundary Audit.
 //
@@ -123,7 +124,7 @@ async function run() {
             const text = await source(item.citedIn);
             assert(text.length > 0, n(`A4. invariant ${item.id}'s cited file ${item.citedIn} exists and was actually read, not assumed`));
         }
-        const architectureDoc = await source('docs/Architecture.md');
+        const architectureDoc = await readDoc('docs/Architecture.md');
         assert(architectureDoc.includes('Never imports anything from\napplication/, renderer/, or ui/.'),
             n('A5. invariant 9\'s own citation is verified against docs/Architecture.md\'s actual text, not paraphrased from memory'));
 

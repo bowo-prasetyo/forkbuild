@@ -587,7 +587,7 @@ async function run() {
         const verdict = 'TRANSPORT_CONVERGENCE_CONFIRMED';
         assert(CLASSIFICATIONS.includes(verdict), '1. the verdict is drawn from this milestone\'s own named taxonomy.');
 
-        const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
+        const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap" ":(exclude)tests.html"',
             { cwd: SOURCE_ROOT.pathname }).toString().trim();
         // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.
         // This guard is a live, point-in-time git-diff check at test-run

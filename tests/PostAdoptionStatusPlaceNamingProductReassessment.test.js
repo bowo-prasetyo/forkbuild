@@ -16,6 +16,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { worldNavigationSessionFiles, worldViewFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.271 — Post-Adoption-Status Place Naming Product Reassessment.
@@ -216,7 +217,7 @@ async function runTests() {
         assert(retractIdx > -1 && retractBody.includes('this._placeNamingClaimUseCase.retract('),
             'A5c. WorldNavigationSession#retractPlaceNamingClaim() still exists and still forwards onto PlaceNamingClaimUseCase#retract() — the ONE existing removal path this reassessment\'s own Section E audits below.');
 
-        const principles = await rawSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         for (const heading of [
             '### A Discovered Naming Claim Is Still Just A Claim (0.9.253)',
             '### Automatic Discovery Is Not Automatic Adoption (0.9.256)',
@@ -417,7 +418,7 @@ async function runTests() {
     // primary/conflicting/official concept is needed yet.
     // ---------------------------------------------------------------
     {
-        const principles = await rawSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         assert(principles.includes('### Naming Exchange Distributes Claims; It Never Establishes Truth (0.5.3)'),
             'D1. docs/Principles.md still carries the founding principle this behavior descends from, unretracted.');
 

@@ -11,6 +11,7 @@ import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.310 — Post-Placement-Visibility Product Evolution Reassessment.
@@ -413,7 +414,7 @@ async function runTests() {
         // never on inertia." That is a standing bar this milestone's own
         // research (Sections C, E) has not cleared — it is the absence
         // of a requirement, not a silent one.
-        assert((await rawSource('docs/Roadmap.md')).includes('once there is real evidence that visibility alone is\ninsufficient, never on inertia'),
+        assert((await readDoc('docs/Roadmap.md')).includes('once there is real evidence that visibility alone is\ninsufficient, never on inertia'),
             'D3. docs/Roadmap.md\'s own 0.9.308 entry still names this exact standing bar for navigation/management — "once there is real evidence... never on inertia" — a bar this milestone\'s own findings do not meet.');
 
         console.log('✓ D: Condition 1 holds trivially (distinguishable by position). Condition 2 FAILS on live, structural evidence: the entire navigation vocabulary is document-keyed and resolves through the world layout provider\'s single per-document position, never the placement registry — and this exact boundary already produces a visible seam on a DIFFERENT, older, already-shipped feature (LocationDocumentsDialog\'s own "Focus"), not merely a hypothetical concern raised for this milestone. Condition 3 has no positive evidence. Per this milestone\'s own brief ("if those conditions aren\'t all satisfied, classify it DEFER, not READY"): DEFER. Building this correctly would mean resolving a navigation-architecture question — "what does the camera do when a document has N placements?" — that predates and outscopes OwnPublicationPanel entirely.');

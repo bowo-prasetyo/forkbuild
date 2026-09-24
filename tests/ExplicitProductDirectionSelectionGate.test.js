@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.397 — Explicit Product Direction Selection Gate.
 //
@@ -90,7 +91,7 @@ async function run() {
     // Section A — Entry-state reconfirmation.
     // ===============================================================
     {
-        const roadmap = await readSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('## 0.9.396 — Product Integrity Boundary Hardening'),
             n('A1. 0.9.396\'s entry is on record in docs/Roadmap.md — this milestone builds on a real, immediately-prior milestone, not an invented one'));
         assert(roadmap.includes('**`BOUNDARY_GUARD_ADDED`.**'),
@@ -369,7 +370,7 @@ async function run() {
     // Section J — Candidate 7: A new product domain.
     // ===============================================================
     {
-        const roadmap = await readSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         const forwardCandidateMarkers = (roadmap.match(/NEW_DOMAIN_CANDIDATE|PROPOSED_DIRECTION\s*=/g) || []).length;
         const evidence = {
             currentSource: forwardCandidateMarkers === 0,

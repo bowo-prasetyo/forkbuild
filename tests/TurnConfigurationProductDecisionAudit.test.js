@@ -5,6 +5,7 @@ import { IceServerConfiguration, isValidStunUrl } from '../core/IceServerConfigu
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { mainFiles } from './support/SourceFileGroups.js';
 import { readSource as source } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.390 — TURN Configuration Product Decision Audit.
 //
@@ -183,7 +184,7 @@ async function run() {
     // assumed equivalent.
     // ===============================================================
     {
-        const roadmap = await source('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
 
         // B1. The requirement 0.9.385 actually recorded, verbatim.
         assert(roadmap.includes('users must be able to switch critical infrastructure endpoints when the default endpoint is\nunavailable'),

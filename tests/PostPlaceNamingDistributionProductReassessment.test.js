@@ -18,6 +18,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { worldViewFiles, worldNavigationSessionFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.318 — Post-Place-Naming Distribution Product Reassessment.
@@ -365,7 +366,7 @@ async function runTests() {
         // this milestone's own initiating conversation, which itself
         // frames Nostr publication as ALREADY COMPLETE, not as an open
         // complaint about the button.
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('0.9.317') && roadmap.includes('0.9.316'),
             'C4. docs/Roadmap.md carries 0.9.316/0.9.317\'s own record of building and converging the write path — it names no user-facing complaint about the missing UI button anywhere in that record; the wiring decision was deferred on architectural grounds (an explicit, later product call), never on unmet user need first identified here.');
 
@@ -538,7 +539,7 @@ async function runTests() {
         // or ACCIDENTAL (an oversight)? Checked against the explicit
         // product decision 0.9.316's own record states, reused verbatim
         // rather than re-argued.
-        const publicationBoundarySource = await rawSource('docs/Roadmap.md');
+        const publicationBoundarySource = await readDoc('docs/Roadmap.md');
         assert(publicationBoundarySource.includes('publishing is **never automatic**') || publicationBoundarySource.includes('One explicit product decision'),
             'F4a. docs/Roadmap.md still carries 0.9.316\'s own explicit, named product decision that publication is never automatic — the un-wired state is not an oversight this reassessment discovered, but a documented choice.');
         assert(/whether and how to surface an explicit "Publish naming\s+claim" UI action/.test(publicationBoundarySource),
@@ -710,7 +711,7 @@ async function runTests() {
         // exact wording, in this codebase's own roadmap record (Section
         // F4b) — making it a DEFERRED, evidence-gated decision, a
         // sharper classification than a bare architectural observation.
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(/A future milestone deciding to wire an explicit "Publish to\s+network" UI action is a separate, later, unscheduled step/.test(roadmap),
             'I2. docs/Roadmap.md still records the exact future integration point, word for word, as a separate, later, unscheduled step — not an idea this reassessment is inventing, and not something already promised for "soon."');
 

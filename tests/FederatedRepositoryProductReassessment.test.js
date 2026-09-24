@@ -24,6 +24,7 @@ import { LocalPublicationCatalog } from '../application/publication/LocalPublica
 import { worldViewFiles, editorViewFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.340 — Federated Repository Product Reassessment.
@@ -699,7 +700,7 @@ async function run() {
         // No further proof needed here; this section reasons about
         // Journey 2 and the standing evidence for/against building it.
 
-        const roadmapSource = await readSource('docs/Roadmap.md');
+        const roadmapSource = await readDoc('docs/Roadmap.md');
         // Roadmap.md wraps its own prose at a fixed column, so a quote
         // spanning a line break needs whitespace (including the
         // newline) treated as a single separator, not a literal

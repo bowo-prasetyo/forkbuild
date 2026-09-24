@@ -27,6 +27,7 @@ import { CreatePublicationPeerExchangeUseCase } from '../application/publication
 import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.343 — Peer Publication Synchronization Product Reassessment.
@@ -743,7 +744,7 @@ async function run() {
 
         // Every "Absent"/"excluded" row traces to a specific, dated,
         // on-file decision — never an unexplained gap.
-        const roadmap = await readSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('0.9.340'), '1. the federated-search exclusion this matrix leans on is on file.');
         assert(roadmap.includes('0.9.341'), '2. the notification-boundary finding this matrix leans on is on file.');
         assert(roadmap.includes('0.9.342'), '3. the metadata/content boundary this matrix leans on is on file.');

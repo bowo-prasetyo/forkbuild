@@ -712,7 +712,7 @@ async function run() {
         // provider selector, never a change to this audit's own
         // application-layer distribution wiring.
         const changedNonTestFiles = execSync(
-            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
+            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap" ":(exclude)tests.html"',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         const expectedLaterMilestoneFiles = new Set(['ui/components/PublicationCard.js', 'ui/components/PublicationList.js']);

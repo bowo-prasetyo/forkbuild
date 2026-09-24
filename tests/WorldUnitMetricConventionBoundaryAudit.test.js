@@ -18,6 +18,7 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.547 — World Unit Metric Convention Boundary Audit.
 //
@@ -407,9 +408,9 @@ async function main() {
     // ===================================================================
     {
         const normalizeWhitespace = (text) => text.replace(/\s+/g, ' ');
-        const principlesSrc = normalizeWhitespace(await readSource('docs/Principles.md'));
-        const protocolSrc = normalizeWhitespace(await readSource('docs/Protocol.md'));
-        const architectureSrc = normalizeWhitespace(await readSource('docs/Architecture.md'));
+        const principlesSrc = normalizeWhitespace(await readDoc('docs/Principles.md'));
+        const protocolSrc = normalizeWhitespace(await readDoc('docs/Protocol.md'));
+        const architectureSrc = normalizeWhitespace(await readDoc('docs/Architecture.md'));
         const worldViewUserDocSrc = normalizeWhitespace(await readSource('docs/user/03-WorldView.md'));
 
         // AMENDED BY 0.9.548. At the moment this milestone (0.9.547) was
@@ -450,7 +451,7 @@ async function main() {
         const geoNavSrc = await readSource('core/GeographicPlaceNavigation.js');
         const nowConsistentHits = [];
         if (/~100m proximity/.test(geoNavSrc)) nowConsistentHits.push('core/GeographicPlaceNavigation.js ("~100m proximity window")');
-        if (/\(1\.5 meters\)/.test(await readSource('docs/Roadmap.md'))) nowConsistentHits.push('docs/Roadmap.md ("(1.5 meters)")');
+        if (/\(1\.5 meters\)/.test(await readDoc('docs/Roadmap.md'))) nowConsistentHits.push('docs/Roadmap.md ("(1.5 meters)")');
         assert(nowConsistentHits.length >= 1, `7. LIVE: the same informal "meter" language this milestone originally flagged as drift still exists (found: ${nowConsistentHits.join('; ')}) — but is no longer a contradiction now that 0.9.548 adopted the affirmative contract, so it required no correction.`);
 
         console.log(`✓ Section H (FLAGSHIP, amended by 0.9.548): this milestone's original finding — four independent, then-current restatements of "A World Unit Is Not (Yet) A Meter" — is preserved above in narrative; the live assertions were updated to confirm 0.9.548 replaced all four with the affirmative "A World Unit Is One Meter" contract. ${nowConsistentHits.length} instance(s) of informal "meter" language originally named as drift are now simply consistent with the adopted contract.`);

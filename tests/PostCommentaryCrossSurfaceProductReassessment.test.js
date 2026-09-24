@@ -14,6 +14,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { publicationsPageFiles, worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.305 — Cross-Surface Publication Commentary Reassessment.
@@ -206,7 +207,7 @@ async function runTests() {
         }
         assert(grepCount('class PublicationDistributionPanel', ['ui', 'application', 'core', 'storage', 'discovery', 'publisher', 'identity', 'content', 'anchoring']) === 0,
             'B4b. no such class exists anywhere in production source.');
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('A shared `PublicationDistributionPanel` abstraction merging the two UI'),
             'B4c. docs/Roadmap.md 0.9.141 still records this name as a deliberately-declined hypothetical, not a shipped surface.');
 

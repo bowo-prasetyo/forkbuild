@@ -18,6 +18,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles, worldNavigationSessionFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.473 — World Encounter -> Repository Continuity Boundary Audit.
@@ -536,7 +537,7 @@ async function run() {
         // local, leaf AND orchestration layers, for World Encounter.
         // Reconfirmed directly from the Roadmap entry itself rather than
         // merely cited.
-        const roadmap = await readSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('family-wide rule, not a decentralized-specific asymmetry'),
             "1. docs/Roadmap.md's own 0.9.329 entry is on file, verbatim, characterizing the rule as family-wide.");
 
@@ -620,7 +621,7 @@ async function run() {
     {
         // J1. No production file was modified by this milestone.
         const changedNonTestFiles = execSync(
-            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
+            'git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap" ":(exclude)tests.html"',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.

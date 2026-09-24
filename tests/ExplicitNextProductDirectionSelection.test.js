@@ -1,5 +1,6 @@
 import { execFileSync, execSync } from 'node:child_process';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.384 — Explicit Next Product Direction Selection.
 //
@@ -125,7 +126,7 @@ async function run() {
         // A1. 0.9.383's own verdict is on record as the immediately
         // prior milestone, and this milestone builds on it rather than
         // repeating it — reconfirmed present, not assumed.
-        const roadmap = await readSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('## 0.9.383 — Whole-Product Product Evolution Reassessment'),
             n('A1. 0.9.383\'s entry is on record in docs/Roadmap.md — this milestone builds on a real prior verdict, not an invented one'));
         assert(roadmap.includes('**`STABLE_STOP`.**'),
@@ -203,7 +204,7 @@ async function run() {
         assert(await sourceExists('application/publication/ResolvePublicationUseCase.js') && await sourceExists('discovery/LocalDiscoveryProvider.js'),
             n('C1. the seams a proactive-discovery journey would reuse (ResolvePublicationUseCase, discoveryProvider/admitToRepositoryDiscovery) already exist and already work for the reactive paths'));
 
-        const roadmap = await readSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         const deferralMentions = (roadmap.match(/proactive.{0,30}[Dd]ecentralized.{0,30}[Dd]iscovery|[Pp]roactive [Rr]epository/g) || []).length;
         assert(deferralMentions >= 5,
             n(`C1. docs/Roadmap.md records at least five separate mentions of this candidate being deferred (found ${deferralMentions}) — this is a repeatedly-considered, not overlooked, candidate`));
@@ -287,7 +288,7 @@ async function run() {
         // exactly this shape as an architecture-driven "expose more of
         // the subsystem" candidate — re-selecting it here without new
         // evidence would reopen a settled STOP by inertia.
-        const roadmap = await readSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('notification event → push'),
             n('E2. docs/Roadmap.md\'s own 0.9.383 record already named this exact candidate shape and rejected it as architecture-driven — re-confirmed on record, not re-derived from scratch'));
 
@@ -355,7 +356,7 @@ async function run() {
         // What IS required, same as every other candidate, is a
         // concrete proposal backed by real evidence — checked here by
         // confirming none exists anywhere on record.
-        const roadmap = await readSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         const forwardCandidateMarkers = (roadmap.match(/NEW_DOMAIN_CANDIDATE|PROPOSED_DIRECTION\s*=/g) || []).length;
         assert(forwardCandidateMarkers === 0,
             n('G1. no forward-looking, concretely-named new-domain candidate exists anywhere in docs/Roadmap.md — nothing is waiting to be selected here'));

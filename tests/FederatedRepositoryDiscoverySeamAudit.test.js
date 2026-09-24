@@ -15,6 +15,7 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
 
@@ -616,7 +617,7 @@ async function run() {
         // J3. Two independent, already-standing architectural
         // restraints (0.9.330's own Section F) still govern any future
         // dedup policy — reconfirmed fresh, not merely cited.
-        const principles = await readSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         assert(principles.includes('### Acquisition Provenance Is Not Evidence Rank (0.8.17)') &&
             principles.includes('### Discovery Is Not Resolution (0.7.2)'),
             '5. both standing principles LocalPublicationCatalog\'s own dedup posture answers to are still present in docs/Principles.md, unchanged.');
@@ -675,7 +676,7 @@ async function run() {
 
         // L4. The production-change guard: no file outside tests/,
         // tests.html, and docs/Roadmap.md is modified by this milestone.
-        const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html" ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */,
+        const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap" ":(exclude)tests.html" ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */,
             { cwd: SOURCE_ROOT.pathname }).toString().trim();
         // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.
         // This guard is a live, point-in-time git-diff check at test-run

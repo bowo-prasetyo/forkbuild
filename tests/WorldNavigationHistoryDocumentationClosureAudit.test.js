@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.587 — World Navigation History Documentation Closure Audit.
 //
@@ -272,8 +273,8 @@ async function main() {
     // milestone's fix is applied.
     // ===============================================================
     {
-        const principles = await readSource('docs/Principles.md');
-        const roadmap = await readSource('docs/Roadmap.md');
+        const principles = await readDoc('docs/Principles.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
 
         // G1. The scattered-but-real prior coverage 0.9.586 Section G
         // already catalogued still exists, unchanged, and is cited
@@ -320,8 +321,8 @@ async function main() {
     // silent edit could not remove without failing this file.
     // ===============================================================
     {
-        const principles = await readSource('docs/Principles.md');
-        const roadmap = await readSource('docs/Roadmap.md');
+        const principles = await readDoc('docs/Principles.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
 
         assert(/### World Navigation Is Position Replacement, Not A Page Stack — Except At The Boundary Into World View \(0\.9\.587\)/.test(principles),
             'I1. docs/Principles.md carries this milestone\'s own section under its exact, dated title — guarded against a future rename or silent removal.');

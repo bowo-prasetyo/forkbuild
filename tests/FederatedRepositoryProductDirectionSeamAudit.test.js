@@ -3,6 +3,7 @@ import { execSync } from 'node:child_process';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.330 — Federated Repository Product Direction & Seam Audit.
 //
@@ -332,7 +333,7 @@ async function run() {
         assert(localPublicationCatalog.includes('No ranking, trust score, "canonical," or "preferred" field exists'),
             '1. application/publication/LocalPublicationCatalog.js\'s own header states this restraint directly, reconfirmed fresh (0.9.329 Section D).');
 
-        const principles = await readSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         assert(principles.includes('### Acquisition Provenance Is Not Evidence Rank (0.8.17)'),
             '2. a second, independent, standing named principle enforces the identical restraint one layer over: provenance (where a record came from) is tracked and preserved, never used to rank or collapse records against each other.');
         assert(principles.includes('### Discovery Is Not Resolution (0.7.2)'),
@@ -439,7 +440,7 @@ async function run() {
         assert(smallestSeam === 'REGISTER_A_PUBLICATION_CONTENT_KIND_PLUGIN',
             '3. Section H\'s own identified seam carries forward into this final verdict rather than being re-litigated.');
 
-        const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
+        const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap" ":(exclude)tests.html"',
             { cwd: SOURCE_ROOT.pathname }).toString().trim();
         // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.
         // This guard is a live, point-in-time git-diff check at test-run

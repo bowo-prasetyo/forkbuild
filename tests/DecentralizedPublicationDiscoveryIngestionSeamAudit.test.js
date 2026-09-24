@@ -676,7 +676,7 @@ async function run() {
     // Section K — No production file touched.
     // ===============================================================
     {
-        const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html"',
+        const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)docs/roadmap" ":(exclude)tests.html"',
             { cwd: SOURCE_ROOT.pathname }).toString().trim();
         // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.
         // This guard is a live, point-in-time git-diff check at test-run

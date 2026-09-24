@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 import { readSource as source } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.460 — Base On-Chain Publishing Capability Boundary Audit.
 //
@@ -417,7 +418,7 @@ async function run() {
     // claims contradict current source, one shown to currently fail.
     // ===============================================================
     {
-        const roadmap = await source('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('## 0.9.383 — Whole-Product Product Evolution Reassessment'), n('L1. docs/Roadmap.md\'s own 0.9.383 heading is on record'));
         assert(/Base anchoring — `BlockchainKind\.BASE` still named and reserved, unimplemented/.test(roadmap),
             n('L2. as late as its own 0.9.383 entry, docs/Roadmap.md itself asserts Base anchoring is unimplemented — a claim Sections A-J directly contradict from current source'));

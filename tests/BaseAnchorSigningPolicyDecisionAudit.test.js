@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { publicationsPageFiles, mainFiles } from './support/SourceFileGroups.js';
 import { readSource as source } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.469 — Base Anchor Signing Policy Decision Audit.
 //
@@ -238,7 +239,7 @@ async function run() {
         const rawSignerFlat = flattenComments(await source('base/BaseTransactionSigner.js'));
         assert(/A caller that hands this class a bare `contentHash` and an `account`, hoping it will figure out the rest, gets a thrown caller-contract violation instead/.test(rawSignerFlat), n('C1. base/BaseTransactionSigner.js\'s own header states, in its own words, that a bare contentHash is a thrown contract violation, never a supported call shape — re-confirmed by reading the real file, not by citing 0.9.466\'s own E1'));
 
-        const principlesSrc = await source('docs/Principles.md');
+        const principlesSrc = await readDoc('docs/Principles.md');
         const heading = '## Signing Authorizes The Exact Reviewed Plan; It Does Not Reconstruct Or Modify It (0.8.93)';
         assert(principlesSrc.includes(heading), n('C2. docs/Principles.md carries a durable, named design-principle entry for the 0.8.93 review gate — this is not merely a code comment\'s own claim about itself'));
 
@@ -258,7 +259,7 @@ async function run() {
     // elevated to a docs/Principles.md entry.
     // ===============================================================
     {
-        const principlesSrc = await source('docs/Principles.md');
+        const principlesSrc = await readDoc('docs/Principles.md');
 
         assert(!/^## .*Arweave/m.test(principlesSrc), n('D1. docs/Principles.md contains not one single heading mentioning Arweave — Arweave\'s own one-shot signer choice was never named as a durable design principle, positive or negative'));
         assert(!/^## .*Bitcoin.*[Bb]roadcast/m.test(principlesSrc) && !/^## .*Bitcoin.*[Ss]tub/m.test(principlesSrc), n('D2. docs/Principles.md contains no heading naming Bitcoin\'s own always-unavailable broadcaster stub either — that choice, too, was never elevated to a named principle'));
@@ -289,7 +290,7 @@ async function run() {
             assert(!/BitcoinAnchorPublicationCoordinator|publishAnchor\(/.test(viewSrc), n(`E7[${file}]. never references this coordinator or its publishAnchor() method either — no UI path reaches it`));
         }
 
-        const roadmapSrc = await source('docs/Roadmap.md');
+        const roadmapSrc = await readDoc('docs/Roadmap.md');
         const entry853 = section(roadmapSrc, '## 0.8.53', '## 0.8.54');
         assert(entry853 && /Any UI surface/.test(entry853), n('E8. 0.8.53\'s own Roadmap entry itself names "Any UI surface" as deliberately excluded, future work — this was left open by design, not built and then rejected'));
 

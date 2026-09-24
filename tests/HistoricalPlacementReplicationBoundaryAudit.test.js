@@ -27,6 +27,7 @@ import { WorldConflictResolver, WorldOperationOutcome } from '../replication/Wor
 import { WorldCommandPropagationUseCase } from '../application/document/WorldCommandPropagationUseCase.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.312 — Historical Placement Replication Boundary Audit.
@@ -382,7 +383,7 @@ async function runTests() {
         // Never Wall-Clock Time (0.2.97)"): the vector-clock machinery
         // was built for a DIFFERENT object and was never the right tool
         // for the live collaboration protocol's own job.
-        const principles = await rawSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         assert(principles.includes('built for a different object — PlacementRecord') && principles.includes('was\nnever the right tool for here'),
             'C3. docs/Principles.md still documents, in its own words, that the historical vector-clock machinery was built for a different object and was never the right tool for the live ordering protocol.');
 
@@ -554,7 +555,7 @@ async function runTests() {
         // reviving or extending the historical family — Section H
         // confirms the documentation itself never frames it as pending
         // future work, only as historical/superseded fact.
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(!/revive.*(?:ConflictResolver|ReplicaMergeService|CreateReplicationUseCase)/i.test(roadmap),
             'F4. NOT a deferred feature — docs/Roadmap.md never frames reviving the historical family as scheduled or pending work.');
 
@@ -615,7 +616,7 @@ async function runTests() {
     {
         // H1. docs/Roadmap.md's own 0.9.311 entry classifies the family
         // HISTORICAL, in those words, tied to the real file names.
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         assert(roadmap.includes('## 0.9.311'), 'H1a. docs/Roadmap.md still carries the 0.9.311 entry.');
         assert(/classified\s+\*\*HISTORICAL\*\*/.test(roadmap) || roadmap.includes('HISTORICAL'),
             'H1b. docs/Roadmap.md classifies the peer placement-replication protocol HISTORICAL, in those words.');
@@ -626,7 +627,7 @@ async function runTests() {
         // H2. docs/Principles.md documents the live protocol's own
         // rationale for NOT reusing the historical machinery — the same
         // fact Section C proves live.
-        const principles = await rawSource('docs/Principles.md');
+        const principles = await readDoc('docs/Principles.md');
         assert(principles.includes('Ordering Is A Deterministic Total Order, Never Wall-Clock Time'),
             'H2a. docs/Principles.md still carries the 0.2.97 ordering-rationale section.');
         assert(principles.includes('never the right tool for here'),

@@ -22,6 +22,7 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.351 — Proactive Publication Discovery Product Direction Audit.
@@ -630,7 +631,7 @@ async function run() {
     // fourth reconfirmation of, plus this milestone's own new evidence.
     // ===============================================================
     {
-        const roadmapSource = await readSource('docs/Roadmap.md');
+        const roadmapSource = await readDoc('docs/Roadmap.md');
         const normalizedRoadmap = roadmapSource.replace(/\s+/g, ' ');
         function roadmapContains(phrase) {
             return normalizedRoadmap.includes(phrase.replace(/\s+/g, ' '));

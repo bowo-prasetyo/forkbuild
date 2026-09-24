@@ -25,6 +25,7 @@ import { LoadPublicationDocumentUseCase } from '../application/publication/LoadP
 import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // 0.9.560 — Cross-Surface Publication Action Consistency Audit.
@@ -394,7 +395,7 @@ async function runTests() {
     {
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const publicationCatalogSource = await rawSource('ui/components/PublicationCatalog.js');
-        const principlesDoc = await rawSource('docs/Principles.md');
+        const principlesDoc = await readDoc('docs/Principles.md');
 
         // F1. "Reposition within an already-live World session" — every
         // in-World surface this audit found (Encounter, Search's Focus,

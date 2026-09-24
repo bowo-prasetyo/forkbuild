@@ -4,6 +4,7 @@ import { WorldViewNavigationState, WorldViewPrimaryMode } from '../application/w
 import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.359 — World View Main-Screen Clutter Product Audit.
 //
@@ -286,7 +287,7 @@ async function run() {
     // was deliberately made prominent for a documented reason.
     // ===============================================================
     {
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         const arcHeadings = [
             '## 0.9.111 — World View Decentralized Publication Retrieval',
             '## 0.9.138 — World View Snapshot Distribution Action',

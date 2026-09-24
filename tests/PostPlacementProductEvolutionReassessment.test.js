@@ -13,6 +13,7 @@ import { ConflictResolver, ConflictRelation } from '../replication/ConflictResol
 import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, editorSessionFiles, worldNavigationSessionFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { readDoc } from './support/DocText.js';
 
 // 0.9.311 — Post-Placement Product Evolution Reassessment.
 //
@@ -462,7 +463,7 @@ async function runTests() {
         // placement) — 0.9.310's own DEFER verdict, reconfirmed: the
         // Roadmap's own standing bar for this candidate is still on
         // record, unaddressed.
-        assert((await rawSource('docs/Roadmap.md')).includes('once there is real evidence that visibility alone is\ninsufficient, never on inertia'),
+        assert((await readDoc('docs/Roadmap.md')).includes('once there is real evidence that visibility alone is\ninsufficient, never on inertia'),
             'F3. docs/Roadmap.md still carries this exact standing bar for placement navigation/management — still not met.');
 
         // F4. Snapshot interaction — already complete (0.9.307's own D3
@@ -570,7 +571,7 @@ async function runTests() {
         // while preserving it — e.g. 0.9.305's own "no provider
         // preferences of any kind" exclusion) is a Commentary/
         // Notification/Placement title, none a provider-selection title.
-        const roadmap = await rawSource('docs/Roadmap.md');
+        const roadmap = await readDoc('docs/Roadmap.md');
         const titlesSincePreference = [...roadmap.matchAll(/^## (0\.9\.30[5-9]|0\.9\.310) — (.+)$/gm)].map(([, , title]) => title);
         assert(titlesSincePreference.length === 6, `H3. Exactly six milestone titles exist between 0.9.304 and this one (found ${titlesSincePreference.length}).`);
         assert(!titlesSincePreference.some((t) => /provider/i.test(t)),
