@@ -98300,3 +98300,15 @@ were kept. Tests that used a version-tagged comment as an anchor now anchor on c
 construction, and the WorldEncounterCanvas observer-local header). Three assertions that only checked that a comment
 still said something the code no longer does were dropped or reduced to existence checks
 (ArweaveAnnouncementDiscoveryCapabilityBoundaryAudit B2, ArweaveAnnouncementDiscoveryIntegrationBoundaryAudit I6/I7).
+
+**Large views split into composables.** `ui/views/DecentralizedPublicationsView.js` (7,547 → 4,389 lines) and
+`ui/views/WorldView.js` (3,478 → 2,275 lines) keep their templates, but most of each `setup()` now lives in
+per-feature composables under `ui/views/decentralizedPublications/` (fifteen composables plus the shared
+`presentation.js` badge/label constants) and `ui/views/worldView/` (eleven composables). Each composable takes its
+collaborators as explicit arguments and returns its state and actions; `setup()` destructures them, so the names
+the template reads are unchanged. The split was mechanical and verified three ways: every free identifier in the
+moved code still resolves, every name the template reads is still returned from `setup()`, and a server-side render
+of each view (logged out, stubbed injections) produces byte-identical HTML before and after. Source-reading tests
+now read each view together with its modules through `tests/support/ViewSourceFiles.js`; a handful of function-body
+regexes were adjusted for the composables' indentation, and three single-file checks now accept the view's own
+modules.
