@@ -1,4 +1,5 @@
 import { PublicationDistributionState } from './PublicationDistributionLifecycle.js';
+import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 
 const KEY_PREFIX = 'publication-distribution-lifecycle:';
 const INVALID_SECTION = Symbol('PublicationDistributionLifecyclePersistence.INVALID_SECTION');
@@ -220,14 +221,6 @@ const INVALID_SECTION = Symbol('PublicationDistributionLifecyclePersistence.INVA
 //   lifecycle carries exactly the two states `ABSENT`/`PRESENT` those
 //   files already established, and nothing this file adds introduces a
 //   third.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 // Pure. Builds a deterministic, JSON-safe plain record from a lifecycle's
 // own `material` section — used both to build the record `save()` writes

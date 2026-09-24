@@ -1,5 +1,6 @@
 import { PublicationObservationArchive } from './PublicationObservationArchive.js';
 import { PublicationObservationArchiveProvenanceOrigin } from './PublicationObservationArchiveProvenance.js';
+import { parseJSONOrNull } from '../utils/parseJsonOrNull.js';
 
 // 0.8.82 — Durable Publication Archive Export & Import.
 //
@@ -135,14 +136,6 @@ export function importPublicationObservationArchive(payload) {
     }
     const archive = PublicationObservationArchive.fromJSON(json).withUniformProvenance(PublicationObservationArchiveProvenanceOrigin.IMPORTED);
     return Object.freeze({ outcome: PublicationObservationArchiveImportOutcome.IMPORTED, archive });
-}
-
-function parseJSONOrNull(text) {
-    try {
-        return JSON.parse(text);
-    } catch {
-        return null;
-    }
 }
 
 // 0.8.83 — the ONE durable fact describing THE ACT OF IMPORTING itself,

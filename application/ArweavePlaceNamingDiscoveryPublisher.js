@@ -1,4 +1,5 @@
 import { buildPlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { withTimeout } from '../utils/withTimeout.js';
 
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';
 // Deliberately distinct from every other Arweave Tag NAME this codebase
@@ -79,7 +80,7 @@ export class ArweavePlaceNamingDiscoveryPublisher {
         const material = JSON.stringify(envelope);
         const tag = Object.freeze({ name: this._tagName, value: discoveryTag });
 
-        const result = await withTimeout(this._uploadTaggedTransaction(material, tag), this._timeoutMs);
+        const result = await withTimeout(this._uploadTaggedTransaction(material, tag), this._timeoutMs, 'ArweavePlaceNamingDiscoveryPublisher: uploadTaggedTransaction timed out');
 
         if (result === null || result === undefined) {
             return null;
@@ -94,19 +95,3 @@ export class ArweavePlaceNamingDiscoveryPublisher {
 
 ArweavePlaceNamingDiscoveryPublisher.DEFAULT_GATEWAY_URL = DEFAULT_GATEWAY_URL;
 ArweavePlaceNamingDiscoveryPublisher.DEFAULT_TAG_NAME = DEFAULT_TAG_NAME;
-
-// Races `promise` against `timeoutMs`; rejects if the timer fires first — a
-// timeout is a genuine failure here, never collapsed to `null`. The timer
-// is always cleared, whichever settles first. Mirrors every sibling
-// publisher's own identically-named helper, deliberately not imported from
-// any of them — the same "kept deliberately separate" convention this
-// whole family already holds for itself.
-function withTimeout(promise, timeoutMs) {
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('ArweavePlaceNamingDiscoveryPublisher: uploadTaggedTransaction timed out')), timeoutMs);
-        Promise.resolve(promise).then(
-            (value) => { clearTimeout(timer); resolve(value); },
-            (error) => { clearTimeout(timer); reject(error); }
-        );
-    });
-}

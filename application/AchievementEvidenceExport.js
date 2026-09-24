@@ -11,6 +11,8 @@ import { BitcoinAnchorPublicationRecord } from './BitcoinAnchorPublicationRecord
 import { BaseAnchorPublicationRecord } from './BaseAnchorPublicationRecord.js';
 import { PublicationReferenceRecord } from './PublicationReferenceRecord.js';
 import { PublisherPublicationAssociationRecord } from './PublisherPublicationAssociationRecord.js';
+import { parseJSONOrNull } from '../utils/parseJsonOrNull.js';
+import { isPlainObject } from '../utils/typeGuards.js';
 
 const SCHEMA_VERSION = 1;
 
@@ -275,18 +277,6 @@ export function importAchievementEvidence(payload) {
 
 function stampImported(records) {
     return Object.freeze(records.map(() => PublicationObservationArchiveProvenanceOrigin.IMPORTED));
-}
-
-function parseJSONOrNull(text) {
-    try {
-        return JSON.parse(text);
-    } catch (error) {
-        return null;
-    }
-}
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function hasOnlyKeys(value, allowedKeys) {

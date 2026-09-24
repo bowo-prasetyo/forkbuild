@@ -7,6 +7,7 @@ import {
     AvatarVehicleInteractionIntent,
     isValidAvatarVehicleInteractionIntent
 } from './AvatarVehicleInteractionIntent.js';
+import { isNonEmptyString } from '../utils/typeGuards.js';
 
 // 0.9.78 — Avatar-Vehicle Mount Transition.
 //
@@ -105,10 +106,6 @@ import {
 // object in, same object out) and matches 0.9.77's own discipline that a
 // new relationship means constructing a genuinely new value, never
 // producing a look-alike copy of one that did not change.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 // The one entry point. See this file's own header for the exact,
 // ordered rule this function implements.

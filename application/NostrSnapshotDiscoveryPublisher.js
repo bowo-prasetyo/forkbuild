@@ -1,4 +1,5 @@
 import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
+import { withTimeout } from '../utils/withTimeout.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
 const DEFAULT_TAG_NAME = 't';
@@ -225,7 +226,7 @@ export class NostrSnapshotDiscoveryPublisher {
             content: JSON.stringify(described)
         });
 
-        const result = await withTimeout(this._publishImpl(this._relayUrl, eventTemplate), this._timeoutMs);
+        const result = await withTimeout(this._publishImpl(this._relayUrl, eventTemplate), this._timeoutMs, 'NostrSnapshotDiscoveryPublisher: publishImpl timed out');
 
         if (!result || result.published !== true) {
             return null;
@@ -241,22 +242,3 @@ export class NostrSnapshotDiscoveryPublisher {
 NostrSnapshotDiscoveryPublisher.DEFAULT_RELAY_URL = DEFAULT_RELAY_URL;
 NostrSnapshotDiscoveryPublisher.DEFAULT_TAG_NAME = DEFAULT_TAG_NAME;
 NostrSnapshotDiscoveryPublisher.DEFAULT_KIND = DEFAULT_KIND;
-
-// Races `promise` against `timeoutMs`; rejects if the timer fires first —
-// a timeout is a genuine failure here, never collapsed to `null`. The
-// timer is always cleared, whichever settles first. Mirrors application/
-// NostrPublicationDiscoveryPublisher.js's own identically-named helper,
-// deliberately not imported from it — see this file's own header, "a
-// different semantic contract," held here for its small private plumbing
-// too, the same "kept deliberately separate rather than cross-imported"
-// restraint content/ArweaveContentStore.js's own header already holds for
-// its own byte-length helpers.
-function withTimeout(promise, timeoutMs) {
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('NostrSnapshotDiscoveryPublisher: publishImpl timed out')), timeoutMs);
-        Promise.resolve(promise).then(
-            (value) => { clearTimeout(timer); resolve(value); },
-            (error) => { clearTimeout(timer); reject(error); }
-        );
-    });
-}

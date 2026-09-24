@@ -1,5 +1,6 @@
 import { VehicleType, isValidVehicleType } from './VehicleType.js';
 import { ANIMAL_SPECIES } from './WildlifeField.js';
+import { isNonEmptyString } from '../utils/typeGuards.js';
 
 // 0.9.670 — Avatar Inventory.
 //
@@ -78,10 +79,6 @@ import { ANIMAL_SPECIES } from './WildlifeField.js';
 // core/AvatarVehicleMount.js's own "where does `mount` live" answer);
 // vehicle/animal placement, rendering, or movement of any kind; keyboard
 // or controller input; persistence; networking; randomness; the clock.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 // The closed vocabulary this file defines for `kind` — see this file's
 // own header, "Named AvatarInventory, not AvatarVehicleInventory, on

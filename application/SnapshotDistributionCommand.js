@@ -1,3 +1,5 @@
+import { isNonEmptyString } from '../utils/typeGuards.js';
+
 // 0.9.136 — Snapshot Distribution Command.
 //
 // 0.9.131 named the boundary between Signed Claim distribution and
@@ -224,10 +226,6 @@
 // both (every caller before 0.9.566, and any caller with no placement
 // claim to carry) gets the identical `{ contentHash, locator, storage }`-
 // only announcement this file has always produced.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 // executeSnapshotDistributionCommand({ bytes, contentStore,
 //   discoveryPublisher, publicationId, claimedPosition }) ->

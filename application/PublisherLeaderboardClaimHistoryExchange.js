@@ -4,6 +4,8 @@ import {
     PublisherLeaderboardSnapshotClaimImportOutcome,
     importPublisherLeaderboardSnapshotClaim
 } from './PublisherLeaderboardSnapshotClaimExchange.js';
+import { parseJSONOrNull } from '../utils/parseJsonOrNull.js';
+import { isPlainObject } from '../utils/typeGuards.js';
 
 // 0.8.126 — Portable Claim History Exchange.
 //
@@ -397,18 +399,6 @@ export function applyPublisherLeaderboardClaimHistoryExchange(history, payload, 
 // own `canonicalRecordKey()`.
 function canonicalReceiptKey(record) {
     return JSON.stringify(record.toJSON());
-}
-
-function parseJSONOrNull(text) {
-    try {
-        return JSON.parse(text);
-    } catch (error) {
-        return null;
-    }
-}
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function hasOnlyKeys(value, allowedKeys) {

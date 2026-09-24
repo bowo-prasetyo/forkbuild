@@ -1,4 +1,5 @@
 import { WorldEncounterKind } from './WorldEncounter.js';
+import { isNonEmptyString } from '../utils/typeGuards.js';
 
 // 0.9.28 — Decentralized Lead → Encounter Resolution Boundary.
 //
@@ -122,10 +123,6 @@ import { WorldEncounterKind } from './WorldEncounter.js';
 // - **Signature verification or any trust decision about a lead, a
 //   service, or a piece of evidence.** See "No score, rank, trust..."
 //   above.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 // Pure. Describes ONE explicit piece of evidence associating a
 // decentralized discovery lead's own identity triple

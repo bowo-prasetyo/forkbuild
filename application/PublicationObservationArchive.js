@@ -20,6 +20,7 @@ import {
     PublicationObservationArchiveProvenanceOrigin,
     isValidPublicationObservationArchiveProvenanceOrigin
 } from './PublicationObservationArchiveProvenance.js';
+import { isPlainObject } from '../utils/typeGuards.js';
 
 const SCHEMA_VERSION = 10;
 
@@ -1756,10 +1757,6 @@ const REVALIDATION_OBSERVATION_RECORD_FIELDS = [
     'observed', 'decision', 'planIdentity', 'candidatePresent', 'candidateType', 'candidateMatchesPlan', 'observedAt'
 ];
 const REVALIDATION_OBSERVATION_CANDIDATE_TYPES = ['DIVERGENT_CORRESPONDENCE', 'CLAIM_WITHOUT_CORRESPONDING_SNAPSHOT', 'SNAPSHOT_WITHOUT_CORRESPONDING_CLAIM'];
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 function hasOnlyKeys(value, allowedKeys) {
     return Object.keys(value).every((key) => allowedKeys.includes(key));

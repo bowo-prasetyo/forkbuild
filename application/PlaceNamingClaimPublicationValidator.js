@@ -1,4 +1,5 @@
 import { CURRENT_SCHEMA_VERSION, PLACE_NAMING_CLAIM_PUBLICATION_KIND } from './PlaceNamingClaimPublication.js';
+import { isNonBlankString } from '../utils/typeGuards.js';
 
 // 0.5.3 — Decentralized Place Name Exchange.
 //
@@ -31,16 +32,12 @@ export class PlaceNamingClaimPublicationError extends Error {
     }
 }
 
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.trim().length > 0;
-}
-
 function validateSignature(signature, prefix) {
     if (!signature || typeof signature !== 'object') {
         throw new PlaceNamingClaimPublicationError(`${prefix}.signature is missing or not an object`);
     }
     for (const field of ['algorithm', 'signer', 'signature', 'signedHash', 'domain']) {
-        if (!isNonEmptyString(signature[field])) {
+        if (!isNonBlankString(signature[field])) {
             throw new PlaceNamingClaimPublicationError(`${prefix}.signature.${field} is missing or not a string`);
         }
     }
@@ -68,7 +65,7 @@ export function validatePlaceNamingClaimPublication(pkg) {
         throw new PlaceNamingClaimPublicationError('PlaceNamingClaimPublication: claim is missing or not an object');
     }
     for (const field of ['id', 'worldId', 'regionId', 'name', 'authorIdentityId', 'createdAt']) {
-        if (!isNonEmptyString(claim[field])) {
+        if (!isNonBlankString(claim[field])) {
             throw new PlaceNamingClaimPublicationError(`PlaceNamingClaimPublication: claim.${field} is missing or not a string`);
         }
     }

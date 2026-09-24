@@ -8,6 +8,8 @@ import {
 import {
     ReconciliationCandidateLeaderboardComparisonState
 } from './PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardComparisonState.js';
+import { parseJSONOrNull } from '../utils/parseJsonOrNull.js';
+import { isPlainObject } from '../utils/typeGuards.js';
 
 // 0.8.188 — Reconciliation Candidate Leaderboard Evidence Export Import.
 //
@@ -182,21 +184,9 @@ const VALID_REPLICA_RELATIONS = [
     ReconciliationCandidateLeaderboardReplicaRelation.TARGET_ONLY
 ];
 
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
-
 function hasExactKeys(value, keys) {
     const actual = Object.keys(value);
     return actual.length === keys.length && keys.every((key) => actual.includes(key));
-}
-
-function parseJSONOrNull(text) {
-    try {
-        return JSON.parse(text);
-    } catch {
-        return null;
-    }
 }
 
 function validateFilter(filter) {

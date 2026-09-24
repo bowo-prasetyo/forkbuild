@@ -1,4 +1,5 @@
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { withTimeout } from '../utils/withTimeout.js';
 
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';
 // Deliberately the exact literal application/ArweaveGraphqlDiscoveryQueryService.js's
@@ -320,7 +321,7 @@ export class ArweaveAnnouncementPublisher {
         const material = JSON.stringify(described);
         const tag = Object.freeze({ name: this._tagName, value: this._discoveryTag });
 
-        const result = await withTimeout(this._uploadTaggedTransaction(material, tag), this._timeoutMs);
+        const result = await withTimeout(this._uploadTaggedTransaction(material, tag), this._timeoutMs, 'ArweaveAnnouncementPublisher: uploadTaggedTransaction timed out');
 
         if (result === null || result === undefined) {
             return null;
@@ -335,20 +336,3 @@ export class ArweaveAnnouncementPublisher {
 
 ArweaveAnnouncementPublisher.DEFAULT_GATEWAY_URL = DEFAULT_GATEWAY_URL;
 ArweaveAnnouncementPublisher.DEFAULT_TAG_NAME = DEFAULT_TAG_NAME;
-
-// Races `promise` against `timeoutMs`; rejects if the timer fires first — a
-// timeout is a genuine failure here, never collapsed to `null`. Byte-for-byte
-// the same helper application/NostrPublicationDiscoveryPublisher.js already
-// defines for itself — not imported from it, since that helper is not
-// exported and the two publishers, though structurally similar, remain two
-// independent files by this whole family's own convention. The timer is
-// always cleared, whichever settles first.
-function withTimeout(promise, timeoutMs) {
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('ArweaveAnnouncementPublisher: uploadTaggedTransaction timed out')), timeoutMs);
-        Promise.resolve(promise).then(
-            (value) => { clearTimeout(timer); resolve(value); },
-            (error) => { clearTimeout(timer); reject(error); }
-        );
-    });
-}

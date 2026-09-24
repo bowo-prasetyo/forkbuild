@@ -1,4 +1,5 @@
 import { buildPlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
+import { withTimeout } from '../utils/withTimeout.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
 const DEFAULT_TAG_NAME = 't';
@@ -234,7 +235,7 @@ export class NostrPlaceNamingDiscoveryPublisher {
             content: JSON.stringify(envelope)
         });
 
-        const result = await withTimeout(this._publishImpl(this._relayUrl, eventTemplate), this._timeoutMs);
+        const result = await withTimeout(this._publishImpl(this._relayUrl, eventTemplate), this._timeoutMs, 'NostrPlaceNamingDiscoveryPublisher: publishImpl timed out');
 
         if (!result || result.published !== true) {
             return null;
@@ -250,20 +251,3 @@ export class NostrPlaceNamingDiscoveryPublisher {
 NostrPlaceNamingDiscoveryPublisher.DEFAULT_RELAY_URL = DEFAULT_RELAY_URL;
 NostrPlaceNamingDiscoveryPublisher.DEFAULT_TAG_NAME = DEFAULT_TAG_NAME;
 NostrPlaceNamingDiscoveryPublisher.DEFAULT_KIND = DEFAULT_KIND;
-
-// Races `promise` against `timeoutMs`; rejects if the timer fires first —
-// a timeout is a genuine failure here, never collapsed to `null`. The
-// timer is always cleared, whichever settles first. Mirrors application/
-// NostrSnapshotDiscoveryPublisher.js's own identically-named helper,
-// deliberately not imported from it — the same "kept deliberately
-// separate rather than cross-imported" restraint every small private
-// helper in this family already holds for itself.
-function withTimeout(promise, timeoutMs) {
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('NostrPlaceNamingDiscoveryPublisher: publishImpl timed out')), timeoutMs);
-        Promise.resolve(promise).then(
-            (value) => { clearTimeout(timer); resolve(value); },
-            (error) => { clearTimeout(timer); reject(error); }
-        );
-    });
-}

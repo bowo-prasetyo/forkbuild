@@ -1,4 +1,5 @@
 import { PublicationDistributionState } from './PublicationDistributionLifecycle.js';
+import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 
 const INVALID_FACT = Symbol('PublicationDistributionLifecycleTransition.INVALID_FACT');
 
@@ -132,14 +133,6 @@ const INVALID_FACT = Symbol('PublicationDistributionLifecycleTransition.INVALID_
 //   untouched dimension is copied through unchanged," above.
 // - **Judging whether a replacement is legitimate.** See "Replacement is
 //   not rejected, never judged," above.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 // Pure. `true` when `section` is a well-formed lifecycle section exactly as
 // 0.9.50's own `describeMaterialState()` produces — `{ state: 'ABSENT' }`

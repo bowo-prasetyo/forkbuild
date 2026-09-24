@@ -98276,3 +98276,9 @@ the connection timer and the "Be Discoverable" state app-wide instead of per pag
 `application/PublisherLeaderboardClaimSnapshotReconciliationPlanIdentity.js` and
 `anchoring/BitcoinAnchorSignedPsbtFinalizer.js`. It stays synchronous (`crypto.subtle.digest()` is Promise-only) and
 dependency-free. Fingerprints are unchanged; the plan-identity boundary test now allows exactly this one import.
+
+**Shared helpers.** Local copies of four small helpers now come from `utils/`: `isNonEmptyString()` and
+`isPlainObject()` (`utils/typeGuards.js`), `parseJSONOrNull()` (`utils/parseJsonOrNull.js`) and `withTimeout()`
+(`utils/withTimeout.js`, which takes the timeout message as a third argument so each caller keeps its own). This
+removed 61 definitions across 55 files. The eight validators whose copy trimmed whitespace now call
+`isNonBlankString()`, so both behaviors are kept.

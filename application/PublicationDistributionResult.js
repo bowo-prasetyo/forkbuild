@@ -1,4 +1,5 @@
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 
 const INVALID = Symbol('PublicationDistributionResult.INVALID');
 
@@ -170,14 +171,6 @@ const INVALID = Symbol('PublicationDistributionResult.INVALID');
 //   has no constructor, no options object, and nothing stateful to
 //   compose; it is a single pure function, usable on its own wherever a
 //   caller already has the facts.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 // Pure. Describes ONE material distribution fact — see this file's own
 // header, "material distribution and discovery publication stay two

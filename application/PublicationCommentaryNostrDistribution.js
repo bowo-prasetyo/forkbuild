@@ -1,3 +1,5 @@
+import { withTimeout } from '../utils/withTimeout.js';
+
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
 const DEFAULT_TAG_NAME = 't';
 const DEFAULT_KIND = 1;
@@ -233,7 +235,7 @@ export class PublicationCommentaryNostrDistribution {
             content: JSON.stringify(envelopeJson)
         });
 
-        const result = await withTimeout(this._publishImpl(this._relayUrl, eventTemplate), this._timeoutMs);
+        const result = await withTimeout(this._publishImpl(this._relayUrl, eventTemplate), this._timeoutMs, 'PublicationCommentaryNostrDistribution: relay operation timed out');
 
         if (!result || result.published !== true) {
             return null;
@@ -254,7 +256,7 @@ export class PublicationCommentaryNostrDistribution {
         if (typeof locator !== 'string' || !EVENT_ID_PATTERN.test(locator)) {
             return null;
         }
-        const events = await withTimeout(this._queryImpl(this._relayUrl, { ids: [locator] }), this._timeoutMs);
+        const events = await withTimeout(this._queryImpl(this._relayUrl, { ids: [locator] }), this._timeoutMs, 'PublicationCommentaryNostrDistribution: relay operation timed out');
         const event = (events || []).find((candidate) => candidate && candidate.id === locator);
         return parseEventContent(event);
     }
@@ -269,7 +271,7 @@ export class PublicationCommentaryNostrDistribution {
     // genuine queryImpl failure propagates as a rejection.
     async discover() {
         const filter = { [`#${this._tagName}`]: [this._discoveryTag] };
-        const events = await withTimeout(this._queryImpl(this._relayUrl, filter), this._timeoutMs);
+        const events = await withTimeout(this._queryImpl(this._relayUrl, filter), this._timeoutMs, 'PublicationCommentaryNostrDistribution: relay operation timed out');
         const envelopes = [];
         for (const event of (events || [])) {
             const parsed = parseEventContent(event);
@@ -298,17 +300,4 @@ function parseEventContent(event) {
     } catch {
         return null;
     }
-}
-
-// Races `promise` against `timeoutMs`; rejects if the timer fires first —
-// identical to application/NostrPublicationDiscoveryPublisher.js's own
-// helper of the same name/shape.
-function withTimeout(promise, timeoutMs) {
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('PublicationCommentaryNostrDistribution: relay operation timed out')), timeoutMs);
-        Promise.resolve(promise).then(
-            (value) => { clearTimeout(timer); resolve(value); },
-            (error) => { clearTimeout(timer); reject(error); }
-        );
-    });
 }

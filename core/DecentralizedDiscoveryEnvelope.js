@@ -1,4 +1,5 @@
 import { WorldEncounterKind } from './WorldEncounter.js';
+import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 
 // 0.9.30 — Decentralized Discovery Envelope.
 //
@@ -199,14 +200,6 @@ import { WorldEncounterKind } from './WorldEncounter.js';
 
 const SUPPORTED_ENVELOPE_PROTOCOL = 'forkbuild';
 const SUPPORTED_ENVELOPE_VERSION = 1;
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 // Pure. Describes ONE substrate-neutral ForkBuild discovery envelope out
 // of an already-parsed, plain-object `candidate` — see this file's own

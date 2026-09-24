@@ -1,3 +1,5 @@
+import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
+
 // 0.9.133 — Snapshot Discovery Envelope.
 //
 // content/ArweaveContentStore.js (0.9.132) closed the STORAGE half of the
@@ -181,14 +183,6 @@
 
 const SUPPORTED_ENVELOPE_PROTOCOL = 'forkbuild-snapshot-discovery';
 const SUPPORTED_ENVELOPE_VERSION = 1;
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 function isPresent(value) {
     return value !== undefined && value !== null;

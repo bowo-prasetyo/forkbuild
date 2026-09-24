@@ -1,3 +1,5 @@
+import { isNonEmptyString } from '../utils/typeGuards.js';
+
 // Avatar Inventory Transfer — Peer Protocol.
 //
 // The WIRE shape carried over peer/PeerMessageBus.js under this file's own
@@ -33,10 +35,6 @@ export const AvatarInventoryTransferPeerMessageKind = Object.freeze({
     ACCEPT: 'ACCEPT',
     DECLINE: 'DECLINE'
 });
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 // `entry` is a plain `AvatarInventoryEntry.toJSON()` shape — `{ id, kind,
 // type }` — never validated or hydrated here; see this file's own header.

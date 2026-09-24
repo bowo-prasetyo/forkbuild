@@ -129,20 +129,13 @@
 // validates shape only, exactly as its own header states above.
 
 import { PlaceNamingClaim } from './PlaceNamingClaim.js';
+import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 
 const SUPPORTED_ENVELOPE_PROTOCOL = 'forkbuild-place-naming-discovery';
 const SUPPORTED_ENVELOPE_VERSION = 1;
 
 const REQUIRED_CLAIM_STRING_FIELDS = ['id', 'worldId', 'regionId', 'name', 'authorIdentityId', 'createdAt'];
 const REQUIRED_SIGNATURE_STRING_FIELDS = ['algorithm', 'signer', 'signature', 'signedHash', 'domain'];
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-}
 
 function describeSignature(signature) {
     if (!isPlainObject(signature)) {

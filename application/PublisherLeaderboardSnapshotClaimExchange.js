@@ -3,6 +3,8 @@ import {
     PUBLISHER_LEADERBOARD_SNAPSHOT_CLAIM_KIND,
     CURRENT_SCHEMA_VERSION
 } from '../core/PublisherLeaderboardSnapshotClaim.js';
+import { parseJSONOrNull } from '../utils/parseJsonOrNull.js';
+import { isPlainObject } from '../utils/typeGuards.js';
 
 // 0.8.122 — Portable Signed Leaderboard Claim Exchange.
 //
@@ -252,18 +254,6 @@ export function importPublisherLeaderboardSnapshotClaim(payload, verifier) {
     }
 
     return Object.freeze({ outcome: PublisherLeaderboardSnapshotClaimImportOutcome.IMPORTED, claim, reason: null });
-}
-
-function parseJSONOrNull(text) {
-    try {
-        return JSON.parse(text);
-    } catch (error) {
-        return null;
-    }
-}
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function hasOnlyKeys(value, allowedKeys) {

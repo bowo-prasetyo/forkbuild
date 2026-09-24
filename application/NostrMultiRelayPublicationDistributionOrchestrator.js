@@ -2,6 +2,7 @@ import { composePublicationMaterialUploader } from './PublicationMaterialUploade
 import { describePublicationDistribution } from './PublicationDistributionDescriptor.js';
 import { describePublicationDistributionResult } from './PublicationDistributionResult.js';
 import { NostrMultiRelayPublicationDiscoveryPublisher } from './NostrMultiRelayPublicationDiscoveryPublisher.js';
+import { isNonEmptyString } from '../utils/typeGuards.js';
 
 // 0.9.444 — Nostr Multi-Relay Announcement Fan-Out.
 //
@@ -111,10 +112,6 @@ import { NostrMultiRelayPublicationDiscoveryPublisher } from './NostrMultiRelayP
 // files can never disagree about what a given `materialStorage` value
 // means. An omitted `materialStorage` still resolves to `'ar'`, exactly
 // where it already did — every existing caller's behavior is unchanged.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 // orchestrateMultiRelayNostrPublicationDistribution({ publication,
 //   serializedMaterial, materialStorage, arweaveUploaderOptions,

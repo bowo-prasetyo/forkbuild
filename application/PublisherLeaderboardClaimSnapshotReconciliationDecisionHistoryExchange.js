@@ -1,4 +1,6 @@
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from './PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory.js';
+import { parseJSONOrNull } from '../utils/parseJsonOrNull.js';
+import { isPlainObject } from '../utils/typeGuards.js';
 
 // 0.8.151 — Portable Reconciliation Decision History Exchange.
 //
@@ -364,18 +366,6 @@ export function applyPublisherLeaderboardClaimSnapshotReconciliationDecisionHist
 // `candidate` + `decision` + `decidedAt`), never a narrower key.
 function canonicalDecisionKey(record) {
     return JSON.stringify({ candidate: record.candidate, decision: record.decision, decidedAt: record.decidedAt });
-}
-
-function parseJSONOrNull(text) {
-    try {
-        return JSON.parse(text);
-    } catch (error) {
-        return null;
-    }
-}
-
-function isPlainObject(value) {
-    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function hasOnlyKeys(value, allowedKeys) {

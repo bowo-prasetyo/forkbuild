@@ -1,4 +1,5 @@
 import { BLUEPRINT_LINEAGE_CLAIM_KIND, CURRENT_SCHEMA_VERSION, BlueprintLineageRelationship } from '../core/BlueprintLineageClaim.js';
+import { isNonBlankString } from '../utils/typeGuards.js';
 
 // 0.6.8 — Blueprint Lineage & Revision Discovery.
 //
@@ -24,16 +25,12 @@ export class BlueprintLineageClaimPublicationError extends Error {
 
 const VALID_RELATIONSHIPS = new Set(Object.values(BlueprintLineageRelationship));
 
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.trim().length > 0;
-}
-
 function validateSignature(signature, prefix) {
     if (!signature || typeof signature !== 'object') {
         throw new BlueprintLineageClaimPublicationError(`${prefix}.signature is missing or not an object`);
     }
     for (const field of ['algorithm', 'signer', 'signature', 'signedHash', 'domain']) {
-        if (!isNonEmptyString(signature[field])) {
+        if (!isNonBlankString(signature[field])) {
             throw new BlueprintLineageClaimPublicationError(`${prefix}.signature.${field} is missing or not a string`);
         }
     }
@@ -55,7 +52,7 @@ export function validateBlueprintLineageClaimPublication(pkg) {
         throw new BlueprintLineageClaimPublicationError(`BlueprintLineageClaimPublication: unsupported schema version ${pkg.schemaVersion}`);
     }
     for (const field of ['id', 'sourceFingerprint', 'derivedFingerprint', 'authorIdentityId', 'relationship', 'createdAt']) {
-        if (!isNonEmptyString(pkg[field])) {
+        if (!isNonBlankString(pkg[field])) {
             throw new BlueprintLineageClaimPublicationError(`BlueprintLineageClaimPublication: ${field} is missing or not a string`);
         }
     }

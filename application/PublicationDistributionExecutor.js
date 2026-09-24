@@ -1,4 +1,5 @@
 import { describePublicationDistributionResult } from './PublicationDistributionResult.js';
+import { isNonEmptyString } from '../utils/typeGuards.js';
 
 // 0.9.49 — Publication Distribution Execution Boundary.
 //
@@ -212,10 +213,6 @@ import { describePublicationDistributionResult } from './PublicationDistribution
 //   already fills that role for the three concrete collaborators most
 //   callers will actually use; this file only accepts whatever a caller
 //   already assembled.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 // executePublicationDistribution({ publication, serializedMaterial,
 //   materialStorage, materialUploader, distributionDescriptor,

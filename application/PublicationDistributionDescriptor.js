@@ -4,6 +4,7 @@ import {
     DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL,
     DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION
 } from '../core/DecentralizedDiscoveryEnvelope.js';
+import { isNonEmptyString } from '../utils/typeGuards.js';
 
 const URI_SCHEME_PATTERN = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//;
 
@@ -172,10 +173,6 @@ const URI_SCHEME_PATTERN = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//;
 //   whatever a real publisher eventually announces; this milestone builds
 //   the model a future publisher will use to produce that announcement, and
 //   stops there.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 // Pure. Reads the `scheme` a `scheme://...` uri names — the identical
 // inference `application/NostrDiscoveryQueryService.js`'s own private

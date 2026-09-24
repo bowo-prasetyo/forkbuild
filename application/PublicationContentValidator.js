@@ -1,3 +1,5 @@
+import { isNonBlankString } from '../utils/typeGuards.js';
+
 // 0.9.331 — Publication Content Kind for Decentralized Discovery.
 //
 // Strict, side-effect-free STRUCTURAL validation of a Publication as it
@@ -39,16 +41,12 @@ export class PublicationContentError extends Error {
     }
 }
 
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.trim().length > 0;
-}
-
 function validateSignature(signature, prefix) {
     if (!signature || typeof signature !== 'object') {
         throw new PublicationContentError(`${prefix}.signature is missing or not an object`);
     }
     for (const field of ['algorithm', 'signer', 'signature', 'signedHash', 'domain']) {
-        if (!isNonEmptyString(signature[field])) {
+        if (!isNonBlankString(signature[field])) {
             throw new PublicationContentError(`${prefix}.signature.${field} is missing or not a string`);
         }
     }
@@ -59,7 +57,7 @@ function validatePublisherIdentity(identity, prefix) {
         throw new PublicationContentError(`${prefix}.publisherIdentity is missing or not an object`);
     }
     for (const field of ['id', 'algorithm', 'publicKey']) {
-        if (!isNonEmptyString(identity[field])) {
+        if (!isNonBlankString(identity[field])) {
             throw new PublicationContentError(`${prefix}.publisherIdentity.${field} is missing or not a string`);
         }
     }
@@ -103,7 +101,7 @@ export function validatePublicationContent(pkg) {
         throw new PublicationContentError('PublicationContent: package is missing or not an object');
     }
     for (const field of ['id', 'documentId', 'publishedAt']) {
-        if (!isNonEmptyString(pkg[field])) {
+        if (!isNonBlankString(pkg[field])) {
             throw new PublicationContentError(`PublicationContent: ${field} is missing or not a string`);
         }
     }

@@ -1,3 +1,5 @@
+import { isNonEmptyString } from '../utils/typeGuards.js';
+
 // 0.9.52 — Publication Distribution Lifecycle Store Boundary.
 //
 // 0.9.49's own executor deliberately has no memory — it runs once, returns a
@@ -474,10 +476,6 @@
 //   this codebase supplies one for `'arweave'` as of this milestone.
 // - **Any change to `getDiscoveryObservations()`'s own return shape**, or
 //   to `get`/`set`/`subscribe`'s own pre-existing contracts.
-
-function isNonEmptyString(value) {
-    return typeof value === 'string' && value.length > 0;
-}
 
 // 0.9.443 — the origin-map key used for an observation recorded WITHOUT a
 // `discoveryOrigin`, keeping that observation keyed by `discoveryProvider`

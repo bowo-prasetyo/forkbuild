@@ -1,3 +1,5 @@
+import { withTimeout } from '../utils/withTimeout.js';
+
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
 const DEFAULT_TAG_NAME = 't';
 const DEFAULT_KINDS = Object.freeze([1]);
@@ -185,7 +187,7 @@ export class NostrPlaceNamingDiscoverySource {
     async search(discoveryTag) {
         const filter = buildDiscoveryFilter(this._tagName, this._kinds, discoveryTag, this._maxResults);
 
-        const events = await withTimeout(this._queryImpl(this._relayUrl, filter), this._timeoutMs);
+        const events = await withTimeout(this._queryImpl(this._relayUrl, filter), this._timeoutMs, 'NostrPlaceNamingDiscoverySource: queryImpl timed out');
         if (!Array.isArray(events)) {
             throw new Error('NostrPlaceNamingDiscoverySource: relay query did not resolve to an array of events');
         }
@@ -228,19 +230,4 @@ function extractRawPayloads(events) {
         payloads.push(event.content);
     }
     return payloads;
-}
-
-// Races `promise` against `timeoutMs`; rejects if the timer fires first.
-// The timer is always cleared, whichever settles first. A small,
-// self-contained helper, not imported from `application/
-// NostrSnapshotDiscoveryQueryService.js`'s own identical-looking one —
-// this file imports nothing from any sibling discovery family.
-function withTimeout(promise, timeoutMs) {
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('NostrPlaceNamingDiscoverySource: queryImpl timed out')), timeoutMs);
-        Promise.resolve(promise).then(
-            (value) => { clearTimeout(timer); resolve(value); },
-            (error) => { clearTimeout(timer); reject(error); }
-        );
-    });
 }
