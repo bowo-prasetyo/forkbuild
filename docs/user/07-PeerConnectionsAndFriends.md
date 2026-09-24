@@ -109,8 +109,7 @@ never shown back to you once saved, only that one is configured. Click
 **There is deliberately no "Use Deployment Default" button here.**
 Unlike Arweave Gateway or Nostr Relays, ForkBuild ships no deployment-wide
 TURN server of its own — leaving this unconfigured simply means peer
-connections rely on STUN and direct connectivity alone, exactly as they
-always have. A TURN relay is entirely optional, and something you'd
+connections rely on STUN and direct connectivity alone. A TURN relay is entirely optional, and something you'd
 supply yourself (many WebRTC hosting providers offer one) only if
 connections to certain peers keep failing to connect directly. Like every
 other Network Settings page, a change here only takes effect on the next
@@ -132,9 +131,9 @@ whether each one is currently **Be Discoverable** and, if so, connects
 without you having to click Reconnect yourself. A Known Peer who isn't
 discoverable right now, or who can't be reached, is simply left alone —
 there's no retry loop chasing them, no notification about the attempt, and
-one identity failing never affects another. Manual **Reconnect** still works
-exactly as before, for the moment you want it to happen right now rather
-than waiting for the next automatic pass.
+one identity failing never affects another. Use **Reconnect** when you
+want it to happen right now rather than waiting for the next automatic
+pass.
 
 ## What's next?
 

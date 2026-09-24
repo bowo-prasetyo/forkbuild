@@ -8,12 +8,10 @@ you want to change something, **Edit a Copy** hands you an independent copy
 in the Editor, the one place ForkBuild ever builds — see
 [Edit a Copy](#edit-a-copy--taking-something-into-the-editor) below.
 
-World Region and Landmark naming is the one exception: naming a place you're
-standing at is annotation, not construction, so it stays right here — see
-[Landmarks](#landmarks--marking-a-place-worth-remembering) below. (Baking a
-released animal into the World as a decoration, with **G**, works the same
-way — see
-[Avatars & Presence](06-AvatarsAndPresence.md#decorating-a-world-with-an-animal).)
+The only exceptions are annotations, not construction: naming World Regions
+and [Landmarks](#landmarks--marking-a-place-worth-remembering), and baking a
+released animal into the World as a decoration with **G** (see
+[Avatars & Presence](06-AvatarsAndPresence.md#decorating-a-world-with-an-animal)).
 
 ## Opening World View
 
@@ -70,8 +68,8 @@ beside it:
   streams back out of view (on foot or by vehicle) doesn't lose your way
   home; Home still returns you to it.
 - **Locations** opens a list of every place this session currently knows
-  about, grouped into **World**, **Structures**, and **Landmarks** — each
-  with one **Focus** button. Like Search and Explore Here/What's Here?,
+  about, grouped into **World**, **Structures**, **Landmarks**, and **Places** —
+  each with one **Focus** button. Like Search and Explore Here/What's Here?,
   Focus only ever moves the camera; it never loads, selects, or edits
   anything.
 - **Notifications** opens your **Notification History** — a durable record
@@ -89,10 +87,7 @@ beside it:
 The compass shows cardinal directions (N, E, S, W) and your current heading
 in degrees, plus small dots for nearby structures, collaborators, and
 landmarks — hover one for its label, or check the readable list underneath
-the compass. As you move through the world, the terrain around you is
-generated deterministically from the world seed — grass, beach, rock, forest
-and farmland, lakes and winding rivers all follow the terrain's own elevation
-and moisture.
+the compass.
 
 ### Explore, Map, and Places — three ways to browse, never at once
 
@@ -202,15 +197,18 @@ Snapshot**.)
 The **Publication** section tracks whether the publication has
 separately been pushed through Arweave/Nostr distribution, reading
 **Absent** for both **Material** and **Discovery** until it has.
-Distributing it genuinely attempts a real upload and announcement, but on
-this device today it always ends in "Distribution could not be
-completed," because no wallet or relay connection is configured yet; the
-button and the attempt are real, the missing piece is host capability,
-not app plumbing.
+Distributing it uploads the material and announces it. Both steps are
+signed by a browser extension: an Arweave wallet (such as Wander) for
+Arweave, and a Nostr signing extension (such as nos2x) for Nostr. Without
+the matching extension installed, the attempt ends in "Distribution could
+not be completed." with the reason. A successful attempt shows the
+publication's id, its **Material** location, and its **Discovery**
+announcement id — one Discovery row per relay when you've configured
+several [Nostr relays](09-PublicationsAndEvidence.md#nostr-relays).
 
 The **Snapshot** section, right below it in the same dialog, has the same
-eligibility and the same "real attempt, honest failure" behavior, but a
-different protocol: Snapshots (see
+eligibility and needs the same extensions, but uses a different
+protocol: Snapshots (see
 [Publications & External Evidence](09-PublicationsAndEvidence.md#local-snapshot))
 are placed and discovered independently of Signed Claim distribution, so
 this section never shares state, history, or a result with the
@@ -229,8 +227,7 @@ loads and checks out — it's also admitted into the same catalog behind
 the [Repository](04-PublishingAndForking.md#the-repository)'s own search
 and every Author page, exactly as if it had been found the ordinary way:
 searching the Repository, or opening its author's page, now turns it up
-too, for the rest of this browser session (a reload forgets it, the same
-way My Worlds and everything else session-scoped in this app does).
+too, and it stays there after a reload.
 There's no separate badge or label marking it as "found via a peer" once
 it's in — a Repository card or Author-page listing looks identical either
 way, since by that point your own device has independently verified the
@@ -242,9 +239,8 @@ Still inside the World Encounters group, but needing no marker click and
 no connected peer at all, is a **Publication Discovery** button that opens
 a small popup of its own. Inside sits the **Discover Publication** panel:
 enter a **Publication id** and the **discovery tag** it was distributed
-under, then click **Discover Publication** to query Arweave (and, once
-this device has a relay connection, Nostr) directly for it. The discovery
-tag field starts prefilled with ForkBuild's own shared campaign tag — the
+under, then click **Discover Publication** to query Arweave and Nostr
+directly for it. The discovery tag field starts prefilled with ForkBuild's own shared campaign tag — the
 one a publication distributed from inside this app would have used — so
 in the common case you only need to type the Publication id; it stays a
 plain, freely editable field if you need to point it at a different tag.
@@ -435,10 +431,9 @@ clicking a search result's **Focus** button, moves the camera there.
 **Editing** is whichever document your next action (adding a landmark or
 region, editing metadata, publishing) would actually apply to — clicking a
 brick or placement, or a search/location result's **Select** button,
-changes it *without* moving the camera. (Editing bricks themselves is
-Editor-only now — see [Edit a Copy](#edit-a-copy--taking-something-into-the-editor)
-above; nothing you can do to a brick in World View changes which document
-is "being edited" here.)
+changes it *without* moving the camera. (Changing the bricks themselves
+only happens in the Editor — see
+[Edit a Copy](#edit-a-copy--taking-something-into-the-editor) above.)
 
 The two usually move together (Focus does both), but two creations can share
 the exact same spot in the world — focusing one, then the other, moves the
@@ -446,13 +441,12 @@ camera nowhere the second time, yet the header still tells you which one
 you're now editing. Flying around and looking at things never changes what
 you're editing on its own; only actually selecting a brick or a document does.
 
-**"Go," on Explore's Nearby rows and on the Focus panel's own camera-move
-button (see [Edit a Copy](#edit-a-copy--taking-something-into-the-editor)
-above), names the same camera-move mechanic as the "Focus" buttons in
-Search, Locations, and Placement above** — a different word for the
-identical kind of operation depending on which panel you're in, not a
-different one. What else moving the camera does — whether it also
-changes the document you're editing, as Search's own Focus does above —
+"Go," on Explore's Nearby rows and on the Info panel,
+names the same camera-move mechanic as the "Focus" buttons in
+Search, Locations, and Placement — only the label differs; each one
+moves the camera. What else
+it does — whether it also changes the document you're editing, as
+[Search](#search--which-publications-match-this)'s own Focus does —
 still depends on context exactly as described in each panel's own
 section; saying "Go" instead of "Focus" changes none of that.
 
@@ -576,10 +570,8 @@ instance (and the original) untouched, use that one instead of Open
 Source.
 
 Every "Edit a Copy" button in World View — here, and on a region/landmark/
-structure's own Focus panel — is the same action, described in full in
-[Edit a Copy](#edit-a-copy--taking-something-into-the-editor) below. You
-don't have to go find something in a list first; clicking on it directly
-works too.
+structure's own Focus panel — is the same action; see
+[Edit a Copy](#edit-a-copy--taking-something-into-the-editor) above.
 
 ## Document Information and Placement
 
@@ -613,28 +605,18 @@ first.
 If a placement belongs to someone else, the Placement panel shows
 **🔒 Placed by &lt;name&gt; — you can view this placement but not move it**
 and the **Move** button is disabled. You can still **Focus** it, inspect it,
-and — subject to the usual fork-on-edit rule — edit the document sitting at
-that placement; only *where it sits in shared space* is theirs to move.
+and use **Edit a Copy** to build on what's there; only *where it sits in
+shared space* is theirs to move.
 
 ## World View is read-only — building happens in the Editor
 
-World View is for looking around, not building: there's no Place tool, no
-transform gizmo, no copy/paste, no groups, and clicking a brick selects it
-for **inspection only** — nothing about clicking, dragging, or pressing a
-key here ever changes a brick. The moment you want to build on something
-you found, use its Focus panel's **[Edit a Copy](#edit-a-copy--taking-something-into-the-editor)**
-button to open an independent copy in the Editor — the one place ForkBuild
-ever builds. See [The Editor](02-TheEditor.md) for placing, transforming,
-grouping, and every other construction tool.
+There's no Place tool, no transform gizmo, no copy/paste, and no groups
+here — clicking, dragging, or pressing a key never changes a brick. To
+build on something, use **[Edit a Copy](#edit-a-copy--taking-something-into-the-editor)**
+and continue in [The Editor](02-TheEditor.md). The annotation exceptions
+listed at the top of this guide still apply.
 
-World Region and Landmark naming is the one exception — see
-[Landmarks](#landmarks--marking-a-place-worth-remembering) above — because
-naming a place is annotation, not construction. Animal decorations (the
-**G** key — see
-[Avatars & Presence](06-AvatarsAndPresence.md#decorating-a-world-with-an-animal))
-follow the same rule.
-
-### Seeing other collaborators
+## Seeing other collaborators
 
 When multiple people are present in the same World:
 
@@ -648,8 +630,8 @@ When multiple people are present in the same World:
 
 > **Presence describes activity; it never changes anything on its own.**
 > Spatial presence helps you understand what others are doing, but only an
-> actual mutation — always in the Editor now, except Region/Landmark
-> naming — changes the shared environment.
+> actual change — made in the Editor, or one of World View's annotation
+> exceptions — changes the shared environment.
 
 ## Save and publish here, too
 
@@ -657,6 +639,14 @@ The header has **Save**, **Publish**, and **Edit Metadata** buttons whenever
 you're editing something, so you can capture and share a world without
 leaving it. The status line (**🔒 Published** or **✎ Editing fork**) always
 shows which one it is.
+
+A published world can never change. If the world you're editing is
+published, your first change here — editing its metadata, adding or
+renaming a landmark or region, or decorating it with an animal —
+automatically creates your own editable copy, titled *"Fork of &lt;original
+name&gt;"*, and a short notice ("Created your own editable copy — … is
+unchanged") tells you so. It follows the same license rules as any other
+fork (see [Publishing & Forking](04-PublishingAndForking.md#forking-make-it-your-own)).
 
 ### My Publication — distributing your own Snapshot, no peers required
 
@@ -688,9 +678,8 @@ one-click button here.
 The point of My Publication is that it never depends on World Encounters
 having anything to show. World Encounters only ever displays what a
 currently or recently connected peer has told you about — with nobody
-else around, it stays empty, and used to leave no way to distribute your
-own material at all. My Publication needs none of that: it's always here
-whenever you have a world open, whether or not anyone else is nearby, and
+else around, it stays empty. My Publication needs none of that: it's
+always here whenever you have a world open, whether or not anyone else is nearby, and
 whether or not it's currently published (until you publish it, the button
 is simply disabled, with a note that there's nothing to distribute yet).
 
@@ -729,8 +718,8 @@ its own explicit click — nothing here chains, retries, or ranks a
 candidate for you; it's the same restraint every other manual, one-step-
 at-a-time flow in ForkBuild already holds to.
 
-**The automatic path this popup is a fallback for now draws from more
-than just this device.** As you walk, ForkBuild periodically checks for
+**The automatic path this popup is a fallback for draws from more than
+just this device.** As you walk, ForkBuild periodically checks for
 Snapshot candidates behind the scenes — the same check **Discover
 Snapshots** above runs by hand — composing whatever this device already
 holds locally, whatever a connected peer has passively shared (simply by
@@ -743,36 +732,28 @@ Diagnostic Tools' own manual buttons above still work exactly as
 described, unchanged, for whenever this passive path doesn't turn up
 what you're looking for yourself.
 
-## The Operation Timeline
+## History — previewing and restoring earlier states
 
-This is one of ForkBuild's most powerful features. Every change you make —
-here, that means adding, renaming, or removing a landmark or region — is
-recorded as an **operation**, and the timeline lets you travel through them.
-
-Click **Timeline** in the overlay to open it. You'll see a list like:
+Every change you make here — adding, renaming, or removing a landmark or
+region — is recorded in the document's history. Click **History** in the
+header to open it. You'll see a numbered list with timestamps, like:
 
 ```
-Add Landmark "Old Bridge"
-Rename Region "Willow Village"
-Remove Landmark "Great View"
+1. Add Landmark "Old Bridge"
+2. Rename Region "Willow Village"
+3. Remove Landmark "Great View"
 ```
 
-### Preview any moment
+Entries you've undone are marked **undone**. Clicking an entry only
+selects it; nothing changes until you press one of the buttons:
 
-Click an operation to **preview** what the world looked like *right after* that
-step. Keep clicking to scrub backward and forward through your build history.
-
-> **Previews never change anything.** You're just looking. Click **Cancel
-> Preview** to return to where you are.
-
-### Restore an earlier state
-
-While previewing, click **Restore Here** to make that historical state your
-**current** one. ForkBuild will ask you to confirm, because this replaces your
-present edits.
-
-This is invaluable when an experiment goes wrong — just travel back to the last
-good moment and restore it.
+- **Preview** — shows what the world looked like *right after* the
+  selected step, alongside the live one, without changing anything.
+  **Cancel Preview** returns to the present.
+- **Restore** — makes the selected step your **current** state. The
+  document is left with unsaved changes, so you can still decide whether
+  to save it. There's no separate confirmation.
+- **Close** — closes the panel.
 
 ## What's next?
 

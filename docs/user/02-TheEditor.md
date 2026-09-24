@@ -5,28 +5,25 @@ transform bricks, and how to organize your build with groups.
 
 ## The layout
 
-`
-<pre>
-┌────────────────────────────────────────────────────────────┐
-│ Toolbar: Save · Publish · New · Saved ● · Recent │
-├──────────────┬─────────────────────────────────────────────┤
-│ Tools │ │
-│ Select │ │
-│ Place │ 3D Viewport │
-│ │ │
-│ Build Library │ │
-│ [Bricks|Structures] │ │
-│ │ │
-│ Selection │ │
-│ Transform │ │
-│ Groups │ │
-│ Clipboard │ │
-└──────────────┴─────────────────────────────────────────────┘
-</pre>
-`
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Toolbar: Save · Publish · New · Export · Import · Recent ·  │
+│          ⌨ Shortcuts                                        │
+├──────────────────────┬──────────────────────────────────────┤
+│ Tools                │                                      │
+│   Select · Place     │                                      │
+│ Build Library        │            3D Viewport               │
+│   [Bricks|Structures]│                                      │
+│ Selection            │                                      │
+│ Transform            │                                      │
+│ Groups               │                                      │
+│ Clipboard            │                                      │
+└──────────────────────┴──────────────────────────────────────┘
+```
 
-
-- **Toolbar** — save, publish, start a new creation, and reopen recent ones.
+- **Toolbar** — save, publish, start a new creation, export or import a
+  document as a file, reopen recent ones, and open the **⌨ Shortcuts**
+  overlay (also `?`).
 - **Tools** — switch between **Select** (`1`) and **Place** (`2`).
 - **Build Library** — a search box and two tabs:
   - **Bricks** — everything you can place with the Place tool, grouped by
@@ -111,25 +108,32 @@ Every brick type has its own default color, but you can choose your own:
 A brick's color is saved with your creation and travels with it when you
 publish or share it.
 
-## Precise transforms: alignment, distribution, and numeric input
+## Precise transforms: numeric input, alignment, and repeat
 
-The sidebar's **Transform** section (below Selection) gives you two more
-exact ways to move a selection, alongside the gizmo and the keys above:
+The sidebar's **Transform** section (below Selection) gives you more exact
+ways to move a selection, alongside the gizmo and the keys above:
 
-- **Alignment & Distribution** — nine buttons to align the whole selection's
-  edges or centers on a world axis (Left/Center/Right, Bottom/Center/Top,
-  Front/Center/Back), plus three to spread it evenly (Distribute X/Y/Z).
-  Alignment needs **2+ bricks** selected; distribution needs **3+**.
 - **Numeric Transform** — type exact X/Y/Z/Rotation values instead of
   dragging. Toggle **Absolute** (the values are a target for the selection's
   pivot/orientation) or **Offset** (the values are added as a delta), then
   press **Apply** (or `Enter` in a field). An empty field means "leave this
   unchanged," never zero.
+- **Alignment & Distribution** (under **Advanced**) — nine buttons to align
+  the whole selection's edges or centers on a world axis (Left/Center/Right,
+  Bottom/Center/Top, Front/Center/Back), plus three to spread it evenly
+  (Distribute X/Y/Z). Alignment needs **2+ bricks** selected; distribution
+  needs **3+**.
+- **Repeat** (under **Advanced**) — makes **N** more copies of the
+  selection, evenly spaced along one axis. If any copy would collide, no
+  copies are made at all.
 
-Either way, the whole operation is **one undo step**, exactly like a gizmo
-drag or a keyboard nudge — see the
+Each of these is **one undo step**, exactly like a gizmo drag or a keyboard
+nudge — see the
 [Controls Reference](ControlsReference.md#transform--numeric-panel-editor-only) for the
 full field-by-field behavior.
+
+The Selection section's **Focus Selection** button frames the camera on
+the selected bricks without changing anything.
 
 > **Collisions are blocked.** Dragging the gizmo or nudging with the keyboard
 > checks the result against every brick outside the selection. If releasing
@@ -174,18 +178,20 @@ Groups let you name and reuse collections of bricks — like "Roof" or "Windows"
 
 **Create a group:**
 1. Select some bricks.
-2. In the **Groups** panel, click **+ Group Selection** and give it a name.
+2. In the **Groups** panel, click **Create**, then give it a name with
+   **Rename** (below).
 
-**Use a group:**
+**Use a group:** click a group's name in the list to select it (and its
+bricks). The buttons under the panel's **Advanced** section act on
+whichever group is selected:
 
 | Button | What it does |
 |---|---|
-| **Select** | Selects all the bricks in that group |
-| **+Sel** | Adds your current selection to the group |
-| **−Sel** | Removes your current selection from the group |
 | **Rename** | Change the group's name |
 | **Duplicate** | Copy the whole group *and* its bricks |
 | **Delete** | Delete the group (the bricks themselves are kept) |
+| **+Sel** | Adds your current selection to the group |
+| **−Sel** | Removes your current selection from the group |
 
 > **Good to know:** Selecting a group just selects its bricks — it never
 > changes the group. And deleting a group only removes the *label*, not the
@@ -368,8 +374,9 @@ exactly what keeps every instance of it in sync.
 ## Document Properties
 
 Every creation has a **title**, an optional **description**, and a
-**license** — set them by clicking **Edit Metadata** (in World View) or the
-first time you save a brand-new document. The description shows up as a
+**license** — set them with the **Edit Metadata** button in the Editor's
+document info panel (or in World View), or the first time you save a
+brand-new document. The description shows up as a
 snippet on its Repository card and is searchable there too; the license
 controls whether — and how — other people are allowed to fork it. See
 [Publishing & Forking](04-PublishingAndForking.md) for what each license

@@ -4,46 +4,30 @@ This guide covers the **Publications** page — a different, more technical
 layer than the Repository you already know from
 [Publishing & Forking](04-PublishingAndForking.md). Where the Repository is
 about *Documents and Worlds*, Publications is about **signed claims**: "I
-authored this structure" or "I'm calling this place X" — and, once you have
-one, several independent kinds of optional depth you can attach to it:
-**external evidence** that the claim was recorded somewhere independent of
-ForkBuild, like a Bitcoin transaction that timestamps it; **snapshot
-placements** that name where the claim's own content can currently be
-retrieved from, like an IPFS node, plus a standing [**Content
-Provider**](#using-a-preferred-provider) preference so a **Use Preferred
-Provider** button can pick one for you instead of naming a backend every
-time; an [**IPFS Publishing**](#ipfs-publishing)
-section that explicitly publishes a claim's content to a remote pinning
-provider and independently verifies it's still retrievable; a **Local
-Snapshot** section that reports what your own device already holds and lets
-you actually pull those bytes in, from a placement, from a peer, or from a
-file someone hands you; and a **Decentralization** overview that puts your
-evidence and placements side by side; and, separately, two full,
-independent pipelines that each connect a real browser wallet and walk a
-real transaction all the way from observed funding to a broadcast,
-on-chain-observed anchor — a
-[Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) and, one chain
-over, a [Base Anchor Pipeline](#the-base-anchor-pipeline) — plus the
-durable, cross-chain [Publication Observation Archive](#the-publication-observation-archive)
-both pipelines (and IPFS Publishing) quietly write their own facts into;
-and, built on top of the durable publication identities those two
-pipelines mint, an explicit [**Publication References**](#publication-references)
-relationship between two publications (and a graph view over all of
-them), an [**Achievements**](#achievements) system that quietly badges a
-publication identity's own milestones, and a [**Publisher
-Identity**](#publisher-identity) layer that lets you explicitly associate
-a self-declared publisher label with your publications and see that
-publisher's own achievements and stats; and, orthogonal to all of it, an
-open [**Commentary**](#commentary) system letting any signed-in identity
-leave a short comment on any publication, which notifies that
-publication's own publisher through World View's
-[Notification History](03-WorldView.md#orientation-and-locations). None of
-these are required by any other, and none are required to use the rest of
-ForkBuild.
+authored this structure" or "I'm calling this place X" — plus several
+independent kinds of optional depth you can attach to a claim:
 
-None of this is required to use ForkBuild. Skip this guide entirely if you
-just want to build, publish Documents, and explore — everything in
-[The Editor](02-TheEditor.md), [World View](03-WorldView.md), and
+- [**Commentary**](#commentary) — open comments on any publication, which
+  notify its publisher.
+- [**Local Snapshot**](#local-snapshot) — what your own device holds for a
+  claim's content, and how to bring those bytes in.
+- [**External Evidence**](#external-evidence) — independent records (such
+  as a Bitcoin, Base, or Arweave transaction) that a claim existed at a
+  certain time, including two wallet-driven pipelines:
+  [Bitcoin](#the-bitcoin-anchor-pipeline) and [Base](#the-base-anchor-pipeline).
+- [**Snapshot Placements**](#snapshot-placements) — signed pointers to where
+  a claim's content can be retrieved, such as IPFS or Arweave.
+- [**Network Settings**](#network-settings) and
+  [**IPFS Publishing**](#ipfs-publishing) — providers, gateways, relays, and
+  a remote pinning service.
+- The durable [**Publication Observation Archive**](#the-publication-observation-archive),
+  and on top of it [**Publication References**](#publication-references),
+  [**Achievements**](#achievements), [**Publisher Identity**](#publisher-identity),
+  and the [**Leaderboard**](#leaderboard-hub) pages.
+
+None of this is required to use ForkBuild. Skip this guide entirely if you just want to build, publish
+Documents, and explore — everything in [The Editor](02-TheEditor.md),
+[World View](03-WorldView.md), and
 [Publishing & Forking](04-PublishingAndForking.md) works exactly the same
 without ever visiting this page.
 
@@ -64,15 +48,14 @@ word.
 
 ## Where a publication comes from
 
-You never create a publication directly from the Publications page itself —
-it's a read-only catalog of claims that reached this device some other way.
-There are two kinds today:
-
-(A signed authorship or place-name claim can also arrive without a peer at
-all, discovered directly from a decentralized network — see
-[Discover Publication](03-WorldView.md#discover-publication--searching-decentralized-networks-directly)
-and [Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone)
-in World View.)
+The catalog of claims on the Publications page is filled from elsewhere —
+you never create a claim on this page itself. A claim is either one you
+made (authorship of a structure, or a place name), one a peer sent you, or
+a Repository creation that arrived in decentralized form, each described
+below. A place-name claim can also be found without any peer, straight
+from a decentralized network — see
+[Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone)
+in World View.
 
 ### Claiming authorship of a structure
 
@@ -95,7 +78,7 @@ Open the naming panel for a Region or Landmark in World View and use
 [Geographic places](03-WorldView.md#geographic-places). Publishing a name
 works the same way: it announces a signed claim to your connected peers.
 
-That reaches anyone currently connected, but it's not yet what
+That reaches anyone currently connected, but it's not what
 [Nearby Place Names](03-WorldView.md#nearby-place-names--discovering-claims-from-anyone)
 searches — that reads a decentralized network (Nostr) directly, with no
 peer involved at all. To make a claim reachable that way too, open the
@@ -118,12 +101,10 @@ time. Cataloging a publication only ever means your device has **seen a
 validly signed claim** — never that whatever it points to is sitting on your
 device right now, which is exactly what the page's status badge tells you.
 Reaching **Available** for something a peer catalogued this way still needs
-its own separate step: **Retrieve from Peers**, below, for a claim of
-authorship or a place name, or **Retrieve** on the Repository entry itself
-for a decentralized Repository creation (see the next section) — arriving in
-your catalog and having its content on hand are always two different facts.
+its own separate step — **Retrieve from Peers**, below. Arriving in your
+catalog and having its content on hand are always two different facts.
 
-### A third kind: a Repository creation, decentralized
+### A Repository creation, decentralized
 
 Authorship attributions and place names aren't the only content this page
 can carry. A card can also hold a **Publication** — the same kind of
@@ -131,12 +112,10 @@ object behind an ordinary Repository listing (see
 [Publishing & Forking](04-PublishingAndForking.md)), signed and wrapped
 for decentralized travel. If one ever reaches your Publications page this
 way and you resolve it — with **Re-check** or **Retrieve from Peers** — it
-gets folded into the Repository's own search results, your Author page,
-and World View exploration for the rest of this browser session, exactly
-as if it had been found the ordinary way; a reload forgets it. Nothing in
-ForkBuild today actually *produces* one of these from the ordinary
-**Publish** button — this is groundwork for a future decentralized
-publish path, not a flow you can start from either end yet.
+gets folded into the Repository's own search results, its author's page,
+and World View exploration, exactly as if it had been found the ordinary
+way — and it's still there after a reload. The ordinary **Publish** button
+doesn't create one of these cards; they only arrive from elsewhere.
 
 ## The Publications page
 
@@ -216,9 +195,8 @@ mechanically.
 ## Commentary
 
 Any signed-in identity can leave a short comment on any publication that
-exists — an authorship attribution or a place name claim, either kind —
-the same open, readable-by-anyone posture the rest of the Publications
-system already has. There's no ownership check, no friendship or
+exists — a Repository creation, an authorship attribution, or a place-name
+claim. There's no ownership check, no friendship or
 peer-connection requirement, and no moderation: if a publication resolves
 at all (see [Where a publication comes from](#where-a-publication-comes-from)),
 you can comment on it.
@@ -229,8 +207,8 @@ Commentary is reachable wherever a publication is shown:
   row of the list view, has a **Comment** button that opens its comments.
 - **World View's**
   [**My Publication**](03-WorldView.md#my-publication--distributing-your-own-snapshot-no-peers-required)
-  panel — your own currently open, published world. Scroll below the
-  Distribute Snapshot button to its **Commentary** section.
+    panel — your own currently open, published world. Scroll down to its
+  **Commentary** section.
 - **World Encounters** — a selected encounter's panel has its own
   **Comment** button.
 
@@ -485,9 +463,7 @@ out:
 | **Content hash** | The content hash this observation was made against. |
 
 Expanding one row never affects any other row, and never affects the
-comparison table or its counts above. This is the same distinction drawn
-throughout this section, restated one more time because it's easy to
-lose sight of once a history builds up: an observation records what a
+comparison table or its counts above. An observation records what a
 peer said *at that moment* — it's never rewritten by anything that peer
 does afterward. If Alice reports **Available** at 20:21 and later deletes
 her own copy, that row still reads **Available** at 20:21; only a *new*,
@@ -626,23 +602,26 @@ available or well-formed.
 
 ### Creating evidence
 
-If this device has an evidence publisher configured, you'll see a card per
-type it can create (today, that's Bitcoin — labeled **Bitcoin Op Return**,
-the specific technique used to write a hash into a Bitcoin transaction):
+You'll see a card per type of evidence this device can create —
+**Bitcoin** and **Arweave** — each with its own button:
 
-- **Create Bitcoin Op Return Anchor** records a claim that this
-  publication's content hash was written into a real Bitcoin transaction.
-  Clicking it always produces one of three honest outcomes:
+- **Create Bitcoin Anchor** / **Create Arweave Anchor** records a claim
+  that this publication's content hash was written into a real transaction
+  on that network. Clicking it always produces one of three outcomes:
   - **Anchor created** — the recording succeeded, and the new anchor
     immediately appears below, unverified.
   - **Recording rejected** — the external system was reached and refused.
   - **No anchor was created** — the external system couldn't currently be
-    reached (or nothing on this device is configured to publish to it yet
-    — this build ships no real Bitcoin wallet, so you'll always see this
-    outcome unless one has been connected).
-- Clicking again after a success offers **Create Another Bitcoin Op Return
-  Anchor** — a second, fully independent anchor, never a replacement for
-  the first.
+    reached, or this device can't sign for it. **Create Bitcoin Anchor**
+    always ends here, because this one-click button has no Bitcoin wallet
+    behind it — use [The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline)
+    instead. **Create Arweave Anchor** needs an Arweave wallet extension
+    (such as Wander).
+- Clicking again after a success offers **Create Another … Anchor** — a
+  second, fully independent anchor, never a replacement for the first.
+
+Base anchors are created differently — see
+[Creating a Base anchor in one step](#creating-a-base-anchor-in-one-step).
 
 Creating evidence never verifies it. A freshly created anchor shows up in
 the list below exactly like any other, "Not yet verified," until you check
@@ -667,11 +646,10 @@ do, and never touches an anchor you already created. **Base** is never
 offered as a preferred provider: every Base anchor needs you to review
 and sign a wallet transaction at the moment it's made, so use its own
 flow in [The Base Anchor Pipeline](#the-base-anchor-pipeline) below.
-Likewise, Bitcoin anchoring is wallet-guided and multi-step — a Bitcoin
-button here only succeeds once a transaction has been connected, funded,
-built, reviewed, signed, finalized, and broadcast in the card's Bitcoin
-section (see [The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline)
-below).
+Choosing **Bitcoin** here behaves like **Create Bitcoin Anchor** above and
+always reports **No anchor was created**; real Bitcoin transactions go
+through [The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline)
+below.
 
 ### Discover from Peers
 
@@ -802,7 +780,7 @@ labels in the table above.
 
 ### Bitcoin Anchor: confirmation and content-proof reconciliation
 
-Every **Bitcoin Op Return** anchor's own expanded card also has a second,
+Every Bitcoin anchor's own expanded card also has a second,
 independent way of checking on it, alongside **Verify Evidence** above: a
 **Bitcoin Anchor** section that asks two narrower, more mechanical
 questions and shows the answers side by side — never merged into one
@@ -861,9 +839,9 @@ content proof is ever shown.
 ## The Bitcoin Anchor Pipeline
 
 Everything above in [External Evidence](#external-evidence) either creates
-an anchor through **Create Bitcoin Op Return Anchor** — which, in this
-build, always reports **No anchor was created**, since nothing behind that
-button holds a real wallet — or inspects an anchor that already exists.
+an anchor through **Create Bitcoin Anchor** — which always reports **No
+anchor was created**, since nothing behind that button holds a real
+wallet — or inspects an anchor that already exists.
 Separately from that, the Publications page has a full, step-by-step
 pipeline that connects an actual browser wallet, builds a real transaction
 plan for a publication's content hash, has the wallet sign it, verifies
@@ -887,23 +865,21 @@ never chained or automated.
   failing silently.
 - A wallet account funded with real, spendable bitcoin, using a **native
   SegWit address** (one starting `bc1q…`). This pipeline can *observe*
-  funding for other address types, but can only carry a **Taproot**
-  (`bc1p…`) or **legacy** (`1…`/`3…`) account through to a *signable*
-  transaction — for anything else, the review step honestly reports it
-  isn't reviewable yet, rather than guessing.
+    funding for other address types, but can't carry a **Taproot**
+  (`bc1p…`) or **legacy** (`1…`/`3…`) account through to a signable
+  transaction — the review step reports that it isn't reviewable.
 - At least one publication already on your own Publications page (see
   [Where a publication comes from](#where-a-publication-comes-from)) — the
   transaction plan anchors that publication's own content hash.
 
 ### Connecting a wallet
 
-The **Bitcoin Wallet** control lives inside an existing **Bitcoin Op
-Return** anchor's own expanded card — click **Show Evidence** on a
-publication that already has one (see
-[The evidence list](#the-evidence-list)), then look underneath that
-anchor's own fields. Since **Create Bitcoin Op Return Anchor** never
-actually succeeds in this build, you'll need to have received an anchor
-from a peer, or imported one, before you have a card to expand — see
+The **Bitcoin Wallet** control lives inside an existing Bitcoin anchor's
+own expanded card — click **Show Evidence** on a publication that already
+has one (see [The evidence list](#the-evidence-list)), then look
+underneath that anchor's own fields. Since **Create Bitcoin Anchor** never
+succeeds, you'll need to have received an anchor from a peer, or imported
+one, before you have a card to expand — see
 [Where a publication comes from](#where-a-publication-comes-from) and
 [Discover from Peers](#discover-from-peers).
 
@@ -959,7 +935,7 @@ and can already be stale by the time you look at it again. Outcomes:
 
 | State | Meaning |
 |---|---|
-| **Funding observed** | Shows the number of UTXOs found (expand **Show Funding Inputs** to see each one), their total value, the account's own script type, and the change destination — always the same account, since this build never asks a wallet extension which address to send change to. |
+| **Funding observed** | Shows the number of UTXOs found (expand **Show Funding Inputs** to see each one), their total value, the account's own script type, and the change destination — always the same account, since ForkBuild never asks a wallet extension which address to send change to. |
 | **Unsupported address format** | A real address ForkBuild simply has no fee-estimation support for yet (for example, a legacy P2SH `3…` address). |
 | **Funding unavailable** | The funding source couldn't currently be reached. |
 
@@ -1058,7 +1034,7 @@ offline. Outcomes:
 | **Signature did not verify** | It didn't — a wrong key, a wrong signature, or a signature over the wrong data. |
 | **Finalization failed** | Some other unacceptable result, distinct from a definite bad signature. |
 
-Today, this can only finalize a **native SegWit (P2WPKH)** input — the one
+This can only finalize a **native SegWit (P2WPKH)** input — the one
 script type this pipeline can fully decode and verify. A Taproot or legacy
 account's transaction review will already have told you it wasn't
 reviewable, before you ever reached this step.
@@ -1115,16 +1091,15 @@ However far you take a transaction through this pipeline — even all the
 way to **Transaction confirmed** — it never, on its own, creates a
 cataloged **External Evidence** entry on this or anyone else's
 Publications page. Nothing here calls the same code
-**Create Bitcoin Op Return Anchor** does, and this pipeline's own review,
+**Create Bitcoin Anchor** does, and this pipeline's own review,
 signing, and broadcast/confirmation *screens* are ephemeral: shown for
 this visit, and replaced or cleared the moment you build a new plan, sign
 again, or reload the page. One narrow fact is the exception — see
 **Bitcoin Anchor Publications**, next — and every broadcast and
 confirmation result also joins the durable
 [Publication Observation Archive](#the-publication-observation-archive).
-Publishing your own real, on-chain-anchored transaction as an evidence
-claim other people can discover is separate work this build doesn't yet
-connect for you.
+The pipeline doesn't turn your broadcast transaction into an evidence
+claim other people can discover.
 
 ### Bitcoin Anchor Publications: a durable identity and lifecycle
 
@@ -1272,7 +1247,7 @@ transaction data. Nothing is signed or broadcast by constructing this —
 it only names the nonce, gas limit, and fee figures the account was
 observed with, and the exact bytes the transaction would carry.
 
-[Create Transaction Plan]
+[Create Base Transaction Plan]
 ```
 
 Unlike Bitcoin's OP_RETURN output, a Base anchor is a **self-transfer**: an
@@ -1289,8 +1264,8 @@ however stale that's become. Outcomes:
 | **Base network unavailable** | The account observation, or a fee/nonce figure needed to build the plan, couldn't currently be obtained. |
 | **Unable to construct transaction** | Construction failed for some other reason. |
 
-A fresh **Create Transaction Plan** click always replaces whatever was
-previously under review, signed, finalized, or broadcast for this
+A fresh **Create Base Transaction Plan** click always replaces whatever
+was previously under review, signed, finalized, or broadcast for this
 publication.
 
 ### Reviewing and signing
@@ -1356,19 +1331,16 @@ consume the other. Outcomes:
 
 | Badge | Meaning |
 |---|---|
-| **Anchor created** | The whole sequence succeeded — a real, broadcast Base transaction now exists, and a new anchor for it immediately appears in this publication's own [evidence list](#the-evidence-list), expanded, exactly like clicking **Create Bitcoin Op Return Anchor** would if this build shipped a real Bitcoin wallet. |
+| **Anchor created** | The whole sequence succeeded — a real, broadcast Base transaction now exists, and a new anchor for it immediately appears in this publication's own [evidence list](#the-evidence-list), expanded. |
 | **Recording rejected** | Signing, finalizing, or broadcasting reached a definite no. |
 | **No anchor was created** | The wallet or network couldn't currently be reached. |
 
 Clicking again after a success offers **Create Another Base Anchor** — a
-second, fully independent anchor, never a replacement for the first —
-exactly like the one-click Bitcoin/Arweave evidence buttons in
-[Creating evidence](#creating-evidence) above. Unlike that Bitcoin
-button, which always reports **No anchor was created** in this build for
-want of a real wallet, this one genuinely works: Base's wallet
-connection is real end to end, so **Create Base Anchor** can and does
-move a real transaction on whatever network your connected wallet
-reports, exactly like the step-by-step pipeline it's an alternative to.
+second, fully independent anchor, never a replacement for the first.
+Unlike **Create Bitcoin Anchor** in [Creating evidence](#creating-evidence),
+this button uses your connected wallet, so it moves a real transaction on
+whatever network your wallet reports, exactly like the step-by-step
+pipeline it's an alternative to.
 
 ### Verifying and finalizing
 
@@ -1468,24 +1440,24 @@ for its exact txid into one chronological read.
 
 Base's own lifecycle carries only **two** entry kinds — **Publication
 record created** and **Inclusion observation #N** — never a **Broadcast**
-entry the way Bitcoin's six-entry-kind timeline does, because this
-codebase has never made a Base broadcast result itself durable, only the
-inclusion observations that follow it. A stage nothing has recorded yet
+entry the way Bitcoin's six-entry-kind timeline does, because Base
+broadcast results aren't saved — only the inclusion observations that
+follow them. A stage nothing has recorded yet
 simply produces no entry, and this disclosure performs zero network
 operations of its own — everything it shows was already recorded
 elsewhere on this page.
 
 ### What this pipeline does not do
 
-Exactly like the Bitcoin pipeline above: however far you take a
-transaction through this pipeline — even to **Transaction included** — it
-never creates any kind of cataloged **External Evidence** entry, and there
-is no "Create Base Anchor" button anywhere in External Evidence to begin
-with; this whole pipeline lives only here. The review, signing, and
-broadcast/inclusion *screens* are ephemeral, replaced or cleared by a new
-plan, a new sign, or a reload. The two durable exceptions are the
-publication record minted at finalization and the inclusion observations
-archived after every **Observe Transaction** click — both described above.
+Taking a transaction through the step-by-step flow — even to
+**Transaction included** — never creates a cataloged **External
+Evidence** entry; only the one-step
+[Create Base Anchor](#creating-a-base-anchor-in-one-step) button does
+that. The review, signing, and broadcast/inclusion *screens* are
+ephemeral, replaced or cleared by a new plan, a new sign, or a reload. The
+two durable exceptions are the publication record minted at finalization
+and the inclusion observations archived after every **Observe
+Transaction** click — both described above.
 
 ## Publication References
 
@@ -1642,9 +1614,9 @@ being.
 Everything above — anchor publications, references, achievements — is
 scoped to a **publication identity**: a specific record on a specific
 chain. Nothing about it names who published it, in any human sense.
-**Publisher Associations**, and the three cards built on top of it, let
-you say, explicitly, "publisher *X* claims this publication" — entirely
-at your own word.
+**Publisher Associations** lets you say, explicitly, "publisher *X*
+claims this publication" — entirely at your own word — and three cards on
+the [Leaderboard](#leaderboard-hub) page build on it.
 
 > **A publisher identifier is a bare, self-declared label — never a
 > verified identity.** Typing "Alice" here is not a login, a
@@ -1686,15 +1658,15 @@ who actually controls those publications.
 
 ### Publisher Achievement Profile, Badges, and Statistics
 
-Three further cards compose the same publisher/publication association
-with everything [Achievements](#achievements) above already computes —
-never a second, competing achievement engine — each answering a
+Three further cards, on the [Leaderboard](#leaderboard-hub) page, combine
+the same publisher/publication associations with everything
+[Achievements](#achievements) above already computes, each answering a
 different question about one chosen publisher:
 
 | Card | Answers |
 |---|---|
 | **Publisher Achievement Profile** | The full list of achievements earned by *any* publication that publisher has claimed, each showing which publication earned it. |
-| **Publisher Achievement Badges** | The same, narrowed to only the achievements that already have a badge presentation in [Achievements](#achievements) — with the identical **View Publication Lifecycle Above** link. |
+| **Publisher Achievement Badges** | The same, narrowed to only the achievements that already have a badge presentation in [Achievements](#achievements) — each with a link back to the Publications page, where its lifecycle is shown. |
 | **Publisher Achievement Statistics** | Plain counts: associated publications, achievements earned, distinct achievement kinds, badges earned, distinct badge kinds, and a per-blockchain publication count — plus a breakdown of how many achievements were earned of each kind. |
 
 Each of the three has its own **Choose A Publisher** dropdown, populated
@@ -1707,8 +1679,9 @@ associated with anything yet, each card says so and points back to
 All three carry the identical caveat as Publisher Associations: what
 they show is a fact about publications that publisher has *explicitly
 claimed*, never proof of who controls, owns, or is the human behind any
-of them — and none of the three ever produces a score, a rank, a level,
-a tier, or a leaderboard entry.
+of them. None of the three ranks anyone by itself; the separate
+[Publisher Performance Leaderboard](#publisher-performance-leaderboard) is
+where publishers are ranked.
 
 ## Snapshot Placements
 
@@ -1722,8 +1695,8 @@ one of several independent questions a card can answer:
 | Where else, right now, can the bytes be fetched from? | **Snapshot Placements** |
 
 A **snapshot placement** is a signed claim, made by whoever created it,
-that a specific storage backend — today, **IPFS** or this device's own
-**Local** storage — can presently serve the bytes for this publication's
+that a specific storage backend — **IPFS**, **Arweave**, or this
+device's own **Local** storage — can presently serve the bytes for this publication's
 content hash. It's not a copy of the claim itself, not a guarantee the
 backend will still have the bytes tomorrow, and not a ranking of one
 backend over another: several independent placements, on different
@@ -1739,22 +1712,24 @@ preferred.
 
 ### Creating a placement
 
-If this device has at least one storage backend configured — this build
-always ships **Local** (this device's own storage) and **IPFS** (a real
-IPFS node's HTTP API, expected at `http://127.0.0.1:5001` unless you've
-pointed it at another node — see
-[Using a preferred provider](#using-a-preferred-provider) below) — you'll
-see a card per backend:
+You'll see a card per storage backend: **Local** (this device's own
+storage), **IPFS** (a real IPFS node's HTTP API, expected at
+`http://127.0.0.1:5001` unless you've pointed it at another node — see
+[Using a preferred provider](#using-a-preferred-provider) below), and
+**Arweave** (uploaded through your Arweave wallet extension, such as
+Wander):
 
-- **Create Local Placement** / **Create Ipfs Placement** — takes the bytes
+- **Create Local Placement** / **Create IPFS Placement** / **Create
+  Arweave Placement** — takes the bytes
   this device already holds for this publication and hands them to that
   backend. Clicking it always produces one of two honest outcomes:
   - **Placement created** — the backend accepted the bytes, and a new
     signed placement immediately appears in the list below.
   - **No placement was created** — the backend couldn't currently be
-    reached (for **IPFS**, this is what you'll see unless a real IPFS node
-    is actually running and reachable at that address), or this device
-    has no local content for this publication to place at all.
+        reached (for **IPFS**, this is what you'll see unless a real IPFS node
+    is actually running and reachable at that address; for **Arweave**,
+    unless a wallet extension is installed), or this device has no local
+    content for this publication to place at all.
 - Clicking again after a success offers **Create Another … Placement** — a
   second, fully independent placement, never a replacement for the first.
 
@@ -1764,7 +1739,7 @@ recorded for `<storage>`."* Never "decentralized," "permanent," or
 accepted these bytes just now.
 
 > **Creating an IPFS placement needs your own IPFS node; resolving one
-> doesn't.** **Create Ipfs Placement** always talks to a real IPFS node's
+> doesn't.** **Create IPFS Placement** always talks to a real IPFS node's
 > HTTP API (expected at `http://127.0.0.1:5001`, or wherever you've
 > pointed **IPFS Node** on the Content Provider settings page) — without
 > one running there, you'll see **No placement was created**. **Resolve
@@ -1784,13 +1759,9 @@ standing preference once and let ForkBuild pick for you. Open
 (`/settings/content-provider`), choose one of the decentralized backends
 currently registered on this replica, and click **Save**. **Local** isn't
 offered: every publication is already stored on this device before any
-placement is made, so it was never a meaningful preference. If you saved
-**Local** in an earlier version, the page now shows nothing selected, with
-a note that the old preference no longer applies — **Use Preferred
-Provider** treats it exactly like having no preference until you choose
-and save another. From then on, every publication card's **Use Preferred
-Provider** button — sitting alongside the explicit **Create Local/Ipfs
-Placement** buttons above — creates a placement on whichever backend you
+placement is made, so it isn't a meaningful preference. From then on,
+every publication card's **Use Preferred Provider** button — sitting
+alongside the explicit **Create … Placement** buttons above — creates a placement on whichever backend you
 saved, without asking you to name one there.
 
 This never changes what the explicit per-backend buttons do, and saving
@@ -1805,23 +1776,22 @@ the next time you click it. Outcomes:
 | **Preferred provider not found** | A preference is saved, but names a backend this replica no longer has registered — you're told exactly what was configured, never silently switched to another one. |
 
 **IPFS (Remote Pinning)** is always offered as a choice here too, even on
-a replica with no content backend registered at all — it exists purely so
-a Wanderer who runs no Kubo node, local or remote, can still save a
-standing Content default. Saving it here never makes **Use Preferred
+a replica with no content backend registered at all — so someone who
+runs no Kubo node, local or remote, can still save a standing Content
+default. Saving it here never makes **Use Preferred
 Provider** itself work for Remote Pinning — that backend needs a fresh
 Endpoint and Credential typed in by hand every time (see
 [IPFS Publishing](#ipfs-publishing) below), which this one-click button
 can't supply — so clicking it with Remote Pinning saved always reports
 **Preferred provider not found**, honestly, rather than a crash or a
 silent substitution. What saving it *does* do is pre-select **IPFS
-(Remote Pinning)** in the Material storage/Snapshot storage pickers
-inside the Editor's, World View's, and My Publication's own **Distribute**
-dialogs (see
+(Remote Pinning)** in the **Storage** picker of the Editor's, World
+View's, and My Publication's own **Distribute** dialogs (see
 [Distributing straight from the Editor](04-PublishingAndForking.md#distributing-straight-from-the-editor)
 and
 [World Encounters](03-WorldView.md#world-encounters--publications-and-avatars-your-peers-are-sharing)),
-so you no longer have to re-pick it by hand on every visit there either —
-the Endpoint/Credential fields in those dialogs still always open empty.
+so you don't have to re-pick it by hand on every visit — the
+Endpoint/Credential fields in those dialogs still always open empty.
 
 **IPFS (Remote Pinning)** aside, the rest of the list still only ever
 shows a backend this replica has genuinely registered — if none is, it's
@@ -1994,7 +1964,7 @@ loads; it never changes an announcement already in flight.
 
 ### Arweave Gateway
 
-Open **Arweave Gateway** in the top bar (`/settings/arweave-gateway`). It
+Open **Arweave Gateway** from **Network Settings** (`/settings/arweave-gateway`). It
 shows whichever gateway(s) are currently in effect — either "No override
 configured. Currently using the deployment default: `https://arweave.net`"
 or, once you've saved one or more, "Current override(s): `<your URLs>`" —
@@ -2013,8 +1983,7 @@ one if that gateway is unreachable or returns an error — the moment one of
 them answers, the rest are left alone. This never changes *what* gets
 retrieved, only *where from* — Arweave content is addressed by an
 unchangeable transaction id, so any gateway that has it returns the exact
-same bytes. A single gateway (or the original single-URL setting from
-before this feature existed) behaves exactly as it always has.
+same bytes.
 
 This setting affects retrieval only — never where your own publications
 or snapshots get uploaded, and never the separate Arweave Anchor evidence
@@ -2032,22 +2001,12 @@ started with until you reload.
 
 ### IPFS Gateway
 
-Open **IPFS Gateway** in the top bar (`/settings/ipfs-gateway`). It works
-just like Arweave Gateway above — enter one gateway URL per line, in the
-order you want them tried, with the same "Current override(s)" / "No
-override configured" display against the deployment default,
-`https://ipfs.io`, and the same **Save** / **Use Deployment Default**
-buttons and shape-only validation (a valid `http:`/`https:` URL, never a
-reachability check).
-
-If you list more than one gateway, they're tried in the order you entered
-them: a read first tries your top gateway, and only moves on to the next
-one if that gateway is unreachable or returns an error — the moment one of
-them answers, the rest are left alone. This never changes *what* gets
-retrieved, only *where from* — IPFS content is addressed by its own
-content id, so any gateway that has it returns the exact same bytes. A
-single gateway (or the original single-URL setting from before this
-failover feature existed) behaves exactly as it always has.
+Open **IPFS Gateway** from **Network Settings** (`/settings/ipfs-gateway`).
+It works just like Arweave Gateway above — one gateway URL per line, tried
+in order, with the same display, buttons, and shape-only validation —
+against the deployment default, `https://ipfs.io`. IPFS content is
+addressed by its own content id, so any gateway that has it returns the
+exact same bytes.
 
 This setting affects retrieval only, exactly like Arweave Gateway — never
 where your own content gets pinned or published. It's consulted wherever
@@ -2065,9 +2024,8 @@ gateway here, either instead of or ahead of the default, is the fix.
 Listing a second gateway also gives you a plain resilience benefit
 independent of that bot-detection wall: if your own top choice ever goes
 down, a read falls through to the next one automatically instead of
-failing outright. Exactly like every other setting on this page, a change
-here only takes effect on the next app
-load.
+failing outright. Like every other Network Settings page, a change here
+only takes effect on the next app load.
 
 ### Bitcoin Endpoint
 
@@ -2086,9 +2044,7 @@ any other substrate.
 
 Open **Nostr Relays** (`/settings/nostr-relay`) to set the relays used
 **everywhere** ForkBuild publishes or discovers over Nostr — Publications,
-Snapshots, Place Naming claims, and Commentary. (Earlier versions had two
-separate pages, **Nostr Relay** and **Nostr Publication Relays**; they've
-been merged into this one page and one saved list.)
+Snapshots, Place Naming claims, and Commentary.
 
 Type one `ws://` or `wss://` relay URL per line (placeholder
 `wss://relay.damus.io`) and click **Save** to replace the whole set at
@@ -2108,10 +2064,8 @@ falls through to the next one. So a second relay stays useful even while
 the first is unreachable, and a Publication announced to more than one
 relay is findable by more people. There's no per-relay status on this
 page, no health check, and no way to mark one relay preferred over
-another. (Where a distribution result *is* shown — the Editor's
-**Distribute** dialog, World Encounters' and My Publication's own
-readouts — it still reports one combined **Discovery** outcome, not a
-per-relay breakdown.)
+another. (A **Distribute** dialog's result does list one **Discovery**
+row per relay.)
 
 Like the other pages here, a change only takes effect on the next app
 load.
@@ -2120,7 +2074,7 @@ load.
 
 Every publication card also has its own **IPFS Publishing** section,
 directly below Snapshot Placements — a different way of getting a
-publication's content onto IPFS than **Create Ipfs Placement** above.
+publication's content onto IPFS than **Create IPFS Placement** above.
 
 ```
 IPFS Publishing
@@ -2152,7 +2106,7 @@ these bytes," never a cataloged claim someone else can discover.
 
 ### Configuring a remote pinning provider
 
-This build ships no commercial pinning provider by default — you supply
+ForkBuild ships no commercial pinning provider by default — you supply
 one yourself, generically, as an HTTP endpoint. Click **Configure Remote
 Publishing** (or **Reconfigure Remote Publishing**, once you already
 have one) to open a small form:
@@ -2198,8 +2152,8 @@ the provider accepted these particular bytes just now.
 Right below that, a small **Nostr: Announced** (or **Nostr: Not
 announced**) badge reports a second, separate thing: whether this exact
 publish was also announced over Nostr for Snapshot discovery — the same
-announcement the Snapshot Placements list's own **Distribute Snapshot**
-protocol already produces for a local Kubo publish, so a peer or a
+announcement a **Distribute Snapshot** from a Distribute dialog produces
+for a local Kubo publish, so a peer or a
 **Discover Publication** search can find this content the same way
 either way, without you ever running an IPFS node. A publish reaching
 **Published** always means the content is genuinely on IPFS regardless
@@ -2449,21 +2403,55 @@ the two are, or are not, the identical durable bytes.
 
 ## Leaderboard Hub
 
-A further page, **Leaderboard**, reads this same durable archive and
-gathers every leaderboard-related page ForkBuild has into one place: the
-**Reconciliation Candidate Leaderboard** (below), **Reconciliation
-Workspace**, **Publisher Snapshot Claim**, and **Publisher Performance
-Leaderboard**, plus the same **Publisher Achievement Profile**, **…
-Badges**, and **… Statistics** cards described in
-[Publisher Identity](#publisher-identity) above — moved here since they
-feed the Performance Leaderboard's own ranking. Reach it by clicking
-**Leaderboard** in the sentence just below the **Publication Archive**
-card, further down this page: "Reconciling this archive against a peer's,
-authoring or exporting your own signed leaderboard snapshot claim, and
-seeing publishers ranked by their own recorded achievements all happen on
-the Leaderboard page." It's deliberately not a top-bar entry of its own —
-one contextual link from Publications, same as the individual pages it
-consolidates used to be.
+A separate **Leaderboard** page (`/leaderboard`) reads the same durable
+archive and links every leaderboard-related page in one place: the
+**Reconciliation Candidate Leaderboard**, **Reconciliation Workspace**,
+**Publisher Snapshot Claim**, and **Publisher Performance Leaderboard**
+(all described below), plus the **Publisher Achievement Profile**,
+**… Badges**, and **… Statistics** cards described in
+[Publisher Identity](#publisher-identity). Reach it from the **Leaderboard**
+link in the sentence just below the **Publication Archive** card on the
+Publications page; it isn't in the top bar.
+
+### Publisher Performance Leaderboard
+
+**Publisher Performance Leaderboard** (`/publisher-leaderboard`) ranks
+publishers by what this replica has recorded for them — a table of
+**Rank**, **Publisher**, **Achievements**, **Achievement Kinds**, and
+**Publications** — computed fresh from your own archive every time the
+page loads, and never saved. A publisher only appears once you've
+associated at least one publication with it in
+[Publisher Associations](#publisher-associations); until then the page
+says there's no one to rank yet. Like everything in Publisher Identity,
+the publisher names are your own self-declared labels, not verified
+identities.
+
+### Publisher Snapshot Claim
+
+**Publisher Snapshot Claim** (`/publisher-snapshot-claim`) lets you sign a
+claim about your own replica's current leaderboard snapshot, so a peer
+can reconcile against it. You need to be signed in. Each step is its own
+click:
+
+1. **Generate & Sign Claim** — computes your current leaderboard snapshot
+   and signs a claim about exactly that snapshot with your identity. The
+   result shows the signer and the evidence, policy, and snapshot
+   fingerprints. **Start Over** discards it.
+2. **Export Claim** — shows the claim as JSON with a **Download Claim**
+   link, ready to paste into a peer's
+   [Reconciliation Workspace](#reconciliation-workspace) or send as a file.
+
+### Reconciliation Workspace
+
+**Reconciliation Workspace** (`/reconciliation-workspace`) is the other
+half: paste a peer's exported snapshot claim into **Peer Evidence JSON**
+and click **Reconcile**. Nothing runs until you click. It compares the
+claim against your own local archive and, when that produces a
+reconciliation candidate, records a decision and a revalidation
+observation in your archive and offers **View in Leaderboard**, which
+opens the Reconciliation Candidate Leaderboard below. If there's nothing
+to reconcile, the result explains why. **Clear Result** dismisses the
+result.
 
 ### Reconciliation Candidate Leaderboard
 
@@ -2633,7 +2621,7 @@ for this visit: it resets to **All** / **All** whenever you reload.
 
 **The same filter reaches into the Inspect Evidence panel, too.** With
 **All** / **All** selected (the default), a surviving row's own **Inspect
-Evidence** panel shows every record, exactly as it always has. Narrow the
+Evidence** panel shows every record. Narrow the
 filter, though, and a surviving row's own panel narrows right along with
 it — select **Observations** + **Target-only** and every visible row's
 panel shows only its own target-only observation records; its Decision
@@ -2713,12 +2701,10 @@ one (see [Evidence Export Comparison](#evidence-export-comparison),
 below) — the fastest way to sanity-check a single document on its own,
 without needing a second one to compare it to.
 
-**In practice, this page shows "No reconciliation candidates to display"
-today.** Nothing else in this app currently records a reconciliation
-decision or a revalidation observation — that's groundwork laid for a
-comparison workflow whose own entry point (creating and revalidating
-these records) hasn't been built into the interface yet. An empty result
-here isn't a bug; it means exactly what it says.
+**Where the candidates come from.** Candidates are recorded by the
+[Reconciliation Workspace](#reconciliation-workspace) above. Until you've
+reconciled at least one peer claim there, this page shows "No
+reconciliation candidates to display" — that's expected, not a bug.
 
 The page loads your own archive once, the moment you open it, and does
 not refresh automatically — a decision or observation recorded
@@ -2862,123 +2848,27 @@ archive — it only ever reads the two documents you paste into it.
 
 ## What survives a reload
 
-Evidence you've cataloged — your own, a peer's, or something you
-discovered — is stored on this device and is still there after you close
-the tab and come back, exactly like everything else this app saves locally.
-So does each anchor's **Local Knowledge** (see above) — how and when your
-device first learned it stays exactly as it was the first time, even if the
-identical evidence later reaches you a second way. **Verification results
-are not** — they're only ever known for the current visit. Reload the page and every anchor you'd checked goes back to "Not yet
-verified" until you check it again; nothing about that is a bug; it simply
-reflects that "was this true a moment ago" and "is this device holding a
-genuine claim" are two different facts, and only the second one is worth
-keeping around.
+The rule throughout this page: **signed claims and durably recorded facts
+are kept; checks, attempts, and in-progress screens are not.** "Was this
+true a moment ago" is worth re-checking; "does this device hold a genuine
+claim" is worth keeping.
 
-**Snapshot Placements follow the identical rule.** A cataloged placement
-and its own **Local Knowledge** are stored on this device and survive a
-reload exactly like evidence does. **Resolution results do not** — every
-placement you'd resolved goes back to "Not yet resolved" until you click
-**Resolve Snapshot** again, for the same reason a verification result
-resets: "was this retrievable a moment ago" and "is this device holding a
-genuine claim" are two different facts, and only the second is worth
-keeping around.
+| Kept on this device | Reset on reload |
+|---|---|
+| Cataloged evidence and placements, and each one's **Local Knowledge** | **Verify Evidence** and **Resolve Snapshot** results (back to "Not yet verified/resolved") |
+| Snapshot bytes you imported, retrieved, or materialized | Everything else in **Local Snapshot**: checks, attempt history, the **Source:** note, peer possession checks and comparisons |
+| **Decentralization** counts and relationships (recomputed on every load) | **Synchronize with Peers** results |
+| — | **IPFS Publishing**: the configured provider (endpoint and credential), publish results, Publication History, and verification history on the card |
+| **Bitcoin/Base Anchor Publications** records, minted at finalization | The anchor pipelines' wallet connection, funding/account observation, plan, review, signature, finalized bytes, broadcast result, and on-screen confirmation/inclusion history |
+| The **Publication Observation Archive** — every IPFS publish and per-entry verification, Bitcoin broadcast/confirmation/content-proof observation (from both **Reconcile** and the pipeline), Base inclusion observation, and both chains' publication records — until you click **Clear Archive** | — |
+| Publication References and Publisher Associations | Which card, badge, or dropdown option you had expanded (References Graph, Achievements, and the Publisher cards are recomputed from the archive) |
+| Reconciliation decisions and observations recorded by the Reconciliation Workspace (they live in the archive) | A pasted peer archive, an imported evidence export, filters, and expanded rows on the Reconciliation Candidate Leaderboard; everything on Evidence Export Comparison and Publisher Snapshot Claim |
 
-**Everything in Local Snapshot is session-only, with one exception.** A
-**Check Local Snapshot** result, an **Import Snapshot** / **Materialize
-Snapshot** / **Get Snapshot from Peer** attempt and its **Source:** note,
-a **Peer Snapshot Possession** check, a possession comparison and its
-**Observation History**, and the **Acquisition History** log all reset
-the moment you reload — none of them is a claim anyone signed, so none of
-them is worth remembering past this visit. The one thing that *does*
-survive is the actual bytes: once a materialization action succeeds, the
-content itself is written to this device's own storage and stays there —
-only the on-screen record of how and when you got it disappears.
-
-**Decentralization behaves differently again.** The evidence/placement
-counts, their Agreement/Conflict relationship, and the "Publication: known
-locally" line are never something you have to check first — they're
-recomputed fresh from your own device's catalog every time the page loads,
-so there's nothing to reset. Only an explicit **Synchronize with Peers**
-result (the New claims / Already known breakdown) resets on reload,
-exactly like a verification or resolution result would.
-
-**[IPFS Publishing](#ipfs-publishing)'s own on-screen record is
-session-only — but a quiet, durable copy of some of it is not.** Your
-configured pinning provider (endpoint and credential alike), every
-publish outcome shown on this card, the Publication History list itself,
-and every entry's own Verification History list all live only in this
-page's own memory and disappear the moment you reload — reconfigure the
-provider and publish again to pick up where you left off. Underneath
-that, though, every successful publish and every per-history-entry
-verification is *also* written into the durable
-[Publication Observation Archive](#the-publication-observation-archive),
-which does survive a reload — you just won't see it again on this
-particular card; open the Observation Archive card instead. The bytes
-you published stay wherever the provider put them either way, exactly as
-any real IPFS publish would.
-
-**[The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) and
-[The Base Anchor Pipeline](#the-base-anchor-pipeline) follow the identical
-split, one chain each.** Your wallet connection, observed funding/account,
-transaction plan, review, signature, finalized bytes, broadcast result, and
-the on-screen confirmation/inclusion history list all disappear the moment
-you reload — even after a real transaction has been broadcast to the real
-network. Reconnect the wallet and observe funding/an account again to pick
-up where you left off. Two things about each pipeline are durable,
-though, and do survive: the **Bitcoin/Base Anchor Publications** record
-minted the moment a transaction is finalized (see
-[Bitcoin Anchor Publications](#bitcoin-anchor-publications-a-durable-identity-and-lifecycle)
-and
-[Base Anchor Publications](#base-anchor-publications-a-durable-identity-and-lifecycle)),
-and every confirmation/inclusion observation either pipeline makes, which
-is quietly archived into the same
-[Publication Observation Archive](#the-publication-observation-archive)
-by its own txid — visible again after a reload through that archive, the
-publication's own Publication Lifecycle disclosure, or (for Bitcoin)
-Historical Bitcoin Anchor Evidence, even though the pipeline's own
-in-progress wizard screen has gone back to a blank slate.
-
-**[Publication References](#publication-references) and [Publisher
-Identity](#publisher-identity) are durable; everything they're read
-through is recomputed fresh, so there's nothing to lose.** A recorded
-reference or publisher association is stored on this device and survives
-a reload exactly like a publication record does. The **Publication
-Reference Graph**, **Achievements**, **Achievement Profile**, and all
-three **Publisher Achievement …** cards never store anything of their
-own — each one is recomputed, from scratch, from the archive's own
-durable facts every time its card renders, so reloading the page changes
-nothing about what they show; only which dropdown option or which badge
-you'd expanded resets, the same as any other collapsed-by-default card
-on this page.
-
-**[The Publication Observation Archive](#the-publication-observation-archive)
-itself is the one place on this page built to survive a reload with no
-exception.** Every fact described as "also archived durably" above —
-IPFS publications and per-history verifications, Bitcoin broadcast/
-confirmation/content-proof observations (from both the evidence-card
-Reconcile action and the Bitcoin Anchor Pipeline's own confirmation
-step), Base transaction-inclusion observations, and both chains'
-publication-identity records — lives here, persisted on this device,
-until the moment you explicitly click **Clear Archive**: the only action
-on this whole page that ever discards a durably recorded fact. Its own
-export/import, provenance, and fingerprint history (archive import
-events) are durable in exactly the same way.
-
-**The [Reconciliation Candidate Leaderboard](#reconciliation-candidate-leaderboard)
-stores nothing of its own — it only reads this same archive, plus
-whichever peer archive you've pasted in for that one visit.** Your own
-archive re-reads from scratch on reload, the same way opening the page
-fresh does; a pasted peer archive, and anything pasted into its own
-Import Evidence Export box, are never written to storage at all, so both
-are gone the moment you leave — on purpose, since neither was ever this
-device's own fact to keep.
-
-**[Evidence Export Comparison](#evidence-export-comparison) stores
-nothing at all, ever.** Unlike every other page in this guide, it reads
-no archive of its own — both paste boxes, the comparison result, every
-explicit record pair, and every expand/collapse state are page-local for
-that one visit only. Reload it, and it goes back to two empty paste
-boxes with nothing compared, exactly like opening it fresh.
+So after a reload you can still see a pipeline's or IPFS publish's facts —
+through the Observation Archive, a publication's lifecycle disclosure, or
+(for Bitcoin) Historical Bitcoin Anchor Evidence — even though the
+pipeline or IPFS card itself starts from a blank slate. Reconnect the
+wallet (or reconfigure the pinning provider) to continue.
 
 ## What's next?
 
