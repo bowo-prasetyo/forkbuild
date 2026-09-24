@@ -629,7 +629,7 @@ async function run() {
 
         const forbiddenInFix = ['Nostr', 'nostr', 'Arweave', 'arweave', 'materialize', 'Materialize', 'ACTIVE', 'EXPIRED', 'STALE', 'SYNCED', 'INACTIVE', 'REVOKED'];
         const equalityFunctionMatch = canvasSource.match(/function resolvedEncounterSelectionsEqual\([^)]*\)\s*\{[\s\S]*?\n\}/);
-        const refreshSelectionOutcomeMatch = canvasSource.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {4}\},/);
+        const refreshSelectionOutcomeMatch = canvasSource.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {4}\},?/);
         assert(equalityFunctionMatch && refreshSelectionOutcomeMatch, '39. sanity — both functions this milestone touches are found in the production file');
         for (const term of forbiddenInFix) {
             assert(!equalityFunctionMatch[0].includes(term) && !refreshSelectionOutcomeMatch[0].includes(term),

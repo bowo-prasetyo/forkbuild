@@ -582,7 +582,7 @@ async function runTests() {
         // H2 — the rendered per-notification details come from
         // event.payload alone; no Publication is re-fetched to compute
         // a "current" display field.
-        const detailsMatch = panelSource.match(/notificationDetails\(event\) \{([\s\S]*?)\n {8}\}\n {4}\},/);
+        const detailsMatch = panelSource.match(/notificationDetails\(event\) \{([\s\S]*?)\n {8}\}\n {4}\},?/);
         assert(detailsMatch, 'H2a. notificationDetails() is present and matchable.');
         assert(!/discoveryProvider|findById|viewPublicationCommand/.test(detailsMatch[1]),
             'H2b. notificationDetails() reads only event.payload — it never re-resolves the Publication to render a "current" claim.');

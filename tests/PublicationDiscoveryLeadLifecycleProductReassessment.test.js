@@ -21,6 +21,7 @@ import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutc
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.538 — Publication Discovery Lead Lifecycle Product Reassessment.
 //
@@ -732,13 +733,13 @@ async function run() {
         // through, confirmed to match the Discovered -> Selected ->
         // Retrieved -> Confirmed-to-match progression, never a stronger
         // claim.
-        assert(/Discovered Snapshots/i.test(await rawSource('ui/components/OwnPublicationPanel.js')), 'I4. the candidate list is headed "Discovered," matching the first stage of the requested progression');
+        assert(/Discovered Snapshots/i.test((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')), 'I4. the candidate list is headed "Discovered," matching the first stage of the requested progression');
         assert(describeSnapshotResolutionOutcomeLabel(DecentralizedSnapshotResolutionOutcome.RESOLVED).toLowerCase().includes('retrieved'), 'I5. a successful resolution is labeled "Retrieved," matching the third stage');
         assert(describeSnapshotAttributionOutcomeLabel('match').toLowerCase().includes('confirmed to match'), 'I6. a hash match is labeled "Confirmed to match," matching the fourth stage — never "verified," "authentic," or "owned"');
 
         // Selection state ("Selected") is real, structural UI state, not
         // merely a label — reconfirm the CSS-class binding exists.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panelSource.includes('own-publication-candidate-item-selected'), 'I7. the second stage, "Selected," corresponds to a genuine, distinct UI state (a CSS class keyed to selectedSnapshotCandidate), not merely an unlabeled click');
     }
     console.log('✓ Section I: neither candidate-facing template renders a trust/authenticity/ownership/preference claim, and the actual label vocabulary a Wanderer sees follows exactly Discovered -> Selected -> Retrieved -> Confirmed to match, with no stronger word anywhere in the pipeline — reconfirms 0.9.151/0.9.157\'s own inline "never labels a candidate best/trusted/recommended" comment and 0.9.528\'s label tables, by reading the ACTUAL rendered template text rather than trusting the comment.');

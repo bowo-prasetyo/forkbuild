@@ -9,7 +9,7 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.310 — Post-Placement-Visibility Product Evolution Reassessment.
 //
@@ -258,7 +258,7 @@ async function runTests() {
         // legitimately shares this surface. See tests/
         // DiscoveredPublicationPlacementJourneyClosureAudit.test.js
         // (0.9.601) for that journey's own full closure.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const placementsSection = panelSource.split('own-publication-placements"')[1].split('</div>')[0];
         const interactiveControls = placementsSection.match(/@click="[^"]+"/g) || [];
         assert(interactiveControls.length === 1 && interactiveControls[0] === '@click="placeOwnPublication"',
@@ -308,7 +308,7 @@ async function runTests() {
         // World placement flow (a Wanderer places a Publication by
         // interacting with the World itself, not from a Publication
         // inspection panel) — OwnPublicationPanel never imports it.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const panelCode = codeOnlyLines(panelSource);
         assert(!/PlacePublicationUseCase/.test(panelCode),
             'C1. OwnPublicationPanel.js\'s own CODE (comments aside — its own header merely NAMES these use cases as things it deliberately excludes) never references PlacePublicationUseCase — creation stays owned by the World placement flow.');
@@ -482,7 +482,7 @@ async function runTests() {
         // entry (a spatial interaction), not a Publication-inspection
         // list row. Confirmed structurally: OwnPublicationPanel.js
         // still has no coordinate-input UI of any kind.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/<input[^>]*type="number"|PlacementEditorDialog/.test(panelSource),
             'E4. OwnPublicationPanel.js still has no coordinate-entry UI or PlacementEditorDialog reference — "move" has no natural home on this read-only inspection surface.');
 
@@ -495,7 +495,7 @@ async function runTests() {
     // rendered; the one real gap is exposed but unproven as valuable.
     // ===============================================================
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const placementsSection = panelSource.split('own-publication-placements"')[1].split('</div>')[0];
 
         // F1. Coordinates and revision and owner are ALREADY rendered,

@@ -21,6 +21,7 @@ import { Position } from '../core/Position.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.159 — Selected Snapshot World Placement.
 //
@@ -582,7 +583,7 @@ async function run() {
         // placeMaterializedSnapshot() never calls resolveSnapshotPublicationAttribution()
         // or the materialization command — it only reads results already
         // computed by other, separate clicks.
-        const panelSource = await readFile(new URL('../ui/components/OwnPublicationPanel.js', import.meta.url), 'utf8');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const bodyStart = panelSource.indexOf('placeMaterializedSnapshot() {');
         const bodyEnd = panelSource.indexOf('\n    }', bodyStart);
         const body = panelSource.slice(bodyStart, bodyEnd);

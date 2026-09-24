@@ -10,7 +10,7 @@ import {
 } from '../core/DocumentCollaborationConsistencyPolicy.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { ConflictResolver, ConflictRelation } from '../replication/ConflictResolver.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, editorSessionFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, editorSessionFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.311 — Post-Placement Product Evolution Reassessment.
 //
@@ -237,7 +237,7 @@ async function runTests() {
         // Materialize -> Place. Every stage still has a real, reusable UI
         // action (0.9.307's own dedicated Snapshot research pass,
         // reconfirmed with one signal per stage).
-        assert((await rawSource('ui/components/OwnPublicationPanel.js')).includes('discoverOwnSnapshot') &&
+        assert(((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')).includes('discoverOwnSnapshot') &&
             ((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')).includes('armComparisonSelection') &&
             (await rawSource('ui/main.js')).includes("app.provide('exportSnapshotCommand'"),
             'B3. Snapshot discovery, comparison, and export all still have real UI call sites.');
@@ -247,7 +247,7 @@ async function runTests() {
         // proven and converged) — reconfirmed with one fresh, live signal
         // that the plural read path still returns every placement,
         // unreduced.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panelSource.includes('getPlacementsForPublication') || panelSource.includes('publicationPlacements'),
             'B4. OwnPublicationPanel.js still renders the plural placements read path 0.9.308 wired.');
 

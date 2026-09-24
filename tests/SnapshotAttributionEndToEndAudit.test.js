@@ -15,7 +15,7 @@ import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.145 — End-to-End Snapshot Attribution Audit.
 //
@@ -417,7 +417,7 @@ async function run() {
         // algorithm of their own (see ui/views/WorldView.js's own
         // discoverOwnSnapshot(), reused verbatim for both, per 0.9.144).
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(canvasCode.includes('discoverSelectedSnapshot()') && panelCode.includes('discoverOwnSnapshot()'),
             'B3. sanity: both entry points genuinely define their own action method, each of which calls the identical injected discoverSnapshotCommand, never a second discovery/verification algorithm of its own');
 

@@ -29,7 +29,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
 import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
-import { worldViewFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.352 — Remote Publication Fork Journey Product Gap Audit.
 //
@@ -676,7 +676,7 @@ async function run() {
         // work; checked directly for whether it offers Fork at all
         // (forking your OWN Publication is not the discovery journey
         // this milestone audits).
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(!/emit\('fork'|@click="\$emit\('fork'/i.test(ownPanelSource),
             '3. OwnPublicationPanel.js offers no Fork action — it is not an alternate route into this journey either.');
     }

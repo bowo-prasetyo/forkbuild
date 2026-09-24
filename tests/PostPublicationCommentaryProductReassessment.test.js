@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.250 — Post-Publication-Commentary Product Reassessment.
 //
@@ -115,7 +115,7 @@ async function runTests() {
         const canComment = await rawSource('application/publication/CanCommentOnPublicationUseCase.js');
         const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         const createWorldView = await rawSource('application/world/CreateWorldViewUseCase.js');
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
 
         // A1a. Publication, not Document — the one architectural decision
         // 0.9.242's own header calls out explicitly.
@@ -230,7 +230,7 @@ async function runTests() {
         // still re-queries rather than optimistically appending on a
         // successful submission — the exact structural fact 0.9.249
         // Section C proved with a destructive stale-array test.
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panel.includes('refreshPublicationCommentaries()') &&
                !/publicationCommentaries\.push\(/.test(codeOnlyLines(panel)),
             'B5. ui/components/OwnPublicationPanel.js\'s own CODE still never pushes a locally-held commentary object into publicationCommentaries — every successful submission re-queries through refreshPublicationCommentaries(), the store staying the one source of truth (0.9.248/0.9.249 Section C).');
@@ -387,7 +387,7 @@ async function runTests() {
         // authorIdentityId per entry — this is not merely storable data,
         // it's already ON SCREEN, exactly as this milestone's own brief
         // asks to check.
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panel.includes('own-publication-commentary-author') && panel.includes('{{ commentary.authorIdentityId }}'),
             'D2. ui/components/OwnPublicationPanel.js still renders {{ commentary.authorIdentityId }} for every commentary entry — identity display already exists, as the raw authenticated identity id (no profile-name resolution).');
         seamRegister.push(['identity display', 'COMPLETE (raw authorIdentityId shown per entry; no display-name resolution)']);

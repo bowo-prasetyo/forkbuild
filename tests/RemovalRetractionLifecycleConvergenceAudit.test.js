@@ -26,7 +26,7 @@ import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.199 — Removal & Retraction Lifecycle Convergence Audit.
 //
@@ -415,7 +415,7 @@ async function runTests() {
         assert(!noNewFlagVocabulary.test(codeOnlyLines(sessionSource).join('\n')),
             'G1. WorldNavigationSession.js introduces no orphaned/isOrphaned vocabulary in CODE — the word appears only in comments (this audit\'s own, and 0.9.198\'s), never as a field a read model returns');
         const placementInfoPanelSource = await rawSource('ui/components/PlacementInfoPanel.js');
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(!noNewFlagVocabulary.test(codeOnlyLines(placementInfoPanelSource).join('\n')), 'G2. PlacementInfoPanel.js carries no orphaned-shaped field or prop either');
         assert(!noNewFlagVocabulary.test(codeOnlyLines(ownPublicationPanelSource).join('\n')), 'G3. OwnPublicationPanel.js carries no orphaned-shaped field or prop either');
 
@@ -530,7 +530,7 @@ async function runTests() {
         const placementEmits = placementInfoPanelSource.match(/emits:\s*\[([^\]]*)\]/)[1];
         assert(!/unpublish|retract/i.test(placementEmits), 'I6. PlacementInfoPanel.js\'s own emits array carries no unpublish/retract-shaped event — that authority lives one layer up, on a different panel entirely');
 
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/@click="[a-zA-Z]*[Rr]emove/.test(ownPublicationPanelSource), 'I7. OwnPublicationPanel.js wires no remove-shaped click handler — placement removal is PlacementInfoPanel\'s authority, never duplicated here');
 
         // WorldView.js's own two handlers each call exactly one session

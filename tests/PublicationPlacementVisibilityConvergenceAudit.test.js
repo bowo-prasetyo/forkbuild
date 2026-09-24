@@ -25,7 +25,7 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.309 — Publication Placement Visibility Convergence Audit.
 //
@@ -215,7 +215,7 @@ async function runTests() {
         // directly, meaning placement facts have exactly ONE storage
         // location, reached through exactly one method, fanned out through
         // two thin readers.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         for (const forbidden of ["LocalPlacementRegistry", "from '../../placement/PlacementRegistry.js'", 'DiscoverPlacementsUseCase']) {
             assert(!codeOnly(panelSource).includes(forbidden), `A6. OwnPublicationPanel.js never references '${forbidden}' — it only ever receives placements through the injected command`);
         }
@@ -448,7 +448,7 @@ async function runTests() {
 
         // The panel's own refresh method never reaches for World/renderer
         // vocabulary either — it only calls the one injected command.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const refreshBody = methodBody(codeOnly(panelSource), 'refreshPublicationPlacements\\(\\)', 8);
         for (const forbidden of ['worldLayoutProvider', 'addWorld', 'removeWorld', '_session', 'spatialIndexProvider']) {
             assert(!refreshBody.includes(forbidden), `G6. refreshPublicationPlacements()'s own body never references '${forbidden}' — the visibility panel never mutates World state`);
@@ -549,7 +549,7 @@ async function runTests() {
     // -----------------------------------------------------------------
     {
         const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const sessionCode = codeOnly(sessionSource);
         const panelCode = codeOnly(panelSource);
 

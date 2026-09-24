@@ -21,6 +21,7 @@ import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQ
 import { queryDecentralizedWorldDiscovery } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
 import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.351 — Proactive Publication Discovery Product Direction Audit.
 //
@@ -321,7 +322,7 @@ async function run() {
         const placeNamingQuerySource = await readSource('application/placeNaming/PlaceNamingDiscoveryQueryService.js');
         assert(placeNamingQuerySource.includes('class PlaceNamingDiscoveryQueryService'),
             '6. Place Naming ALSO already has its own read-side query service (application/placeNaming/PlaceNamingDiscoveryQueryService.js).');
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/discoverSnapshotCandidatesCommand|discoverSnapshotCommand/.test(ownPanelSource),
             '7. Snapshot\'s read-side query service is wired into a real UI browsing surface (ui/components/OwnPublicationPanel.js).');
 

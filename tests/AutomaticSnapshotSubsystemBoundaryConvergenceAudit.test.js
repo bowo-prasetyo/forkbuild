@@ -914,7 +914,7 @@ async function runTests() {
         // H2. Exactly two call sites for each of register/unregister,
         // system-wide — one automatic, one manual, distinguished only by
         // WHICH CODE calls the shared primitive.
-        const registerCallers = ['application/snapshot/AutomaticSnapshotEncounterCascade.js', 'ui/components/OwnPublicationPanel.js'];
+        const registerCallers = ['application/snapshot/AutomaticSnapshotEncounterCascade.js', 'ui/components/ownPublicationPanel/snapshotDiagnosticMethods.js'];
         const unregisterCallers = ['application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js', 'ui/components/worldEncounterCanvas/materialAndDistributionMethods.js'];
         for (const file of registerCallers) {
             const source = await codeOnlySource(file);

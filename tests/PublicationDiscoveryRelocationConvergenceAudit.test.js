@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasSource } from './support/SourceFileGroups.js';
 
 // 0.9.361 — Publication Discovery Relocation Convergence Audit.
 //
@@ -168,7 +168,7 @@ function verifiedDiscoveryResult(objectId) {
 async function run() {
     console.log('Running Publication Discovery Relocation Convergence Audit tests...\n');
 
-    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
+    const canvasSource = worldEncounterCanvasSource();
     const canvasCodeOnly = codeOnly(canvasSource);
 
     const mainSource = await rawSource('ui/main.js');

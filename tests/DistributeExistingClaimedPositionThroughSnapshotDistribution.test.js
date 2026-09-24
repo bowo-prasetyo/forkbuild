@@ -9,7 +9,7 @@ import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.566 — Distribute Existing Claimed Position Through Snapshot
 // Distribution.
@@ -371,7 +371,7 @@ async function run() {
         assert(placementRegistry.findByPublicationId(publication.id).length === 1,
             '3. exactly one PlacementRecord still exists for this Publication — distribution never adds a second one.');
 
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/@click="useClaimedSnapshotPosition"/.test(panelSource),
             '4. a distributed claim still only ever becomes a placement through the pre-existing, person-initiated "Use Claimed Position" click — never automatically, from this milestone\'s own change.');
     }

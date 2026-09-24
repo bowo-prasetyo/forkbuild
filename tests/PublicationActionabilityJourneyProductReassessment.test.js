@@ -47,7 +47,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.598 — Publication Actionability Journey Product Reassessment.
 //
@@ -491,7 +491,7 @@ async function run() {
         assert(/forkPublicationCommand/.test(worldEncounterCanvasSource), 'C2. Fork remains wired (forkPublicationCommand prop).');
         assert(/explorePublicationCommand/.test(worldEncounterCanvasSource), 'C3. Explore remains wired (explorePublicationCommand prop) — and Section A live-proved it is a real navigation, not a preview.');
 
-        const ownPublicationPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/getPublicationCommentariesCommand|addPublicationCommentaryCommand/.test(ownPublicationPanelSource), 'C4. Commentary remains wired once a Publication resolves (OwnPublicationPanel\'s own commentary surface).');
 
         // C5: no "place" action exists in WorldEncounterCanvas.js's own

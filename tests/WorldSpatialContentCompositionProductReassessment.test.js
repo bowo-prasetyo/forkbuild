@@ -21,7 +21,7 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.578 — World Spatial Content Composition Product Reassessment.
 //
@@ -281,7 +281,7 @@ async function run() {
     // =======================================================================
     {
         const canvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'));
-        const panelSource = codeOnly(await readSource('ui/components/OwnPublicationPanel.js'));
+        const panelSource = codeOnly((await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n'));
 
         // Mechanism 1 — authoritative placement. Rendered via
         // `projectedPublications`, sourced from `publicationRows`
@@ -653,7 +653,7 @@ async function run() {
     // =======================================================================
     {
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         // HTML comments inside a template literal are developer notes,
         // never rendered UI text (e.g. OwnPublicationPanel.js's own
         // template carries a comment mentioning a hypothetical "trusted"

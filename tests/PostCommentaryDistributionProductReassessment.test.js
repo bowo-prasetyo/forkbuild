@@ -17,6 +17,7 @@ import { PublicationCommentaryDistributionPeerExchange } from '../application/pu
 import { CreatePublicationCommentaryUseCase } from '../application/publication/commentary/CreatePublicationCommentaryUseCase.js';
 import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.622 — Post-Commentary-Distribution Product Reassessment.
 //
@@ -295,7 +296,7 @@ async function run() {
             n('OBSERVABLE: the SAME real command a UI surface actually calls (getPublicationCommentariesCommand) already returns it — GetPublicationCommentariesUseCase\'s own documented "no discovery-provider call" contract holds; the fact is not hidden from any caller that already knows the publicationId'));
 
         const cardSource = codeOnly(await rawSource('ui/components/PublicationCard.js'));
-        const panelSource = codeOnly(await rawSource('ui/components/OwnPublicationPanel.js'));
+        const panelSource = codeOnly((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/publication:\s*\{\s*type:\s*Object,\s*required:\s*true/.test(cardSource),
             n('DISPLAYED — negative case: ui/components/PublicationCard.js requires an already-resolved Publication OBJECT as a prop; it exposes no path that reaches Commentary from a bare publicationId'));
         assert(/publication:\s*\{\s*type:\s*Object,\s*default:\s*null/.test(panelSource),
@@ -381,7 +382,7 @@ async function run() {
             n('the list reads back in exactly ARRIVAL order (C2, C3, C1) — never re-sorted to creation order (C1, C2, C3) — matching storage/PublicationCommentaryStore.js\'s own "in the order they were originally saved" contract exactly, unmodified by this milestone'));
 
         const cardSource = codeOnly(await rawSource('ui/components/PublicationCard.js'));
-        const panelSource = codeOnly(await rawSource('ui/components/OwnPublicationPanel.js'));
+        const panelSource = codeOnly((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!/commentaries\.sort\(|publicationCommentaries\.sort\(/.test(cardSource) && !/commentaries\.sort\(|publicationCommentaries\.sort\(/.test(panelSource),
             n('neither existing Commentary-rendering component re-sorts the list by date — arrival order IS the documented, and the only, ordering contract this product has ever made'));
 

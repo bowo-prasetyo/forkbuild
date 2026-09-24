@@ -21,7 +21,7 @@ import { World } from '../core/World.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles, editorSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.326 — Post-Diagnostic Product Evolution Reassessment.
 //
@@ -260,7 +260,7 @@ async function runTests() {
         // is that SAME capability's presentation, reorganized. Verified
         // structurally: the popup introduces no operation vocabulary of
         // its own (Section C makes this the object of direct proof).
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/class DiagnosticService|application\/Diagnostic/.test(panelSource),
             'A-diagnostic. OwnPublicationPanel.js references no DiagnosticService or application/Diagnostic* file — the popup is presentation, not a second capability.');
 
@@ -422,7 +422,7 @@ async function runTests() {
             'B8b. WorldView.js still drives the automatic path independently, on its own spatial-observation tick, with no dependency on OwnPublicationPanel\'s own Diagnostic Tools popup state.');
         assert(!worldViewSource.includes('diagnosticToolsOpen'),
             'B8c. WorldView.js never reads or writes diagnosticToolsOpen — the automatic path\'s own tick has no awareness of whether the manual popup is open, closed, or has ever been opened.');
-        assert(codeOnlyLines(await rawSource('ui/components/OwnPublicationPanel.js')).includes("if (!this.discoverSnapshotCandidatesCommand || this.snapshotCandidateDiscoveryExecuting)"),
+        assert(codeOnlyLines((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')).includes("if (!this.discoverSnapshotCandidatesCommand || this.snapshotCandidateDiscoveryExecuting)"),
             'B8d. OwnPublicationPanel.js\'s own manual discoverSnapshotCandidates() runs independently on its own click, with no gate on any automatic-path state.');
 
         console.log('✓ B: All six previously-named journeys close, hop to hop, against real, unmodified source, plus one live execution through the World collaboration pipeline (B1-B7, unaffected by the Diagnostic Tools arc). NEW: Automatic Snapshot encounter and Manual Diagnostic recovery verified as two independent entry points sharing the same downstream commands by design — neither reads the other\'s state, neither supersedes the other (B8).');
@@ -435,7 +435,7 @@ async function runTests() {
     // merely carried forward from 0.9.324/0.9.325.
     // ===============================================================
     {
-        const rawPanel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const rawPanel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const codePanel = codeOnlyLines(rawPanel);
 
         // C1. diagnosticToolsOpen exists ONLY as a data field and inside
@@ -776,7 +776,7 @@ async function runTests() {
         // F3. The explicit empty-state, still on file — a user who opens
         // Diagnostic Tools and finds nothing is told exactly that, not
         // left to guess between "found nothing" and "never asked."
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panelSource.includes('No Snapshots have been announced under this discoveryTag yet.'),
             'F3. The manual popup still renders an explicit, distinct empty-state message — never collapsed with the "not yet run" (null) state.');
 

@@ -25,7 +25,7 @@ import { WorldAuthorizationService } from '../application/identity/WorldAuthoriz
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.219 — Post-Presence Product Reassessment.
 //
@@ -447,7 +447,7 @@ async function runTests() {
         assert(/new BuildPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'B4b. ui/main.js still composes BuildPublicationSnapshotTransferPackageUseCase');
 
         // B5 — Publication lifecycle + distribution. COMPLETE.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const clickHandlers = new Set((panelSource.match(/@click="[a-zA-Z]+/g) || []).map((s) => s.replace('@click="', '')));
         assert(clickHandlers.size >= 10, `B5a. OwnPublicationPanel.js still wires at least 10 distinct actions (found ${clickHandlers.size})`);
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');

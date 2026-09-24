@@ -19,7 +19,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldViewTemplateFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.290 — Publication Commentary Cross-Surface Convergence Audit.
 //
@@ -701,7 +701,7 @@ async function runTests() {
         // command — the decision genuinely never reaches the UI layer.
         const cardCode = await codeOnlySource('ui/components/PublicationCard.js');
         const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         for (const [file, code] of [['PublicationCard.js', cardCode], ['PublicationCommentarySection.js', sectionCode], ['OwnPublicationPanel.js', panelCode]]) {
             assert(!/publication\.(author|publisherIdentity)\s*===?\s*(this\.)?viewerIdentityId/.test(code),
                 `45. ${file} never compares the Publication's own author/publisher against the viewer to gate commentary`);
@@ -719,7 +719,7 @@ async function runTests() {
     // equivalent.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(/mounted\s*\(\s*\)\s*\{[^}]*refreshPublicationCommentaries\(\)/s.test(panelCode),
             '46. OwnPublicationPanel eagerly loads commentary on mount — its own existing lifecycle, unchanged');
         assert(/watch\s*:\s*\{/.test(panelCode), '47. OwnPublicationPanel still reacts to a change of the active Publication via a watcher — the eager-reload path this milestone leaves untouched');
@@ -808,7 +808,7 @@ async function runTests() {
     // milestone changes no production file.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(panelCode.includes('refreshPublicationCommentaries()') && panelCode.includes('submitPublicationCommentary()'),
             '62. OwnPublicationPanel.js still carries its own original commentary methods');
 

@@ -25,7 +25,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.379 — Post-Distribution Product Evolution Reassessment.
 //
@@ -439,7 +439,7 @@ async function run() {
         // proof of convergence, only that all three still exist).
         assert(editorViewCodeOnly.includes('function distributePublishedDocument()'),
             n('post-publish distribution action: EditorView.js (0.9.377) still carries its own action'));
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(panelSource.includes('distributeOwnPublication') && canvasSource.includes('distributeSelectedPublication'),
             n('OwnPublicationPanel.js and WorldEncounterCanvas.js still each carry their own pre-existing entry point onto the identical capability'));
@@ -524,7 +524,7 @@ async function run() {
         assert(editorViewSource.includes('{{ distributionResult[0].material ? distributionResult[0].material.uri : ') &&
                editorViewSource.includes('relayResult.discovery ? relayResult.discovery.id : '),
             n('AMENDED BY 0.9.450 — EditorView.js\'s own template actually renders material.uri and discovery.id to the user — the locator is not merely computed and discarded'));
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED BY 0.9.671 — publicationDistributionResult is now
         // normalized into the identical one-element-per-relay ARRAY shape
         // EditorView.js's own distributionResult already uses (see
@@ -741,7 +741,7 @@ async function run() {
         // any of the three surfaces, reconfirmed fresh across all three
         // rather than just EditorView.js as 0.9.378 Section J checked.
         const canvasCodeOnly = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
-        const panelCodeOnly = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCodeOnly = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         for (const [label, code] of [['EditorView.js', editorViewCodeOnly], ['OwnPublicationPanel.js', panelCodeOnly], ['WorldEncounterCanvas.js', canvasCodeOnly]]) {
             for (const term of ['setInterval', 'RetryQueue', 'retryQueue', 'RetryScheduler']) {
                 assert(!code.includes(term), n(`${label} contains no "${term}" — no retry loop, queue, or scheduler of any kind`));

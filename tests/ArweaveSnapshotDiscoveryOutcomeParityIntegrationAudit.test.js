@@ -8,6 +8,7 @@ import { SnapshotCandidateDiscoveryOutcome } from '../application/snapshot/Snaps
 import { executeDiscoverSnapshotCandidatesCommandWithOutcome } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.591 — Arweave Snapshot Discovery Outcome Parity.
 //
@@ -359,7 +360,7 @@ async function runTests() {
 
         // Confirm which copy the template actually renders for each case,
         // reading the real template source rather than assuming it.
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const templateStart = panelSource.indexOf('template: `');
         const template = panelSource.slice(templateStart);
         assert(/snapshotCandidateDiscoveryResult\.length === 0 && snapshotCandidateDiscoveryOutcome === 'unavailable'/.test(template),

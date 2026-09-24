@@ -1044,7 +1044,7 @@ async function run() {
         // No Snapshot-specific refresh code, no source-family branching:
         // re-read directly, mirroring 0.9.169's own Section J/F.
         const equalityFunctionMatch = canvasSource.match(/function resolvedEncounterSelectionsEqual\([^)]*\)\s*\{[\s\S]*?\n\}/);
-        const refreshSelectionOutcomeMatch = canvasSource.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {4}\},/);
+        const refreshSelectionOutcomeMatch = canvasSource.match(/refreshSelectionOutcome\(\)\s*\{[\s\S]*?\n {4}\},?/);
         assert(equalityFunctionMatch && refreshSelectionOutcomeMatch, '68. sanity — both functions this fix touches are found in the production file');
         const forbiddenInFix = ['Nostr', 'nostr', 'Arweave', 'arweave', 'materialize', 'Materialize', 'ACTIVE', 'EXPIRED', 'STALE', 'SYNCED', 'INACTIVE', 'REVOKED', 'retry', 'Retry', 'rediscover', 'Rediscover'];
         for (const term of forbiddenInFix) {

@@ -15,7 +15,7 @@ import {
 } from '../core/NotificationDeduplicationPolicy.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.282 — Post-Persistence Notification Product Reassessment.
 //
@@ -917,7 +917,7 @@ async function runTests() {
         // vocabulary at all — 0.9.284 deliberately built a SEPARATE
         // Notification History surface (see J5) rather than folding
         // notification vocabulary into this one.
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/Notification/.test(panel),
             'J4. ui/components/OwnPublicationPanel.js — the one existing UI surface a publisher already visits to manage their own Publications — still contains zero Notification vocabulary of any kind, even after 0.9.284.');
 

@@ -10,7 +10,7 @@ import { CanCommentOnPublicationUseCase } from '../application/publication/CanCo
 import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.637 — Publication Commentary Distribution Provider Selection UI
 // Boundary Audit.
@@ -217,7 +217,7 @@ async function run() {
     {
         const cardSource = (await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
         const listSource = (await rawSource('ui/components/PublicationList.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
 
         assert(/inject:\s*\{[\s\S]*?addPublicationCommentaryCommand:\s*\{\s*default:\s*null\s*\}/.test(cardSource),
@@ -394,7 +394,7 @@ async function run() {
             'Commentary could not be created.',
             'Commentary could not be loaded.'
         ];
-        const ownPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         for (const text of errorTexts) {
             assert(ownPanelSource.includes(text), n(`OwnPublicationPanel.js's own existing error text "${text}" is scoped to local creation/loading only — never to a distribution outcome, because none is attempted from this component today`));
         }

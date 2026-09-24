@@ -1057,7 +1057,7 @@ async function run() {
             return source.slice(start, end);
         }
 
-        const projectToCanvasFn = extractBetween(canvasSource, 'function projectToCanvas(value) {', '\nexport default {');
+        const projectToCanvasFn = extractBetween(canvasSource, 'function projectToCanvas(value) {', '\n}');
         const projectedPublicationsFn = extractBetween(canvasSource, 'projectedPublications() {', 'projectedAvatars() {');
         const projectedAvatarsFn = extractBetween(canvasSource, 'projectedAvatars() {', 'projectedWanderer() {');
         assert(!/snapshot/i.test(projectToCanvasFn), '6. projectToCanvas() itself contains no "snapshot" vocabulary of any kind — it is a plain x/z linear transform');

@@ -4,7 +4,7 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
 import { queryDecentralizedWorldDiscovery } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
 import { resolveNostrPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.356 — Publication Discovery Tag UX Consistency Audit.
 //
@@ -186,7 +186,7 @@ async function run() {
         assert(snapshotLiteralOccurrences.length === 3,
             `1. 'forkbuild-snapshot' is assigned as discoveryTag in exactly 3 CODE lines in ui/main.js (found ${snapshotLiteralOccurrences.length}) — one publish-side composition, two discovery-side compositions — all three the SAME literal, never re-typed by a caller.`);
 
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(!/placeholder=["']?[Dd]iscovery tag/.test(ownPanelSource),
             '2. ui/components/OwnPublicationPanel.js — the real Snapshot Discovery UI surface — renders no "Discovery tag" input of any kind; Snapshot discovery is a single button bound to a Publication object, with no tag ever exposed to a Wanderer.');
         assert(!/placeholder=["']?[Dd]iscovery tag/.test(((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n')).split('world-encounter-discovery-panel')[0]),

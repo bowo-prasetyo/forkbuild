@@ -18,6 +18,7 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.172 — Decentralized Snapshot Position Claim Consumption.
 //
@@ -618,7 +619,7 @@ async function run() {
         // materialization command itself — it only reads
         // selectedSnapshotCandidate/publication, already computed by
         // separate clicks.
-        const panelSource = await readFile(new URL('../ui/components/OwnPublicationPanel.js', import.meta.url), 'utf8');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const bodyStart = panelSource.indexOf('useClaimedSnapshotPosition() {');
         const bodyEnd = panelSource.indexOf('\n        },', bodyStart);
         const body = panelSource.slice(bodyStart, bodyEnd);

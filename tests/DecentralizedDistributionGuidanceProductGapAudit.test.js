@@ -11,7 +11,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.346 — Decentralized Distribution Guidance Product Gap Audit.
 //
@@ -147,7 +147,7 @@ async function run() {
     // Section B — Capability inventory, sourced exactly.
     // =======================================================================
     {
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/>\{\{ snapshotDistributionExecuting \? 'Distributing…' : 'Distribute Snapshot' \}\}<\/button>/.test(ownPanelSource),
             '1. "Distribute Snapshot" — the Arweave-content-store + Nostr-discovery-announce pair — is a real button on ui/components/OwnPublicationPanel.js, the primary "My Publication" screen, gated on nothing but :disabled="!publication || snapshotDistributionExecuting".');
         assert(/>Unpublish<\/button>/.test(ownPanelSource) && />\{\{ snapshotExportExecuting \? 'Exporting…' : 'Export Snapshot' \}\}<\/button>/.test(ownPanelSource),
@@ -196,7 +196,7 @@ Capability inventory (Section B):
         assert(/if \(!this\.selectedEncounter \|\| this\.selectedEncounter\.kind !== 'PUBLICATION'\) \{/.test(gateMatch[0]),
             '2. "Distribute Publication" is reachable ONLY when a World Encounter is currently SELECTED, of kind PUBLICATION — never merely because a local Publication exists.');
 
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/:disabled="!publication \|\| snapshotDistributionExecuting"/.test(ownPanelSource),
             '3. by contrast, "Distribute Snapshot" (OwnPublicationPanel.js) is disabled ONLY by the absence of a Publication or an in-flight call — the identical `publication` prop a successful Repository Publish already supplies, with no selection of any kind required.');
 
@@ -339,7 +339,7 @@ Capability inventory (Section B):
 
         // G3 — Export Snapshot vs. Distribute Snapshot: DISTINCT (local,
         // synchronous, no network, vs. external content store + announce).
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/Snapshot Export Capability Integration/.test(ownPanelSource) && /no file save, download, or copy-to-clipboard/.test(ownPanelSource),
             '4. Export Snapshot is confirmed, by its own file\'s header, to be a local package-export capability with no network step at all — distinct in kind from Distribute Snapshot\'s external content-store + announce pair, not a redundant path to the same outcome.');
     }

@@ -6,7 +6,7 @@ import { composeDiscoverSnapshotRuntime } from '../application/snapshot/Discover
 import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.151 — World View Snapshot Candidate Browser.
 //
@@ -203,7 +203,7 @@ async function runTests() {
             ctx.snapshotCandidateDiscoveryResult[2].contentHash === 'hash-second',
             '9. arrival order survives into presentation verbatim — no alphabetical, hash, or any other sort is introduced by this UI');
 
-        const panelSource = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!panelSource.includes('.sort(') , '10. OwnPublicationPanel.js never sorts the candidate collection');
 
         console.log('✓ Section C: relay/application order survives into presentation verbatim — the UI introduces no ranking of its own');
@@ -401,7 +401,7 @@ async function runTests() {
     // Section J — structural boundary.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbiddenConstruction = [
             "from '../../content/ArweaveContentStore.js'",
             "from '../../application/nostr/NostrSnapshotDiscoveryQueryService.js'",

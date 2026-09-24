@@ -20,7 +20,7 @@ import { PublishDocumentUseCase } from '../application/publication/PublishDocume
 import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { VehicleType } from '../core/VehicleType.js';
-import { worldNavigationSessionFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldViewFiles, worldViewTemplateFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.196 — Architecture Reassessment / Product Gap Audit.
 //
@@ -278,7 +278,7 @@ async function runTests() {
         // exist, and now does, is the mutation itself.
         const navigationSessionSourceForUnpublish = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(/unpublishDocument\(documentId/.test(navigationSessionSourceForUnpublish), 'C7a. WorldNavigationSession now exposes unpublishDocument(documentId, expectedPublicationId) — the reachable call site 0.9.198 added, mirroring removePlacement()\'s own compare-and-swap shape one authority up');
-        const ownPublicationPanelSourceForUnpublish = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSourceForUnpublish = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/unpublishCommand/.test(ownPublicationPanelSourceForUnpublish) && /unpublishOwnPublication/.test(ownPublicationPanelSourceForUnpublish), 'C7b. OwnPublicationPanel.js now wires an unpublishCommand prop to an "Unpublish" action, per 0.9.198');
 
         // C6 — both use cases are proven CORRECT here, directly, against
@@ -345,7 +345,7 @@ async function runTests() {
     // missing, from the identical authoring surface.
     // ---------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const clickHandlers = new Set((panelSource.match(/@click="[a-zA-Z]+/g) || []).map((s) => s.replace('@click="', '')));
         assert(clickHandlers.size >= 9, `D1. OwnPublicationPanel.js already wires at least 9 distinct actions (found ${clickHandlers.size}) — publish/unpublish/anchor/distribute/Snapshot discovery/resolution/materialization/attribution are all reachable`);
         const unpublishHandlers = [...clickHandlers].filter((h) => /^unpublish|^retract/i.test(h));

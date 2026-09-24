@@ -30,7 +30,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelSource } from './support/SourceFileGroups.js';
 
 // 0.9.325 — Diagnostic Tools Surface Convergence Audit.
 //
@@ -137,10 +137,13 @@ async function rawSource(relativePath) {
     return readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
 }
 
-async function codeOnlySource(relativePath) {
-    const text = await rawSource(relativePath);
+function codeOnlyText(text) {
     const withoutHtmlComments = text.replace(/<!--[\s\S]*?-->/g, '');
     return withoutHtmlComments.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
+}
+
+async function codeOnlySource(relativePath) {
+    return codeOnlyText(await rawSource(relativePath));
 }
 
 // ---------------------------------------------------------------------
@@ -344,8 +347,8 @@ const PIPELINE_ACTIONS = [
 async function runTests() {
     console.log('Running Diagnostic Tools Surface Convergence Audit tests...\n');
 
-    const rawPanel = await rawSource('ui/components/OwnPublicationPanel.js');
-    const codePanel = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+    const rawPanel = ownPublicationPanelSource();
+    const codePanel = codeOnlyText(ownPublicationPanelSource());
 
     // ---------------------------------------------------------------
     // Section A — Pipeline identity.

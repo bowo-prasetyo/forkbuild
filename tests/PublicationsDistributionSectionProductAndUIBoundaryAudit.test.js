@@ -10,7 +10,7 @@ import { composePublicationDistributionCommand } from '../application/publicatio
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
-import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.435 — Publications Distribution Section Product & UI Boundary Audit.
 //
@@ -204,7 +204,7 @@ async function run() {
     // distribution-capable action, from real source.
     // ===============================================================
     {
-        const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
@@ -418,7 +418,7 @@ async function run() {
     // concrete adaptation a UI change would need, named precisely.
     // ===============================================================
     {
-        const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         // OwnPublicationPanel/WorldEncounterCanvas hold ONE set of
@@ -444,7 +444,7 @@ async function run() {
     // execution, kept contextual, never re-embedded.
     // ===============================================================
     {
-        const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 

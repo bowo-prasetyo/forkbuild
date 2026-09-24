@@ -15,7 +15,7 @@ import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
 import { RestoreHistoryStateUseCase } from '../application/document/RestoreHistoryStateUseCase.js';
 import { RecoveryObserver } from '../application/document/RecoveryObserver.js';
-import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.206 — Post-Recovery Product Reassessment.
 //
@@ -100,7 +100,7 @@ async function runTests() {
         const emitsMatch = placementInfoPanelSource.match(/emits:\s*\[([^\]]*)\]/);
         assert(emitsMatch && /\bremove\b/i.test(emitsMatch[1]), 'A3. PlacementInfoPanel.js still emits \'remove\' — 0.9.197\'s removal action remains reachable');
 
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/unpublishCommand/.test(ownPublicationPanelSource), 'A4. OwnPublicationPanel.js still wires an unpublishCommand — 0.9.198\'s retract action remains reachable');
 
         // A5 — the one thing 0.5.9's own design record (docs/Principles.md,
@@ -284,7 +284,7 @@ async function runTests() {
     // Section D — Publication workflow. COMPLETE, reconfirmed.
     // ---------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const clickHandlers = new Set((panelSource.match(/@click="[a-zA-Z]+/g) || []).map((s) => s.replace('@click="', '')));
         assert(clickHandlers.size >= 9, `D1. OwnPublicationPanel.js still wires at least 9 distinct actions (found ${clickHandlers.size})`);
         const unpublishHandlers = [...clickHandlers].filter((h) => /^unpublish|^retract/i.test(h));

@@ -7,7 +7,7 @@ import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnaps
 import { ArweaveSnapshotDiscoveryPublisher } from '../application/arweave/ArweaveSnapshotDiscoveryPublisher.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.565 — Decentralized Publication Position Claim Distribution Boundary
 // Audit.
@@ -324,7 +324,7 @@ async function run() {
         assert(!/PlacementRecord|LocalPlacementRegistry/.test(claimSource),
             '4. ...and, structurally, never touches PlacementRecord/LocalPlacementRegistry — consuming a claim still never becomes authoritative World state on its own.');
 
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/useClaimedSnapshotPosition\(\)\s*\{/.test(panelSource),
             '5. the one place a claim is ever consumed remains a distinct, person-initiated method...');
         assert(/@click="useClaimedSnapshotPosition"/.test(panelSource),
@@ -336,7 +336,7 @@ async function run() {
     // Section H — The existing consumer is already production-ready.
     // =======================================================================
     {
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/import \{ resolveSnapshotWorldPositionClaim \} from '\.\.\/\.\.\/application\/snapshot\/placement\/SnapshotWorldPositionClaim\.js'/.test(panelSource),
             '1. ui/components/OwnPublicationPanel.js — a real, shipped production UI component — already imports the consumer function directly.');
         assert(/this\.selectedSnapshotWorldPositionClaimResult = resolveSnapshotWorldPositionClaim\(candidate, publication\.id\)/.test(panelSource),

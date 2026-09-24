@@ -10,7 +10,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.142 — World View Snapshot Discovery Command.
 //
@@ -170,7 +170,7 @@ async function runTests() {
     // Section B — command boundary (structural).
     // ---------------------------------------------------------------
     {
-        const code = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const code = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbiddenConstruction = [
             "from '../../content/ArweaveContentStore.js'",
             "from '../../application/nostr/NostrSnapshotDiscoveryQueryService.js'",
@@ -367,7 +367,7 @@ async function runTests() {
         assert(/<OwnPublicationPanel[\s\S]{0,400}:discoverSnapshotCommand="discoverOwnSnapshot"/.test(viewCode),
             '20. OwnPublicationPanel is wired to discoverOwnSnapshot, mirroring the existing :snapshotDistributionCommand wiring');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbiddenInUi = [
             'window.arweaveWallet', 'window.nostr', 'WebSocket',
             'new ArweaveContentStore(', 'new NostrSnapshotDiscoveryQueryService(', 'new DecentralizedSnapshotResolver(',

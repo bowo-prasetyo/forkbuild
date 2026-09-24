@@ -13,6 +13,7 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.158 — Selected Snapshot Materialization.
 //
@@ -469,7 +470,7 @@ async function run() {
         // resolveSnapshotPublicationAttribution() or touches a publication
         // catalog — proven by source inspection.
         const { readFile } = await import('node:fs/promises');
-        const panelSource = await readFile(new URL('../ui/components/OwnPublicationPanel.js', import.meta.url), 'utf8');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const bodyStart = panelSource.indexOf('materializeSelectedSnapshot()');
         const bodyEnd = panelSource.indexOf('\n    },', bodyStart);
         const body = panelSource.slice(bodyStart, bodyEnd);

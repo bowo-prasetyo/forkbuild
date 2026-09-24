@@ -27,6 +27,7 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.160 — Selected Snapshot World Runtime Registration.
 //
@@ -579,7 +580,7 @@ async function run() {
         // registerMaterializedSnapshot() never calls resolveSnapshotWorldPlacement()
         // or the materialization/resolution commands — it only reads their
         // already-computed results.
-        const panelSource = await readFile(new URL('../ui/components/OwnPublicationPanel.js', import.meta.url), 'utf8');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const bodyStart = panelSource.indexOf('registerMaterializedSnapshot() {');
         const bodyEnd = panelSource.indexOf('\n    }', bodyStart);
         const body = panelSource.slice(bodyStart, bodyEnd);

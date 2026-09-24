@@ -17,7 +17,7 @@ import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/P
 import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 import { DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL, DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.372 — Nostr Relay Settings Lifecycle & Product Reassessment.
 //
@@ -598,7 +598,7 @@ async function run() {
         // ever announced, or the relay was unreachable — a genuine,
         // currently invisible ambiguity, on the ONE discovery family that
         // (like Place Naming) has no alternative source.
-        const ownPublicationPanelSource = await source('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         assert(ownPublicationPanelSource.includes('No Snapshots have been announced under this discoveryTag yet.'),
             'E4. sanity — the exact ambiguous copy this finding is about exists in source');
 

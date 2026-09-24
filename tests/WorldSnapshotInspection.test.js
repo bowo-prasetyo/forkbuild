@@ -308,7 +308,7 @@ function run() {
             '4. no Nostr/Arweave-specific vocabulary — this file operates entirely on already-established World facts, reached only through their existing origin-string encoding');
 
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-        assert(canvasSource.includes("import { describeWorldSnapshotInspection } from '../../application/snapshot/WorldSnapshotInspection.js';"),
+        assert(canvasSource.includes("import { describeWorldSnapshotInspection } from '../../../application/snapshot/WorldSnapshotInspection.js';"),
             '5. WorldEncounterCanvas.js wires the new pure module in as a plain import, exactly like every other application/ seam it depends on');
 
         console.log('✓ Section K: structural sweep — no I/O, no registry access, no re-invocation of upstream resolution/placement/registration, no hashing, and no rank/trust vocabulary');

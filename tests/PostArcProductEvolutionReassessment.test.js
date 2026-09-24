@@ -6,7 +6,7 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
-import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, editorSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.307 — Post-Arc Product Evolution Reassessment.
 //
@@ -242,7 +242,7 @@ async function runTests() {
         // observe/attribute/export) — REACHABLE_AND_COMPLETE, per this
         // milestone's own dedicated Snapshot research pass. Reconfirmed
         // with one signal per stage rather than the full prior sweep.
-        assert((await rawSource('ui/components/OwnPublicationPanel.js')).includes('discoverOwnSnapshot') &&
+        assert(((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')).includes('discoverOwnSnapshot') &&
             ((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')).includes('armComparisonSelection') &&
             (await rawSource('ui/main.js')).includes("app.provide('exportSnapshotCommand'"),
             'C1. Snapshot discovery, comparison, and export all still have real UI call sites.');
@@ -474,7 +474,7 @@ async function runTests() {
         // "(publication) -> ..." command-prop shape every other
         // OwnPublicationPanel capability (snapshotDistributionCommand,
         // discoverSnapshotCommand, exportSnapshotCommand) already uses.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publication:\s*\{\s*type:\s*Object/.test(codeOnlyLines(panelSource)) && /placementInfo/.test(panelSource),
             'G4. OwnPublicationPanel.js already receives both the full Publication object and a singular placementInfo prop — the exact two inputs an "all placements" section needs, already present.');
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');

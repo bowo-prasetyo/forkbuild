@@ -16,6 +16,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.251 — Publication Commentary Count UI.
 //
@@ -125,7 +126,7 @@ async function runTests() {
 
         assert(ctx.publicationCommentaries.length === 3, '1. three comments are persisted and loaded');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(panelCode.includes('Commentary ({{ publicationCommentaries.length }})'),
             '2. the template renders the count as a direct interpolation of publicationCommentaries.length');
 
@@ -235,7 +236,7 @@ async function runTests() {
     // introduced to compute the count.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         assert(!/publicationCommentaryCount/.test(panelCode),
             '15. no dedicated publicationCommentaryCount field/method exists — the count is read directly from the array');

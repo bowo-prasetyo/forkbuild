@@ -16,7 +16,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.382 — Distribution Result -> Repository Navigation Convergence
 // Audit.
@@ -237,7 +237,7 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
 async function run() {
     const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
     const editorViewCodeOnly = codeOnlyLines(editorViewSource);
-    const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+    const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
 
     // ---------------------------------------------------------------

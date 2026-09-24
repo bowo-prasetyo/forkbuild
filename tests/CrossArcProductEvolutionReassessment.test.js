@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { owningView } from './support/SourceFileGroups.js';
+import { owningView, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { execSync } from 'node:child_process';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
@@ -418,7 +418,7 @@ async function runTests() {
         // E4. The ONE UI component these commands are bound to.
         const bindingSites = await grepComponentCount(':getPublicationCommentariesCommand=\\|:addPublicationCommentaryCommand=', ['ui']);
         assert(bindingSites === 1, `E4. Exactly one UI binding site passes these commands as props today (found ${bindingSites}) — OwnPublicationPanel.`);
-        const ownPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(ownPanelSource.includes('getPublicationCommentariesCommand') && ownPanelSource.includes('addPublicationCommentaryCommand'),
             'E4b. ui/components/OwnPublicationPanel.js is that one component.');
 

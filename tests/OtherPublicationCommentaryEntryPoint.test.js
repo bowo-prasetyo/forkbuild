@@ -18,7 +18,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.289 — Other-Publication Commentary Entry Point.
 //
@@ -461,7 +461,7 @@ async function runTests() {
     // remain byte-for-byte as 0.9.248/0.9.285 left them.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(panelCode.includes('refreshPublicationCommentaries()') && panelCode.includes('submitPublicationCommentary()'),
             '36. OwnPublicationPanel.js still carries its own original commentary methods, untouched');
 

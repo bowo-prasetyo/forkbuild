@@ -10,7 +10,7 @@ import {
     executeDiscoverSnapshotCandidatesCommandWithOutcome
 } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.590 — Snapshot Discovery Outcome Presentation Closure Audit.
 //
@@ -305,7 +305,7 @@ async function runTests() {
         assert(malformedCtx.snapshotCandidateDiscoveryOutcome === 'some-unexpected-value',
             '26. the panel stores whatever it is handed verbatim — it validates nothing itself');
 
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const templateStart = panelSource.indexOf('template: `');
         const template = panelSource.slice(templateStart);
         assert(/snapshotCandidateDiscoveryResult\.length === 0 && snapshotCandidateDiscoveryOutcome === 'unavailable'/.test(template),
@@ -352,8 +352,8 @@ async function runTests() {
 
         // The method body itself never references any downstream family's
         // own fields — a static, structural guarantee, not just this one run.
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
-        const methodMatch = panelSource.match(/discoverSnapshotCandidates\(\) \{[\s\S]*?\n {8}\},/);
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
+        const methodMatch = panelSource.match(/discoverSnapshotCandidates\(\) \{[\s\S]*?\n {4}\},?/);
         assert(methodMatch, '34. discoverSnapshotCandidates() method body is present and extractable');
         const methodBody = methodMatch[0];
         assert(!/selectedSnapshot|Placement|Registration|Materialization|Attribution/.test(methodBody),

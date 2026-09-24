@@ -12,7 +12,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.599 — First Publication Placement Capability Boundary Audit.
 //
@@ -352,7 +352,7 @@ async function run() {
     // keyed the right way.
     // ===============================================================
     {
-        const ownPublicationPanelSrc = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSrc = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
 
         assert(/getPublicationPlacementsCommand\(publication\.id\)/.test(ownPublicationPanelSrc),
             'G1. ui/components/OwnPublicationPanel.js already has a publicationId-keyed placement surface (0.9.308\'s own getPublicationPlacementsCommand(publication.id)) — the SAME key (publicationId, not documentId) the new capability needs, since Section C\'s own Publication has no locally-known documentId path at all.');

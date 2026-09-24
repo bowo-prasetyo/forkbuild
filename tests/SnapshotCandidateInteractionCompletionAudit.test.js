@@ -10,6 +10,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { ownPublicationPanelSource } from './support/SourceFileGroups.js';
 
 // 0.9.157 — Snapshot Candidate Interaction Completion Audit.
 //
@@ -221,10 +222,13 @@ async function placeAndAnnounce(host, bytes) {
 
 const SOURCE_ROOT = new URL('../', import.meta.url);
 
-async function codeOnlySource(relativePath) {
-    const text = await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
+function codeOnlyText(text) {
     const withoutHtmlComments = text.replace(/<!--[\s\S]*?-->/g, '');
     return withoutHtmlComments.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
+}
+
+async function codeOnlySource(relativePath) {
+    return codeOnlyText(await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8'));
 }
 
 function panelCtx(overrides = {}) {
@@ -289,7 +293,7 @@ async function run() {
         assert(ctx.snapshotCandidateDiscoveryResult[2].locator === referenceShared2.uri, 'A4. ...third announced is third, even though it shares a contentHash with the first');
 
         // No ranking or dedup, structurally.
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = codeOnlyText(ownPublicationPanelSource());
         assert(!panelCode.includes('.sort('), 'A5. OwnPublicationPanel.js never sorts the candidate collection');
         assert(!panelCode.includes('new Set(') && !panelCode.includes('.filter('), 'A6. OwnPublicationPanel.js never deduplicates or filters the candidate collection');
 
@@ -480,7 +484,7 @@ async function run() {
         // behaviorally that a selection change immediately (no await
         // needed at all) invalidates it.
         {
-            const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+            const panelCode = codeOnlyText(ownPublicationPanelSource());
             assert(!panelCode.includes('selectedSnapshotAttributionExecuting'), 'Eii1. there is no selectedSnapshotAttributionExecuting field at all — attribution has no in-flight state to race');
             assert(!/attributeSelectedSnapshot\s*\(\s*\)\s*{[^}]*await/s.test(panelCode), 'Eii2. attributeSelectedSnapshot() contains no await — it is genuinely synchronous, start to finish');
 
@@ -689,7 +693,7 @@ async function run() {
         // many-to-one) over every real outcome value — see this milestone's
         // own tests/SnapshotEncounterPlacementProductExperienceReassessment
         // .test.js, Section G3, which proves that live.
-        const rawTemplateSource = await readFile(new URL('ui/components/OwnPublicationPanel.js', SOURCE_ROOT), 'utf8');
+        const rawTemplateSource = ownPublicationPanelSource();
         const templateMatch = rawTemplateSource.match(/template: `([\s\S]*)`\s*};?\s*$/);
         assert(templateMatch, 'G1. sanity: the component template literal was located');
         const template = templateMatch[1];
@@ -803,7 +807,7 @@ async function run() {
     // body guards with.
     // ===============================================================
     {
-        const rawSource = await readFile(new URL('ui/components/OwnPublicationPanel.js', SOURCE_ROOT), 'utf8');
+        const rawSource = ownPublicationPanelSource();
 
         function disabledExpressionFor(actionClass) {
             const re = new RegExp(`class="action-btn ${actionClass}"[\\s\\S]{0,200}?:disabled="([^"]*)"`);
@@ -831,7 +835,7 @@ async function run() {
         // Cross-check against the actual method-body guards themselves, so
         // this section proves CORRESPONDENCE, not merely that each side
         // independently looks plausible.
-        const codeOnly = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const codeOnly = codeOnlyText(ownPublicationPanelSource());
         const resolveMethodGuard = codeOnly.match(/resolveSelectedSnapshot\(\)\s*{\s*const candidate[\s\S]{0,200}?if \(([^)]*)\)/);
         assert(resolveMethodGuard && resolveMethodGuard[1].includes('!candidate'), 'I6. resolveSelectedSnapshot()\'s own guard genuinely requires a selected candidate — the template\'s disabled binding mirrors a real guard, not an ornamental one');
 

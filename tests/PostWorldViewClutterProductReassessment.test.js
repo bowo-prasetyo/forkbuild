@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.362 — Post-World-View-Clutter Product Reassessment.
 //
@@ -88,7 +88,7 @@ async function run() {
     const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
     const canvasCodeOnly = codeOnlySource(canvasSource);
-    const ownPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+    const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
     const dialogSource = await rawSource('ui/components/WorldDistributionDialog.js');
     const roadmap = await rawSource('docs/Roadmap.md');
 

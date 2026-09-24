@@ -9,7 +9,7 @@ import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutc
 import { resolveSnapshotPublicationAttribution } from '../application/snapshot/SnapshotPublicationAttribution.js';
 import { describeWorldEncounterMaterialVerificationStatusLabel } from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.529 — Snapshot Outcome Presentation Boundary Closure Audit.
 //
@@ -120,7 +120,7 @@ function makeResolvedSnapshot(outcome, overrides = {}) {
 async function run() {
     console.log('=== 0.9.529 — Snapshot Outcome Presentation Boundary Closure Audit ===\n');
 
-    const panelSource = await source('ui/components/OwnPublicationPanel.js');
+    const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
     const viewSource = await source('application/snapshot/SnapshotOutcomeInspectionView.js');
     const panelCode = codeOnly(panelSource);

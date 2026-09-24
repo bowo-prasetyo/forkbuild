@@ -42,7 +42,7 @@ import { Brick } from '../core/Brick.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.568 — Decentralized Publication Spatial Continuity Product
 // Reassessment.
@@ -918,7 +918,7 @@ async function run() {
     // =======================================================================
     {
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const canvasSourceNormalized = canvasSource.replace(/\s+/g, ' ');
 
         // 1. Observer-local: "Discovered here" — never a claim of ownership,

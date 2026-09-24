@@ -22,7 +22,7 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.216 — Post-Snapshot-Export Product Reassessment.
 //
@@ -242,7 +242,7 @@ async function runTests() {
     // integrity"). Both COMPLETE.
     // ---------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         // AMENDED BY 0.9.672 — World View Distribution Dialog.
         // distributeOwnSnapshot()/distributeOwnPublication()/
         // distributeOwnPublicationAndSnapshot() are no longer wired via a
@@ -337,7 +337,7 @@ async function runTests() {
     // participation. COMPLETE, reconfirmed (0.9.212's own Section E1).
     // ---------------------------------------------------------------
     {
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/discoverOwnSnapshot\(/.test(ownPublicationPanelSource), 'F1. OwnPublicationPanel.js still calls discoverOwnSnapshot (manual discovery)');
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/worldSnapshotDiscoveryMonitor\.observe\(/.test(worldViewSource), 'F2. WorldView.js still drives worldSnapshotDiscoveryMonitor.observe() (automatic discovery)');
@@ -405,7 +405,7 @@ async function runTests() {
         // G5 — no file download / clipboard affordance was added for
         // export either; the panel's own template comment documents the
         // restraint directly.
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/Deliberately no file save, download, or copy-to-clipboard/.test(ownPublicationPanelSource), 'G5a. OwnPublicationPanel.js\'s own template comment still documents "no file save, download, or copy-to-clipboard"');
         assert(!/<a[^>]+download[\s=]/i.test(ownPublicationPanelSource) && !/navigator\.clipboard/.test(ownPublicationPanelSource), 'G5b. ...and its CODE genuinely contains neither a download link nor a clipboard call');
 
@@ -519,7 +519,7 @@ async function runTests() {
         assert(/materialInspection\.verification\.status/.test(canvasSource) || /discoveryResult\.inspection\.verification\.status/.test(canvasSource), 'I2a. WorldEncounterCanvas.js still renders a verification status field');
         assert(/resolveSnapshotPublicationAttribution/.test(canvasSource), 'I2b. ...and still resolves Snapshot/Publication attribution');
 
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/resolveSnapshotPublicationAttribution/.test(ownPublicationPanelSource), 'I3. OwnPublicationPanel.js also resolves attribution — a second, independent rendering surface, not a single unreachable path');
 
         console.log('✓ Section I: Material verification / attribution — COMPLETE. The full verifier chain is composed app-wide and its result is rendered on two independent surfaces (WorldEncounterCanvas.js, OwnPublicationPanel.js).');

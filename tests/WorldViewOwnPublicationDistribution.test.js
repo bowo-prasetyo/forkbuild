@@ -22,7 +22,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.140 — Own Publication Distribution Entry Point.
 //
@@ -268,7 +268,7 @@ async function runTests() {
     // Section C — command boundary (structural).
     // ---------------------------------------------------------------
     {
-        const code = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const code = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbiddenConstruction = [
             "from '../../content/ArweaveContentStore.js'",
             "from '../../application/nostr/NostrSnapshotDiscoveryPublisher.js'",
@@ -510,7 +510,7 @@ async function runTests() {
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!canvasCode.includes('OwnPublicationPanel'), '40. WorldEncounterCanvas.js is untouched by this milestone — it knows nothing of OwnPublicationPanel');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbiddenInUi = [
             'window.arweaveWallet', 'window.nostr', 'WebSocket',
             'new ArweaveContentStore(', 'new NostrSnapshotDiscoveryPublisher(',

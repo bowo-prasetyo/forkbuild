@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.252 — Post-Commentary-UI Product Reassessment.
 //
@@ -121,7 +121,7 @@ async function runTests() {
         const addUseCase = await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
         const getUseCase = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
         const navSession = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
 
         assert(/publicationId/.test(domain) && !/\bdocumentId\b/.test(codeOnlyLines(domain)),
             'A3a. core/PublicationCommentary.js still keys commentary on publicationId, never documentId (0.9.242).');
@@ -309,7 +309,7 @@ async function runTests() {
         // subscription/polling/websocket vocabulary in the real read
         // methods.
         const getUseCase = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const refreshMethod = panel.match(/refreshPublicationCommentaries\(\) \{[\s\S]*?\n        \},/);
         assert(refreshMethod, 'C6a. refreshPublicationCommentaries() still exists in its expected shape.');
         const syncVocab = /subscri|\bpoll(?:ing)?\b|websocket|nostr/i;
@@ -360,7 +360,7 @@ async function runTests() {
             assert(new RegExp(`\\b${field}\\b`).test(publicationDomain),
                 `D1a. publisher/Publication.js's own constructor still carries a ${field} field.`);
         }
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const detailBlock = panel.match(/<dl v-if="publication" class="own-publication-detail">[\s\S]*?<\/dl>/)[0];
         assert(detailBlock.includes('publication.title') && detailBlock.includes('publication.author'),
             'D1b. own-publication-detail still renders publication.title and publication.author.');

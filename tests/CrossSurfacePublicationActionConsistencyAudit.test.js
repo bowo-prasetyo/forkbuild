@@ -24,7 +24,7 @@ import { PublicationCommentaryNotificationProducer } from '../application/public
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.560 — Cross-Surface Publication Action Consistency Audit.
 //
@@ -135,7 +135,7 @@ async function runTests() {
         const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const worldFocusPanelSource = await rawSource('ui/components/WorldFocusPanel.js');
         const worldSearchPanelSource = await rawSource('ui/components/WorldSearchPanel.js');
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const recentWorldsViewSource = await rawSource('ui/views/RecentWorldsView.js');
         const worldCardSource = await rawSource('ui/components/WorldCard.js');
 
@@ -448,7 +448,7 @@ async function runTests() {
         // view's), so the card's Commentary source is the two together.
         const publicationCardSource = await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js');
         const publicationListSource = await rawSource('ui/components/PublicationList.js');
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
 
         // G1. Every commentary-bearing surface reads/writes strictly by

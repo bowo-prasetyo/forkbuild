@@ -25,7 +25,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldNavigationSessionFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldViewFiles, worldViewTemplateFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.551 — Novel Publication Spatial Admission Product Boundary Audit.
 //
@@ -486,7 +486,7 @@ async function runTests() {
         // component requires a `publication` prop, and the whole flow is
         // keyed to `this.publication.id` — the panel's own active
         // Publication, never an arbitrary encountered one.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publication:\s*\{/.test(panelSource) && /useClaimedSnapshotPosition\(\)\s*\{/.test(codeOnlyLines(panelSource)),
             'D3. useClaimedSnapshotPosition() exists, scoped to this component\'s own required `publication` prop.');
         assert(/resolveSnapshotWorldPositionClaim\(candidate, publication\.id\)/.test(codeOnlyLines(panelSource)),
@@ -519,7 +519,11 @@ async function runTests() {
             'ui/views/worldView/templates/nearbySection.js',
             'ui/components/WorldEncounterCanvas.js',
             // WorldEncounterCanvas.js's own observer-local methods, moved out of it.
-            'ui/components/worldEncounterCanvas/observerLocalEncounterMethods.js'
+            'ui/components/worldEncounterCanvas/observerLocalEncounterMethods.js',
+            // WorldEncounterCanvas.js's computed properties and template sections.
+            'ui/components/worldEncounterCanvas/canvasProjectionComputed.js',
+            'ui/components/worldEncounterCanvas/selectionInspectionComputed.js',
+            'ui/components/worldEncounterCanvas/templates/observerLocalEncounterPanel.js'
         ]);
         let hits = '';
         try {

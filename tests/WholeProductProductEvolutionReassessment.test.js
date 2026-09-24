@@ -17,7 +17,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.383 — Whole-Product Product Evolution Reassessment.
 //
@@ -320,7 +320,7 @@ async function run() {
         // world is its own real, composed use case, distinct from Fork.
         assert(await sourceExists('application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js'),
             n('Discover -> Attribute -> Place: application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js exists — placing a discovered Snapshot is a real, reachable action'));
-        const panelCodeOnly = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCodeOnly = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(panelCodeOnly.includes('>Place Materialized Snapshot</button>') && panelCodeOnly.includes('>Register Placed Snapshot</button>'),
             n('OwnPublicationPanel.js still renders real, distinct "Place Materialized Snapshot" and "Register Placed Snapshot" buttons, not merely a placement-orchestrator file with no UI entry point'));
 

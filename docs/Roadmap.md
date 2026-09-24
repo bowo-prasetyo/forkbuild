@@ -98399,3 +98399,16 @@ snapshotting every prototype member (name, flags and source text) before and aft
 WorldNavigationSession members are identical, as are both constructors. Tests that read either class's source now
 read it with its modules through `tests/support/SourceFileGroups.js` (129 reads in 85 files). 35 of those tests
 had been failing because they read only `WorldNavigationSession.js` after the earlier split; they pass now.
+
+**WorldEncounterCanvas and OwnPublicationPanel split further.** `ui/components/WorldEncounterCanvas.js` (1,708 → 715
+lines) moves its 36 computed properties into four modules under `ui/components/worldEncounterCanvas/` (canvas
+projection, selection and inspection, distribution, snapshot comparison) spread into `computed`, and five template
+sections into `ui/components/worldEncounterCanvas/templates/`. `ui/components/OwnPublicationPanel.js` (1,130 → 413
+lines) moves 17 of its methods into two modules under a new `ui/components/ownPublicationPanel/` (publication actions,
+the Snapshot diagnostic pipeline) and four template sections into its `templates/`. Module-level helpers moved with
+the only code that uses them. Comparing each component definition before and after: the compiled template string is
+identical, and so is the source of every prop, computed property, method, watcher and lifecycle hook, apart from
+indentation. Tests read OwnPublicationPanel with its modules through `tests/support/SourceFileGroups.js` (186 reads in
+103 files); checks on template order read `ownPublicationPanelSource()` or `worldEncounterCanvasSource()`, which
+expand the template in place. Other adjustments follow the earlier splits: inventories name the module holding the
+code, method regexes expect four-space indentation, and import paths quoted from source gained a `../`.

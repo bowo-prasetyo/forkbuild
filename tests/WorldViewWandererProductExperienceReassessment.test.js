@@ -3,7 +3,7 @@ import { execSync } from 'node:child_process';
 
 import WorldEncounterCanvasModule from '../ui/components/WorldEncounterCanvas.js';
 import { materializedSnapshotWorldOrigin } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.516 — World View / Wanderer Product Experience Reassessment.
 //
@@ -302,7 +302,7 @@ async function run() {
         // already labeled, and out of THIS milestone's own Wanderer-scoped
         // brief. USER_VISIBLE + CONFUSING at the two ordinary-Wanderer
         // "Choose Source"/"Choose Location" call sites — FIXED, Section G1-G6.
-        const ownPublicationSource = await source('ui/components/OwnPublicationPanel.js');
+        const ownPublicationSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         check(ownPublicationSource.includes("// 0.9.140 — Own Publication Distribution Entry Point."),
             'G8. OwnPublicationPanel.js is still explicitly the content OWNER\'S own distribution entry point — a different persona from an ordinary Wanderer encountering someone else\'s content');
         classifications.push(['locator/uri (Publisher evidence surfaces)', 'USER_VISIBLE_ACCEPTABLE — explicitly labeled <dt>Locator</dt>/<dt>Transaction</dt> field, creator-only opt-in surface, out of this milestone\'s Wanderer-scoped brief']);

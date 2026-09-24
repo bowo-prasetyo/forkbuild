@@ -19,7 +19,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.638 — Publication Commentary Distribution Provider Selector.
 //
@@ -547,7 +547,7 @@ async function runTests() {
         // own PRE-EXISTING Publication selector, 0.9.430, legitimately
         // keeps its own "Distribution"/<option value="nostr"> markup
         // elsewhere in the same file, for Publication, not Commentary).
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/<option value="nostr">Nostr<\/option>/.test(panelSource),
             '38. OwnPublicationPanel.js — which carries no Publication-distribution selector at all — gained no Commentary one either');
 

@@ -8,7 +8,7 @@ import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnaps
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.141 — Distribution Entry-Point Convergence Audit.
 //
@@ -615,7 +615,7 @@ async function run() {
     // the command's own put()-then-publish() sequencing.
     // ===============================================================
     {
-        const ownCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const ownCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         const forbidden = [

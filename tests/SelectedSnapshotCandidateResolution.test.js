@@ -13,7 +13,7 @@ import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/R
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.152 — Selected Snapshot Candidate Resolution.
 //
@@ -575,7 +575,7 @@ async function run() {
             '39. ResolveSelectedSnapshotCommand.js never constructs infrastructure or calls the other discovery/resolution commands');
         assert((commandCode.match(/resolver\.resolveCandidate\(/g) || []).length === 1, '40. resolver.resolveCandidate() is called from exactly one place');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert((panelCode.match(/this\.resolveSelectedSnapshotCommand\(/g) || []).length === 1, '41. resolveSelectedSnapshotCommand is called from exactly one place');
         assert(panelCode.includes('this.resolveSelectedSnapshotCommand(candidate)'),
             '42. OwnPublicationPanel.js calls resolveSelectedSnapshotCommand with the CANDIDATE OBJECT — never candidate.contentHash or any other derived string');

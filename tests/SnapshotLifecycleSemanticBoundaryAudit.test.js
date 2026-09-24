@@ -19,6 +19,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.156 — Snapshot Lifecycle & Semantic Boundary Audit.
 //
@@ -565,7 +566,7 @@ async function run() {
         // at all; every "is this valid" fact it displays is entirely the
         // resolver's/attribution function's own, read off a result
         // object, never independently recomputed.
-        const panelSource = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!panelSource.includes("from '../../serializer/contentHash.js'") && !panelSource.includes('computeContentHash'),
             'F2. OwnPublicationPanel.js never imports serializer/contentHash.js — it has no capability to independently compute a hash even if it wanted to');
 
@@ -673,7 +674,7 @@ async function run() {
                     `H1. ${file} never references '${field}' — that field is ephemeral UI state, never a fact any application-/core-/content-layer file depends on`);
             }
         }
-        const otherUiFiles = (await listJsFilesRecursively('ui/')).filter((f) => f !== 'ui/components/OwnPublicationPanel.js');
+        const otherUiFiles = (await listJsFilesRecursively('ui/')).filter((f) => !ownPublicationPanelFiles().includes(f));
         for (const field of exclusiveToOwnPublicationPanelFieldNames) {
             for (const file of otherUiFiles) {
                 const source = await codeOnlySource(file);
@@ -689,7 +690,7 @@ async function run() {
         // let discovery-order metadata quietly acquire attribution
         // meaning by being written back onto the SAME object other code
         // still holds a reference to.
-        const panelSource = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!/selectedSnapshotCandidate\.\w+\s*=/.test(panelSource),
             'H2. OwnPublicationPanel.js never assigns a property onto selectedSnapshotCandidate itself — a selected candidate is read, never annotated');
         assert(!/\.locator\.contentHash|\.contentHash\.locator/.test(panelSource),
@@ -828,9 +829,10 @@ async function run() {
         // 0.9.155's own Section F already established, re-verified here
         // as part of this holistic audit's own "single-source-of-
         // behavior" claim rather than a single-feature one.
-        const panelSource = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
+        // The panel's methods live in two modules, and each imports it once.
         const importCount = (panelSource.match(/import\s*\{\s*resolveSnapshotPublicationAttribution\s*\}/g) || []).length;
-        assert(importCount === 1, 'J2a. resolveSnapshotPublicationAttribution is imported exactly once into OwnPublicationPanel.js');
+        assert(importCount === 2, 'J2a. resolveSnapshotPublicationAttribution is imported once into each of OwnPublicationPanel.js\'s two method modules');
         const callSiteCount = (panelSource.match(/resolveSnapshotPublicationAttribution\(/g) || []).length;
         assert(callSiteCount === 2, 'J2b. exactly two call sites exist — discoverOwnSnapshot()\'s own (known-contentHash path) and attributeSelectedSnapshot()\'s own (browsed-and-selected path) — both the SAME imported function, never a second, independent comparison implementation');
 

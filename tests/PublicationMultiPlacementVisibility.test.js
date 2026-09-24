@@ -7,7 +7,7 @@ import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.308 — Publication Multi-Placement Visibility.
 //
@@ -221,7 +221,7 @@ async function runTests() {
             '16. an unplaced Publication resolves to a real, empty array');
         assert(ctx.publicationPlacementsError === null, '17. zero placements is never reported as an error');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(panelCode.includes('This Publication has not been placed anywhere yet.'),
             '18. the template renders a dedicated, honest empty-state message');
 
@@ -283,7 +283,7 @@ async function runTests() {
         // calls the mutating placement use cases anywhere in the file —
         // this feature's own methods/template add no new call site for
         // any of them.
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbidden = [
             "from '../../application/placement/PlacePublicationUseCase.js'",
             "from '../../application/placement/MoveWorldPlacementUseCase.js'",

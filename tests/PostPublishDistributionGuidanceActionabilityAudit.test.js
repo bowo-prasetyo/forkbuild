@@ -20,7 +20,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.375 — Post-Publish Distribution Guidance Actionability Audit.
 //
@@ -525,7 +525,7 @@ async function run() {
         // DistributionErrorMessageSanitizer.js) — the SAME restraint a
         // toast action would inherit for free if it called this command,
         // never a toast-specific error vocabulary of its own.
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(panelCode.includes('this.publicationDistributionError = sanitizeDistributionErrorMessage(error)') &&
                panelCode.includes("|| 'Publication distribution could not be completed.'"),
             '33. OwnPublicationPanel.js\'s own catch() renders the sanitized cause, or one fixed, generic fallback failure message — the exact vocabulary a toast action would reuse, never a distinct one');

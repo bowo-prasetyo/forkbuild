@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { describeRoleProviderPreferenceSettings } from '../application/settings/RoleProviderPreferenceSettingsView.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.517 — Decentralized Publication Lifecycle Product Reassessment.
 //
@@ -268,7 +268,7 @@ async function run() {
         // Publisher-facing evidence fields — explicitly labeled, opt-in,
         // reconfirmed by direct source read rather than assumed from
         // 0.9.516's own prose.
-        const ownPublicationSource = await source('ui/components/OwnPublicationPanel.js');
+        const ownPublicationSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         check(ownPublicationSource.includes('<dt>Locator</dt>'), 'G1. OwnPublicationPanel.js still explicitly labels a content locator as "Locator", never a raw `uri`/`locator` field name');
         const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(decentralizedViewSource.includes('<dt>Transaction</dt>'), 'G2. DecentralizedPublicationsView.js still explicitly labels a proof transaction as "Transaction"');

@@ -12,7 +12,7 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.215 — Snapshot Export Capability Integration.
 //
@@ -235,8 +235,8 @@ async function runTests() {
         // method calls exactly one thing: the injected exportSnapshotCommand
         // prop, over the whole `publication` object — the SAME shape
         // distributeOwnSnapshot()/discoverOwnSnapshot() already hold.
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
-        const exportMethodMatch = panelSource.match(/exportOwnSnapshot\(\)\s*\{([\s\S]*?)\n\s{8}\},/);
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
+        const exportMethodMatch = panelSource.match(/exportOwnSnapshot\(\)\s*\{([\s\S]*?)\n {4}\},?/);
         assert(exportMethodMatch, 'A4a. OwnPublicationPanel.js defines an exportOwnSnapshot() method');
         assert(/this\.exportSnapshotCommand\(publication\)/.test(exportMethodMatch[1]), 'A4b. exportOwnSnapshot() calls this.exportSnapshotCommand(publication) — the injected prop, over the whole publication object');
         assert(!/BuildPublicationSnapshotTransferPackageUseCase|SnapshotContentMaterializationCoordinator/.test(exportMethodMatch[1]),
@@ -293,7 +293,7 @@ async function runTests() {
     // comparison, or retention.
     // ---------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const codeOnlyPanel = codeOnly(panelSource);
         const exportCallSites = (codeOnlyPanel.match(/this\.exportSnapshotCommand\(/g) || []).length;
         assert(exportCallSites === 1, `C1. this.exportSnapshotCommand( is called from exactly one place in OwnPublicationPanel.js (found ${exportCallSites}) — no second, implicit call site`);
@@ -489,7 +489,7 @@ async function runTests() {
     // this capability — only the composed command function.
     // ---------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const codeOnlyPanel = codeOnly(panelSource);
         const importBlock = codeOnlyPanel.slice(0, codeOnlyPanel.indexOf('export default'));
         for (const forbidden of ['BuildPublicationSnapshotTransferPackageUseCase', 'SnapshotContentMaterializationCoordinator', 'ContentStore', 'PublicationCatalog', 'NostrSnapshotDiscoveryPublisher', 'ArweaveContentStore']) {

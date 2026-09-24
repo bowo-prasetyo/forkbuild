@@ -38,7 +38,7 @@ import {
     describePublicationMaterialProvenanceFromInspection
 } from '../application/publication/distribution/PublicationMaterialProvenance.js';
 import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.533 — Publication Lifecycle Seam Product Reassessment.
 //
@@ -551,7 +551,7 @@ async function main() {
         // imports the retrieval-placement class, and
         // DecentralizedPublicationsView.js's own retrieval-placement
         // usage never imports the spatial placement/registry classes.
-        const ownPanelSrc = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSrc = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const decentralizedViewSrc = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(!/PublicationSnapshotPlacement/.test(ownPanelSrc),
             '4. OwnPublicationPanel.js never imports PublicationSnapshotPlacement — its own placementId list stays sourced from spatial PlacementRecord/DiscoverPlacementsUseCase alone.');
@@ -636,7 +636,7 @@ async function main() {
         // "verified" signal from the mere presence of a spatial or
         // retrieval placement — having been PLACED is never read as
         // having been VERIFIED anywhere in these files.
-        const ownPanelSrc = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSrc = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const decentralizedViewSrc = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(!/verified\s*=\s*.*placements?\.length/i.test(ownPanelSrc) && !/verified\s*=\s*.*placements?\.length/i.test(decentralizedViewSrc),
             '7. Neither OwnPublicationPanel.js nor DecentralizedPublicationsView.js derives a "verified" flag from a placement list\'s own length — "placed" and "verified" are never conflated.');

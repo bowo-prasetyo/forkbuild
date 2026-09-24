@@ -7,6 +7,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.154 — Selected Snapshot Attribution.
 //
@@ -377,12 +378,12 @@ function run() {
         // Section J — structural sweep.
         // ===============================================================
         return (async () => {
-            const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+            const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
 
-            assert(panelCode.includes("from '../../application/snapshot/SnapshotPublicationAttribution.js'"),
+            assert(/from '(\.\.\/)+application\/snapshot\/SnapshotPublicationAttribution\.js'/.test(panelCode),
                 'J1. OwnPublicationPanel.js imports the existing pure function — never reimplements it');
 
-            const attributeBody = (panelCode.match(/attributeSelectedSnapshot\(\)\s*\{[\s\S]*?\n\s{8}\}/) || [''])[0];
+            const attributeBody = (panelCode.match(/attributeSelectedSnapshot\(\)\s*\{[\s\S]*?\n {4}\}/) || [''])[0];
             assert(attributeBody.length > 0, 'J2. sanity: attributeSelectedSnapshot() method body was found');
             const callSites = attributeBody.match(/resolveSnapshotPublicationAttribution\(/g) || [];
             assert(callSites.length === 1, 'J3. attributeSelectedSnapshot() calls resolveSnapshotPublicationAttribution() exactly once');
@@ -407,13 +408,13 @@ function run() {
             // resolveSelectedSnapshot()'s own body never calls the
             // attribution function — mirrors 0.9.153's own Section E5,
             // confirmed here as part of this milestone's own sweep.
-            const resolveSelectedSnapshotBody = (panelCode.match(/resolveSelectedSnapshot\(\)\s*\{[\s\S]*?\n\s{8}\},/) || [''])[0];
+            const resolveSelectedSnapshotBody = (panelCode.match(/resolveSelectedSnapshot\(\)\s*\{[\s\S]*?\n {4}\},?/) || [''])[0];
             assert(!resolveSelectedSnapshotBody.includes('resolveSnapshotPublicationAttribution'),
                 'J8. resolveSelectedSnapshot() itself never calls resolveSnapshotPublicationAttribution()');
 
             // selectSnapshotCandidate()'s own body never calls it either —
             // selection alone must never attribute.
-            const selectSnapshotCandidateBody = (panelCode.match(/selectSnapshotCandidate\(candidate\)\s*\{[\s\S]*?\n\s{8}\},/) || [''])[0];
+            const selectSnapshotCandidateBody = (panelCode.match(/selectSnapshotCandidate\(candidate\)\s*\{[\s\S]*?\n {4}\},?/) || [''])[0];
             assert(!selectSnapshotCandidateBody.includes('resolveSnapshotPublicationAttribution'),
                 'J9. selectSnapshotCandidate() never calls resolveSnapshotPublicationAttribution()');
 

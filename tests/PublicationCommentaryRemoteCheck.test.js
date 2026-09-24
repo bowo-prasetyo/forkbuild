@@ -9,6 +9,12 @@ import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/pu
 import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';
 import { composeRefreshPublicationCommentaryCommand } from '../application/publication/commentary/RefreshPublicationCommentaryCommandComposition.js';
 import PublicationCommentaryRemoteCheck from '../ui/components/PublicationCommentaryRemoteCheck.js';
+import { ownPublicationPanelSource, worldEncounterCanvasSource } from './support/SourceFileGroups.js';
+
+const SPLIT_COMPONENT_SOURCES = {
+    'ui/components/OwnPublicationPanel.js': ownPublicationPanelSource,
+    'ui/components/WorldEncounterCanvas.js': worldEncounterCanvasSource
+};
 
 // Publication Commentary — fetch-on-open and "Check for new comments".
 //
@@ -344,7 +350,8 @@ async function run() {
             ['ui/components/WorldEncounterCanvas.js', ':publication-id="observerLocalEncounterCommentaryPublicationId" @refreshed="refreshObserverLocalEncounterCommentaries"']
         ];
         for (const [path, binding] of sections) {
-            const componentSource = await read(path);
+            // The two split components are read whole, template expanded.
+            const componentSource = SPLIT_COMPONENT_SOURCES[path] ? SPLIT_COMPONENT_SOURCES[path]() : await read(path);
             assert(componentSource.includes("import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';")
                 && /components: \{[^}]*PublicationCommentaryRemoteCheck[^}]*\}/.test(componentSource),
                 `39. ${path} imports and registers the component`);

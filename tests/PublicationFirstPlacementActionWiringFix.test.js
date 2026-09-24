@@ -15,7 +15,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.600 — Publication First-Placement Action Wiring Fix.
 //
@@ -354,7 +354,7 @@ async function run() {
     // Section J — UI wiring, confirmed in real source.
     // ===============================================================
     {
-        const panelSrc = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSrc = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/placePublicationCommand: \{\s*type: Function,\s*default: null\s*\}/.test(panelSrc),
             'J1. OwnPublicationPanel.js declares an optional placePublicationCommand prop, mirroring unpublishCommand\'s own shape.');
         assert(/placeOwnPublication\(\) \{/.test(panelSrc), 'J2. OwnPublicationPanel.js defines placeOwnPublication().');

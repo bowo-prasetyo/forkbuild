@@ -40,7 +40,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.601 — Discovered Publication Placement Journey Closure Audit.
 //
@@ -883,7 +883,7 @@ async function run() {
     // Section J — Product surface sanity.
     // ===============================================================
     {
-        const panelSrc = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSrc = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(/placePublicationCommand: \{\s*type: Function,\s*default: null\s*\}/.test(panelSrc),
             'J1. OwnPublicationPanel.js declares placePublicationCommand as an optional prop.');
         const placementsSection = panelSrc.split('own-publication-placements"')[1].split('</div>')[0];

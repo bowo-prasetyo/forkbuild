@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.221 — Product Evolution Selection / Architecture Baseline.
 //
@@ -101,7 +101,7 @@ async function runTests() {
         // reconfirmed 0.9.199-0.9.203). Both removal use cases still have
         // real UI callers.
         const worldViewHasRemove = worldView.includes('RemoveWorldPlacementUseCase');
-        const ownPublicationPanel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldViewHasRemove, 'A3a. ui/views/WorldView.js still references RemoveWorldPlacementUseCase (0.9.197).');
         assert(ownPublicationPanel.includes('UnpublishDocumentUseCase') || worldView.includes('UnpublishDocumentUseCase'),
             'A3b. UnpublishDocumentUseCase still has a real UI caller (0.9.198).');

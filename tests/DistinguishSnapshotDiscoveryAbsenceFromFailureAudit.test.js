@@ -8,7 +8,7 @@ import {
     executeDiscoverSnapshotCandidatesCommandWithOutcome
 } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.589 — Distinguish Snapshot Discovery Absence from Discovery
 // Failure.
@@ -266,7 +266,7 @@ async function runTests() {
         // 'unavailable', and keeps the pre-existing copy for every other
         // empty-result case (genuine empty, and the legacy null-outcome
         // path).
-        const panelTemplate = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelTemplate = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(panelTemplate.includes('Snapshot discovery is currently unavailable.'),
             '27. the template carries the new, honest unavailable-state copy');
         assert(panelTemplate.includes('No Snapshots have been announced under this discoveryTag yet.'),

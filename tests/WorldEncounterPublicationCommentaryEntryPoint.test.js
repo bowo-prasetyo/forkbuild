@@ -19,7 +19,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldEncounterCanvasFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.291 — Publication Commentary on the World Encounter Surface.
 //
@@ -660,7 +660,7 @@ async function runTests() {
     // the four still-unwired 0.9.288 surfaces stay untouched.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(panelCode.includes('refreshPublicationCommentaries()') && panelCode.includes('submitPublicationCommentary()'),
             '50. OwnPublicationPanel.js still carries its own original commentary methods, untouched');
 

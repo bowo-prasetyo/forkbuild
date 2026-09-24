@@ -9,7 +9,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { ExternalAnchorPublisherRegistry } from '../application/anchoring/ExternalAnchorPublisherRegistry.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
-import { publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.422 — Decentralized Substrate Role Choice UI Reachability Audit.
 //
@@ -231,7 +231,7 @@ async function run() {
         // Publication" button always distributed via Nostr regardless of
         // the saved ANNOUNCEMENT_AND_DISCOVERY preference.
         const editorSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
         // Wiring. EditorView.js's own injected key renamed from
         // `publicationDistributionCommand` to

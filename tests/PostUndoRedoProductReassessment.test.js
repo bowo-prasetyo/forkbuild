@@ -9,7 +9,7 @@ import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
-import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles, editorSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles, editorSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.212 — Post-Undo/Redo Product Reassessment.
 //
@@ -96,7 +96,7 @@ async function runTests() {
         const emitsMatch = placementInfoPanelSource.match(/emits:\s*\[([^\]]*)\]/);
         assert(emitsMatch && /\bremove\b/i.test(emitsMatch[1]), 'A2. PlacementInfoPanel.js still emits \'remove\' — removal stays reachable');
 
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/unpublishCommand/.test(ownPublicationPanelSource), 'A3. OwnPublicationPanel.js still wires an unpublishCommand — retract stays reachable');
 
         for (const identifier of ['getTimeline', 'restoreHistoryAt', 'beginHistoryPreview', 'previewHistoryAt', 'cancelHistoryPreview']) {
@@ -221,7 +221,7 @@ async function runTests() {
     // Section D — Publication workflow. COMPLETE, reconfirmed.
     // ---------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         // AMENDED BY 0.9.672 — World View Distribution Dialog.
         // distributeOwnSnapshot() is no longer wired via a literal
         // `@click="..."` in THIS file's own template — it moved into
@@ -257,7 +257,7 @@ async function runTests() {
         // E1 — manual discovery, automatic discovery, materialization,
         // and World participation are all real, composed, UI-reachable
         // paths — regression-checked directly against source.
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/discoverOwnSnapshot\s*\(\)\s*\{/.test(ownPublicationPanelSource) || /discoverOwnSnapshot\(/.test(ownPublicationPanelSource), 'E1a. OwnPublicationPanel.js still defines/calls discoverOwnSnapshot (manual discovery)');
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/worldSnapshotDiscoveryMonitor\.observe\(/.test(worldViewSource), 'E1b. WorldView.js still drives worldSnapshotDiscoveryMonitor.observe() on its own refresh tick (automatic discovery)');
@@ -291,7 +291,7 @@ async function runTests() {
         const coordinatorSource = await rawSource('application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js');
         assert(/async import\(pkg\)/.test(coordinatorSource), 'E2e. SnapshotContentMaterializationCoordinator still has an import(pkg) method');
         assert(/async export\(publicationId\)/.test(coordinatorSource), 'E2f. ...and now also has a matching export(publicationId) method, forwarding to the Build use case');
-        const ownPublicationPanelSourceForExport = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSourceForExport = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(/[Ee]xport [Ss]napshot/.test(ownPublicationPanelSourceForExport), 'E2g. OwnPublicationPanel.js now carries "Export Snapshot" UI text — the asymmetry E2 originally found is closed at the UI layer too');
         console.log('✓ Section E2: CLOSED by 0.9.215 — application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js, already correct and fully tested, is now composed in ui/main.js, reachable through SnapshotContentMaterializationCoordinator\'s own new export() method, and has a real "Export Snapshot" action on OwnPublicationPanel.js. Import and Export are symmetric.');
 

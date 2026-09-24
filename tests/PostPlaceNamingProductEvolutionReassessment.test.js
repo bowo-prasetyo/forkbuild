@@ -18,7 +18,7 @@ import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNaming
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.272 — Post-Place-Naming Product Evolution Reassessment.
 //
@@ -209,7 +209,7 @@ async function runTests() {
         // reconfirmed by 0.9.252. OwnPublicationPanel still wires the
         // full read/write pair through the real use cases, never a
         // second, disconnected implementation.
-        const panel = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panel = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(panel.includes('AddPublicationCommentaryUseCase') || panel.includes('addPublicationCommentaryCommand'),
             'A5a. ui/components/OwnPublicationPanel.js still reaches the real Commentary write path.');
         assert(panel.includes('GetPublicationCommentariesUseCase') || panel.includes('getPublicationCommentariesCommand'),
@@ -282,8 +282,8 @@ async function runTests() {
         assert(worldView.includes('CreateExternalSnapshotPlacementUseCase'), 'B6. Snapshot: reconfirmed (Section A2).');
         macroMatrix.push(['Snapshot', 'COMPLETE']);
 
-        assert((await rawSource('ui/components/OwnPublicationPanel.js')).includes('GetPublicationCommentariesUseCase') ||
-               (await rawSource('ui/components/OwnPublicationPanel.js')).includes('getPublicationCommentariesCommand'),
+        assert(((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')).includes('GetPublicationCommentariesUseCase') ||
+               ((await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n')).includes('getPublicationCommentariesCommand'),
             'B7. Commentary: reconfirmed (Section A5).');
         macroMatrix.push(['Commentary', 'COMPLETE']);
 

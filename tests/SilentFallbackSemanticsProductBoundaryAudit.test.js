@@ -12,6 +12,7 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.588 — Silent Fallback Semantics Product Boundary Audit.
 //
@@ -275,7 +276,7 @@ async function main() {
     // milestone.
     // ===============================================================
     {
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
 
         // E1. The panel's own copy for a genuine zero-candidate result.
         assert(/No Snapshots have been announced under this discoveryTag yet\./.test(panelSource),
@@ -433,7 +434,7 @@ async function main() {
         // .catch() (Section E) only ever forwards the ALREADY-collapsed
         // result/rejection; it adds no second layer of error-swallowing
         // of its own around discoverSnapshotCandidatesCommand().
-        const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         const methodStart = panelSource.indexOf('discoverSnapshotCandidates() {');
         const methodEnd = panelSource.indexOf('selectSnapshotCandidate(candidate) {', methodStart);
         const discoveryMethodBody = panelSource.slice(methodStart, methodEnd);

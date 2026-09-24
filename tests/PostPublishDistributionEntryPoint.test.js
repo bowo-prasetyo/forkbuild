@@ -6,7 +6,7 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/publ
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.347 — Post-Publish Distribution Entry Point.
 //
@@ -218,7 +218,7 @@ async function runTests() {
     // Section C — command boundary (structural).
     // ---------------------------------------------------------------
     {
-        const code = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const code = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbiddenConstruction = [
             "from '../../application/arweave/ArweavePublicationMaterialUploader.js'",
             "from '../../application/nostr/NostrPublicationDiscoveryPublisher.js'",
@@ -410,7 +410,7 @@ async function runTests() {
         assert(viewCode.includes('function distributeWorldEncounterPublication(publication, discoveryProvider)'),
             '32. exactly one distributeWorldEncounterPublication function exists — this milestone adds no second wrapper');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!panelCode.includes('this.selectedEncounter'),
             '33. distributeOwnPublication() (and every other method in this file) never reads selectedEncounter — reachable with no selection of any kind');
 
@@ -428,7 +428,7 @@ async function runTests() {
     // publish invariant untouched.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbiddenScope = [
             'IpfsRemotePublicationCoordinator', 'HttpPinningProvider', 'IpfsRemotePinningContentStore',

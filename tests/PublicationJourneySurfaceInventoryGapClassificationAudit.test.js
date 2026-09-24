@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 
 import { sweepDirectory } from './support/RawStatusInterpolationSweep.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.573 — Publication Journey Surface Inventory & Gap Classification Audit.
 //
@@ -72,7 +72,7 @@ async function runTests() {
         const worldSearchPanelSource = await rawSource('ui/components/WorldSearchPanel.js');
         const worldEncounterMarkerSource = await rawSource('ui/components/WorldEncounterMarker.js');
         const notificationHistoryPanelSource = await rawSource('ui/components/NotificationHistoryPanel.js');
-        const ownPublicationPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const ownPublicationPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         const decentralizedPublicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         const authorViewSource = await rawSource('ui/views/AuthorView.js');
         const forkTreeSource = await rawSource('ui/components/ForkTree.js');

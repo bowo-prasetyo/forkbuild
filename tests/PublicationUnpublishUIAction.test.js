@@ -27,7 +27,7 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.198 — Publication Unpublish/Retract UI Action.
 //
@@ -360,7 +360,7 @@ async function runTests() {
         const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/isUnpublished|publicationRemoved/i.test(codeOnlyLines(sessionSource).join('\n')),
             '3. WorldNavigationSession.js introduces no isUnpublished/publicationRemoved vocabulary in code — the existing getPublicationForDocument()/getPlacementInfo() read models remain the sole source of truth');
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/isUnpublished|publicationRemoved/i.test(codeOnlyLines(panelSource).join('\n')),
             '4. OwnPublicationPanel.js likewise introduces no isUnpublished/publicationRemoved field in code — its own disappearance (via the unchanged v-if="publication" gate) IS the observable state change');
 
@@ -410,7 +410,7 @@ async function runTests() {
     // PlacementRegistry/spatial classes directly.
     // -------------------------------------------------------------
     {
-        const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
         assert(countReferences(panelSource, 'UnpublishDocumentUseCase') === 0,
             '1. OwnPublicationPanel.js never references the raw UnpublishDocumentUseCase (by class or conventional instance name) directly — WorldNavigationSession remains the sole authority it talks to');
         const panelCodeOnly = codeOnlyLines(panelSource).join('\n');

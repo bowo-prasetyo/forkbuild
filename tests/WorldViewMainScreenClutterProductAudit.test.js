@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../application/world/WorldViewNavigationState.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.359 — World View Main-Screen Clutter Product Audit.
 //
@@ -95,7 +95,7 @@ function sliceForward(source, markerPattern, maxLength) {
 async function run() {
     const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
-    const ownPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
+    const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
     const canvasCodeOnly = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
 
     // ===============================================================

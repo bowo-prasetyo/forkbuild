@@ -8,7 +8,7 @@ import { PublicationDistributionLifecycleMemoryStore } from '../application/publ
 import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
-import { editorViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.502 — Editor Announcement/Discovery Provider Selection.
 //
@@ -416,7 +416,7 @@ async function run() {
     // publication-only forever.
     // ===============================================================
     {
-        const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => source(file)))).join('\n');
         // AMENDED BY 0.9.670 — Publication Material Storage Selection. This
         // call site gained two more forwarded arguments
         // (`publicationMaterialStorage`, and a conditional remote-pinning

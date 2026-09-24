@@ -23,7 +23,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.349 — Post-Publish Distribution Product Reassessment.
 //
@@ -272,7 +272,7 @@ async function run() {
         // View/World Encounter-shaped — confirming the journey really is
         // coherent WITHOUT that navigation, not merely "possible in
         // addition to it."
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!panelCode.includes('this.selectedEncounter') && !panelCode.includes('this.$router') && !panelCode.includes('router.push') && !panelCode.includes('router.replace'),
             '5. OwnPublicationPanel.js — the actual post-publish entry point — never reads a World Encounter selection or navigates anywhere to reach this action');
 
@@ -354,7 +354,7 @@ async function run() {
         // from distributeWorldEncounterSnapshot, never collapsed into it.
         assert(viewCode.includes('function distributeWorldEncounterSnapshot(publication, storage, remotePinningConfiguration)') && viewCode.includes('function distributeWorldEncounterPublication(publication, discoveryProvider)'),
             '14. WorldView.js still wires two distinct wrapper functions — Snapshot distribution and Publication distribution were never collapsed into one');
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert((panelCode.match(/this\.snapshotDistributionCommand\(/g) || []).length === 1,
             '15. snapshotDistributionCommand is still called from exactly one place — the pre-existing 0.9.140 action, unduplicated');
         assert((panelCode.match(/this\.publicationDistributionCommand\(/g) || []).length === 1,
@@ -407,7 +407,7 @@ async function run() {
         // D4 — reconfirm, fresh, that neither remains referenced from the
         // immediate post-publish surface — the deliberate absence 0.9.347/
         // 0.9.348 already established, still true today.
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         for (const term of ['IpfsRemotePublicationCoordinator', 'PublicationAnchorCreationCoordinator', 'BlockchainKind', 'CreateBaseAnchorPublicationRecordUseCase']) {
             assert(!panelCode.includes(term) && !viewCode.includes(term),
@@ -452,7 +452,7 @@ async function run() {
         const publishUseCaseCode = await codeOnlySource('application/publication/PublishDocumentUseCase.js');
         assert(!/Arweave|Nostr|Ipfs|Bitcoin|distribut/i.test(publishUseCaseCode),
             '26. PublishDocumentUseCase.js carries no distribution vocabulary of any kind');
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const mountedMatch = panelCode.match(/mounted\(\)\s*\{[\s\S]*?\n\s{8}\},/);
         if (mountedMatch) {
             assert(!mountedMatch[0].includes('distributeOwnPublication(') && !mountedMatch[0].includes('distributeOwnSnapshot('),
@@ -651,7 +651,7 @@ async function run() {
 
         // No new distribution lifecycle vocabulary in either panel.
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         for (const code of [canvasCode, panelCode]) {
             assert(!/\bDISPATCHED\b|\bQUEUED\b|\bSCHEDULED\b|\bRETRYING\b|\bCOMMANDED\b/.test(code),
                 '45. no new distribution lifecycle vocabulary has appeared in either panel');

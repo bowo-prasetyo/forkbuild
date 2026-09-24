@@ -454,8 +454,8 @@ async function run() {
         // material sources — a different concept this milestone leaves
         // untouched.
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-        const publicationRowsBody = canvasSource.match(/publicationRows\(\) \{[\s\S]*?\n {8}\},/)[0];
-        const projectedPublicationsBody = canvasSource.match(/projectedPublications\(\) \{[\s\S]*?\n {8}\},/)[0];
+        const publicationRowsBody = canvasSource.match(/publicationRows\(\) \{[\s\S]*?\n {4}\},?/)[0];
+        const projectedPublicationsBody = canvasSource.match(/projectedPublications\(\) \{[\s\S]*?\n {4}\},?/)[0];
         assert(!/\.origin\b/.test(publicationRowsBody), '5. WorldEncounterCanvas.js\'s own publicationRows computed never reads a discovery source\'s `.origin` field');
         assert(!/\.origin\b/.test(projectedPublicationsBody), '6. WorldEncounterCanvas.js\'s own projectedPublications computed never reads a discovery source\'s `.origin` field — every projected marker is built from objectId/title/x/z alone');
         const markerSource = await readFile(new URL('../ui/components/WorldEncounterMarker.js', import.meta.url), 'utf8');

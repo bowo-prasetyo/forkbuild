@@ -16,7 +16,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.380 — Publication Result -> Publication Center Deep-Link Audit.
 //
@@ -277,7 +277,7 @@ async function run() {
     const editorViewCodeOnly = codeOnlyLines(editorViewSource);
     const toolbarCodeOnly = await codeOnlySource('ui/components/Toolbar.js');
     const publishSource = extractToolbarPublishChain(toolbarCodeOnly);
-    const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
+    const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
 
     // ---------------------------------------------------------------

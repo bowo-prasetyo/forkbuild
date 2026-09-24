@@ -16,7 +16,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.249 — Publication Commentary Lifecycle & Isolation Audit.
 //
@@ -356,7 +356,7 @@ async function runTests() {
         // command that intentionally reorders its own side effects (to
         // simulate what an async race WOULD look like) can never actually
         // observe out-of-order delivery through a synchronous call path.
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const refreshMethodMatch = panelCode.match(/refreshPublicationCommentaries\(\)\s*\{[\s\S]*?\n\s{8}\},/);
         assert(refreshMethodMatch, 'D3: refreshPublicationCommentaries() method body is present in the source for structural inspection');
         const refreshBody = refreshMethodMatch[0];
@@ -688,7 +688,7 @@ async function runTests() {
     // Section J — Architecture boundary.
     // ===================================================================
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
         const addUseCaseCode = await codeOnlySource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
 

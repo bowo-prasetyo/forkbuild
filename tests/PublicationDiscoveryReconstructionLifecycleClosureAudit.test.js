@@ -21,6 +21,7 @@ import { PlacePublicationUseCase } from '../application/placement/PlacePublicati
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.609 — Publication Discovery Reconstruction Lifecycle Closure Audit.
 //
@@ -550,7 +551,7 @@ async function run() {
         // of this milestone, that "cataloged/discoverable" and "placed"
         // are rendered as two distinct facts, and that zero placements
         // is a real, honest value rather than an error.
-        const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
+        const ownPanelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => readSource(file)))).join('\n');
         assert(ownPanelSource.includes('NO_PLACEMENTS ≠ DISCOVERY_FAILED'),
             '1. ui/components/OwnPublicationPanel.js still draws its own explicit "no placements is not a discovery failure" distinction — reconstruction (a discovery-layer fact) is never conflated with placement (a wholly separate fact) anywhere this UI renders a Publication\'s own placements.');
         assert(ownPanelSource.includes('PLACEMENT RECORDS, NEVER WORLD VISIBILITY OR OCCUPANCY'),

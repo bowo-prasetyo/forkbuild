@@ -16,7 +16,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.248 — Publication Commentary UI Integration.
 //
@@ -242,7 +242,7 @@ async function runTests() {
         assert(receivedInput.publicationId === publication.id && receivedInput.content === 'through the use case',
             '13. the exact publicationId/content typed by the person reaches the command unmodified');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbidden = [
             "from '../../core/PublicationCommentary.js'",
             "from '../../storage/PublicationCommentaryStore.js'",
@@ -361,7 +361,7 @@ async function runTests() {
             '30. a Publication with no commentary yet resolves to an empty array');
         assert(ctx.publicationCommentaryError === null, '31. an empty result is never reported as an error');
 
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(panelCode.includes('No commentary yet.'), '32. the template renders a dedicated empty-state message');
 
         console.log('✓ Section H: an empty Publication renders an intentional empty state, never an error');

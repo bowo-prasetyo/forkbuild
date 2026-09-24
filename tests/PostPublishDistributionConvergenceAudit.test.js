@@ -23,7 +23,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 
 // 0.9.348 — Post-Publish Distribution Convergence Audit.
 //
@@ -410,8 +410,8 @@ async function run() {
         // reads only this.publication/this.publicationDistributionCommand/
         // its own ephemeral fields — never a title/documentId/contentHash
         // lookup, never selectedEncounter, never a catalog resolver.
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const methodMatch = panelCode.match(/distributeOwnPublication\(\)\s*\{[\s\S]*?\n\s{8}\},/);
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
+        const methodMatch = panelCode.match(/distributeOwnPublication\(\)\s*\{[\s\S]*?\n {4}\},?/);
         assert(methodMatch, '16. sanity: distributeOwnPublication()\'s own method body was located');
         const methodBody = methodMatch[0];
         assert(!methodBody.includes('selectedEncounter'), '17. distributeOwnPublication() never reads selectedEncounter');
@@ -712,7 +712,7 @@ async function run() {
         // already established one milestone earlier, reconfirmed fresh
         // against the canvas AND the panel.
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         for (const code of [canvasCode, panelCode]) {
             assert(!/\bDISPATCHED\b|\bQUEUED\b|\bSCHEDULED\b|\bRETRYING\b|\bCOMMANDED\b/.test(code),
                 '57. no new distribution lifecycle vocabulary (DISPATCHED/QUEUED/SCHEDULED/RETRYING/COMMANDED) has appeared');
@@ -727,7 +727,7 @@ async function run() {
     // post-publish surface, by design rather than oversight.
     // ---------------------------------------------------------------
     {
-        const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
+        const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         const scopedTerms = [
