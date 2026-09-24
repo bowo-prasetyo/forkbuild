@@ -717,7 +717,7 @@ async function runTests() {
         // rather than the superseded file's — the identical shape, just
         // the comment sitting one file over.
         const createWorldViewUseCaseSource = await rawSource('application/CreateWorldViewUseCase.js');
-        assert(/CreatePlacementRegistryUseCase already/.test(createWorldViewUseCaseSource) && /builds this exact set of collaborators for other surfaces/.test(createWorldViewUseCaseSource), 'M3a. CreateWorldViewUseCase.js\'s own header still documents that CreatePlacementRegistryUseCase "already builds this exact set of collaborators for other surfaces" — an explicit, in-repo supersession record, on the replacement\'s own side');
+        assert(!/new CreatePlacementRegistryUseCase\(/.test(createWorldViewUseCaseSource) && /new LocalPlacementRegistry\(/.test(createWorldViewUseCaseSource), 'M3a. CreateWorldViewUseCase.js builds its own placement stack rather than composing CreatePlacementRegistryUseCase');
         const placementRegistryUseCaseSource = await rawSource('application/CreatePlacementRegistryUseCase.js');
         assert(/class CreatePlacementRegistryUseCase/.test(placementRegistryUseCaseSource), 'M3b. CreatePlacementRegistryUseCase.js still exists, fully implemented');
         assert(await repoWideInstantiationCount('CreatePlacementRegistryUseCase') === 0, 'M3c. ...and is instantiated NOWHERE in application/ or ui/');
