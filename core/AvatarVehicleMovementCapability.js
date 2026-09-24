@@ -22,6 +22,7 @@ import { AvatarMovementSteeringCapability, AvatarMovementSteeringKind, isValidAv
 // This module is a pure vocabulary with no coupling to the simulations that
 // consume it; tests/AvatarVehicleMovementCapability.test.js (Section K) forbids
 // importing them. That is why WALK's speed and radius are local copies below.
+
 export const AvatarMovementCapabilityKind = Object.freeze({
     WALK: 'walk',
     GROUND_VEHICLE: 'ground_vehicle',
