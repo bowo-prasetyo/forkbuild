@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { worldViewSourceWithTemplate } from './support/SourceFileGroups.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
@@ -357,8 +358,7 @@ async function runTests() {
             && !/worldEncounterMaterialSources\s*=\s*Object\.freeze\(\{/.test(mainCodeOnly),
             "29. ui/main.js reads worldEncounterMaterialSources (including its new .decentralized slot) straight off the composition root's own materialSources — never a second object literal shaping it by hand");
 
-        const viewUrl = new URL('../ui/views/WorldView.js', import.meta.url);
-        const viewSource = await readFile(viewUrl, 'utf8');
+        const viewSource = worldViewSourceWithTemplate();
         const viewCodeOnly = viewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(viewCodeOnly.includes("inject('worldDiscoveryLeadRegistry', null)"),
             '30. WorldView.js injects worldDiscoveryLeadRegistry, defaulting to null — never throwing when absent');

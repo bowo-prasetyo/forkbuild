@@ -9,7 +9,7 @@ import { PublicationDistributionState } from '../application/publication/distrib
 import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.431 — Multi-Substrate Announcement/Discovery Product Reassessment.
 //
@@ -571,7 +571,7 @@ async function run() {
             'application/publication/distribution/PublicationDistributionCommand.js',
             'application/publication/distribution/PublicationDistributionCommandComposition.js',
             'ui/components/WorldEncounterCanvas.js',
-            'ui/views/WorldView.js'
+            'ui/views/WorldView.js', ...worldViewTemplateFiles()
         ]) {
             const code = await source(file);
             assert(!/PARTIAL_SUCCESS|DiscoveryProviderRegistry|AnnouncementPublisherRegistry|fanOut|FanOut/.test(code), n(`J1[${file}]. no fan-out coordinator, provider registry, or new PARTIAL_SUCCESS-style vocabulary was added anywhere this milestone touched (it touched none of these files at all — this is a pure production-code guard)`));

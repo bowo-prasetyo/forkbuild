@@ -14,7 +14,7 @@ import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingC
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.321 — Place Naming Publication Action Convergence Audit.
 // See docs/Roadmap.md, "0.9.321 — Place Naming Publication Action
@@ -761,7 +761,7 @@ async function run() {
         // JSON, and no such vocabulary in the family's own source.
         assert(!Object.keys(claim.toJSON()).some((k) => /publish/i.test(k)), '5. the claim\'s own JSON carries no publication-status field of any kind');
         for (const bannedTerm of ['alreadyPublished', 'isPublished', 'publicationStatus', 'PublicationHistory'] ) {
-            assert(grepCount(bannedTerm, ['application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js', 'application/placeNaming/PlaceNamingPublicationRuntimeComposition.js', 'ui/views/WorldView.js', 'ui/components/PlaceNamingPanel.js', 'core/PlaceNamingClaim.js']) === 0, `6. no "${bannedTerm}" vocabulary exists anywhere in the publication path`);
+            assert(grepCount(bannedTerm, ['application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js', 'application/placeNaming/PlaceNamingPublicationRuntimeComposition.js', 'ui/views/WorldView.js', ...worldViewTemplateFiles(), 'ui/components/PlaceNamingPanel.js', 'core/PlaceNamingClaim.js']) === 0, `6. no "${bannedTerm}" vocabulary exists anywhere in the publication path`);
         }
 
         console.log('✓ Section H: publishing the same claim repeatedly remains three independent, unrelated attempts — no client-side deduplication or "already published" state has appeared anywhere in the path');

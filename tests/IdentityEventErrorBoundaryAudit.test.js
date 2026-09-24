@@ -4,7 +4,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { IdentityUseCase } from '../application/identity/IdentityUseCase.js';
 import { EventBus } from '../core/events/EventBus.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, peerConnectionsViewSource } from './support/SourceFileGroups.js';
 
 // 0.9.220 — Identity Event/Error Boundary Characterization Audit.
 //
@@ -276,7 +276,7 @@ async function runTests() {
         // Presence's refreshWorldPresenceActivity() (which reaches into
         // WorldAuthorizationService AND performs a network broadcast) a
         // realized defect and this one not.
-        const peerConnectionsSource = codeOnlyLines(await rawSource('ui/views/PeerConnectionsView.js')).join('\n');
+        const peerConnectionsSource = codeOnlyLines(peerConnectionsViewSource()).join('\n');
         assert(/identityUseCase\.onSessionChanged\(\(\) => \{\s*isAuthenticated\.value = identityUseCase\.isAuthenticated\(\);\s*refreshRelationships\(\);\s*refreshFriendships\(\);\s*refreshBlocked\(\);\s*refreshLockState\(\);\s*\}\);/.test(peerConnectionsSource), 'C6a. PeerConnectionsView.js onSessionChanged callback still calls exactly these four local functions, nothing else');
         assert(/function refreshRelationships\(list\) \{\s*relationships\.value = list \|\| peerRelationshipUseCase\.getRelationships\(\);\s*\}/.test(peerConnectionsSource), 'C6b. refreshRelationships() is still a pure read via getRelationships(), no mutation');
         assert(/function refreshFriendships\(list\) \{\s*friendships\.value = list \|\| friendRelationshipUseCase\.getRelationships\(\);\s*\}/.test(peerConnectionsSource), 'C6c. refreshFriendships() is still a pure read via getRelationships(), no mutation');

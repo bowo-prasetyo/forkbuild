@@ -27,7 +27,7 @@ import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { materializedSnapshotWorldOrigin } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.553 — Observer-Local Encounter Experience Product Reassessment.
 //
@@ -870,7 +870,7 @@ async function runTests() {
             'core/ObserverLocalPublicationEncounter.js',
             'application/worldEncounter/ObserverLocalEncounterStore.js',
             'application/snapshot/AutomaticSnapshotEncounterCascade.js',
-            'ui/views/WorldView.js',
+            'ui/views/WorldView.js', ...worldViewTemplateFiles(),
             'ui/components/WorldEncounterCanvas.js'
         ];
         for (const file of productionFilesThisReassessmentDependsOn) {

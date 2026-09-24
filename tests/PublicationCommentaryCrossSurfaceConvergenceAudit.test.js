@@ -19,7 +19,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.290 — Publication Commentary Cross-Surface Convergence Audit.
 //
@@ -349,7 +349,7 @@ async function runTests() {
         for (const file of [
             'application/world/CreateWorldViewUseCase.js',
             'application/publication/commentary/CreatePublicationCommentaryUseCase.js',
-            'ui/views/WorldView.js',
+            'ui/views/WorldView.js', ...worldViewTemplateFiles(),
             'ui/components/OwnPublicationPanel.js',
             'ui/components/PublicationCard.js',
             'ui/components/PublicationCommentarySection.js',

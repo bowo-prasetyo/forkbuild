@@ -18,7 +18,7 @@ import { CheckRecoveryUseCase } from '../application/document/CheckRecoveryUseCa
 import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentUseCase.js';
 import { DiscardRecoveryUseCase } from '../application/document/DiscardRecoveryUseCase.js';
 import { CreatePersistenceUseCase } from '../application/document/CreatePersistenceUseCase.js';
-import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.203 — Post-Lifecycle Product Reassessment.
 //
@@ -242,7 +242,7 @@ async function runTests() {
         // should be (the integration belongs in the one view that edits
         // documents, not spread across the app).
         const otherUiFiles = [
-            'ui/views/WorldView.js', 'ui/views/LiveWorldView.js',
+            'ui/views/WorldView.js', ...worldViewTemplateFiles(), 'ui/views/LiveWorldView.js',
             'ui/views/HomeView.js', 'ui/views/RecentWorldsView.js', 'ui/views/RepositoryView.js', 'ui/main.js'
         ];
         for (const identifier of ['AutosaveScheduler', 'recoverDocumentUseCase', 'discardRecoveryUseCase', 'checkRecoveryUseCase', 'autosaveDocumentUseCase']) {

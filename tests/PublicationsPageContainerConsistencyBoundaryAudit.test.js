@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { stylesheetFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
+import { stylesheetFiles, publicationsPageFiles, peerConnectionsViewSource } from './support/SourceFileGroups.js';
 
 // 0.9.648 — Publications Page Container Consistency Boundary Audit.
 //
@@ -114,7 +114,7 @@ async function run() {
     const recentWorldsViewSrc = await readSource('ui/views/RecentWorldsView.js');
     const identityManagementViewSrc = await readSource('ui/views/IdentityManagementView.js');
     const conversationsViewSrc = await readSource('ui/views/ConversationsView.js');
-    const peerConnectionsViewSrc = await readSource('ui/views/PeerConnectionsView.js');
+    const peerConnectionsViewSrc = peerConnectionsViewSource();
     const leaderboardHubViewSrc = await readSource('ui/views/LeaderboardHubView.js');
     const routerSrc = await readSource('ui/router/index.js');
 

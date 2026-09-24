@@ -20,7 +20,7 @@ import { PublishDocumentUseCase } from '../application/publication/PublishDocume
 import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
 import { DocumentManager } from '../application/document/DocumentManager.js';
 import { VehicleType } from '../core/VehicleType.js';
-import { worldNavigationSessionFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.196 — Architecture Reassessment / Product Gap Audit.
 //
@@ -206,7 +206,7 @@ async function runTests() {
         const placementUiFiles = [
             'ui/components/PlacementInfoPanel.js',
             'ui/components/PlacementEditorDialog.js',
-            'ui/views/WorldView.js',
+            'ui/views/WorldView.js', ...worldViewTemplateFiles(),
             'ui/views/EditorView.js',
             'ui/components/OwnPublicationPanel.js',
             'ui/components/WorldEncounterCanvas.js'
@@ -259,7 +259,7 @@ async function runTests() {
         // more than one composition root away.
         const publicationUiFiles = [
             'ui/components/OwnPublicationPanel.js',
-            'ui/views/WorldView.js',
+            'ui/views/WorldView.js', ...worldViewTemplateFiles(),
             'ui/views/RepositoryView.js',
             'ui/views/AuthorView.js'
         ];

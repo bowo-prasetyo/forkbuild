@@ -25,7 +25,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldNavigationSessionFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.551 — Novel Publication Spatial Admission Product Boundary Audit.
 //
@@ -515,6 +515,8 @@ async function runTests() {
             'application/worldEncounter/ObserverLocalEncounterStore.js',
             'core/ObserverLocalPublicationEncounter.js',
             'ui/views/WorldView.js',
+            // WorldView.js's own Nearby section template, moved out of it.
+            'ui/views/worldView/templates/nearbySection.js',
             'ui/components/WorldEncounterCanvas.js',
             // WorldEncounterCanvas.js's own observer-local methods, moved out of it.
             'ui/components/worldEncounterCanvas/observerLocalEncounterMethods.js'
@@ -737,7 +739,7 @@ async function runTests() {
             'core/PlacementRecord.js',
             'placement/LocalPlacementRegistry.js',
             'application/placement/PlacePublicationUseCase.js',
-            'ui/views/WorldView.js',
+            'ui/views/WorldView.js', ...worldViewTemplateFiles(),
             'application/snapshot/WorldSnapshotDiscoveryMonitor.js',
             'application/snapshot/WorldSnapshotInspection.js',
             'ui/components/OwnPublicationPanel.js'

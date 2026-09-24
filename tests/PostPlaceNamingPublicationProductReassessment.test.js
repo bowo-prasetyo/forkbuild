@@ -17,7 +17,7 @@ import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingC
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.322 — Post-Place-Naming Publication Product Reassessment.
 //
@@ -359,7 +359,7 @@ async function run() {
         assert(roadmap.includes('publishing to Nostr stays **never automatic**'),
             'B4. docs/Roadmap.md still carries the exact, explicit "never automatic" product decision — not silently dropped or reworded by any milestone since.');
         const placeNamingFamilyForB4 = ['application/placeNaming/PlaceNamingClaimUseCase.js', 'application/placeNaming/PlaceNamingPublicationRuntimeComposition.js',
-            'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js', 'ui/views/WorldView.js', 'ui/components/PlaceNamingPanel.js', 'ui/main.js'];
+            'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js', 'ui/views/WorldView.js', ...worldViewTemplateFiles(), 'ui/components/PlaceNamingPanel.js', 'ui/main.js'];
         for (const file of placeNamingFamilyForB4) {
             const code = codeOnlyLines(await rawSource(file));
             assert(!/auto.?publish|publish.*automatically|automatically.*publish/i.test(code),
@@ -587,7 +587,7 @@ async function run() {
             'core/PlaceNamingProximitySelection.js', 'application/placeNaming/PlaceNamingClaimUseCase.js',
             'application/placeNaming/PlaceNamingClaimExchange.js', 'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js',
             'application/placeNaming/NostrPlaceNamingDiscoverySource.js', 'application/placeNaming/PlaceNamingDiscoveryQueryService.js',
-            'application/placeNaming/PlaceNamingDiscoveryMonitor.js', 'ui/views/WorldView.js', 'ui/components/PlaceNamingPanel.js'];
+            'application/placeNaming/PlaceNamingDiscoveryMonitor.js', 'ui/views/WorldView.js', ...worldViewTemplateFiles(), 'ui/components/PlaceNamingPanel.js'];
         // Deliberately specific, feature-shaped identifiers — never bare
         // words like "vote" or "ranking," both of which this codebase's
         // own headers already use constantly in NEGATING disclaimers (e.g.

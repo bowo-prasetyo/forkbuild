@@ -21,7 +21,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewFiles, worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.555 — Observer-Local Discovery Retention Product Reassessment.
 //
@@ -874,7 +874,7 @@ async function runTests() {
             'core/ObserverLocalPublicationEncounter.js',
             'application/worldEncounter/ObserverLocalEncounterStore.js',
             'application/snapshot/AutomaticSnapshotEncounterCascade.js',
-            'ui/views/WorldView.js',
+            'ui/views/WorldView.js', ...worldViewTemplateFiles(),
             'ui/components/WorldEncounterCanvas.js'
         ];
         for (const file of productionFilesThisReassessmentDependsOn) {

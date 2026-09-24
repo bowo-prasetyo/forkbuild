@@ -475,7 +475,9 @@ async function runTests() {
             'ui/components/worldEncounterCanvas/publicationDiscoveryMethods.js',
             'ui/views/WorldView.js',
             // WorldView's own publication actions module, where those wrappers live.
-            'ui/views/worldView/useOwnPublicationActions.js'
+            'ui/views/worldView/useOwnPublicationActions.js',
+            // WorldView's Nearby section template, which binds them on WorldEncounterCanvas.
+            'ui/views/worldView/templates/nearbySection.js'
         ]);
         assert(wired.length === expectedWired.size, `1. exactly ${expectedWired.size} UI files under ui/components/ or ui/views/ reference the Commentary command vocabulary — found ${wired.length}: ${wired.join(', ')}`);
         for (const file of wired) {

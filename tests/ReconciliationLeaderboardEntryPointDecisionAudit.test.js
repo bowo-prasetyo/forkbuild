@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, peerConnectionsViewSource } from './support/SourceFileGroups.js';
 
 // 0.9.400 — Reconciliation Leaderboard Product Entry-Point Decision Audit.
 //
@@ -173,7 +173,7 @@ async function run() {
     // Section C — Navigation precedent inspection.
     // ===============================================================
     {
-        const peerConnectionsSource = await readSource('ui/views/PeerConnectionsView.js');
+        const peerConnectionsSource = peerConnectionsViewSource();
         assert(
             /:to="'\/chat\/'\s*\+\s*friend\.identityId"/.test(peerConnectionsSource),
             n('C1. the "contextual, not top-nav" pattern this milestone follows is a real, pre-existing one: PeerConnectionsView\'s own Chat button already links to /chat/:identityId this same way')

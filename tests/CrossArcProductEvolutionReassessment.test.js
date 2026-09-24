@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { owningView } from './support/SourceFileGroups.js';
 import { execSync } from 'node:child_process';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
@@ -98,6 +99,13 @@ async function grepCount(pattern, dirs, { ignoreCase = false } = {}) {
             { cwd: SOURCE_ROOT.pathname }).toString();
     } catch { /* grep exits non-zero on no match; treated as zero hits */ }
     return hits.trim() ? hits.trim().split('\n').length : 0;
+}
+
+// Like grepCount, but a view's template-section files count as that view.
+async function grepComponentCount(pattern, dirs) {
+    const hits = execSync(`grep -rl "${pattern}" ${dirs.join(' ')} --include="*.js" || true`,
+        { cwd: SOURCE_ROOT.pathname }).toString().trim();
+    return hits ? new Set(hits.split('\n').map(owningView)).size : 0;
 }
 
 // ---------------------------------------------------------------------
@@ -212,7 +220,7 @@ async function runTests() {
 
         // B3. Reachable from UI? — Only through one component, checked
         // as a fresh grep (this is the entire finding).
-        const wiredComponents = await grepCount('getPublicationCommentariesCommand=\\|addPublicationCommentaryCommand=', ['ui']);
+        const wiredComponents = await grepComponentCount('getPublicationCommentariesCommand=\\|addPublicationCommentaryCommand=', ['ui']);
         assert(wiredComponents === 1, `B3. Reachable from UI — exactly one UI component binds these commands as props today (found ${wiredComponents}), reconfirmed fresh.`);
 
         // B4. Actually useful? — Yes, for the one surface it reaches
@@ -408,7 +416,7 @@ async function runTests() {
             'E3b. WorldNavigationSession#getPublicationCommentaries(publicationId) still takes an explicit, caller-supplied publicationId.');
 
         // E4. The ONE UI component these commands are bound to.
-        const bindingSites = await grepCount(':getPublicationCommentariesCommand=\\|:addPublicationCommentaryCommand=', ['ui']);
+        const bindingSites = await grepComponentCount(':getPublicationCommentariesCommand=\\|:addPublicationCommentaryCommand=', ['ui']);
         assert(bindingSites === 1, `E4. Exactly one UI binding site passes these commands as props today (found ${bindingSites}) — OwnPublicationPanel.`);
         const ownPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         assert(ownPanelSource.includes('getPublicationCommentariesCommand') && ownPanelSource.includes('addPublicationCommentaryCommand'),

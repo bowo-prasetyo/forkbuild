@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { worldViewSourceWithTemplate } from './support/SourceFileGroups.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
@@ -264,8 +265,7 @@ async function runTests() {
     // Section F — architectural regression: ui/views/WorldView.js
     // -------------------------------------------------------------
     {
-        const viewSourceUrl = new URL('../ui/views/WorldView.js', import.meta.url);
-        const viewSource = await readFile(viewSourceUrl, 'utf8');
+        const viewSource = worldViewSourceWithTemplate();
         const viewCodeOnly = viewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(viewCodeOnly.includes("inject('worldEncounterMaterialSources', null)"),

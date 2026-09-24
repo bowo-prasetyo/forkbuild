@@ -43,7 +43,7 @@ import {
 } from '../core/DocumentCollaborationConsistencyPolicy.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
-import { editorViewFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles, peerConnectionsViewSource } from './support/SourceFileGroups.js';
 
 // 0.9.545 — Collaborative Editing Product Reassessment.
 //
@@ -738,7 +738,7 @@ async function runTests() {
         } catch { /* zero hits */ }
         assert(hits === '', `I1. ui/ still contains zero references to EDIT-authorization/causal-eligibility/readiness decision vocabulary (WorldAccessLevel/evaluateApplicationEligibility/evaluateApplicationReadiness/resolveSigningIdentityId) — found in: ${hits || 'nothing'}. The UI observes and forwards collaboration state; it never re-decides it.`);
 
-        const peerConnectionsView = await rawSource('ui/views/PeerConnectionsView.js');
+        const peerConnectionsView = peerConnectionsViewSource();
         assert(peerConnectionsView.includes('PeerLifecycleState') && !peerConnectionsView.includes('WorldAccessLevel'),
             'I2. ui/views/PeerConnectionsView.js reads PeerLifecycleState (for connection/authentication BADGES and display copy) but imports no WorldAccessLevel at all — lifecycle display is not the same code path as an edit-authorization decision, and this file never blends the two.');
 

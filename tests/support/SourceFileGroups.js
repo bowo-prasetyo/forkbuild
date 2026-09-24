@@ -29,7 +29,17 @@ export function publicationsPageFiles() {
 }
 
 export function worldViewFiles() {
-    return fileGroup('ui/views/WorldView.js', 'ui/views/worldView');
+    return [
+        ...fileGroup('ui/views/WorldView.js', 'ui/views/worldView'),
+        ...jsFilesIn('ui/views/worldView/templates')
+    ];
+}
+
+export function peerConnectionsViewFiles() {
+    return [
+        ...fileGroup('ui/views/PeerConnectionsView.js', 'ui/views/peerConnections'),
+        ...jsFilesIn('ui/views/peerConnections/templates')
+    ];
 }
 
 export function editorViewFiles() {
@@ -50,11 +60,10 @@ export function stylesheetFiles() {
     return [...entry.matchAll(/@import url\('([^']+)'\);/g)].map((match) => `css/${match[1]}`);
 }
 
-// DecentralizedPublicationsView.js with each `${nameTemplate}` placeholder
-// replaced by that section's markup: the source as it read before the
-// template was split, for checks that span the whole template.
-export function publicationsViewSourceWithTemplate() {
-    const templatesDir = 'ui/views/decentralizedPublications/templates';
+// A view's source with each `${nameTemplate}` placeholder replaced by that
+// section's markup: the source as it read before the template was split,
+// for checks that span the whole template.
+function viewSourceWithTemplate(viewPath, templatesDir) {
     const sections = new Map();
     for (const file of jsFilesIn(templatesDir)) {
         const text = readFileSync(join(root, file), 'utf8');
@@ -63,5 +72,36 @@ export function publicationsViewSourceWithTemplate() {
         sections.set(match[1], match[2]);
     }
     const expand = (text) => text.replace(/\$\{(\w+Template)\}/g, (_, name) => expand(sections.get(name)));
-    return expand(readFileSync(join(root, 'ui/views/DecentralizedPublicationsView.js'), 'utf8'));
+    return expand(readFileSync(join(root, viewPath), 'utf8'));
+}
+
+export function publicationsViewSourceWithTemplate() {
+    return viewSourceWithTemplate('ui/views/DecentralizedPublicationsView.js', 'ui/views/decentralizedPublications/templates');
+}
+
+export function worldViewSourceWithTemplate() {
+    return viewSourceWithTemplate('ui/views/WorldView.js', 'ui/views/worldView/templates');
+}
+
+// PeerConnectionsView's composables, then the view with its template
+// expanded: every line the single file held before it was split.
+export function peerConnectionsViewSource() {
+    const parts = jsFilesIn('ui/views/peerConnections').map((file) => readFileSync(join(root, file), 'utf8'));
+    return [...parts, viewSourceWithTemplate('ui/views/PeerConnectionsView.js', 'ui/views/peerConnections/templates')].join('\n');
+}
+
+// The view a template-section file belongs to, or the file itself: a check
+// that counts components counts a view and its template sections once.
+const TEMPLATE_OWNERS = {
+    'ui/views/worldView/templates/': 'ui/views/WorldView.js',
+    'ui/views/peerConnections/templates/': 'ui/views/PeerConnectionsView.js',
+    'ui/views/decentralizedPublications/templates/': 'ui/views/DecentralizedPublicationsView.js'
+};
+export function owningView(file) {
+    const dir = Object.keys(TEMPLATE_OWNERS).find((prefix) => file.startsWith(prefix));
+    return dir ? TEMPLATE_OWNERS[dir] : file;
+}
+
+export function worldViewTemplateFiles() {
+    return jsFilesIn('ui/views/worldView/templates');
 }

@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { worldViewTemplateFiles } from './support/SourceFileGroups.js';
 
 // 0.9.363 — User-Configurable Infrastructure Endpoint Product Audit.
 //
@@ -299,7 +300,7 @@ async function run() {
         // unchanged.
         const inventoryHosts = ['arweave.net', 'ipfs.io', '127.0.0.1:5001', 'relay.damus.io', 'blockstream.info', 'mainnet.base.org', 'metered.live'];
         const nonCompositionRootUiFiles = [
-            'ui/views/WorldView.js', 'ui/views/ContentProviderSettingsView.js', 'ui/views/AvatarSettingsView.js'
+            'ui/views/WorldView.js', ...worldViewTemplateFiles(), 'ui/views/ContentProviderSettingsView.js', 'ui/views/AvatarSettingsView.js'
         ];
         for (const file of nonCompositionRootUiFiles) {
             const source = await rawSource(file);

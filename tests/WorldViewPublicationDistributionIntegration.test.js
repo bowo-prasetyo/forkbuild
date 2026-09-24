@@ -7,7 +7,7 @@ import { PublicationDistributionLifecyclePersistenceBridge } from '../applicatio
 import { PublicationDistributionLifecycleRestorer } from '../application/publication/distribution/PublicationDistributionLifecycleRestorer.js';
 import { hydratePublicationDistributionLifecycles } from '../application/publication/distribution/PublicationDistributionLifecycleHydration.js';
 import { describePublicationDistributionLifecycle, PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
-import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
+import { worldEncounterCanvasFiles, worldViewSourceWithTemplate } from './support/SourceFileGroups.js';
 
 // 0.9.100 — Publication Distribution World View Integration.
 //
@@ -373,8 +373,7 @@ async function runTests() {
     // Section J — architectural regression: ui/views/WorldView.js
     // -------------------------------------------------------------
     {
-        const viewSourceUrl = new URL('../ui/views/WorldView.js', import.meta.url);
-        const viewSource = await readFile(viewSourceUrl, 'utf8');
+        const viewSource = worldViewSourceWithTemplate();
         const viewCodeOnly = viewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(viewCodeOnly.includes("inject('publicationDistributionLifecycleStore', null)"),
