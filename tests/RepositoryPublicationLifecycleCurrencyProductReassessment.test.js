@@ -23,6 +23,7 @@ import { DecentralizedPublicationDiscoveryProvider } from '../discovery/Decentra
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
+import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.574 — Repository Publication Lifecycle & Currency Product
 // Reassessment.
@@ -166,7 +167,8 @@ async function main() {
         );
         const admissionSites = grepRaw.trim().split('\n').filter(Boolean)
             .filter((line) => /discoveryProvider\.add\(|DiscoveryProvider\.add\(/.test(line) && !/^\s*\/\//.test(line.split(':').slice(2).join(':')));
-        const knownAdmissionGateFiles = ['WorldEncounterCanvas.js', 'PublicationExchange.js', 'LocalPublicationCatalog.js', 'DecentralizedPublicationsView.js'];
+        // WorldEncounterCanvas.js's gate lives in its materialAndDistributionMethods.js module.
+        const knownAdmissionGateFiles = ['worldEncounterCanvas/materialAndDistributionMethods.js', 'PublicationExchange.js', 'LocalPublicationCatalog.js', 'DecentralizedPublicationsView.js'];
         assert(admissionSites.length > 0 && admissionSites.every((line) => knownAdmissionGateFiles.some((f) => line.includes(f))),
             `A1. Every real .add() call site is one of the already-audited admission gates (found: ${admissionSites.join(' | ')}).`);
 
@@ -336,7 +338,7 @@ async function main() {
         // structurally rather than live (see this file's own header
         // for why) — citing, not re-deriving, the two prior live
         // proofs this exact claim already received.
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/navigateToDocument\(initialDocumentId\)/.test(worldViewSource),
             'D4. WorldView.js\'s own mount still resolves the primary document via session.navigateToDocument(), the same real path tests/PublicationDiscoveryToWorkContinuityProductReassessment.test.js Section D and tests/WorldEncounterRepositoryContinuityIntegrationBoundaryAudit.test.js already exercised live — cited here, not re-executed, per this file\'s own header constraint.');
 
@@ -460,7 +462,7 @@ async function main() {
         // G3. Live, at the actual presentation boundary: EditorView.js
         // no longer interpolates err.message into the Wanderer-facing
         // toast — it branches on err.reason and shows plain vocabulary.
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(!/feedback\.show\(`Load failed: \$\{err\.message\}`\)/.test(editorViewSource),
             'G3. EditorView.js no longer contains the old raw-interpolation toast.');
         assert(/err\.reason === LoadFailureReason\.MATERIAL_UNAVAILABLE/.test(editorViewSource),

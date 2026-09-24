@@ -3,7 +3,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { CreateBrickRegistryUseCase } from '../../application/CreateBrickRegistryUseCase.js';
 import { CreateWorldViewUseCase } from '../../application/CreateWorldViewUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
-import { InputRouter } from '../../application/InputRouter.js';
 import { WorldSpatialContextService } from '../../application/WorldSpatialContextService.js';
 import { AutomaticSnapshotEncounterCascade } from '../../application/AutomaticSnapshotEncounterCascade.js';
 import { AutomaticSnapshotEncounterRetentionReconciliation } from '../../application/AutomaticSnapshotEncounterRetentionReconciliation.js';
@@ -25,7 +24,7 @@ import LandmarkFormModal from '../components/LandmarkFormModal.js';
 import RegionFormModal from '../components/RegionFormModal.js';
 import WorldMembersPanel from '../components/WorldMembersPanel.js';
 import WorldPresenceIndicator from '../components/WorldPresenceIndicator.js';
-import WorldCollaboratorIndicator, { buildSpatialCollaboratorRows } from '../components/WorldCollaboratorIndicator.js';
+import WorldCollaboratorIndicator from '../components/WorldCollaboratorIndicator.js';
 import { buildWorldCollaborationRoster } from '../components/WorldCollaborationRoster.js';
 import WorldWelcomePanel from '../components/WorldWelcomePanel.js';
 import WorldMapPanel from '../components/WorldMapPanel.js';
@@ -41,8 +40,6 @@ import AnimalInteractionPrompt from '../components/AnimalInteractionPrompt.js';
 import HistoryTimelinePanel from '../components/HistoryTimelinePanel.js';
 import NotificationHistoryPanel from '../components/NotificationHistoryPanel.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
-import { WorldFocusKind } from '../../core/WorldFocusContext.js';
-import { EditorEntryContext, EditorEntryReason, editorEntryContextToQuery } from '../../core/EditorEntryContext.js';
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../../application/WorldViewNavigationState.js';
 import { PlaceNamingDiscoveryMonitor } from '../../application/PlaceNamingDiscoveryMonitor.js';
 import { executeDiscoverPlaceNamingClaimsCommand } from '../../application/DiscoverPlaceNamingClaimsCommand.js';
@@ -58,8 +55,11 @@ import { useNearbySections } from './worldView/useNearbySections.js';
 import { useWorldMembersPanel } from './worldView/useWorldMembersPanel.js';
 import { useWorldEncounterCommands } from './worldView/useWorldEncounterCommands.js';
 import { useOwnPublicationActions } from './worldView/useOwnPublicationActions.js';
-
-const DRAG_THRESHOLD_PX = 6;
+import { useViewportInput } from './worldView/useViewportInput.js';
+import { useHomeAndLocations } from './worldView/useHomeAndLocations.js';
+import { useEditorHandoff } from './worldView/useEditorHandoff.js';
+import { useDocumentActions } from './worldView/useDocumentActions.js';
+import { useWorldPresenceSync } from './worldView/useWorldPresenceSync.js';
 
 // World View observes and navigates; brick editing lives in the Editor (see
 // docs/Principles.md, "World View Observes and Navigates; Editor Mutates and
@@ -311,24 +311,7 @@ export default {
         const allPublications = ref([]);
 
         let spatialInterval = null;
-        let pointerStart = null;
-        let isDragging = false;
         let feedbackTimer = null;
-        // Non-reactive bookkeeping; the template never reads these.
-        let presentWorldDocumentId = null;
-        let unsubscribeWorldPresence = null;
-        let unsubscribeWorldMembership = null;
-        // A separate, much faster timer than spatialInterval: a moving camera needs
-        // 10-15 updates per second, while presence and membership only every few
-        // seconds.
-        let presentSpatialWorldDocumentId = null;
-        let unsubscribeWorldSpatialPresence = null;
-        // Separate from the presence ids: tracked even when no experience store is
-        // wired.
-        let presentExperienceWorldDocumentId = null;
-        // The automatic Welcome shows once per World per session; only "Explore"
-        // reopens it.
-        const welcomeShownForDocumentId = new Set();
         let spatialPresenceSyncInterval = null;
         let vehicleInteractionInterval = null;
 
@@ -364,45 +347,11 @@ export default {
             }
         }
 
-        // Editing a published snapshot's metadata forks it first, so this goes through
-        // guarded(). Openable from the inspected document's panel or the header (the
-        // active document); metadataEditTarget records which.
-        function openMetadataEditor(info) {
-            if (!info) return;
-            metadataEditTarget.value = info;
-            showMetadataEditor.value = true;
-        }
-
-        function onSaveMetadata({ title, description, license }) {
-            const info = metadataEditTarget.value;
-            if (!info) return;
-            guarded(() => session.updateDocumentMetadata(info.documentId, { title, description, license }));
-            showMetadataEditor.value = false;
-            metadataEditTarget.value = null;
-            refreshSpatialUI();
-        }
-
-        // Bound to the ACTIVE document, never the inspected one: save/publish must be
-        // unambiguous about which document it acts on.
-        function saveActiveDocument() {
-            const info = activeDocumentInfo.value;
-            if (!info) return;
-            guarded(() => {
-                session.saveDocument(info.documentId);
-                feedback.show('Saved');
-            });
-            refreshSpatialUI();
-        }
-
-        function publishActiveDocument() {
-            const info = activeDocumentInfo.value;
-            if (!info) return;
-            guarded(() => {
-                const publication = session.publishDocument(info.documentId);
-                feedback.show(`Published "${publication.title}"`);
-            });
-            refreshSpatialUI();
-        }
+        const {
+            onSaveMetadata, openMetadataEditor, publishActiveDocument, saveActiveDocument
+        } = useDocumentActions({
+            activeDocumentInfo, feedback, guarded, metadataEditTarget, refreshSpatialUI, session, showMetadataEditor
+        });
 
         // Recipient-scoped, unlike the document-scoped History panel.
         const showNotificationHistoryPanel = ref(false);
@@ -600,129 +549,19 @@ export default {
             }
         }
 
-        // -----------------------------------------------------------------
-        // World Collaboration
-        // -----------------------------------------------------------------
-        //
-        // Presence follows the ACTIVE document, never the merely focused one: entering
-        // presence for a world you only look at would announce "here" for a document
-        // nothing considers current. A no-op unless the active document changed, to
-        // avoid re-subscribing every poll.
-        function _syncWorldPresence(activeId) {
-            if (activeId === presentWorldDocumentId) {
-                return;
-            }
-            if (presentWorldDocumentId) {
-                session.leaveWorldPresence(presentWorldDocumentId);
-            }
-            if (unsubscribeWorldPresence) {
-                unsubscribeWorldPresence();
-                unsubscribeWorldPresence = null;
-            }
-            if (unsubscribeWorldMembership) {
-                unsubscribeWorldMembership();
-                unsubscribeWorldMembership = null;
-            }
-            presentWorldDocumentId = activeId || null;
-            refreshCollaborationRoster(presentWorldDocumentId);
-            if (!presentWorldDocumentId) {
-                return;
-            }
-            session.enterWorldPresence(presentWorldDocumentId);
-            // Live membership/presence changes refresh the roster immediately. A grant or
-            // revocation also re-derives and re-broadcasts this replica's own advertised
-            // activity right away. That refresh is isolated in its own try/catch: this
-            // callback runs synchronously inside WorldMembershipUseCase, and a throw would
-            // skip its network broadcast for every peer.
-            unsubscribeWorldMembership = session.onWorldMembershipChanged(presentWorldDocumentId, () => {
-                worldMembers.value = session.listWorldMembers(presentWorldDocumentId);
-                try {
-                    session.refreshWorldPresenceActivity(presentWorldDocumentId);
-                } catch {
-                }
-            });
-            unsubscribeWorldPresence = session.onWorldPresenceChanged(presentWorldDocumentId, (roster) => {
-                worldPresenceRoster.value = roster;
-            });
-        }
-
-        // Same shape as _syncWorldPresence() but purely local storage, never
-        // broadcast. worldReturnInfo is captured from the prior record before this
-        // visit's restore/save.
-        function _syncWorldExperience(activeId) {
-            if (activeId === presentExperienceWorldDocumentId) {
-                return;
-            }
-            if (presentExperienceWorldDocumentId) {
-                session.saveWorldExperience(presentExperienceWorldDocumentId);
-            }
-            presentExperienceWorldDocumentId = activeId || null;
-            if (!presentExperienceWorldDocumentId) {
-                worldReturnInfo.value = null;
-                return;
-            }
-            // restoreWorldExperience() only reads, and returns null on a first visit.
-            const priorExperience = session.restoreWorldExperience(presentExperienceWorldDocumentId);
-            worldReturnInfo.value = priorExperience ? { lastVisitedAt: priorExperience.lastVisitedAt } : null;
-        }
-
-        function refreshCollaborationRoster(documentId) {
-            if (!documentId) {
-                worldMembers.value = [];
-                worldPresenceRoster.value = [];
-                return;
-            }
-            worldMembers.value = session.listWorldMembers(documentId);
-            worldPresenceRoster.value = session.getWorldPresenceRoster(documentId);
-        }
-
-        // Same shape as _syncWorldPresence(), for spatial presence.
-        function _syncWorldSpatialPresence(activeId) {
-            if (activeId === presentSpatialWorldDocumentId) {
-                return;
-            }
-            if (presentSpatialWorldDocumentId) {
-                session.leaveWorldSpatialPresence(presentSpatialWorldDocumentId);
-            }
-            if (unsubscribeWorldSpatialPresence) {
-                unsubscribeWorldSpatialPresence();
-                unsubscribeWorldSpatialPresence = null;
-            }
-            presentSpatialWorldDocumentId = activeId || null;
-            spatialCollaboratorRows.value = [];
-            if (!presentSpatialWorldDocumentId) {
-                return;
-            }
-            session.enterWorldSpatialPresence(presentSpatialWorldDocumentId, {
-                resolveDisplayName: (identityId) => resolveIdentityDisplayName(identityId)
-            });
-            spatialCollaboratorRows.value = buildSpatialCollaboratorRows(
-                session.getWorldSpatialPresenceRoster(presentSpatialWorldDocumentId),
-                { resolveDisplayName: resolveIdentityDisplayName, resolveSelectionLabel: (selection) => session.resolveSpatialSelectionLabel(selection) }
-            );
-            unsubscribeWorldSpatialPresence = session.onWorldSpatialPresenceChanged(presentSpatialWorldDocumentId, (roster) => {
-                spatialCollaboratorRows.value = buildSpatialCollaboratorRows(roster, {
-                    resolveDisplayName: resolveIdentityDisplayName,
-                    resolveSelectionLabel: (selection) => session.resolveSpatialSelectionLabel(selection)
-                });
-                // Refreshes an already-open Welcome panel in place; never reopens a dismissed
-                // one (docs/Principles.md, "Exploration Guides Attention, Never Ownership or
-                // Mutation").
-                if (showWelcomePanel.value) {
-                    refreshWelcomeContext();
-                }
-            });
-            if (!welcomeShownForDocumentId.has(presentSpatialWorldDocumentId)) {
-                welcomeShownForDocumentId.add(presentSpatialWorldDocumentId);
-                openWelcomePanel(true);
-            }
-        }
-
         const {
             showWelcomePanel, welcomeContext, welcomeIsArrival, worldReturnInfo, refreshWelcomeContext,
             welcomeIsReturning, openWelcomePanel, closeWelcomePanel, exploreWelcomeSuggestion
         } = useWelcomePanel({
             refreshSpatialUI, resolveIdentityDisplayName, session, syncPrimaryMode
+        });
+
+        const {
+            _syncWorldExperience, _syncWorldPresence, _syncWorldSpatialPresence, disposeWorldPresence,
+            refreshCollaborationRoster, syncCurrentWorldSpatialPresence
+        } = useWorldPresenceSync({
+            openWelcomePanel, refreshWelcomeContext, resolveIdentityDisplayName, session, showWelcomePanel,
+            spatialCollaboratorRows, worldMembers, worldPresenceRoster, worldReturnInfo
         });
 
         // The one handler for every "go to this person" entry point. Only moves the
@@ -788,16 +627,6 @@ export default {
             refreshSpatialUI();
         }
 
-        // Same /editor?load= navigation as PublicationCatalog's Open.
-        function openEncounteredPublicationCommand(publication) {
-            router.push({ path: '/editor', query: { load: publication.documentId } });
-        }
-
-        // Same /editor?fork= navigation as PublicationCatalog's Fork.
-        function forkEncounteredPublicationCommand(publication) {
-            router.push({ path: '/editor', query: { fork: publication.documentId, publication: publication.id } });
-        }
-
         function exploreEncounteredPublicationCommand(publication) {
             focusWorld(publication.documentId);
         }
@@ -807,44 +636,16 @@ export default {
             refreshSpatialUI();
         }
 
-        // -----------------------------------------------------------------
-        // Location & Navigation
-        // -----------------------------------------------------------------
-        //
-        // Unlike focusWorld(), Home and Locations never load a document, touch the
-        // route or change the active document.
-        function goHome() {
-            session.goHome();
-            refreshSpatialUI();
-        }
-
-        // Lives under Explore mode, opened through the same mutual-exclusion helper.
-        function openLocationsPanel() {
-            syncPrimaryMode(WorldViewPrimaryMode.EXPLORE);
-            closePrimaryNavigationPanels();
-            refreshLocationsPanel();
-            showLocationsPanel.value = true;
-        }
-
-        function closeLocationsPanel() {
-            showLocationsPanel.value = false;
-        }
-
-        // The one handler for every "go to this location" entry point.
-        function focusLocation(locationId) {
-            session.focusLocation(locationId);
-            refreshSpatialUI();
-        }
+        const {
+            closeLocationsPanel, focusLocation, goHome, openLocationsPanel, refreshLocationsPanel
+        } = useHomeAndLocations({
+            closePrimaryNavigationPanels, refreshSpatialUI, session, showLocationsPanel, syncPrimaryMode,
+            worldLocations
+        });
 
         // -----------------------------------------------------------------
         // Landmarks & Waypoints
         // -----------------------------------------------------------------
-        //
-        // Mutations go through guarded(); the Locations list is re-read after each so
-        // changes show immediately.
-        function refreshLocationsPanel() {
-            worldLocations.value = session.getWorldLocations().map((loc) => loc.toJSON());
-        }
 
         const {
             showLandmarkForm, landmarkFormTarget, showRegionForm, regionFormTarget, openAddLandmarkForm,
@@ -935,52 +736,12 @@ export default {
             showWelcomePanel, syncPrimaryMode, title, worldViewNav
         });
 
-        // "Open Source" loads the structure's document directly in the Editor (no
-        // fork), so edits affect every placed instance. Contrast "Edit a Copy".
-        function openStructureSource(documentId) {
-            if (!documentId) {
-                return;
-            }
-            router.push({ path: '/editor', query: { load: documentId } });
-        }
-
-        // "Edit a Copy" from the inspection panel: forks the containing World for a
-        // brick or ground, or the structure's own content document for a placement.
-        // Builds the EditorEntryContext by hand: camera framing always, and
-        // selectAllBricks only for a placement. The return address is the focused
-        // document; no focusLocationId is available here.
-        function editInspectedCopy(inspection) {
-            if (!inspection) {
-                return;
-            }
-            const isPlacement = inspection.type === 'placement';
-            const documentId = isPlacement ? inspection.sourceDocumentId : inspection.documentId;
-            if (!documentId) {
-                return;
-            }
-            const publication = session.getPublicationIdForDocument(documentId);
-            const position = inspection.type === 'ground' ? inspection.position : inspection.worldPosition;
-            const title = isPlacement ? inspection.sourceTitle : inspection.worldTitle;
-            const returnWorld = currentReturnWorld();
-            const entryContext = new EditorEntryContext({
-                sourceDocumentId: documentId,
-                focusPosition: position || null,
-                selectAllBricks: isPlacement,
-                title: title || '',
-                kind: isPlacement ? WorldFocusKind.STRUCTURE : null,
-                reason: EditorEntryReason.WORLD_VIEW_EDIT_COPY,
-                returnWorldId: returnWorld.id,
-                returnWorldTitle: returnWorld.title
-            });
-            router.push({
-                path: '/editor',
-                query: {
-                    fork: documentId,
-                    ...(publication ? { publication } : {}),
-                    ...editorEntryContextToQuery(entryContext)
-                }
-            });
-        }
+        const {
+            editInspectedCopy, forkEncounteredPublicationCommand, openEncounteredPublicationCommand,
+            openStructureSource
+        } = useEditorHandoff({
+            currentReturnWorld, router, session
+        });
 
         // -----------------------------------------------------------------
         // Search & Spatial Discovery
@@ -1021,78 +782,6 @@ export default {
         });
 
         // -----------------------------------------------------------------
-        // Pointer interaction: pick/hover for focus and inspection only
-        // -----------------------------------------------------------------
-
-        function onPointerDown(event) {
-            isDragging = false;
-            pointerStart = { x: event.clientX, y: event.clientY };
-        }
-
-        function onPointerMove(event) {
-            if (pointerStart) {
-                const dx = event.clientX - pointerStart.x;
-                const dy = event.clientY - pointerStart.y;
-                if (Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD_PX) {
-                    isDragging = true;
-                }
-            }
-            if (event.buttons === 0) {
-                session.hover(event.clientX, event.clientY);
-                refreshHoverUI();
-            }
-            // Keep the compass turning during an orbit drag.
-            if (isDragging && event.buttons !== 0) {
-                compassHeading.value = session.getCompassHeading();
-            }
-        }
-
-        function onPointerUp(event) {
-            if (!isDragging && pointerStart) {
-                session.pick(event.clientX, event.clientY, {
-                    toggle: event.ctrlKey || event.metaKey,
-                    additive: event.shiftKey
-                });
-                refreshSpatialUI();
-            } else if (isDragging) {
-                compassHeading.value = session.getCompassHeading();
-            }
-            pointerStart = null;
-            isDragging = false;
-        }
-
-        // -----------------------------------------------------------------
-        // Keyboard interaction
-        // -----------------------------------------------------------------
-
-        function onKeyDown(event) {
-            if (InputRouter.isTextInputTarget(event.target)) {
-                if (event.key === 'Escape') {
-                    event.target.blur();
-                }
-                return;
-            }
-            // 2. Undo/Redo: Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z, as in the Editor.
-            if ((event.ctrlKey || event.metaKey) && !event.altKey) {
-                const key = event.key.toLowerCase();
-                if (key === 'z' && !event.shiftKey) {
-                    event.preventDefault();
-                    undoAction();
-                    return;
-                }
-                if ((key === 'z' && event.shiftKey) || key === 'y') {
-                    event.preventDefault();
-                    redoAction();
-                    return;
-                }
-            }
-            // 3. Avatar Control Mode consumes W/A/S/D/Shift/Space only while on.
-            if (onAvatarKeyDown(event)) {
-                return;
-            }
-        }
-
-        // -----------------------------------------------------------------
         // Lifecycle
         // -----------------------------------------------------------------
 
@@ -1111,6 +800,12 @@ export default {
         } = useAvatarControls({
             avatarControlMode, blurCheckbox, cameraPerspective, followAvatar, followedRemoteAvatarId,
             refreshSpatialUI, session, showMyAvatar, showOtherAvatars
+        });
+
+        const {
+            onKeyDown, onPointerDown, onPointerMove, onPointerUp
+        } = useViewportInput({
+            compassHeading, onAvatarKeyDown, redoAction, refreshHoverUI, refreshSpatialUI, session, undoAction
         });
 
         onMounted(() => {
@@ -1155,11 +850,7 @@ export default {
             // (selection/activity immediately, position/heading at most every ~90ms); this
             // only guarantees a fresh read to throttle from. A no-op outside spatial
             // presence.
-            spatialPresenceSyncInterval = setInterval(() => {
-                if (presentSpatialWorldDocumentId) {
-                    session.syncWorldSpatialPresence(presentSpatialWorldDocumentId);
-                }
-            }, 100);
+            spatialPresenceSyncInterval = setInterval(syncCurrentWorldSpatialPresence, 100);
 
             // Its own short interval: the 3-second refresh is far too slow for a prompt
             // that must appear as the avatar approaches a vehicle. Only reads session
@@ -1199,22 +890,7 @@ export default {
             viewport.value.removeEventListener('pointerup', onPointerUp);
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
-            // session.dispose() leaves every world's coarse and spatial presence, so only
-            // the view's own subscriptions are torn down here.
-            if (unsubscribeWorldPresence) {
-                unsubscribeWorldPresence();
-            }
-            if (unsubscribeWorldMembership) {
-                unsubscribeWorldMembership();
-            }
-            if (unsubscribeWorldSpatialPresence) {
-                unsubscribeWorldSpatialPresence();
-            }
-            // Final save of the camera framing: _syncWorldExperience() only saves on the
-            // next active-document change, which never comes after teardown.
-            if (presentExperienceWorldDocumentId) {
-                session.saveWorldExperience(presentExperienceWorldDocumentId);
-            }
+            disposeWorldPresence();
             // Defensive: end any preview before disposing the session.
             if (historyPreviewCursor.value !== null) {
                 guarded(() => session.cancelHistoryPreview());

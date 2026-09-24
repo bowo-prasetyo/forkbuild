@@ -11,6 +11,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/Decentral
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.139 — Snapshot Distribution End-to-End Runtime & UI Audit.
 //
@@ -893,7 +894,7 @@ async function run() {
         // shape this section exists to catch — WorldEncounterCanvas.js
         // constructing a decentralized collaborator directly, bypassing
         // WorldView.js and the composed command entirely.
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!canvasCode.includes('new ArweaveContentStore(') && !canvasCode.includes('new NostrSnapshotDiscoveryPublisher('), 'I5. NEGATIVE CONTROL: ui/components/WorldEncounterCanvas.js never constructs ArweaveContentStore/NostrSnapshotDiscoveryPublisher directly — the one hidden second path this section exists to catch');
 
         console.log('✓ Section I: the only construction/call sites for ArweaveContentStore, NostrSnapshotDiscoveryPublisher, and the Snapshot Distribution command/composition functions, anywhere in this repository, are exactly the ones this architecture intends');

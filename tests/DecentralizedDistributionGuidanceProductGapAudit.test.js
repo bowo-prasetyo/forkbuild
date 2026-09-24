@@ -11,6 +11,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.346 — Decentralized Distribution Guidance Product Gap Audit.
 //
@@ -119,8 +120,8 @@ async function run() {
         assert(!/router\.|Modal|modal|distribut|Distribut|nostr|Nostr|ipfs|Ipfs|anchor|Anchor/i.test(publishFnBody),
             '3. that function body contains no navigation call, no modal, and no reference to any distribution/announcement/anchoring vocabulary of any kind — nothing beyond the toast is triggered.');
 
-        const worldViewSource = await readSource('ui/views/WorldView.js');
-        const publishActiveMatch = worldViewSource.match(/function publishActiveDocument\(\) \{[\s\S]*?\n        \}/);
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
+        const publishActiveMatch = worldViewSource.match(/function publishActiveDocument\(\) \{[\s\S]*?\n    \}/);
         assert(publishActiveMatch, '4. ui/views/WorldView.js#publishActiveDocument() exists as a real, isolable function — the SECOND surface Repository Publish is reachable from.');
         const publishActiveBody = publishActiveMatch[0];
         assert(/feedback\.show\(`Published "\$\{publication\.title\}"`\)/.test(publishActiveBody),
@@ -154,11 +155,11 @@ async function run() {
         assert(!/PublicationDistributionExecutor|NostrPublicationDistributionRuntimeAdapter|distributeOwnPublication|distributionCommand\s*:/.test(ownPanelSource),
             '3. that same primary screen has NO button for announcing the Publication record itself (as distinct from its Snapshot bytes) — confirmed by the total absence of the Publication-distribution family\'s own vocabulary anywhere in this file.');
 
-        const worldEncounterSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/>\{\{ distributionExecuting \? 'Distributing…' : 'Distribute Publication' \}\}<\/button>/.test(worldEncounterSource),
             '4. "Distribute Publication" — the actual signed Publication record, via distributionCommand — exists, but on a DIFFERENT component, ui/components/WorldEncounterCanvas.js.');
 
-        const decentralizedPubsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedPubsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/publishToRemoteIpfs\(entry\)/.test(decentralizedPubsSource) && /Publish to Remote IPFS/.test(decentralizedPubsSource),
             '5. remote IPFS pinning ("Publish to Remote IPFS"/"Publish Again") lives in a THIRD file, ui/views/DecentralizedPublicationsView.js — never OwnPublicationPanel.js or WorldEncounterCanvas.js.');
         assert(/createAnchor\(entry, anchorType\)/.test(decentralizedPubsSource) && /Bitcoin Anchor Publications/.test(decentralizedPubsSource) && /Base Anchor Publications/.test(decentralizedPubsSource),
@@ -189,7 +190,7 @@ Capability inventory (Section B):
     // Section C — The asymmetric reachability finding.
     // =======================================================================
     {
-        const worldEncounterSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const gateMatch = worldEncounterSource.match(/distributablePublication\(\) \{[\s\S]*?\n        \}/);
         assert(gateMatch, '1. the exact gating computed property for "Distribute Publication" exists and is isolable.');
         assert(/if \(!this\.selectedEncounter \|\| this\.selectedEncounter\.kind !== 'PUBLICATION'\) \{/.test(gateMatch[0]),
@@ -319,7 +320,7 @@ Capability inventory (Section B):
     // Section G — UI duplication assessment.
     // =======================================================================
     {
-        const decentralizedPubsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedPubsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
 
         // G1 — Snapshot placement (local IPFS daemon) vs. remote IPFS
         // pinning (hosted service): DISTINCT, not duplicative.
@@ -360,9 +361,9 @@ Capability inventory (Section B):
         // kind — reconfirmed here as this section's own governing fact,
         // not re-derived from Section A's assertions.
         const toolbarSource = await readSource('ui/components/Toolbar.js');
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         const publishBody = toolbarSource.match(/function publish\(\) \{[\s\S]*?\n        \}/)[0];
-        const publishActiveBody = worldViewSource.match(/function publishActiveDocument\(\) \{[\s\S]*?\n        \}/)[0];
+        const publishActiveBody = worldViewSource.match(/function publishActiveDocument\(\) \{[\s\S]*?\n    \}/)[0];
         assert(!/router/.test(publishBody),
             '3. Toolbar.js#publish() never calls router.push()/router.replace() — no automatic hand-off to /publications or /repository happens today, confirmed within this function\'s own isolated body (WorldView.js elsewhere uses `router` extensively for OTHER handlers — this check is scoped to publish() alone, not the whole file).');
         assert(!/router/.test(publishActiveBody),
@@ -386,7 +387,7 @@ Capability inventory (Section B):
         }
 
         const toolbarSource = await readSource('ui/components/Toolbar.js');
-        const worldViewPublishBody = (await readSource('ui/views/WorldView.js')).match(/function publishActiveDocument\(\) \{[\s\S]*?\n        \}/)[0];
+        const worldViewPublishBody = ((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n')).match(/function publishActiveDocument\(\) \{[\s\S]*?\n    \}/)[0];
         assert(!distributionVocabulary.test(toolbarSource.match(/function publish\(\) \{[\s\S]*?\n        \}/)[0]),
             '2. the Editor\'s own publish() handler body itself references none of the five mechanisms either — confirmed at the UI handler layer, not merely the use-case layer.');
         assert(!distributionVocabulary.test(worldViewPublishBody),

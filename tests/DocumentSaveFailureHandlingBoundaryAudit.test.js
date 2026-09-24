@@ -12,6 +12,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.652 — Document Save Failure Handling Boundary Audit.
 //
@@ -141,7 +142,7 @@ async function run() {
         assert(/const SAVE_FAILURE_MESSAGE = '[^']+';/.test(toolbarSource),
             n('A4b (0.9.653). ...and that constant is a fixed, generic, storage-agnostic string — never QuotaExceededError or any other raw storage exception name — matching Section E3\'s own "report()/feedback.show() takes a plain string, already storage-agnostic" finding.'));
 
-        const editorViewSource = codeOnly(await rawSource('ui/views/EditorView.js'));
+        const editorViewSource = codeOnly((await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/event\.key\.toLowerCase\(\) === 's'\) \{\s*event\.preventDefault\(\);\s*try \{\s*saveDocumentUseCase\.execute\(documentManager\);\s*\} catch \(error\) \{\s*console\.error\('Save failed:', error\);\s*feedback\.show\(SAVE_FAILURE_MESSAGE\);\s*\}\s*return;/.test(editorViewSource.replace(/\s+/g, ' ')),
             n('A5 (AMENDED BY 0.9.653). EditorView.js\'s own Ctrl+S/Cmd+S shortcut — the SECOND, independent call site this section\'s own original finding flagged as the gap a toolbar-only fix would leave silent — is now wrapped too, reporting through the same local `feedback` object Toolbar.js\'s `props.feedback` is the prop-passed form of (Section E2\'s own seam), via the identical SAVE_FAILURE_MESSAGE text Toolbar.js uses (see A5b).'));
         assert(/import Toolbar, \{ SAVE_FAILURE_MESSAGE \} from '\.\.\/components\/Toolbar\.js';/.test(editorViewSource)

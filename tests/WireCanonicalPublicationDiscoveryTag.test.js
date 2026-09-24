@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.357 — Wire Canonical Publication Discovery Tag into World View.
 //
@@ -92,7 +93,7 @@ async function run() {
     // forwards it, unmodified, to WorldEncounterCanvas's own new prop.
     // ===============================================================
     {
-        const viewSource = await readSource('ui/views/WorldView.js');
+        const viewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(viewSource.includes("inject('publicationDiscoveryTag', '')"),
             '1. WorldView.js injects publicationDiscoveryTag, defaulting to \'\' for any embedding predating this provide() call — the same "optional injection, graceful default" contract discoverWorldEncounterPublicationCommand itself already holds one line above it.');
 
@@ -176,7 +177,7 @@ async function run() {
         // discoverPublication()'s own source is byte-for-byte unchanged
         // from 0.9.356's own audit — this milestone added no branch of any
         // kind to it.
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const methodStart = canvasSource.indexOf('discoverPublication() {');
         const methodBlock = canvasSource.slice(methodStart, canvasSource.indexOf('\n        },', methodStart));
         assert(methodBlock.includes("const objectId = this.discoveryObjectId.trim();") && methodBlock.includes("const discoveryTag = this.discoveryTag.trim();") && methodBlock.includes('this.discoveryCommand({ objectId, discoveryTag })'),

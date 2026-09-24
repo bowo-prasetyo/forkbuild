@@ -13,6 +13,7 @@ import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSel
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.152 — Selected Snapshot Candidate Resolution.
 //
@@ -584,7 +585,7 @@ async function run() {
             assert(!panelCode.includes(term), `44. OwnPublicationPanel.js never constructs/calls '${term}' directly`);
         }
 
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(viewCode.includes("const resolveSelectedSnapshotCommand = inject('resolveSelectedSnapshotCommand', null);"),
             '45. WorldView.js injects the app-wide resolveSelectedSnapshotCommand');
         assert(/<OwnPublicationPanel[\s\S]{0,700}:resolveSelectedSnapshotCommand="resolveSelectedSnapshotCommand"/.test(viewCode),

@@ -16,7 +16,7 @@ import { describeObserverLocalPublicationEncounter } from '../core/ObserverLocal
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 
 import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.584 — World Navigation & Return Journey Product Reassessment.
 //
@@ -300,7 +300,7 @@ async function main() {
         // Section A found (`focusWorld(publication.documentId)`), so the
         // adversarial check is exactly: is that argument ever, anywhere,
         // `publication.id` or `publication.contentHash` instead?
-        const worldEncounterCanvasSource = codeOnly(await readSource('ui/components/WorldEncounterCanvas.js'));
+        const worldEncounterCanvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'));
         const worldViewSource = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         assert(!/focusWorld\(publication\.id\)/.test(worldViewSource) && !/focusWorld\(publication\.contentHash\)/.test(worldViewSource),
             'B3. No focusWorld() call site passes publication.id or publication.contentHash where documentId belongs.');

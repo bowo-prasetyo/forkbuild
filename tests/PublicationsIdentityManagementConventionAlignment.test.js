@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { stylesheetFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.649 — Align Publications with the Application's Identity-Management
 // Convention. Closure audit.
@@ -82,8 +83,8 @@ function normalizeBody(body) {
 }
 
 async function run() {
-    const css = await readSource('css/main.css');
-    const publicationsViewSrc = await readSource('ui/views/DecentralizedPublicationsView.js');
+    const css = (await Promise.all(stylesheetFiles().map((file) => readSource(file)))).join('\n');
+    const publicationsViewSrc = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
 
     // ===============================================================
     // Section A — Container identity.

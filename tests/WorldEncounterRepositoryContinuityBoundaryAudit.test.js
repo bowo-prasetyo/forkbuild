@@ -17,6 +17,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.473 — World Encounter -> Repository Continuity Boundary Audit.
 //
@@ -290,7 +291,7 @@ async function run() {
             assert(!/LocalPublicationCatalog|DecentralizedPublicationDiscoveryProvider|admitToRepositoryDiscovery/.test(src),
                 `1. ${file} still carries no reference to LocalPublicationCatalog, DecentralizedPublicationDiscoveryProvider, or admitToRepositoryDiscovery -- 0.9.329's own "never persists what it retrieves" finding still holds, unchanged, at this file today.`);
         }
-        const canvasSrc = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSrc = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED BY 0.9.523 -- Repository / Discovery Product Boundary
         // Reassessment, Section E closed a real asymmetry this same gate
         // had against its DecentralizedPublicationsView.js sibling: it
@@ -425,11 +426,11 @@ async function run() {
 
         const injectHits = grepFiles("inject\\('decentralizedPublicationDiscoveryProvider'", ['ui']);
         assert(injectHits.includes('ui/views/WorldView.js'), '2. ui/views/WorldView.js already injects the shared provider (0.9.339, for enrichment).');
-        assert(/discoveryProvider\.add\(/.test(await readSource('ui/views/DecentralizedPublicationsView.js')),
+        assert(/discoveryProvider\.add\(/.test((await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n')),
             '3a. AMENDED BY 0.9.474 -- ui/views/DecentralizedPublicationsView.js still calls .add() on the shared provider, unchanged (0.9.337).');
-        assert(/:decentralizedPublicationDiscoveryProvider="decentralizedDiscoveryProviderForEnrichment"/.test(await readSource('ui/views/WorldView.js')),
+        assert(/:decentralizedPublicationDiscoveryProvider="decentralizedDiscoveryProviderForEnrichment"/.test((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n')),
             "3b. AMENDED BY 0.9.474 -- ui/views/WorldView.js now binds that SAME injected provider straight into <WorldEncounterCanvas>'s own new prop, one production hop from World Encounter's own admission.");
-        assert(!/discoveryProvider\.add\(|\.add\(flagship|decentralizedDiscoveryProviderForEnrichment\.add\(/.test(await readSource('ui/views/WorldView.js')),
+        assert(!/discoveryProvider\.add\(|\.add\(flagship|decentralizedDiscoveryProviderForEnrichment\.add\(/.test((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n')),
             '4. ui/views/WorldView.js itself STILL never calls .add() on the provider it injects -- the admission call lives in WorldEncounterCanvas.js alone, one layer down, exactly as Section I (below) specified.');
 
         // E2. Live, repeating Section C's exact scenario one more time,
@@ -535,7 +536,7 @@ async function run() {
         assert(/publicationActionDiscoveryProvider\s*=\s*decentralizedPublicationDiscoveryProvider/.test(createWorldViewSource),
             '3. AMENDED BY 0.9.597 — the file now DOES reference a decentralized provider, but only to compose a SEPARATE `publicationActionDiscoveryProvider` (confirmed present); `discoveryProvider` itself — assertion 2, above — is untouched by that composition.');
 
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/findPublicationById: \(publicationId\) => session\.findPublicationById\(publicationId\)/.test(worldViewSource),
             '4. UNCHANGED BY 0.9.597 — ui/views/WorldView.js still wires the Automatic Snapshot Encounter Cascade’s own findPublicationById collaborator straight through to this same session, unmodified.');
     }
@@ -563,7 +564,7 @@ async function run() {
         // (Section B, above) was never revisited.
         assert(roadmap.includes('Wire Resolved Decentralized Publications into Repository Discovery'),
             "2. docs/Roadmap.md's own 0.9.337 entry, building the sibling's admission mechanism, is on file.");
-        const decentralizedPublicationsViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedPublicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/function admitToRepositoryDiscovery/.test(decentralizedPublicationsViewSource),
             "3. ... and its own admitToRepositoryDiscovery() function is real, live in production, confirmed directly from source, not merely from the Roadmap's own account of it.");
 
@@ -581,7 +582,7 @@ async function run() {
     // Section I -- smallest seam, identified but not built.
     // ===============================================================
     {
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(worldViewSource.includes("inject('decentralizedPublicationDiscoveryProvider', null)"),
             '1. ui/views/WorldView.js already injects the exact dependency a fix would need, today, for an unrelated purpose (0.9.339’s own Repository-enrichment listPublicationsUseCase) -- no new provide()/inject() wiring at the composition root would be required.');
 
@@ -619,7 +620,7 @@ async function run() {
         // choice. 0.9.474 answered it: refreshMaterialInspection() itself
         // calls a real admitToRepositoryDiscovery(loading), inline --
         // never an emitted event WorldView.js has to separately consume.
-        const canvasSourceForI = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSourceForI = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/decentralizedPublicationDiscoveryProvider/.test(canvasSourceForI),
             "4. AMENDED BY 0.9.474 -- the seam this section named IS now built: WorldEncounterCanvas.js references decentralizedPublicationDiscoveryProvider directly, as its own new prop.");
         assert(/refreshMaterialInspection\(\) \{[\s\S]*?this\.admitToRepositoryDiscovery\(result\.loading, result\.verification\);/.test(canvasSourceForI),

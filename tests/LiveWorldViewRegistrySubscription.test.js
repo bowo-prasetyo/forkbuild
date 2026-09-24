@@ -3,6 +3,7 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
 import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.13 — Live World View Registry Subscription.
 //
@@ -287,8 +288,7 @@ async function run() {
     // reviewed exception.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url);
-        const fullSource = await readFile(sourceUrl, 'utf8');
+        const fullSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(!codeOnly.includes('.setSource('), '19. WorldEncounterCanvas.js never calls registry.setSource() — it never manipulates registry membership');

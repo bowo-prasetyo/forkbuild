@@ -13,6 +13,7 @@ import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.651 — Persist World-Encounter Publication Admissions — Closure Audit.
 //
@@ -434,7 +435,7 @@ async function run() {
     // Section J — Production-change guard.
     // ===============================================================
     {
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const addCallSites = (canvasSource.match(/this\.publicationAdmissionLog\.add\(/g) || []);
         assert(addCallSites.length === 1, `1. exactly one call site invokes .add() on the new publicationAdmissionLog prop (found ${addCallSites.length}).`);
         assert(!/new LocalWorldEncounterPublicationAdmissionLog\(/.test(canvasSource), '2. WorldEncounterCanvas.js never constructs a log of its own — it only ever receives one via its new prop.');
@@ -443,7 +444,7 @@ async function run() {
         const discoveryAddCallSites = (canvasSource.match(/decentralizedPublicationDiscoveryProvider\.add\(/g) || []);
         assert(discoveryAddCallSites.length === 1, '4. the pre-existing in-memory admission call site is unchanged — still exactly one.');
 
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(!/\.admitToRepositoryDiscovery\(/.test(worldViewSource), '5. WorldView.js still never calls admitToRepositoryDiscovery() itself — it only ever forwards collaborators as props.');
         assert(worldViewSource.includes(":publicationAdmissionLog=\"worldEncounterPublicationAdmissionLog\""), '6. WorldView.js binds the new prop to its own injected admission log.');
 

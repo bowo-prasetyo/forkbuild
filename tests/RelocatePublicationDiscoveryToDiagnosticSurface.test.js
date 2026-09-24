@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.360 — Relocate Publication Discovery to a Secondary Diagnostic Surface.
 //
@@ -93,7 +94,7 @@ async function flush() {
 async function run() {
     console.log('Running Relocate Publication Discovery to a Secondary Diagnostic Surface tests...\n');
 
-    const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
     const ownPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
 
     // ===============================================================

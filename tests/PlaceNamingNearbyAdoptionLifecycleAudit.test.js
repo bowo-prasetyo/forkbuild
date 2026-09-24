@@ -22,6 +22,7 @@ import { PlaceNamingDiscoveryMonitor } from '../application/PlaceNamingDiscovery
 import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.264 — Place Naming Claim Adoption Lifecycle Audit.
 //
@@ -553,7 +554,7 @@ async function runTests() {
 
         // 24. Structural confirmation, direct from real source: BOTH doors
         // call the exact same session method.
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(worldViewCode.includes('session.importPlaceNamingClaim(parsed)') && worldViewCode.includes('session.importPlaceNamingClaim(pkg)'),
             '24. ui/views/WorldView.js\'s manual importNamingClaim() and nearby adoptNearbyPlaceNamingClaim() both call session.importPlaceNamingClaim() — the SAME single boundary, never two independent adoption use cases.');
 
@@ -952,7 +953,7 @@ async function runTests() {
 
         // 69. Structural proof, direct from real source: neither function
         // references the other's own machinery at all.
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const adoptBlock = extractBetween(worldViewCode, 'function adoptNearbyPlaceNamingClaim(row) {', '\n        }');
         const navigateBlock = extractBetween(worldViewCode, 'function navigateToNearbyPlaceNamingClaim(row) {', '\n        }');
         assert(!/focusLocation|refreshSpatialUI/.test(adoptBlock), '69a. adoptNearbyPlaceNamingClaim() never references focusLocation()/refreshSpatialUI(), structurally.');
@@ -1136,8 +1137,8 @@ async function runTests() {
     // if it never touched ui/views/WorldView.js at all.
     // -------------------------------------------------------------
     {
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
-        const rawWorldViewCode = await rawSource('ui/views/WorldView.js');
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
+        const rawWorldViewCode = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const proximitySource = codeOnlyLines(await rawSource('core/PlaceNamingProximitySelection.js'));
         const monitorSource = codeOnlyLines(await rawSource('application/PlaceNamingDiscoveryMonitor.js'));
         const envelopeSource = codeOnlyLines(await rawSource('core/PlaceNamingDiscoveryEnvelope.js'));

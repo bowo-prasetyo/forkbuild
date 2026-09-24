@@ -19,6 +19,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.638 — Publication Commentary Distribution Provider Selector.
 //
@@ -553,7 +554,7 @@ async function runTests() {
         // WorldEncounterCanvas.js's own PRE-EXISTING Publication
         // selector (0.9.430) is untouched, still present, still
         // unrelated to Commentary.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/selectedDiscoveryProvider: 'nostr',/.test(canvasSource),
             '39. WorldEncounterCanvas.js\'s own PRE-EXISTING Publication selector is untouched, still present, still unrelated to Commentary');
 

@@ -17,6 +17,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.377 — EditorView Post-Publish Distribution Action.
 //
@@ -180,7 +181,7 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- document lifecycle ------------',
+        '\n    return {',
         '0.9.377/0.9.450/0.9.502 post-publish distribution block'
     );
 
@@ -217,7 +218,7 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
 }
 
 async function run() {
-    const editorViewSource = await readSource('ui/views/EditorView.js');
+    const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
     const editorViewCodeOnly = codeOnlyLines(editorViewSource);
 
     // ---------------------------------------------------------------
@@ -318,7 +319,7 @@ async function run() {
         // — confirmed against the REAL, extracted source text, not
         // merely the live behavior above.
         const onPublishedSource = extractRange(editorViewCodeOnly,
-            'function onDocumentPublished(publication) {', '\n        }',
+            'function onDocumentPublished(publication) {', '\n    }',
             'onDocumentPublished() body');
         assert(!onPublishedSource.includes('multiRelayNostrPublicationDistributionCommand(') && !onPublishedSource.includes('distributePublishedDocument(') && !onPublishedSource.includes('distributeEditorPublication('),
             '10. AMENDED BY 0.9.450 — the REAL, extracted onDocumentPublished() source never calls the (now multi-relay) command or either distribution wrapper itself');
@@ -535,7 +536,7 @@ async function run() {
     // Section H — Existing WorldView path: unaffected, same command.
     // ---------------------------------------------------------------
     {
-        const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(worldViewCode.includes("inject('publicationDistributionCommand', null)"),
             '34. WorldView.js still injects the SAME app-wide publicationDistributionCommand, unmodified by this milestone');
         // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
@@ -568,7 +569,7 @@ async function run() {
         // the multi-relay command, byte-for-byte the same request shape
         // as before.
         const editorWrapper = extractRange(editorViewCodeOnly,
-            'function distributeEditorPublication(publication, discoveryProvider) {', '\n        }',
+            'function distributeEditorPublication(publication, discoveryProvider) {', '\n    }',
             'distributeEditorPublication() body');
         assert(editorWrapper.includes("if (discoveryProvider === 'arweave')") && editorWrapper.includes('publicationDistributionCommand({') && editorWrapper.includes('discoveryProvider\n'),
             '37a. AMENDED BY 0.9.502 — EditorView.js\'s own distributeEditorPublication() branches on discoveryProvider === \'arweave\' and, when selected, calls the injected single-relay publicationDistributionCommand, forwarding discoveryProvider verbatim — the identical branch WorldView.js\'s own wrapper already holds');

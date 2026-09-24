@@ -20,6 +20,7 @@ import { DocumentManifest } from '../application/DocumentManifest.js';
 import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
 import { ExportDocumentUseCase } from '../application/ExportDocumentUseCase.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // Deliberately does NOT import application/EditorSession.js: that class
 // pulls in the renderer stack (ultimately `three`), which this repo only
@@ -344,9 +345,9 @@ async function run() {
         assert(/'export-document'/.test(toolbarSource.match(/emits:\s*\[[^\]]*\]/)[0]),
             '51. \'export-document\' is declared in Toolbar\'s own emits list');
 
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/@export-document="exportDocument"/.test(editorViewSource), '52. EditorView.js wires Toolbar\'s export-document event to its own exportDocument() handler');
-        const exportDocumentFnMatch = editorViewSource.match(/function exportDocument\(\)\s*\{[\s\S]*?\n\t\t\}/);
+        const exportDocumentFnMatch = editorViewSource.match(/function exportDocument\(\)\s*\{[\s\S]*?\n    \}/);
         assert(exportDocumentFnMatch !== null, '53. EditorView.js defines an exportDocument() handler');
         const exportDocumentFnBody = exportDocumentFnMatch[0];
         assert(/editorSession\.exportDocument\(\)/.test(exportDocumentFnBody),

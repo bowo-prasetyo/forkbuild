@@ -1,0 +1,319 @@
+/* ===================================================================
+   0.9.3 — World View UI / Wanderer Presence
+   0.9.4 — World Encounter Selection
+   ===================================================================
+   ui/components/WorldEncounterCanvas.js, ui/components/
+   WorldEncounterMarker.js, ui/components/WandererMarker.js — the first
+   actual World View surface: a fixed-size 2D SVG grid (no pan, no zoom;
+   see WorldEncounterCanvas.js's own header for why 0.5.1's own richer
+   .world-map-* projection isn't needed yet). Styled deliberately close
+   to .world-map-marker* immediately above, since both draw the same
+   kind of thing — a labeled glyph at a translated <g> — but these two
+   component families stay visually and structurally distinct.
+   .world-encounter-marker now carries `cursor: pointer` (0.9.4's own
+   click affordance, mirroring .world-map-marker's own rule above). */
+.world-encounter-view {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 600px;
+}
+
+.world-encounter-canvas {
+    width: 100%;
+    max-width: 600px;
+    aspect-ratio: 1 / 1;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+}
+
+.world-encounter-canvas-background {
+    fill: #161616;
+}
+
+.world-encounter-canvas-empty-hint {
+    font-size: 12px;
+    fill: #808080;
+}
+
+.world-encounter-marker {
+    cursor: pointer;
+}
+
+/* 0.9.554 — Observer-Local Encounter Inspection Capability. Clickable now,
+   mirroring .world-encounter-marker's own cursor above, one marker family
+   over. */
+.world-encounter-observer-local-marker {
+    cursor: pointer;
+}
+
+.world-encounter-observer-local-inspection-note {
+    margin: 0 0 0.5rem;
+    font-size: 11px;
+    color: #a0a0a0;
+}
+
+.world-encounter-marker-glyph {
+    font-size: 16px;
+    pointer-events: none;
+}
+
+.world-encounter-marker-label {
+    font-size: 9px;
+    fill: #a0a0a0;
+    pointer-events: none;
+}
+
+.wanderer-marker-glyph {
+    font-size: 18px;
+    pointer-events: none;
+}
+
+.wanderer-marker-label {
+    font-size: 9px;
+    fill: #4caf7d;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.world-encounter-inspection-panel {
+    padding: 0.6rem 0.75rem;
+    background: #1c1c1c;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+}
+
+.world-encounter-inspection-title {
+    margin: 0 0 0.4rem;
+    font-size: 12px;
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
+.world-encounter-inspection-detail {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.15rem 0.5rem;
+    margin: 0;
+    font-size: 12px;
+}
+
+.world-encounter-inspection-detail dt {
+    color: #808080;
+}
+
+.world-encounter-inspection-detail dd {
+    margin: 0;
+    color: #e0e0e0;
+}
+
+.world-encounter-inspection-unavailable {
+    margin: 0;
+    font-size: 12px;
+    color: #808080;
+    font-style: italic;
+}
+
+/* 0.9.176 — World Snapshot Presentation. A plain color badge over
+   selectedEncounterPresentationSourceLabel — never a rank, trust, or
+   quality signal, purely a "which family did this come from" cue, one
+   modifier class per WorldEncounterPresentationSourceFamily value plus the
+   unresolved default. */
+.world-encounter-inspection-source {
+    font-weight: 600;
+}
+
+.world-encounter-inspection-source--local {
+    color: #808080;
+}
+
+.world-encounter-inspection-source--peer {
+    color: #5aa9e6;
+}
+
+.world-encounter-inspection-source--snapshot {
+    color: #e6b85a;
+}
+
+.world-encounter-inspection-source--unresolved {
+    color: #808080;
+    font-style: italic;
+}
+
+/* 0.9.177 — World Snapshot Inspection Detail. contentHash is an opaque
+   identifier, never a rank/trust cue — a plain monospace rendering, no
+   color coding of its own. */
+.world-encounter-inspection-content-hash {
+    font-family: monospace;
+    word-break: break-all;
+}
+
+/* 0.9.179 — Snapshot World Source Unregistration. The one new action in
+   the inspection panel, shown only for a resolved, SNAPSHOT-sourced
+   selection (selectedEncounterSnapshotInspection). A plain, mildly
+   cautionary button — this removes a World discovery contribution alone,
+   never the underlying material/Publication — no rank/trust styling. */
+.world-encounter-inspection-actions {
+    margin-top: 0.5rem;
+}
+
+.world-encounter-unregister-snapshot {
+    padding: 0.25rem 0.5rem;
+    font-size: 12px;
+    color: #e0a05a;
+    background: #262626;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.world-encounter-unregister-snapshot:hover {
+    border-color: #e0a05a;
+}
+
+/* ===================================================================
+   0.9.20 — World Encounter Selection Resolution
+   ===================================================================
+   .world-encounter-selection-origin-* renders alongside (never inside)
+   .world-encounter-inspection-panel above — see
+   ui/components/WorldEncounterCanvas.js's own header, "resolvedEncounterSelection
+   is the one computed value...". Styled to sit visually below the
+   inspection panel as its own distinct card, using the same dark
+   palette so the two read as one family without being the same block. */
+.world-encounter-selection-origin-panel {
+    padding: 0.6rem 0.75rem;
+    background: #1c1c1c;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+}
+
+.world-encounter-selection-origin-title {
+    margin: 0 0 0.4rem;
+    font-size: 12px;
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
+.world-encounter-selection-origin-hint {
+    margin: 0 0 0.4rem;
+    font-size: 12px;
+    color: #808080;
+}
+
+.world-encounter-selection-origin-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.world-encounter-selection-origin-choice {
+    padding: 0.25rem 0.5rem;
+    font-size: 12px;
+    color: #e0e0e0;
+    background: #262626;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.world-encounter-selection-origin-choice:hover {
+    border-color: #4caf7d;
+}
+
+.world-encounter-selection-origin-choice-active {
+    border-color: #4caf7d;
+    color: #4caf7d;
+}
+
+.world-encounter-selection-origin-resolved {
+    margin: 0;
+    font-size: 12px;
+    color: #808080;
+}
+
+/* 0.9.207 — World View History Timeline UI Integration.
+   ui/components/HistoryTimelinePanel.js reuses the same .modal-overlay/
+   .modal-panel/.locations-panel-item language every other list-style
+   panel here already uses (see 0.5.5's own note on
+   GeographicPlaceDirectoryPanel above) — rows are clickable exactly like
+   that panel's, plus three state modifiers unique to a history entry:
+   selected (this milestone's own explicit-selection affordance),
+   future (an undone, redo-branch entry — CommandHistory.getTimeline()'s
+   own `applied: false`, not a new concept), and previewing (mirrors
+   WorldNavigationSession#getHistoryPreview()'s own cursor). */
+.history-timeline-panel {
+    width: 460px;
+}
+
+.history-timeline-list .locations-panel-item {
+    cursor: pointer;
+}
+
+.history-timeline-list .locations-panel-item:hover {
+    border-color: #4caf7d;
+}
+
+.history-timeline-item--selected {
+    border-color: #4caf7d;
+}
+
+.history-timeline-item--future {
+    opacity: 0.6;
+}
+
+.history-timeline-item--previewing .locations-panel-item-title {
+    color: #4caf7d;
+}
+
+.history-timeline-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* 0.9.284 — Notification History UI Boundary.
+   ui/components/NotificationHistoryPanel.js reuses the same
+   .modal-overlay/.modal-panel/.locations-panel-item language every
+   other list-style panel here already uses (see HistoryTimelinePanel's
+   own note above) — no hover/selection state of its own is added.
+   .notification-history-panel-error reuses .world-view-error's own
+   red-error color, scoped to this panel so a failed read is never
+   visually confused with the plain empty state.
+
+   0.9.530 — a row's own Explore action (present only when a payload
+   carries a publicationId — see that file's own header) reuses
+   .locations-panel-item-actions/.action-btn--explore verbatim, the
+   SAME row-action language LocationsPanel and PublicationCard already
+   use — never a new button style for what is the identical
+   "navigate to this Publication's World placement" action. */
+.notification-history-panel {
+    width: 420px;
+}
+
+.notification-history-panel-error {
+    color: #e74c3c;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.notification-history-item-detail {
+    display: block;
+    color: #707070;
+    font-size: 0.8rem;
+}
+
+.notification-history-item-unavailable {
+    font-size: 0.8rem;
+    color: #707070;
+    font-style: italic;
+}
+
+.notification-history-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}

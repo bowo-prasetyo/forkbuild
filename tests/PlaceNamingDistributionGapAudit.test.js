@@ -16,6 +16,7 @@ import { executeDiscoverPlaceNamingClaimsCommand } from '../application/Discover
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.315 — Place Naming Distribution Gap Audit.
 //
@@ -437,7 +438,7 @@ async function runTests() {
         assert(panelSource.includes('Names are published locally first — share a claim') && panelSource.includes('Import Claim'),
             'G3. The live UI (PlaceNamingPanel\'s own "Exchange" section) tells the user, in-product, that sharing IS exporting — this is documented, wired, user-facing product behavior today, not merely available machinery nobody surfaces.');
 
-        const worldViewSource = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewSource = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(/export-claim/.test(worldViewSource) && /import-claim/.test(worldViewSource),
             'G4. ui/views/WorldView.js still wires both the export-claim and import-claim events to real file-download/file-read handlers — live, reachable UI, unchanged since 0.5.3.');
 

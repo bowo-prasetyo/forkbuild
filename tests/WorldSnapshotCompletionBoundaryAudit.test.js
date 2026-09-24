@@ -44,6 +44,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.180 — World Snapshot Completion & Boundary Audit.
 //
@@ -361,7 +362,7 @@ function assertNoOriginLeak(value, path = '$') {
 }
 
 async function run() {
-    const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const bridgeSource = await readFile(new URL('../application/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
     const registrySource = await readFile(new URL('../application/WorldDiscoverySourceRegistry.js', import.meta.url), 'utf8');
     const markerSource = await readFile(new URL('../ui/components/WorldEncounterMarker.js', import.meta.url), 'utf8');

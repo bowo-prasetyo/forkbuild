@@ -25,6 +25,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.650 — Major User Journey Product Reassessment.
 //
@@ -193,8 +194,8 @@ async function run() {
     {
         const publishSource = codeOnly(await rawSource('application/PublishDocumentUseCase.js'));
         const distributionSource = codeOnly(await rawSource('application/PublicationDistributionCommand.js'));
-        const decentralizedViewSource = codeOnly(await rawSource('ui/views/DecentralizedPublicationsView.js'));
-        const worldEncounterCanvasSource = codeOnly(await rawSource('ui/components/WorldEncounterCanvas.js'));
+        const decentralizedViewSource = codeOnly((await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n'));
+        const worldEncounterCanvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n'));
         const discoveryProviderSource = codeOnly(await rawSource('discovery/DecentralizedPublicationDiscoveryProvider.js'));
 
         // B1. Document -> Publication: real, synchronous, wired.
@@ -262,7 +263,7 @@ async function run() {
         // its own fixture to be representative.
         const cascadeSource = await rawSource('application/AutomaticSnapshotEncounterCascade.js');
         assert(!cascadeSource.includes('LocalPublicationCatalog'), n('setup check: application/AutomaticSnapshotEncounterCascade.js — the real production pipeline behind World-Encounter snapshot discovery — never references LocalPublicationCatalog, confirming the fixture below reproduces its actual admission shape, not a hypothetical one'));
-        const worldEncounterCanvasSourceForCheck = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvasSourceForCheck = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/LocalPublicationCatalog/.test(worldEncounterCanvasSourceForCheck) && worldEncounterCanvasSourceForCheck.includes('this.decentralizedPublicationDiscoveryProvider.add(loading.material)'),
             n('setup check: ui/components/WorldEncounterCanvas.js\'s own admitToRepositoryDiscovery() calls ONLY decentralizedPublicationDiscoveryProvider.add() — confirmed, not assumed'));
 
@@ -567,7 +568,7 @@ async function run() {
         // different underlying conditions — never collapsed into one
         // status word.
         assert(inspectionViewSource !== resolutionViewSource, 'setup: sanity, the two label maps are genuinely two different files');
-        const worldEncounterCanvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldEncounterCanvasSource.includes('<dt>') && /Material|Verification/.test(worldEncounterCanvasSource),
             'H3. World Encounter renders "material" (discovery/load) and "verification" as two separately labeled fields, never merged into a single status word.');
 

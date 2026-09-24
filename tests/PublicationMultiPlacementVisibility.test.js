@@ -7,6 +7,7 @@ import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.308 — Publication Multi-Placement Visibility.
 //
@@ -134,7 +135,7 @@ async function runTests() {
         assert(sessionCode.includes('this._placementRegistry.findByPublicationId(publicationId)'),
             '5. getPlacementsForPublication() delegates to the registry\'s own findByPublicationId(), the SAME method DiscoverPlacementsUseCase itself wraps');
 
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(viewCode.includes(':getPublicationPlacementsCommand="getPublicationPlacementsCommand"'),
             '6. WorldView.js wires getPublicationPlacementsCommand onto OwnPublicationPanel');
         assert(viewCode.includes('session.getPlacementsForPublication(publicationId)'),

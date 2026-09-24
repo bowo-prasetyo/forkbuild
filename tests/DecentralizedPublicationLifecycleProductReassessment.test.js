@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { describeRoleProviderPreferenceSettings } from '../application/RoleProviderPreferenceSettingsView.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.517 — Decentralized Publication Lifecycle Product Reassessment.
 //
@@ -93,7 +94,7 @@ async function run() {
     // what can I do next" is formed. Re-read live from current source.
     // ===============================================================
     {
-        const editorSource = await source('ui/views/EditorView.js');
+        const editorSource = (await Promise.all(editorViewFiles().map((file) => source(file)))).join('\n');
         check(editorSource.includes('Publication published successfully.'),
             'A1. EditorView.js still confirms a publish in plain, non-technical language');
         check(editorSource.includes('Announcement / Discovery substrate:'),
@@ -159,7 +160,7 @@ async function run() {
 
         // B3. The OTHER, already-fixed (0.9.510) Content backend surface
         // stays correct — this milestone touches nothing there.
-        const decentralizedViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(decentralizedViewSource.includes('STORAGE_TYPE_LABELS') && decentralizedViewSource.includes("ar: 'Arweave'"),
             'B3. the Publication Center\'s own Content backend picker (0.9.510\'s own fix) still humanizes ar -> Arweave, unchanged by this milestone');
 
@@ -172,8 +173,8 @@ async function run() {
     // own brief) — checked at both call sites that offer the choice.
     // ===============================================================
     {
-        const editorSource = await source('ui/views/EditorView.js');
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const editorSource = (await Promise.all(editorViewFiles().map((file) => source(file)))).join('\n');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         check(editorSource.includes("<option value=\"nostr\">Nostr</option>") && editorSource.includes("<option value=\"arweave\">Arweave</option>"),
             'C1. EditorView.js\'s own post-publish substrate control offers Nostr/Arweave');
         check(canvasSource.includes("value=\"nostr\"") && canvasSource.includes(">Nostr<") && canvasSource.includes("value=\"arweave\"") && canvasSource.includes(">Arweave<"),
@@ -217,7 +218,7 @@ async function run() {
     // already-quoted markup.
     // ===============================================================
     {
-        const editorSource = await source('ui/views/EditorView.js');
+        const editorSource = (await Promise.all(editorViewFiles().map((file) => source(file)))).join('\n');
         check(editorSource.includes("relayResult.material ? relayResult.material.uri") || editorSource.includes("distributionResult[0].material ? distributionResult[0].material.uri"),
             'E1. "Material" reads the material\'s own uri — the content LOCATION fact');
         check(editorSource.includes('relayResult.discovery ? relayResult.discovery.id'),
@@ -232,7 +233,7 @@ async function run() {
     // a product-level message, never a raw wallet/library exception.
     // ===============================================================
     {
-        const editorSource = await source('ui/views/EditorView.js');
+        const editorSource = (await Promise.all(editorViewFiles().map((file) => source(file)))).join('\n');
         check(editorSource.includes('sanitizeDistributionErrorMessage(error)'),
             'F1. EditorView.js still sanitizes a distribution failure through sanitizeDistributionErrorMessage() before ever displaying it');
         check(editorSource.includes("'Publication distribution could not be completed.'"),
@@ -269,7 +270,7 @@ async function run() {
         // 0.9.516's own prose.
         const ownPublicationSource = await source('ui/components/OwnPublicationPanel.js');
         check(ownPublicationSource.includes('<dt>Locator</dt>'), 'G1. OwnPublicationPanel.js still explicitly labels a content locator as "Locator", never a raw `uri`/`locator` field name');
-        const decentralizedViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         check(decentralizedViewSource.includes('<dt>Transaction</dt>'), 'G2. DecentralizedPublicationsView.js still explicitly labels a proof transaction as "Transaction"');
         check(decentralizedViewSource.includes('<dt>Content hash</dt>'), 'G3. contentHash is still always rendered behind the explicit "Content hash" label, never the bare field name');
         classifications.push(['locator/uri/contentHash (Publisher evidence surfaces)', 'USER_VISIBLE_ACCEPTABLE — explicitly labeled <dt>Locator</dt>/<dt>Transaction</dt>/<dt>Content hash</dt> fields']);
@@ -323,7 +324,7 @@ async function run() {
     // source read, not re-derived.
     // ===============================================================
     {
-        const editorSource = await source('ui/views/EditorView.js');
+        const editorSource = (await Promise.all(editorViewFiles().map((file) => source(file)))).join('\n');
         check(editorSource.includes('const publication = publishedPublication.value;')
             && editorSource.includes("router.push({ path: ")
             && editorSource.includes('/world/${publication.documentId}'),

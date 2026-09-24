@@ -6,7 +6,7 @@ import { PlacementRecord } from '../core/PlacementRecord.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { DiscoverPlacementsUseCase } from '../application/DiscoverPlacementsUseCase.js';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.307 — Post-Arc Product Evolution Reassessment.
 //
@@ -188,7 +188,7 @@ async function runTests() {
         // NO for the Snapshot→Place→Observe loop specifically: a placed,
         // Snapshot-sourced encounter can still be re-inspected, re-
         // compared, and removed, indefinitely, by anyone who selects it.
-        assert((await rawSource('ui/components/WorldEncounterCanvas.js')).includes('unregisterSelectedSnapshot'),
+        assert(((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')).includes('unregisterSelectedSnapshot'),
             'B3. WorldEncounterCanvas.js still exposes unregisterSelectedSnapshot() — a placed Snapshot-sourced encounter is never a dead end.');
         // But B1's OWN answer shows the sibling question — "placed, but
         // not ALL of it observable, only the newest one" — is a real,
@@ -213,10 +213,10 @@ async function runTests() {
         // getTimeline()/undo()/redo() already operate on.
         const toolbarSource = await rawSource('ui/components/Toolbar.js');
         assert(/class="toolbar-publish"/.test(toolbarSource), 'B5a. Toolbar.js still renders a real Publish action.');
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/documentCommandPropagation/.test(editorViewSource) && /publishDocumentUseCase/.test(editorViewSource),
             'B5b. EditorView.js still composes both live collaboration AND the publish use case in the same view — no route change needed between them.');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publishActiveDocument/.test(worldViewSource) && /WorldCommandPropagationUseCase/.test(await rawSource('application/CreateWorldViewUseCase.js')),
             'B5c. WorldView.js still exposes publishActiveDocument() in the same view CreateWorldViewUseCase.js composes live World collaboration for.');
 
@@ -243,7 +243,7 @@ async function runTests() {
         // milestone's own dedicated Snapshot research pass. Reconfirmed
         // with one signal per stage rather than the full prior sweep.
         assert((await rawSource('ui/components/OwnPublicationPanel.js')).includes('discoverOwnSnapshot') &&
-            (await rawSource('ui/components/WorldEncounterCanvas.js')).includes('armComparisonSelection') &&
+            ((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')).includes('armComparisonSelection') &&
             (await rawSource('ui/main.js')).includes("app.provide('exportSnapshotCommand'"),
             'C1. Snapshot discovery, comparison, and export all still have real UI call sites.');
         classifications.push(['Snapshot discovery/compare/materialize/place/observe', 'REACHABLE_AND_COMPLETE']);
@@ -271,7 +271,7 @@ async function runTests() {
         // C4. World-surface Autosave/Recovery — the mirror gap: the
         // generic scheduler exists, is composed for the Editor, but
         // WorldView.js has zero autosave/recovery vocabulary.
-        assert(!/Autosave|Recovery/i.test(await rawSource('ui/views/WorldView.js')),
+        assert(!/Autosave|Recovery/i.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n')),
             'C4. ui/views/WorldView.js still carries no Autosave/Recovery vocabulary of any kind.');
         classifications.push(['Autosave/Recovery for World Documents', 'NO_REAL_USER_VALUE-CANDIDATE — never composed']);
 
@@ -319,7 +319,7 @@ async function runTests() {
         // DecentralizedPublicationsView.js has verification with zero
         // Commentary vocabulary) — a real, but smaller and non-
         // load-bearing, asymmetry than D1's.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/encounterCommentaryPublicationId/.test(canvasSource) && /materialInspection/.test(canvasSource),
             'D2a. WorldEncounterCanvas.js still gates both its commentary and verification panels on the same selected-encounter state.');
         const cardSource = await rawSource('ui/components/PublicationCard.js');
@@ -330,7 +330,7 @@ async function runTests() {
         // Observe. Per this milestone's dedicated research pass: every
         // stage has a real, reusable UI action; the loop closes with
         // re-inspection/re-comparison/removal rather than dead-ending.
-        assert((await rawSource('ui/components/WorldEncounterCanvas.js')).includes('worldSnapshotComparisonResult'),
+        assert(((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')).includes('worldSnapshotComparisonResult'),
             'D3. The Snapshot chain\'s own comparison stage is still live-computed on selection, not a one-shot snapshot of a snapshot.');
 
         // D4. Collaborate → Recover → Review history → Publish. No
@@ -339,11 +339,11 @@ async function runTests() {
         // history live on two DIFFERENT, non-overlapping document
         // surfaces (Editor has Recover, not Review history; World View
         // has Review history, not Recover) — reconfirmed fresh here.
-        const hasEditorRecovery = /RecoveryObserver/.test(await rawSource('ui/views/EditorView.js'));
+        const hasEditorRecovery = /RecoveryObserver/.test((await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n'));
         const hasEditorHistory = await sourceExists('application/EditorSession.js') &&
             /getTimeline/.test(codeOnlyLines(await rawSource('application/EditorSession.js')));
-        const hasWorldRecovery = /Recovery/i.test(await rawSource('ui/views/WorldView.js'));
-        const hasWorldHistory = /HistoryTimelinePanel/.test(await rawSource('ui/views/WorldView.js'));
+        const hasWorldRecovery = /Recovery/i.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
+        const hasWorldHistory = /HistoryTimelinePanel/.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(hasEditorRecovery && !hasEditorHistory, 'D4a. Editor surface: Recover yes, Review-history no.');
         assert(!hasWorldRecovery && hasWorldHistory, 'D4b. World surface: Recover no, Review-history yes.');
 
@@ -397,7 +397,7 @@ async function runTests() {
         // placement }. Checked directly: all four already converge on
         // ONE component (WorldEncounterCanvas.js) for a SINGLE selected
         // encounter — this tree has NO missing seam, unlike F1's.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/distributionCommand/.test(canvasSource) && /Snapshot Attribution/.test(canvasSource) &&
             /worldSnapshotComparisonResult/.test(canvasSource) && /registerMaterializedSnapshotWorldSource|unregisterSelectedSnapshot/.test(canvasSource),
             'F2. WorldEncounterCanvas.js still converges distribution, attribution, comparison, and World placement/removal on one selected encounter — no missing cross-boundary seam here.');
@@ -477,7 +477,7 @@ async function runTests() {
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         assert(/publication:\s*\{\s*type:\s*Object/.test(codeOnlyLines(panelSource)) && /placementInfo/.test(panelSource),
             'G4. OwnPublicationPanel.js already receives both the full Publication object and a singular placementInfo prop — the exact two inputs an "all placements" section needs, already present.');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/:placementInfo="activePlacementInfo"/.test(worldViewSource),
             'G4b. WorldView.js still binds the SINGULAR activePlacementInfo (session.getPlacementInfo(activeId)) — never the plural findByPublicationId/findByOwner result — into OwnPublicationPanel.');
 

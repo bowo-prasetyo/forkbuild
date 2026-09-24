@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.515 — Decentralized Publication & Snapshot Capability Product
 // Reassessment.
@@ -228,7 +229,7 @@ async function run() {
     // specifically flagged as "particularly valuable."
     // ===============================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const viewCodeOnly = codeOnly(viewSource);
 
         // C1. Anchoring never reads Content's or Discovery's own per-entry
@@ -326,7 +327,7 @@ async function run() {
         check(/path: '\/world\/:documentId'/.test(routerSrc) && /path: '\/publications'/.test(routerSrc),
             'D2. both real routes exist: /world/:documentId (World Encounter) and /publications (Distribution/Evidence/Anchoring)');
 
-        const canvasSrc = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSrc = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         check(!/\/publications/.test(canvasSrc),
             "D2. WorldEncounterCanvas.js — the component actually rendering an encountered Publication's own Material/Verification panel — contains no link of any kind to /publications; a person inspecting signature verification in World is never routed to Proof/Anchoring evidence from there");
         const catalogSrc = await source('ui/components/PublicationCatalog.js');

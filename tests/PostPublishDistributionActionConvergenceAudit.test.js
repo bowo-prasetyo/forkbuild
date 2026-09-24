@@ -19,6 +19,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.378 — Post-Publish Distribution Action Convergence Audit.
 //
@@ -224,7 +225,7 @@ function buildEditorViewHarness(editorViewSource, { multiRelayNostrPublicationDi
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- document lifecycle ------------',
+        '\n    return {',
         '0.9.377/0.9.450 post-publish distribution block'
     );
 
@@ -423,7 +424,7 @@ const WORLD_ENCOUNTER_SURFACE = {
 };
 
 async function run() {
-    const editorViewSource = await readSource('ui/views/EditorView.js');
+    const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
     const editorViewCodeOnly = codeOnlyLines(editorViewSource);
     const toolbarCodeOnly = await codeOnlySource('ui/components/Toolbar.js');
     const publishSource = extractToolbarPublishChain(toolbarCodeOnly);
@@ -432,7 +433,7 @@ async function run() {
     const editorViewBlock = codeOnlyLines(extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- document lifecycle ------------',
+        '\n    return {',
         '0.9.377/0.9.450 block (raw, before comment-stripping)'
     ));
 
@@ -445,7 +446,7 @@ async function run() {
         assert(provideMatches.length === 1,
             n('ui/main.js provides publicationDistributionCommand exactly once, at the app root — a single composition, never one per view'));
 
-        const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         // AMENDED BY 0.9.450 — Nostr Multi-Relay Publication Distribution
         // Wiring. WorldView.js still injects the single-relay
         // publicationDistributionCommand (kept for its own Arweave
@@ -855,7 +856,7 @@ async function run() {
         }
 
         const ownPanelRaw = await readSource('ui/components/OwnPublicationPanel.js');
-        const canvasRaw = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasRaw = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(!/\bEditor\b/.test(ownPanelRaw), n('OwnPublicationPanel.js contains no reference to "Editor" anywhere — zero leakage of the new EditorView-specific capability into this file'));
         assert(!/\bEditor\b/.test(canvasRaw), n('WorldEncounterCanvas.js contains no reference to "Editor" either — zero leakage'));
 
@@ -890,7 +891,7 @@ async function run() {
         // d) No distribution persistence, e) no automatic distribution.
         assert(!/localStorage|sessionStorage/.test(editorViewBlock),
             n('no distribution persistence of any kind exists in the 0.9.377 block (restated from Section H for this section\'s own completeness)'));
-        const onPublishedSource = extractRange(editorViewCodeOnly, 'function onDocumentPublished(publication) {', '\n        }', 'onDocumentPublished() body');
+        const onPublishedSource = extractRange(editorViewCodeOnly, 'function onDocumentPublished(publication) {', '\n    }', 'onDocumentPublished() body');
         assert(!onPublishedSource.includes('multiRelayNostrPublicationDistributionCommand(') && !onPublishedSource.includes('distributePublishedDocument(') && !onPublishedSource.includes('distributeEditorPublication('),
             n('AMENDED BY 0.9.450 — onDocumentPublished() never calls the (now multi-relay) command or either distribution wrapper itself — publishing alone remains fully automatic-distribution-free'));
 

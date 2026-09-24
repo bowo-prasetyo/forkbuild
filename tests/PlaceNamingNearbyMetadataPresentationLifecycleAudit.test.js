@@ -22,6 +22,7 @@ import { PlaceNamingDiscoveryMonitor } from '../application/PlaceNamingDiscovery
 import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.267 — Nearby Place Naming Metadata Presentation Lifecycle Audit.
 //
@@ -792,7 +793,7 @@ async function runTests() {
             '38. Navigate behaves identically for a row whose createdAtLabel is corrupted or nonsensical — the field is display-only and never consulted.');
 
         // 39. Structural proof, direct from real source.
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const navigateBlock = extractBetween(worldViewCode, 'function navigateToNearbyPlaceNamingClaim(row) {', '\n        }');
         assert(!/createdAtLabel/.test(navigateBlock), '39. navigateToNearbyPlaceNamingClaim() contains no reference to createdAtLabel whatsoever, structurally.');
 
@@ -1181,7 +1182,7 @@ async function runTests() {
     // mutation was introduced.
     // -------------------------------------------------------------
     {
-        const rawWorldViewCode = await rawSource('ui/views/WorldView.js');
+        const rawWorldViewCode = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const worldViewCode = codeOnlyLines(rawWorldViewCode);
 
         // 70. The formatter itself remains a pure function: no verifier,

@@ -10,6 +10,7 @@ import {
     executeDiscoverSnapshotCandidatesCommandWithOutcome
 } from '../application/DiscoverSnapshotCandidatesCommand.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.590 — Snapshot Discovery Outcome Presentation Closure Audit.
 //
@@ -412,7 +413,7 @@ async function runTests() {
         assert(!/corrupt|unreadable|deserialize/i.test(rendererSource),
             '43. renderer/WorldRenderer.js still asserts no reason for an absent Structure Document (I3b stays out of scope)');
 
-        const worldEncounterCanvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(!/have been announced/i.test(worldEncounterCanvasSource),
             '44. WorldEncounterCanvas.js makes no equivalent "have been announced" claim');
 
@@ -422,7 +423,7 @@ async function runTests() {
         // carries its OWN separate, honest network-failure indicator
         // (placeNamingDiscoveryError) shown independently of the empty-list
         // copy. Reconfirmed live, not merely by memory of 0.9.589's audit.
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/No nearby place naming claims were discovered\./.test(worldViewSource),
             '45. WorldView.js\'s nearby-claims empty copy says "were discovered," not a flat existence claim');
         assert(/Place naming discovery is temporarily unavailable/.test(worldViewSource),
@@ -444,7 +445,7 @@ async function runTests() {
         // state is over a LOCAL catalog (attribution/naming claims already
         // known to this replica), not the Snapshot candidate discovery
         // mechanism this milestone scopes — ruled out on the same grounds.
-        const decentralizedPublicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedPublicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/Nothing cataloged yet\./.test(decentralizedPublicationsSource),
             '48. DecentralizedPublicationsView.js\'s empty state describes a local catalog, unrelated to Snapshot candidate discovery — ruled OUT as a match');
 

@@ -10,6 +10,7 @@ import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateB
 import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
 import { reconstructPublisherRanking } from '../application/PublisherRankingPolicy.js';
 import { reconstructPublisherLeaderboard } from '../application/PublisherLeaderboardView.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.417 — Publisher Performance Leaderboard UI.
 //
@@ -144,7 +145,7 @@ async function run() {
     let routerSource, publicationsSource, appSource, viewSource, leaderboardHubSource;
     {
         routerSource = await readSource('ui/router/index.js');
-        publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         appSource = await readSource('ui/App.js');
         viewSource = await readSource('ui/views/PublisherPerformanceLeaderboardView.js');
         // AMENDED — Leaderboard Hub Consolidation. See ui/views/

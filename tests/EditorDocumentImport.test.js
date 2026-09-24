@@ -25,6 +25,7 @@ import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
 import { ExportDocumentUseCase } from '../application/ExportDocumentUseCase.js';
 import { ImportDocumentUseCase } from '../application/ImportDocumentUseCase.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // Deliberately does NOT import application/EditorSession.js — same reason
 // tests/EditorDocumentExport.test.js gives: that class pulls in the
@@ -619,9 +620,9 @@ async function run() {
         assert(/emit\('import-document', String\(reader\.result/.test(toolbarSource),
             n('Toolbar emits the raw file text it read — it never parses JSON or calls editorSession.importDocument() itself'));
 
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/@import-document="importDocument"/.test(editorViewSource), n('EditorView.js wires Toolbar\'s import-document event to its own importDocument() handler'));
-        const importDocumentFnMatch = editorViewSource.match(/function importDocument\(rawText\)\s*\{[\s\S]*?\n\t\t\}/);
+        const importDocumentFnMatch = editorViewSource.match(/function importDocument\(rawText\)\s*\{[\s\S]*?\n    \}/);
         assert(importDocumentFnMatch !== null, n('EditorView.js defines an importDocument(rawText) handler'));
         const importDocumentFnBody = importDocumentFnMatch[0];
         assert(/JSON\.parse\(rawText\)/.test(importDocumentFnBody), n('the handler parses the raw file text itself — Toolbar never does'));

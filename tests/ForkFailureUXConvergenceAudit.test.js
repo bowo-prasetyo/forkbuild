@@ -28,6 +28,7 @@ import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
 import { ForkFailureReason } from '../application/ForkFailureReason.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import ForkFailureDialog from '../ui/components/ForkFailureDialog.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.354 — Fork Failure UX Convergence Audit.
 //
@@ -176,7 +177,7 @@ function extractByMarker(source, marker, label) {
 async function run() {
     console.log('Running Fork Failure UX Convergence Audit...\n');
 
-    const editorViewSource = await readSource('ui/views/EditorView.js');
+    const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
     const forkBlockSource = extractByMarker(editorViewSource, 'if (route.query.fork) {', 'route.query.fork handler');
     const backFromForkFailureSource = extractByMarker(editorViewSource, 'function backFromForkFailure() {', 'backFromForkFailure()');
 

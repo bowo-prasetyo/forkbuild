@@ -29,6 +29,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.606 — Publication Placement-to-World Presence Product Closure Audit.
 //
@@ -282,7 +283,7 @@ async function run() {
         assert(!/claimedPosition/.test(placeSrc),
             'C1. PlacePublicationUseCase.js never reads claimedPosition — position is only ever the caller\'s own explicit argument.');
 
-        const canvasSrc = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSrc = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/claimedPosition` REMAINS INERT/.test(canvasSrc) || /claimedPosition.*never reads/.test(canvasSrc) || /admitToRepositoryDiscovery\(\) never reads `claimedPosition`/.test(canvasSrc),
             'C2. WorldEncounterCanvas.js\'s own admission path documents, in its own header, that claimedPosition is never read for admission or placement.');
 
@@ -658,7 +659,7 @@ async function run() {
     // family already used for production composition files).
     // ===============================================================
     {
-        const worldViewSrc = await readSource('ui/views/WorldView.js');
+        const worldViewSrc = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         const panelSrc = await readSource('ui/components/OwnPublicationPanel.js');
 
         // Discover / understand.

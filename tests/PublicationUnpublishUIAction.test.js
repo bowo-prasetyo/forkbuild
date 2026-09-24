@@ -27,6 +27,7 @@ import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.
 import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/DiscoverWorldsUseCase.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.198 — Publication Unpublish/Retract UI Action.
 //
@@ -416,7 +417,7 @@ async function runTests() {
         assert(!/^\s*import\s+\{[^}]*\}\s+from\s+['"]\.\.\/\.\.\/(publisher|placement|spatial|content)\//m.test(panelCodeOnly),
             '2. OwnPublicationPanel.js imports nothing from publisher/, placement/, spatial/, or content/ — it only ever imports pure application/ describer functions, unchanged by this milestone');
 
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const worldViewCodeOnly = codeOnlyLines(worldViewSource).join('\n');
         assert(!/LocalPublisherProvider|UnpublishDocumentUseCase/.test(worldViewCodeOnly),
             '3. WorldView.js never imports or names LocalPublisherProvider/UnpublishDocumentUseCase directly — unpublish, like every other mutation in this file, goes through WorldNavigationSession alone');

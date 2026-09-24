@@ -19,6 +19,7 @@ import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofV
 import { ExternalProofVerifierRegistry } from '../application/ExternalProofVerifierRegistry.js';
 import { ExternalAnchorPublisherRegistry } from '../application/ExternalAnchorPublisherRegistry.js';
 import { PublicationAnchorCreationCoordinator } from '../application/PublicationAnchorCreationCoordinator.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.424 — Arweave Cross-Role Substrate Capability Audit.
 //
@@ -365,7 +366,7 @@ async function run() {
         check(!/PublicationAnchor|ExternalAnchorPublisherRegistry|CreateExternalPublicationAnchorUseCase/.test(distributionRuntimeSource), 'F3. the Content/Discovery distribution composition imports nothing from anchor creation either — the reverse direction is equally absent, confirming this is a genuine architectural boundary, not an accident of which file happened to import which');
 
         let multiSelectAnchorOrStorageMarkup = 0;
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const anchorSection = viewSource.slice(viewSource.indexOf('availableAnchorTypes'), viewSource.indexOf('availableAnchorTypes') + 4000);
         if (/type=["']checkbox["']/.test(anchorSection)) multiSelectAnchorOrStorageMarkup += 1;
         check(multiSelectAnchorOrStorageMarkup === 0, 'F4. the real anchor-type UI region contains no checkbox/multi-select markup — choosing a provider for a role remains "one action, one provider," never "select several and fan out," reconfirmed at the UI layer specifically for this milestone rather than assumed from 0.9.421');

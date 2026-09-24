@@ -8,6 +8,7 @@ import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshot
 import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
 import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/IpfsPublicationRecord.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.663 — Connect Remote IPFS to Nostr Snapshot Distribution — Closure
 // Audit.
@@ -180,7 +181,7 @@ async function run() {
         // publishToRemoteIpfs() genuinely makes exactly this call, in
         // exactly this shape, reached only from inside the PUBLISHED
         // branch — never assumed, always checked against production.
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const fnMatch = viewSource.match(/async function publishToRemoteIpfs\(entry\) \{[\s\S]*?\n        \}/);
         assert(fnMatch, n('A1. ui/views/DecentralizedPublicationsView.js#publishToRemoteIpfs() exists as a real, isolable function.'));
         const fnBody = fnMatch[0];
@@ -339,7 +340,7 @@ async function run() {
     // Section F — UI state: one source of truth, never two.
     // =======================================================================
     {
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const fnMatch = viewSource.match(/async function publishToRemoteIpfs\(entry\) \{[\s\S]*?\n        \}/);
         const fnBody = fnMatch[0];
 
@@ -382,7 +383,7 @@ async function run() {
         // G1 — source: the announce call lives strictly INSIDE the
         // `if (... === PUBLISHED)` branch, never before it, never in the
         // outer catch, and never unconditionally.
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const fnMatch = viewSource.match(/async function publishToRemoteIpfs\(entry\) \{[\s\S]*?\n        \}/);
         const fnBody = fnMatch[0];
         const publishedIndex = fnBody.indexOf('if (entry.ipfsRemotePublicationOutcome.state === IpfsRemotePublicationState.PUBLISHED)');

@@ -25,6 +25,7 @@ import { AutosaveDocumentUseCase } from '../application/AutosaveDocumentUseCase.
 import { CheckRecoveryUseCase } from '../application/CheckRecoveryUseCase.js';
 import { RecoverDocumentUseCase } from '../application/RecoverDocumentUseCase.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.581 — Editor Persistence Boundary Closure Audit.
 //
@@ -204,7 +205,7 @@ async function run() {
         const schedulerSource = await readSource('application/AutosaveScheduler.js');
         assert(/flush\(\) \{/.test(schedulerSource), 'A2. AutosaveScheduler.js now defines flush() — the exact seam 0.9.579 found missing.');
 
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const unmountMatch = editorViewSource.match(/onBeforeUnmount\(\(\) => \{[\s\S]*?\n        \}\);/);
         assert(unmountMatch !== null, 'sanity — onBeforeUnmount() block located.');
         const flushPos = unmountMatch[0].indexOf('autosaveScheduler.flush()');
@@ -530,7 +531,7 @@ async function run() {
         const schedulerSource = await readSource('application/AutosaveScheduler.js');
         assert(!/peer|collaboration|Propagation|EventBus/i.test(schedulerSource.replace(/\/\/.*$/gm, '')),
             'H1. AutosaveScheduler.js (flush() included) still references nothing from peer/collaboration machinery.');
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const flushCallLine = editorViewSource.split('\n').find((line) => line.includes('autosaveScheduler.flush()'));
         assert(flushCallLine && flushCallLine.trim() === 'autosaveScheduler.flush();',
             'H2. The real call site is a bare, argument-less autosaveScheduler.flush() — it passes no collaboration/peer collaborator into it.');
@@ -553,7 +554,7 @@ async function run() {
         assert(offenders.length === 0,
             `I1. No file anywhere under ui/ introduces beforeRouteLeave/onBeforeRouteLeave/beforeunload/window.confirm() — navigation away from the Editor is still never blocked or interactively warned about, exactly as 0.9.579 Section C1 found and this milestone deliberately did not change (offenders: ${offenders.join(', ') || 'none'}).`);
 
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(!/await\s+autosaveScheduler\.flush\(\)/.test(editorViewSource),
             'I2. The real call site never awaits flush() — teardown is not paused on it, even though flush() itself is synchronous today.');
         console.log('✓ I. No navigation-blocking mechanism exists anywhere under ui/ (I1, a whole-tree sweep — 0.9.580\'s own D2/E1/E2 examined only EditorView.js), and the real call site is un-awaited (I2) — navigation remains genuinely ungated on this milestone\'s own persistence operation.');
@@ -746,7 +747,7 @@ async function run() {
 
         // L6 — EditorView.js still calls the explicit Save use case
         // exactly once; flush() did not add a second Save call site.
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const saveCallCount = (editorViewSource.match(/saveDocumentUseCase\.execute\(/g) || []).length;
         assert(saveCallCount === 1,
             `L6. ui/views/EditorView.js still calls saveDocumentUseCase.execute( exactly once (the pre-existing explicit Save action) — flush() did not add a second Save call site (found ${saveCallCount}).`);

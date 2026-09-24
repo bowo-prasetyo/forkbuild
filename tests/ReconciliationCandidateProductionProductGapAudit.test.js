@@ -31,6 +31,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.405 — Reconciliation Candidate Production Product Gap Audit.
 //
@@ -351,7 +352,7 @@ async function run() {
     // claim side is not.
     // ===============================================================
     {
-        const publicationsViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(publicationsViewSource.includes("import { reconstructAchievementBadges } from '../../application/AchievementBadgeView.js';"), n('E1. DecentralizedPublicationsView already reads real achievement evidence off its own archive ref'));
         assert(/reconstructAchievementBadges\(publicationObservationArchive\.value\)/.test(publicationsViewSource), n('E2. that call is made directly against the SAME live archive ref reconstructPublisherLeaderboard(archive) would also need — no second archive, no fetch, no peer'));
         assert(!publicationsViewSource.includes('reconstructPublisherLeaderboard('), n('E3. yet reconstructPublisherLeaderboard() itself is never called from that file — the zero-network half of a candidate is real, wired for achievements, but not for the leaderboard snapshot'));

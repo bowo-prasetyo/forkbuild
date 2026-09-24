@@ -26,6 +26,7 @@ import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.
 import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
 import { DiscoverWorldsUseCase } from '../application/DiscoverWorldsUseCase.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.197 — World Placement Removal UI Action.
 //
@@ -313,7 +314,7 @@ async function runTests() {
         assert(!/^\s*import\s/m.test(placementInfoPanelSource),
             '4. PlacementInfoPanel.js still has zero imports — a pure presentation component that cannot reach the placement store directly even by accident');
 
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const codeOnly = codeOnlyLines(worldViewSource).join('\n');
         assert(!/LocalSpatialIndexProvider|LocalPlacementRegistry|SpatialIndexProvider|PlacementRegistry/.test(codeOnly),
             '5. WorldView.js never imports or names a spatial-index/placement-registry class directly — removal, like every other mutation in this file, goes through WorldNavigationSession alone');

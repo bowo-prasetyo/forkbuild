@@ -1,0 +1,706 @@
+/* Choose Your Brick Color — SelectionInspector's recolor swatch, styled
+   like every other structure-instance-btn beside it (same padding/border/
+   font), just with a real <input type="color"> tucked inside the label. */
+.selection-inspector-color {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.selection-inspector-color-input {
+    width: 1.1rem;
+    height: 1.1rem;
+    padding: 0;
+    border: 1px solid #2a2a2a;
+    border-radius: 3px;
+    background: none;
+    cursor: pointer;
+}
+
+.structure-instance-edit-source {
+    width: 100%;
+    padding: 0.35rem 0.55rem;
+    background: transparent;
+    border: 1px dashed #3a3a3a;
+    border-radius: 3px;
+    color: #9b59b6;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.structure-instance-edit-source:hover {
+    background: #201a26;
+    border-color: #9b59b6;
+    color: #ffffff;
+}
+
+/* 0.2.92 — World Instance Transform UX: the numeric X/Z/rotation
+   inspector inside StructureInstancePanel. Reuses .form-field/.form-
+   label/.form-input (ui/components/MetadataEditorDialog.js's own
+   convention) with tighter spacing so it fits the narrow editor
+   sidebar. */
+.structure-instance-transform {
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid #242424;
+}
+
+.structure-instance-transform-row {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.structure-instance-field {
+    margin-bottom: 0.4rem;
+    flex: 1;
+}
+
+.structure-instance-field .form-label {
+    margin-bottom: 0.15rem;
+    font-size: 0.7rem;
+}
+
+.structure-instance-field .form-input {
+    padding: 0.3rem 0.4rem;
+    font-size: 0.8rem;
+}
+
+.structure-instance-ground-y {
+    margin: 0 0 0.4rem;
+    color: #707070;
+    font-size: 0.72rem;
+}
+
+.structure-instance-apply {
+    width: 100%;
+}
+
+/* 0.6.2 — Editor UX Consolidation: ui/components/SelectionInspector.js,
+   the brick-selection counterpart to StructureInstancePanel above.
+   Reuses every .structure-instance-* class wholesale (same card/hint/
+   action-button look, see that component's own header on why the two
+   stay separate components) — .selection-inspector-next is the one new
+   hook, a "what happens next" hint line one step quieter than the
+   position readout above it. */
+.selection-inspector-next {
+    color: #5a8a6f;
+}
+
+/* 0.3.0 — ui/components/WorldCollaboratorIndicator.js: deliberately as
+   understated as .world-presence-indicator above — a compact list, never
+   its own panel, and never competing visually with the World itself. */
+.world-collaborator-indicator {
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    max-width: 260px;
+}
+
+.world-collaborator-indicator-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(31, 31, 31, 0.75);
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    font-size: 0.76rem;
+    color: #b0b0b0;
+}
+
+.world-collaborator-indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.world-collaborator-indicator-name {
+    color: #e0e0e0;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-collaborator-indicator-activity {
+    color: #909090;
+}
+
+.world-collaborator-indicator-devices {
+    color: #707070;
+}
+
+/* 0.3.1 — ui/components/WorldCollaboratorIndicator.js's own Follow
+   action: local camera navigation only, so it stays as understated as
+   the row it lives in — a plain text-weight button, never a call-to-
+   action style that could read as something more than "move my own
+   camera over there." */
+.world-collaborator-indicator-follow {
+    margin-left: auto;
+    padding: 0.1rem 0.4rem;
+    background: transparent;
+    border: 1px solid #3a3a3a;
+    border-radius: 3px;
+    color: #909090;
+    font-size: 0.7rem;
+    cursor: pointer;
+}
+
+.world-collaborator-indicator-follow:hover {
+    color: #e0e0e0;
+    border-color: #4caf7d;
+}
+
+/* 0.5.1 — World Maps & Geographic Navigation.
+   ui/components/WorldMapPanel.js follows the SAME .modal-overlay/
+   .modal-panel convention as .locations-panel/.region-form above, just
+   wider — the map itself needs the room, everything else (hint text,
+   toolbar, close button) stays the same shape every other panel here
+   already has. */
+.world-map-panel {
+    width: 680px;
+}
+
+.world-map-hint {
+    font-size: 0.78rem;
+    color: #909090;
+    margin: 0 0 0.75rem;
+    line-height: 1.4;
+}
+
+.world-map-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.world-map-scale {
+    font-size: 0.78rem;
+    color: #909090;
+    min-width: 5.5rem;
+    text-align: center;
+}
+
+.world-map-toolbar .action-btn:last-child {
+    margin-left: auto;
+}
+
+.world-map-svg {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    background: #101410;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.world-map-background {
+    fill: #101410;
+}
+
+/* Regions are drawn broadest-first (see WorldMapPanel's own
+   projectedRegions ordering) so a CONTINENT never visually buries a
+   VILLAGE drawn inside it; tier only ever changes stroke/label
+   weight, never geometry — see core/WorldMapProjection.js's own header
+   on presentation tiers. */
+.world-map-region {
+    fill: rgba(76, 175, 125, 0.08);
+    stroke: rgba(76, 175, 125, 0.5);
+    stroke-width: 1.5;
+    cursor: pointer;
+}
+
+.world-map-region:hover {
+    fill: rgba(76, 175, 125, 0.16);
+    stroke: #4caf7d;
+}
+
+.world-map-region-label {
+    fill: #c8e6d5;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    pointer-events: none;
+    font-family: inherit;
+}
+
+.world-map-region-label--tier-1 { font-size: 15px; font-weight: 600; }
+.world-map-region-label--tier-2 { font-size: 12px; font-weight: 600; }
+.world-map-region-label--tier-3 { font-size: 10px; }
+.world-map-region-label--tier-4 { font-size: 9px; }
+
+.world-map-marker {
+    cursor: pointer;
+}
+
+.world-map-marker-glyph {
+    font-size: 14px;
+    fill: #e0e0e0;
+    pointer-events: none;
+}
+
+.world-map-marker--structure .world-map-marker-glyph {
+    fill: #9fc7ff;
+}
+
+.world-map-marker--landmark .world-map-marker-glyph {
+    fill: #f0c95c;
+}
+
+.world-map-marker--viewer .world-map-marker-glyph {
+    fill: #4caf7d;
+    font-size: 16px;
+}
+
+.world-map-marker-label {
+    font-size: 9px;
+    fill: #a0a0a0;
+    pointer-events: none;
+    font-family: inherit;
+}
+
+.world-map-marker--viewer .world-map-marker-label {
+    fill: #4caf7d;
+    font-weight: 600;
+}
+
+.world-map-collaborator-dot {
+    fill: #d97757;
+    stroke: #1a1a1a;
+    stroke-width: 1.5;
+}
+
+.world-map-collaborator-initial {
+    font-size: 8px;
+    fill: #1a1a1a;
+    font-weight: 700;
+    pointer-events: none;
+}
+
+.world-map-empty {
+    font-size: 0.8rem;
+    color: #707070;
+    text-align: center;
+    margin: 0.75rem 0 0;
+}
+
+/* 0.5.2 — ui/components/PlaceNamingPanel.js: same .modal-overlay/
+   .modal-panel convention as .locations-panel/.region-form above, plus
+   a list language borrowed straight from .locations-panel-item (a
+   naming claim IS a kind of location row, just for a name rather than
+   a place). */
+.naming-panel {
+    width: 460px;
+}
+
+.naming-panel-section {
+    margin-bottom: 1.1rem;
+}
+
+.naming-panel-section:last-of-type {
+    margin-bottom: 0.85rem;
+}
+
+.naming-panel-list {
+    list-style: none;
+    margin: 0 0 0.6rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 30vh;
+    overflow-y: auto;
+}
+
+.naming-panel-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.6rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.naming-panel-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.naming-panel-item-name {
+    font-size: 0.88rem;
+    color: #e0e0e0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.naming-panel-item-score,
+.naming-panel-item-meta {
+    font-family: monospace;
+    font-size: 0.72rem;
+    color: #707070;
+}
+
+/* 0.5.3 — Decentralized Place Name Exchange: a claim row now shows both
+   Export and (conditionally) Retract, so it needs its own small flex
+   row rather than the single bare button naming-panel-item's own
+   space-between layout assumed. */
+.naming-panel-item-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.form-field-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.form-field-row .form-input {
+    flex: 1;
+}
+
+/* 0.5.5 — Geographic Place Directory & Identity UX.
+   ui/components/GeographicPlaceDirectoryPanel.js follows the same
+   .modal-overlay/.modal-panel/.locations-panel-item language every
+   other directory-style panel here already uses; the only new thing is
+   that a row itself is clickable (role="button"), not just its action
+   button, since opening a place IS this list's whole purpose. */
+.geographic-place-directory-panel {
+    width: 460px;
+}
+
+.geographic-place-directory-list .locations-panel-item {
+    cursor: pointer;
+}
+
+.geographic-place-directory-list .locations-panel-item:hover {
+    border-color: #4caf7d;
+}
+
+/* ui/components/GeographicPlacePanel.js reuses .naming-panel-section/
+   .naming-panel-list wholesale (see that panel's own header on why —
+   it's the exact same "ranked list of named things" shape 0.5.2's
+   naming panel already established), plus its own small checklist for
+   "why grouped together?" */
+.geographic-place-panel {
+    width: 480px;
+}
+
+.geographic-place-reasons-list {
+    list-style: none;
+    margin: 0 0 0.5rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.82rem;
+    color: #a8d9bd;
+}
+
+/* 0.5.5 — "Show on Map" highlights the geometry that already exists;
+   it never draws a new shape. A highlighted region gets a brighter
+   stroke/fill and a subtle glow, layered on top of whatever tier
+   styling .world-map-region already applies — never a replacement for
+   it. */
+.world-map-region--highlighted {
+    fill: rgba(217, 119, 87, 0.18);
+    stroke: #d97757;
+    stroke-width: 2.5;
+}
+
+/* 0.5.6 — Geographic Place Navigation & Arrival. A geographic place's
+   own compass/legend color — violet, distinct from structure (gold),
+   collaborator (teal), and landmark (pink) above, so all four kinds
+   read apart at a glance on the dial and in the HUD legend. */
+.compass-indicator-marker--place {
+    background: #9b8cff;
+}
+
+.world-view-nav-marker.place .marker-direction {
+    color: #9b8cff;
+}
+
+/* ui/components/GeographicPlaceDirectoryPanel.js: the "Nearby Places"
+   section reuses .naming-panel-section/.naming-panel-list wholesale
+   (the same "ranked list of named things" shape 0.5.5's own
+   GeographicPlacePanel already reused) — only the search box below it
+   is new layout. */
+.geographic-place-search-input {
+    width: 100%;
+    margin: 0.75rem 0;
+}
+
+/* ui/components/WorldWelcomePanel.js: the arrival banner's "You are
+   in"/"You are near" line — deliberately more prominent than
+   .world-welcome-panel-stats (a fact worth noticing on arrival) but
+   plainer than the world title itself. */
+.world-welcome-panel-arrival-note {
+    margin: 0 0 0.3rem;
+    font-size: 0.85rem;
+    color: #9b8cff;
+}
+
+/* ===================================================================
+   0.5.7 — World View UX & Progressive Exploration
+   ===================================================================
+   World View's left panel (.world-view-overlay) grew one section at a
+   time across 0.1.50-0.5.6 with no height bound of its own — on a
+   long enough stack (an active build, an open selection, several
+   nearby-world lists) content was pushed out past the bottom of the
+   viewport with no way to reach it. This is the structural fix: a
+   SINGLE scrollable wrapper around the panel's entire content, so the
+   panel itself always fits, never the World scene beneath it. See
+   ui/views/WorldView.js's own template — this wrapper is the ONLY
+   direct child of .world-view-overlay now, so the existing
+   ".world-view-overlay > *" pointer-events rule (still below) keeps
+   working unchanged: it targets this one wrapper instead of many
+   siblings, and every click inside it still reaches its target exactly
+   as before. */
+/* 0.9.655 — padding-right widened 0.25rem -> 1.0625rem, matching
+   .sidebar-scroll above: an overlay scrollbar reserves no layout width
+   of its own, so this wrapper must declare its own clearance. */
+.world-view-overlay-scroll {
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 1.0625rem;
+}
+
+/* The three PRIMARY modes — Explore / Map / Places — replacing the
+   four separate always-visible buttons (Locations, Map, Geographic
+   Places, Explore) 0.2.94-0.5.6 accumulated. Mutually exclusive by
+   construction (application/WorldViewNavigationState.js): exactly one
+   carries --active at a time. */
+.world-view-primary-nav {
+    display: flex;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+}
+
+.world-view-primary-nav .action-btn {
+    flex: 1;
+}
+
+.world-view-primary-nav .action-btn--active {
+    background: #2a5540;
+    border-color: #4caf7d;
+    color: #ffffff;
+}
+
+/* Generic collapsible section (ui/components/CollapsibleSection.js) —
+   used for World View's "Nearby ___" groups in Explore mode. The
+   header stays a full-width button (never just the caret) so the
+   entire row is clickable, not a tiny hit target. */
+.collapsible-section {
+    margin-top: 0.6rem;
+}
+
+.collapsible-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0.3rem 0;
+    color: #d0d0d0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.collapsible-section-header:hover {
+    color: #ffffff;
+}
+
+.collapsible-section-caret {
+    color: #707070;
+    width: 0.9rem;
+    text-align: center;
+}
+
+.collapsible-section-title {
+    flex: 1;
+}
+
+.collapsible-section-count {
+    font-family: monospace;
+    font-size: 0.72rem;
+    color: #707070;
+}
+
+.collapsible-section-body {
+    padding: 0.25rem 0 0.25rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+/* One "Nearby ___" row — a name, a distance, and a compact Go action.
+   Point 5 of the design conversation: "not everything needs to become
+   an icon... but repeated actions... can become compact controls." */
+.world-view-nearby-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.world-view-nearby-row-label {
+    color: #d0d0d0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.world-view-nearby-row-distance {
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: #707070;
+    flex-shrink: 0;
+}
+
+.world-view-nearby-row-go {
+    flex-shrink: 0;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.72rem;
+}
+
+.world-view-nearby-empty {
+    color: #606060;
+    font-size: 0.78rem;
+    font-style: italic;
+}
+
+/* 0.9.257 — World View Place Naming Presentation. A "Nearby Place Names"
+   row wraps to a second line for its author label — unlike the single-line
+   rows above, a claim's own name and its claimant are both worth reading
+   in full, never truncated behind an ellipsis. */
+.world-view-place-naming-row {
+    flex-wrap: wrap;
+}
+
+.world-view-place-naming-author {
+    flex-basis: 100%;
+    font-size: 0.7rem;
+    color: #808080;
+}
+
+/* 0.9.266 — Nearby Place Naming Claim Metadata Presentation. Same
+   full-width, secondary-line treatment as .world-view-place-naming-author
+   just above — createdAt is exactly as ordinary a fact as the author, never
+   visually promoted above it. */
+.world-view-place-naming-created {
+    flex-basis: 100%;
+    font-size: 0.7rem;
+    color: #808080;
+}
+
+.world-view-place-naming-error {
+    color: #b08050;
+}
+
+/* 0.9.263 — Nearby Place Naming Claim Adoption UI. Same compact sizing as
+   .world-view-nearby-row-go — Adopt sits beside Navigate as an equally
+   ordinary row action, never visually promoted above it. */
+.world-view-nearby-row-adopt {
+    flex-shrink: 0;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.72rem;
+}
+
+/* 0.9.269 — Nearby Place Naming Claim Adoption Status Indicator. Replaces
+   .world-view-nearby-row-adopt in place once a claim is already on file —
+   same compact sizing/position as the button it stands in for, but
+   deliberately unstyled as an action (no button, no hover/click affordance):
+   this is a passive fact about a row, not something to press. */
+.world-view-nearby-row-status {
+    flex-shrink: 0;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.72rem;
+    color: #6a9a6a;
+}
+
+/* ui/components/PlaceNamingPanel.js: the "More — other descriptions,
+   claim history, import/export" disclosure gating everything past
+   Community Names/Publish A Name — same full-width, caret-led button
+   language as .collapsible-section-header above, kept as its own class
+   since this one isn't reusable (PlaceNamingPanel doesn't use
+   CollapsibleSection itself — it toggles one boolean over several
+   sibling <section> elements rather than wrapping a single slot). */
+.naming-panel-advanced-toggle {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    border-top: 1px solid #2a2a2a;
+    margin: 0.4rem 0 0.9rem;
+    padding: 0.6rem 0 0.2rem;
+    color: #909090;
+    font-size: 0.78rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.naming-panel-advanced-toggle:hover {
+    color: #e0e0e0;
+}
+
+/* 0.5.8 — World View Contextual Focus & Information Hierarchy.
+   ui/components/WorldFocusPanel.js: a small, single-purpose "what am I
+   looking at?" reading, deliberately plainer than the specialized
+   panels (GeographicPlacePanel, LocationsPanel) it complements — see
+   that component's own header. */
+.world-focus-panel {
+    width: 380px;
+}
+
+.world-focus-panel-subtitle {
+    margin: 0;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #808080;
+}
+
+.world-focus-panel-description {
+    margin: 0.4rem 0;
+    font-size: 0.88rem;
+    color: #c0c0c0;
+}
+
+/* Same "in"/"near" violet wording .world-welcome-panel-arrival-note
+   already established for the viewer's OWN arrival banner — reused
+   here verbatim for whatever is currently focused, never a second
+   color convention for the same distinction. */
+.world-focus-panel-arrival {
+    margin: 0.5rem 0 0.3rem;
+    font-size: 0.85rem;
+    color: #9b8cff;
+}
+
+.world-focus-panel-nearby {
+    margin: 0 0 0.5rem;
+    font-size: 0.78rem;
+    color: #808080;
+}
+
+.world-focus-panel-hint {
+    margin: 0.5rem 0 0;
+    font-size: 0.76rem;
+    color: #808080;
+}

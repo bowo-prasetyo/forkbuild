@@ -34,7 +34,7 @@ import {
     PublicationMaterialProvenanceOrigin,
     describePublicationMaterialProvenanceFromInspection
 } from '../application/PublicationMaterialProvenance.js';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.535 — Wanderer World Session Continuity Product Reassessment.
 //
@@ -456,7 +456,7 @@ async function main() {
         const movementSource = await readSource('application/AvatarMovementController.js');
         assert(!/Publication|Encounter/.test(movementSource),
             '1. application/AvatarMovementController.js names no Publication/Encounter concept anywhere — movement is physics/input only.');
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const canvasMethodsAndComputed = canvasSource.slice(canvasSource.indexOf('    computed: {'), canvasSource.indexOf('    template: `'));
         const codeOnlyMethods = canvasMethodsAndComputed.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/nearby|proximity|radius/i.test(codeOnlyMethods),
@@ -851,8 +851,8 @@ async function main() {
         // milestone touches refreshSelectionOutcome()/
         // refreshComparisonSelectionOutcome() only — see Section E/F —
         // never admitToRepositoryDiscovery() itself).
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
-        const admitBody = canvasSource.slice(canvasSource.indexOf('admitToRepositoryDiscovery(loading, verification) {'), canvasSource.indexOf('\n        },', canvasSource.indexOf('admitToRepositoryDiscovery(loading, verification) {')));
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
+        const admitBody = canvasSource.slice(canvasSource.indexOf('admitToRepositoryDiscovery(loading, verification) {'), canvasSource.indexOf('\n    },', canvasSource.indexOf('admitToRepositoryDiscovery(loading, verification) {')));
         assert(/loading\.status === 'AVAILABLE'/.test(admitBody) && /loading\.material instanceof Publication/.test(admitBody) && /verification\.status === 'VERIFIED'/.test(admitBody),
             '7. admitToRepositoryDiscovery()\'s own gate is untouched by this milestone — still exactly AVAILABLE + instanceof Publication + VERIFIED, nothing added, nothing loosened.');
 

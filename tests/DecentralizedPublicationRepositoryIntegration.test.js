@@ -31,6 +31,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import { buildPlaceNamingClaimPublication, PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION as NAMING_SCHEMA_VERSION } from '../application/PlaceNamingClaimPublication.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.337 — Wire Resolved Decentralized Publications into Repository
 // Discovery.
@@ -189,7 +190,7 @@ async function run() {
         // built inside the view would silently defeat the whole
         // milestone, the exact failure mode 0.9.336's own Section H4
         // proved live.
-        const viewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(viewSource.includes("inject('decentralizedPublicationDiscoveryProvider', null)"),
             '3. ui/views/DecentralizedPublicationsView.js injects the application-lifetime instance rather than constructing its own.');
         assert(!/new DecentralizedPublicationDiscoveryProvider\(/.test(viewSource),

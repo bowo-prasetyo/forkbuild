@@ -26,6 +26,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.530 — Notification Event & Delivery Experience Product Reassessment.
 //
@@ -367,7 +368,7 @@ async function runTests() {
     // evidenced PRODUCT_GAP this reassessment found, and closed.
     // ===============================================================
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const panelSource = await rawSource('ui/components/NotificationHistoryPanel.js');
 
         // E1 — the new command exists, resolves via findPublicationById()
@@ -527,7 +528,7 @@ async function runTests() {
     {
         const panelSource = await rawSource('ui/components/NotificationHistoryPanel.js');
         const cardSource = await rawSource('ui/components/PublicationCard.js');
-        const editorSource = await rawSource('ui/views/EditorView.js');
+        const editorSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
 
         const explorePattern = /class="action-btn action-btn--explore"[\s\S]{0,200}>Explore</;
         assert(explorePattern.test(panelSource), 'H1a. NotificationHistoryPanel.js\'s own Explore button matches the exact class+label shape.');

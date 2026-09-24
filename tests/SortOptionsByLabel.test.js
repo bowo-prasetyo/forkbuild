@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { sortOptionsByLabel, sortLabels, compareOptionLabels } from '../utils/sortOptionsByLabel.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, publicationsViewSourceWithTemplate } from './support/SourceFileGroups.js';
 
 // Choice lists are shown alphabetically unless their order carries meaning.
 //
@@ -67,7 +67,7 @@ async function run() {
             'ui/views/DecentralizedPublicationsView.js'
         ];
         for (const path of substrateFiles) {
-            const text = await source(path);
+            const text = path === 'ui/views/DecentralizedPublicationsView.js' ? publicationsViewSourceWithTemplate() : await source(path);
             assert(!/<option value="nostr">Nostr<\/option>\s*<option value="arweave">Arweave<\/option>/.test(text),
                 `${path} no longer lists Nostr before Arweave`);
             assert(/<option value="arweave">Arweave<\/option>\s*<option value="nostr">Nostr<\/option>/.test(text),

@@ -23,7 +23,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PublicationExchange } from '../application/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
 import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.340 — Federated Repository Product Reassessment.
 //
@@ -247,7 +247,7 @@ async function run() {
         // identically to a local one.
         assert(/function forkPublication\(pub\)\s*\{\s*router\.push\(\{ path: '\/editor', query: \{ fork: pub\.documentId, publication: pub\.id \} \}\);/.test(catalogSource),
             '9. Fork routes by pub.documentId/pub.id — reconfirmed unchanged since 0.9.339.');
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(editorViewSource.includes("inject('decentralizedPublicationDiscoveryProvider', null)"),
             '9b. EditorView.js\'s fork-time lookup shares the merged composition (0.9.339) — no broken handoff between Repository selection and Fork.');
     }

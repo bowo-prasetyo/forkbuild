@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.511 — Proof/Anchoring Cross-Substrate Capability Parity Audit.
 //
@@ -219,7 +220,7 @@ async function run() {
         for (const name of granularCoordinators) {
             assert(new RegExp(`app\\.provide\\('${name}', ${name}\\)`).test(mainSrc), n(`C4[${name}]. is constructed AND provided to the app — real, not merely present`));
         }
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
         for (const name of granularCoordinators) {
             assert(new RegExp(name).test(viewSrc), n(`C5[${name}]. is actually injected/consumed by ui/views/DecentralizedPublicationsView.js — reachable, not dormant`));
         }
@@ -263,7 +264,7 @@ async function run() {
         // D3: no view action of the createBitcoinAnchor(...) shape exists
         // anywhere — the direct structural counterpart of
         // createBaseAnchor(entry) (Section F) is simply absent.
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
         assert(!/function createBitcoinAnchor\(/.test(viewSrc), n('D3. no createBitcoinAnchor(...)-shaped view action exists — confirmed absent, not merely unobserved'));
         assert(!/createPublicationAnchorUseCase/.test(viewSrc), n('D4. ui/views/DecentralizedPublicationsView.js never references createPublicationAnchorUseCase directly at all — every anchor this page ever mints goes through either the generic registry\'s create(entry, anchorType) or Base\'s own baseAnchorPublisher.publish(), never a bespoke Bitcoin call'));
 
@@ -323,7 +324,7 @@ async function run() {
     // genuinely complete for creation, cataloging, and verification.
     // ===============================================================
     {
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
         assert(/async function createBaseAnchor\(entry\)/.test(viewSrc), n('F1. createBaseAnchor(entry) exists as a real, explicit, person-triggered UI action'));
         assert(/const result = await baseAnchorPublisher\.publish\(entry\.publication\.id, \{/.test(viewSrc), n('F2. it calls the real baseAnchorPublisher.publish() with the actual entry — not a stub or placeholder'));
         assert(/entry\.baseAnchorCreationAttempt = \{\s*creating: false, outcome: ExternalAnchorCreationOutcome\.CREATED, anchor: result\.anchor,/.test(viewSrc), n('F3. a successful publish produces a real anchor, surfaced through the SAME ExternalAnchorCreationOutcome vocabulary Bitcoin/Arweave already use — no separate Base-only outcome type'));
@@ -348,7 +349,7 @@ async function run() {
         assert(!(await sourceExists('anchoring/BaseAnchorEvidenceView.js')), n('G1. anchoring/BaseAnchorEvidenceView.js does not exist — confirmed absent, the direct structural counterpart of anchoring/BitcoinAnchorEvidenceView.js and anchoring/ArweaveAnchorEvidenceView.js, both of which DO exist'));
         assert(await sourceExists('anchoring/BitcoinAnchorEvidenceView.js') && await sourceExists('anchoring/ArweaveAnchorEvidenceView.js'), n('G2. confirming this is a real asymmetry, not a pattern this codebase never uses for any substrate'));
 
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
         assert(/evidenceViewRegistry && evidenceViewRegistry\.has\(anchor\.anchorType\)/.test(viewSrc), n('G3. the page\'s own evidence rendering already gates type-specific presentation on registry membership, gracefully degrading rather than crashing when a type is unregistered'));
 
         // G4: verification itself is unaffected — re-confirmed distinct

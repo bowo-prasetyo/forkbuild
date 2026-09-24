@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.400 — Reconciliation Leaderboard Product Entry-Point Decision Audit.
 //
@@ -115,7 +116,7 @@ async function run() {
             n('B2. /reconciliation-leaderboard is NOT among App.js\'s top-nav router-link destinations — confirms the NOT_REACHABLE-from-top-nav half of the reachability census')
         );
 
-        publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED — Leaderboard Hub Consolidation. The link moved one hop
         // further, from the Publications page directly onto ui/views/
         // LeaderboardHubView.js, itself now reached by the one link

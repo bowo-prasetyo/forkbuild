@@ -20,6 +20,7 @@ import { RecoverDocumentUseCase } from '../application/RecoverDocumentUseCase.js
 import { DiscardRecoveryUseCase } from '../application/DiscardRecoveryUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.204 — Editor Autosave & Recovery UI Integration.
 //
@@ -530,7 +531,7 @@ async function run() {
         assert(!observerSource.includes('import '),
             'RecoveryObserver.js has zero imports — it depends only on constructor-injected collaborators');
 
-        const editorViewSource = codeOnlyLines(await rawSource('ui/views/EditorView.js'));
+        const editorViewSource = codeOnlyLines((await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(!/from ['"].*\/storage\//.test(editorViewSource),
             'EditorView.js still never imports storage/ directly (goes through CreatePersistenceUseCase)');
         console.log('✓ J. no direct storage manipulation from the UI layer');

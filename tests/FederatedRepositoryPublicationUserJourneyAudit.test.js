@@ -25,6 +25,7 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.338 — Federated Repository Publication User-Journey Audit.
 //
@@ -373,7 +374,7 @@ async function run() {
         // D1. Structural: EditorView.js's own fork branch, reproduced
         // faithfully — findPublicationUseCase.execute(route.query.publication)
         // then forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication).
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(editorViewSource.includes("inject('decentralizedPublicationDiscoveryProvider', null)") &&
             /new CreateDiscoveryUseCase\(\)\.execute\(\{\s*decentralizedDiscoveryProvider:/.test(editorViewSource),
             '1. UPDATED (0.9.339): ui/views/EditorView.js builds findPublicationUseCase from the SAME application/CreateDiscoveryUseCase.js composition root Section A proved is now merged, now also injecting and threading through the shared decentralized provider.');

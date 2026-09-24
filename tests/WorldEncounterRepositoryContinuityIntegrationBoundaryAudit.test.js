@@ -17,6 +17,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.474 — Admit World-Encountered Publications into App-Wide Discovery —
 // Integration Boundary Audit.
@@ -197,7 +198,7 @@ async function run() {
     // Section A — Production wiring.
     // ===============================================================
     {
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/const decentralizedDiscoveryProviderForEnrichment = inject\('decentralizedPublicationDiscoveryProvider', null\);/.test(worldViewSource),
             '1. ui/views/WorldView.js still injects the shared provider exactly once, under its own established name.');
         assert(/decentralizedDiscoveryProviderForEnrichment\s*$/m.test(worldViewSource) || /decentralizedDiscoveryProviderForEnrichment\n\s*\};/.test(worldViewSource),
@@ -205,7 +206,7 @@ async function run() {
         assert(/<WorldEncounterCanvas[\s\S]{0,1200}?:decentralizedPublicationDiscoveryProvider="decentralizedDiscoveryProviderForEnrichment"[\s\S]{0,400}?\/>/.test(worldViewSource),
             '3. FLAGSHIP WIRING: the real <WorldEncounterCanvas> element binds :decentralizedPublicationDiscoveryProvider to the SAME decentralizedDiscoveryProviderForEnrichment this view already injects for search-result enrichment — one dependency, two consumers, no second inject().');
 
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/decentralizedPublicationDiscoveryProvider:\s*\{\s*\n\s*type: Object,\s*\n\s*default: null\s*\n\s*\},/.test(canvasSource),
             '4. ui/components/WorldEncounterCanvas.js declares decentralizedPublicationDiscoveryProvider as an optional, null-default prop — a mount with none supplied changes nothing about resolution or rendering.');
         assert(/admitToRepositoryDiscovery\(loading, verification\)\s*\{/.test(canvasSource),
@@ -324,7 +325,7 @@ async function run() {
     // 4 is amended in place to expect three.
     // ===============================================================
     {
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(!/new DecentralizedPublicationDiscoveryProvider\(/.test(canvasSource),
             '1. WorldEncounterCanvas.js never constructs a DiscoveryProvider of its own — it only ever receives one, as a prop.');
         assert(!/import .*DecentralizedPublicationDiscoveryProvider.* from/.test(canvasSource),
@@ -362,7 +363,7 @@ async function run() {
     // Section I — Cross-feature isolation.
     // ===============================================================
     {
-        const decentralizedPublicationsViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedPublicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/function admitToRepositoryDiscovery\(view\) \{\s*\n\s*if \(discoveryProvider && view && view\.resolved && view\.content instanceof Publication\) \{\s*\n\s*discoveryProvider\.add\(view\.content\);\s*\n\s*\}\s*\n\s*\}/.test(decentralizedPublicationsViewSource),
             "1. ui/views/DecentralizedPublicationsView.js's own admitToRepositoryDiscovery() (0.9.337) — the sibling this milestone's own gate is modeled on — is untouched, verbatim.");
     }

@@ -16,7 +16,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.376 — EditorView Distribution Command Channel Audit.
 //
@@ -311,7 +311,7 @@ async function run() {
         // Option 2 — session/application capability (Vue provide/inject).
         // Already the dominant existing pattern, and already how the
         // SAME command reaches WorldView.
-        const editorViewRaw = await rawSource('ui/views/EditorView.js');
+        const editorViewRaw = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const injectCalls = editorViewRaw.match(/inject\(('|")[a-zA-Z]+\1(,\s*null)?\)/g) || [];
         assert(injectCalls.length >= 9,
             `18. EditorView.js already calls inject() at least 9 times today for other app-wide capabilities (identityUseCase, publicationResolver, publicationCatalog, publicationPeerExchange, peerMessageBus, peerSessionManager, deviceAuthorizationUseCase, peerBlockUseCase, decentralizedPublicationDiscoveryProvider) — found ${injectCalls.length}`);
@@ -370,7 +370,7 @@ async function run() {
         // await'd network call writing to a ref afterward with no
         // requestId guard of its own) already tolerates today, live in
         // production, without incident.
-        const editorViewRaw = await rawSource('ui/views/EditorView.js');
+        const editorViewRaw = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const unmountBlock = editorViewRaw.match(/onBeforeUnmount\(\(\) => \{[\s\S]*?\n {8}\}\);/)[0];
         assert(unmountBlock.includes('clearTimeout(feedbackTimer)') && unmountBlock.includes('editorSession.dispose()'),
             '25. EditorView.js\'s own onBeforeUnmount() already clears its feedback timer and disposes editorSession — real, existing teardown discipline a new async action would simply inherit, not invent');
@@ -446,7 +446,7 @@ async function run() {
         // above in this file, by construction — the same restraint,
         // live-demonstrated rather than merely asserted.
         const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
-        const publishActiveDocumentFn = worldViewCode.match(/function publishActiveDocument\(\)[\s\S]*?\n {8}\}/)[0];
+        const publishActiveDocumentFn = worldViewCode.match(/function publishActiveDocument\(\)[\s\S]*?\n {4}\}/)[0];
         assert(!publishActiveDocumentFn.includes('distributeWorldEncounterPublication('),
             '32. WorldView.js\'s own publishActiveDocument() never calls distributeWorldEncounterPublication() itself — distribution only ever happens on a LATER, separate, explicit user action');
 

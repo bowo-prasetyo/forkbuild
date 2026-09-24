@@ -21,6 +21,7 @@ import { PlaceNamingDiscoveryMonitor } from '../application/PlaceNamingDiscovery
 import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.270 — Place Naming Adoption Status Lifecycle Audit.
 //
@@ -953,7 +954,7 @@ async function runTests() {
             '53. Navigate behaves identically even for a row whose alreadySaved value is corrupted or nonsensical — the field is never consulted.');
 
         // Structural proof, direct from real source.
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const navigateBlock = extractBetween(worldViewCode, 'function navigateToNearbyPlaceNamingClaim(row) {', '\n        }');
         assert(!/alreadySaved/.test(navigateBlock), '54. navigateToNearbyPlaceNamingClaim() contains no reference to alreadySaved whatsoever, structurally.');
 
@@ -1217,7 +1218,7 @@ async function runTests() {
     // anywhere in the chain.
     // -------------------------------------------------------------
     {
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
 
         assert(!/adoptedClaimIds/.test(worldViewCode),
             '81. ui/views/WorldView.js defines no "adoptedClaimIds"-shaped second store of its own — every findable reference to a claim being known comes from session.hasPlaceNamingClaim(), never a UI-maintained list, still true one milestone later.');

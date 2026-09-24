@@ -22,6 +22,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.140 — Own Publication Distribution Entry Point.
 //
@@ -491,7 +492,7 @@ async function runTests() {
         assert(sessionCode.includes('getPublicationForDocument(documentId)'),
             '34. WorldNavigationSession.js exposes getPublicationForDocument()');
 
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(viewCode.includes("import OwnPublicationPanel from '../components/OwnPublicationPanel.js';"),
             '35. WorldView.js imports OwnPublicationPanel');
         assert(viewCode.includes('session.getPublicationForDocument(activeId)'),
@@ -506,7 +507,7 @@ async function runTests() {
         assert(ownPanelIndex < worldEncountersSectionIndex,
             '39. OwnPublicationPanel is mounted entirely separately from, and before, the World Encounters section — never nested inside it');
 
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!canvasCode.includes('OwnPublicationPanel'), '40. WorldEncounterCanvas.js is untouched by this milestone — it knows nothing of OwnPublicationPanel');
 
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');

@@ -23,6 +23,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.285 — Wire Publication Commentary Notification Producer.
 //
@@ -353,7 +354,7 @@ async function runTests() {
         // vocabulary of its own for the WRITE path; it forwards to
         // WorldNavigationSession exactly as it always has, unaware the
         // object behind that call is now decorated.
-        const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         // 0.9.542 — this command's own signature grew commentaryId/createdAt
         // passthrough (see WorldView.js's own 0.9.542 comment); it still
         // forwards, unmodified otherwise, to the real session.

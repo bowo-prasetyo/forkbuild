@@ -14,6 +14,7 @@ import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardS
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.408 — Reconciliation Workspace UI.
 //
@@ -162,7 +163,7 @@ async function run() {
         assert(routerSource.includes('ReconciliationWorkspaceView'), n('A4. the registered route points at ReconciliationWorkspaceView'));
         assert(/import\s+ReconciliationWorkspaceView\s+from\s+'[^']+'/.test(routerSource), n('A5. the router genuinely default-imports ReconciliationWorkspaceView, never merely names it'));
 
-        const publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED — Leaderboard Hub Consolidation. The link moved one hop
         // further, from the Publications page directly onto ui/views/
         // LeaderboardHubView.js, itself now reached by the one link

@@ -2,6 +2,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.469 — Base Anchor Signing Policy Decision Audit.
 //
@@ -377,7 +378,7 @@ async function run() {
     // the generic one-click anchor card.
     // ===============================================================
     {
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
 
         assert(/v-for="anchorType in availableAnchorTypes"/.test(viewSrc), n('I1. the generic "Create <type> Anchor" card still iterates availableAnchorTypes() with a single click handler, confirmed fresh'));
 
@@ -402,7 +403,7 @@ async function run() {
 
         // J3: Option 3's own evidence source already produces exactly
         // that shape today, confirmed at the real, live call sites.
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
         assert(/entry\.baseTransactionBroadcastOutcome = \{ state: BaseTransactionBroadcastState\.BROADCASTING, broadcasted: false, txid: null, reason: null \};/.test(viewSrc), n('J3. the existing, live broadcast flow already tracks its own outcome under a `txid` field by this exact name — Option 3 would read this same value, never invent a new one'));
 
         console.log('✓ Section J: no option this audit named needs any new failure vocabulary or proof encoding — Options 1 and 2 fit the existing two-bucket {reason}/{unavailable:true,reason} shape unchanged, and Option 3\'s own evidence is already produced, under the exact field names BaseProofVerifier already expects, by the live reviewed pipeline today.');

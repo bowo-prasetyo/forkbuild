@@ -17,6 +17,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { WorldEncounterMaterialVerificationComposition } from '../application/WorldEncounterMaterialVerificationComposition.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.524 — Repository Admission Verification Boundary Closure Audit.
 //
@@ -360,10 +361,10 @@ async function run() {
         // "bytes arrived" alone; both require an explicit positive
         // result from a real, injected cryptographic verifier before
         // Repository ever sees the material.
-        const siblingSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const siblingSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/view\.resolved && view\.content instanceof Publication/.test(siblingSource),
             "8. ui/views/DecentralizedPublicationsView.js's own admitToRepositoryDiscovery() gate is unchanged: `view.resolved` (true only after PublicationResolver's full envelope+content signature/hash pipeline).");
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/loading\.status === 'AVAILABLE'[\s\S]{0,120}verification\.status === 'VERIFIED'/.test(canvasSource),
             "9. ui/components/WorldEncounterCanvas.js's own admitToRepositoryDiscovery() gate is unchanged: `loading.status === 'AVAILABLE' && ... && verification.status === 'VERIFIED'`.");
         assert(provider.list().length === 1 && provider.list()[0] === goodView.content,
@@ -491,7 +492,7 @@ async function run() {
         // reconfirmed: the gate's condition is a single conjunction, and
         // `verification.status === 'VERIFIED'` is not behind any `||`
         // that could be satisfied by loading status alone.
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const gateBody = canvasSource.slice(canvasSource.indexOf('admitToRepositoryDiscovery(loading, verification) {'), canvasSource.indexOf('admitToRepositoryDiscovery(loading, verification) {') + 600);
         assert(!/\|\|/.test(gateBody.slice(0, gateBody.indexOf('{') + 400)),
             '4. the admission condition itself contains no `||` — every clause (provider present, loading AVAILABLE, material is a Publication, verification VERIFIED) is required, none is an alternative to another.');
@@ -572,13 +573,13 @@ async function run() {
 
         // H2. Neither admission gate resolves or verifies material
         // itself — each only ever READS an already-computed result.
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const canvasGateStart = canvasSource.indexOf('admitToRepositoryDiscovery(loading, verification) {');
-        const canvasGateBody = canvasSource.slice(canvasGateStart, canvasSource.indexOf('\n        },', canvasGateStart));
+        const canvasGateBody = canvasSource.slice(canvasGateStart, canvasSource.indexOf('\n    },', canvasGateStart));
         assert(!/inspectWorldEncounterMaterial|verifyWorldEncounterMaterial|loadWorldEncounterMaterial/.test(canvasGateBody),
             "2. WorldEncounterCanvas.js's own admitToRepositoryDiscovery() calls no loading or verification function itself — it only ever reads the `loading`/`verification` results its caller already computed.");
 
-        const siblingSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const siblingSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         const siblingGateStart = siblingSource.indexOf('function admitToRepositoryDiscovery(view) {');
         const siblingGateBody = siblingSource.slice(siblingGateStart, siblingSource.indexOf('\n        }', siblingGateStart));
         assert(!/resolvePublicationView|coordinator\.resolve|resolver\.resolve/.test(siblingGateBody),

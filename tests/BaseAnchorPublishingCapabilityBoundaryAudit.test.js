@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.466 — Base Anchor Publishing Capability Boundary Audit.
 //
@@ -194,7 +195,7 @@ async function run() {
         const coordinatorSrc = codeOnly(await source('application/PublicationAnchorCreationCoordinator.js'));
         assert(!/'bitcoin'|'arweave'|'base'/.test(coordinatorSrc), n('C3. PublicationAnchorCreationCoordinator.js names no fixed anchorType — availableAnchorTypes() is a bare pass-through to the registry\'s own keys'));
 
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
         assert(/v-for="anchorType in availableAnchorTypes"/.test(viewSrc), n('C4. the shipped template iterates availableAnchorTypes() generically — never a hardcoded per-chain button'));
         assert(/createAnchor\(entry, anchorType\)/.test(viewSrc), n('C5. the click handler forwards whatever anchorType the loop is currently on — never a chain-specific handler name'));
 
@@ -317,7 +318,7 @@ async function run() {
         // straight from a finalized Base transaction, per 0.9.460 Section
         // H's own already-proven wiring — never a value this audit
         // invents.
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
         assert(/txid:\s*entry\.baseSignedTransactionFinalizationOutcome\.finalizedTransaction\.transactionHash/.test(viewSrc), n('H2. the real, current production code already derives a { txid } value from a finalized Base transaction this exact way — a future BaseAnchorPublisher would report the identical field, not a new one'));
 
         const bitcoinVerifierProofPattern = /txid.*network/s;
@@ -330,7 +331,7 @@ async function run() {
     // Section I — UI reachability: a generic v-for, confirmed live.
     // ===============================================================
     {
-        const viewSrc = codeOnly(await source('ui/views/DecentralizedPublicationsView.js'));
+        const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
         assert(/v-for="anchorType in availableAnchorTypes"/.test(viewSrc), n('I1. the "Create <type> Anchor" section already iterates availableAnchorTypes() with no per-chain branch'));
         assert(/humanizeContentKind\(anchorType\)/.test(viewSrc), n('I2. the displayed label is derived generically from whatever anchorType string is present — never a chain-specific lookup table requiring a "base" entry to be added'));
         assert(/createAnchor\(entry, anchorType\)/.test(viewSrc), n('I3. the click handler is the identical generic createAnchor(entry, anchorType) for every anchorType, confirmed a second time at the call site'));

@@ -18,6 +18,7 @@ import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardS
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.411 — Publisher Leaderboard Snapshot Claim Authoring & Export.
 //
@@ -194,7 +195,7 @@ async function run() {
         assert(routerSource.includes('PublisherLeaderboardSnapshotClaimAuthoringView'), n('A4. the registered route points at PublisherLeaderboardSnapshotClaimAuthoringView'));
         assert(/import\s+PublisherLeaderboardSnapshotClaimAuthoringView\s+from\s+'[^']+'/.test(routerSource), n('A5. the router genuinely default-imports PublisherLeaderboardSnapshotClaimAuthoringView, never merely names it'));
 
-        const publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         // AMENDED — Leaderboard Hub Consolidation. The link moved one hop
         // further, from the Publications page's own Publication Archive
         // card onto ui/views/LeaderboardHubView.js, itself now reached by

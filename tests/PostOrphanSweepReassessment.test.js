@@ -2,6 +2,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
 import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage
 } from '../application/PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage.js';
@@ -284,7 +285,7 @@ async function run() {
     // No seventh introduced merely for coverage.
     // ===============================================================
     {
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publishDocumentUseCase/.test(editorViewSource), 'C1. Publication -> Placement -> Discovery -> Inspection: EditorView.js still composes the publish use case.');
         assert(await sourceExists('application/PlacePublicationUseCase.js') && await sourceExists('ui/components/PublicationCatalog.js') && (await rawSource('ui/components/PublicationPreview.js')).length > 0,
             'C1. Every hop in journey 1 still exists.');
@@ -293,7 +294,7 @@ async function run() {
             'C2. Snapshot -> Discovery -> Resolution -> Materialization -> World: discovery stage still exists.');
         const materializeSource = await rawSource('application/MaterializeSnapshotFromPlacementUseCase.js');
         assert(materializeSource.includes('storeSnapshotContentUseCase') && materializeSource.includes('contentHash'), 'C2. Resolution-then-store pipeline still intact.');
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(canvasSource.includes('registerMaterializedSnapshotWorldSource') || canvasSource.includes('unregisterSelectedSnapshot'), 'C2. Materialization -> World hop still intact.');
 
         assert(await sourceExists('ui/components/PlaceNamingPanel.js'), 'C3. Place Naming -> Publish -> Stranger Discovery -> Adoption: claim/persist hop still exists.');
@@ -313,7 +314,7 @@ async function run() {
 
         const settingsSource = await rawSource('ui/views/ContentProviderSettingsView.js');
         assert(settingsSource.includes('setRoleProviderPreferenceUseCase'), 'C6. Provider preference -> Setting -> Preferred Placement: settings still save through the real write use case.');
-        const publicationsViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         assert(publicationsViewSource.includes('preferredSnapshotPlacementCreationCoordinator') && publicationsViewSource.includes('createPreferredPlacement'),
             'C6. Discovery still exposes "Use Preferred Provider", consuming the same store settings write.');
 
@@ -360,7 +361,7 @@ async function run() {
         // is called from INSIDE `finalizeBitcoinAnchorSignedPsbt()`,
         // gated on that same finalize's own FINALIZED outcome, never from
         // a separate, disconnected click.
-        const pubViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const pubViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         const finalizeBtcStart = pubViewSource.indexOf('function finalizeBitcoinAnchorSignedPsbt()');
         const finalizeBtcEnd = pubViewSource.indexOf('\n        }\n\n', finalizeBtcStart);
         const finalizeBtcBody = pubViewSource.slice(finalizeBtcStart, finalizeBtcEnd > 0 ? finalizeBtcEnd : finalizeBtcStart + 3000);

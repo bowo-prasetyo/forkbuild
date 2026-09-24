@@ -1,0 +1,789 @@
+/* Editor view */
+
+.editor-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #1a1a1a;
+    border-bottom: 1px solid #2a2a2a;
+    font-size: 0.85rem;
+}
+
+.toolbar-save {
+    padding: 0.3rem 0.8rem;
+    background: #4caf7d;
+    color: #121212;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-save:hover {
+    background: #5fc490;
+}
+
+.toolbar-new {
+    padding: 0.3rem 0.8rem;
+    background: transparent;
+    color: #d0d0d0;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-new:hover {
+    background: #262626;
+}
+
+/* 0.9.641 — Editor Document Export. Same visual weight as .toolbar-new
+   — a secondary action, never as loud as .toolbar-save/.toolbar-publish
+   — since exporting doesn't change the document's own saved/dirty
+   state. */
+.toolbar-export {
+    padding: 0.3rem 0.8rem;
+    background: transparent;
+    color: #d0d0d0;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-export:hover {
+    background: #262626;
+}
+
+/* 0.9.642 — Editor Document Import. Same visual weight as
+   .toolbar-export — a secondary action, sitting right beside it. */
+.toolbar-import {
+    padding: 0.3rem 0.8rem;
+    background: transparent;
+    color: #d0d0d0;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-import:hover {
+    background: #262626;
+}
+
+/* The native file input itself is never shown — .toolbar-import is the
+   only click target a user ever sees, the same "styled trigger button +
+   invisible native file input" shape .personal-structure-library-import-input
+   already established. */
+.toolbar-import-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.toolbar-dirty {
+    color: #e0a34c;
+    font-size: 0.8rem;
+}
+
+.toolbar-dirty--clean {
+    color: #707070;
+}
+
+/* 0.6.2 — Editor UX Consolidation: opens
+   ui/components/KeyboardShortcutsOverlay.js — same visual weight as
+   .toolbar-new/.toolbar-back-to-world, deliberately never as loud as
+   .toolbar-save. */
+.toolbar-shortcuts {
+    padding: 0.3rem 0.8rem;
+    background: transparent;
+    color: #909090;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-shortcuts:hover {
+    background: #262626;
+    color: #d0d0d0;
+}
+
+/* 0.6.1 — World ↔ Editor Continuity & Return Navigation. Only
+   rendered once EditorView has a real EditorEntryContext with a
+   return address — see ui/components/Toolbar.js's own header. */
+.toolbar-back-to-world {
+    padding: 0.3rem 0.8rem;
+    background: transparent;
+    color: #d0d0d0;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-back-to-world:hover {
+    background: #262626;
+}
+
+.toolbar-entry-context {
+    color: #a0a0a0;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 26rem;
+}
+
+.toolbar-save-return {
+    padding: 0.3rem 0.8rem;
+    background: transparent;
+    color: #4caf7d;
+    border: 1px solid #3a6b53;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-save-return:hover {
+    background: #1c2b24;
+}
+
+/* Hardening: Recent Documents — a dropdown instead of an
+   unbounded inline row of buttons (which just silently clipped once
+   there were more saved documents than fit — see Toolbar.js). */
+.toolbar-recent {
+    position: relative;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.toolbar-recent-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    background: transparent;
+    color: #b0b0b0;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-recent-toggle:hover,
+.toolbar-recent-toggle--open {
+    background: #262626;
+    color: #ffffff;
+}
+
+.toolbar-recent-count {
+    padding: 0.05rem 0.4rem;
+    background: #2a2a2a;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    color: #909090;
+}
+
+.toolbar-recent-caret {
+    font-size: 0.7rem;
+    color: #707070;
+}
+
+.dropdown-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+}
+
+.toolbar-recent-dropdown {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    right: 0;
+    z-index: 56;
+    width: 300px;
+    max-width: 80vw;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.toolbar-recent-search {
+    box-sizing: border-box;
+    width: 100%;
+    background: #121212;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    padding: 0.4rem 0.6rem;
+    color: #e0e0e0;
+    font-family: inherit;
+    font-size: 0.82rem;
+}
+
+.toolbar-recent-search:focus {
+    outline: none;
+    border-color: #4caf7d;
+}
+
+.toolbar-recent-dropdown-list {
+    max-height: 320px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+/* 0.2.90 — each Recent Documents entry is now a row: Load (the
+   pre-existing button, unchanged) plus Place, the structure-placement
+   entry point (Toolbar.js#place()). */
+.toolbar-recent-dropdown-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.toolbar-recent-dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.45rem 0.6rem;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #d0d0d0;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.85rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.toolbar-recent-dropdown-place {
+    flex-shrink: 0;
+    padding: 0.35rem 0.55rem;
+    background: transparent;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    color: #a0a0a0;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+
+.toolbar-recent-dropdown-place:hover {
+    background: #262626;
+    border-color: #4caf7d;
+    color: #ffffff;
+}
+
+.toolbar-recent-dropdown-item:hover {
+    background: #262626;
+    color: #ffffff;
+}
+
+.toolbar-recent-dropdown-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.toolbar-recent-dropdown-date {
+    flex-shrink: 0;
+    color: #707070;
+    font-size: 0.75rem;
+}
+
+.toolbar-recent-dropdown-empty {
+    margin: 0.5rem 0.25rem;
+    color: #707070;
+    font-size: 0.82rem;
+    font-style: italic;
+}
+
+.editor-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+.sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: #181818;
+    border-right: 1px solid #2a2a2a;
+    padding: 1rem;
+}
+
+/* 0.9.647 — Editor Sidebar Scroll Ownership. .sidebar itself stays exactly
+   as it was (fixed 220px, no overflow of its own) — this wrapper is its
+   ONLY direct child and is the sidebar's sole scroll owner, mirroring the
+   World left panel's own scroll-wrapper shape (see the World View UX
+   section further below in this file, 0.5.7): a single scrollable wrapper
+   around the panel's entire content, so the sidebar always fits its
+   allotted height instead of overflowing into the canvas beside it. */
+/* 0.9.655 — padding-right widened from 0.25rem (4px) to 1.0625rem
+   (17px): 0.9.654 live-measured .tool-btn stretching flush to this
+   wrapper's own edge with only that 4px as clearance. Under a classic
+   (space-reserving) scrollbar the browser already shrinks this box's
+   content width on its own, so 4px was merely thin; under an OVERLAY
+   scrollbar (this sandbox's own Chromium regime, and macOS/touch/
+   "Always show scrollbars"-off configurations generally) the browser
+   reserves no width at all, so the scrollbar paints on top of whatever
+   sits within 4px of the edge. 17px matches Windows' own classic-
+   scrollbar default (GetSystemMetrics(SM_CXVSCROLL)) — the widest
+   common affordance any platform's real scrollbar/thumb actually
+   occupies — so this wrapper now reserves its own clearance instead of
+   assuming the browser will. */
+.sidebar-scroll {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 1.0625rem;
+}
+
+.brick-palette {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Choose Your Brick Color — sets the color the next placements of the
+   currently active brick type will use; only shown once a brick type is
+   selected (see BuildLibraryPanel.js's own v-if). */
+.brick-palette-color {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    align-self: flex-start;
+    padding: 0.3rem 0.55rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #c0c0c0;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.brick-palette-color-input {
+    width: 1.1rem;
+    height: 1.1rem;
+    padding: 0;
+    border: 1px solid #2a2a2a;
+    border-radius: 3px;
+    background: none;
+    cursor: pointer;
+}
+
+.palette-title {
+    margin: 0 0 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.palette-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.palette-category {
+    margin: 0.4rem 0 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #707070;
+    text-transform: capitalize;
+    letter-spacing: 0.03em;
+}
+
+.palette-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.palette-item {
+    padding: 0.5rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: #d0d0d0;
+    background: #1f1f1f;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.palette-item:hover {
+    background: #262626;
+}
+
+.palette-item--active {
+    background: #234433;
+    border-color: #4caf7d;
+    color: #ffffff;
+}
+
+/* 0.2.81 — Forkable Structure Library. Reuses .palette-title and
+   .action-btn--fork wholesale (the same "list of catalog entries" and
+   "green Fork action" language BrickPalette and the World View fork
+   button already established) rather than inventing a second visual
+   vocabulary for what is architecturally the same kind of panel one
+   rung up. */
+.structure-library-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.structure-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+/* 0.4.5 — Unified Build Placement. A structure card is now clickable
+   the same way a .palette-item (Brick) card is — see the hover rule
+   just below — because clicking it does the analogous thing: enter
+   Place. */
+.structure-item {
+    padding: 0.5rem 0.6rem;
+    border-radius: 4px;
+    background: #1f1f1f;
+    cursor: pointer;
+}
+
+.structure-item:hover {
+    background: #262626;
+}
+
+.structure-item-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85rem;
+    color: #d0d0d0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 0.4.5 — Unified Build Placement. Fork (and, for a personal Structure,
+   Rename/Remove) moved out of the card's primary row into this small
+   secondary menu, so none of them compete with the card's own click
+   target (Place) — see docs/Principles.md, "Buildable Things Share One
+   Placement Experience." Replaces 0.4.0's .structure-item-actions two-
+   button row entirely. */
+.structure-item-menu {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.structure-item-menu-toggle {
+    padding: 0.2rem 0.55rem;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.structure-item-menu-list {
+    position: absolute;
+    top: calc(100% + 0.25rem);
+    right: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 170px;
+    padding: 0.4rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Every action inside the menu (Fork, and — for a personal Structure —
+   Rename/Remove) fills the menu's width and left-aligns, regardless of
+   which .action-btn--* color it uses. */
+.structure-item-menu-list .action-btn {
+    width: 100%;
+    text-align: left;
+}
+
+/* 0.4.3 — Personal Blueprint Library. A second, visually distinct
+   section beneath the built-in category groups above — "My Structures"
+   never mixes into a Village category, and gets a top border/spacing to
+   read as its own library rather than one more category among Village's
+   own. Its own entries reuse .structure-item/.structure-item-menu/
+   .action-btn--fork wholesale (same content, same actions); only
+   Rename/Remove are new, and reuse the existing
+   .action-btn--secondary/.action-btn--danger vocabulary rather than
+   inventing a third button color. */
+.personal-structure-library {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #2a2a2a;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.personal-structure-library-title {
+    margin: 0;
+}
+
+/* 0.4.6 — Blueprint Sharing & Exchange. Import is a library-level action
+   (unlike Export, which lives in a personal Structure's own "⋮" menu
+   alongside Fork/Rename/Remove), so it sits beside the section's own
+   title instead of inside any one card. Reuses .action-btn--secondary
+   wholesale — same rationale as every other addition in this section:
+   no new button colors. The real <input type="file"> stays functional
+   but visually hidden — .personal-structure-library-import is the only
+   click target a user ever sees, mirroring the "styled trigger button +
+   invisible native file input" shape most of the web already uses. */
+.personal-structure-library-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.personal-structure-library-import-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* 0.2.84 — Building Library & Palette UX. One unified Bricks/Structures
+   panel replacing the previously-separate BrickPalette/
+   StructureLibraryPanel components; deliberately reuses .palette-*,
+   .structure-*, and .action-btn--fork wholesale (same rationale as the
+   0.2.81 comment above, one rung up again — a Build Library is
+   architecturally the same "list of catalog entries," now with tabs,
+   search, and a small rendered preview per entry) rather than inventing
+   a third visual vocabulary. */
+.build-library {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.build-library-tabs {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.build-library-tab {
+    flex: 1;
+    padding: 0.4rem 0.5rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #b0b0b0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+}
+
+.build-library-tab:hover {
+    background: #262626;
+    color: #e0e0e0;
+}
+
+.build-library-tab--active {
+    background: #234433;
+    border-color: #4caf7d;
+    color: #ffffff;
+}
+
+.build-library-search {
+    padding: 0.4rem 0.5rem;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.8rem;
+    outline: none;
+}
+
+.build-library-search:focus {
+    border-color: #4caf7d;
+}
+
+.build-library-empty {
+    margin: 0.4rem 0 0;
+    font-size: 0.78rem;
+    color: #707070;
+}
+
+/* Turns .palette-item/.structure-item (each already a background/
+   radius/padding card) into a flex row carrying a preview thumbnail
+   alongside the existing label/button content — additive, so neither
+   base class's own rules (used nowhere else) need to change. */
+.build-library-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.build-library-preview {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 3px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #2a2a2a;
+}
+
+.build-library-preview--pending {
+    animation: build-library-preview-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes build-library-preview-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+}
+
+.build-library-preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.build-library-preview-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* 0.6.4 — Blueprint Discovery, Search & Library Organization. The
+   Structures tab's All/Built-in/My Structures tri-state, styled as a
+   smaller sibling of .build-library-tab/.build-library-tab--active
+   wholesale rather than a second tab visual language — this is
+   architecturally the same "pick one of a few mutually exclusive
+   views" control one rung down from the Bricks/Structures switcher
+   above it. */
+.build-library-source-tabs {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.build-library-source-tab {
+    flex: 1;
+    padding: 0.3rem 0.4rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #909090;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+}
+
+.build-library-source-tab:hover {
+    background: #262626;
+    color: #d0d0d0;
+}
+
+.build-library-source-tab--active {
+    background: #234433;
+    border-color: #4caf7d;
+    color: #ffffff;
+}
+
+/* Category filter + sort dropdowns — reuses .build-library-search's own
+   dark input styling so neither dropdown introduces a third form-field
+   look next to the search box directly above it. */
+.build-library-filters {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.build-library-filter-select {
+    flex: 1;
+    min-width: 0;
+    padding: 0.35rem 0.4rem;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.75rem;
+    outline: none;
+}
+
+.build-library-filter-select:focus {
+    border-color: #4caf7d;
+}
+
+/* "Recent" reuses .palette-group/.palette-category/.structure-list
+   wholesale — visually it's just another category group, positioned
+   first, never a competing visual language for what is, structurally,
+   the exact same kind of list. */
+.recent-structures-group {
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.viewport {
+    flex: 1;
+    min-width: 0;
+}
+
+.viewport canvas {
+    display: block;
+}
+
+.toolbar-publish {
+    padding: 0.3rem 0.8rem;
+    background: #8e44ad;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.toolbar-publish:hover {
+    background: #9b59b6;
+}

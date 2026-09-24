@@ -14,6 +14,7 @@ import { DocumentManager } from '../application/DocumentManager.js';
 import { SelectionUseCase } from '../application/SelectionUseCase.js';
 import { PreviewUseCase } from '../application/PreviewUseCase.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.214 — Editor Transform Gesture Feedback.
 //
@@ -406,7 +407,7 @@ async function run() {
     //    Autosave, Snapshot, Publication, or World placement.
     // -------------------------------------------------------------
     {
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
 
         assert(/import TransformFeedback from '..\/components\/TransformFeedback\.js';/.test(editorViewSource), '1. EditorView.js imports TransformFeedback');
         assert(/<TransformFeedback :feedback="transformFeedback" \/>/.test(editorViewSource), '2. ...and mounts it bound to a transformFeedback ref');
@@ -449,7 +450,7 @@ async function run() {
     // H. Unmount hygiene — transformFeedback is local setup() state.
     // -------------------------------------------------------------
     {
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const setupBody = editorViewSource.slice(editorViewSource.indexOf('setup() {'), editorViewSource.lastIndexOf('return {'));
         assert(/const transformFeedback = ref\(null\);/.test(setupBody), '1. transformFeedback is declared with ref(null) INSIDE setup() — fresh on every mount, not shared module-level state');
         assert(!/^\s*(let|const)\s+transformFeedback\s*=/m.test(editorViewSource.slice(0, editorViewSource.indexOf('export default'))), '2. no module-level transformFeedback declaration exists above the component definition either');

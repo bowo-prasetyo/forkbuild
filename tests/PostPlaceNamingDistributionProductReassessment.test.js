@@ -16,6 +16,7 @@ import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.318 — Post-Place-Naming Distribution Product Reassessment.
 //
@@ -192,7 +193,7 @@ async function runTests() {
         // A1. Create -> local persistence: IMPLEMENTED AND REACHABLE.
         // ui/views/WorldView.js's own "Publish" action reaches the real
         // local use case.
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldView.includes('function publishNamingClaim(name)') && worldView.includes('session.publishPlaceNamingClaim(namingPanelRegionId.value, name)'),
             'A1. ui/views/WorldView.js still defines publishNamingClaim(name), which still forwards to session.publishPlaceNamingClaim() — creation and local persistence are live-wired and reachable through the real "Publish" UI action.');
 
@@ -338,7 +339,7 @@ async function runTests() {
         // machinery nobody surfaces. This is the exact channel 0.9.315
         // Section G already found to be this codebase's own deliberately
         // designed CURRENT sharing mechanism.
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldView.includes('function exportNamingClaim(claimId)') && worldView.includes('function importNamingClaim(rawText)'),
             'C1a. ui/views/WorldView.js still defines both exportNamingClaim() and importNamingClaim(), live.');
         const panelSource = await rawSource('ui/components/PlaceNamingPanel.js');
@@ -449,7 +450,7 @@ async function runTests() {
         candidateMatrix.push(['Notifications for naming publication', 'NOT READY — a generic NotificationEvent domain exists and has one real producer (Publication Commentary), but no Place Naming producer exists; Place Naming discovery still has no "recipient" concept to notify in the first place (0.9.272 Section D3: discovery is a puller\'s own query, never a push at a named identity) — the prerequisite gap is conceptual, not merely a missing producer class to write.']);
 
         // D9. Local export/import.
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldView.includes('function exportNamingClaim') && worldView.includes('function importNamingClaim'),
             'D9. Export/import is already live, wired, reachable UI (reconfirmed, Section C1).');
         candidateMatrix.push(['Local export/import', 'ALREADY FUNCTIONAL — reconfirmed live in Section C.']);

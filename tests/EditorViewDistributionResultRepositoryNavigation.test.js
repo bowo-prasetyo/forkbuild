@@ -16,6 +16,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.381 — EditorView Distribution Result -> Repository Navigation.
 //
@@ -200,7 +201,7 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- document lifecycle ------------',
+        '\n    return {',
         '0.9.377/0.9.381/0.9.450 post-publish distribution block'
     );
 
@@ -232,10 +233,10 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
 }
 
 async function run() {
-    const editorViewSource = await readSource('ui/views/EditorView.js');
+    const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
     const editorViewCodeOnly = codeOnlyLines(editorViewSource);
     const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
-    const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
 
     // ---------------------------------------------------------------
     // Section A — Exact identity.

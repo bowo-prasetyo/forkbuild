@@ -14,6 +14,7 @@ import { PublicationObservationArchive } from '../application/PublicationObserva
 import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
 import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import { BaseTransactionInclusionObservationState } from '../application/BaseTransactionInclusionObservationState.js';
+import { publicationsViewSourceWithTemplate } from './support/SourceFileGroups.js';
 
 // 0.9.327 — Bitcoin Anchor Observation Product Gap Audit.
 //
@@ -238,7 +239,7 @@ async function run() {
     // Section D — Existing observation surfaces.
     // ===============================================================
     {
-        const uiSource = await readFile(new URL('ui/views/DecentralizedPublicationsView.js', SOURCE_ROOT), 'utf8');
+        const uiSource = publicationsViewSourceWithTemplate();
         assert(uiSource.includes('Bitcoin Anchor Publications'),
             '1. a "Bitcoin Anchor Publications" card exists in the shipped UI.');
         assert(uiSource.includes('Base Anchor Publications'),

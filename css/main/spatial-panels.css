@@ -1,0 +1,740 @@
+/* Spatial Interaction Panel */
+
+.spatial-panel {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.spatial-panel--selection {
+    border-color: #4caf7d;
+}
+
+.spatial-panel h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.spatial-type {
+    margin: 0;
+    color: #4caf7d;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: capitalize;
+}
+
+.spatial-world {
+    margin: 0.5rem 0 0;
+    color: #d0d0d0;
+    font-size: 0.85rem;
+}
+
+.spatial-author {
+    color: #707070;
+    font-size: 0.8rem;
+}
+
+.spatial-id {
+    margin: 0.25rem 0 0;
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #909090;
+}
+
+.spatial-pos {
+    margin: 0.25rem 0 0.5rem;
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #707070;
+}
+.spatial-panel--hover {
+    border-color: #3a6ea5;
+}
+
+.spatial-panel--hover h4 {
+    color: #3a6ea5;
+}
+
+.spatial-panel--hover .spatial-type {
+    color: #3a6ea5;
+}
+/* ... existing styles above remain unchanged ... */
+
+.spatial-panel--inspection {
+    border-color: #e0a34c;
+}
+
+.spatial-panel--inspection h4 {
+    color: #e0a34c;
+}
+
+.spatial-panel--inspection .spatial-type {
+    color: #e0a34c;
+}
+
+.inspection-fields {
+    margin: 0.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.inspection-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.inspection-label {
+    color: #707070;
+    flex-shrink: 0;
+}
+
+.inspection-value {
+    color: #d0d0d0;
+    text-align: right;
+    word-break: break-all;
+}
+
+.inspection-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.editability-notice {
+    margin: 0.75rem 0 0;
+    padding: 0.5rem 0.65rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    background: rgba(76, 175, 125, 0.12);
+    border: 1px solid rgba(76, 175, 125, 0.35);
+    color: #a8e0c2;
+}
+
+.editability-notice--blocked {
+    background: rgba(224, 108, 108, 0.12);
+    border-color: rgba(224, 108, 108, 0.4);
+    color: #e0a0a0;
+}
+
+.action-btn--primary {
+    background: #4caf7d;
+    color: #121212;
+}
+
+.action-btn--primary:hover {
+    background: #5fc490;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+/* ... existing styles ... */
+
+/* 0.9.204 — Editor Autosave & Recovery UI Integration
+   (ui/components/RecoveryBanner.js). The amber accent .toolbar-dirty/
+   .world-item-dirty already use for "unsaved" — a recovery offer is
+   exactly that condition, discovered at open time rather than during
+   editing. */
+.recovery-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    background: rgba(224, 163, 76, 0.12);
+    border-bottom: 1px solid rgba(224, 163, 76, 0.4);
+}
+
+.recovery-banner-message {
+    color: #e0a34c;
+    font-size: 0.85rem;
+}
+
+.recovery-banner-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* 0.9.377 — EditorView Post-Publish Distribution Action
+   (ui/views/EditorView.js). Mirrors .recovery-banner's own full-width
+   banner shape immediately above (including its border-BOTTOM, since
+   both sit at the TOP of the view, ahead of .editor-body's viewport —
+   never after it, where a previous revision placed this and where it
+   rendered below a canvas that can fill the whole remaining height),
+   with the green "success" accent .cta-button/.action-btn--primary
+   already use rather than recovery-banner's amber "attention needed"
+   one — this bar reports good news, not a problem. The wrapper stacks
+   the action/error/detail states (mutually exclusive except the action
+   bar, which can persist alongside a result) without letting them
+   overlap. */
+.editor-post-publish-overlay {
+    display: flex;
+    flex-direction: column;
+}
+
+.editor-post-publish-action {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    background: rgba(76, 175, 125, 0.12);
+    border-bottom: 1px solid rgba(76, 175, 125, 0.4);
+}
+
+.editor-post-publish-message {
+    color: #4caf7d;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.editor-post-publish-distribution-error {
+    margin: 0;
+    padding: 0.6rem 1rem;
+    background: rgba(224, 90, 90, 0.12);
+    border-bottom: 1px solid rgba(224, 90, 90, 0.4);
+    color: #e0a0a0;
+    font-size: 0.85rem;
+}
+
+/* The result detail list reuses .world-encounter-inspection-detail's own
+   auto/1fr label-value grid verbatim (see that class's own definition) —
+   the same key-value shape, one caller over. */
+.editor-post-publish-distribution-detail {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 0.3rem 0.75rem;
+    margin: 0;
+    padding: 0.6rem 1rem;
+    background: rgba(76, 175, 125, 0.12);
+    border-bottom: 1px solid rgba(76, 175, 125, 0.4);
+    font-size: 0.82rem;
+}
+
+.editor-post-publish-distribution-detail dt {
+    color: #808080;
+}
+
+.editor-post-publish-distribution-detail dd {
+    margin: 0;
+    color: #e0e0e0;
+    word-break: break-all;
+}
+
+/* 0.2.21: Document Info panel — shared by EditorView's sidebar and
+   WorldView's inspection column (ui/components/DocumentInfoPanel.js).
+   Reuses the .spatial-panel palette (dark card, green accent) so it
+   reads as one family of panels rather than a second visual system. */
+.document-info-panel {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.document-info-panel h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.25rem 0;
+    font-size: 0.82rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.info-row:last-of-type {
+    border-bottom: none;
+}
+
+.info-label {
+    color: #909090;
+    flex-shrink: 0;
+}
+
+.info-value {
+    color: #d0d0d0;
+    text-align: right;
+    word-break: break-word;
+}
+
+.info-value--wrap {
+    text-align: left;
+    white-space: pre-wrap;
+}
+
+.info-actions {
+    margin-top: 0.75rem;
+}
+
+/* Document Properties modal (ui/components/MetadataEditorDialog.js) —
+   overlay/panel shape follows CommandPalette's existing convention. */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-panel {
+    width: 420px;
+    max-width: 90vw;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    padding: 1.25rem;
+}
+
+.modal-panel h3 {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    color: #e0e0e0;
+}
+
+.form-field {
+    display: block;
+    margin-bottom: 0.85rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.78rem;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+    width: 100%;
+    box-sizing: border-box;
+    background: #121212;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    padding: 0.5rem 0.6rem;
+    color: #e0e0e0;
+    font-family: inherit;
+    font-size: 0.88rem;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    outline: none;
+    border-color: #4caf7d;
+}
+
+.form-textarea {
+    resize: vertical;
+}
+
+.form-hint {
+    margin: -0.4rem 0 0.85rem;
+    font-size: 0.78rem;
+    color: #c9a24a;
+}
+
+.form-hint--neutral {
+    margin: 0 0 0.85rem;
+    color: #909090;
+}
+
+/* ui/components/PublicationCommentaryRemoteCheck.js — the "Check for new
+   comments" row inside every Commentary section. */
+.commentary-remote-check {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.25rem 0 0.5rem;
+}
+
+.commentary-remote-check-status {
+    font-size: 0.8rem;
+    color: #909090;
+}
+
+/* 0.2.23: Placement Info panel — same card language as
+   .document-info-panel (WHAT the document is), a deliberately
+   separate panel for WHERE it is. */
+.placement-info-panel {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.placement-info-panel h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* 0.2.39: Avatar Info panel — same card language as
+   .document-info-panel/.placement-info-panel, a deliberately separate
+   panel for WHO is here (never WHAT the document is or WHERE it's
+   placed) — see docs/Principles.md, "Avatars Are Never Document
+   Selection." Read-only by design: no edit/move/delete affordances
+   exist here at all, only "Follow". */
+.avatar-info-panel {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.avatar-info-panel h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+    color: #e0e0e0;
+}
+
+.avatar-info-status-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    margin-right: 0.3rem;
+    background: #4caf7d;
+}
+
+.avatar-info-status-dot--stale {
+    background: #d0a030;
+}
+
+.avatar-info-status-dot--conflicting {
+    background: #e74c3c;
+}
+
+.avatar-info-placeholder-note {
+    display: block;
+    font-size: 0.7rem;
+    color: #707070;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+/* 0.6.3 — ui/components/CreateBlueprintDialog.js: same .modal-overlay/
+   .modal-panel/.form-field convention as .metadata-editor above, plus
+   a small live preview strip reusing .build-library-preview (32px)
+   unchanged — no second, bigger thumbnail style invented for "not yet
+   saved" content. */
+.create-blueprint-preview-body {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.create-blueprint-preview-count {
+    font-size: 0.82rem;
+    color: #b0b0b0;
+}
+
+/* 0.9.353 — ui/components/ForkFailureDialog.js: same .modal-overlay/
+   .modal-panel/.modal-actions convention as .create-blueprint-dialog
+   above, with no .form-field of its own — just the one explanatory
+   message a fork failure needs. */
+.fork-failure-dialog-message {
+    margin: 0 0 0.85rem;
+    color: #c0c0c0;
+    line-height: 1.4;
+}
+
+/* 0.6.3 — ui/components/StructureInfoPanel.js: same .modal-overlay/
+   .modal-panel convention, read-only — no .form-field/.form-input
+   anywhere in this panel, only a label/value fact list. */
+.structure-info-panel .structure-info-category {
+    margin: -0.5rem 0 0.85rem;
+    font-size: 0.78rem;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.structure-info-facts {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.3rem 0.75rem;
+    margin: 0 0 0.85rem;
+}
+
+.structure-info-facts dt {
+    color: #909090;
+    font-size: 0.82rem;
+}
+
+.structure-info-facts dd {
+    margin: 0;
+    color: #e0e0e0;
+    font-size: 0.82rem;
+}
+
+.structure-info-description {
+    margin: 0 0 0.85rem;
+    color: #c0c0c0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+/* 0.6.7 — Blueprint Attribution Resolution & Community Identity.
+   ui/components/StructureInfoPanel.js's "Community Attribution" section
+   reuses .naming-panel-section/.naming-panel-list/.naming-panel-item
+   wholesale (the same "ranked list of named things" shape 0.5.5's own
+   GeographicPlacePanel already reused, applied here to authors instead
+   of names) — only this small actions row and the .inline-link-btn
+   margin reset are new, since .inline-link-btn was designed to sit mid-
+   sentence, not as a standalone row of two. */
+.structure-info-attribution-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin: 0.3rem 0 0;
+}
+
+.structure-info-attribution-actions .inline-link-btn {
+    margin-left: 0;
+}
+
+/* 0.2.24: relative nudge convenience on the Move Placement dialog —
+   always adjusts the absolute X/Y/Z fields above; nothing relative is
+   ever persisted (see ui/components/PlacementEditorDialog.js). */
+.placement-nudge {
+    margin: 0.5rem 0 0.25rem;
+    padding: 0.65rem 0.75rem;
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.placement-nudge-step {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.6rem;
+}
+
+.placement-nudge-step .form-label {
+    margin-bottom: 0;
+}
+
+.placement-nudge-step-options {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.placement-nudge-step-btn {
+    background: #1f1f1f;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    color: #b0b0b0;
+    font-size: 0.78rem;
+    padding: 0.2rem 0.55rem;
+    cursor: pointer;
+}
+
+.placement-nudge-step-btn:hover {
+    border-color: #4caf7d;
+    color: #e0e0e0;
+}
+
+.placement-nudge-step-btn--active {
+    background: #234433;
+    border-color: #4caf7d;
+    color: #4caf7d;
+}
+
+.placement-nudge-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.placement-nudge-row + .placement-nudge-row {
+    margin-top: 0.4rem;
+}
+
+.placement-nudge-axis {
+    width: 1.2rem;
+    font-size: 0.8rem;
+    color: #909090;
+    text-transform: uppercase;
+}
+
+.placement-nudge-btn {
+    flex: 1;
+    text-align: center;
+}
+
+/* 0.2.25: overlap is a fact, not an error — amber (the same tone
+   .form-hint already uses for validation hints), never the red
+   .editability-notice--blocked reserves for an actually-blocked
+   mutation. Shown inline in the Move Placement dialog only once a
+   requested position is confirmed occupied under the WARN policy
+   (see ui/components/PlacementEditorDialog.js). */
+.placement-overlap-warning {
+    margin: 0.75rem 0 0.25rem;
+    padding: 0.6rem 0.7rem;
+    background: rgba(201, 162, 74, 0.1);
+    border: 1px solid rgba(201, 162, 74, 0.4);
+    border-radius: 4px;
+}
+
+.placement-overlap-warning-text {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #d9b968;
+}
+
+.placement-overlap-warning-list {
+    margin: 0.4rem 0 0;
+    padding-left: 1.1rem;
+    font-size: 0.78rem;
+    color: #c0c0c0;
+}
+
+.placement-overlap-warning-list li {
+    margin: 0.15rem 0;
+}
+
+/* Passive equivalent shown in PlacementInfoPanel — same tone, no list,
+   just a count (see ui/components/PlacementInfoPanel.js). */
+.placement-overlap-notice {
+    margin: 0.5rem 0 0;
+    font-size: 0.78rem;
+    color: #d9b968;
+}
+
+.spatial-panel--editing {
+    border-color: #4caf7d;
+}
+
+.spatial-panel--editing h4 {
+    color: #4caf7d;
+}
+
+.spatial-panel--editing .spatial-type {
+    color: #4caf7d;
+}
+
+.editing-actions {
+    margin: 0.5rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.editing-hint {
+    margin: 0;
+    color: #909090;
+    font-size: 0.8rem;
+}
+
+.action-btn--danger {
+    background: #c0392b;
+    color: #ffffff;
+}
+
+.action-btn--danger:hover {
+    background: #e74c3c;
+}
+
+.spatial-panel--placement {
+    border-color: #9b59b6;
+}
+
+.spatial-panel--placement h4 {
+    color: #9b59b6;
+}
+
+.spatial-panel--placement .spatial-type {
+    color: #9b59b6;
+}
+
+/* 0.2.87 — the hovered position is occupied (core/PlacementValidator.js);
+   the panel stays visible, tinted red, rather than disappearing, so
+   the user sees WHY clicking won't do anything. */
+.spatial-panel--placement.spatial-panel--blocked {
+    border-color: #e05252;
+}
+
+.spatial-panel--placement.spatial-panel--blocked h4,
+.spatial-panel--placement.spatial-panel--blocked .spatial-type {
+    color: #e05252;
+}
+
+.editing-hint--blocked {
+    color: #e05252;
+    font-weight: 500;
+}
+
+.placement-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.placement-select {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.placement-select:focus {
+    outline: none;
+    border-color: #9b59b6;
+}
+
+.action-btn--secondary {
+    background: #2a2a2a;
+    color: #d0d0d0;
+    border: 1px solid #3a3a3a;
+}
+
+.action-btn--secondary:hover {
+    background: #333333;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

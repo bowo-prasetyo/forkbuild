@@ -12,7 +12,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.305 — Cross-Surface Publication Commentary Reassessment.
 //
@@ -141,7 +141,7 @@ async function runTests() {
         // real, current prop/inject declarations rather than assumed.
         const ownPanel = await rawSource('ui/components/OwnPublicationPanel.js');
         const card = await rawSource('ui/components/PublicationCard.js');
-        const canvas = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/getPublicationCommentariesCommand:\s*\{\s*\n?\s*type: Function/.test(ownPanel),
             'A7a. OwnPublicationPanel.js still declares getPublicationCommentariesCommand as a typed prop (session-supplied, via WorldView.js).');
         assert(card.includes('getPublicationCommentariesCommand: { default: null }'),
@@ -171,7 +171,8 @@ async function runTests() {
             'ui/components/PublicationList.js',
             'ui/components/WorldEncounterCanvas.js',
             'ui/views/DecentralizedPublicationsView.js',
-            'ui/views/WorldView.js'
+            // WorldView.js's own encountered-publication hand-off to the Editor.
+            'ui/views/worldView/useEditorHandoff.js'
         ];
         for (const file of expectedBearers) {
             assert(bearerSet.has(file), `B1. ${file} is still a real Publication-bearing surface (found by fresh repo grep).`);
@@ -360,7 +361,7 @@ async function runTests() {
             `F1. exactly two ui/components/*.js files declare a snapshotDistributionCommand prop (found ${distributionPropCount}) — OwnPublicationPanel.js and WorldEncounterCanvas.js, exactly as docs/Roadmap.md's own 0.9.139/0.9.141 entries describe.`);
 
         const ownPanel = await rawSource('ui/components/OwnPublicationPanel.js');
-        const canvas = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
 
         // F2. In BOTH files, the distribution UI's own entry point and
         // the commentary UI are sections of the SAME component, not

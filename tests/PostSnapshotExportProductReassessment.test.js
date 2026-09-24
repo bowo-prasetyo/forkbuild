@@ -21,7 +21,7 @@ import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.216 — Post-Snapshot-Export Product Reassessment.
 //
@@ -207,7 +207,7 @@ async function runTests() {
     // audit in Section J, not folded in here.)
     // ---------------------------------------------------------------
     {
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const destructureMatch = editorViewSource.match(/const \{([^}]*)\}\s*=\s*new CreatePersistenceUseCase\(\)\.execute\(\)/);
         assert(destructureMatch, 'C1a. EditorView.js still destructures CreatePersistenceUseCase().execute()');
         for (const field of ['autosaveDocumentUseCase', 'recoverDocumentUseCase', 'discardRecoveryUseCase', 'checkRecoveryUseCase']) {
@@ -273,7 +273,7 @@ async function runTests() {
         // (Section F) — a Publication is DISTRIBUTED (announced) so
         // others can DISCOVER it; nothing here transfers the actual
         // bytes, which is what Section G's Transfer Package is for.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/distributionCommand:\s*\{/.test(canvasSource), 'D2a. WorldEncounterCanvas.js still declares a distributionCommand prop');
         assert(/distributeSelectedPublication\(\)\s*\{/.test(canvasSource), 'D2b. ...and still defines distributeSelectedPublication()');
         // AMENDED BY 0.9.672 — World View Distribution Dialog.
@@ -308,7 +308,7 @@ async function runTests() {
         // E1 — Transform gesture feedback (closed by 0.9.214).
         const spatialEditingServiceSource = await rawSource('application/SpatialEditingService.js');
         assert(/getGestureFeedback\(\)\s*\{\s*return this\._gestureFeedback;\s*\}/.test(spatialEditingServiceSource), 'E1a. SpatialEditingService still exposes getGestureFeedback()');
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/import TransformFeedback from '..\/components\/TransformFeedback\.js';/.test(editorViewSource), 'E1b. EditorView.js still imports TransformFeedback');
         assert(/<TransformFeedback :feedback="transformFeedback" \/>/.test(editorViewSource), 'E1c. ...and still mounts it, bound to a local ref');
         assert(/transformFeedback\.value = result\.feedback \|\| null;/.test(editorViewSource), 'E1d. ...still a bare passthrough of the captured pointer-event result, no reconstruction');
@@ -341,9 +341,9 @@ async function runTests() {
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/worldSnapshotDiscoveryMonitor\.observe\(/.test(worldViewSource), 'F2. WorldView.js still drives worldSnapshotDiscoveryMonitor.observe() (automatic discovery)');
         assert(/automaticSnapshotEncounterCascade\.processCandidate\(/.test(worldViewSource), 'F3. ...and still feeds candidates to automaticSnapshotEncounterCascade.processCandidate() (automatic materialization)');
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/openSnapshotContentView/.test(canvasSource) && /unregisterSelectedSnapshot/.test(canvasSource), 'F4. WorldEncounterCanvas.js still lets a materialized Snapshot be viewed and removed');
-        const decentralizedViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         assert(/materializePlacement\(/.test(decentralizedViewSource) && /importSnapshotContent\(/.test(decentralizedViewSource), 'F5. DecentralizedPublicationsView.js still wires explicit "Materialize"/"Import Snapshot" actions');
         console.log('✓ Section F: Snapshot discovery/materialization/World participation — COMPLETE, reconfirmed unchanged.');
     }
@@ -396,7 +396,7 @@ async function runTests() {
         // G4 — import stays an explicit, single action; the coordinator
         // never invents an automatic/background import path (mirrors
         // 0.9.215's own Section C/G for export, now checked for import).
-        const decentralizedViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         const importCallSites = (codeOnlyLines(decentralizedViewSource).join('\n').match(/@click="importSnapshotContent\(/g) || []).length;
         assert(importCallSites === 1, `G4a. importSnapshotContent(...) is bound to exactly one @click handler in DecentralizedPublicationsView.js (found ${importCallSites}) — one explicit click handler, no background caller`);
         assert(!/dragover|dragenter|ondrop|@drop=/i.test(decentralizedViewSource), 'G4b. no drag-and-drop import affordance exists — an explicit boundary this milestone observes, not extends');
@@ -477,7 +477,7 @@ async function runTests() {
         assert(/composeDecentralizedWorldEncounterMaterialDiscoveryRuntime\(/.test(mainSource), 'H1a. ui/main.js still composes the decentralized World Material discovery runtime (Nostr + Arweave)');
         assert(/provide\('discoverWorldEncounterPublicationCommand'/.test(mainSource) || /discoverWorldEncounterPublicationCommand/.test(mainSource), 'H1b. ...and still exposes a discovery command app-wide');
 
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/discoveryCommand:\s*\{/.test(canvasSource), 'H2a. WorldEncounterCanvas.js still declares a discoveryCommand prop');
         assert(/discoverPublication\(\)\s*\{/.test(canvasSource), 'H2b. ...and still defines discoverPublication()');
         assert(/@click="discoverPublication"/.test(canvasSource), 'H2c. ...wired to a real @click handler — "Discover Publication" stays reachable');
@@ -499,7 +499,7 @@ async function runTests() {
         // DISTRIBUTION only, never the World-material discovery query
         // family H1/H2 above cover; that half of this assertion still
         // holds unchanged.
-        const decentralizedViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/DecentralizedWorldDiscoveryQuery/.test(decentralizedViewSource), 'H3. AMENDED BY 0.9.436 — ui/views/DecentralizedPublicationsView.js still contains zero DecentralizedWorldDiscoveryQuery references (the World-material discovery family remains WorldEncounterCanvas.js\'s own, untouched); Nostr/Arweave references now DO exist here, deliberately, as this milestone\'s own Announcement/Discovery distribution wiring — not a naming-assumption violation, but this milestone\'s own explicit scope');
 
         console.log('✓ Section H: AMENDED BY 0.9.436 — Decentralized discovery composition remains exactly as this section originally found it (H1/H2, WorldEncounterCanvas.js untouched); DecentralizedPublicationsView.js now ALSO reaches the same already-composed Nostr/Arweave distribution commands, inside its own contextual "Distribution" section, closing the reachability gap tests/PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js (0.9.435) documented.');
@@ -514,7 +514,7 @@ async function runTests() {
         assert(/composeWorldEncounterMaterialVerifier\(/.test(mainSource), 'I1a. ui/main.js still composes the material verifier (signature -> identity -> inspection chain)');
         assert(/provide\('worldEncounterMaterialVerifier'/.test(mainSource), 'I1b. ...and provides it app-wide');
 
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/materialInspection\.verification\.status/.test(canvasSource) || /discoveryResult\.inspection\.verification\.status/.test(canvasSource), 'I2a. WorldEncounterCanvas.js still renders a verification status field');
         assert(/resolveSnapshotPublicationAttribution/.test(canvasSource), 'I2b. ...and still resolves Snapshot/Publication attribution');
 
@@ -545,7 +545,7 @@ async function runTests() {
 
         // Autosave never survives a teardown to write into whatever
         // document happens to load next.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/autosaveScheduler\.stop\(\)/.test(editorViewSource), 'J3. EditorView.js still stops (never merely pauses) the autosave scheduler on teardown — no orphaned cross-document autosave write');
         const autosaveSchedulerSource = await rawSource('application/AutosaveScheduler.js');
         assert(/onStateChanged/.test(autosaveSchedulerSource), 'J4. AutosaveScheduler.js still subscribes to documentManager.onStateChanged — a document switch is observed, not silently ignored');

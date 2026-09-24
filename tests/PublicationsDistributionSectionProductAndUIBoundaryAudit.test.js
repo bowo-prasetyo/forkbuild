@@ -10,7 +10,7 @@ import { composePublicationDistributionCommand } from '../application/Publicatio
 import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
 import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.435 — Publications Distribution Section Product & UI Boundary Audit.
 //
@@ -205,7 +205,7 @@ async function run() {
     // ===============================================================
     {
         const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         // OwnPublicationPanel.js — exactly two distribution-capable actions,
@@ -398,7 +398,7 @@ async function run() {
         // this experiment's own finding is therefore not a novel discovery
         // about this command, only its first live proof against a
         // /publications-SHAPED entry specifically.
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         assert(/selectedEncounter\.kind === 'PUBLICATION'/.test(canvasSource), n('C6. WorldEncounterCanvas.js already calls this exact command for a selected World Encounter — which can be ANY discovered publication, own or a peer\'s — so C5\'s ownership-agnostic finding is a precedent this codebase already relies on elsewhere, not a new risk this audit introduces'));
 
         // C7 — the "Distribute Snapshot" (Content-via-actual-bytes) half:
@@ -445,7 +445,7 @@ async function run() {
     // ===============================================================
     {
         const ownPanelSource = await source('ui/components/OwnPublicationPanel.js');
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
 
         // UPDATED by 0.9.437 — Contextual Distribution Configuration

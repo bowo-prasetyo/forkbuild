@@ -10,6 +10,7 @@ import { SetRoleProviderPreferenceUseCase } from '../application/SetRoleProvider
 import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.304 — Post-Content-Preference Product Evolution Reassessment.
 //
@@ -305,7 +306,7 @@ async function run() {
         // front of — 0.9.298 already reached this same finding
         // (SEMANTICALLY_UNSUITABLE); re-confirmed fresh against the
         // current view source.
-        const publicationsViewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         assert(/evidenceViewRegistry\.get\(anchor\.anchorType\)/.test(publicationsViewSource),
             '19. an existing anchor\'s own anchorType still drives which evidence view renders it — a ' +
             'historical-record dispatch key, never a live selection');
@@ -519,7 +520,7 @@ async function run() {
         // 6. The explicit per-storage button handler never reads the
         // preference store — preference influencing explicit placement,
         // even silently, would be a real regression.
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const createPlacementMatch = viewSource.match(/async function createPlacement\(entry, storage\)[\s\S]*?\n {8}\}/);
         assert(createPlacementMatch && !/[Pp]reference/.test(createPlacementMatch[0]),
             '41. createPlacement(entry, storage) — the explicit per-storage button handler — never mentions any ' +

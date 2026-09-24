@@ -20,6 +20,7 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { readFile } from 'node:fs/promises';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.184 — World Snapshot Content Comparison View.
 //
@@ -187,7 +188,7 @@ function comparison(overrides = {}) {
 }
 
 async function run() {
-    const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const descriptorSource = await readFile(new URL('../application/WorldSnapshotContentComparisonView.js', import.meta.url), 'utf8');
 
     // ---------------------------------------------------------------
@@ -545,7 +546,7 @@ async function run() {
     {
         const strippedCanvas = stripLineComments(canvasSource);
 
-        const openMethodMatch = strippedCanvas.match(/openContentComparisonView\(\)\s*\{[\s\S]*?\n\s{8}\},/);
+        const openMethodMatch = strippedCanvas.match(/openContentComparisonView\(\)\s*\{[\s\S]*?\n\s{4}\},/);
         assert(openMethodMatch, 'sanity — openContentComparisonView() body is found');
         const openBody = openMethodMatch[0];
         assert(!/registry\./.test(openBody), '1. openContentComparisonView() never touches the registry');
@@ -555,7 +556,7 @@ async function run() {
         assert(!/distribut/i.test(openBody), '4. openContentComparisonView() never distributes');
         assert(!/discover/i.test(openBody), '5. openContentComparisonView() never discovers');
 
-        const closeMethodMatch = strippedCanvas.match(/closeContentComparisonView\(\)\s*\{[\s\S]*?\n\s{8}\},/);
+        const closeMethodMatch = strippedCanvas.match(/closeContentComparisonView\(\)\s*\{[\s\S]*?\n\s{4}\},/);
         assert(closeMethodMatch, 'sanity — closeContentComparisonView() body is found');
         assert(!/registry\./.test(closeMethodMatch[0]), '6. closeContentComparisonView() never touches the registry');
 
@@ -565,7 +566,7 @@ async function run() {
         // refreshComparisonMaterialInspection() never supplies a
         // resolvedLead — decentralized lead resolution for the comparison
         // target remains excluded.
-        const refreshComparisonMaterialMatch = strippedCanvas.match(/refreshComparisonMaterialInspection\(\)\s*\{[\s\S]*?\n\s{8}\},/);
+        const refreshComparisonMaterialMatch = strippedCanvas.match(/refreshComparisonMaterialInspection\(\)\s*\{[\s\S]*?\n\s{4}\},/);
         assert(refreshComparisonMaterialMatch, 'sanity — refreshComparisonMaterialInspection() body is found');
         assert(/resolvedLead:\s*null/.test(refreshComparisonMaterialMatch[0]),
             '8. refreshComparisonMaterialInspection() always supplies resolvedLead: null — no decentralized lead resolution for the comparison target');

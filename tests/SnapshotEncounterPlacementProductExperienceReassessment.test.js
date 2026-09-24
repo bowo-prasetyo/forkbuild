@@ -9,7 +9,7 @@ import { describeWorldEncounterMaterialVerificationStatusLabel } from '../applic
 import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
 import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/ShouldRefreshSnapshotDiscovery.js';
 import { materializedSnapshotWorldOrigin } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.528 — Snapshot Encounter & Placement Product Experience
 // Reassessment.
@@ -83,7 +83,7 @@ async function run() {
     // Section A — Discovery-to-encounter comprehension.
     // ===============================================================
     {
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
 
         // The "Choose Source" panel's own origin labels — Local/Peer
         // <id>/Snapshot <hash> — are plain, self-explanatory English that
@@ -110,7 +110,7 @@ async function run() {
     // ===============================================================
     {
         const panelSource = await source('ui/components/OwnPublicationPanel.js');
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
 
         // Four genuinely distinct fields exist for four genuinely distinct
         // facts, never collapsed into one another anywhere this milestone
@@ -212,11 +212,11 @@ async function run() {
         // new view rather than a raw `.outcome` interpolation.
         // -----------------------------------------------------------
         const panelSource = await source('ui/components/OwnPublicationPanel.js');
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
 
         check(panelSource.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/SnapshotOutcomeInspectionView.js';"),
             'C9. OwnPublicationPanel.js imports the new view');
-        check(canvasSource.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/SnapshotOutcomeInspectionView.js';"),
+        check(canvasSource.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../../application/SnapshotOutcomeInspectionView.js';"),
             'C10. WorldEncounterCanvas.js imports the new view');
 
         const rawOutcomeInterpolations = [
@@ -248,7 +248,7 @@ async function run() {
         // directly) and each is a thin pass-through, exactly mirroring
         // this file's own pre-existing describeMaterialLoadStatusLabel()/
         // describeMaterialVerificationStatusLabel() shape from 0.9.519.
-        check(canvasSource.includes('describeSnapshotResolutionLabel(outcome) {\n            return describeSnapshotResolutionOutcomeLabel(outcome);\n        },'),
+        check(canvasSource.includes('describeSnapshotResolutionLabel(outcome) {\n        return describeSnapshotResolutionOutcomeLabel(outcome);\n    },'),
             'C15. WorldEncounterCanvas.js\'s own wrapper method is a pure pass-through, no logic of its own');
         check(panelSource.includes('describeSnapshotAttributionLabel(outcome) {\n            return describeSnapshotAttributionOutcomeLabel(outcome);\n        }'),
             'C16. OwnPublicationPanel.js\'s own wrapper method is a pure pass-through, no logic of its own');
@@ -355,7 +355,7 @@ async function run() {
     // Section G — Failure comprehension.
     // ===============================================================
     {
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
 
         check(canvasSource.includes("This Snapshot's content is no longer available."),
             'G1. a Snapshot whose content stopped being available says so in plain language, rather than showing an empty/blank detail panel');
@@ -384,14 +384,14 @@ async function run() {
     // Section H — World/Repository continuity.
     // ===============================================================
     {
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
 
         // Repository admission's own real gate, read live: AVAILABLE load,
         // a genuine Publication instance, AND an actively VERIFIED
         // material — never admitted on retrieval success alone.
         check(canvasSource.includes("admitToRepositoryDiscovery(loading, verification) {"),
             'H1. the real admission method still exists under its own 0.9.474 name');
-        check(canvasSource.includes("loading.status === 'AVAILABLE'\n                && loading.material instanceof Publication\n                && verification\n                && verification.status === 'VERIFIED'"),
+        check(canvasSource.includes("loading.status === 'AVAILABLE'\n            && loading.material instanceof Publication\n            && verification\n            && verification.status === 'VERIFIED'"),
             'H2. admission requires AVAILABLE + a real Publication instance + an actively VERIFIED verification — never resolution success alone (the exact 0.9.523 gate, re-confirmed unmodified)');
 
         // World Encounter rendering itself never re-derives or displays
@@ -410,7 +410,7 @@ async function run() {
     {
         const newViewSource = await source('application/SnapshotOutcomeInspectionView.js');
         const panelSource = await source('ui/components/OwnPublicationPanel.js');
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
 
         const classifications = [];
         classifications.push(['discovered', 'USER_VISIBLE_ACCEPTABLE — describes an announcement being found, never a verdict about what it is']);

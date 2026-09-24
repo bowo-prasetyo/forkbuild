@@ -21,6 +21,7 @@ import { World } from '../core/World.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.326 — Post-Diagnostic Product Evolution Reassessment.
 //
@@ -334,7 +335,7 @@ async function runTests() {
     // ===============================================================
     {
         // B1. Publication -> Placement -> Discovery -> Inspection.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publishDocumentUseCase/.test(editorViewSource), 'B1a. EditorView.js still composes the publish use case.');
         assert(await sourceExists('application/PlacePublicationUseCase.js'), 'B1b. PlacePublicationUseCase.js still exists — Publication -> Placement.');
         assert(await sourceExists('ui/components/PublicationCatalog.js'), 'B1c. PublicationCatalog.js still exists — Placement -> Discovery.');
@@ -349,7 +350,7 @@ async function runTests() {
         const materializeSource = await rawSource('application/MaterializeSnapshotFromPlacementUseCase.js');
         assert(materializeSource.includes('storeSnapshotContentUseCase') && materializeSource.includes('contentHash'),
             'B2b. MaterializeSnapshotFromPlacementUseCase.js still runs a hash-verify (resolution) then-store (materialization) pipeline.');
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(canvasSource.includes('registerMaterializedSnapshotWorldSource') || canvasSource.includes('unregisterSelectedSnapshot'),
             'B2c. WorldEncounterCanvas.js still registers a materialized Snapshot as a World source — Materialization -> World.');
 
@@ -384,7 +385,7 @@ async function runTests() {
         // B6. Provider preference -> Setting -> Preferred Placement.
         const settingsSource = await rawSource('ui/views/ContentProviderSettingsView.js');
         assert(settingsSource.includes('setRoleProviderPreferenceUseCase'), 'B6a. ContentProviderSettingsView.js still saves through the real write use case.');
-        const publicationsViewSource = await rawSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n');
         assert(publicationsViewSource.includes('preferredSnapshotPlacementCreationCoordinator') && publicationsViewSource.includes('createPreferredPlacement'),
             'B6b. DecentralizedPublicationsView.js still exposes "Use Preferred Provider", consuming the SAME store the settings view writes.');
 
@@ -416,7 +417,7 @@ async function runTests() {
         const cascadeSource = await rawSource('application/AutomaticSnapshotEncounterCascade.js');
         assert(cascadeSource.includes('resolveSelectedSnapshotCommand') && cascadeSource.includes('materializeSelectedSnapshotCommand'),
             'B8a. AutomaticSnapshotEncounterCascade.js still calls the SAME resolve/materialize commands the manual popup\'s own buttons call.');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldViewSource.includes('automaticSnapshotEncounterCascade.processCandidate') && worldViewSource.includes('worldSnapshotDiscoveryMonitor.observe'),
             'B8b. WorldView.js still drives the automatic path independently, on its own spatial-observation tick, with no dependency on OwnPublicationPanel\'s own Diagnostic Tools popup state.');
         assert(!worldViewSource.includes('diagnosticToolsOpen'),
@@ -835,7 +836,7 @@ async function runTests() {
         const outcomeSource = await rawSource('application/AutomaticSnapshotEncounterCascadeOutcome.js');
         assert(outcomeSource.includes('INELIGIBLE') && outcomeSource.includes('SUPPRESSED'),
             'H2. The cascade outcome vocabulary this candidate would surface still exists, confirming the candidate is real and buildable, not hypothetical.');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/toast|notif.*cascade|cascadeOutcome/i.test(worldViewSource) || !worldViewSource.toLowerCase().includes('cascadeoutcome'),
             'H3. WorldView.js still renders no toast/notification for the automatic cascade\'s own outcome — this candidate remains genuinely unbuilt, not merely unverified.');
 

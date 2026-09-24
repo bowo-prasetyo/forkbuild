@@ -35,6 +35,7 @@ import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeer
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { toWorldOperationEnvelope } from '../core/WorldOperationEnvelope.js';
+import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.546 — Document Lifecycle Product Reassessment.
 //
@@ -819,7 +820,7 @@ async function main() {
         // I1. WorldView.js's own Publication-governing field is read
         // fresh every refresh tick, by its own documented contract —
         // never a cached, independently-tracked lifecycle flag.
-        const worldViewSrc = await readSource('ui/views/WorldView.js');
+        const worldViewSrc = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/re-read fresh every refreshSpatialUI\(\) tick, never cached/.test(worldViewSrc),
             '1. ui/views/WorldView.js documents (and, by every call site below, honors) "re-read fresh every refreshSpatialUI() tick, never cached" for the Publication governing the active document.');
         assert(/session\.getPublicationForDocument\(activeId\)/.test(worldViewSrc),
@@ -829,7 +830,7 @@ async function main() {
         // documented as replaced wholesale by each publish, and is
         // assigned in exactly the two legitimate places: the publish
         // handler and the dismiss action.
-        const editorViewSrc = await readSource('ui/views/EditorView.js');
+        const editorViewSrc = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/never merged with a prior one/.test(editorViewSrc) && /replaced wholesale by/.test(editorViewSrc),
             '3. ui/views/EditorView.js documents publishedPublication as replaced wholesale by each successful publish, never merged — no accumulating, independently-tracked lifecycle state.');
         const assignments = (editorViewSrc.match(/publishedPublication\.value\s*=/g) || []).length;

@@ -1,0 +1,617 @@
+/* Repository View */
+
+/* Hardening: Repository/Author publication lists were a single
+   narrow (800px), centered, vertical column — a wall of blank space
+   either side on anything wider than a laptop. .publication-list is
+   now a responsive card grid, shared unchanged by both views (and
+   ForkTree's root list styling); wide screens fill with more
+   columns, narrow ones collapse toward one, without either view
+   needing its own layout logic. */
+.repository-view,
+.author-view,
+.recent-worlds-view {
+    padding: 2rem 2.5rem 3rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.repository-view h1,
+.author-view h1,
+.recent-worlds-view h1 {
+    margin: 0 0 1.5rem;
+}
+
+/* 0.3.10 — World Persistence & Return Experience. Reuses
+   .repository-view/.author-view's own layout wholesale (same "a
+   catalog of cards, centered, responsive" shape) — see
+   ui/views/RecentWorldsView.js. */
+.recent-worlds-subtitle {
+    margin: -1rem 0 1.5rem;
+    color: #909090;
+    font-size: 0.9rem;
+}
+
+.publication-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 1.25rem;
+}
+
+.publication-card {
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.publication-card:hover {
+    transform: translateY(-3px);
+    border-color: #3a6ea5;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+}
+
+.publication-card h3 {
+    margin: 0 0 0.5rem;
+    color: #e0e0e0;
+    font-size: 1.05rem;
+    overflow-wrap: break-word;
+}
+
+.publication-meta {
+    margin: 0;
+    color: #909090;
+    font-size: 0.9rem;
+}
+
+.publication-date {
+    margin: 0.5rem 0 0;
+    color: #707070;
+    font-size: 0.8rem;
+}
+
+.empty-state {
+    color: #707070;
+    font-style: italic;
+    padding: 3rem 0;
+    text-align: center;
+}
+
+.publication-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+}
+
+.action-btn {
+    padding: 0.3rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.action-btn--open {
+    background: #2a2a2a;
+    color: #d0d0d0;
+    border: 1px solid #3a3a3a;
+}
+
+.action-btn--open:hover {
+    background: #333333;
+}
+
+.action-btn--fork {
+    background: #4caf7d;
+    color: #121212;
+}
+
+.action-btn--fork:hover {
+    background: #5fc490;
+}
+/* App Header Right Group */
+.app-header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* User Widget */
+.user-widget {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-name {
+    color: #4caf7d;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.user-btn {
+    padding: 0.3rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.user-btn--login {
+    background: #4caf7d;
+    color: #121212;
+}
+
+.user-btn--login:hover {
+    background: #5fc490;
+}
+
+.user-btn--logout {
+    background: transparent;
+    color: #b0b0b0;
+    border: 1px solid #3a3a3a;
+}
+
+.user-btn--logout:hover {
+    background: #262626;
+    color: #ffffff;
+}
+
+/* Login Modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.modal-content {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    padding: 1.5rem;
+    width: 320px;
+    max-width: 90vw;
+}
+
+.modal-content h3 {
+    margin: 0 0 0.25rem;
+    color: #e0e0e0;
+}
+
+.modal-subtitle {
+    margin: 0 0 1rem;
+    color: #909090;
+    font-size: 0.85rem;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.modal-input:focus {
+    outline: none;
+    border-color: #4caf7d;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.modal-btn {
+    padding: 0.4rem 1rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.modal-btn--secondary {
+    background: transparent;
+    color: #b0b0b0;
+    border: 1px solid #3a3a3a;
+}
+
+.modal-btn--secondary:hover {
+    background: #262626;
+}
+
+.modal-btn--primary {
+    background: #4caf7d;
+    color: #121212;
+}
+
+.modal-btn--primary:hover {
+    background: #5fc490;
+}
+
+.modal-btn--danger {
+    background: #c0392b;
+    color: #ffffff;
+}
+
+.modal-btn--danger:hover {
+    background: #e74c3c;
+}
+
+/* Identity List (LoginModal, 0.2.46) */
+.identity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 220px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.identity-list-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-align: left;
+}
+
+.identity-list-item:hover {
+    border-color: #4caf7d;
+    background: #182018;
+}
+
+.identity-list-item-label {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.identity-list-item-id {
+    color: #707070;
+    font-size: 0.75rem;
+    font-family: monospace;
+    flex-shrink: 0;
+}
+
+.identity-divider {
+    display: flex;
+    align-items: center;
+    margin: 0.75rem 0;
+    color: #707070;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.identity-divider::before,
+.identity-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #2a2a2a;
+}
+
+.identity-divider span {
+    padding: 0 0.6rem;
+}
+
+/* Key Protection (LoginModal/UserWidget, 0.2.47) */
+.identity-lock-icon {
+    margin-right: 0.3rem;
+}
+
+.identity-unlock-form {
+    padding: 0.6rem 0.75rem;
+    background: #121212;
+    border: 1px solid #4caf7d;
+    border-radius: 4px;
+}
+
+.identity-unlock-label {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    color: #d0d0d0;
+}
+
+.identity-unlock-error {
+    margin: -0.4rem 0 0.75rem;
+    color: #e05c5c;
+    font-size: 0.8rem;
+}
+
+.user-name--locked {
+    color: #e0a34c;
+}
+
+/* Identity Lifecycle Hardening (0.2.67) */
+.identity-revoked-badge {
+    color: #e05c5c;
+    font-weight: 600;
+}
+
+.publication-fork-of {
+    margin: 0.25rem 0;
+    color: #e0a34c;
+    font-size: 0.85rem;
+}
+
+.publication-forks {
+    margin: 0.25rem 0;
+    color: #707070;
+    font-size: 0.8rem;
+}
+
+/* 0.2.31 — Publication Catalog & Repository UX. See
+   ui/components/PublicationCatalog.js. */
+
+.publication-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 700;
+    user-select: none;
+    overflow: hidden;
+}
+
+.publication-preview--card {
+    width: 100%;
+    height: 120px;
+    margin-bottom: 0.85rem;
+    font-size: 2.4rem;
+}
+
+.publication-preview--list {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+    border-radius: 4px;
+}
+
+.publication-preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 0.2.32 — a subtle pulse while a real thumbnail is actively being
+   generated (see ui/components/PublicationPreview.js's `pending`
+   state). Deliberately subtle: the placeholder underneath is already
+   a complete, legible card — this is a hint that something more is on
+   its way, not a loading spinner blocking anything. */
+.publication-preview--pending {
+    animation: publication-preview-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes publication-preview-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+.publication-badge {
+    color: #4caf7d;
+    font-weight: 600;
+    margin-right: 0.35rem;
+}
+
+.publication-description {
+    margin: 0.35rem 0;
+    color: #909090;
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.publication-description--list {
+    display: block;
+    margin-top: 0.2rem;
+}
+
+/* 0.3.10 — World Persistence & Return Experience. ui/components/WorldCard.js
+   reuses .publication-card/.publication-list/.action-btn--explore
+   wholesale (same "a catalog of cards" language RecentWorldsView shares
+   with Repository/Author — see this file's own 0.3.10 comment above) —
+   this rule is the only genuinely new styling a World Card needs beyond
+   a plain Publication Card (its visit line already takes
+   .publication-date's own color). */
+.world-card-perspective {
+    color: #5a8fc4;
+}
+
+/* Toolbar */
+
+.publication-catalog-toolbar {
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.publication-catalog-search {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.publication-catalog-search-input {
+    flex: 1;
+    min-width: 220px;
+}
+
+.publication-catalog-search-descriptions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #909090;
+    font-size: 0.82rem;
+    white-space: nowrap;
+}
+
+.publication-catalog-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.publication-catalog-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #909090;
+    font-size: 0.85rem;
+}
+
+.publication-catalog-select {
+    width: auto;
+}
+
+.publication-catalog-view-toggle {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.publication-catalog-count {
+    margin: 0;
+    color: #707070;
+    font-size: 0.85rem;
+}
+
+.publication-catalog-group {
+    margin-bottom: 1.5rem;
+}
+
+.publication-catalog-group-label {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+    color: #a0a0a0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid #2a2a2a;
+    padding-bottom: 0.4rem;
+}
+
+/* List/table view */
+
+.publication-table-wrap {
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.publication-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.publication-table th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    color: #808080;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.publication-table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid #232323;
+    vertical-align: top;
+    font-size: 0.88rem;
+    color: #d0d0d0;
+}
+
+.publication-table-preview-col {
+    width: 56px;
+}
+
+.publication-table-title-col {
+    max-width: 320px;
+}
+
+.publication-table-title {
+    display: block;
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
+.publication-table-actions-col {
+    white-space: nowrap;
+}
+
+.publication-actions--row {
+    margin-top: 0;
+    padding-top: 0;
+}
+
+/* Pagination */
+
+.publication-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.publication-pagination-pages {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.publication-pagination-page {
+    min-width: 2rem;
+    padding: 0.3rem 0.5rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: #909090;
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.publication-pagination-page:hover:not(:disabled) {
+    border-color: #3a3a3a;
+    color: #d0d0d0;
+}
+
+.publication-pagination-page--current {
+    background: #4caf7d;
+    color: #121212;
+    font-weight: 700;
+}
+
+.publication-pagination-page--ellipsis {
+    cursor: default;
+    color: #555;
+}

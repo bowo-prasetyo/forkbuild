@@ -16,6 +16,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.382 — Distribution Result -> Repository Navigation Convergence
 // Audit.
@@ -202,7 +203,7 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
     const blockSource = extractRange(
         editorViewSource,
         "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '// ------------------------- document lifecycle ------------',
+        '\n    return {',
         '0.9.377/0.9.381/0.9.450 post-publish distribution block'
     );
 
@@ -234,10 +235,10 @@ function buildHarness(editorViewSource, { multiRelayNostrPublicationDistribution
 }
 
 async function run() {
-    const editorViewSource = await readSource('ui/views/EditorView.js');
+    const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
     const editorViewCodeOnly = codeOnlyLines(editorViewSource);
     const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
-    const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
 
     // ---------------------------------------------------------------
     // Section A — Exact Publication identity, traced end to end through
@@ -293,7 +294,7 @@ async function run() {
         assert(catalogSource.includes(catalogExploreShape),
             n("PublicationCatalog.js's own pre-existing Explore action pushes exactly `{ path: '/world/${documentId}' }`"));
 
-        const navigationBlock = extractRange(editorViewCodeOnly, 'function viewDistributedPublicationInRepository()', '\n        }', 'viewDistributedPublicationInRepository() body');
+        const navigationBlock = extractRange(editorViewCodeOnly, 'function viewDistributedPublicationInRepository()', '\n    }', 'viewDistributedPublicationInRepository() body');
         assert(navigationBlock.includes('router.push({ path: `/world/${publication.documentId}` });'),
             n('viewDistributedPublicationInRepository() pushes the byte-identical `{ path: \'/world/${documentId}\' }` shape'));
 
@@ -538,7 +539,7 @@ async function run() {
         // references discoveryProvider/findById/findPublicationUseCase —
         // this convergence is established by this test's own Section G
         // rig, not by anything EditorView.js does at navigation time.
-        const navigationBlock = extractRange(editorViewCodeOnly, 'function viewDistributedPublicationInRepository()', '\n        }', 'viewDistributedPublicationInRepository() body (Section G)');
+        const navigationBlock = extractRange(editorViewCodeOnly, 'function viewDistributedPublicationInRepository()', '\n    }', 'viewDistributedPublicationInRepository() body (Section G)');
         assert(!navigationBlock.includes('discoveryProvider') && !navigationBlock.includes('findById') && !navigationBlock.includes('findPublicationUseCase'),
             n('viewDistributedPublicationInRepository() itself performs no Repository lookup — the convergence holds because documentId is a stable, already-shared identity, not because navigation re-resolves anything'));
 
@@ -650,7 +651,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         // No Publication Center integration / catalog mutation.
-        const navigationBlock = extractRange(editorViewCodeOnly, 'function viewDistributedPublicationInRepository()', '\n        }', 'viewDistributedPublicationInRepository() body (Section J)');
+        const navigationBlock = extractRange(editorViewCodeOnly, 'function viewDistributedPublicationInRepository()', '\n    }', 'viewDistributedPublicationInRepository() body (Section J)');
         assert(!navigationBlock.includes('publicationCatalog') && !navigationBlock.includes('.add('),
             n('the navigation function never references publicationCatalog or calls .add() on anything — no Publication Center catalog mutation'));
         // EditorView.js does inject `publicationCatalog` elsewhere — for

@@ -14,7 +14,7 @@ import { describeCreationAttempt } from '../application/PublicationAnchorCreatio
 import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
 import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../application/WorldEncounterMaterialInspectionView.js';
-import { publicationsPageFiles } from './support/SourceFileGroups.js';
+import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.519 — Publication Evidence & Trust Experience Product Reassessment.
 //
@@ -178,14 +178,14 @@ async function run() {
         // adjacent "Choose Source"/"Choose Location" panels, which never
         // render their own analogous `.status` values as visible text at
         // all. Confirmed live, against real, current production source.
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         check(canvasSource.includes('describeMaterialLoadStatusLabel(materialInspection.loading.status)'),
             'A5a. THE FIX: the Material panel now routes loading.status through describeMaterialLoadStatusLabel() rather than interpolating the raw enum constant');
         check(canvasSource.includes('describeMaterialVerificationStatusLabel(materialInspection.verification.status)'),
             'A5b. THE FIX: the Verification panel now routes verification.status through describeMaterialVerificationStatusLabel() rather than interpolating the raw enum constant');
         check(!/\{\{\s*materialInspection\.loading\.status\s*\}\}/.test(canvasSource) && !/\{\{\s*materialInspection\.verification\.status\s*\}\}/.test(canvasSource),
             'A5c. neither raw status is interpolated directly into the template anywhere in current source');
-        check(canvasSource.includes("import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../../application/WorldEncounterMaterialInspectionView.js';"),
+        check(canvasSource.includes("import { describeWorldEncounterMaterialLoadStatusLabel, describeWorldEncounterMaterialVerificationStatusLabel } from '../../../application/WorldEncounterMaterialInspectionView.js';"),
             'A5d. the humanizing view is imported from a new, dedicated application/ view file, mirroring this codebase\'s own established pattern (PublicationResolutionView.js, PublicationEvidenceView.js, IpfsPublicationContentVerificationView.js)');
 
         // A6. FOUND and VERIFIED stay two structurally separate axes for
@@ -450,7 +450,7 @@ async function run() {
     {
         const classifications = [];
         const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
 
         classifications.push(['contentHash', 'USER_VISIBLE_ACCEPTABLE — always explicitly labeled "Content hash", never a bare field name']);
         check(decentralizedViewSource.includes('<dt>Content hash</dt>'), 'H1. contentHash is always rendered behind the explicit "Content hash" label');

@@ -23,6 +23,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.562 — Publication Commentary Surface Parity Reassessment.
 //
@@ -469,6 +470,9 @@ async function runTests() {
             'ui/components/PublicationCommentarySection.js',
             'ui/components/OwnPublicationPanel.js',
             'ui/components/WorldEncounterCanvas.js',
+            // WorldEncounterCanvas's own commentary methods, moved out of it.
+            'ui/components/worldEncounterCanvas/observerLocalEncounterMethods.js',
+            'ui/components/worldEncounterCanvas/publicationDiscoveryMethods.js',
             'ui/views/WorldView.js',
             // WorldView's own publication actions module, where those wrappers live.
             'ui/views/worldView/useOwnPublicationActions.js'
@@ -484,7 +488,7 @@ async function runTests() {
         // A2. WorldEncounterCanvas.js specifically carries TWO
         // independent commentary sections, not one — confirmed by the
         // presence of both method families in its own source.
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         for (const method of ['toggleEncounterCommentary', 'refreshEncounterCommentaries', 'submitEncounterCommentary']) {
             assert(canvasCode.includes(`${method}(`), `4. WorldEncounterCanvas.js's own primary/"selected" encounter panel still carries ${method}().`);
         }
@@ -522,7 +526,7 @@ async function runTests() {
         const listCode = await codeOnlySource('ui/components/PublicationList.js');
         const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(cardCode.includes(':publication="publication"') && sectionCode.includes('this.publication.id'), '7. PublicationCard.js hands its own publication to the shared section, which reads identity from this.publication.id.');
         assert(listCode.includes('<PublicationCommentarySection :publication="pub" />') && listCode.includes('openCommentaryIds[pub.id]'), '8. PublicationList.js keys each row by pub.id and hands that row\'s own pub to its section.');
         assert(panelCode.includes('publication.id') || panelCode.includes('this.publication.id'), '9. OwnPublicationPanel.js reads identity from (this.)publication.id.');
@@ -686,7 +690,7 @@ async function runTests() {
         const sectionCode = await codeOnlySource('ui/components/PublicationCommentarySection.js');
         const listCode = await codeOnlySource('ui/components/PublicationList.js');
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         // AMENDED BY 0.9.638 — Publication Commentary Distribution
         // Provider Selector adds exactly one more field, discoveryProvider,
         // to PublicationCard.js's/PublicationList.js's own call sites —
@@ -970,7 +974,7 @@ async function runTests() {
             'PublicationCard.js': await rawSource('ui/components/PublicationCard.js') + sectionSource,
             'PublicationList.js': await rawSource('ui/components/PublicationList.js') + sectionSource,
             'OwnPublicationPanel.js': await rawSource('ui/components/OwnPublicationPanel.js'),
-            'WorldEncounterCanvas.js': await rawSource('ui/components/WorldEncounterCanvas.js')
+            'WorldEncounterCanvas.js': (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n')
         };
         const sharedStrings = [
             'No commentary yet.',

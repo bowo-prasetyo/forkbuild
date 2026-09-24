@@ -19,7 +19,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { readFile } from 'node:fs/promises';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.291 — Publication Commentary on the World Encounter Surface.
 //
@@ -326,7 +326,7 @@ async function runTests() {
         ctxAvatar.toggleEncounterCommentary();
         assert(ctxAvatar.encounterCommentaryOpen === false, '11. toggleEncounterCommentary() is a no-op for an AVATAR selection');
 
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(canvasCode.includes('v-if="encounterCommentaryPublicationId && getPublicationCommentariesCommand"') && canvasCode.includes('@click="toggleEncounterCommentary"'),
             '12. the template gates the Comment action on both the injected capability and a live PUBLICATION selection');
 
@@ -403,7 +403,7 @@ async function runTests() {
         // never a second, divergent commentary implementation. Both call
         // sites send the identical shape this section already asserted
         // above (18/18b).
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert((canvasCode.match(/this\.addPublicationCommentaryCommand\(/g) || []).length === 2,
             '19. AMENDED by 0.9.558: addPublicationCommentaryCommand is called from exactly two places — the primary selection\'s own submitEncounterCommentary(), and the new, separate submitObserverLocalEncounterCommentary() for an observer-local encounter.');
 
@@ -461,7 +461,7 @@ async function runTests() {
         // nothing to do with Publication ownership) — so this check
         // targets ownership-of-a-Publication vocabulary specifically,
         // never the pre-existing avatar field.
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!/isOwn|ownPublication|is-own|isMine|ownPublicationId/i.test(canvasCode),
             '26. WorldEncounterCanvas.js carries no Publication-ownership concept of any kind anywhere in its own source');
 
@@ -556,7 +556,7 @@ async function runTests() {
         assert(own[0].recipientIdentityId === aliceId, '35. the notification is addressed to the Publication\'s own publisher (Alice), never the commenter');
         assert(own[0].payload.authorIdentityId === bobId, '36. the notification payload names the real commentator (Bob) as author');
 
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!/PublicationCommentaryNotificationProducer|publication\.commented/.test(canvasCode),
             '37. WorldEncounterCanvas.js never references the notification producer or event type itself — that stays entirely behind the injected command');
 
@@ -616,7 +616,7 @@ async function runTests() {
     // reuses its own already-existing commands for both surfaces.
     // ---------------------------------------------------------------
     {
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(canvasCode.includes('getPublicationCommentariesCommand: {') && canvasCode.includes('type: Function') &&
                canvasCode.includes('addPublicationCommentaryCommand: {'),
             '46. WorldEncounterCanvas.js declares the two commentary commands as OPTIONAL, caller-injected PROPS — never Vue inject, matching this file\'s own established prop-injection convention');

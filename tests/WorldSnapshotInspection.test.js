@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { describeWorldSnapshotInspection } from '../application/WorldSnapshotInspection.js';
 import { WorldEncounterPresentationSourceFamily } from '../application/WorldEncounterPresentation.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.177 — World Snapshot Inspection Detail.
 //
@@ -306,7 +307,7 @@ function run() {
         assert(!/Nostr|Arweave/i.test(codeOnly),
             '4. no Nostr/Arweave-specific vocabulary — this file operates entirely on already-established World facts, reached only through their existing origin-string encoding');
 
-        const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         assert(canvasSource.includes("import { describeWorldSnapshotInspection } from '../../application/WorldSnapshotInspection.js';"),
             '5. WorldEncounterCanvas.js wires the new pure module in as a plain import, exactly like every other application/ seam it depends on');
 

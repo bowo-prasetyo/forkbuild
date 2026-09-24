@@ -3,6 +3,7 @@ import { execSync } from 'node:child_process';
 
 import { DecentralizedWorldEncounterMaterialSource } from '../application/DecentralizedWorldEncounterMaterialSource.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.329 — Federated Repository Product Gap Audit.
 //
@@ -170,7 +171,7 @@ async function run() {
         // SHIPPED — ui/views/DecentralizedPublicationsView.js — reading
         // from application/LocalPublicationCatalog.js, never from
         // Repository's own discoveryProvider.
-        const decentralizedView = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedView = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(decentralizedView.length > 10000,
             '6. DecentralizedPublicationsView.js is a large, substantive, shipped view (confirmed by size, not merely existence).');
         assert(grepCount('LocalDiscoveryProvider|SearchPublicationsUseCase', ['ui/views/DecentralizedPublicationsView.js']) === 0,
@@ -214,7 +215,7 @@ async function run() {
         // own words, at two separate points in the codebase — this is a
         // deliberate, repeatedly-stated design rule, not a silent gap
         // this audit is the first to notice.
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(proseIncludes(canvasSource, 'Nothing here persists it to a `StorageProvider`, broadcasts it'),
             '3. WorldEncounterCanvas.js states directly, in its own header, that a resolved encounter is never persisted to storage.');
         assert(proseIncludes(canvasSource, 'None of it is persisted, and none of it is written into any'),

@@ -8,6 +8,7 @@ import {
     executeDiscoverSnapshotCandidatesCommandWithOutcome
 } from '../application/DiscoverSnapshotCandidatesCommand.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.589 — Distinguish Snapshot Discovery Absence from Discovery
 // Failure.
@@ -350,7 +351,7 @@ async function runTests() {
         assert(!/corrupt|unreadable|deserialize/i.test(rendererSource),
             '36. renderer/WorldRenderer.js still asserts no reason for an absent Structure Document — I3b remains out of this milestone\'s scope, confirmed live');
 
-        const worldEncounterCanvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const worldEncounterCanvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(!/have been announced/i.test(worldEncounterCanvasSource),
             '37. ui/components/WorldEncounterCanvas.js makes no equivalent "have been announced" claim over a discovery result');
 

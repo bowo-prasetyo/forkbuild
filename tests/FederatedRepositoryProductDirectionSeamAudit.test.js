@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.330 — Federated Repository Product Direction & Seam Audit.
 //
@@ -175,7 +176,7 @@ async function run() {
         // B4. Decentralized — identity-scoped lookup only, no free-text
         // browse, reconfirmed directly (0.9.329's own B8 finding, checked
         // fresh here rather than merely cited).
-        const decentralizedView = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedView = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(!/searchTerm|filterText|placeholder=.*[Ss]earch/.test(decentralizedView),
             '5. ui/views/DecentralizedPublicationsView.js still has no free-text search/browse affordance — a known contentReference/txid/anchorId in, evidence out, reconfirmed fresh.');
 

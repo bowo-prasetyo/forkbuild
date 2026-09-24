@@ -15,6 +15,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.571 — Observer-Local / Authoritative Placement Presentation Closure
 // Reassessment.
@@ -290,7 +291,7 @@ async function run() {
         // claim-resolution module — the two mechanisms are not merely
         // "not wired together today," they are structurally incapable of
         // interacting.
-        const canvasSource = codeOnly(await readSource('ui/components/WorldEncounterCanvas.js'));
+        const canvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'));
         assert(!canvasSource.includes('SnapshotWorldPositionClaim') && !canvasSource.includes('claimedPosition'),
             'B5. ui/components/WorldEncounterCanvas.js neither imports application/SnapshotWorldPositionClaim.js nor reads claimedPosition anywhere in its own source — the independence B1-B4 exercised behaviorally is also structural, not incidental.');
 

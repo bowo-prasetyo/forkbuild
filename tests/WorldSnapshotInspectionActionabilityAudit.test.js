@@ -23,6 +23,7 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.178 — World Snapshot Inspection Actionability Audit.
 //
@@ -287,18 +288,20 @@ function stripLineComments(source) {
 // these functions (e.g. `discoverSelectedSnapshot()`, an explicit,
 // Wanderer-initiated action, calling `discoverSnapshotCommand` — a
 // completely different question from whether INSPECTION itself does).
+// Methods moved into ./worldEncounterCanvas/ modules sit at four spaces, not
+// eight; a null `nextName` means `name` is the last method of its module.
 function extractComputedBody(source, name, nextName) {
-    const startMarker = `        ${name}() {`;
-    const startIndex = source.indexOf(startMarker);
-    assert(startIndex !== -1, `sanity — ${name}() is found verbatim in WorldEncounterCanvas.js`);
-    const nextMarker = `        ${nextName}() {`;
+    const start = new RegExp(`\\n( {8}| {4})${name}\\(\\) \\{`).exec(source);
+    assert(start !== null, `sanity — ${name}() is found verbatim in WorldEncounterCanvas.js`);
+    const startIndex = start.index + 1;
+    const nextMarker = nextName === null ? '\n};' : `${start[1]}${nextName}() {`;
     const endIndex = source.indexOf(nextMarker, startIndex);
     assert(endIndex !== -1, `sanity — ${nextName}() (the next computed) is found after ${name}()`);
     return source.slice(startIndex, endIndex);
 }
 
 async function run() {
-    const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const snapshotInspectionSource = await readFile(new URL('../application/WorldSnapshotInspection.js', import.meta.url), 'utf8');
 
     // ---------------------------------------------------------------
@@ -341,7 +344,7 @@ async function run() {
         const canvasCodeOnly = stripLineComments(canvasSource);
         const unregisterCallCount = (canvasCodeOnly.match(/unregisterMaterializedSnapshotWorldSource\(/g) || []).length;
         assert(unregisterCallCount === 1, `4b. unregisterMaterializedSnapshotWorldSource() is called from exactly ONE place in actual code (comments aside) — found ${unregisterCallCount}`);
-        const unregisterSelectedSnapshotBody = extractComputedBody(canvasSource, 'unregisterSelectedSnapshot', 'discoverPublication');
+        const unregisterSelectedSnapshotBody = extractComputedBody(canvasSource, 'unregisterSelectedSnapshot', null);
         assert(unregisterSelectedSnapshotBody.includes('unregisterMaterializedSnapshotWorldSource('),
             '4c. that one call site is inside unregisterSelectedSnapshot() itself');
 
@@ -805,7 +808,7 @@ async function run() {
         // the ONE call site is that one action method, never a computed.
         assert(canvasSource.includes('unregisterMaterializedSnapshotWorldSource'),
             '4. unregisterMaterializedSnapshotWorldSource() is now wired into WorldEncounterCanvas.js (0.9.179) — the 0.9.178 finding, acted on');
-        const unregisterSelectedSnapshotBody = extractComputedBody(canvasSource, 'unregisterSelectedSnapshot', 'discoverPublication');
+        const unregisterSelectedSnapshotBody = extractComputedBody(canvasSource, 'unregisterSelectedSnapshot', null);
         assert(unregisterSelectedSnapshotBody.includes('unregisterMaterializedSnapshotWorldSource('),
             '4b. unregisterSelectedSnapshot() is that one call site');
 

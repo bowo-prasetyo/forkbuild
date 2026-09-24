@@ -13,6 +13,7 @@ import { ArweaveAnchorPublisher } from '../anchoring/ArweaveAnchorPublisher.js';
 import { executePublicationDistribution } from '../application/PublicationDistributionExecutor.js';
 import { composePublicationDistributionRuntime } from '../application/PublicationDistributionRuntimeComposition.js';
 import { resolveArweaveAnnouncementPublisherOptions } from '../application/PublicationDistributionConfigurationProvider.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.489 — Arweave Announcement/Discovery Capability Boundary Audit.
 //
@@ -284,7 +285,7 @@ async function run() {
         // relocation — see that file's own header); its own gating
         // (:disabled="distributionExecuting", the same busy-state guard,
         // never an availability guard) is unmodified.
-        const canvasSource = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         const worldDistributionDialogSource = await source('ui/components/WorldDistributionDialog.js');
         check(/<option value="arweave">Arweave<\/option>/.test(worldDistributionDialogSource), 'B4. REACHABLE? — YES. the real <select> already offers "Arweave" as a live, clickable choice, gated only by :disabled="distributionExecuting" (a busy-state guard, never an availability guard)');
         check(!/<option value="arweave"[^>]*disabled/.test(worldDistributionDialogSource), 'B5. ...and that <option> itself carries no conditional disabled attribute of its own tied to capability availability');

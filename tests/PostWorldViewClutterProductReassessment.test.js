@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.362 — Post-World-View-Clutter Product Reassessment.
 //
@@ -86,7 +86,7 @@ function countMatches(source, pattern) {
 
 async function run() {
     const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
-    const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
     const canvasCodeOnly = codeOnlySource(canvasSource);
     const ownPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
     const dialogSource = await rawSource('ui/components/WorldDistributionDialog.js');

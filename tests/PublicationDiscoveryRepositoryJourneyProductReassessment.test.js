@@ -54,6 +54,7 @@ import { describeObserverLocalPublicationEncounter } from '../core/ObserverLocal
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 
 import { findRawStatusInterpolations, sweepDirectory, OVERCLAIM_WORDS } from './support/RawStatusInterpolationSweep.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.585 — Publication Discovery & Repository Journey Product
 // Reassessment.
@@ -571,7 +572,7 @@ async function main() {
         // site (confirmed exact source, unmodified since 0.9.556/0.9.584)
         // takes exactly `publication.documentId` — never `.id` or
         // `.contentHash`.
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/focusWorld\(publication\.documentId\)/.test(worldViewSource),
             'F2. Explore\'s real call site (exploreEncounteredPublicationCommand) navigates on publication.documentId, exactly the field Section F1\'s own discovered Publication carries forward unmodified.');
 
@@ -956,7 +957,7 @@ async function main() {
         // actually wired into ui/components/WorldEncounterCanvas.js's
         // own template (never the bare enum word for THIS family
         // either, per 0.9.528's own closure).
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/describeSnapshotResolutionOutcomeLabel\(/.test(canvasSource) || /describeSnapshotAttributionOutcomeLabel\(/.test(canvasSource),
             'M4. WorldEncounterCanvas.js\'s own template actually calls through the humanizing label functions Section E exercised, not the bare outcome string.');
 
@@ -1011,7 +1012,7 @@ async function main() {
 
         // 5. User explores P1 in World — the real navigation call site
         // (Section F2) targets P1's own documentId.
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/focusWorld\(publication\.documentId\)/.test(worldViewSource), 'N5. Explore navigates on P1.documentId, the real production call site.');
 
         // 6. User opens P1 in Editor — publishes a real Document at that

@@ -21,6 +21,7 @@ import { PlaceNamingDiscoveryMonitor } from '../application/PlaceNamingDiscovery
 import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
 import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
 import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.269 — Nearby Place Naming Claim Adoption Status Indicator.
 //
@@ -706,7 +707,7 @@ async function runTests() {
     // Section R — source-level regression: no second source of truth.
     // -------------------------------------------------------------
     {
-        const worldViewCode = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewCode = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
 
         assert(!/adoptedClaimIds/.test(worldViewCode),
             '44. ui/views/WorldView.js defines no "adoptedClaimIds"-shaped second store of its own — every findable reference to a claim being known comes from session.hasPlaceNamingClaim(), never a UI-maintained list.');

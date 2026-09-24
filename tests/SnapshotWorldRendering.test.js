@@ -23,6 +23,7 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.161 — Snapshot World Rendering.
 //
@@ -622,7 +623,7 @@ async function run() {
         assert(!/viewport|visible|camera|mesh|scene/i.test(bridgeCodeOnly),
             '2. no viewport/visibility/camera/rendering vocabulary appears anywhere in the bridge\'s own executable code — unchanged from 0.9.160\'s own sweep');
 
-        const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const canvasCodeOnly = canvasSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         // 0.9.138/0.9.144 already gave this file legitimate, UNRELATED
         // "snapshot" vocabulary of their own — distributing/discovering a

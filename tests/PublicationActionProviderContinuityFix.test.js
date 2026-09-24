@@ -23,6 +23,7 @@ import { World } from '../core/World.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.597 — Publication Action Provider Continuity Fix.
 //
@@ -168,7 +169,7 @@ async function run() {
         assert(/_findPublications\(documentId\) \{\s*\n\s*if \(!this\._discoveryProvider/.test(sessionSource),
             'A8. `_findPublications()` — the fork-policy/`_isKnownPublication()` choke point — still reads `_discoveryProvider` directly, completely untouched by this milestone.');
 
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/decentralizedPublicationDiscoveryProvider: decentralizedDiscoveryProviderForEnrichment/.test(worldViewSource),
             'A9. ui/views/WorldView.js threads the SAME already-injected decentralizedDiscoveryProviderForEnrichment through to CreateWorldViewUseCase.js\'s new parameter.');
 

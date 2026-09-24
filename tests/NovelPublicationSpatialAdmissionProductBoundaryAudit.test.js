@@ -25,7 +25,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.551 — Novel Publication Spatial Admission Product Boundary Audit.
 //
@@ -428,7 +428,7 @@ async function runTests() {
             || /does an ALREADY-KNOWN, ALREADY-AUTHORITATIVE/.test(cascadeHeader),
             'C1. The cascade\'s own header names its ONE admission question explicitly: does an already-known, already-authoritative WorldPlacement exist for this publicationId.');
 
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/resolvePlacementInfo:\s*\(publicationId\)\s*=>\s*session\.getPlacementInfoForPublication\(publicationId\)/.test(worldViewSource),
             'C2. The real composition root wires resolvePlacementInfo to session.getPlacementInfoForPublication(publicationId) — never a claim, never a signature check performed inline.');
 
@@ -515,7 +515,9 @@ async function runTests() {
             'application/ObserverLocalEncounterStore.js',
             'core/ObserverLocalPublicationEncounter.js',
             'ui/views/WorldView.js',
-            'ui/components/WorldEncounterCanvas.js'
+            'ui/components/WorldEncounterCanvas.js',
+            // WorldEncounterCanvas.js's own observer-local methods, moved out of it.
+            'ui/components/worldEncounterCanvas/observerLocalEncounterMethods.js'
         ]);
         let hits = '';
         try {

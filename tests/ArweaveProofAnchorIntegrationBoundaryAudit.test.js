@@ -20,6 +20,7 @@ import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofV
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.426 — Arweave Proof/Anchoring Integration Boundary Audit.
 //
@@ -298,7 +299,7 @@ async function run() {
         const coordinator = new PublicationAnchorCreationCoordinator({ execute: async () => { throw new Error('never called'); } }, publisherRegistry);
         check(coordinator.availableAnchorTypes().length === 1 && coordinator.availableAnchorTypes()[0] === 'arweave', 'B1. registering only the real ArweaveAnchorPublisher makes it the sole reported anchorType — no default, no hidden second entry');
 
-        const viewSource = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const startMarker = 'v-for="anchorType in availableAnchorTypes"';
         const startIndex = viewSource.indexOf(startMarker);
         check(startIndex !== -1, 'B2. the real view still contains the generic availableAnchorTypes v-for this audit is about to slice out');

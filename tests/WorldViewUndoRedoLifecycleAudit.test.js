@@ -28,6 +28,7 @@ import { CheckRecoveryUseCase } from '../application/CheckRecoveryUseCase.js';
 import { RecoverDocumentUseCase } from '../application/RecoverDocumentUseCase.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
 import { InputRouter } from '../application/InputRouter.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.211 — World View Undo/Redo Lifecycle Audit.
 //
@@ -213,7 +214,7 @@ async function run() {
     //    which no purely behavioral test could prove by itself.
     // -------------------------------------------------------------
     {
-        const worldViewSource = await readFile(new URL('../ui/views/WorldView.js', import.meta.url), 'utf8');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = worldViewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         for (const refName of ['canUndo', 'canRedo', 'undoLabel', 'redoLabel']) {
@@ -251,7 +252,7 @@ async function run() {
     // -------------------------------------------------------------
     let extractedHandlers; // shared with Section I below
     {
-        const worldViewSource = await readFile(new URL('../ui/views/WorldView.js', import.meta.url), 'utf8');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
 
         function extractFunction(source, name) {
             const marker = `function ${name}(`;
@@ -590,7 +591,7 @@ async function run() {
         // Structural half: World View's own undo/redo has NOTHING like
         // this wired up at all — no special path exists because no path
         // exists, period.
-        const worldViewSource = await readFile(new URL('../ui/views/WorldView.js', import.meta.url), 'utf8');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const navSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
         assert(!/autosave|recovery/i.test(worldViewSource), '66. ui/views/WorldView.js contains no autosave/recovery reference of any kind (case-insensitive) — World View\'s Undo/Redo has no autosave/recovery surface to interact with');
         assert(!/autosave|recovery/i.test(navSource), '67. application/WorldNavigationSession.js likewise contains no autosave/recovery reference — confirms the invariant holds by construction (nothing exists to special-case), not merely by omission of a bug');
@@ -804,7 +805,7 @@ async function run() {
         // makes I1-I5's extracted-source behavior above representative
         // of the real component's actual mount/unmount wiring, not just
         // of a hypothetical reimplementation.
-        const worldViewSource = await readFile(new URL('../ui/views/WorldView.js', import.meta.url), 'utf8');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const structuralCodeOnly = worldViewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         const addKeydownMatches = structuralCodeOnly.match(/window\.addEventListener\('keydown',\s*onKeyDown\)/g) || [];
         const removeKeydownMatches = structuralCodeOnly.match(/window\.removeEventListener\('keydown',\s*onKeyDown\)/g) || [];
@@ -854,7 +855,7 @@ async function run() {
     // milestone's brief calls for by name.
     // -------------------------------------------------------------
     {
-        const worldViewSource = await readFile(new URL('../ui/views/WorldView.js', import.meta.url), 'utf8');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = worldViewSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         const navSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
         const panelSource = await readFile(new URL('../ui/components/HistoryTimelinePanel.js', import.meta.url), 'utf8');

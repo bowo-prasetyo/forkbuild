@@ -13,6 +13,7 @@ import {
 import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';
 import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
 import { resolveNostrPublisherOptions } from '../application/PublicationDistributionConfigurationProvider.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.358 — Publication Discovery Tag Convergence Audit.
 //
@@ -183,8 +184,8 @@ async function run() {
         // WorldView.js may DISCUSS the literal in comments (both already
         // do, extensively — 0.9.357's own headers), but neither may
         // contain it as a live string literal in actual code.
-        const canvasCodeOnly = codeOnly(await readSource('ui/components/WorldEncounterCanvas.js'));
-        const viewCodeOnly = codeOnly(await readSource('ui/views/WorldView.js'));
+        const canvasCodeOnly = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'));
+        const viewCodeOnly = codeOnly((await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n'));
         assert(!canvasCodeOnly.includes("'forkbuild-publication'"),
             '5. WorldEncounterCanvas.js\'s own non-comment code never re-types the canonical literal — it only ever receives it through defaultDiscoveryTag.');
         assert(!viewCodeOnly.includes("'forkbuild-publication'"),
@@ -326,7 +327,7 @@ async function run() {
         // discoveryTag at all, by construction.
         assert(typeof WorldEncounterCanvas.watch === 'undefined' || !('defaultDiscoveryTag' in (WorldEncounterCanvas.watch || {})),
             '4. no watcher of any kind is declared on defaultDiscoveryTag — the seed-then-forget contract is structural, not merely observed in this one run.');
-        const canvasCodeOnly = codeOnly(await readSource('ui/components/WorldEncounterCanvas.js'));
+        const canvasCodeOnly = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'));
         assert(!/watch\s*:\s*\{/.test(canvasCodeOnly),
             '5. this component declares no watch: block at all — confirmed directly against source, not merely the exported options object.');
     }
@@ -338,7 +339,7 @@ async function run() {
     // discovery-protocol changes.
     // ===============================================================
     {
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const methodStart = canvasSource.indexOf('discoverPublication() {');
         const methodBlock = canvasSource.slice(methodStart, canvasSource.indexOf('\n        },', methodStart));
         assert(methodBlock.includes('this.discoveryCommand({ objectId, discoveryTag })'),
@@ -433,7 +434,7 @@ async function run() {
         // snapshotAttributionResult) is called with the selected
         // Publication object itself, NEVER with this.discoveryTag —
         // confirmed directly against source, not assumed from naming.
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const snapshotDiscoveryCallIndex = canvasSource.indexOf('.discoverSnapshotCommand(publication)');
         assert(snapshotDiscoveryCallIndex !== -1,
             '4. Snapshot\'s own discovery call is invoked with the Publication object itself — never with this.discoveryTag or this.defaultDiscoveryTag.');
@@ -529,7 +530,7 @@ async function run() {
         // WorldView.js's own template forwards the value with no wrapper —
         // confirmed again here as the composition-boundary claim (a
         // wrapper would be a second, hidden authority).
-        const viewSource = await readSource('ui/views/WorldView.js');
+        const viewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(viewSource.includes(':defaultDiscoveryTag="publicationDiscoveryTag"'),
             '3. WorldView.js still forwards the injected value with no wrapper function of its own — no hidden second authority introduced at the boundary.');
     }

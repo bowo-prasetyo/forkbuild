@@ -8,6 +8,7 @@ import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshot
 import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.479 — Walking-Triggered Nearby Discovery Source Convergence Audit.
 //
@@ -105,7 +106,7 @@ async function run() {
         // A1. The walking-triggered nearby discovery monitor really is
         // wired to fire from movement, inside WorldView's own existing
         // spatial cadence — never a second polling loop of its own.
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/worldSnapshotDiscoveryMonitor\.observe\(spatialContext\.value\)/.test(worldViewSource),
             '1. WorldSnapshotDiscoveryMonitor#observe() is called from WorldView.js, fed the same spatialContext every other spatial-cadence field on the same tick already reads.');
         assert(/function refreshSpatialUI\(\)[\s\S]*worldSnapshotDiscoveryMonitor\.observe/.test(worldViewSource),

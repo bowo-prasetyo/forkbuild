@@ -6,6 +6,7 @@ import { Structure } from '../core/Structure.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { compareBlueprintSimilarity, isPossibleLineageCandidate, DEFAULT_SIMILARITY_THRESHOLD } from '../core/BlueprintSimilarity.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.592 — Editor Similarity Ranking Boundary Audit.
 //
@@ -117,9 +118,9 @@ async function run() {
     // ===============================================================
     let editorSource;
     {
-        editorSource = await source('ui/views/EditorView.js');
+        editorSource = (await Promise.all(editorViewFiles().map((file) => source(file)))).join('\n');
 
-        assert(/import \{ compareBlueprintSimilarity, isPossibleLineageCandidate \} from '\.\.\/\.\.\/core\/BlueprintSimilarity\.js';/.test(editorSource),
+        assert(/import \{ compareBlueprintSimilarity, isPossibleLineageCandidate \} from '\.\.\/\.\.\/\.\.\/core\/BlueprintSimilarity\.js';/.test(editorSource),
             n("A1. EditorView.js imports the similarity function and its threshold-filter sibling from core/, never redefines either — candidate acquisition and ordering are two different things from the score's own computation, and only the latter is owned by core/"));
 
         assert(/function computeSimilarityCandidates\(structure, lineage\) \{/.test(editorSource),
@@ -313,7 +314,8 @@ async function run() {
             return out.split('\n').filter(Boolean);
         }));
         const [uiHits, appHits, coreHits] = matches;
-        assert(uiHits.every((line) => line.startsWith('ui/views/EditorView.js') || line.startsWith('ui/components/StructureInfoPanel.js')),
+        // EditorView.js computes it in its own structure inspection module.
+        assert(uiHits.every((line) => line.startsWith('ui/views/editorView/useStructureInspection.js') || line.startsWith('ui/components/StructureInfoPanel.js')),
             n('D1. every ui/ reference to the similarity module is in EditorView.js (computes) or StructureInfoPanel.js (renders the label via describeBlueprintSimilarity, a different export) — no third UI surface touches it'));
         assert(appHits.every((line) => line.startsWith('application/BlueprintLineageUseCase.js')),
             n('D2. the one application/ hit is BlueprintLineageUseCase.js\'s own header COMMENT explicitly saying it never calls compareBlueprintSimilarity() — confirmed a negative reference, not a second consumer'));
@@ -340,7 +342,7 @@ async function run() {
         // even appear — the exact combination that makes EditorView.js's
         // own similarity sort distinctive.
         assert(nonTrivialUiSorts.length === 3
-            && nonTrivialUiSorts.some((l) => l.includes('EditorView.js'))
+            && nonTrivialUiSorts.some((l) => l.includes('editorView/useStructureInspection.js'))
             && nonTrivialUiSorts.some((l) => l.includes('WorldCollaborationRoster.js'))
             && nonTrivialUiSorts.some((l) => l.includes('PublicationPagination.js')),
             n(`D4a. exactly three non-trivial (non-date/name/radius) .sort() calls exist in ui/ today — EditorView.js (similarity), WorldCollaborationRoster.js (role/online/name), and PublicationPagination.js (page numbers) — found: ${JSON.stringify(nonTrivialUiSorts.map((l) => l.split(':')[0]))}`));

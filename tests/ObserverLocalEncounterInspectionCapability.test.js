@@ -23,6 +23,7 @@ import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.554 — Observer-Local Encounter Inspection Capability.
 //
@@ -752,7 +753,7 @@ async function runTests() {
     // ===============================================================
     {
         const fs = await import('node:fs/promises');
-        const canvasSource = await fs.readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => fs.readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const blockStart = canvasSource.indexOf('world-encounter-observer-local-marker');
         const block = canvasSource.slice(blockStart, canvasSource.indexOf('</g>', blockStart));
         assert(block.includes('@click="selectObserverLocalEncounter(marker)"'), 'L1. The marker binds @click to selectObserverLocalEncounter(), by name.');

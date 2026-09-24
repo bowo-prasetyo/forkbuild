@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.402 — Evidence Export Comparison Entry-Point Decision Audit.
 //
@@ -224,7 +225,7 @@ async function run() {
         // predecessor, per 0.9.400) does not itself produce or reference
         // evidence-export documents — it produces PEER ARCHIVE exports, a
         // different document entirely, consumed by a different feature.
-        const publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(
             !publicationsSource.includes('EvidenceExport') && !publicationsSource.toLowerCase().includes('evidence export'),
             n('C7. Publications (the Leaderboard\'s own predecessor) produces peer ARCHIVE exports only — it is not itself a predecessor for evidence-export comparison, ruling out reusing 0.9.400\'s exact host page')
@@ -245,7 +246,7 @@ async function run() {
             /\{ path: '\/reconciliation-leaderboard', name: 'reconciliation-leaderboard', component: ReconciliationCandidateLeaderboardView \}/.test(routerSource),
             n('D1. /reconciliation-leaderboard (the Leaderboard\'s own route) is confirmed still registered, as the baseline for this comparison')
         );
-        const publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         const publicationsLeaderboardLinks = [...publicationsSource.matchAll(/<router-link to="\/reconciliation-leaderboard"/g)];
         assert(
             publicationsLeaderboardLinks.length === 1,

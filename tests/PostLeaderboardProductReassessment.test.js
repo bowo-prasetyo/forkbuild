@@ -10,6 +10,7 @@ import { CreatePublisherPublicationAssociationRecordUseCase } from '../applicati
 import { describePublisherRankingPolicy, reconstructPublisherRanking } from '../application/PublisherRankingPolicy.js';
 import { reconstructPublisherLeaderboard } from '../application/PublisherLeaderboardView.js';
 import PublisherPerformanceLeaderboardView from '../ui/views/PublisherPerformanceLeaderboardView.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.419 — Post-Leaderboard Product Reassessment.
 //
@@ -138,7 +139,7 @@ async function run() {
     console.log('Running Post-Leaderboard Product Reassessment tests...\n');
 
     const routerSource = await readSource('ui/router/index.js');
-    const publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+    const publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
     const performanceViewSource = await readSource('ui/views/PublisherPerformanceLeaderboardView.js');
     const reconciliationViewSource = await readSource('ui/views/ReconciliationCandidateLeaderboardView.js');
     const archiveSource = await readSource('application/PublicationObservationArchive.js');

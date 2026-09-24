@@ -7,6 +7,7 @@ import { PublicationDistributionLifecyclePersistenceBridge } from '../applicatio
 import { PublicationDistributionLifecycleRestorer } from '../application/PublicationDistributionLifecycleRestorer.js';
 import { hydratePublicationDistributionLifecycles } from '../application/PublicationDistributionLifecycleHydration.js';
 import { describePublicationDistributionLifecycle, PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.100 — Publication Distribution World View Integration.
 //
@@ -412,8 +413,7 @@ async function runTests() {
     // Section K — architectural regression: ui/components/WorldEncounterCanvas.js
     // -------------------------------------------------------------
     {
-        const canvasSourceUrl = new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url);
-        const canvasSource = await readFile(canvasSourceUrl, 'utf8');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const canvasCodeOnly = canvasSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(!/ArweavePublicationMaterialUploader|NostrPublicationDiscoveryPublisher|PublicationDistributionExecutor|PublicationDistributionOrchestrator|PublicationDistributionRuntimeComposition|transitionPublicationDistributionLifecycle|PublicationDistributionLifecycleMemoryStore/.test(canvasCodeOnly),

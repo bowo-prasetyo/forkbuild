@@ -14,6 +14,7 @@ import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterM
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.144 — World View Snapshot Attribution Integration.
 //
@@ -502,7 +503,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-        const canvasCode = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+        const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
 
         const forbiddenInUi = [
             'computeContentHash', 'TextDecoder',
@@ -533,17 +534,17 @@ async function runTests() {
             '28c. attributeSelectedSnapshot() (0.9.154) contains its own, independent call site');
         assert((canvasCode.match(/resolveSnapshotPublicationAttribution\(/g) || []).length === 1,
             '29. WorldEncounterCanvas.js calls resolveSnapshotPublicationAttribution() from exactly one place');
-        assert(panelCode.includes("from '../../application/SnapshotPublicationAttribution.js'") && canvasCode.includes("from '../../application/SnapshotPublicationAttribution.js'"),
+        assert(panelCode.includes("from '../../application/SnapshotPublicationAttribution.js'") && canvasCode.includes("from '../../../application/SnapshotPublicationAttribution.js'"),
             '30. both UI files import the SAME application-layer seam — no second, parallel comparison implementation');
 
         // Snapshot Distribution stays entirely untouched by this
         // milestone — no automatic attribution during distribution.
         assert((panelCode.match(/distributeOwnSnapshot\(\)\s*\{[\s\S]*?\n\s{8}\},/) || [''])[0].indexOf('resolveSnapshotPublicationAttribution') === -1,
             '31. distributeOwnSnapshot() never calls resolveSnapshotPublicationAttribution() — distribution and attribution stay independent');
-        assert((canvasCode.match(/distributeSelectedSnapshot\(\)\s*\{[\s\S]*?\n\s{8}\},/) || [''])[0].indexOf('resolveSnapshotPublicationAttribution') === -1,
+        assert((canvasCode.match(/distributeSelectedSnapshot\(\)\s*\{[\s\S]*?\n\s{4}\},/) || [''])[0].indexOf('resolveSnapshotPublicationAttribution') === -1,
             '32. distributeSelectedSnapshot() never calls resolveSnapshotPublicationAttribution() either');
 
-        const viewCode = await codeOnlySource('ui/views/WorldView.js');
+        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(/<WorldEncounterCanvas[\s\S]{0,600}:discoverSnapshotCommand="discoverOwnSnapshot"/.test(viewCode),
             '33. WorldEncounterCanvas is wired to the SAME discoverOwnSnapshot function OwnPublicationPanel already uses — one seam, two entry points');
         assert(/<OwnPublicationPanel[\s\S]{0,400}:discoverSnapshotCommand="discoverOwnSnapshot"/.test(viewCode),

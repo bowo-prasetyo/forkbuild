@@ -18,6 +18,7 @@ import { CheckRecoveryUseCase } from '../application/CheckRecoveryUseCase.js';
 import { RecoverDocumentUseCase } from '../application/RecoverDocumentUseCase.js';
 import { DiscardRecoveryUseCase } from '../application/DiscardRecoveryUseCase.js';
 import { CreatePersistenceUseCase } from '../application/CreatePersistenceUseCase.js';
+import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.203 — Post-Lifecycle Product Reassessment.
 //
@@ -95,7 +96,7 @@ async function runTests() {
     // found missing from this exact surface.
     // ---------------------------------------------------------------
     {
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const componentTags = new Set((worldView.match(/<[A-Z][A-Za-z]+/g) || []).map((tag) => tag.slice(1)));
         const expectedFamilies = [
             'AvatarInfoPanel', 'NearbyAvatarsPanel', 'CompassIndicator',
@@ -221,7 +222,7 @@ async function runTests() {
         // yet" snapshot below is current. See docs/Roadmap.md, 0.9.204,
         // and tests/PostRecoveryProductReassessment.test.js's own C1 for
         // the 0.9.206 reconfirmation that this closure holds.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/new CreatePersistenceUseCase\(\)\.execute\(\)/.test(editorViewSource), 'C3a. EditorView.js still composes CreatePersistenceUseCase directly');
         const destructureMatch = editorViewSource.match(/const \{([^}]*)\}\s*=\s*new CreatePersistenceUseCase\(\)\.execute\(\)/);
         assert(destructureMatch, 'C3b. the destructuring assignment is findable');

@@ -21,6 +21,7 @@ import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
 import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
 import { WorldCommandPropagationUseCase } from '../application/WorldCommandPropagationUseCase.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.217 — Wire World Presence Activity Refresh.
 //
@@ -190,7 +191,7 @@ async function runTests() {
 // Section A — static wiring proof.
 // ---------------------------------------------------------------------
 {
-    const worldViewSource = await readFile(new URL('../ui/views/WorldView.js', import.meta.url), 'utf8');
+    const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const navigationSessionSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
 
     // A1 — the method itself is unchanged: still a real implementation,
@@ -418,7 +419,7 @@ async function runTests() {
 // none of the machinery 0.9.197-0.9.203 deliberately kept separate.
 // ---------------------------------------------------------------------
 {
-    const worldViewSource = await readFile(new URL('../ui/views/WorldView.js', import.meta.url), 'utf8');
+    const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const membershipCallbackMatch = worldViewSource.match(/session\.onWorldMembershipChanged\(presentWorldDocumentId, \(\) => \{([\s\S]*?)\}\);/);
     assert(membershipCallbackMatch, 'F0. the callback this milestone extends is still present');
     const callbackBody = membershipCallbackMatch[1];

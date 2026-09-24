@@ -20,6 +20,7 @@ import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.607 — Publication Discovery Persistence Boundary Audit.
 //
@@ -259,7 +260,7 @@ async function run() {
 
         // B2. Trace upstream: what admitToRepositoryDiscovery() is
         // actually HANDED already came from somewhere durable.
-        const siblingSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const siblingSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/entry\.view = await resolvePublicationView\(entry\.publication, \{ coordinator, kindPlugins \}\);/.test(siblingSource),
             '2. ui/views/DecentralizedPublicationsView.js\'s own resolveEntry() resolves FROM entry.publication — a catalog entry, never a value it invented itself.');
         assert(/const current = catalog\.list\(\);/.test(siblingSource),
@@ -496,7 +497,7 @@ async function run() {
         // G2. Both real admission gates likewise never reference
         // placement (reconfirms tests/RepositoryAdmissionVerificationBoundaryClosureAudit.test.js's
         // own Section H3, cited rather than re-derived).
-        const siblingSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const siblingSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         const siblingGateStart = siblingSource.indexOf('function admitToRepositoryDiscovery(view) {');
         const siblingGateBody = siblingSource.slice(siblingGateStart, siblingSource.indexOf('\n        }', siblingGateStart));
         assert(!/PlacementRecord|placementRegistry|PlacePublicationUseCase/.test(siblingGateBody),

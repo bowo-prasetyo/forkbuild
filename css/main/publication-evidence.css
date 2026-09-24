@@ -1,0 +1,677 @@
+/* 0.8.3 — Publication Center: External Evidence UX. Nests inside
+   .identity-mgmt-card (ui/views/DecentralizedPublicationsView.js),
+   reusing .peer-badge/.action-btn--secondary/.form-hint--neutral
+   wholesale — the same "compose the existing card language, add only
+   what's genuinely new" restraint .peer-connections-view's own comment
+   above already states. What's new here is the "known evidence" summary
+   line, the per-anchor evidence card, and one additional .peer-badge
+   color (.peer-badge--unchecked) for "not yet verified" — deliberately
+   distinct from .peer-badge--pending, which this view reuses for a
+   verification that WAS attempted and came back honestly inconclusive
+   (PROOF_UNAVAILABLE/VALID_PROOF_UNVERIFIED) — "never asked" and "asked,
+   couldn't tell" are different states and get different colors. */
+.evidence-section {
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.evidence-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.evidence-summary-title {
+    font-weight: 600;
+    color: #c9c9c9;
+    font-size: 0.85rem;
+}
+
+.evidence-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.evidence-anchor-card {
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    padding: 0.75rem 0.9rem;
+}
+
+.evidence-anchor-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.evidence-anchor-type {
+    font-weight: 600;
+    color: #e0e0e0;
+    font-size: 0.88rem;
+}
+
+.evidence-fields {
+    margin: 0.5rem 0 0.75rem;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: 0.6rem;
+    row-gap: 0.2rem;
+}
+
+.evidence-field {
+    display: contents;
+}
+
+.evidence-field dt {
+    color: #808080;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.evidence-field dd {
+    margin: 0;
+    color: #c9c9c9;
+    font-size: 0.78rem;
+    font-family: monospace;
+    word-break: break-all;
+}
+
+.peer-badge--unchecked {
+    background: rgba(144, 144, 144, 0.15);
+    color: #909090;
+}
+
+/* 0.8.13 — Multi-Evidence Comparison & Conflict UX. Sits between
+   .evidence-summary and the per-anchor .evidence-list above/below it,
+   reusing .form-hint--neutral for every line of plain text — the one
+   deliberately NEW visual element is the amber .evidence-convergence-
+   conflict line, and even that is a warning about disagreement, never a
+   verdict about which claim to believe. Groups are laid out as equal,
+   same-sized cards in a row — no group is made larger, bolder, or
+   positioned first to imply it is more likely correct than another. */
+.evidence-convergence {
+    margin-top: 0.75rem;
+    padding: 0.75rem 0.9rem;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+}
+
+.evidence-convergence-title {
+    display: block;
+    font-weight: 600;
+    color: #c9c9c9;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.evidence-convergence-groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.evidence-convergence-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.5rem 0.7rem;
+    background: #1e1e1e;
+    border: 1px solid #2f2f2f;
+    border-radius: 5px;
+    min-width: 9rem;
+}
+
+.evidence-convergence-hash {
+    font-family: monospace;
+    font-size: 0.78rem;
+    color: #c9c9c9;
+    word-break: break-all;
+}
+
+.evidence-convergence-conflict {
+    margin: 0.6rem 0 0;
+    font-size: 0.78rem;
+    color: #e0a34c;
+}
+
+/* 0.9.525 — Repository Discovery & Material Trust Product
+   Reassessment. Reuses the identical amber (#e0a34c) .evidence-
+   convergence-conflict already established for "the known evidence
+   disagrees, never a verdict about who to believe" — this is the
+   identical structural warning, one level up, about a NAME rather than
+   a content hash. */
+.author-identity-convergence-notice {
+    margin: 0.35rem 0 0.75rem;
+    font-size: 0.8rem;
+    color: #e0a34c;
+}
+
+/* 0.8.27 — Unified Publication Decentralization View. Sits ABOVE
+   .evidence-section/the placement equivalent, always visible once either
+   dimension has a known claim — never gated behind "Show Evidence"/"Show
+   Placements" the way .evidence-convergence above is. Reuses the
+   identical dark-card, neutral-tone language .evidence-convergence
+   already established; the two .decentralization-dimension cards are
+   equal-width siblings in a row, neither styled, sized, or ordered to
+   read as more significant than the other, and .evidence-convergence-
+   conflict (reused, unchanged) is the only "look at this" color either
+   one ever earns — for the contrast SENTENCE, never for one dimension
+   over the other. */
+.decentralization-summary {
+    margin-top: 1rem;
+    padding: 0.75rem 0.9rem;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+}
+
+.decentralization-dimensions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.decentralization-dimension {
+    flex: 1 1 12rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.5rem 0.7rem;
+    background: #1e1e1e;
+    border: 1px solid #2f2f2f;
+    border-radius: 5px;
+}
+
+.decentralization-dimension-title {
+    font-weight: 600;
+    color: #c9c9c9;
+    font-size: 0.8rem;
+    margin-bottom: 0.15rem;
+}
+
+/* 0.8.14 — External Evidence Inspection & Locator UX. A purely
+   informational panel opened by "Inspect Evidence" — visually similar
+   to .evidence-convergence above (same dark card, same neutral tone),
+   deliberately with no "verified"/"trusted" coloring anywhere: nothing
+   here was independently checked, only read back from the anchor
+   itself. */
+.evidence-inspection {
+    margin-top: 0.75rem;
+    padding: 0.75rem 0.9rem;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+}
+
+.evidence-inspection-title {
+    display: block;
+    font-weight: 600;
+    color: #c9c9c9;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.evidence-inspection-adapter {
+    margin-top: 0.75rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.evidence-inspection-adapter-title {
+    display: block;
+    font-weight: 600;
+    color: #c9c9c9;
+    font-size: 0.8rem;
+    margin-bottom: 0.4rem;
+}
+
+/* 0.8.17 — Evidence Provenance & Observation Boundary. Same separator
+   treatment as .evidence-inspection-adapter directly above — a distinct
+   subsection within "Inspect Evidence," never restyled to look more or
+   less prominent than the claim it sits below. */
+.evidence-inspection-knowledge {
+    margin-top: 0.75rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.evidence-inspection-proof {
+    margin-top: 0.75rem;
+}
+
+.evidence-inspection-proof summary {
+    cursor: pointer;
+    color: #909090;
+    font-size: 0.78rem;
+}
+
+.evidence-inspection-proof-json {
+    margin: 0.5rem 0 0;
+    padding: 0.5rem 0.6rem;
+    background: #101010;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    color: #c9c9c9;
+    font-size: 0.72rem;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
+   Sits directly under .evidence-summary, ahead of the anchor-creation and
+   per-anchor evidence lists — "Discover from Peers" is always offered
+   (unlike "Retrieve from Peers," which hides with zero connected peers),
+   so its own result line covers the "nobody was there to ask" case
+   honestly rather than the button simply vanishing. .peer-badge--pending
+   is reused for UNAVAILABLE, the same "honestly inconclusive" amber every
+   other UNAVAILABLE-shaped state in this view already uses — never the
+   red .peer-badge--failed coloring, since nothing was rejected. */
+.evidence-discovery {
+    margin-top: 0.6rem;
+}
+
+.evidence-discovery-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+/* 0.8.31 — Replica Knowledge Provenance & Synchronization Inspection.
+   .replica-sync-breakdown reuses .evidence-fields verbatim (same dl/dt/dd
+   shape "Local Knowledge" already uses) for the two-row "New claims" /
+   "Already known" breakdown sitting under the combined synchronization
+   message — no new visual language, since this is the same kind of plain
+   fact application/PublicationKnowledgeSynchronizationView.js's own
+   message text already states, just also broken out by dimension. */
+.replica-sync-breakdown {
+    margin-top: 0.5rem;
+}
+
+/* .replica-knowledge is the "Show/Hide Replica Knowledge" disclosure
+   sitting inside .decentralization-summary, mirroring .evidence-discovery
+   immediately above in placement and restraint — a plain button, no color
+   of its own, since opening it changes nothing about what is known, only
+   how much of it is currently shown. .replica-knowledge-detail lays its
+   two dimensions side by side exactly like .decentralization-dimensions
+   already does one card up. Each .replica-knowledge-claim reuses
+   .evidence-fields' own dl/dt/dd rows (the identical shape "Local
+   Knowledge" inside "Inspect Evidence"/"Inspect Placement" already uses)
+   so a single claim row here and a single claim's own inspection panel
+   never read as two different kinds of information. */
+.replica-knowledge {
+    margin-top: 0.75rem;
+}
+
+.replica-knowledge-detail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.6rem;
+}
+
+.replica-knowledge-dimension {
+    flex: 1 1 16rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.5rem 0.7rem;
+    background: #1e1e1e;
+    border: 1px solid #2f2f2f;
+    border-radius: 5px;
+}
+
+.replica-knowledge-claim-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.replica-knowledge-claim {
+    padding: 0.5rem 0.6rem;
+    background: #161616;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+/* 0.8.180 — Reconciliation Candidate Leaderboard UI Integration */
+
+.reconciliation-leaderboard-view {
+    padding: 1.5rem;
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.reconciliation-leaderboard-note {
+    color: #909090;
+    font-size: 0.9rem;
+    max-width: 720px;
+}
+
+.reconciliation-leaderboard-summary {
+    color: #808080;
+    font-size: 0.85rem;
+    margin: 0 0 0.5rem;
+}
+
+/* 0.8.183 — Reconciliation Candidate Leaderboard Comparison State. A
+   neutral, restrained fact ("no peer" / "peer, but empty" / "peer,
+   present"), never a verdict — so it gets the identical muted treatment
+   as .reconciliation-leaderboard-summary directly above, not a
+   warning/success color implying one state is better than another. */
+.reconciliation-leaderboard-comparison-state {
+    color: #909090;
+    font-size: 0.8rem;
+    margin: 0 0 0.6rem;
+}
+
+.reconciliation-leaderboard-table-wrap {
+    overflow-x: auto;
+}
+
+.reconciliation-leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.reconciliation-leaderboard-table th {
+    text-align: center;
+    padding: 0.5rem 0.75rem;
+    color: #808080;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.reconciliation-leaderboard-table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid #232323;
+    text-align: center;
+    font-size: 0.88rem;
+    color: #d0d0d0;
+}
+
+.reconciliation-leaderboard-candidate-col {
+    text-align: left !important;
+}
+
+/* 0.8.182 — Reconciliation Candidate Evidence Detail View */
+
+.evidence-inspect-btn {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+    white-space: nowrap;
+}
+
+.evidence-detail-row td {
+    background: #191919;
+    padding: 1rem 1.25rem;
+    text-align: left;
+}
+
+.evidence-detail-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.evidence-detail-group-title {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    color: #b0b0b0;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.evidence-detail-columns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.evidence-detail-column h5 {
+    margin: 0 0 0.35rem;
+    font-size: 0.78rem;
+    color: #909090;
+    font-weight: 600;
+}
+
+.evidence-detail-empty {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #666;
+    font-style: italic;
+}
+
+/* 0.8.192 — Reconciliation Candidate Leaderboard Evidence Export
+   Comparison UI. `.evidence-export-comparison-table` renders 0.8.191's own
+   view: two metadata blocks (Comparison State / Filter) reusing
+   .evidence-fields verbatim, then up to three independent dimension
+   tables — never one combined status, never restyled to imply one
+   dimension outranks another. */
+.evidence-export-comparison-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.evidence-export-comparison-metadata-block {
+    flex: 1 1 16rem;
+}
+
+.evidence-export-comparison-dimension {
+    margin-top: 1.25rem;
+}
+
+.evidence-export-comparison-dimension-table {
+    width: 100%;
+    max-width: 28rem;
+    border-collapse: collapse;
+}
+
+.evidence-export-comparison-dimension-table th {
+    text-align: center;
+    padding: 0.5rem 0.75rem;
+    color: #808080;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.evidence-export-comparison-dimension-table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid #232323;
+    text-align: center;
+    font-size: 0.88rem;
+    color: #d0d0d0;
+}
+
+.evidence-detail-list {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.82rem;
+    color: #d0d0d0;
+    line-height: 1.5;
+}
+
+.evidence-detail-list li {
+    margin-bottom: 0.25rem;
+}
+
+/* 0.8.194 — Evidence Export Comparison Detail UI. Each dimension's own
+   summary table stays the primary surface; ".evidence-export-comparison-
+   inspect-btn" is the per-dimension toggle that reveals 0.8.193's own
+   record columns (reusing .evidence-detail-columns/.evidence-detail-column
+   verbatim) underneath that one dimension only. */
+.evidence-export-comparison-inspect-btn {
+    margin-top: 0.75rem;
+}
+
+.evidence-export-comparison-dimension .evidence-detail-columns {
+    margin-top: 0.75rem;
+}
+
+/* 0.8.196 — Evidence Comparison Identity Inspection UI. Each individual
+   decision/observation record listed under an "Inspect records" column
+   gets its own, smaller "Inspect identity" toggle directly beneath it;
+   opening it reveals 0.8.195's own named fields for that one record,
+   reusing .evidence-fields' dl/dt/dd shape verbatim (the same shape the
+   Comparison State/Filter metadata blocks already use) so an identity
+   panel never reads as a visually distinct kind of information. Neither
+   element is styled to imply a verdict — it is the same plain, muted
+   secondary-button/field treatment used everywhere else on this page. */
+.evidence-identity-inspect-btn {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.evidence-identity-fields {
+    margin: 0.4rem 0 0.2rem;
+    padding: 0.5rem 0.6rem;
+    background: #101010;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+@media (max-width: 720px) {
+    .evidence-detail-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 0.8.201 — Explicit Record-Pair Selection UI. `.evidence-export-
+   comparison-pairing` sits below the existing summary/detail/identity
+   table, reusing `.evidence-detail-group-title`/`.reconciliation-
+   leaderboard-note`/`.form-field`/`.form-input`/`.action-btn--secondary`/
+   `.evidence-detail-list`/`.evidence-detail-empty` verbatim so the pairing
+   controls and the paired-difference result read as the same plain,
+   muted, no-verdict surface as every other panel on this page — never a
+   visually distinct "important" or "flagged" treatment. */
+.evidence-export-comparison-pairing {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #232323;
+}
+
+.evidence-pair-selector {
+    margin-top: 1rem;
+}
+
+.evidence-pair-selector-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.evidence-pair-selector-controls .form-field {
+    flex: 1 1 16rem;
+}
+
+.evidence-pair-list {
+    list-style: none;
+    margin: 0.6rem 0 0;
+    padding: 0;
+    font-size: 0.82rem;
+    color: #d0d0d0;
+}
+
+.evidence-pair-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid #202020;
+}
+
+.evidence-pair-remove-btn {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.evidence-pair-differences {
+    margin-top: 1.25rem;
+}
+
+.evidence-pair-difference-group {
+    margin-top: 0.75rem;
+}
+
+.evidence-pair-difference-group h6 {
+    margin: 0 0 0.35rem;
+    font-size: 0.78rem;
+    color: #909090;
+    font-weight: 600;
+}
+
+/* 0.8.202 — Paired Record Difference Inspection UI. Each pair now renders
+   as its own row, with an "Inspect differences" toggle over that one pair's
+   own detail panel — reusing `.evidence-detail-list`/`.evidence-detail-empty`/
+   `.action-btn--secondary` verbatim, exactly like every other panel on this
+   page. */
+.evidence-pair-difference-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.evidence-pair-difference-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #202020;
+}
+
+.evidence-pair-difference-item:last-child {
+    border-bottom: none;
+}
+
+.evidence-pair-difference-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.82rem;
+}
+
+.evidence-pair-difference-index {
+    font-weight: 600;
+    color: #d0d0d0;
+}
+
+.evidence-pair-difference-count {
+    color: #909090;
+}
+
+.evidence-pair-inspect-btn {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    margin-left: auto;
+}
+
+.evidence-pair-difference-detail {
+    margin-top: 0.5rem;
+    padding-left: 0.25rem;
+    font-size: 0.8rem;
+    color: #c0c0c0;
+}
+
+.evidence-pair-difference-detail p {
+    margin: 0.2rem 0;
+}

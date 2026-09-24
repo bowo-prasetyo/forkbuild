@@ -25,6 +25,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.336 — Decentralized Publication Discovery Ingestion Seam Audit.
 //
@@ -290,7 +291,7 @@ async function run() {
         // (Section B) to resolvePublicationView(): ui/views/
         // DecentralizedPublicationsView.js. Confirmed directly, not
         // assumed from proximity.
-        const viewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(viewSource.includes("? publicationPeerExchange.onPublicationReceived(() => refreshList())"),
             '5. the real UI wires onPublicationReceived to refreshList() — a live peer announcement actually triggers this path, not merely a manual page load.');
         assert(viewSource.includes('entry.view = await resolvePublicationView(entry.publication, { coordinator, kindPlugins });') ||

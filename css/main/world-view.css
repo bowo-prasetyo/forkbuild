@@ -1,0 +1,630 @@
+/* World View */
+.world-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    position: relative;
+}
+
+.world-viewport {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    background: #121212;
+}
+
+.world-viewport canvas {
+    display: block;
+}
+
+/* World View Navigation HUD - camera coordinates and compass
+   Positioned as an overlay on the main viewport, deliberately
+   transparent and unobtrusive while remaining readable. */
+.world-view-nav-hud {
+    position: absolute;
+    top: 5rem;
+    right: 1.5rem;
+    z-index: 10;
+    background: rgba(18, 18, 18, 0.6);
+    border: 1px solid rgba(74, 74, 74, 0.5);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 180px;
+}
+
+.world-view-nav-hud-coords {
+    font-family: monospace;
+    font-size: 0.85rem !important;
+    color: #a0a0a0 !important;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+
+.world-view-nav-hud-compass {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Scale up the compass dial slightly for better visibility */
+.world-view-nav-hud .compass-indicator-dial {
+    width: 36px;
+    height: 36px;
+    --compass-radius: 15px;
+}
+
+.world-view-nav-hud .compass-indicator-label {
+    font-size: 0.9rem;
+    color: #b0b0b0;
+}
+
+/* 0.3.6 — Contextual location description */
+.world-view-nav-context {
+    font-size: 0.85rem !important;
+    color: #c0c0c0 !important;
+    margin: 0.25rem 0 0 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(74, 74, 74, 0.5);
+    font-style: italic;
+}
+
+/* 0.3.6 — Nearby structure and collaborator markers */
+.world-view-nav-markers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(74, 74, 74, 0.5);
+}
+
+.world-view-nav-marker {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem !important;
+    color: #a0a0a0 !important;
+}
+
+.world-view-nav-marker .marker-direction {
+    font-weight: bold;
+    color: #ffd700;
+    min-width: 24px;
+    text-align: center;
+}
+
+.world-view-nav-marker .marker-label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.world-view-nav-marker.collaborator .marker-direction {
+    color: #4ecdc4;
+}
+
+.world-view-nav-marker.collaborator .marker-label {
+    color: #b0e0ff;
+}
+
+/* 0.3.7 — matches .compass-indicator-marker--landmark, so a landmark's
+   HUD row and its compass dot read as one system. */
+.world-view-nav-marker.landmark .marker-direction {
+    color: #f687b3;
+}
+
+/* Original overlay style - keep for title/author info */
+/* The World View left panel — everything from the title down through
+   Avatar/Search/Tools/Editing/Worlds-in-View lives inside this one
+   floating box (see WorldView.js's template: the div opened here
+   isn't closed until after the last section, deliberately, so this
+   max-width actually bounds the whole panel). Only the top-right nav
+   HUD (.world-view-nav-hud) sits outside it. */
+.world-view-overlay {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 10;
+    background: rgba(18, 18, 18, 0.85);
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    max-width: 280px;
+    pointer-events: none;
+}
+
+.world-view-overlay h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.1rem;
+    color: #e0e0e0;
+}
+
+.world-view-overlay p {
+    margin: 0;
+    color: #909090;
+    font-size: 0.9rem;
+}
+
+.world-view-date {
+    margin-top: 0.25rem !important;
+    font-size: 0.8rem !important;
+    color: #707070 !important;
+}
+
+.world-view-hint {
+    margin-top: 0.75rem !important;
+    font-size: 0.75rem !important;
+    color: #606060 !important;
+    font-style: italic;
+}
+
+/* 0.2.22: Published vs Editing-fork badge, directly under the World
+   View title — the active document's status must be at least as
+   visible as its name, since which one you're looking at is exactly
+   what fork-on-edit can silently change without this. */
+.world-view-status {
+    margin-top: 0.15rem !important;
+    font-size: 0.8rem !important;
+    font-weight: 600;
+    color: #4caf7d !important;
+}
+
+.world-view-status--published {
+    color: #909090 !important;
+}
+
+/* 0.2.27: camera focus vs. active (editing) document — deliberately
+   subtler than .world-view-status, since it's context, not a state
+   that gates what actions are available. See
+   docs/Principles.md, "Camera Focus, Active Document, and Selection
+   Are Three Different Things." */
+.world-view-context {
+    margin: 0.2rem 0 0 !important;
+    font-size: 0.72rem !important;
+    color: #707070 !important;
+    letter-spacing: 0.01em;
+}
+
+/* Hardening: World View had no Save/Publish surface at all — the
+   Editor's Toolbar equivalent, scoped to the active document (see
+   WorldView.js's saveActiveDocument/publishActiveDocument). */
+/* 0.9.655 — flex-wrap:wrap added: Save/Publish/Edit Metadata/Undo/Redo/
+   History is six fixed-content buttons in a 234px-wide row (0.9.654
+   Section B) that never fit on one line — without an escape hatch they
+   were unconditionally clipped by the overlay's own scroll wrapper's
+   overflow-x:hidden, not merely crowded. Same convention as
+   EditingSidebar.js's own rowStyle(). */
+.world-view-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+/* Author View — .author-view's shared padding/max-width/grid lives
+   with .repository-view above; only what's unique to this view stays
+   here. */
+.author-stats {
+    color: #909090;
+    margin: 0.5rem 0 1.5rem;
+}
+
+/* Fork Tree */
+.fork-graph-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.fork-tree {
+    margin: 0.5rem 0 1rem;
+}
+
+.fork-node {
+    padding: 0.4rem 0.6rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.fork-node--root {
+    background: #234433;
+    border-color: #4caf7d;
+}
+
+.fork-node-date {
+    color: #707070;
+    font-size: 0.8rem;
+}
+
+.fork-tree-list {
+    list-style: none;
+    margin: 0.25rem 0 0 1.5rem;
+    padding: 0;
+    border-left: 1px solid #2a2a2a;
+}
+
+.fork-tree-item {
+    margin: 0.25rem 0;
+    padding-left: 0.75rem;
+}
+
+.fork-tree-node {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+}
+
+.fork-connector {
+    color: #505050;
+    font-family: monospace;
+}
+
+.fork-title {
+    color: #d0d0d0;
+    font-weight: 500;
+}
+
+.fork-author {
+    color: #909090;
+    font-size: 0.85rem;
+}
+
+.fork-date {
+    color: #707070;
+    font-size: 0.8rem;
+}
+
+/* Action button variants */
+.action-btn--explore {
+    background: #3a6ea5;
+    color: #ffffff;
+}
+
+.action-btn--explore:hover {
+    background: #4a7eb5;
+}
+
+/* Clickable author in repository */
+.publication-author-link {
+    color: #4caf7d;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.publication-author-link:hover {
+    text-decoration: underline;
+}
+/* World View Spatial UI */
+
+.world-view-coords {
+    margin: 0.25rem 0 0 !important;
+    font-family: monospace;
+    font-size: 0.8rem !important;
+    color: #707070 !important;
+}
+
+.world-view-nearby {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.world-view-nearby h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.nearby-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.nearby-item {
+    padding: 0.35rem 0.5rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    color: #b0b0b0;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nearby-item:hover {
+    background: #234433;
+    border-color: #4caf7d;
+    color: #ffffff;
+}
+/* World View 0.1.28 — Spatial Streaming UI */
+
+.world-view-section {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.world-view-section h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.world-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.world-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0.5rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 3px;
+    font-size: 0.85rem;
+}
+
+.world-item--current {
+    background: #234433;
+    border-color: #4caf7d;
+}
+
+.world-item--clickable {
+    cursor: pointer;
+}
+
+.world-item--clickable:hover {
+    background: #2a2a2a;
+    border-color: #3a3a3a;
+}
+
+.world-item-title {
+    color: #d0d0d0;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.world-item-author {
+    color: #707070;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+.world-view-error {
+    color: #e74c3c;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.world-view-section--error {
+    border-color: #e74c3c !important;
+}
+
+.world-view-section--error h4 {
+    color: #e74c3c;
+}
+
+.world-item--failed {
+    opacity: 0.5;
+    border-color: #3a1f1f;
+    background: #1f1f1f;
+}
+
+.world-item--failed .world-item-title {
+    color: #707070;
+    text-decoration: line-through;
+}
+
+/* 0.2.26: World Navigation & Spatial Discovery UX —
+   ui/components/WorldSearchPanel.js. Same section language as
+   .world-view-section above; results reuse .world-item's card look so
+   search results, Nearby Worlds, and Worlds in View all read as one
+   family of lists. Deliberately the FIRST section under the header
+   hint (not tucked below Tools/Editing/Groups) — search over the
+   entire world is a navigation entry point, not a per-document tool,
+   and needed to be reachable without scrolling past unrelated panels. */
+.world-view-section--search {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+}
+
+.world-search-form {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.world-search-input {
+    flex: 1;
+}
+
+/* 0.2.28: the spatial half of World Search — X/Y/Z + Radius,
+   deliberately styled as a lightweight, secondary row under the text
+   field rather than a separate panel, since the two compose into one
+   query (see ui/components/WorldSearchPanel.js). */
+.world-search-location {
+    margin-top: 0.5rem;
+}
+
+.world-search-location .form-label {
+    display: block;
+    margin-bottom: 0.3rem;
+}
+
+.world-search-location-fields {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.world-search-coord,
+.world-search-radius {
+    width: 0;
+    padding-left: 0.4rem;
+    padding-right: 0.3rem;
+}
+
+.world-search-coord {
+    flex: 1;
+}
+
+.world-search-radius {
+    flex: 1.6;
+}
+
+.world-search-results {
+    margin-top: 0.6rem;
+}
+
+.world-search-empty {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #808080;
+}
+
+.world-search-count {
+    margin: 0 0 0.4rem;
+    font-size: 0.75rem;
+    color: #909090;
+}
+
+.world-search-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.world-search-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.45rem 0.6rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.world-search-item-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.world-search-item-title {
+    color: #d0d0d0;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.world-search-item-author {
+    color: #707070;
+    font-size: 0.75rem;
+}
+
+/* 0.2.28: position/distance — 📍/📏 give every result a concrete
+   place in the World Unit coordinate system 0.2.24 established,
+   rather than that system staying a purely internal convention. */
+.world-search-item-position {
+    color: #808080;
+    font-size: 0.72rem;
+    margin-top: 0.1rem;
+}
+
+.world-search-item-note {
+    color: #c9a24a;
+    font-size: 0.72rem;
+    margin-top: 0.15rem;
+}
+
+/* 0.2.26: ui/components/LocationDocumentsDialog.js — modal follows the
+   same convention as PlacementEditorDialog/MetadataEditorDialog. */
+.location-documents-list {
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.location-documents-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding: 0.5rem 0.65rem;
+    background: #1f1f1f;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.location-documents-item-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.location-documents-item-title {
+    color: #d0d0d0;
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.location-documents-item-owner {
+    color: #707070;
+    font-size: 0.75rem;
+}
+
+.location-documents-empty {
+    color: #808080;
+    font-size: 0.82rem;
+    padding: 0.5rem 0;
+}
+
+/* 0.2.29: "Explore Here" / "What's Here?" — sits directly under the
+   camera coordinate readout they both read from, so the buttons read
+   as acting on "where the camera is right now," not on the world in
+   general. */
+.world-view-actions--explore {
+    margin-top: 0.4rem;
+}

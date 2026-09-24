@@ -18,6 +18,7 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.353 — Fork Failure Reason Presentation.
 //
@@ -250,7 +251,7 @@ async function run() {
     // user with a valid way back to the originating Publication/World.
     // ===============================================================
     {
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
 
         // The catch block records a `returnWorldId`, falling back to
         // the Publication's own documentId when there is no
@@ -282,7 +283,7 @@ async function run() {
     // dialog rather than an auto-hiding toast.
     // ===============================================================
     {
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const forkBlockMatch = editorViewSource.match(/if \(route\.query\.fork\) \{[\s\S]*?\n\s{12}\} else if \(route\.query\.load\)/);
         assert(forkBlockMatch, '1. the route.query.fork handler block is located in source.');
         const forkBlock = forkBlockMatch[0];
@@ -422,7 +423,7 @@ async function run() {
                 `1. ${file} introduces no retry loop and no persistent lifecycle state constant.`);
         }
 
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         const forkFailureRegionMatch = editorViewSource.match(/const forkFailure = ref\(null\);[\s\S]*?\n\s{8}(?=const|function)/);
         assert(forkFailureRegionMatch, '2. forkFailure is declared as a plain, ephemeral ref — the same shape entryContext already is, never a store or a persisted document field.');
 

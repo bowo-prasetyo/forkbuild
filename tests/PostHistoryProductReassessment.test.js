@@ -12,7 +12,7 @@ import { CommandHistory } from '../application/CommandHistory.js';
 import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
-import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.209 — Post-History Product Reassessment.
 //
@@ -219,7 +219,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         // C1 — the 0.9.203 finding stays closed (autosave/recovery).
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const destructureMatch = editorViewSource.match(/const \{([^}]*)\}\s*=\s*new CreatePersistenceUseCase\(\)\.execute\(\)/);
         assert(destructureMatch, 'C1a. EditorView.js still destructures CreatePersistenceUseCase().execute()');
         for (const field of ['autosaveDocumentUseCase', 'recoverDocumentUseCase', 'discardRecoveryUseCase', 'checkRecoveryUseCase']) {
@@ -320,7 +320,7 @@ async function runTests() {
     // area).
     // ---------------------------------------------------------------
     {
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const directlyCalledUseCases = [
             ['CopySelectionUseCase', 'copySelectionUseCase'],
             ['RepeatSelectionUseCase', 'repeatSelectionUseCase'],
@@ -421,7 +421,7 @@ async function runTests() {
         // named again here, once, at the repository level, so a future
         // reassessment does not rediscover it as a "product gap."
         assert(!/GroupsPanel/.test(await rawSource('ui/main.js')), 'G1a. GroupsPanel is not registered in ui/main.js');
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/components:\s*\{[^}]*GroupsPanel/.test(editorViewSource), 'G1b. EditorView.js\'s own components: {} does not register GroupsPanel');
         const editingSidebarSource = await rawSource('ui/components/EditingSidebar.js');
         for (const groupAction of ['group.create', 'group.rename', 'group.duplicate', 'group.delete', 'group.addSelection', 'group.removeSelection']) {

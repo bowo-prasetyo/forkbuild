@@ -18,6 +18,7 @@ import { encodeBasePublicationCommitment } from '../application/BasePublicationC
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { publicationsViewSourceWithTemplate } from './support/SourceFileGroups.js';
 
 // 0.9.511 — Base Anchor Evidence View.
 //
@@ -223,8 +224,7 @@ async function run() {
         // file (the existing "Create Base Anchor" button-label logic,
         // unrelated to evidence inspection), so the sweep is scoped to
         // this one template block rather than the whole file.
-        const viewPath = fileURLToPath(new URL('../ui/views/DecentralizedPublicationsView.js', import.meta.url));
-        const viewSrc = await readFile(viewPath, 'utf8');
+        const viewSrc = publicationsViewSourceWithTemplate();
         const inspectionBlockStart = viewSrc.indexOf('evidence-inspection-title">External Evidence');
         const inspectionBlockEnd = viewSrc.indexOf('evidence-inspection-adapter-title', inspectionBlockStart);
         assert(inspectionBlockStart !== -1 && inspectionBlockEnd !== -1 && inspectionBlockEnd > inspectionBlockStart,

@@ -9,6 +9,7 @@ import { PublicationQuery } from '../core/PublicationQuery.js';
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.557 — Publication Return-Path Product Boundary Audit.
 //
@@ -303,7 +304,7 @@ async function runTests() {
         // or PublicationQuery anywhere in the canvas component itself
         // either — reconfirmed directly against the current source,
         // not merely inferred from Section C4/C5's own narrower file.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(!canvasSource.includes('SearchPublicationsUseCase') && !canvasSource.includes('PublicationQuery'),
             'E5. ui/components/WorldEncounterCanvas.js itself never imports or references SearchPublicationsUseCase/PublicationQuery — the entire encounter -> resolved-material chain this milestone traces is, end to end, independent of Repository\'s free-text search.');
 
@@ -316,7 +317,7 @@ async function runTests() {
     // Repository search, even implicitly?
     // ===============================================================
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const catalogSource = await rawSource('ui/components/PublicationCatalog.js');
 
         // F1. 0.9.556 Section E already proved "return to World" is a
@@ -388,7 +389,7 @@ async function runTests() {
     // already resolvable are now actually rendered.
     // ===============================================================
     {
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const panelStart = canvasSource.indexOf('world-encounter-observer-local-inspection-panel');
         const panelEnd = canvasSource.indexOf('0.9.183', panelStart);
         const panel = canvasSource.slice(panelStart, panelEnd);

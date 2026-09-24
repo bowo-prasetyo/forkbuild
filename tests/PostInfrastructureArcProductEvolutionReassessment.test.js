@@ -13,7 +13,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { RendezvousTransport } from '../peer/RendezvousTransport.js';
-import { worldViewFiles } from './support/SourceFileGroups.js';
+import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.392 — Post-Infrastructure-Arc Product Evolution Reassessment.
 //
@@ -246,7 +246,7 @@ async function run() {
         // or any of the other seven named journeys. Checked structurally:
         // neither EditorView.js nor WorldView.js (the two files carrying
         // the bulk of journey logic) references either new settings view.
-        const editorViewSource = await source('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => source(file)))).join('\n');
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => source(file)))).join('\n');
         assert(!/StunSettingsView|RendezvousSettingsView/.test(editorViewSource) && !/StunSettingsView|RendezvousSettingsView/.test(worldViewSource),
             n('C2. neither EditorView.js nor WorldView.js references either new settings view — the closed arc added two independent surfaces, never a new step inside an existing journey'));

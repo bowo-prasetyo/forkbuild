@@ -41,6 +41,7 @@ import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js
 import { DocumentCloneService } from '../application/DocumentCloneService.js';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.594 — Discovered-Unplaced Publication Actionability Product Boundary
 // Audit.
@@ -420,7 +421,7 @@ async function run() {
             n('B5. AMENDED BY 0.9.597 — application/WorldNavigationSession.js#getPublicationForDocument() — the sole input to OwnPublicationPanel\'s own `publication` prop, per ui/views/WorldView.js — now resolves through its own, separate `_publicationActionDiscoveryProvider`, confirmed in real source, rather than delegating to _resolvePublicationForPlacement()/`_discoveryProvider`.'));
         assert(/_findPublications\(documentId\) \{\s*\n\s*if \(!this\._discoveryProvider \|\| typeof this\._discoveryProvider\.findByDocumentId !== 'function'\) \{\s*\n\s*return \[\];\s*\n\s*\}\s*\n\s*return this\._discoveryProvider\.findByDocumentId\(documentId\) \|\| \[\];/.test(worldNavSrc),
             n('B6. ...which itself resolves entirely through `this._discoveryProvider.findByDocumentId(documentId)` — confirmed in real source — the SAME predicate B3 just proved returns empty for an observer-local-only encounter.'));
-        const worldViewSrc = await source('ui/views/WorldView.js');
+        const worldViewSrc = (await Promise.all(worldViewFiles().map((file) => source(file)))).join('\n');
         assert(/ownPublication\.value = activeId \? session\.getPublicationForDocument\(activeId\)/.test(worldViewSrc),
             n('B7. ui/views/WorldView.js computes `ownPublication` — OwnPublicationPanel\'s own only input fact — from exactly this call, on every refreshSpatialUI() tick, confirmed in real source.'));
         assert(/function exploreEncounteredPublicationCommand\(publication\) \{\s*\n\s*focusWorld\(publication\.documentId\);/.test(worldViewSrc),
@@ -526,7 +527,7 @@ async function run() {
             n('BW-5. UNCHANGED BY 0.9.597 — CreateWorldViewUseCase.js still unconditionally constructs its own, fresh LocalDiscoveryProvider for `discoveryProvider` — the exact instance WorldNavigationSession\'s own constructor still receives as `discoveryProvider` (fork-policy/world-layout/placement resolution) — confirmed in real source. 0.9.597 adds a SEPARATE `publicationActionDiscoveryProvider` alongside it; it never replaces this one.'));
         assert(/publicationActionDiscoveryProvider\s*=\s*decentralizedPublicationDiscoveryProvider/.test(createWorldViewSrc),
             n('BW-5b. AMENDED BY 0.9.597 — ...and now ALSO composes a separate `publicationActionDiscoveryProvider`, handed to WorldNavigationSession alongside (never instead of) `discoveryProvider` — confirmed in real source.'));
-        const worldViewSrc2 = await source('ui/views/WorldView.js');
+        const worldViewSrc2 = (await Promise.all(worldViewFiles().map((file) => source(file)))).join('\n');
         assert(/new CreateWorldViewUseCase\(\)\.execute\(/.test(worldViewSrc2),
             n('BW-6. ui/views/WorldView.js — the one real caller — constructs its session through exactly this use case, confirmed in real source; no override or post-construction rewiring of session\'s own discoveryProvider happens anywhere in that file.'));
         assert(/decentralizedPublicationDiscoveryProvider:\s*decentralizedDiscoveryProviderForEnrichment/.test(worldViewSrc2),
@@ -699,7 +700,7 @@ async function run() {
     // Section I — product vocabulary.
     // ===============================================================
     {
-        const canvasSrc = await source('ui/components/WorldEncounterCanvas.js');
+        const canvasSrc = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
         const hasOpenForkExplore = /openObserverLocalEncounterPublication|forkObserverLocalEncounterPublication|exploreObserverLocalEncounterPublication/.test(canvasSrc);
         assert(hasOpenForkExplore, n('I1. Sanity: the actionable vocabulary (Open/Fork/Explore/Comment) exists in real source for a Wanderer to be shown once selected.'));
         const hasPlaceCopy = /Place Here|Place This Publication|Claim This Spot/i.test(canvasSrc);

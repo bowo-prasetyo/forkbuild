@@ -29,6 +29,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.602 — Post-Placement World Visibility Product Boundary Audit.
 //
@@ -600,7 +601,7 @@ and materially larger piece of work.
     // Section I — User-visible truthfulness.
     // ===============================================================
     {
-        const viewSrc = await readSource('ui/views/WorldView.js');
+        const viewSrc = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         const placeWrapper = viewSrc.match(/function placeOwnPublication\(publication\) \{[\s\S]*?\n {8}\}/);
         assert(placeWrapper !== null, 'I1. Sanity: placeOwnPublication() located.');
         assert(/session\.placePublication\(publication\.id, position\);\s*\n\s*feedback\.show\('Publication placed in World'\);/.test(placeWrapper[0]),

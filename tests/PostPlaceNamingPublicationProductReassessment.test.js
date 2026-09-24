@@ -17,6 +17,7 @@ import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.322 — Post-Place-Naming Publication Product Reassessment.
 //
@@ -342,7 +343,7 @@ async function run() {
         // ui/views/WorldView.js) and "Publish to Nostr" (announce) as two
         // separate buttons with two separate handlers — never one combined
         // action.
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const panelJs = await rawSource('ui/components/PlaceNamingPanel.js');
         assert(worldView.includes('function publishNamingClaim(name)') && worldView.includes('function publishNamingClaimToNostr(claimId)'),
             'B3. ui/views/WorldView.js still defines two distinct functions — publishNamingClaim() (create, local) and publishNamingClaimToNostr() (announce) — never one merged handler.');
@@ -375,7 +376,7 @@ async function run() {
         const publisherCode = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
         const compositionCode = codeOnlyLines(await rawSource('application/PlaceNamingPublicationRuntimeComposition.js'));
         const panelJs = codeOnlyLines(await rawSource('ui/components/PlaceNamingPanel.js'));
-        const worldViewJs = codeOnlyLines(await rawSource('ui/views/WorldView.js'));
+        const worldViewJs = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
 
         // C1. Publication history — no persisted history store exists, and
         // the UI keeps at most one ephemeral result per in-flight claim
@@ -510,7 +511,7 @@ async function run() {
         // near — is a DIFFERENT journey ("browse everything, anywhere"),
         // and Section H below scores it on its own, separately, as
         // "evidence required" rather than folding it into this result.
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldView.includes('Nearby Place Names') && worldView.includes('nearbyPlaceNamingClaimRows'),
             'D5. ui/views/WorldView.js still renders a live "Nearby Place Names" section sourced from this exact automatic pipeline — not merely available machinery nobody surfaces.');
         assert(!/PlaceNamingGlobalBrowser|GlobalNamingBrowser|AllClaimsBrowser/.test(await rawSource('ui/main.js')),
@@ -554,7 +555,7 @@ async function run() {
         // "claimed by {{ claim.authorDisplayName }}", derived from exactly
         // this field).
         assert(discoveredClaim.authorIdentityId === claim.authorIdentityId, 'E1a. the discovered claim carries the exact original authorIdentityId');
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldView.includes('claimed by {{ claim.authorDisplayName }}') && worldView.includes('authorDisplayName: resolveIdentityDisplayName(entry.claim.authorIdentityId)'),
             'E1b. ui/views/WorldView.js already renders "claimed by <author>" for every nearby claim, derived directly from authorIdentityId — "who named it" is already answered in the shipped UI, not merely in the data model.');
 
@@ -728,7 +729,7 @@ async function run() {
         }
         assert(mainJs.includes('composePlaceNamingPublicationRuntime('),
             'G3b. composePlaceNamingPublicationRuntime() has exactly the one live production caller (ui/main.js) it was built for — no orphan composition function.');
-        const worldViewJs = await rawSource('ui/views/WorldView.js');
+        const worldViewJs = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(worldViewJs.includes("publishPlaceNamingClaimToNostrCommand(claim)"),
             'G3c. publishPlaceNamingClaimToNostrCommand (provided by ui/main.js) has a real, live caller in ui/views/WorldView.js — no orphan provide().');
         const panelJs = await rawSource('ui/components/PlaceNamingPanel.js');

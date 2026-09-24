@@ -26,6 +26,7 @@ import { PublicationPeerExchange } from '../application/PublicationPeerExchange.
 import { PublicationPeerConnectionSync } from '../application/PublicationPeerConnectionSync.js';
 import { PeerContentExchange } from '../application/PeerContentExchange.js';
 import { CreatePublicationPeerExchangeUseCase } from '../application/CreatePublicationPeerExchangeUseCase.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.343 — Peer Publication Synchronization Product Reassessment.
 //
@@ -349,7 +350,7 @@ async function run() {
 
         // Structural confirmation: no dedicated "connection-sync-only"
         // admission path exists anywhere production actually runs.
-        const viewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const viewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(!/connectionSync|PublicationPeerConnectionSync/.test(viewSource),
             '5. ui/views/DecentralizedPublicationsView.js itself has no knowledge of PublicationPeerConnectionSync at all — one admission gate, reached by every source, never a second one keyed on how a Publication was acquired.');
         const discoverySource = await readSource('application/CreateDiscoveryUseCase.js');

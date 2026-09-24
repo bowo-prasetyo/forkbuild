@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
 import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
 import { groupStructuresByCategory } from '../core/groupStructuresByCategory.js';
+import { stylesheetFiles, publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.646 — Unified Application Layout & UI Consistency Boundary Audit.
 //
@@ -120,10 +121,10 @@ function remToPx(remValue) {
 }
 
 async function run() {
-    const css = await readSource('css/main.css');
-    const editorViewSrc = await readSource('ui/views/EditorView.js');
-    const worldViewSrc = await readSource('ui/views/WorldView.js');
-    const publicationsViewSrc = await readSource('ui/views/DecentralizedPublicationsView.js');
+    const css = (await Promise.all(stylesheetFiles().map((file) => readSource(file)))).join('\n');
+    const editorViewSrc = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
+    const worldViewSrc = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
+    const publicationsViewSrc = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
     const repositoryViewSrc = await readSource('ui/views/RepositoryView.js');
     const appSrc = await readSource('ui/App.js');
     const buildLibraryPanelSrc = await readSource('ui/components/BuildLibraryPanel.js');

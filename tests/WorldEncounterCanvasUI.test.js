@@ -5,6 +5,7 @@ import WandererMarker from '../ui/components/WandererMarker.js';
 import { describeWorldEncounterView } from '../application/WorldEncounterView.js';
 import { describeWorldEncounterReadModel } from '../application/WorldEncounterReadModel.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.3 — World View UI / Wanderer Presence.
 //
@@ -319,7 +320,7 @@ async function run() {
         assert(serialize(WorldEncounterCanvas.computed.projectedPublications.call(ctx).map((m) => m.objectId)) === serialize(['p3', 'p1', 'p2']), '21. publication order is never re-sorted');
         assert(serialize(WorldEncounterCanvas.computed.projectedAvatars.call(ctx).map((m) => m.objectId)) === serialize(['a3', 'a1', 'a2']), '22. avatar order is never re-sorted');
 
-        const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const canvasCodeOnly = canvasSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!canvasCodeOnly.includes('.sort('), '23. WorldEncounterCanvas.js\'s own code contains no sort() call anywhere');
 
@@ -376,7 +377,7 @@ async function run() {
     // for 0.9.144: exactly eight application/ modules now, still no core/).
     // ---------------------------------------------------------------
     {
-        const source = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const source = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const importLines = source.split('\n').filter((line) => line.trim().startsWith('import '));
         assert(importLines.length === 18, '37. WorldEncounterCanvas.js has exactly eighteen imports as of 0.9.474');
         assert(importLines.some((line) => line.includes('./WorldEncounterMarker.js')) && importLines.some((line) => line.includes('./WandererMarker.js')), '38. WorldEncounterCanvas.js still imports its own two sibling marker components');

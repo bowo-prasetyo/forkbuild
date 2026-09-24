@@ -23,6 +23,7 @@ import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAn
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.471 — Base Review-Preserving Anchor Publishing Integration Boundary
 // Audit.
@@ -489,7 +490,7 @@ async function run() {
     // ===============================================================
     {
         const mainSrc = await source('ui/main.js');
-        const viewSrc = await source('ui/views/DecentralizedPublicationsView.js');
+        const viewSrc = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const viewCodeOnly = codeOnly(viewSrc);
 
         // H1-H2: AMENDED BY 0.9.472 — Expose Review-Preserving Base Anchor

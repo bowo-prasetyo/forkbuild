@@ -23,6 +23,7 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
+import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.333 — Decentralized Publication Display-Kind Integration.
 //
@@ -386,7 +387,7 @@ async function run() {
     // ===============================================================
     {
         const viewSource = await readSource('application/PublicationResolutionView.js');
-        const decentralizedViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         const registrySource = await readSource('application/CreatePublicationDisplayKindRegistryUseCase.js');
         const combined = viewSource + decentralizedViewSource + registrySource;
 

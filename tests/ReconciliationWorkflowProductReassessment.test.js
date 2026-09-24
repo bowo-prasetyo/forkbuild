@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.410 — Reconciliation Workflow Product Reassessment.
 //
@@ -130,7 +131,7 @@ async function run() {
     {
         routerSource = await readSource('ui/router/index.js');
         appSource = await readSource('ui/App.js');
-        publicationsSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        publicationsSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         workspaceSource = await readSource('ui/views/ReconciliationWorkspaceView.js');
         leaderboardSource = await readSource('ui/views/ReconciliationCandidateLeaderboardView.js');
 
@@ -346,7 +347,7 @@ async function run() {
         // this exact class of diagnostic result, not something the
         // Workspace invented or a UX regression it introduced.
         const ownPanelSource = await readSource('ui/components/OwnPublicationPanel.js');
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const rawOutcomeInOwnPanel = (ownPanelSource.match(/\{\{\s*\w[\w.]*Result\.outcome\s*\}\}/g) || []).length;
         const rawOutcomeInCanvas = (canvasSource.match(/\{\{\s*\w[\w.]*Result\.outcome\s*\}\}/g) || []).length;
         assert(

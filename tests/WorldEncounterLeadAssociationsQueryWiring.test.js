@@ -7,6 +7,7 @@ import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourc
 import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/DecentralizedWorldDiscoveryLeadRegistry.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
 import { composeWorldEncounterLeadAssociationsQuery } from '../application/WorldEncounterLeadAssociationsQueryComposition.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // Connects WorldEncounterCanvas's "Location" / "Choose Location" panel to
 // real association evidence.
@@ -359,8 +360,8 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const mainSource = await readFile(new URL('../ui/main.js', import.meta.url), 'utf8');
-        const worldViewSource = await readFile(new URL('../ui/views/WorldView.js', import.meta.url), 'utf8');
-        const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
 
         assert(/const worldEncounterPublicationEvidenceProvider = new LocalDiscoveryProvider\(new LocalStorageProvider\(\)\);/.test(mainSource),
             '28. main.js constructs one publication evidence provider');

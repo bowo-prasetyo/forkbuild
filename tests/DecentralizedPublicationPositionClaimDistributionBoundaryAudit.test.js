@@ -7,6 +7,7 @@ import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDis
 import { ArweaveSnapshotDiscoveryPublisher } from '../application/ArweaveSnapshotDiscoveryPublisher.js';
 import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
 import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.565 — Decentralized Publication Position Claim Distribution Boundary
 // Audit.
@@ -140,7 +141,7 @@ async function run() {
         assert(/publicationId/.test(exportedFnMatch[0]) && /claimedPosition/.test(exportedFnMatch[0]),
             '5. (0.9.566) executeSnapshotDistributionCommand()\'s own public parameter list now carries publicationId/claimedPosition alongside bytes/contentStore/discoveryPublisher — a caller who already computed both (Section A) now has a parameter through which to hand them in.');
 
-        const worldViewSource = await readSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         const distributeFnMatch = worldViewSource.match(/function distributeWorldEncounterSnapshot\(publication, storage, remotePinningConfiguration\)\s*\{[\s\S]*?\n        \}/);
         assert(distributeFnMatch, '6. ui/views/WorldView.js#distributeWorldEncounterSnapshot(publication, storage) exists as an isolable function — the ONE production call site that invokes Snapshot distribution.');
         const distributeFnBody = distributeFnMatch[0];

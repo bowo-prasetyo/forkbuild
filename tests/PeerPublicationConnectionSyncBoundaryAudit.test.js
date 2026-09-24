@@ -22,6 +22,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
 import { PublicationExchange } from '../application/PublicationExchange.js';
 import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
+import { publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.341 — Peer Publication Connection-Sync Boundary Audit.
 //
@@ -705,10 +706,10 @@ async function run() {
         // manual announce), and ui/views/DecentralizedPublicationsView.js
         // already reacts to onPublicationReceived by refreshing its own
         // list — live, locally, with no NotificationEvent involved.
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(editorViewSource.includes('const peerCount = publicationPeerExchange.announce(publication);') && editorViewSource.includes('feedback.show('),
             '3. the existing local-feedback mechanism (feedback.show) is already how this codebase surfaces a peer-exchange fact to the person at the keyboard, distinct from NotificationEvent entirely.');
-        const decentralizedViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(decentralizedViewSource.includes('publicationPeerExchange.onPublicationReceived(() => refreshList())'),
             '3b. onPublicationReceived already has a real, live UI consumer today — a page refresh, not a notification.');
 

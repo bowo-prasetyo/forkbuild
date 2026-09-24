@@ -24,6 +24,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.544 — Notification Lifecycle Product Reassessment.
 //
@@ -446,7 +447,7 @@ async function runTests() {
 
         // E2 — the navigation command WorldView.js wires resolves by
         // publicationId, never by documentId or contentHash as an input.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const commandMatch = worldViewSource.match(/function viewNotificationPublicationCommand\(([^)]*)\) \{[\s\S]*?\n {8}\}/);
         assert(commandMatch, 'E2a. viewNotificationPublicationCommand is present in ui/views/WorldView.js.');
         assert(commandMatch[1].trim() === 'publicationId',

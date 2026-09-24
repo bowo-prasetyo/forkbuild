@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../application/WorldViewNavigationState.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.359 — World View Main-Screen Clutter Product Audit.
 //
@@ -92,10 +93,10 @@ function sliceForward(source, markerPattern, maxLength) {
 }
 
 async function run() {
-    const worldViewSource = await rawSource('ui/views/WorldView.js');
-    const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+    const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
     const ownPanelSource = await rawSource('ui/components/OwnPublicationPanel.js');
-    const canvasCodeOnly = await codeOnlySource('ui/components/WorldEncounterCanvas.js');
+    const canvasCodeOnly = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
 
     // ===============================================================
     // Section A — Current primary-surface inventory.

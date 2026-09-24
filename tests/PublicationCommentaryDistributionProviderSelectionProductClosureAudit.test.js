@@ -21,6 +21,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
+import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.639 — Publication Commentary Distribution Provider Selection Product
 // Closure Audit.
@@ -560,7 +561,7 @@ async function run() {
         // milestone's own brief asked for, distinguishing "an
         // architectural capability exists but isn't surfaced" from "a
         // real user journey is blocked."
-        const worldViewCode = await codeOnlySource('ui/views/WorldView.js');
+        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         const localWrapperMatch = worldViewCode.match(/function addPublicationCommentaryCommand\(\{ publicationId, content, commentaryId, createdAt \}\) \{[\s\S]*?\n {8}\}/);
         assert(localWrapperMatch !== null, n('WorldView.js\'s own local addPublicationCommentaryCommand is found'));
         assert(!/discoveryProvider/.test(localWrapperMatch[0]),

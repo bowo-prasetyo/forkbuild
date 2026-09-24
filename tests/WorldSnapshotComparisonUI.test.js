@@ -20,6 +20,7 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { readFile } from 'node:fs/promises';
+import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.182 — World Snapshot Comparison UI.
 //
@@ -175,7 +176,7 @@ function stripLineComments(source) {
 }
 
 async function run() {
-    const canvasSource = await readFile(new URL('../ui/components/WorldEncounterCanvas.js', import.meta.url), 'utf8');
+    const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const candidateSource = await readFile(new URL('../application/WorldEncounterComparisonCandidate.js', import.meta.url), 'utf8');
 
     // ---------------------------------------------------------------
@@ -486,12 +487,12 @@ async function run() {
         for (const name of newMethodNames) {
             assert(typeof WorldEncounterCanvas.methods[name] === 'function', `4. ${name}() exists on WorldEncounterCanvas.js`);
         }
-        const startMarker = '        armComparisonSelection() {';
+        const startMarker = '    armComparisonSelection() {';
         const startIndex = canvasSource.indexOf(startMarker);
         assert(startIndex !== -1, 'sanity — armComparisonSelection() is found verbatim');
-        const endMarker = '        discoverPublication() {';
-        const endIndex = canvasSource.indexOf(endMarker, startIndex);
-        assert(endIndex !== -1, 'sanity — the next existing method is found after this milestone\'s own new methods');
+        // These are the last methods in their module.
+        const endIndex = canvasSource.indexOf('\n};', startIndex);
+        assert(endIndex !== -1, 'sanity — the end of their module is found after this milestone\'s own new methods');
         const newMethodsBody = stripLineComments(canvasSource.slice(startIndex, endIndex));
         assert(!/\.setSource\(|\.removeSource\(|\.clear\(\)/.test(newMethodsBody),
             '5. none of this milestone\'s own new methods ever mutates registry membership directly');

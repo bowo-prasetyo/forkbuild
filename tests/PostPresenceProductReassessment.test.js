@@ -24,6 +24,7 @@ import { WorldAuthorizationService } from '../application/WorldAuthorizationServ
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
 import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
 import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.219 — Post-Presence Product Reassessment.
 //
@@ -387,7 +388,7 @@ async function runTests() {
         // interval-driven spatial poll; refreshWorldPresenceActivity()'s
         // only production call site remains the membership callback, not
         // a new timer this milestone might have been tempted to add.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const spatialIntervalDeclarations = (codeOnlyLines(worldViewSource).join('\n').match(/spatialInterval\s*=\s*setInterval\(/g) || []).length;
         assert(spatialIntervalDeclarations === 1, `A7a. exactly one setInterval assigns spatialInterval (found ${spatialIntervalDeclarations}) — no second cadence introduced`);
         assert(countReferences(worldViewSource, 'refreshWorldPresenceActivity') === 1, 'A7b. refreshWorldPresenceActivity has exactly one call site in WorldView.js, still inside onWorldMembershipChanged, still not refreshSpatialUI()\'s own 3-second tick');
@@ -418,7 +419,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         // B1 — World interaction/navigation. COMPLETE.
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         for (const name of ['PlacementInfoPanel', 'OwnPublicationPanel', 'HistoryTimelinePanel', 'VehicleInteractionPrompt', 'WorldEncounterCanvas']) {
             assert(new RegExp(`<${name}\\b`).test(worldViewSource), `B1. WorldView.js still composes ${name}`);
         }
@@ -430,7 +431,7 @@ async function runTests() {
 
         // B3 — World material/document lifecycle: autosave/recovery,
         // history, undo/redo, placement. COMPLETE.
-        const editorViewSource = await rawSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/<RecoveryBanner/.test(editorViewSource), 'B3a. RecoveryBanner still in EditorView.js\'s template');
         assert(/autosaveScheduler\.stop\(\)/.test(editorViewSource), 'B3b. autosave scheduler still stopped on teardown');
         for (const identifier of ['getTimeline', 'restoreHistoryAt', 'beginHistoryPreview', 'canUndo', 'canRedo', 'getUndoLabel', 'getRedoLabel']) {
@@ -448,7 +449,7 @@ async function runTests() {
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         const clickHandlers = new Set((panelSource.match(/@click="[a-zA-Z]+/g) || []).map((s) => s.replace('@click="', '')));
         assert(clickHandlers.size >= 10, `B5a. OwnPublicationPanel.js still wires at least 10 distinct actions (found ${clickHandlers.size})`);
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(/distributeSelectedPublication\(\)\s*\{/.test(canvasSource) && /@click="distributeSelectedPublication"/.test(canvasSource), 'B5b. WorldEncounterCanvas.js still wires "Distribute Publication"');
 
         // B6 — Snapshot: discovery, materialization, export/import
@@ -605,7 +606,7 @@ async function runTests() {
             assert(!supersessionRecordFound, `D2c. no explicit supersession record for ${className} has appeared anywhere in application/ or ui/ since 0.9.216 — it stays OBSOLETE_CANDIDATE, not escalated to OBSOLETE`);
         }
         assert(/bootstrapWorldDiscoveryRuntime\(/.test(mainSource), 'D2d. the reachable replacement world-discovery runtime is still genuinely composed in ui/main.js');
-        assert(/new CreateWorldViewUseCase\(/.test((await rawSource('ui/views/WorldView.js'))), 'D2e. ...and the reachable replacement world-view backend is still genuinely composed in WorldView.js');
+        assert(/new CreateWorldViewUseCase\(/.test(((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'))), 'D2e. ...and the reachable replacement world-view backend is still genuinely composed in WorldView.js');
 
         // D3 — none of the four is "intentionally internal" either: each
         // is a top-level, exported composition-root class with the exact
@@ -633,7 +634,7 @@ async function runTests() {
         // currently unreachable, for a reason that is NOT already an
         // established INTENTIONAL_BOUNDARY or a redundant wrapper?
         const navigationSessionSource = await rawSource('application/WorldNavigationSession.js');
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         // AMENDED by the My Worlds dead-code cleanup: the redundant
         // getRecentlyVisitedWorlds() wrapper was deleted outright (its
         // capability stays delivered by ui/views/RecentWorldsView.js).

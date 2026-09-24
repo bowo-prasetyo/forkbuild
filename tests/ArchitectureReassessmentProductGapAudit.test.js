@@ -20,7 +20,7 @@ import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js
 import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
 import { DocumentManager } from '../application/DocumentManager.js';
 import { VehicleType } from '../core/VehicleType.js';
-import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
+import { worldNavigationSessionFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.196 — Architecture Reassessment / Product Gap Audit.
 //
@@ -105,7 +105,7 @@ async function runTests() {
     // broad interaction surface, or is Wanderer interaction thin?
     // ---------------------------------------------------------------
     {
-        const worldView = await rawSource('ui/views/WorldView.js');
+        const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const componentTags = new Set((worldView.match(/<[A-Z][A-Za-z]+/g) || []).map((tag) => tag.slice(1)));
         const expectedFamilies = [
             'AvatarInfoPanel', 'NearbyAvatarsPanel', 'CompassIndicator',

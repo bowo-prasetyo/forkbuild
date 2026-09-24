@@ -25,6 +25,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
 import PublicationList from '../ui/components/PublicationList.js';
+import { stylesheetFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.564 — Repository Discovery Experience Product Reassessment.
 //
@@ -528,7 +529,7 @@ async function main() {
             assert(!/\b(trusted|authentic|guaranteed|officially|authoritative|verified)\b/i.test(src),
                 `39. LIVE: ${name} claims none of "Repository membership = trusted/verified/authentic/official" — no such word appears anywhere in its source.`);
         }
-        const cssSource = await readSource('css/main.css');
+        const cssSource = (await Promise.all(stylesheetFiles().map((file) => readSource(file)))).join('\n');
         assert(!/publication-badge[\s\S]{0,200}(verified|trusted|authentic|safe|guaranteed)/i.test(cssSource),
             '40. LIVE: the "🔒 Published" badge\'s own styling still carries no verification/trust vocabulary — it denotes lifecycle state (published vs. an editable fork per 0.2.22), never a trust verdict.');
 
@@ -663,7 +664,7 @@ async function main() {
         // EditorView.js's own route handling directly is the same
         // "past the command boundary, into the real consumer" discipline
         // 0.9.559 itself used.
-        const editorViewSource = await codeOnlySource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(editorViewSource.includes('route.query.fork') && editorViewSource.includes("sourceDocumentId = route.query.fork") && editorViewSource.includes('forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication)'),
             '55. LIVE: EditorView.js\'s own route.query.fork branch still consumes exactly the { fork: documentId } shape Repository\'s own Fork route builds, passing it straight into ForkDocumentUseCase.');
         assert(editorViewSource.includes('route.query.publication') && editorViewSource.includes('sourcePublication = findPublicationUseCase.execute(route.query.publication)'),

@@ -10,6 +10,7 @@ import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncount
 import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
 import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
+import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.556 — Publication-to-World Return Journey Product Reassessment.
 //
@@ -169,7 +170,7 @@ async function runTests() {
         // -> refreshObserverLocalEncounterInspection) never reads .documentId
         // or .contentHash off anything to construct an "identity" — it reads
         // exactly the two fields the marker itself already carried.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const selectStart = canvasSource.indexOf('selectObserverLocalEncounter(marker) {');
         const resolvedStart = canvasSource.indexOf('observerLocalEncounterResolvedSelection() {');
         const selectBody = canvasSource.slice(selectStart, canvasSource.indexOf('},', selectStart));
@@ -201,7 +202,7 @@ async function runTests() {
     // instance for a different top-level route.
     // ===============================================================
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
 
         // B1. Exactly one construction site for each, and it is inside
         // setup() (this file has no module-level `const session =` or
@@ -333,7 +334,7 @@ async function runTests() {
         // encounter in front of them" fact alone) — reusing the SAME
         // Repository-independent seam D3-D6 below still show Repository
         // SEARCH itself can never reach.
-        const canvasSource = await rawSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         const panelStart = canvasSource.indexOf('world-encounter-observer-local-inspection-panel');
         const panelEnd = canvasSource.indexOf('0.9.183', panelStart);
         const panel = canvasSource.slice(panelStart, panelEnd);
@@ -391,7 +392,7 @@ async function runTests() {
     // else?
     // ===============================================================
     {
-        const worldViewSource = await rawSource('ui/views/WorldView.js');
+        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
         const catalogSource = await rawSource('ui/components/PublicationCatalog.js');
 
         // E1. focusWorld() itself: session.focusDocument() + router.replace +

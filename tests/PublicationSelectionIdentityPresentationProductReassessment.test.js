@@ -23,6 +23,7 @@ import {
 
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationList from '../ui/components/PublicationList.js';
+import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.539 — Publication Selection & Identity Presentation Product
 // Reassessment.
@@ -339,7 +340,7 @@ async function run() {
         // content item; a "Snapshot Content" detail panel shows the real
         // Publication ID field when opened. (0.9.17 onward; reconfirmed
         // structurally here.)
-        const canvasSource = await readSource('ui/components/WorldEncounterCanvas.js');
+        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(/THE PUBLICATIONID IS THE ENCOUNTER'S OWN objectId/i.test(canvasSource),
             'G1a. STRUCTURAL: WorldEncounterCanvas.js\'s own documented invariant that objectId IS the publicationId (never a separately-loaded material\'s own id) is still present, unmodified by this milestone.');
         assert(/Publication ID<\/dt>/.test(canvasSource),
@@ -351,7 +352,7 @@ async function run() {
         // "evidence" components are a distinct, unrelated feature
         // (publisher-claim reconciliation, not anchor->contentHash proof)
         // and were never touched.
-        const decentralizedViewSource = await readSource('ui/views/DecentralizedPublicationsView.js');
+        const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(/entry\.evidence\.anchors/.test(decentralizedViewSource),
             'G2a. STRUCTURAL: anchors are still rendered scoped to one Publication\'s own `entry`, never as a global, cross-Publication list that could imply two Publications sharing a contentHash are one.');
         const reconciliationPanelSource = await readSource('ui/components/ReconciliationCandidateEvidenceDetailPanel.js');

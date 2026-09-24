@@ -23,6 +23,7 @@ import { groupPublications, GroupBy } from '../core/PublicationGrouping.js';
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationList from '../ui/components/PublicationList.js';
 import PublicationCommentarySection from '../ui/components/PublicationCommentarySection.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.540 — Publication Catalog Action Safety Product Reassessment.
 //
@@ -343,7 +344,7 @@ async function run() {
             '7. LIVE: ...and fork A\'s prime query back to EXACTLY publication A\' — never swapped, never the "first match by documentId."');
         assert(resolvedA.id !== resolvedAPrime.id, '8. LIVE: confirmed distinct end to end.');
 
-        const editorViewSource = await readSource('ui/views/EditorView.js');
+        const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(/if \(route\.query\.publication\) \{\s*sourcePublication = findPublicationUseCase\.execute\(route\.query\.publication\);/.test(editorViewSource),
             '9. STRUCTURAL: EditorView.js resolves the fork\'s source publication by the exact publicationId the catalog sent — never executeByDocumentId(), which would return whichever record a documentId-keyed lookup happened to find first.');
     }
