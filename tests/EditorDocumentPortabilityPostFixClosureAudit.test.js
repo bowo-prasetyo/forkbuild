@@ -12,13 +12,13 @@ import { Group } from '../core/Group.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { ExportDocumentUseCase } from '../application/ExportDocumentUseCase.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { ImportDocumentUseCase } from '../application/ImportDocumentUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { ExportDocumentUseCase } from '../application/document/ExportDocumentUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { ImportDocumentUseCase } from '../application/document/ImportDocumentUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -419,7 +419,7 @@ async function run() {
         // G2 — WorldNavigationSession#cloneDocument() (World View
         // "Duplicate") and #forkDocument() (World View "Fork"). Confirmed
         // live, freshly for THIS milestone (not assumed from 0.9.643's own
-        // header): application/WorldNavigationSession.js statically
+        // header): application/world/WorldNavigationSession.js statically
         // imports RenderWorldViewUseCase, which statically imports
         // renderer/Renderer.js, which statically imports the 'three'
         // package — a real npm package this repo (which ships no
@@ -433,12 +433,12 @@ async function run() {
             let importFailed = false;
             let importError = '';
             try {
-                execSync('node -e "import(\'./application/WorldNavigationSession.js\')"', { cwd: SOURCE_ROOT.pathname, stdio: 'pipe' });
+                execSync('node -e "import(\'./application/world/WorldNavigationSession.js\')"', { cwd: SOURCE_ROOT.pathname, stdio: 'pipe' });
             } catch (err) {
                 importFailed = true;
                 importError = String(err.stderr || err.message);
             }
-            assert(importFailed, n('G2: CONFIRMED LIVE, freshly for this milestone: importing application/WorldNavigationSession.js under plain `node`, right now, fails'));
+            assert(importFailed, n('G2: CONFIRMED LIVE, freshly for this milestone: importing application/world/WorldNavigationSession.js under plain `node`, right now, fails'));
             assert(/three/.test(importError), n('G2: ...specifically because of the unresolvable \'three\' package — confirmed from the actual error text, not guessed'));
 
             // What IS available: exact structural proof, against real
@@ -450,7 +450,7 @@ async function run() {
             // anywhere in either method body. This is the identical
             // standard 0.9.643 Section A/C already established for
             // EditorSession-adjacent code it likewise could not run live.
-            const navSource = codeOnly(await rawSource('application/WorldNavigationSession.js'));
+            const navSource = codeOnly(await rawSource('application/world/WorldNavigationSession.js'));
             const cloneMethodMatch = navSource.match(/\bcloneDocument\(documentId\)\s*\{[\s\S]*?\n\t\}/);
             const forkMethodMatch = navSource.match(/\bforkDocument\(documentId\)\s*\{[\s\S]*?\n\t\}/);
             assert(cloneMethodMatch !== null && forkMethodMatch !== null, n('G2: both cloneDocument() and forkDocument() are found, in isolation, in real source'));
@@ -461,7 +461,7 @@ async function run() {
             assert(!/brickIds|\.groups\b/.test(cloneMethodMatch[0]) && !/brickIds|\.groups\b/.test(forkMethodMatch[0]),
                 n('G2: neither method body references brickIds or a world\'s groups at all — group-relationship remapping happens ONLY inside DocumentCloneService.execute(), never duplicated or special-cased at the session layer'));
 
-            console.log('✓ G2: application/WorldNavigationSession.js is confirmed LIVE (fresh for this milestone, not assumed) to be unrunnable under plain `node` in this environment, purely due to the \'three\' package — exactly like EditorSession.js in 0.9.643. What is verifiable, and is verified, is that cloneDocument() (Duplicate) and forkDocument() (Fork) are both short, structurally-confirmed pass-throughs to this._documentCloneService.execute() — the exact class and method Sections A-F already proved correct live — with no parallel group-remapping logic anywhere in either method body for this audit to have missed.');
+            console.log('✓ G2: application/world/WorldNavigationSession.js is confirmed LIVE (fresh for this milestone, not assumed) to be unrunnable under plain `node` in this environment, purely due to the \'three\' package — exactly like EditorSession.js in 0.9.643. What is verifiable, and is verified, is that cloneDocument() (Duplicate) and forkDocument() (Fork) are both short, structurally-confirmed pass-throughs to this._documentCloneService.execute() — the exact class and method Sections A-F already proved correct live — with no parallel group-remapping logic anywhere in either method body for this audit to have missed.');
         }
 
         console.log('✓ G: fixing DocumentCloneService\'s relationship semantics preserves — and now correctly extends group-membership integrity to — every existing production clone operation: Import (0.9.644\'s own focus), Fork (both the storage-loaded ForkDocumentUseCase and the in-session forkDocument()), and Duplicate (cloneDocument()). This is a shared cloning correctness fix, not an Import-specific patch.');

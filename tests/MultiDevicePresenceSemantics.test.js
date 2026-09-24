@@ -3,23 +3,23 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
-import { ConversationStore } from '../application/ConversationStore.js';
-import { ChatOutbox } from '../application/ChatOutbox.js';
-import { ConversationReadTracker } from '../application/ConversationReadTracker.js';
-import { PeerPresenceUseCase } from '../application/PeerPresenceUseCase.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
+import { ConversationStore } from '../application/chat/ConversationStore.js';
+import { ChatOutbox } from '../application/chat/ChatOutbox.js';
+import { ConversationReadTracker } from '../application/chat/ConversationReadTracker.js';
+import { PeerPresenceUseCase } from '../application/presence/PeerPresenceUseCase.js';
 
 // 0.2.85 — Multi-Device Presence Semantics.
 //
 // 0.2.78/0.2.79 taught friendship/chat/voice to resolve a live
 // connection to its SOCIAL identity (a parent identity's own key, or an
 // authorized DEVICE speaking for it) instead of matching a connection's
-// raw key. application/PeerPresenceUseCase.js was the one 0.2.79-era
+// raw key. application/presence/PeerPresenceUseCase.js was the one 0.2.79-era
 // social surface left behind — it still matched raw keys only, so "is
 // Alice online" could not see a connection from her Phone or Laptop at
 // all, only one whose own key happened to equal her parent identity's.
@@ -102,7 +102,7 @@ async function connectAndAuthenticate(network, addressA, deviceA, addressB, devi
 // DeviceAuthorizationPropagationUseCase#resolveConnectionIdentity()
 // wiring tests/MultiDeviceSocialSemantics.test.js's own makeSocialStack()
 // already established, extended with the collaborators
-// application/PeerPresenceUseCase.js itself requires. `resolveSocialIdentity`
+// application/presence/PeerPresenceUseCase.js itself requires. `resolveSocialIdentity`
 // is optional so Section D can build a stack that deliberately omits it.
 function makePresenceStack(device, { withDeviceResolution = true } = {}) {
     const peerMessageBus = new PeerMessageBus();
@@ -314,7 +314,7 @@ async function runTests() {
     alice.provider.authorizeDevice(alice.identity.identityId, phone.identity.identityId, phone.identity.publicKey, { deviceLabel: 'Phone' });
 
     // Bob's presence stack deliberately omits resolveSocialIdentity —
-    // the default (application/SocialIdentityResolver.js#resolveDirectSocialIdentity)
+    // the default (application/identity/SocialIdentityResolver.js#resolveDirectSocialIdentity)
     // never resolves a device to its parent, exactly matching every
     // caller's behavior before this milestone.
     const bobStack = makePresenceStack(bob, { withDeviceResolution: false });

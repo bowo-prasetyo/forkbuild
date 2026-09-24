@@ -1,9 +1,9 @@
 import { ref, reactive, computed, inject } from 'vue';
-import { PublicationObservationArchive } from '../../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../../application/publication/observationArchive/PublicationObservationArchive.js';
 import {
     importPublicationObservationArchive,
     PublicationObservationArchiveImportOutcome
-} from '../../application/PublicationObservationArchiveExport.js';
+} from '../../application/publication/observationArchive/PublicationObservationArchiveExport.js';
 import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage
 } from '../../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';

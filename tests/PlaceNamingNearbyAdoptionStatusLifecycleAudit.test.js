@@ -6,21 +6,21 @@ import { Position } from '../core/Position.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStore.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
-import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION } from '../application/PlaceNamingClaimPublication.js';
+import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION } from '../application/placeNaming/PlaceNamingClaimPublication.js';
 import { buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { PlaceNamingDiscoveryMonitor } from '../application/PlaceNamingDiscoveryMonitor.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
-import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
+import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.270 — Place Naming Adoption Status Lifecycle Audit.
@@ -1249,7 +1249,7 @@ async function runTests() {
         assert(worldViewCode.includes('function hasPlaceNamingClaim') === false,
             '84. WorldView.js defines no LOCAL hasPlaceNamingClaim()-shaped function of its own — it only ever calls the session\'s.');
 
-        const sessionCode = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));
+        const sessionCode = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
         assert(sessionCode.includes('hasPlaceNamingClaim(worldId, claimId) {'),
             '85. WorldNavigationSession exposes a real hasPlaceNamingClaim(worldId, claimId) method, still taking exactly those two arguments.');
         const sessionMethodBlock = extractBetween(sessionCode, 'hasPlaceNamingClaim(worldId, claimId) {', '\n\t}');
@@ -1258,12 +1258,12 @@ async function runTests() {
         assert(!/_identityProvider|authorIdentityId|discoverySource/.test(sessionMethodBlock),
             '87. the session method\'s own body references none of the forbidden identity/discovery signals — it forwards exactly two arguments and returns exactly one boolean.');
 
-        const useCaseCode = codeOnlyLines(await rawSource('application/PlaceNamingClaimUseCase.js'));
+        const useCaseCode = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js'));
         const useCaseMethodBlock = extractBetween(useCaseCode, 'hasClaim(worldId, claimId) {', '\n    }');
         assert(useCaseMethodBlock.includes('this._store.has(worldId, claimId)'),
             '88. PlaceNamingClaimUseCase#hasClaim() remains a thin pass-through to the EXISTING, UNMODIFIED LocalPlaceNamingClaimStore#has() — no new storage-layer capability was invented for this milestone or any since.');
 
-        const storeSource = await rawSource('application/LocalPlaceNamingClaimStore.js');
+        const storeSource = await rawSource('application/placeNaming/LocalPlaceNamingClaimStore.js');
         assert(!/getById|findById|getClaim\(/.test(storeSource),
             '89. LocalPlaceNamingClaimStore.js still exposes no getById()/findById()/getClaim() — no new storage-layer lookup capability has been added since 0.9.269.');
 

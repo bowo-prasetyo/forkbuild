@@ -1,7 +1,7 @@
-import { describePublicationSnapshotPossession, isSnapshotPossessed } from '../application/PublicationSnapshotPossessionView.js';
-import { describePublicationReplicaContentKnowledge } from '../application/PublicationReplicaContentKnowledgeView.js';
-import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
-import { LocalSnapshotContentAvailabilityOutcome } from '../application/LocalSnapshotContentAvailabilityOutcome.js';
+import { describePublicationSnapshotPossession, isSnapshotPossessed } from '../application/snapshot/possession/PublicationSnapshotPossessionView.js';
+import { describePublicationReplicaContentKnowledge } from '../application/publication/replica/PublicationReplicaContentKnowledgeView.js';
+import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
+import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
@@ -20,7 +20,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 //              by this one bit.
 //   Section C: describePublicationReplicaContentKnowledge() — composes
 //              `hasPublication` (a plain boolean the caller supplies,
-//              mirroring application/PublicationReplicaKnowledgeView.js's
+//              mirroring application/publication/replica/PublicationReplicaKnowledgeView.js's
 //              own 0.8.28 parameter) with a possession view into
 //              `{ publicationId, hasPublication, hasValidSnapshot }`,
 //              proving every one of the four combinations is reported as

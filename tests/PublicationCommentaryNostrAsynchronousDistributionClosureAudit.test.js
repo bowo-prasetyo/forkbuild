@@ -10,12 +10,12 @@ import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { Publication } from '../publisher/Publication.js';
 
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
-import { PublicationCommentaryDistributionPeerExchange } from '../application/PublicationCommentaryDistributionPeerExchange.js';
-import { PublicationCommentaryNostrDistribution } from '../application/PublicationCommentaryNostrDistribution.js';
-import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/DiscoverPublicationCommentaryFromNostrUseCase.js';
-import { PublicationCommentaryRemoteNotificationBridge } from '../application/PublicationCommentaryRemoteNotificationBridge.js';
-import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/PublicationCommentaryNotificationProducer.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryDistributionPeerExchange } from '../application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js';
+import { PublicationCommentaryNostrDistribution } from '../application/publication/commentary/PublicationCommentaryNostrDistribution.js';
+import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js';
+import { PublicationCommentaryRemoteNotificationBridge } from '../application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js';
+import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 
 import {
     PublicationCommentaryDeliveryStatus,
@@ -28,7 +28,7 @@ import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.9.629 — Publication Commentary Nostr Asynchronous Distribution
@@ -402,7 +402,7 @@ async function run() {
         const envelopeSource = codeOnly(await rawSource('core/PublicationCommentaryDistributionEnvelope.js'));
         const storeSource = codeOnly(await rawSource('storage/PublicationCommentaryStore.js'));
         assert(!/nostrEventId/i.test(envelopeSource) && !/nostrEventId/i.test(storeSource),
-            n('neither the envelope nor the store carries a nostrEventId field — the Nostr locator lives only in a caller\'s own bookkeeping (application/PublicationCommentaryNostrDistribution.js#publish()\'s own return value), never inside Commentary\'s own identity'));
+            n('neither the envelope nor the store carries a nostrEventId field — the Nostr locator lives only in a caller\'s own bookkeeping (application/publication/commentary/PublicationCommentaryNostrDistribution.js#publish()\'s own return value), never inside Commentary\'s own identity'));
 
         console.log('✓ C: commentaryId, publicationId, the Nostr event id, and authorIdentityId remain four independent, unaliased facts across the full lifecycle — no transport-generated identity ever replaces Commentary identity.');
     }
@@ -732,9 +732,9 @@ async function run() {
     // Section J — persistence semantics.
     // ===============================================================
     {
-        const distributionSourceFlat = (await rawSource('application/PublicationCommentaryNostrDistribution.js')).replace(/\r?\n/g, ' ').replace(/\/\/ ?/g, '');
+        const distributionSourceFlat = (await rawSource('application/publication/commentary/PublicationCommentaryNostrDistribution.js')).replace(/\r?\n/g, ' ').replace(/\/\/ ?/g, '');
         assert(/never that it is durably retained or ever\s*actually retrievable again/.test(distributionSourceFlat),
-            n('application/PublicationCommentaryNostrDistribution.js\'s own header already states the honest boundary in its own words: a successful publish() means only "at least one relay accepted this event," never durable retention'));
+            n('application/publication/commentary/PublicationCommentaryNostrDistribution.js\'s own header already states the honest boundary in its own words: a successful publish() means only "at least one relay accepted this event," never durable retention'));
         assert(/ONE RELAY, ONE DISCOVERY TAG, PER INSTANCE/.test(distributionSourceFlat),
             n('the same header documents that this implementation is deliberately one relay, one instance — no resilience claim is made, and none should be inferred from PERSISTENTLY_PUBLISHED'));
 
@@ -765,12 +765,12 @@ async function run() {
         assert(globalIndexFiles.length === 0, n(`no file anywhere in application/, core/, storage/, or nostr/ resembles a global Commentary index — found: ${globalIndexFiles.join(', ') || 'none'}`));
 
         // discover() holds no accumulating internal state of its own.
-        const distributionSource = codeOnly(await rawSource('application/PublicationCommentaryNostrDistribution.js'));
+        const distributionSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryNostrDistribution.js'));
         const fieldAssignments = distributionSource.match(/this\._\w+\s*=/g) || [];
         const fieldNames = new Set(fieldAssignments.map((m) => m.replace(/this\.|\s*=$/g, '').trim()));
         const expectedFields = new Set(['_relayUrl', '_tagName', '_kind', '_discoveryTag', '_publishImpl', '_queryImpl', '_timeoutMs']);
         assert([...fieldNames].every((f) => expectedFields.has(f)),
-            n(`application/PublicationCommentaryNostrDistribution.js's own instance fields are exactly its configuration (relayUrl/tagName/kind/discoveryTag/publishImpl/queryImpl/timeoutMs) — found: ${[...fieldNames].join(', ')}; no accumulating cache, index, or "seen candidates" field of any kind`));
+            n(`application/publication/commentary/PublicationCommentaryNostrDistribution.js's own instance fields are exactly its configuration (relayUrl/tagName/kind/discoveryTag/publishImpl/queryImpl/timeoutMs) — found: ${[...fieldNames].join(', ')}; no accumulating cache, index, or "seen candidates" field of any kind`));
 
         // Live confirmation: a FRESH instance, sharing no memory with the
         // one that published, discovers the identical content — proving

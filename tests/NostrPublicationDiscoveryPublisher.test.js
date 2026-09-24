@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 
 // 0.9.46 — Nostr Publication Discovery Publisher.
 // See docs/Roadmap.md, "0.9.46 — Nostr Publication Discovery Publisher."
@@ -27,7 +27,7 @@ import { describePublicationDistribution } from '../application/PublicationDistr
 //   Section F: a publishImpl that resolves published:true but with no/a
 //              malformed id throws — never degrades to null
 //   Section G: this class is a real publishing round-trip counterpart of
-//              application/NostrDiscoveryQueryService.js — the same JSON
+//              application/nostr/NostrDiscoveryQueryService.js — the same JSON
 //              this file writes to content is exactly what
 //              parseDecentralizedDiscoveryEnvelope() reads back
 //   Section H: a constructor missing relayUrl, discoveryTag, or
@@ -257,7 +257,7 @@ async function run() {
     // vocabulary.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/NostrPublicationDiscoveryPublisher.js', import.meta.url);
+        const sourceUrl = new URL('../application/nostr/NostrPublicationDiscoveryPublisher.js', import.meta.url);
         const fullSource = await readFile(sourceUrl, 'utf8');
         const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

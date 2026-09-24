@@ -3,15 +3,15 @@ import { readFile } from 'node:fs/promises';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/CreateExternalPublicationAnchorOrchestratorUseCase.js';
-import { ExternalAnchorPublisherRegistry } from '../application/ExternalAnchorPublisherRegistry.js';
-import { ExternalProofVerifierRegistry } from '../application/ExternalProofVerifierRegistry.js';
-import { ExternalAnchorCreationOutcome } from '../application/ExternalAnchorCreationOutcome.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { PublicationAnchorCreationCoordinator } from '../application/PublicationAnchorCreationCoordinator.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/anchoring/CreateExternalPublicationAnchorOrchestratorUseCase.js';
+import { ExternalAnchorPublisherRegistry } from '../application/anchoring/ExternalAnchorPublisherRegistry.js';
+import { ExternalProofVerifierRegistry } from '../application/anchoring/ExternalProofVerifierRegistry.js';
+import { ExternalAnchorCreationOutcome } from '../application/anchoring/ExternalAnchorCreationOutcome.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { PublicationAnchorCreationCoordinator } from '../application/anchoring/PublicationAnchorCreationCoordinator.js';
 import { ProofVerifier } from '../anchoring/ProofVerifier.js';
 import { ArweaveAnchorPublisher } from '../anchoring/ArweaveAnchorPublisher.js';
 import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransactionDataProofVerifier.js';
@@ -536,8 +536,8 @@ async function run() {
     {
         const contentSideFiles = [
             'content/ArweaveContentStore.js',
-            'application/ArweavePublicationMaterialUploader.js',
-            'application/ArweaveWorldEncounterMaterialResolver.js'
+            'application/arweave/ArweavePublicationMaterialUploader.js',
+            'application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js'
         ];
         const anchorRoleSymbols = /ArweaveAnchorPublisher|ArweaveTransactionDataProofVerifier|ExternalAnchorPublisherRegistry|ExternalProofVerifierRegistry|PublicationAnchorCreationCoordinator|CreateExternalPublicationAnchorUseCase|CreatePublicationAnchorUseCase|PublicationAnchor\b/;
         for (const file of contentSideFiles) {
@@ -644,7 +644,7 @@ async function run() {
         // (already read in full for this audit's own Section A) is
         // `{ publicationCatalog, anchorCatalog, identityProvider, publishers, knowledgeStore }`
         // — nothing content-shaped at all.
-        const orchestratorSource = await source('application/CreateExternalPublicationAnchorOrchestratorUseCase.js');
+        const orchestratorSource = await source('application/anchoring/CreateExternalPublicationAnchorOrchestratorUseCase.js');
         check(!/ContentStore|MaterialUploader|contentPublisher/i.test(orchestratorSource), 'I3. the anchor-creation orchestrator\'s own composition root accepts nothing content-shaped in its signature — there is no parameter a caller could even mistakenly wire a content publisher into');
 
         console.log('✓ Section I: no hidden fan-out in either direction — an explicit anchor action reaches only its own registered publisher, never a content-role collaborator, and the anchor orchestrator\'s own composition has no content-shaped parameter for one to be smuggled through');

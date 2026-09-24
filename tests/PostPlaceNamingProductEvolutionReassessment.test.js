@@ -4,17 +4,17 @@ import { execSync } from 'node:child_process';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import {
     buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope
 } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { buildPlaceNamingClaimPublication } from '../application/PlaceNamingClaimPublication.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
+import { buildPlaceNamingClaimPublication } from '../application/placeNaming/PlaceNamingClaimPublication.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -169,7 +169,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
-        const createWorldView = await rawSource('application/CreateWorldViewUseCase.js');
+        const createWorldView = await rawSource('application/world/CreateWorldViewUseCase.js');
         const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const mainJs = await rawSource('ui/main.js');
         const worldEncounterCanvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
@@ -179,17 +179,17 @@ async function runTests() {
         // CreateWorldViewUseCase, which still constructs a real
         // WorldNavigationSession.
         assert(worldView.includes('CreateWorldViewUseCase') && createWorldView.includes('new WorldNavigationSession('),
-            'A1. ui/views/WorldView.js still reaches application/CreateWorldViewUseCase.js, which still constructs a real WorldNavigationSession.');
+            'A1. ui/views/WorldView.js still reaches application/world/CreateWorldViewUseCase.js, which still constructs a real WorldNavigationSession.');
 
         // A2. Snapshot discovery -> verification -> materialization ->
         // World — COMPLETE since 0.9.216, reconfirmed through 0.9.219.
         // The one shared transfer schema both directions use still
         // exists, and WorldView still reaches the placement use case
         // live.
-        assert(await sourceExists('application/PublicationSnapshotTransferPackage.js'),
-            'A2a. application/PublicationSnapshotTransferPackage.js still exists as the one shared Snapshot transfer schema.');
+        assert(await sourceExists('application/snapshot/PublicationSnapshotTransferPackage.js'),
+            'A2a. application/snapshot/PublicationSnapshotTransferPackage.js still exists as the one shared Snapshot transfer schema.');
         assert(worldView.includes('CreateExternalSnapshotPlacementUseCase'),
-            'A2b. ui/views/WorldView.js still references application/CreateExternalSnapshotPlacementUseCase.js live.');
+            'A2b. ui/views/WorldView.js still references application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js live.');
 
         // A3. Publication distribution — COMPLETE since 0.9.26-0.9.52.
         // ui/main.js still composes a distribution command, and a live
@@ -254,11 +254,11 @@ async function runTests() {
     const macroMatrix = [];
     {
         const worldView = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
-        const createWorldView = await rawSource('application/CreateWorldViewUseCase.js');
+        const createWorldView = await rawSource('application/world/CreateWorldViewUseCase.js');
         const editorView = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         const mainJs = await rawSource('ui/main.js');
         const worldEncounterCanvas = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
-        const navSession = await rawSource('application/WorldNavigationSession.js');
+        const navSession = await rawSource('application/world/WorldNavigationSession.js');
 
         assert(/new\s+EditorSession\s*\(/.test(editorView), 'B1. Editor: ui/views/EditorView.js still constructs a real EditorSession.');
         macroMatrix.push(['Editor', 'COMPLETE']);
@@ -272,7 +272,7 @@ async function runTests() {
         macroMatrix.push(['World Presence', 'COMPLETE']);
 
         assert(navSession.includes('AvatarVehicleInteractionController') && navSession.includes('AvatarVehicleMovementController') && worldView.includes('vehicleInteractionState'),
-            'B4. Vehicles: application/WorldNavigationSession.js still imports both vehicle controllers, and WorldView still reads vehicleInteractionState() live.');
+            'B4. Vehicles: application/world/WorldNavigationSession.js still imports both vehicle controllers, and WorldView still reads vehicleInteractionState() live.');
         macroMatrix.push(['Vehicles', 'COMPLETE']);
 
         assert(createWorldView.includes('PublishDocumentUseCase') && editorView.includes('new CreatePublisherUseCase()'),
@@ -289,7 +289,7 @@ async function runTests() {
 
         const legacyCollabCallers = await constructorCallerCount('CollaborationSession', ['application', 'ui'], { excludeSuffix: 'CreateCollaborationUseCase.js' });
         assert(legacyCollabCallers === 0,
-            `B8. Collaboration: collaboration/CollaborationSession.js still has zero real callers outside application/CreateCollaborationUseCase.js (found ${legacyCollabCallers}) — the legacy protocol stays OBSOLETE_CANDIDATE, the live 0.9.222-0.9.240 path stays COMPLETE.`);
+            `B8. Collaboration: collaboration/CollaborationSession.js still has zero real callers outside application/document/CreateCollaborationUseCase.js (found ${legacyCollabCallers}) — the legacy protocol stays OBSOLETE_CANDIDATE, the live 0.9.222-0.9.240 path stays COMPLETE.`);
         macroMatrix.push(['Collaboration', 'COMPLETE (legacy authority protocol: OBSOLETE_CANDIDATE, unchanged since 0.9.241 — Section E)']);
 
         assert(mainJs.includes('new PublicationCatalogDiscoveryProvider('), 'B9. Discovery: ui/main.js still constructs a real PublicationCatalogDiscoveryProvider.');
@@ -322,9 +322,9 @@ async function runTests() {
         // boundary stays as clean as 0.9.259 Section K already found, one
         // arc later.
         const placeNamingFiles = [
-            'application/PlaceNamingClaimUseCase.js', 'application/PlaceNamingClaimExchange.js',
-            'application/LocalPlaceNamingClaimStore.js', 'application/LocalNamePreferenceStore.js',
-            'application/NostrPlaceNamingDiscoverySource.js', 'application/PlaceNamingDiscoveryMonitor.js'
+            'application/placeNaming/PlaceNamingClaimUseCase.js', 'application/placeNaming/PlaceNamingClaimExchange.js',
+            'application/placeNaming/LocalPlaceNamingClaimStore.js', 'application/identity/LocalNamePreferenceStore.js',
+            'application/placeNaming/NostrPlaceNamingDiscoverySource.js', 'application/placeNaming/PlaceNamingDiscoveryMonitor.js'
         ];
         for (const file of placeNamingFiles) {
             const code = codeOnlyLines(await rawSource(file));
@@ -382,7 +382,7 @@ async function runTests() {
     // examined individually rather than assumed. D6 below then checks,
     // rather than assumes, whether ANY delivery primitive exists
     // anywhere in this codebase at all — and finds a real, working one
-    // (application/ChatOutbox.js) that a naive sweep would have missed,
+    // (application/chat/ChatOutbox.js) that a naive sweep would have missed,
     // exactly the trap 0.9.271 Section F's own header already warned
     // against for a different capability ("naively concluding no such
     // surface exists anywhere ... would have been WRONG"). That
@@ -397,11 +397,11 @@ async function runTests() {
         // persisted, and delivery is peer-to-peer over an ALREADY-
         // connected PeerMessageBus; a participant who leaves is pruned,
         // not queued for later delivery.
-        const presenceUseCase = await rawSource('application/WorldPresenceUseCase.js');
+        const presenceUseCase = await rawSource('application/presence/WorldPresenceUseCase.js');
         assert(/[Nn]ever persisted/.test(presenceUseCase) || codeOnlyLines(presenceUseCase).match(/this\._localActivity\s*=\s*new Map\(\)/),
-            'D1a. application/WorldPresenceUseCase.js still holds presence only in an in-memory Map, never persisted.');
+            'D1a. application/presence/WorldPresenceUseCase.js still holds presence only in an in-memory Map, never persisted.');
         assert(presenceUseCase.includes('peerMessageBus') && presenceUseCase.includes('this._registry.onChange('),
-            'D1b. application/WorldPresenceUseCase.js still delivers presence only over an already-connected PeerMessageBus, pruned on disconnect (this._pruneDisconnected()) rather than queued.');
+            'D1b. application/presence/WorldPresenceUseCase.js still delivers presence only over an already-connected PeerMessageBus, pruned on disconnect (this._pruneDisconnected()) rather than queued.');
         console.log('✓ D1. World presence change: event exists and recipients are identifiable, but delivery is realtime-peer-only and never persisted — (3) fails structurally.');
 
         // D2. Publication commentary. (1) YES — a PublicationCommentary
@@ -438,10 +438,10 @@ async function runTests() {
         assert(commentary.authorIdentityId !== publication.publisherIdentity.id,
             'D2c. LIVE: the commentary\'s actor (Bob) and the Publication\'s own recipient candidate (Alice) are two distinct, independently verifiable identities — a genuine "who commented" vs. "who should be told" pair, unlike Place Naming\'s own competing-claims case (Section D3 below) where no such pair exists.');
 
-        const addUseCaseCode = codeOnlyLines(await rawSource('application/AddPublicationCommentaryUseCase.js'));
-        const canCommentCode = codeOnlyLines(await rawSource('application/CanCommentOnPublicationUseCase.js'));
+        const addUseCaseCode = codeOnlyLines(await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js'));
+        const canCommentCode = codeOnlyLines(await rawSource('application/publication/CanCommentOnPublicationUseCase.js'));
         assert(!/publisherIdentity/.test(addUseCaseCode) && !/publisherIdentity/.test(canCommentCode),
-            'D2d. Neither application/AddPublicationCommentaryUseCase.js nor application/CanCommentOnPublicationUseCase.js reads publisherIdentity anywhere in its own code — the one fact a notification would need ("who published this") already exists on the very Publication object both classes already hold a reference to, and is never read for that purpose.');
+            'D2d. Neither application/publication/commentary/AddPublicationCommentaryUseCase.js nor application/publication/CanCommentOnPublicationUseCase.js reads publisherIdentity anywhere in its own code — the one fact a notification would need ("who published this") already exists on the very Publication object both classes already hold a reference to, and is never read for that purpose.');
         console.log('✓ D2. Publication commentary: (1) durably recorded, (2) a genuine, structurally distinct recipient identity already exists on file and is proven live here — the strongest of the five candidates — but (3) still fails: nothing computes or delivers on that fact, and (D6 below) nothing in this codebase reaches from Commentary to a delivery mechanism that could act on it even if something did.');
 
         // D3. Place Naming claim. (1) YES — a claim's arrival is durably
@@ -451,9 +451,9 @@ async function runTests() {
         // a specific other identity. Every existing claim author is a
         // peer, not a subscriber — reconfirmed structurally: the
         // discovery source is read-only, matching 0.9.271 Section G.
-        const nostrSource = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoverySource.js'));
+        const nostrSource = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoverySource.js'));
         assert(!/publishEvent|sendEvent|broadcast|\.publish\(/i.test(nostrSource),
-            'D3a. application/NostrPlaceNamingDiscoverySource.js still contains no publish/send/broadcast call — discovery is pull-only, reconfirmed one arc later.');
+            'D3a. application/placeNaming/NostrPlaceNamingDiscoverySource.js still contains no publish/send/broadcast call — discovery is pull-only, reconfirmed one arc later.');
         console.log('✓ D3. Place Naming claim: event exists, but there is no recipient at all — discovery is a puller\'s own query, never a push at a named identity. Weaker than commentary (D2), not stronger.');
 
         // D4. Snapshot/distribution result. (1) YES, but scoped to THIS
@@ -467,12 +467,12 @@ async function runTests() {
         // side of the exchange, where a second replica actually imports
         // someone else's Snapshot — has no acknowledge/receipt call of
         // any kind back to the original publisher.
-        const lifecycleStoreHeader = await rawSource('application/PublicationDistributionLifecycleStore.js');
+        const lifecycleStoreHeader = await rawSource('application/publication/distribution/PublicationDistributionLifecycleStore.js');
         assert(/talks to another process, tab, or machine/.test(lifecycleStoreHeader),
-            'D4a. application/PublicationDistributionLifecycleStore.js\'s own header still states it never talks to another process, tab, or machine — a distribution result is this replica\'s own local operation status, not a cross-user event.');
-        const importSnapshotSource = codeOnlyLines(await rawSource('application/ImportPublicationSnapshotTransferPackageUseCase.js'));
+            'D4a. application/publication/distribution/PublicationDistributionLifecycleStore.js\'s own header still states it never talks to another process, tab, or machine — a distribution result is this replica\'s own local operation status, not a cross-user event.');
+        const importSnapshotSource = codeOnlyLines(await rawSource('application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js'));
         assert(!/acknowledge|receipt|notifyPublisher|notifyOrigin/i.test(importSnapshotSource),
-            'D4b. application/ImportPublicationSnapshotTransferPackageUseCase.js still contains no acknowledge/receipt/notify call back to the original publisher — importing someone else\'s Snapshot is silent and one-directional.');
+            'D4b. application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js still contains no acknowledge/receipt/notify call back to the original publisher — importing someone else\'s Snapshot is silent and one-directional.');
         console.log('✓ D4. Snapshot/distribution result: the only genuine "recipient" is the same local actor who started the operation; a second replica importing that Snapshot never informs the first at all. Weaker than commentary (D2) on recipient distinctness, and structurally silent on delivery.');
 
         // D5. Document collaboration activity. (1) YES — an incoming
@@ -483,11 +483,11 @@ async function runTests() {
         // over an ALREADY-established propagation feed; there is nothing
         // to observe for a collaborator who is not currently connected,
         // and nothing here queues one for later.
-        const gapObserverSource = await rawSource('application/DocumentOperationCausalGapObservationUseCase.js');
+        const gapObserverSource = await rawSource('application/document/DocumentOperationCausalGapObservationUseCase.js');
         assert(gapObserverSource.includes('new EventBus()') || gapObserverSource.includes("import { EventBus }"),
-            'D5a. application/DocumentOperationCausalGapObservationUseCase.js still fires its own observation through a local EventBus, not a cross-session channel.');
+            'D5a. application/document/DocumentOperationCausalGapObservationUseCase.js still fires its own observation through a local EventBus, not a cross-session channel.');
         assert(/attach.*propagation|attaches to that identical feed/i.test(gapObserverSource),
-            'D5b. application/DocumentOperationCausalGapObservationUseCase.js\'s own header still describes itself as a second subscriber on the SAME live propagation feed operations already flow through — observable only while that feed is live, never for a disconnected collaborator.');
+            'D5b. application/document/DocumentOperationCausalGapObservationUseCase.js\'s own header still describes itself as a second subscriber on the SAME live propagation feed operations already flow through — observable only while that feed is live, never for a disconnected collaborator.');
         console.log('✓ D5. Document collaboration activity: recipients are real, named identities, but awareness is emitted only at the moment of live, connected propagation — identical shape to World presence (D1), for the identical underlying reason.');
 
         // D6. THE SYNTHESIS — checked directly rather than assumed, per
@@ -496,13 +496,13 @@ async function runTests() {
         // "no Notification class, therefore no delivery mechanism of any
         // kind" would be WRONG, exactly the trap 0.9.271 Section F
         // already caught once for a different capability. It DOES exist
-        // — application/ChatOutbox.js (0.2.63) is a real, working,
+        // — application/chat/ChatOutbox.js (0.2.63) is a real, working,
         // durable, identity-addressed (never connection-addressed) queue
         // that flushes automatically on reconnect. This is the single
         // most important finding of this section.
-        const chatOutboxSource = await rawSource('application/ChatOutbox.js');
+        const chatOutboxSource = await rawSource('application/chat/ChatOutbox.js');
         assert(chatOutboxSource.includes('export class ChatOutbox') && chatOutboxSource.includes('enqueue(message, peerIdentityId'),
-            'D6a. application/ChatOutbox.js genuinely exists and genuinely enqueues messages addressed to a peerIdentityId — a real precedent for durable, identity-addressed delivery, not a hypothetical one.');
+            'D6a. application/chat/ChatOutbox.js genuinely exists and genuinely enqueues messages addressed to a peerIdentityId — a real precedent for durable, identity-addressed delivery, not a hypothetical one.');
         assert(chatOutboxSource.includes('Addressed To An Identity, Never A Connection'),
             'D6b. Its own header states the precedent explicitly: "A Durable Outbox Is Addressed To An Identity, Never A Connection" — proving the architectural PATTERN a notification would need is not only possible but already built and shipping, one domain over.');
 
@@ -525,12 +525,12 @@ async function runTests() {
         // ZERO of application/, ui/, or core/ outside Chat/Conversation/
         // PeerPresence code ever imports it.
         assert(/one list per LOCAL owner/.test(flattenProse(chatOutboxSource)),
-            'D6d. application/ChatOutbox.js\'s own header still states it is durable "one list per LOCAL owner" — the queued fact lives only on the sender\'s own device until that device itself reconnects, never on a neutral or recipient-owned store.');
+            'D6d. application/chat/ChatOutbox.js\'s own header still states it is durable "one list per LOCAL owner" — the queued fact lives only on the sender\'s own device until that device itself reconnects, never on a neutral or recipient-owned store.');
         const allChatOutboxImporters = execSync('grep -rl "from .*ChatOutbox\\.js." application ui core --include="*.js" || true', { cwd: SOURCE_ROOT.pathname })
             .toString().trim().split('\n').filter(Boolean);
-        const nonChatOutboxImporters = allChatOutboxImporters.filter((f) => !/chat|conversation/i.test(f) && f !== 'application/PeerPresenceUseCase.js');
+        const nonChatOutboxImporters = allChatOutboxImporters.filter((f) => !/chat|conversation/i.test(f) && f !== 'application/presence/PeerPresenceUseCase.js');
         assert(nonChatOutboxImporters.length === 0,
-            `D6f. Every file that imports application/ChatOutbox.js is Chat/Conversation-domain code, plus exactly one READ-only summary reader (application/PeerPresenceUseCase.js#list(), which never enqueues) — found ${nonChatOutboxImporters.length} unexplained non-Chat importer(s): ${nonChatOutboxImporters.join(', ')}. None of the five candidate events in D1-D5 reach it.`);
+            `D6f. Every file that imports application/chat/ChatOutbox.js is Chat/Conversation-domain code, plus exactly one READ-only summary reader (application/presence/PeerPresenceUseCase.js#list(), which never enqueues) — found ${nonChatOutboxImporters.length} unexplained non-Chat importer(s): ${nonChatOutboxImporters.join(', ')}. None of the five candidate events in D1-D5 reach it.`);
 
         // D6g. AND even fully generalized, its own guarantee is bounded,
         // not eventual: a queued entry that never gets a chance to flush
@@ -539,7 +539,7 @@ async function runTests() {
         assert(outboxEntrySource.includes('DEFAULT_OUTBOX_TTL_MS') && /best-effort, not forever/.test(await rawSource('core/ChatOutboxEntry.js')),
             'D6g. core/ChatOutboxEntry.js still bounds delivery to a 7-day, explicitly "best-effort, not forever" TTL — even within its own domain this precedent does not promise the "recipient can always eventually learn of this" property a durable notification inbox would need.');
 
-        console.log('✓ D: Five candidate notification-worthy events audited against three conditions (occurs+recorded, distinct recipient, offline delivery). Publication commentary (D2) is the strongest candidate on recipient distinctness. All five fail condition (3) — but NOT because no delivery precedent exists anywhere, which this section checked directly rather than assumed (D6): application/ChatOutbox.js is a real, working, durable, identity-addressed queue that flushes on reconnect, proving the underlying PATTERN a notification would need is buildable and has, in fact, already been built once. Its real limits are what actually block reuse: it is typed to ChatMessage specifically (D6c), durable only on the sender\'s own device with zero callers outside Chat/Conversation/presence-summary code (D6d/D6f), and even in its own domain gives only a bounded, 7-day, best-effort guarantee, never a durable inbox (D6g). Notifications therefore remains MISSING_DOMAIN_CAPABILITY — characterized more precisely than any of its eight prior citations, and differently than a first pass would suggest: not "no precedent exists," but "the one precedent that exists is domain-specific, sender-anchored, and bounded, and reusing or strengthening it for any of these five events is new, deliberate architectural work, not a UI feature." No evidence anywhere in this codebase demonstrates that investment is warranted yet, so it is recorded, not selected.');
+        console.log('✓ D: Five candidate notification-worthy events audited against three conditions (occurs+recorded, distinct recipient, offline delivery). Publication commentary (D2) is the strongest candidate on recipient distinctness. All five fail condition (3) — but NOT because no delivery precedent exists anywhere, which this section checked directly rather than assumed (D6): application/chat/ChatOutbox.js is a real, working, durable, identity-addressed queue that flushes on reconnect, proving the underlying PATTERN a notification would need is buildable and has, in fact, already been built once. Its real limits are what actually block reuse: it is typed to ChatMessage specifically (D6c), durable only on the sender\'s own device with zero callers outside Chat/Conversation/presence-summary code (D6d/D6f), and even in its own domain gives only a bounded, 7-day, best-effort guarantee, never a durable inbox (D6g). Notifications therefore remains MISSING_DOMAIN_CAPABILITY — characterized more precisely than any of its eight prior citations, and differently than a first pass would suggest: not "no precedent exists," but "the one precedent that exists is domain-specific, sender-anchored, and bounded, and reusing or strengthening it for any of these five events is new, deliberate architectural work, not a UI feature." No evidence anywhere in this codebase demonstrates that investment is warranted yet, so it is recorded, not selected.');
     }
 
     // ---------------------------------------------------------------
@@ -553,15 +553,15 @@ async function runTests() {
         // ui/components/GroupsPanel.js was on this list until the
         // Editor dead-code cleanup deleted it.
         const obsoleteConfirmed = [
-            'application/CreatePublicationSnapshotPlacementCatalogUseCase.js',
-            'application/CreatePublicationAnchorCatalogUseCase.js',
-            'application/CreatePlacementRegistryUseCase.js'
+            'application/snapshot/placement/CreatePublicationSnapshotPlacementCatalogUseCase.js',
+            'application/anchoring/CreatePublicationAnchorCatalogUseCase.js',
+            'application/placement/CreatePlacementRegistryUseCase.js'
         ];
         const obsoleteCandidate = [
-            'application/CreateSpatialIndexUseCase.js',
-            'application/CreateSpatialDiscoveryUseCase.js',
-            'application/CreateDecentralizedSpatialDiscoveryUseCase.js',
-            'application/CreateWorldViewStreamingUseCase.js'
+            'application/world/CreateSpatialIndexUseCase.js',
+            'application/discovery/CreateSpatialDiscoveryUseCase.js',
+            'application/discovery/CreateDecentralizedSpatialDiscoveryUseCase.js',
+            'application/world/CreateWorldViewStreamingUseCase.js'
         ];
         for (const path of [...obsoleteConfirmed, ...obsoleteCandidate]) {
             assert(await sourceExists(path), `E1a. ${path} still exists — classification only, nothing deleted (register since 0.9.216/0.9.219/0.9.221).`);
@@ -579,7 +579,7 @@ async function runTests() {
         const legacyCollabFiles = [
             'collaboration/CollaborationSession.js', 'collaboration/DocumentAuthority.js',
             'collaboration/AuthorityCollaborationTransport.js', 'collaboration/LocalCollaborationTransport.js',
-            'core/CollaborationEnvelope.js', 'application/CreateCollaborationUseCase.js'
+            'core/CollaborationEnvelope.js', 'application/document/CreateCollaborationUseCase.js'
         ];
         for (const path of legacyCollabFiles) {
             assert(await sourceExists(path), `E2a. ${path} still exists — nothing deleted.`);
@@ -612,7 +612,7 @@ async function runTests() {
         // Section E2 above already reconfirmed the legacy collaboration
         // protocol has stayed frozen (zero callers) since exactly that
         // point — no further collaboration-domain building occurred.
-        assert(await sourceExists('core/PublicationCommentary.js') && await sourceExists('application/DocumentOperationCausalGapObservationUseCase.js'),
+        assert(await sourceExists('core/PublicationCommentary.js') && await sourceExists('application/document/DocumentOperationCausalGapObservationUseCase.js'),
             'F1. Both the collaboration arc\'s own closing capability (causal gap observation) and the very next arc\'s own opening capability (Publication commentary domain) exist side by side — Collaboration\'s own reassessment (0.9.241) was followed by a NEW domain, never by further Collaboration-domain building.');
 
         // F2. Commentary: 0.9.252's own reassessment ("Post-Commentary-
@@ -620,7 +620,7 @@ async function runTests() {
         // domain (Place Naming, 0.9.253), never by another Commentary
         // milestone. Checked the same way: Commentary's own closing file
         // and Place Naming's own opening file both exist.
-        assert(await sourceExists('ui/components/OwnPublicationPanel.js') && await sourceExists('application/PlaceNamingClaimUseCase.js'),
+        assert(await sourceExists('ui/components/OwnPublicationPanel.js') && await sourceExists('application/placeNaming/PlaceNamingClaimUseCase.js'),
             'F2. Commentary\'s own closing capability (the count UI, 0.9.251) and the next arc\'s own opening capability (Place Naming claim use case, 0.9.253) both exist — Commentary stopped after one reassessment cycle, exactly like Collaboration.');
 
         // F3. Place Naming's own history is NOT uniform with F1/F2, and
@@ -712,7 +712,7 @@ async function runTests() {
 '    (the Publication\'s own publisherIdentity) exists and is proven live\n' +
 '    — but every candidate, including it, fails condition (3). Checked\n' +
 '    directly rather than assumed: a real delivery precedent DOES exist\n' +
-'    (application/ChatOutbox.js, 0.2.63) — a durable, identity-addressed,\n' +
+'    (application/chat/ChatOutbox.js, 0.2.63) — a durable, identity-addressed,\n' +
 '    reconnect-triggered queue, proving the underlying pattern is\n' +
 '    buildable. But it is typed to ChatMessage, durable only on the\n' +
 '    sender\'s own device, bounded by a 7-day best-effort TTL, and has\n' +
@@ -754,7 +754,7 @@ async function runTests() {
 '    Not selected. ForkBuild has reached another explicit product-\n' +
 '    evolution decision point, exactly as 0.9.221 did before it. Building\n' +
 '    notifications now would mean a deliberate architectural choice —\n' +
-'    generalize application/ChatOutbox.js\'s own pattern across domains\n' +
+'    generalize application/chat/ChatOutbox.js\'s own pattern across domains\n' +
 '    and accept its sender-anchored, 7-day-bounded guarantee, or design a\n' +
 '    stronger, durable, recipient-owned mechanism from scratch — never an\n' +
 '    incremental UI feature bolted onto today\'s peer-connected/pull-only\n' +
@@ -762,7 +762,7 @@ async function runTests() {
 '    candidates, belongs to an explicit human/product call, not to this\n' +
 '    reassessment.\n');
 
-        console.log('✓ Section G: Verdict recorded. No production changes were made in this milestone (0.9.272, Section F5). All six completed product arcs remain COMPLETE (Section A); the thirteen-area macro sweep finds nothing newly stranded by Place Naming\'s own completion (Section B); Collaboration and Commentary are reconfirmed built exactly as 0.9.221 hoped (Section C); notifications is reassessed with a genuinely sharper, three-condition criterion rather than recycled from a stale grep, and found to fail on a delivery-guarantee gap common to every candidate event — one real, narrower precedent (application/ChatOutbox.js) exists and was found rather than missed, but its own domain-specific, sender-anchored, bounded shape is what actually blocks reuse, not a UI or domain-modeling gap (Section D); the technical-debt register is unchanged (Section E); and the Place Naming stopping point is preserved, with its own honest five-cycle history on the record and the concrete mechanism that finally broke that cycle reconfirmed and extended to this file (Section F).');
+        console.log('✓ Section G: Verdict recorded. No production changes were made in this milestone (0.9.272, Section F5). All six completed product arcs remain COMPLETE (Section A); the thirteen-area macro sweep finds nothing newly stranded by Place Naming\'s own completion (Section B); Collaboration and Commentary are reconfirmed built exactly as 0.9.221 hoped (Section C); notifications is reassessed with a genuinely sharper, three-condition criterion rather than recycled from a stale grep, and found to fail on a delivery-guarantee gap common to every candidate event — one real, narrower precedent (application/chat/ChatOutbox.js) exists and was found rather than missed, but its own domain-specific, sender-anchored, bounded shape is what actually blocks reuse, not a UI or domain-modeling gap (Section D); the technical-debt register is unchanged (Section E); and the Place Naming stopping point is preserved, with its own honest five-cycle history on the record and the concrete mechanism that finally broke that cycle reconfirmed and extended to this file (Section F).');
     }
 
     console.log('\n✅ All PostPlaceNamingProductEvolutionReassessment tests passed.');

@@ -8,12 +8,12 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { PublicationCommentaryDistributionEnvelope } from '../core/PublicationCommentaryDistributionEnvelope.js';
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
-import { PublicationCommentaryArweaveDistribution } from '../application/PublicationCommentaryArweaveDistribution.js';
-import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/DiscoverPublicationCommentaryFromArweaveUseCase.js';
-import { createArweaveTaggedTransactionSearch } from '../application/ArweaveTaggedTransactionSearch.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryArweaveDistribution } from '../application/publication/commentary/PublicationCommentaryArweaveDistribution.js';
+import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';
+import { createArweaveTaggedTransactionSearch } from '../application/arweave/ArweaveTaggedTransactionSearch.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
-import { PublicationCommentaryRemoteNotificationBridge } from '../application/PublicationCommentaryRemoteNotificationBridge.js';
+import { PublicationCommentaryRemoteNotificationBridge } from '../application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 
@@ -29,7 +29,7 @@ import {
 // substrate satisfy the identical contract shape (Section A) and remain
 // genuinely independent (Section I); never modified, never used to carry a
 // single byte of this file's own Commentary traffic.
-import { PublicationCommentaryNostrDistribution } from '../application/PublicationCommentaryNostrDistribution.js';
+import { PublicationCommentaryNostrDistribution } from '../application/publication/commentary/PublicationCommentaryNostrDistribution.js';
 
 // 0.9.631 — Publication Commentary Arweave Asynchronous Distribution.
 //
@@ -48,7 +48,7 @@ import { PublicationCommentaryNostrDistribution } from '../application/Publicati
 // milestone builds exactly those two pieces (application/
 // PublicationCommentaryArweaveDistribution.js, application/
 // ArweaveTaggedTransactionSearch.js), the admission boundary on top of the
-// adapter (application/DiscoverPublicationCommentaryFromArweaveUseCase.js),
+// adapter (application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js),
 // and the ui/main.js wiring making all three reachable from the real,
 // running application — deliberately preserving Arweave's own wider
 // durability SEMANTIC_GAP (0.9.630 Section E) rather than papering over it,
@@ -171,7 +171,7 @@ function fakeArweaveSigner(label) {
 // A realistic fake Arweave gateway speaking the same two HTTP exchanges the
 // real production transport files implement — `POST <gatewayUrl>/tx` and
 // `GET <gatewayUrl>/<transaction-id>` — plus a fake GraphQL endpoint
-// speaking the same query shape `application/ArweaveTaggedTransactionSearch.js`
+// speaking the same query shape `application/arweave/ArweaveTaggedTransactionSearch.js`
 // sends, so `discover()` can be exercised end to end without a real
 // network. `mineDelayTicks` simulates a transaction the gateway has
 // accepted but does not yet serve on GET — the genuine gap Section C
@@ -671,8 +671,8 @@ async function run() {
     // ===============================================================
     {
         const mainSource = codeOnly(await rawSource('ui/main.js'));
-        assert(mainSource.includes("import { PublicationCommentaryArweaveDistribution } from '../application/PublicationCommentaryArweaveDistribution.js';")
-            && mainSource.includes("import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/DiscoverPublicationCommentaryFromArweaveUseCase.js';"),
+        assert(mainSource.includes("import { PublicationCommentaryArweaveDistribution } from '../application/publication/commentary/PublicationCommentaryArweaveDistribution.js';")
+            && mainSource.includes("import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';"),
             n('ui/main.js imports both new classes'));
 
         const constructionSites = grepFiles('new PublicationCommentaryArweaveDistribution\\(', ['ui', 'application']);
@@ -691,7 +691,7 @@ async function run() {
         assert(/discoveryProvider\s*=\s*\(input\s*&&\s*input\.discoveryProvider\)\s*\|\|\s*'nostr'/.test(wrapperBody),
             n('the wrapper reads input.discoveryProvider, defaulting to \'nostr\' — every existing caller that never supplies it keeps the exact 0.9.628 behavior unchanged'));
         assert(/discoveryProvider === 'arweave'\s*\?\s*publicationCommentaryArweaveDistribution\s*:\s*publicationCommentaryNostrDistribution/.test(wrapperBody),
-            n('SELECTION, NEVER FAN-OUT: exactly one asynchronous substrate is chosen per call — never both — mirroring application/PublicationDistributionRuntimeComposition.js\'s own invariant of the same name'));
+            n('SELECTION, NEVER FAN-OUT: exactly one asynchronous substrate is chosen per call — never both — mirroring application/publication/distribution/PublicationDistributionRuntimeComposition.js\'s own invariant of the same name'));
         assert((wrapperBody.match(/\.publish\(envelopeJson\)\.catch\(\(\) => \{\}\)/g) || []).length === 1,
             n('exactly one fire-and-forget publish call exists in the wrapper body — the selected substrate\'s own, never two parallel publish attempts'));
 
@@ -736,9 +736,9 @@ async function run() {
     // Section K — exclusion guard.
     // ===============================================================
     {
-        const newFilesSource = codeOnly(await rawSource('application/PublicationCommentaryArweaveDistribution.js'))
-            + codeOnly(await rawSource('application/DiscoverPublicationCommentaryFromArweaveUseCase.js'))
-            + codeOnly(await rawSource('application/ArweaveTaggedTransactionSearch.js'));
+        const newFilesSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryArweaveDistribution.js'))
+            + codeOnly(await rawSource('application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js'))
+            + codeOnly(await rawSource('application/arweave/ArweaveTaggedTransactionSearch.js'));
         assert(!/arweaveTransactionId\s*[:=]|nostrEventId\s*[:=]/.test(newFilesSource),
             n('no new Commentary identity field of any kind is introduced anywhere in this milestone\'s own new files'));
         assert(!/setTimeout\([^)]*retry|setInterval|while\s*\(\s*true\s*\)|MAX_RETR|backoff/i.test(newFilesSource),
@@ -746,18 +746,18 @@ async function run() {
         assert(!/relayRank|relayScore|gatewayRank|gatewayScore|gatewayFallback|fallbackGateway/i.test(newFilesSource),
             n('no gateway ranking, preference, or fallback vocabulary of any kind'));
 
-        const nostrFilesSource = codeOnly(await rawSource('application/PublicationCommentaryNostrDistribution.js'))
-            + codeOnly(await rawSource('application/DiscoverPublicationCommentaryFromNostrUseCase.js'));
+        const nostrFilesSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryNostrDistribution.js'))
+            + codeOnly(await rawSource('application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js'));
         assert(!/Arweave/i.test(nostrFilesSource),
             n('the existing Nostr Commentary substrate/admission files remain completely unmodified and unaware of Arweave'));
 
-        const peerExchangeSource = await rawSource('application/PublicationCommentaryDistributionPeerExchange.js');
+        const peerExchangeSource = await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js');
         assert(!/Arweave/i.test(peerExchangeSource),
             n('the existing WebRTC peer exchange remains entirely unaware of Arweave, exactly as it already was unaware of Nostr'));
 
-        const bridgeSource = codeOnly(await rawSource('application/PublicationCommentaryRemoteNotificationBridge.js'));
+        const bridgeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js'));
         assert(!/Arweave/i.test(bridgeSource),
-            n('application/PublicationCommentaryRemoteNotificationBridge.js is unmodified by this milestone — it still mentions nothing Arweave-shaped, because it already accepts the transport-agnostic { commentary, isNew } shape'));
+            n('application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js is unmodified by this milestone — it still mentions nothing Arweave-shaped, because it already accepts the transport-agnostic { commentary, isNew } shape'));
 
         console.log('✓ K: no new Commentary identity field, no retry/mining-delay compensation, no gateway ranking, and no change whatsoever to the Nostr or WebRTC Commentary paths.');
     }
@@ -767,10 +767,10 @@ async function run() {
     // ===============================================================
     {
         console.log('\n=== 0.9.631 VERDICT ===');
-        console.log('CONCRETE_PRODUCT_GAP (0.9.630) -> CLOSED. application/PublicationCommentaryArweaveDistribution.js');
+        console.log('CONCRETE_PRODUCT_GAP (0.9.630) -> CLOSED. application/publication/commentary/PublicationCommentaryArweaveDistribution.js');
         console.log('    (the small, permanent adapter that audit named) now exists, composing the same two');
         console.log('    unmodified transport primitives that audit proved conform, plus a new standalone');
-        console.log('    tag-search primitive (application/ArweaveTaggedTransactionSearch.js) filling the');
+        console.log('    tag-search primitive (application/arweave/ArweaveTaggedTransactionSearch.js) filling the');
         console.log('    second gap that audit named. It is wired into ui/main.js as a genuinely SELECTABLE');
         console.log('    asynchronous substrate alongside Nostr — never a silent fan-out to both.');
         console.log('SEMANTIC_GAP (0.9.630 Section E) -> PRESERVED, HONESTLY. retrieve() never claims a');

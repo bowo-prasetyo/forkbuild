@@ -12,9 +12,9 @@
 // core/PreviewCameraFraming.js) — this file has no idea what a session,
 // a presence, or a renderer even is, and produces a framing an
 // application-layer caller hands straight to
-// application/SpatialCameraController.js#applyFraming(), the SAME sole
+// application/world/SpatialCameraController.js#applyFraming(), the SAME sole
 // write path every other camera-focus caller already uses (see
-// application/CameraFocusAnimator.js's own header) — no second
+// application/editor/CameraFocusAnimator.js's own header) — no second
 // camera-movement mechanism.
 //
 // See docs/Principles.md, "Camera Perspective Determines An Offset;

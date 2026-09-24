@@ -4,12 +4,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import PublisherPerformanceLeaderboardView from '../ui/views/PublisherPerformanceLeaderboardView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { reconstructPublisherRanking } from '../application/PublisherRankingPolicy.js';
-import { reconstructPublisherLeaderboard } from '../application/PublisherLeaderboardView.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { reconstructPublisherRanking } from '../application/leaderboard/PublisherRankingPolicy.js';
+import { reconstructPublisherLeaderboard } from '../application/leaderboard/PublisherLeaderboardView.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.417 — Publisher Performance Leaderboard UI.
@@ -18,8 +18,8 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //
 // 0.9.416's own audit (tests/PublisherPerformanceLeaderboardProductGapAudit
 // .test.js) reached BUILD_NEXT: a real, live-tested ranking capability
-// (application/PublisherRankingPolicy.js, 0.8.112) already correctly
-// presented (application/PublisherLeaderboardView.js, 0.8.113), reachable
+// (application/leaderboard/PublisherRankingPolicy.js, 0.8.112) already correctly
+// presented (application/leaderboard/PublisherLeaderboardView.js, 0.8.113), reachable
 // by zero UI paths. This milestone makes it reachable — one new view
 // (ui/views/PublisherPerformanceLeaderboardView.js), one new route
 // (/publisher-leaderboard), and one contextual entry point on /publications
@@ -205,8 +205,8 @@ async function run() {
     {
         const code = codeOnly(viewSource);
 
-        assert(importsSymbol(viewSource, 'reconstructPublisherLeaderboard'), n('B1. the view genuinely imports reconstructPublisherLeaderboard from application/PublisherLeaderboardView.js'));
-        assert(viewSource.includes("from '../../application/PublisherLeaderboardView.js'"), n('B2. that import resolves to the real, existing PublisherLeaderboardView.js module path'));
+        assert(importsSymbol(viewSource, 'reconstructPublisherLeaderboard'), n('B1. the view genuinely imports reconstructPublisherLeaderboard from application/leaderboard/PublisherLeaderboardView.js'));
+        assert(viewSource.includes("from '../../application/leaderboard/PublisherLeaderboardView.js'"), n('B2. that import resolves to the real, existing PublisherLeaderboardView.js module path'));
         assert(!code.includes('PublisherRankingPolicy'), n('B3. the view\'s own code (comments stripped) never references PublisherRankingPolicy.js at all — it reaches the ranking exclusively through PublisherLeaderboardView.js\'s own composition, never a second, parallel path to it'));
         assert(!importsSymbol(code, 'describePublisherRanking') && !importsSymbol(code, 'reconstructPublisherRanking'), n('B4. the view never imports describePublisherRanking() or reconstructPublisherRanking() itself — only the composed leaderboard projection'));
         assert(!/\.sort\s*\(/.test(code), n('B5. the view\'s own code contains no sort() call anywhere — it never reorders what reconstructPublisherLeaderboard() already ordered'));
@@ -218,7 +218,7 @@ async function run() {
         assert(!/Reconciliation|ClaimSnapshot/.test(code), n('B7. the view\'s own code contains no "Reconciliation" or "ClaimSnapshot" vocabulary at all — it composes nothing from that family'));
 
         console.log('\n=== SECTION B: CORRECT DEPENDENCY ===');
-        console.log('✓ Section B: the view depends on reconstructPublisherLeaderboard() (application/PublisherLeaderboardView.js) alone, called exactly once, never reaching PublisherRankingPolicy.js directly and never reproducing either.');
+        console.log('✓ Section B: the view depends on reconstructPublisherLeaderboard() (application/leaderboard/PublisherLeaderboardView.js) alone, called exactly once, never reaching PublisherRankingPolicy.js directly and never reproducing either.');
     }
 
     // ===============================================================
@@ -446,8 +446,8 @@ async function run() {
         assert(unauthorized.length === 0, n(`J1. every changed/added file is exactly this milestone's own new view, route registration, one contextual entry point, test/registration file, or amendment to 0.9.416's own now-superseded reachability assertions (found unauthorized: ${JSON.stringify(unauthorized)})`));
 
         const untouchedFiles = [
-            'application/PublisherRankingPolicy.js',
-            'application/PublisherLeaderboardView.js',
+            'application/leaderboard/PublisherRankingPolicy.js',
+            'application/leaderboard/PublisherLeaderboardView.js',
             'ui/App.js',
             'ui/views/ReconciliationCandidateLeaderboardView.js',
             'ui/components/ReconciliationCandidateLeaderboardTable.js'

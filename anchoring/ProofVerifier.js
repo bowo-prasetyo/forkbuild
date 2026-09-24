@@ -13,7 +13,7 @@
 // envelope itself.
 //
 // verify(proof, { publicationId, contentHash, locator }) resolves (sync
-// return or Promise — application/ExternalAnchorVerifier.js always
+// return or Promise — application/anchoring/ExternalAnchorVerifier.js always
 // awaits it) to exactly one of:
 //
 //   { valid: true }

@@ -41,7 +41,7 @@
 //                         is currently FALLING — gravity winning, whether
 //                         that's the descending half of a jump or the
 //                         result of walking off an unsupported ledge
-//                         (see application/AvatarStepConstraint.js).
+//                         (see application/avatar/AvatarStepConstraint.js).
 //
 // 0.3.4 — named rather than hidden, the same restraint this file's own
 // header already applies to every other addition here: JUMPING/FALLING
@@ -57,7 +57,7 @@
 // header does for its narrower pair: this is NEVER authorization. Seeing
 // "Bob — Building" tells a viewer nothing about whether Bob actually
 // HOLDS edit authority — that fact still comes, exclusively, from
-// application/WorldAuthorizationService.js, recomputed locally, exactly
+// application/identity/WorldAuthorizationService.js, recomputed locally, exactly
 // like WorldPresenceActivity.EDITING already never proves it either. And
 // this value is never something a user TYPES — deriveWorldSpatialActivity()
 // below is a pure function of local interaction state a session already
@@ -82,7 +82,7 @@ export function isValidWorldSpatialActivity(value) {
 }
 
 // The one place this vocabulary is actually chosen. A pure function over
-// plain booleans/strings a caller (application/WorldNavigationSession.js)
+// plain booleans/strings a caller (application/world/WorldNavigationSession.js)
 // already has lying around from its own gizmo/selection/movement state —
 // never a THREE.js object, never a Command, never anything that could
 // itself be mistaken for an editing signal. Ordered most-specific first:

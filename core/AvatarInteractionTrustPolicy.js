@@ -1,7 +1,7 @@
 // 0.2.45 — the ONE meaningful policy knob for interaction trust,
 // mirroring core/PresenceTrustPolicy.js exactly one layer over: is an
 // UNSIGNED interaction claim tolerated at all? Everything else
-// application/AvatarInteractionTrustBoundary.js enforces — a
+// application/avatar/AvatarInteractionTrustBoundary.js enforces — a
 // wrong-authority claim, a replayed/stale claim — is never a matter of
 // policy, the same "Presence Trust Has One Real Policy Axis" reasoning
 // applied here.

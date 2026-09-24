@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -16,13 +16,13 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { composePublicationDistributionCommand, composeMultiRelayNostrPublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { orchestrateMultiRelayNostrPublicationDistribution } from '../application/NostrMultiRelayPublicationDistributionOrchestrator.js';
-import { createArweaveTaggedTransactionUpload } from '../application/ArweaveTaggedTransactionUpload.js';
-import { describePublicationDistributionResult } from '../application/PublicationDistributionResult.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
-import { publicationAnchorDetailView, describeAnchorBinding } from '../application/PublicationAnchorDetailView.js';
+import { composePublicationDistributionCommand, composeMultiRelayNostrPublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { orchestrateMultiRelayNostrPublicationDistribution } from '../application/nostr/NostrMultiRelayPublicationDistributionOrchestrator.js';
+import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';
+import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
+import { publicationAnchorDetailView, describeAnchorBinding } from '../application/anchoring/PublicationAnchorDetailView.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { BitcoinAnchorEvidenceView } from '../anchoring/BitcoinAnchorEvidenceView.js';
 import { ArweaveAnchorEvidenceView } from '../anchoring/ArweaveAnchorEvidenceView.js';
@@ -248,7 +248,7 @@ async function run() {
         // A2. PublishDocumentUseCase itself performs no distribution, no
         // network call, no anchor creation — structurally confirmed, not
         // merely by its own header's prose.
-        const publishUseCaseSource = codeOnly(await source('application/PublishDocumentUseCase.js'));
+        const publishUseCaseSource = codeOnly(await source('application/publication/PublishDocumentUseCase.js'));
         assert(!/Distribut|Anchor|Nostr|Arweave|fetch\(/i.test(publishUseCaseSource),
             n('A3. PublishDocumentUseCase.js imports/calls none of Distribution, Anchor, Nostr, or Arweave, and performs no fetch — a successful Publish is a real, local, immutable snapshot fact, and NOTHING else'));
 
@@ -320,7 +320,7 @@ async function run() {
         const distributionDialogSource = await source('ui/components/EditorDistributionDialog.js');
         const dlBlock = extractRange(distributionDialogSource, '<dl v-else-if="distributionResult && distributionResult.length"', '</dl>', 'distribution result dl');
         assert(!OVERCLAIM_WORDS.test(dlBlock), n('B5. the distribution result <dl> itself (Publication/Material/Discovery/Repository rows) carries no overclaim word'));
-        const announcementPublisherSource = await source('application/ArweaveAnnouncementPublisher.js');
+        const announcementPublisherSource = await source('application/arweave/ArweaveAnnouncementPublisher.js');
         assert(!/\bpermanently published\b/i.test(announcementPublisherSource), n('B6. ArweaveAnnouncementPublisher.js never describes its own action as "permanently published" — an announcement is a gateway-accepted transaction, never a durability claim'));
 
         console.log('✓ Section B: both Nostr and Arweave discovery distribution communicate a discovery announcement, live, with neither a durability nor a permanence claim anywhere in the result path. PRODUCT_COMPLETE (and B4 doubles as the FLAGSHIP fix\'s own first live proof).');
@@ -331,7 +331,7 @@ async function run() {
     // ===============================================================
     {
         // C1-C4. The four named combinations, at the PURE result-boundary
-        // level (application/PublicationDistributionResult.js, unmodified
+        // level (application/publication/distribution/PublicationDistributionResult.js, unmodified
         // by this milestone): material.storage and discovery.* are
         // supplied and read completely independently — describing an
         // 'ar'-backed material with a Nostr discovery fact never expects
@@ -572,7 +572,7 @@ async function run() {
 
         // F3. Source-level sweep: no anchor-facing file claims proof of
         // authorship/ownership/truth.
-        for (const file of ['anchoring/BaseAnchorEvidenceView.js', 'anchoring/BitcoinAnchorEvidenceView.js', 'anchoring/ArweaveAnchorEvidenceView.js', 'application/PublicationAnchorDetailView.js']) {
+        for (const file of ['anchoring/BaseAnchorEvidenceView.js', 'anchoring/BitcoinAnchorEvidenceView.js', 'anchoring/ArweaveAnchorEvidenceView.js', 'application/anchoring/PublicationAnchorDetailView.js']) {
             const text = await source(file);
             assert(!/proof of (authorship|ownership)|proves? (authorship|ownership|this is true)/i.test(text),
                 n(`F5[${file}]. never claims proof of authorship, ownership, or truth`));
@@ -609,11 +609,11 @@ async function run() {
         // embedded HTML template, so a whole-file string-literal sweep is
         // reliable here.
         const filesToSweep = [
-            'application/PublicationDistributionResult.js',
-            'application/PublicationDistributionLifecycle.js',
-            'application/DistributionErrorMessageSanitizer.js',
-            'application/ArweaveAnnouncementPublisher.js',
-            'application/ArweavePublicationMaterialUploader.js'
+            'application/publication/distribution/PublicationDistributionResult.js',
+            'application/publication/distribution/PublicationDistributionLifecycle.js',
+            'application/publication/distribution/DistributionErrorMessageSanitizer.js',
+            'application/arweave/ArweaveAnnouncementPublisher.js',
+            'application/arweave/ArweavePublicationMaterialUploader.js'
         ];
         for (const file of filesToSweep) {
             const text = await source(file);

@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 
 // 0.9.45 — Arweave Publication Material Uploader.
 // See docs/Roadmap.md, "0.9.45 — Arweave Publication Material Uploader."
@@ -297,7 +297,7 @@ async function run() {
     // vocabulary.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/ArweavePublicationMaterialUploader.js', import.meta.url);
+        const sourceUrl = new URL('../application/arweave/ArweavePublicationMaterialUploader.js', import.meta.url);
         const fullSource = await readFile(sourceUrl, 'utf8');
         const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -315,7 +315,7 @@ async function run() {
             assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `44. code must never use "${term}" — no trust/ranking vocabulary at this boundary`);
         }
 
-        const resolverSource = await readFile(new URL('../application/ArweaveWorldEncounterMaterialResolver.js', import.meta.url), 'utf8');
+        const resolverSource = await readFile(new URL('../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js', import.meta.url), 'utf8');
         assert(!resolverSource.includes('ArweavePublicationMaterialUploader'), '45. the 0.9.35 resolver is never modified to know about this uploader — read and write stay two separate files');
 
         console.log('✓ Section L: architectural regression — no forbidden imports, no Publication serialization, no key management');

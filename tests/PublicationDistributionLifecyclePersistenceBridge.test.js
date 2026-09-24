@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
-import { PublicationDistributionLifecyclePersistenceBridge } from '../application/PublicationDistributionLifecyclePersistenceBridge.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionLifecyclePersistence } from '../application/PublicationDistributionLifecyclePersistence.js';
-import { transitionPublicationDistributionLifecycle } from '../application/PublicationDistributionLifecycleTransition.js';
-import { describePublicationDistributionLifecycle } from '../application/PublicationDistributionLifecycle.js';
-import { executePublicationDistribution } from '../application/PublicationDistributionExecutor.js';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
+import { PublicationDistributionLifecyclePersistenceBridge } from '../application/publication/distribution/PublicationDistributionLifecyclePersistenceBridge.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionLifecyclePersistence } from '../application/publication/distribution/PublicationDistributionLifecyclePersistence.js';
+import { transitionPublicationDistributionLifecycle } from '../application/publication/distribution/PublicationDistributionLifecycleTransition.js';
+import { describePublicationDistributionLifecycle } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -505,15 +505,15 @@ async function run() {
     // store, an event log, a policy engine, or a rollback mechanism.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/PublicationDistributionLifecyclePersistenceBridge.js', import.meta.url);
+        const sourceUrl = new URL('../application/publication/distribution/PublicationDistributionLifecyclePersistenceBridge.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(!codeOnly.includes("from './PublicationDistributionLifecycleStore"), '42. never imports the 0.9.52/0.9.53 memory store module — it is duck-typed, received through the constructor');
         assert(!codeOnly.includes("from './PublicationDistributionLifecyclePersistence"), '43. never imports the 0.9.54 persistence module — it is duck-typed, received through the constructor');
-        assert(!codeOnly.includes("from './PublicationDistributionLifecycle"), '44. never imports the 0.9.50 lifecycle module');
+        assert(!codeOnly.includes("from '../../PublicationDistributionLifecycle"), '44. never imports the 0.9.50 lifecycle module');
         assert(!codeOnly.includes("from './PublicationDistributionLifecycleTransition"), '45. never imports the 0.9.51 transition module');
-        assert(!codeOnly.includes("from './PublicationDistributionResult"), '46. never imports the 0.9.48 result module');
+        assert(!codeOnly.includes("from '../../PublicationDistributionResult"), '46. never imports the 0.9.48 result module');
         assert(!codeOnly.includes("from './PublicationDistributionExecutor"), '47. never imports the 0.9.49 execution module');
         assert(!codeOnly.includes('.load(') && !codeOnly.includes('.list('), '48. never calls persistence.load() or persistence.list() — no hydration of any kind');
         assert(!codeOnly.includes('try') && !codeOnly.includes('catch'), '49. the bridge itself contains no try/catch of its own — a persistence failure surfaces exactly as far as the store\'s own subscriber isolation already lets it, with no extra suppression layered on top');

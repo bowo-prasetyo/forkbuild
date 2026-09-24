@@ -2,8 +2,8 @@ import { WorldViewStreamingSession } from '../world/WorldViewStreamingSession.js
 import { WorldLoadState } from '../world/WorldLoadState.js';
 import { LoadedWorld } from '../world/LoadedWorld.js';
 import { PublicationContentCache } from '../world/PublicationContentCache.js';
-import { ResolvePublicationUseCase } from '../application/ResolvePublicationUseCase.js';
-import { DiscoverWorldAreaUseCase } from '../application/DiscoverWorldAreaUseCase.js';
+import { ResolvePublicationUseCase } from '../application/publication/ResolvePublicationUseCase.js';
+import { DiscoverWorldAreaUseCase } from '../application/discovery/DiscoverWorldAreaUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { Document } from '../core/Document.js';
 import { World } from '../core/World.js';

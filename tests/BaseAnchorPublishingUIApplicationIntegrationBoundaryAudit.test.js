@@ -4,18 +4,18 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { BaseAnchorPublisher } from '../anchoring/BaseAnchorPublisher.js';
-import { CreateBaseAnchorPublisherUseCase } from '../application/CreateBaseAnchorPublisherUseCase.js';
+import { CreateBaseAnchorPublisherUseCase } from '../application/anchoring/base/CreateBaseAnchorPublisherUseCase.js';
 import { BaseTransactionBroadcaster } from '../base/BaseTransactionBroadcaster.js';
 import { BaseJsonRpcClient } from '../base/BaseJsonRpcClient.js';
-import { describeBasePublicationTransactionReview } from '../application/BasePublicationTransactionReview.js';
-import { encodeBasePublicationCommitment } from '../application/BasePublicationCommitmentEncoding.js';
+import { describeBasePublicationTransactionReview } from '../application/anchoring/base/BasePublicationTransactionReview.js';
+import { encodeBasePublicationCommitment } from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
 import { BaseProofVerifier } from '../anchoring/BaseProofVerifier.js';
-import { ExternalAnchorPublisherRegistry } from '../application/ExternalAnchorPublisherRegistry.js';
-import { CreatePublicationAnchorUseCase } from '../application/CreatePublicationAnchorUseCase.js';
+import { ExternalAnchorPublisherRegistry } from '../application/anchoring/ExternalAnchorPublisherRegistry.js';
+import { CreatePublicationAnchorUseCase } from '../application/anchoring/CreatePublicationAnchorUseCase.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -50,7 +50,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //     `reviewedTransaction` the review card already rendered — never a
 //     bare contentHash, never a review it reconstructs itself.
 //   - anchoring/BaseAnchorPublisher.js itself is UNCHANGED.
-//   - application/ExternalAnchorPublisherRegistry.js registration is
+//   - application/anchoring/ExternalAnchorPublisherRegistry.js registration is
 //     UNCHANGED — Base remains deliberately absent from it.
 //
 // This audit's one question is whether that gap is now genuinely closed:
@@ -231,8 +231,8 @@ async function run() {
     // Section A — Composition root wiring.
     // ===============================================================
     {
-        assert(/import \{ CreateBaseAnchorPublisherUseCase \} from '\.\.\/application\/CreateBaseAnchorPublisherUseCase\.js';/.test(mainSrc),
-            n('A1. ui/main.js now imports application/CreateBaseAnchorPublisherUseCase.js'));
+        assert(/import \{ CreateBaseAnchorPublisherUseCase \} from '\.\.\/application\/anchoring\/base\/CreateBaseAnchorPublisherUseCase\.js';/.test(mainSrc),
+            n('A1. ui/main.js now imports application/anchoring/base/CreateBaseAnchorPublisherUseCase.js'));
         assert(/const \{ baseAnchorPublisher \} = new CreateBaseAnchorPublisherUseCase\(\)\.execute\(\{/.test(mainCodeOnly),
             n('A2. ui/main.js constructs a real baseAnchorPublisher via CreateBaseAnchorPublisherUseCase'));
 
@@ -435,7 +435,7 @@ async function run() {
     {
         const VERDICT = 'UI_APPLICATION_REACHABILITY_GAP_CLOSED';
         assert(VERDICT === 'UI_APPLICATION_REACHABILITY_GAP_CLOSED',
-            n('I1. final verdict: UI_APPLICATION_REACHABILITY_GAP_CLOSED — 0.9.471\'s own finding (a real, correct, review-preserving BaseAnchorPublisher reachable from no production entry point) is resolved by the smallest adaptation named as sufficient: one composition-root construction (Section A), one view injection and template action (Section B), with the review boundary provably intact (Section C) and the exact wired composition functionally verified end to end (Section D). Nothing about anchoring/BaseAnchorPublisher.js, application/ExternalAnchorPublisherRegistry.js, or the existing granular pipeline changed.'));
+            n('I1. final verdict: UI_APPLICATION_REACHABILITY_GAP_CLOSED — 0.9.471\'s own finding (a real, correct, review-preserving BaseAnchorPublisher reachable from no production entry point) is resolved by the smallest adaptation named as sufficient: one composition-root construction (Section A), one view injection and template action (Section B), with the review boundary provably intact (Section C) and the exact wired composition functionally verified end to end (Section D). Nothing about anchoring/BaseAnchorPublisher.js, application/anchoring/ExternalAnchorPublisherRegistry.js, or the existing granular pipeline changed.'));
 
         console.log('\n=== VERDICT: UI_APPLICATION_REACHABILITY_GAP_CLOSED ===');
         console.log(`\nAll ${assertionCount} assertions passed.`);
@@ -469,7 +469,7 @@ async function run() {
         // the changed files — the two files 0.9.471 explicitly named as
         // out of scope for this milestone.
         assert(!changed.includes('anchoring/BaseAnchorPublisher.js'), n('J2. anchoring/BaseAnchorPublisher.js itself is unchanged'));
-        assert(!changed.includes('application/ExternalAnchorPublisherRegistry.js'), n('J3. application/ExternalAnchorPublisherRegistry.js is unchanged'));
+        assert(!changed.includes('application/anchoring/ExternalAnchorPublisherRegistry.js'), n('J3. application/anchoring/ExternalAnchorPublisherRegistry.js is unchanged'));
 
         console.log('✓ Section J: exactly the two production files this milestone\'s own header names (ui/main.js, ui/views/DecentralizedPublicationsView.js) changed — anchoring/BaseAnchorPublisher.js and the generic registry remain untouched.');
     }

@@ -1,25 +1,25 @@
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { BlockchainKind } from '../application/BlockchainKind.js';
-import { BlockchainPublicationIdentity } from '../application/BlockchainPublicationIdentity.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { PublicationReferenceRecord } from '../application/PublicationReferenceRecord.js';
-import { AchievementKind } from '../application/AchievementEvent.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
+import { BlockchainPublicationIdentity } from '../application/anchoring/BlockchainPublicationIdentity.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { PublicationReferenceRecord } from '../application/publication/PublicationReferenceRecord.js';
+import { AchievementKind } from '../application/achievement/AchievementEvent.js';
 import {
     describePublisherAchievementProfile,
     reconstructPublisherAchievementProfile
-} from '../application/PublisherAchievementProfileView.js';
+} from '../application/achievement/PublisherAchievementProfileView.js';
 import {
     describePublisherAchievementBadges,
     reconstructPublisherAchievementBadges
-} from '../application/PublisherAchievementBadgeView.js';
+} from '../application/achievement/PublisherAchievementBadgeView.js';
 import {
     describePublisherAchievementStatistics,
     reconstructPublisherAchievementStatistics
-} from '../application/PublisherAchievementStatisticsView.js';
+} from '../application/achievement/PublisherAchievementStatisticsView.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 
@@ -265,7 +265,7 @@ async function run() {
 
         // A publisher whose only achievement is reference-derived has
         // badgeCount === 0 while achievementCount > 0.
-        const { PublicationReferenceRecord: ReferenceRecordClass } = await import('../application/PublicationReferenceRecord.js');
+        const { PublicationReferenceRecord: ReferenceRecordClass } = await import('../application/publication/PublicationReferenceRecord.js');
         void ReferenceRecordClass; // sanity: class already imported above; re-import mirrors sibling test style
         const bob = new PublisherIdentityRecord({ publisherId: 'Bob' });
         const someoneElseAsBob = new BlockchainPublicationIdentity({ blockchain: BlockchainKind.BASE, contentHash: 'bob-content', chainReference: 'bob-ref', createdAt: new Date('2026-05-04T00:00:00Z') });
@@ -404,8 +404,8 @@ async function run() {
         // result — composed straight through from PublisherAchievementProfileView.js's
         // own already-proven order-independence.
         const shuffledRecords = [...archive.publisherPublicationAssociationRecords].reverse();
-        const { reconstructAchievementEvents } = await import('../application/AchievementEvent.js');
-        const { reconstructAchievementBadges } = await import('../application/AchievementBadgeView.js');
+        const { reconstructAchievementEvents } = await import('../application/achievement/AchievementEvent.js');
+        const { reconstructAchievementBadges } = await import('../application/achievement/AchievementBadgeView.js');
         const events = reconstructAchievementEvents(archive).events;
         const reorderedProfile = describePublisherAchievementProfile(alice, shuffledRecords, events);
         const { badges: allBadges } = reconstructAchievementBadges(archive);

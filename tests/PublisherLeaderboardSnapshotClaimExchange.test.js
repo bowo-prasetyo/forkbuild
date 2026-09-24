@@ -1,14 +1,14 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreatePublicationReferenceRecordUseCase } from '../application/CreatePublicationReferenceRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
-import { verifyPublisherLeaderboardSnapshotClaim } from '../application/PublisherLeaderboardSnapshotClaimVerification.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
+import { verifyPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimVerification.js';
 import {
     exportPublisherLeaderboardSnapshotClaim,
     importPublisherLeaderboardSnapshotClaim,
     PublisherLeaderboardSnapshotClaimImportOutcome
-} from '../application/PublisherLeaderboardSnapshotClaimExchange.js';
+} from '../application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js';
 import { PublisherLeaderboardSnapshotClaim, PUBLISHER_LEADERBOARD_SNAPSHOT_CLAIM_KIND } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';

@@ -8,7 +8,7 @@
 // anyone — see docs/Principles.md, "Discovery Finds A Candidate; It Never
 // Authenticates One." It only ever answers "what endpoints are worth
 // attempting?", as peer/PeerDiscoveryRecord.js instances. The application
-// layer (application/DiscoverPeersUseCase.js) and, eventually, the UI never
+// layer (application/peer/DiscoverPeersUseCase.js) and, eventually, the UI never
 // need to know whether an implementation found those endpoints via a
 // portable invitation (today's peer/LocalPeerDiscoveryProvider.js), a LAN
 // broadcast, a rendezvous service, or a DHT — every one of those is just
@@ -33,7 +33,7 @@ export class PeerDiscoveryProvider {
     // lookup(): the result is exactly as untrusted as list()'s own
     // records, filtered by identityHint alone — a field this provider
     // never verified and never will (see peer/PeerDiscoveryRecord.js's own
-    // header). A caller (application/FindPeerUseCase.js) treats every
+    // header). A caller (application/peer/FindPeerUseCase.js) treats every
     // returned record as "candidate found," never "identity found," and
     // still owes it a full connection + peer/PeerAuthenticationSession.js
     // handshake before that record means anything at all.

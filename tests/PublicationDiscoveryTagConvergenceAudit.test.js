@@ -5,14 +5,14 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
+import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
     composeDecentralizedWorldEncounterMaterialDiscoveryRuntime
-} from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
-import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';
-import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
-import { resolveNostrPublisherOptions } from '../application/PublicationDistributionConfigurationProvider.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
+import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
+import { resolveNostrPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.358 — Publication Discovery Tag Convergence Audit.
@@ -20,7 +20,7 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 // Type: test-only, no production changes. Production changes: NONE.
 //
 // UPDATE (0.9.515): fixture fix in Section B only, not a behavior change.
-// 0.9.494 amended `application/ArweaveGraphqlDiscoveryQueryService.js#search()`
+// 0.9.494 amended `application/arweave/ArweaveGraphqlDiscoveryQueryService.js#search()`
 // to perform one additional gateway fetch per discovered transaction,
 // decoding it as a real `core/DecentralizedDiscoveryEnvelope.js` envelope
 // rather than treating the discovered transaction's own gateway response
@@ -363,7 +363,7 @@ async function run() {
         // depends on are the SAME files 0.9.111/0.9.110 already built,
         // unmodified since before this whole arc — confirmed by git
         // history rather than assumed.
-        const commandSource = await readSource('application/DiscoverWorldEncounterPublicationCommand.js');
+        const commandSource = await readSource('application/worldEncounter/DiscoverWorldEncounterPublicationCommand.js');
         assert(commandSource.includes('runtime.discoverWorldEncounterPublication({ objectId, discoveryTag, publications })'),
             '3. the application command boundary still forwards discoveryTag verbatim, unmodified — no new field, no renaming, no new branch.');
     }
@@ -474,7 +474,7 @@ async function run() {
         WorldEncounterCanvas.methods.discoverPublication.call(ctxA);
         await new Promise((resolve) => setTimeout(resolve, 10));
         assert(ctxA.discoveryError === 'network unavailable' && ctxA.discoveryResult === null,
-            '1. a rejection with the canonical tag seeded now surfaces the sanitized underlying cause (see application/DistributionErrorMessageSanitizer.js) and leaves discoveryResult null.');
+            '1. a rejection with the canonical tag seeded now surfaces the sanitized underlying cause (see application/publication/distribution/DistributionErrorMessageSanitizer.js) and leaves discoveryResult null.');
 
         // The identical rejection, with a hand-typed custom starting tag —
         // the same failure message, byte for byte.
@@ -513,9 +513,9 @@ async function run() {
         // either.
         const filesToAudit = [
             'ui/components/WorldEncounterCanvas.js',
-            'application/DiscoverWorldEncounterPublicationCommand.js',
-            'application/DiscoverWorldEncounterPublicationCommandComposition.js',
-            'application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js',
+            'application/worldEncounter/DiscoverWorldEncounterPublicationCommand.js',
+            'application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js',
+            'application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js',
             'discovery/LocalDiscoveryProvider.js',
             'publisher/LocalPublisherProvider.js'
         ];

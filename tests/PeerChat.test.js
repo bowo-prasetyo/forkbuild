@@ -2,11 +2,11 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
-import { PeerBlockUseCase } from '../application/PeerBlockUseCase.js';
-import { ChatUseCase } from '../application/ChatUseCase.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
+import { PeerBlockUseCase } from '../application/peer/PeerBlockUseCase.js';
+import { ChatUseCase } from '../application/chat/ChatUseCase.js';
 import {
     ChatMessageKind,
     deriveConversationId,
@@ -21,7 +21,7 @@ import { resolveIncomingChatMessage } from '../core/ChatMessageIngestion.js';
 //
 // "Chat is a protocol running over authenticated peers, not a feature
 // embedded into the peer transport." This file proves the ONE new
-// protocol (`forkbuild:chat`, application/ChatUseCase.js) genuinely
+// protocol (`forkbuild:chat`, application/chat/ChatUseCase.js) genuinely
 // gates on FriendshipState.FRIEND + not-blocked + authenticated, rather
 // than merely on possessing a proven identity — and that it defends
 // against exactly the attacks a live, direct-message protocol actually

@@ -8,7 +8,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { License, LicenseId } from '../core/License.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -16,18 +16,18 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
-import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
-import { DiscoverWorldsUseCase } from '../application/DiscoverWorldsUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
+import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
+import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
 import { SpatialAllocationPolicy } from '../core/SpatialAllocationPolicy.js';
 
 // 0.9.468 — Orphaned Placement Product Reassessment.
@@ -315,7 +315,7 @@ async function runTests() {
         // publicationId alone and performs no spatial lookup at all
         // (0.9.202 Section B's own finding, reconfirmed by reading the
         // strategy's current source rather than re-citing it).
-        const strategySource = codeOnlyLines(await rawSource('application/InitialPlacementStrategy.js'));
+        const strategySource = codeOnlyLines(await rawSource('application/placement/InitialPlacementStrategy.js'));
         assert(/computeDeterministicGridPosition\(context\.publicationId\)/.test(strategySource) &&
             !/spatialIndexProvider|placementRegistry/i.test(strategySource),
             'C1. GridPlacementStrategy.computePosition() still takes no spatial collaborator at all — physical occupancy protects nothing about automatic initial placement, orphan or otherwise.');
@@ -393,7 +393,7 @@ async function runTests() {
         // because a placement resolved.
         assert(session.getPlacementInfoForPublication(publication.id) !== null,
             'D3. getPlacementInfoForPublication() still resolves the raw occupancy fact — proving D2\'s null is a genuine "Publication missing" signal, not an artifact of the placement itself being gone too.');
-        const cascadeSource = codeOnlyLines(await rawSource('application/AutomaticSnapshotEncounterCascade.js'));
+        const cascadeSource = codeOnlyLines(await rawSource('application/snapshot/AutomaticSnapshotEncounterCascade.js'));
         assert(/findPublicationById/.test(cascadeSource),
             'D4. The real cascade consumer still calls findPublicationById (D2\'s guard) rather than assuming a resolved placement implies a resolved Publication.');
 
@@ -525,9 +525,9 @@ No production code changes ship with this milestone.
         const nonGoalVocabulary = /\bTOMBSTONE\b|\btombstone(d)?\b|\bDETACH\b|\bdetach(ed|ment)?\b|\bREATTACH\b|\breattach(ed|ment)?\b|\bgarbageCollect|\bGARBAGE_COLLECT|\bORPHAN_STATE\b|\bisOrphaned\b|\bplacementOrphaned\b|\bcleanupOrphan/i;
 
         const filesToCheck = [
-            'application/UnpublishDocumentUseCase.js',
+            'application/publication/UnpublishDocumentUseCase.js',
             'publisher/LocalPublisherProvider.js',
-            'application/WorldNavigationSession.js',
+            'application/world/WorldNavigationSession.js',
             'placement/LocalPlacementRegistry.js',
             'core/PlacementRecord.js',
             'core/SpatialAllocationPolicy.js'
@@ -541,7 +541,7 @@ No production code changes ship with this milestone.
         // G2. No new placement-deletion trigger was wired to
         // unpublish/publish anywhere — the collaborator counts already
         // established (0.9.467 F1-F2) still hold.
-        const unpublishUseCaseSource = codeOnlyLines(await rawSource('application/UnpublishDocumentUseCase.js'));
+        const unpublishUseCaseSource = codeOnlyLines(await rawSource('application/publication/UnpublishDocumentUseCase.js'));
         const cleanupVocabulary = /RemoveWorldPlacementUseCase|PlacementRegistry|SpatialIndexProvider/;
         assert(!cleanupVocabulary.test(unpublishUseCaseSource),
             'G2. UnpublishDocumentUseCase.js still references no placement/spatial-index collaborator — no automatic cleanup was added by this milestone.');

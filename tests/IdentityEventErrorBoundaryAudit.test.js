@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { IdentityUseCase } from '../application/IdentityUseCase.js';
+import { IdentityUseCase } from '../application/identity/IdentityUseCase.js';
 import { EventBus } from '../core/events/EventBus.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
@@ -13,7 +13,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // for World Presence (a use case that publishes an event, then performs
 // MORE authoritative work in the same synchronous call chain, over an
 // EventBus with no per-listener isolation) recurs in
-// application/IdentityUseCase.js — but classified it DEFERRED, because
+// application/identity/IdentityUseCase.js — but classified it DEFERRED, because
 // no CURRENT production listener performs the kind of fallible,
 // cross-use-case derived work that made World Presence's instance a
 // realized defect. That finding was correct but narrow: it behaviorally
@@ -89,7 +89,7 @@ async function runTests() {
     // Section A — Exact event boundary map.
     // ---------------------------------------------------------------
     {
-        const source = codeOnlyLines(await rawSource('application/IdentityUseCase.js')).join('\n');
+        const source = codeOnlyLines(await rawSource('application/identity/IdentityUseCase.js')).join('\n');
 
         // A1 — the five methods that share 0.9.219 Section C2's exact
         // precondition: _publishChange() (itself two sequential
@@ -322,7 +322,7 @@ async function runTests() {
         // "is this a derived listener" question alone — so this
         // milestone does not, and must not, conclude "wrap every
         // IdentityUseCase listener in try/catch too."
-        const worldPresenceUseCaseSource = codeOnlyLines(await rawSource('application/WorldPresenceUseCase.js')).join('\n');
+        const worldPresenceUseCaseSource = codeOnlyLines(await rawSource('application/presence/WorldPresenceUseCase.js')).join('\n');
         assert(/_broadcast/.test(worldPresenceUseCaseSource), 'D3. WorldPresenceUseCase.js still performs a network broadcast as part of the derived work the 0.9.218 fix isolated — the precedent case had an externally-visible fallible side effect that IdentityUseCase\'s current listeners (Section C) do not share');
 
         console.log('✓ Section D: Compared explicitly against the 0.9.218 precedent — that fix is still a local try/catch around one call site, never generalized into EventBus.js or PeerMessageBus.js (D1/D2). The two cases differ on the fact that actually mattered: World Presence\'s derived listener reached a collaborator with a fallible, externally-visible side effect (a network broadcast); none of Identity\'s six current listeners do (D3). "This is a derived listener" alone was never the trigger for a fix, and this milestone does not treat it as one.');

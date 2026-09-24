@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { applicationFiles } from './support/ApplicationFiles.js';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
@@ -43,7 +44,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //            View's own Nearby Place Names section) are untouched — no
 //            artificial "Place Naming diagnostics" category was invented
 //            merely for symmetry with Snapshots.
-// Section J: `application/AutomaticSnapshotEncounterCascade.js` (the
+// Section J: `application/snapshot/AutomaticSnapshotEncounterCascade.js` (the
 //            automatic counterpart this whole pipeline exists to let a
 //            person manually walk) is untouched.
 
@@ -280,9 +281,8 @@ async function runTests() {
         // brief requires ("do not create a new diagnostic subsystem").
         let diagnosticAppFiles = [];
         try {
-            const { readdirSync } = await import('node:fs');
-            diagnosticAppFiles = readdirSync(new URL('application/', SOURCE_ROOT))
-                .filter((name) => /diagnostic/i.test(name));
+            diagnosticAppFiles = applicationFiles()
+                .filter((file) => /diagnostic/i.test(file.split('/').pop()));
         } catch { /* ignore — best-effort */ }
         assert(diagnosticAppFiles.length === 0,
             `G2. no new application/ file names itself after "diagnostic" (found: ${diagnosticAppFiles.join(', ')}) — this milestone added no new capability, only a presentation grouping`);
@@ -332,14 +332,14 @@ async function runTests() {
     // Section J — the automatic cascade is unaffected.
     // ---------------------------------------------------------------
     {
-        const cascadeCode = await rawSource('application/AutomaticSnapshotEncounterCascade.js');
+        const cascadeCode = await rawSource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
         // The cascade's own pre-existing comments have always REFERRED to
         // OwnPublicationPanel by name (it is the manual counterpart this
         // file exists to mirror, since 0.9.187) — what must be absent is
         // any dependency on, or awareness of, THIS milestone's own new
         // vocabulary, and any actual import of the UI component.
         assert(!cascadeCode.includes('diagnosticToolsOpen') && !cascadeCode.includes('Diagnostic Tools'),
-            'J1. application/AutomaticSnapshotEncounterCascade.js carries none of this milestone\'s own new vocabulary (diagnosticToolsOpen / "Diagnostic Tools")');
+            'J1. application/snapshot/AutomaticSnapshotEncounterCascade.js carries none of this milestone\'s own new vocabulary (diagnosticToolsOpen / "Diagnostic Tools")');
         assert(!cascadeCode.includes("from './OwnPublicationPanel.js'") && !cascadeCode.includes("import OwnPublicationPanel"),
             'J1b. the cascade still never imports OwnPublicationPanel.js itself — it only ever refers to it in prose, unchanged since 0.9.187');
         assert(cascadeCode.includes('resolveSelectedSnapshotCommand(candidate)') || cascadeCode.includes('this._resolveSelectedSnapshotCommand'),

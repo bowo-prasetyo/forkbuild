@@ -1,16 +1,16 @@
-import { BitcoinAnchorPublicationRecord } from '../application/BitcoinAnchorPublicationRecord.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { BitcoinAnchorBroadcastState } from '../application/BitcoinAnchorBroadcastState.js';
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
-import { BitcoinAnchorContentProofState } from '../application/BitcoinAnchorContentProofState.js';
+import { BitcoinAnchorPublicationRecord } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { BitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import {
     BitcoinAnchorPublicationLifecycleTimelineEntryKind,
     describeBitcoinAnchorPublicationLifecycleTimeline,
     reconstructBitcoinAnchorPublicationLifecycleTimeline
-} from '../application/BitcoinAnchorPublicationLifecycleTimelineView.js';
+} from '../application/anchoring/bitcoin/BitcoinAnchorPublicationLifecycleTimelineView.js';
 
 // 0.8.81 — Bitcoin Anchor Publication Lifecycle Timeline.
 //

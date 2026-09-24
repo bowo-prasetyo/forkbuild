@@ -10,23 +10,23 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { RenameGroupCommand } from '../application/commands/RenameGroupCommand.js';
-import { DocumentCommandPropagationUseCase } from '../application/DocumentCommandPropagationUseCase.js';
+import { DocumentCommandPropagationUseCase } from '../application/document/DocumentCommandPropagationUseCase.js';
 import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
-import { DocumentOperationCausalGapObservationUseCase } from '../application/DocumentOperationCausalGapObservationUseCase.js';
-import { DocumentOperationRecoveryUseCase } from '../application/DocumentOperationRecoveryUseCase.js';
-import { RecoveredOperationReplayUseCase } from '../application/RecoveredOperationReplayUseCase.js';
+import { DocumentOperationCausalGapObservationUseCase } from '../application/document/DocumentOperationCausalGapObservationUseCase.js';
+import { DocumentOperationRecoveryUseCase } from '../application/document/DocumentOperationRecoveryUseCase.js';
+import { RecoveredOperationReplayUseCase } from '../application/document/RecoveredOperationReplayUseCase.js';
 import {
     DocumentOperationDeferralUseCase,
     DocumentOperationDeferralOutcome,
     isDocumentOperationDeferralOutcome
-} from '../application/DocumentOperationDeferralUseCase.js';
+} from '../application/document/DocumentOperationDeferralUseCase.js';
 
 // 0.9.237 — Causal Application Deferral Boundary.
 //
@@ -49,7 +49,7 @@ import {
 // for the exact "recovered predecessor must not release" interaction
 // 0.9.236's own header calls out. Every other section exercises
 // DocumentOperationDeferralUseCase directly against real
-// `application/CommandHistory.js` instances — the same "pure class,
+// `application/editor/CommandHistory.js` instances — the same "pure class,
 // exercised directly" posture `tests/DocumentOperationApplicationReadiness.test.js`
 // already established for its own sibling file.
 
@@ -134,7 +134,7 @@ function makeDeferralHarness(worldId, { groupName = 'Original' } = {}) {
 
 // Production always wires a DocumentOperationCausalGapObservationUseCase
 // AHEAD of the deferral boundary on the same onOperationReceived() feed
-// (see application/EditorSession.js's own 0.9.229 comment on receive
+// (see application/editor/EditorSession.js's own 0.9.229 comment on receive
 // ordering) — its job, not this class's own (see
 // DocumentOperationDeferralUseCase's own header, "Composition, not
 // duplication"), is recording each arriving operation's causal identity
@@ -149,7 +149,7 @@ function receiveOperation(harness, { documentId, command, authorIdentityId = 'al
 }
 
 // A full, real, peer-authenticated propagation + recovery + replay stack,
-// wired exactly the way application/EditorSession.js wires them: one
+// wired exactly the way application/editor/EditorSession.js wires them: one
 // shared causalGapDetector feeds gap observation AND the deferral
 // boundary, recovery's own feed is attached to gap observation only
 // (never to the deferral boundary — see DocumentOperationDeferralUseCase's
@@ -444,7 +444,7 @@ async function runTests() {
     const historyX = new CommandHistory({ world: docX.world });
     const historyY = new CommandHistory({ world: docY.world });
     // One shared causalGapDetector across both documents — mirrors
-    // application/EditorSession.js's own single, session-lifetime
+    // application/editor/EditorSession.js's own single, session-lifetime
     // detector shared across every document it opens (0.9.237's own
     // constructor wiring) — so this section proves isolation is a real
     // property of DocumentOperationDeferralUseCase itself, not an

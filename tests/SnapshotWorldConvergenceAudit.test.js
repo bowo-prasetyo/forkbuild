@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import WorldEncounterMarker from '../ui/components/WorldEncounterMarker.js';
-import { registerMaterializedSnapshotWorldSource, materializedSnapshotWorldOrigin } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { resolveSnapshotWorldPlacement } from '../application/SnapshotWorldPlacement.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeWorldFromDiscoveryRegistry } from '../application/WorldDiscoveryRegistryProjection.js';
-import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
+import { registerMaterializedSnapshotWorldSource, materializedSnapshotWorldOrigin } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
+import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
@@ -43,7 +43,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //
 //   - `core/WorldDiscoverySourceAssembly.js` (0.9.7): "assembly is not
 //     reconciliation... concatenates... never deduplicates."
-//   - `application/WorldDiscoverySourceRegistry.js` (0.9.9): keyed by
+//   - `application/discovery/WorldDiscoverySourceRegistry.js` (0.9.9): keyed by
 //     `origin` alone, "replacement, not accumulation" — but ONLY within
 //     one origin's own slot; two DIFFERENT origins are simply two entries.
 //   - `core/WorldEncounter.js` (0.9.0): joins a placement to a publication
@@ -60,7 +60,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // A below runs the real code and confirms this is exactly what happens.
 //
 //   THE ONE GENUINE GAP THIS AUDIT ACTUALLY FOUND — FIXED BY 0.9.163.
-// `application/MaterializedSnapshotWorldDiscoveryBridge.js`'s own
+// `application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js`'s own
 // `materializedSnapshotWorldOrigin(contentHash)` (0.9.160) derived a
 // registered Snapshot's registry slot from `contentHash` ALONE —
 // deliberately, per that file's own header, so re-registering the
@@ -474,11 +474,11 @@ async function run() {
     {
         const filesToSweep = [
             '../core/WorldDiscoverySourceAssembly.js',
-            '../application/WorldDiscoverySourceRegistry.js',
+            '../application/discovery/WorldDiscoverySourceRegistry.js',
             '../core/WorldEncounter.js',
-            '../application/WorldDiscoveryRegistryProjection.js',
-            '../application/WorldEncounterIntegration.js',
-            '../application/MaterializedSnapshotWorldDiscoveryBridge.js'
+            '../application/discovery/WorldDiscoveryRegistryProjection.js',
+            '../application/worldEncounter/WorldEncounterIntegration.js',
+            '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js'
         ];
         for (const relativePath of filesToSweep) {
             const source = await readFile(new URL(relativePath, import.meta.url), 'utf8');

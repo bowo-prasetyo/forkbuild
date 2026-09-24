@@ -5,7 +5,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { License, LicenseId } from '../core/License.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -13,17 +13,17 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
 
 // 0.2.23 — World Placement & Spatial Positioning.
 //

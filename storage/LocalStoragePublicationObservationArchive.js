@@ -1,6 +1,6 @@
 import { StorageProvider } from './StorageProvider.js';
 import { LocalStorageProvider } from './LocalStorageProvider.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 const ARCHIVE_KEY = 'publication-observation-archive';
 
@@ -30,7 +30,7 @@ const ARCHIVE_KEY = 'publication-observation-archive';
 //   storage/StorageProvider.js             (generic, JSON-safe, injected)
 //
 // AN INJECTED storage/StorageProvider.js, NEVER window.localStorage
-// DIRECTLY. Exactly like application/SaveDocumentUseCase.js's own
+// DIRECTLY. Exactly like application/document/SaveDocumentUseCase.js's own
 // constructor, this class accepts a StorageProvider instance — defaulting
 // to storage/LocalStorageProvider.js (the real, browser-backed
 // implementation) so a caller needs to pass nothing to get real

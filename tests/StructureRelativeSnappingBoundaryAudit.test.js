@@ -8,14 +8,14 @@ import { StructurePlacement } from '../core/StructurePlacement.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateEditorContextUseCase } from '../application/CreateEditorContextUseCase.js';
-import { PlacementPositionService } from '../application/PlacementPositionService.js';
-import { StructureDocumentResolver } from '../application/StructureDocumentResolver.js';
-import { StructurePlacementValidator } from '../application/StructurePlacementValidator.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
+import { PlacementPositionService } from '../application/editor/PlacementPositionService.js';
+import { StructureDocumentResolver } from '../application/editor/StructureDocumentResolver.js';
+import { StructurePlacementValidator } from '../application/editor/StructurePlacementValidator.js';
 import { StructurePlacementTool } from '../application/tools/StructurePlacementTool.js';
-import { StructurePreviewUseCase } from '../application/StructurePreviewUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { StructurePreviewUseCase } from '../application/editor/StructurePreviewUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -154,7 +154,7 @@ async function run() {
         assert(/calculateStructureStack/.test(placementToolSrc),
             '3. AMENDED BY 0.9.611 — StructurePlacementTool now has a dimension-aware/relative offset call (calculateStructureStack()), the new PlacementPositionService method this audit\'s own Section E prototyped and Section H recommended by name.');
 
-        const positionServiceSrc = await readSource('application/PlacementPositionService.js');
+        const positionServiceSrc = await readSource('application/editor/PlacementPositionService.js');
         const structureGroundBody = positionServiceSrc.split('calculateStructureGround(')[1].split('calculateStack(')[0];
         assert(!structureGroundBody.includes('normal') && !structureGroundBody.includes('existing'),
             '4. calculateStructureGround() takes no neighbor/normal/existing-object argument — pure worldPosition -> grid snap');

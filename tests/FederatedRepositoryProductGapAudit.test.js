@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
-import { DecentralizedWorldEncounterMaterialSource } from '../application/DecentralizedWorldEncounterMaterialSource.js';
+import { DecentralizedWorldEncounterMaterialSource } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
@@ -98,7 +98,7 @@ async function run() {
     // ===============================================================
     let principles;
     {
-        const searchSource = await readSource('application/SearchPublicationsUseCase.js');
+        const searchSource = await readSource('application/publication/SearchPublicationsUseCase.js');
         assert(searchSource.includes('Repository search asks "which publications match this description?"'),
             '1. SearchPublicationsUseCase documents its own question in its own header — not inferred, quoted directly.');
         assert(searchSource.includes('no position, no camera, no placement concept at all'),
@@ -113,8 +113,8 @@ async function run() {
         // The wiring itself, not just the prose: CreateDiscoveryUseCase.js
         // (the one composition root every Repository/Author view goes
         // through) constructs exactly ONE concrete provider.
-        const createDiscovery = await readSource('application/CreateDiscoveryUseCase.js');
-        assert(createDiscovery.includes("import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';"),
+        const createDiscovery = await readSource('application/discovery/CreateDiscoveryUseCase.js');
+        assert(createDiscovery.includes("import { LocalDiscoveryProvider } from '../../discovery/LocalDiscoveryProvider.js';"),
             '5. CreateDiscoveryUseCase imports LocalDiscoveryProvider.');
         // UPDATED by 0.9.339 — Merge Decentralized Publication Discovery
         // into Repository Discovery. At the time THIS audit was written,
@@ -149,7 +149,7 @@ async function run() {
         // Repository alone lags behind a broader "World Search already
         // federates" reality. Nothing in the shipped search surface,
         // Repository's or World's, reads beyond this device today.
-        const createWorldView = await readSource('application/CreateWorldViewUseCase.js');
+        const createWorldView = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(createWorldView.includes("const discoveryProvider = new LocalDiscoveryProvider(storageProvider);"),
             '1. CreateWorldViewUseCase, independently of CreateDiscoveryUseCase, also constructs a fresh LocalDiscoveryProvider — World Search is local-only in production too.');
         assert(principles.includes('### Discovery Is One Path, Not Two (0.2.26)'),
@@ -169,7 +169,7 @@ async function run() {
 
         // B4. A decentralized-publication-facing UI surface ALREADY
         // SHIPPED — ui/views/DecentralizedPublicationsView.js — reading
-        // from application/LocalPublicationCatalog.js, never from
+        // from application/publication/LocalPublicationCatalog.js, never from
         // Repository's own discoveryProvider.
         const decentralizedView = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(decentralizedView.length > 10000,
@@ -205,7 +205,7 @@ async function run() {
         // The class itself never touches a StorageProvider or a
         // discoveryProvider — verified structurally, not merely by not
         // observing a side effect in this one test run.
-        const decentralizedSourceCode = await readSource('application/DecentralizedWorldEncounterMaterialSource.js');
+        const decentralizedSourceCode = await readSource('application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js');
         assert(!/^import.*(StorageProvider|discoveryProvider|Catalog)/m.test(decentralizedSourceCode),
             '2. DecentralizedWorldEncounterMaterialSource imports no storage or catalog class at all (its own header even names `StorageProvider` only to say a decentralized source is UNLIKE it) — the class\'s constructor takes exactly one collaborator, `retrieveByUri`.');
         assert(decentralizedSourceCode.includes('constructor(retrieveByUri) {'),
@@ -269,7 +269,7 @@ async function run() {
 
         // The two catalogs are also literally separate storage — not
         // just separate classes reading the same rows.
-        const localPublicationCatalog = await readSource('application/LocalPublicationCatalog.js');
+        const localPublicationCatalog = await readSource('application/publication/LocalPublicationCatalog.js');
         assert(localPublicationCatalog.includes("const STORAGE_KEY = 'publication-catalog:entries';"),
             '4. LocalPublicationCatalog persists under its own, distinct storage key.');
         assert(!localPublicationCatalog.includes('LocalStorageProvider'),
@@ -299,7 +299,7 @@ async function run() {
         // WorldEncounterMaterialSource#load() is explicitly asynchronous
         // — a genuinely different contract shape, not an implementation
         // detail.
-        const decentralizedSourceCode = await readSource('application/DecentralizedWorldEncounterMaterialSource.js');
+        const decentralizedSourceCode = await readSource('application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js');
         assert(decentralizedSourceCode.includes('async load(resolvedSelection, resolvedLead)'),
             '2. DecentralizedWorldEncounterMaterialSource#load() is async — retrieval is a Promise-returning operation DiscoveryProvider\'s synchronous list()/findById() contract cannot represent without changing that contract\'s own shape for every existing caller.');
 
@@ -343,12 +343,12 @@ async function run() {
         // ahead of their own UI wiring (the exact pattern the 0.9.32x
         // orphan-sweep sequence has repeatedly found and classified,
         // never assumed), it exists, is tested, and has zero UI callers.
-        const importReplica = await readSource('application/ImportPublicationReplicaPackageUseCase.js');
+        const importReplica = await readSource('application/publication/replica/ImportPublicationReplicaPackageUseCase.js');
         assert(importReplica.includes("this._publicationExchange.importPublication(pkg.publication)"),
             '5. ImportPublicationReplicaPackageUseCase already imports a peer-supplied publication package via PublicationExchange#importPublication() — the exact "adopt something from elsewhere" mechanism a federated Repository provider would otherwise have to reinvent.');
-        const publicationExchange = await readSource('application/PublicationExchange.js');
+        const publicationExchange = await readSource('application/publication/PublicationExchange.js');
         assert(proseIncludes(publicationExchange, 'catalogs the resulting DecentralizedPublication'),
-            '6. that import path\'s own target is confirmed, from source, to be the DECENTRALIZED catalog (application/LocalPublicationCatalog.js) — never Repository\'s own storage/LocalStorageProvider.js — regardless of whether it is UI-wired.');
+            '6. that import path\'s own target is confirmed, from source, to be the DECENTRALIZED catalog (application/publication/LocalPublicationCatalog.js) — never Repository\'s own storage/LocalStorageProvider.js — regardless of whether it is UI-wired.');
         const replicaUiCallers = grepFiles('ImportPublicationReplicaPackageUseCase|BuildPublicationReplicaPackageUseCase', ['ui']);
         assert(replicaUiCallers.length === 0,
             '7. and, checked honestly rather than assumed: this import path itself has ZERO ui/ callers today — an application-layer-only capability, not a live user-facing feature this audit could point to as proof a "federate Repository" seam is already wired and working.');
@@ -365,7 +365,7 @@ async function run() {
         // already-selected object. It was never built, at any point in
         // its own multi-milestone history, as a save/import mechanism —
         // confirmed by its own header vocabulary.
-        const decentralizedSourceCode = await readSource('application/DecentralizedWorldEncounterMaterialSource.js');
+        const decentralizedSourceCode = await readSource('application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js');
         assert(proseIncludes(decentralizedSourceCode, 'A RETRIEVER, NEVER A SECOND RESOLVER'),
             '1. the class\'s own header names its own scope boundary explicitly, in its own words.');
         assert(proseIncludes(decentralizedSourceCode, 'NO CACHING, NO RETRY, NO FALLBACK BETWEEN URIS, NO RANKING'),
@@ -383,9 +383,9 @@ async function run() {
         // begin with." Neither shape resembles a blocked handoff between
         // two FINISHED capabilities — the defining condition this
         // section's own test requires.
-        const worldEncounterMaterialLoading = await readSource('application/WorldEncounterMaterialLoading.js');
+        const worldEncounterMaterialLoading = await readSource('application/worldEncounter/WorldEncounterMaterialLoading.js');
         assert(!/^import.*(StorageProvider|Catalog)/m.test(worldEncounterMaterialLoading),
-            '3. even the ORCHESTRATION layer that routes an encounter to local/peer/decentralized material sources — application/WorldEncounterMaterialLoading.js itself — imports no storage or catalog class (its own header even names `StorageProvider` only to say it ships with no concrete one). The no-persist rule holds at every layer this audit checked, not just at the one leaf class Section C exercised.');
+            '3. even the ORCHESTRATION layer that routes an encounter to local/peer/decentralized material sources — application/worldEncounter/WorldEncounterMaterialLoading.js itself — imports no storage or catalog class (its own header even names `StorageProvider` only to say it ships with no concrete one). The no-persist rule holds at every layer this audit checked, not just at the one leaf class Section C exercised.');
 
         // Applying the same distinguishing test 0.9.328's own Section E
         // used for the Reconciliation Decision family: check the
@@ -393,7 +393,7 @@ async function run() {
         // that concept is "does ANYTHING encountered through World View
         // ever get saved anywhere automatically" — Local encounters
         // included, not just Decentralized/Peer ones.
-        const localSourceCode = await readSource('application/LocalWorldEncounterMaterialSource.js');
+        const localSourceCode = await readSource('application/worldEncounter/LocalWorldEncounterMaterialSource.js');
         assert(!/\.save\(|\.add\(|catalog\./.test(localSourceCode),
             '4. even LOCAL World Encounter material — already fully trusted, already on this device — is never auto-saved anywhere as a side effect of being encountered. The absence of an auto-persist step is a codebase-wide World Encounter rule, not something asymmetric or missing specifically for decentralized/peer origins.');
     }
@@ -501,8 +501,8 @@ async function run() {
         // own DriftGuard1 names) while still catching any OTHER,
         // unexpected production drift.
         const expectedLaterMilestoneFiles = new Set([
-            'application/CreateWorldViewUseCase.js',
-            'application/WorldNavigationSession.js',
+            'application/world/CreateWorldViewUseCase.js',
+            'application/world/WorldNavigationSession.js',
             'ui/views/WorldView.js'
         ]);
         const changedNonTestFiles = execSync('git diff --name-only HEAD -- . ":(exclude)tests" ":(exclude)docs/Roadmap.md" ":(exclude)tests.html" ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */,

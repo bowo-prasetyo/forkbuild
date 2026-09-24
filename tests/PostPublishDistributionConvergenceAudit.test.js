@@ -3,12 +3,12 @@ import { execSync } from 'node:child_process';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
+import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -233,7 +233,7 @@ const WORLD_ENCOUNTER_SURFACE = {
     executing: (ctx) => ctx.distributionExecuting,
     error: (ctx) => ctx.distributionError,
     // WorldEncounterCanvas's own Distribution panel stores no result of its
-    // own — see application/PublicationDistributionCommand.js's own
+    // own — see application/publication/distribution/PublicationDistributionCommand.js's own
     // header and WorldEncounterCanvas.js's own "execution is ephemeral UI
     // state — never a third lifecycle value." Callers of this adapter must
     // observe success through the shared lifecycleStore instead.
@@ -472,7 +472,7 @@ async function run() {
 
             assert(surface.executing(ctx) === false, `24. [${surface.name}] D2 — returns to idle after a rejection`);
             assert(surface.error(ctx) === 'no wallet available',
-                `25. [${surface.name}] D2 — a genuine rejection now surfaces the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js`);
+                `25. [${surface.name}] D2 — a genuine rejection now surfaces the sanitized underlying cause — see application/publication/distribution/DistributionErrorMessageSanitizer.js`);
             assert(lifecycleStore.get(publication.id) === null, `26. [${surface.name}] D2 — a rejected call never writes into the lifecycle store`);
         }
 
@@ -544,8 +544,8 @@ async function run() {
     {
         // E1 — structural: neither use case carries distribution
         // vocabulary, reconfirmed fresh against the real source.
-        const publishUseCaseCode = await codeOnlySource('application/PublishDocumentUseCase.js');
-        const unpublishUseCaseCode = await codeOnlySource('application/UnpublishDocumentUseCase.js');
+        const publishUseCaseCode = await codeOnlySource('application/publication/PublishDocumentUseCase.js');
+        const unpublishUseCaseCode = await codeOnlySource('application/publication/UnpublishDocumentUseCase.js');
         assert(!/Arweave|Nostr|Ipfs|Bitcoin|distribut/i.test(publishUseCaseCode),
             '36. PublishDocumentUseCase.js carries no distribution vocabulary of any kind');
         assert(!/Arweave|Nostr|Ipfs|Bitcoin|distribut/i.test(unpublishUseCaseCode),
@@ -570,7 +570,7 @@ async function run() {
         await flushMicrotasks();
         assert(failingCtx.publicationDistributionError !== null, '38. sanity: the distribution attempt genuinely failed');
 
-        // application/WorldNavigationSession.js's own getPublicationForDocument()
+        // application/world/WorldNavigationSession.js's own getPublicationForDocument()
         // is itself only a thin reduction over exactly this discoveryProvider
         // (see that file's own _resolvePublicationForPlacement()) — read
         // through the discoveryProvider directly here so this section never
@@ -611,8 +611,8 @@ async function run() {
         // E5 — structural: the distribution seam never imports either
         // publish/unpublish use case, and vice versa — no coupling in
         // either direction.
-        const commandCode = await codeOnlySource('application/PublicationDistributionCommand.js');
-        const orchestratorCode = await codeOnlySource('application/PublicationDistributionOrchestrator.js');
+        const commandCode = await codeOnlySource('application/publication/distribution/PublicationDistributionCommand.js');
+        const orchestratorCode = await codeOnlySource('application/publication/distribution/PublicationDistributionOrchestrator.js');
         assert(!commandCode.includes('PublishDocumentUseCase') && !commandCode.includes('UnpublishDocumentUseCase'),
             '45. PublicationDistributionCommand.js imports neither PublishDocumentUseCase nor UnpublishDocumentUseCase');
         assert(!orchestratorCode.includes('PublishDocumentUseCase') && !orchestratorCode.includes('UnpublishDocumentUseCase'),

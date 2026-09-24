@@ -4,16 +4,16 @@ import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { AvatarVerticalState, deriveAvatarVerticalState, isValidAvatarVerticalState } from '../core/AvatarVerticalState.js';
 import { deriveWorldSpatialActivity, WorldSpatialActivity, isValidWorldSpatialActivity } from '../core/WorldSpatialActivity.js';
 import { isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
-import { AvatarStepConstraint } from '../application/AvatarStepConstraint.js';
-import { AvatarMovementConstraint } from '../application/AvatarMovementConstraint.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
+import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -23,8 +23,8 @@ import { Position } from '../core/Position.js';
 //
 //   Section A: core/AvatarVerticalState.js        — the pure SUPPORTED/RISING/FALLING vocabulary
 //   Section B: core/AvatarMovementSimulation.js    — `result.verticalState`, derived, not duplicated
-//   Section C: application/AvatarStepConstraint.js — a step DOWN beyond maxStepHeight now falls
-//   Section D: application/AvatarMovementController.js — falling flips `grounded` for the next tick
+//   Section C: application/avatar/AvatarStepConstraint.js — a step DOWN beyond maxStepHeight now falls
+//   Section D: application/avatar/AvatarMovementController.js — falling flips `grounded` for the next tick
 //   Section E: core/WorldSpatialActivity.js        — the JUMPING/FALLING vocabulary extension
 //   Section F: FLAGSHIP — climb, walk off the edge, fall, land, jump, determinism
 //   Section G: Edge case — falling lands on a SLOPE's own per-point surface,
@@ -33,7 +33,7 @@ import { Position } from '../core/Position.js';
 // Central architectural claim under test throughout — see docs/Principles.md,
 // "Falling Still Asks WalkableSurface The Same Question Walking Always Has
 // (0.3.4)": there is no second "falling surface" concept anywhere in this
-// codebase. `application/AvatarStepConstraint.js#supportHeightAt()` — the
+// codebase. `application/avatar/AvatarStepConstraint.js#supportHeightAt()` — the
 // SAME function 0.3.2/0.3.3 already built — is what a walking step snaps
 // onto AND what a falling avatar lands on. No physics engine, no rigid
 // bodies, no momentum beyond the one signed `verticalVelocity` scalar
@@ -164,7 +164,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — application/AvatarStepConstraint.js: a step DOWN
+    // Section C — application/avatar/AvatarStepConstraint.js: a step DOWN
     // beyond maxStepHeight now falls; a step UP beyond it is still a
     // wall. The two directions were always a named simplification
     // treating them alike — see this class's own 0.3.4 header — and
@@ -224,7 +224,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section D — application/AvatarMovementController.js: `falling`
+    // Section D — application/avatar/AvatarMovementController.js: `falling`
     // flips `grounded` to false for the NEXT tick, and `verticalState()`
     // reflects the whole SUPPORTED -> FALLING -> SUPPORTED arc.
     // -------------------------------------------------------------

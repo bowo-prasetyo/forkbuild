@@ -9,7 +9,7 @@ import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHisto
 // (see 0.8.146's own header, "Deliberately excluded," bullet four, and
 // 0.8.147's own, bullet two). This file is that projection, and nothing
 // more — the decision-history analogue of
-// `application/PublisherLeaderboardClaimHistoryTimelineView.js` (0.8.129),
+// `application/leaderboard/PublisherLeaderboardClaimHistoryTimelineView.js` (0.8.129),
 // one subject over: where that file narrates a replica's own stored claim
 // RECEIPTS in chronological order, this file narrates a replica's own
 // stored reconciliation DECISIONS (0.8.146's own, plain, ordered array of

@@ -5,16 +5,16 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License, LicenseId } from '../core/License.js';
 import { PublicationSort } from '../core/PublicationSort.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { CreateDiscoveryUseCase } from '../application/CreateDiscoveryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
-import { ListPublicationsUseCase } from '../application/ListPublicationsUseCase.js';
-import { FindPublicationUseCase } from '../application/FindPublicationUseCase.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscoveryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
+import { ListPublicationsUseCase } from '../application/publication/ListPublicationsUseCase.js';
+import { FindPublicationUseCase } from '../application/publication/FindPublicationUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { DiscoveryProvider } from '../discovery/DiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -24,19 +24,19 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.339 — Merge Decentralized Publication Discovery into Repository
 // Discovery.
 //
 // 0.9.338's own audit located ONE remaining, precisely-scoped gap:
-// application/CreateDiscoveryUseCase.js — the composition root every real
+// application/discovery/CreateDiscoveryUseCase.js — the composition root every real
 // UI surface (Repository/Author's PublicationCatalog.js, Editor's fork/
 // load lookup, World View, Recent Worlds) independently calls — built a
 // fresh LocalDiscoveryProvider every time and never merged in the
@@ -47,7 +47,7 @@ import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
 //   - discovery/CompositeDiscoveryProvider.js (new): a small, generic
 //     multi-provider merge — no discovery, resolution, dedup, ranking,
 //     or source preference of its own.
-//   - application/CreateDiscoveryUseCase.js: execute() now accepts an
+//   - application/discovery/CreateDiscoveryUseCase.js: execute() now accepts an
 //     OPTIONAL decentralizedDiscoveryProvider and composes it in via the
 //     class above, when supplied. LocalDiscoveryProvider is still
 //     unconditionally constructed, unchanged.
@@ -132,7 +132,7 @@ function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// application/CreateDiscoveryUseCase.js constructs a real
+// application/discovery/CreateDiscoveryUseCase.js constructs a real
 // storage/LocalStorageProvider.js, which reads window.localStorage — a
 // minimal in-memory shim, installed ONLY when no window already exists
 // (a real browser test run never hits this branch), scoped to this
@@ -230,10 +230,10 @@ async function run() {
         assert(countOccurrences(mainSource, /app\.provide\('decentralizedPublicationDiscoveryProvider', decentralizedPublicationDiscoveryProvider\);/g) === 1,
             '2. ...still provided app-wide exactly once.');
 
-        const createDiscoverySource = await readSource('application/CreateDiscoveryUseCase.js');
+        const createDiscoverySource = await readSource('application/discovery/CreateDiscoveryUseCase.js');
         assert(createDiscoverySource.includes('new LocalDiscoveryProvider(storageProvider)') &&
             createDiscoverySource.includes('new CompositeDiscoveryProvider([localDiscoveryProvider, decentralizedDiscoveryProvider])'),
-            '3. application/CreateDiscoveryUseCase.js constructs LocalDiscoveryProvider unconditionally and composes an optional decentralizedDiscoveryProvider alongside it.');
+            '3. application/discovery/CreateDiscoveryUseCase.js constructs LocalDiscoveryProvider unconditionally and composes an optional decentralizedDiscoveryProvider alongside it.');
 
         // Every real UI caller now injects the shared instance (default
         // null, so a caller with no provider ancestor degrades safely)
@@ -265,7 +265,7 @@ async function run() {
         assert(!/CompositeDiscoveryProvider|providers/.test(providerSource),
             '6. discovery/DecentralizedPublicationDiscoveryProvider.js carries no merge/composition concept of its own — its job stays "catalog Publications already resolved," nothing more.');
     }
-    console.log('✓ Section 0: the composition root diagram holds — ui/main.js still builds and shares exactly one DecentralizedPublicationDiscoveryProvider instance; application/CreateDiscoveryUseCase.js now optionally composes it alongside LocalDiscoveryProvider via the new discovery/CompositeDiscoveryProvider.js; every real UI caller of CreateDiscoveryUseCase now injects and threads the shared instance through.');
+    console.log('✓ Section 0: the composition root diagram holds — ui/main.js still builds and shares exactly one DecentralizedPublicationDiscoveryProvider instance; application/discovery/CreateDiscoveryUseCase.js now optionally composes it alongside LocalDiscoveryProvider via the new discovery/CompositeDiscoveryProvider.js; every real UI caller of CreateDiscoveryUseCase now injects and threads the shared instance through.');
 
     // ===============================================================
     // Section A — Shared provider reaches Repository.
@@ -331,7 +331,7 @@ async function run() {
 
         clearLocalPublications();
         // Note: this section calls the SAME generic
-        // application/CreateDiscoveryUseCase.js / application/
+        // application/discovery/CreateDiscoveryUseCase.js / application/
         // SearchPublicationsUseCase.js every local query already used in
         // Section B — no Repository-specific or decentralized-specific
         // branch exists anywhere in either class.
@@ -563,7 +563,7 @@ async function run() {
         // enrichment of loaded/nearby world markers and a catalogEmpty
         // flag (allPublications), never for World Search itself, which
         // stays entirely separate (session.searchWorld(), built inside
-        // application/CreateWorldViewUseCase.js's own independent
+        // application/world/CreateWorldViewUseCase.js's own independent
         // LocalDiscoveryProvider). Reconfirmed both ways.
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readSource(file)))).join('\n');
         assert(worldViewSource.includes("inject('decentralizedPublicationDiscoveryProvider', null)"),
@@ -585,11 +585,11 @@ async function run() {
         // milestone never merged anything into THAT path. See
         // tests/PublicationActionProviderContinuityFix.test.js for the
         // dedicated proof this narrower distinction holds.
-        const createWorldViewSource = await readSource('application/CreateWorldViewUseCase.js');
+        const createWorldViewSource = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(createWorldViewSource.includes('new LocalDiscoveryProvider(storageProvider)') &&
             /decentralizedPublicationDiscoveryProvider\s*=\s*null/.test(createWorldViewSource) &&
             /publicationActionDiscoveryProvider\s*=\s*decentralizedPublicationDiscoveryProvider/.test(createWorldViewSource),
-            '4. AMENDED BY 0.9.597 — application/CreateWorldViewUseCase.js is untouched and still local-only for World Search\'s own purposes -- `discoveryProvider` itself, the one session.searchWorld() reads through, is still the plain, unmerged LocalDiscoveryProvider this assertion originally confirmed. The file now ALSO accepts an optional decentralized provider, but composes it ONLY into a separate `publicationActionDiscoveryProvider`, consumed exclusively by WorldNavigationSession#getPublicationForDocument()/findPublicationById() -- see tests/PublicationActionProviderContinuityFix.test.js for that narrower capability\'s own dedicated proof.');
+            '4. AMENDED BY 0.9.597 — application/world/CreateWorldViewUseCase.js is untouched and still local-only for World Search\'s own purposes -- `discoveryProvider` itself, the one session.searchWorld() reads through, is still the plain, unmerged LocalDiscoveryProvider this assertion originally confirmed. The file now ALSO accepts an optional decentralized provider, but composes it ONLY into a separate `publicationActionDiscoveryProvider`, consumed exclusively by WorldNavigationSession#getPublicationForDocument()/findPublicationById() -- see tests/PublicationActionProviderContinuityFix.test.js for that narrower capability\'s own dedicated proof.');
 
         // I3. ui/views/RecentWorldsView.js — discoveryProvider is used
         // only via findByDocumentId(documentId), where `documentId`
@@ -773,7 +773,7 @@ async function run() {
     // ===============================================================
     {
         const compositeSource = await readSource('discovery/CompositeDiscoveryProvider.js');
-        const createDiscoverySource = await readSource('application/CreateDiscoveryUseCase.js');
+        const createDiscoverySource = await readSource('application/discovery/CreateDiscoveryUseCase.js');
         assert(!/Nostr/.test(compositeSource) && !/Nostr/.test(createDiscoverySource),
             '1. no Nostr discovery of any kind was introduced.');
         assert(!/FederatedDiscoveryProvider/.test(compositeSource) && !/FederatedDiscoveryProvider/.test(createDiscoverySource),
@@ -781,11 +781,11 @@ async function run() {
         assert(!/TTL|trust|canonical|preferred/i.test(compositeSource),
             '3. no ranking, source preference, trust, or TTL concept exists in the new composition class.');
 
-        const searchUseCaseSource = await readSource('application/SearchPublicationsUseCase.js');
+        const searchUseCaseSource = await readSource('application/publication/SearchPublicationsUseCase.js');
         const localDiscoverySource = await readSource('discovery/LocalDiscoveryProvider.js');
         const decentralizedProviderSource = await readSource('discovery/DecentralizedPublicationDiscoveryProvider.js');
         assert(!/CompositeDiscoveryProvider/.test(searchUseCaseSource),
-            '4. application/SearchPublicationsUseCase.js itself is untouched — it still only ever calls discoveryProvider.list(), unaware a composite exists.');
+            '4. application/publication/SearchPublicationsUseCase.js itself is untouched — it still only ever calls discoveryProvider.list(), unaware a composite exists.');
         assert(!/Composite|decentralizedDiscoveryProvider/.test(localDiscoverySource),
             '5. discovery/LocalDiscoveryProvider.js is untouched.');
         assert(!/Composite/.test(decentralizedProviderSource),

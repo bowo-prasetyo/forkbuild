@@ -1,9 +1,9 @@
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -124,7 +124,7 @@ async function run() {
         // Exactly the shape a real runtime configuration source (a future
         // wallet adapter's already-connected signer, a development/test
         // signer, or any other host-provided capability — see
-        // application/PublicationDistributionRuntimeConfiguration.js's own
+        // application/publication/distribution/PublicationDistributionRuntimeConfiguration.js's own
         // header) would hand ui/main.js.
         const publicationDistributionRuntimeConfiguration = {
             arweave: {
@@ -210,7 +210,7 @@ async function run() {
         await flushMicrotasks();
 
         assert(ctx.distributionExecuting === false, '9. today\'s configuration — execution still returns to idle');
-        assert(ctx.distributionError === 'ArweavePublicationMaterialUploader: a signer with a sign() method is required', '10. today\'s configuration — the click now surfaces the sanitized underlying cause (no wallet signer configured) instead of the old generic notice — see application/DistributionErrorMessageSanitizer.js');
+        assert(ctx.distributionError === 'ArweavePublicationMaterialUploader: a signer with a sign() method is required', '10. today\'s configuration — the click now surfaces the sanitized underlying cause (no wallet signer configured) instead of the old generic notice — see application/publication/distribution/DistributionErrorMessageSanitizer.js');
         assert(lifecycleStore.get(publication.id) === null, '11. today\'s configuration — the lifecycle store is left untouched, exactly as before this milestone');
 
         console.log('✓ Section B: with the runtime configuration source empty, the way ui/main.js composes it today, the identical click still reaches exactly today\'s existing honest failure');
@@ -224,9 +224,9 @@ async function run() {
         const source = await readFile(new URL('../ui/main.js', import.meta.url), 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js'"),
+        assert(codeOnly.includes("import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js'"),
             '12. ui/main.js imports the real composition function, never a hand-rolled equivalent');
-        assert(codeOnly.includes("import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js'"),
+        assert(codeOnly.includes("import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js'"),
             '13. ui/main.js imports the real runtime configuration seam, never the 0.9.105 resolvers directly');
         assert(!codeOnly.includes("PublicationDistributionConfigurationProvider.js'"),
             '14. ui/main.js no longer imports the 0.9.105 resolvers directly — resolvePublicationDistributionRuntimeConfiguration() is the one seam now');

@@ -6,7 +6,7 @@ export const DEFAULT_PAGE_SIZE = 20;
 // for, how to order it, and which page to return. Deliberately
 // APPLICATION-level, not tied to how any particular discovery provider
 // happens to store or fetch publications — see
-// application/SearchPublicationsUseCase.js's own comment for why
+// application/publication/SearchPublicationsUseCase.js's own comment for why
 // `page`/`pageSize` are page-NUMBER based rather than a raw
 // OFFSET/LIMIT the UI computes itself: this leaves room for a future
 // decentralized provider to answer the SAME query shape via

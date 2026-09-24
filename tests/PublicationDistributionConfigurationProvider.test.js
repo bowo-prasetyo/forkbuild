@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions } from '../application/PublicationDistributionConfigurationProvider.js';
+import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
 
 // 0.9.105 — Publication Distribution Configuration Boundary.
 // See docs/Roadmap.md, "0.9.105 — Publication Distribution Configuration
@@ -114,7 +114,7 @@ async function run() {
     // Section F — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/PublicationDistributionConfigurationProvider.js', import.meta.url);
+        const sourceUrl = new URL('../application/publication/distribution/PublicationDistributionConfigurationProvider.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

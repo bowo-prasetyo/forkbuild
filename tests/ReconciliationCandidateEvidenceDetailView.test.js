@@ -9,7 +9,7 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetail,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetail
 } from '../application/claimSnapshotReconciliation/candidate/EvidenceDetailView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.182 — Reconciliation Candidate Evidence Detail View.
 //

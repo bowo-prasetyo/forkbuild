@@ -6,7 +6,7 @@ const VEHICLE_RUNTIME_INSTANCE_STORE_KEY = 'vehicle-runtime-instances';
 
 // World View Placed-Vehicle Persistence.
 //
-// application/VehicleRuntimeInstances.js stays exactly what its own
+// application/world/VehicleRuntimeInstances.js stays exactly what its own
 // header already declares it to be — a session-local reconciliation
 // store, unaware of persistence or serialization. This file is a
 // separate, optional durable backing for it: a plain data mapper, the
@@ -14,7 +14,7 @@ const VEHICLE_RUNTIME_INSTANCE_STORE_KEY = 'vehicle-runtime-instances';
 // *Store in this directory already use.
 //
 // WHAT IS PERSISTED, AND WHY IT IS ENOUGH. `nearbyVehicleInstances()`
-// (application/NearbyVehicleInstances.js) reconstructs every STATIONARY
+// (application/world/NearbyVehicleInstances.js) reconstructs every STATIONARY
 // vehicle deterministically from nothing but the world seed — nothing
 // about those needs to be written down. The two facts that formula has
 // no way to reproduce are exactly what this store persists:
@@ -35,7 +35,7 @@ const VEHICLE_RUNTIME_INSTANCE_STORE_KEY = 'vehicle-runtime-instances';
 // USING ITS OWN PUBLIC add()/discard() — never by reaching into its
 // private fields, and never from this file, which has no reference to
 // any VehicleRuntimeInstances instance at all. See
-// application/WorldNavigationSession.js's own constructor for the one
+// application/world/WorldNavigationSession.js's own constructor for the one
 // call site.
 //
 // CORRUPTED OR MISSING STORAGE DEGRADES TO EMPTY, never a thrown error —

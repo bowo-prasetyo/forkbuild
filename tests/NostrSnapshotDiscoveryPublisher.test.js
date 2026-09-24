@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { parseSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
 
 // 0.9.133 — Nostr Snapshot Discovery Publisher.
@@ -241,11 +241,11 @@ async function run() {
     // vocabulary.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/NostrSnapshotDiscoveryPublisher.js', import.meta.url);
+        const sourceUrl = new URL('../application/nostr/NostrSnapshotDiscoveryPublisher.js', import.meta.url);
         const fullSource = await readFile(sourceUrl, 'utf8');
         const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(!codeOnly.includes('NostrPublicationDiscoveryPublisher'), '28. never imports application/NostrPublicationDiscoveryPublisher.js — a distinct semantic contract, per this milestone\'s own header');
+        assert(!codeOnly.includes('NostrPublicationDiscoveryPublisher'), '28. never imports application/nostr/NostrPublicationDiscoveryPublisher.js — a distinct semantic contract, per this milestone\'s own header');
         assert(!codeOnly.includes('DecentralizedDiscoveryEnvelope'), '29. never imports the Signed Claim\'s own envelope shape');
         assert(!codeOnly.includes('PublicationDistribution'), '30. never imports the Signed Claim distribution family');
         assert(!codeOnly.includes('ArweavePublicationMaterialUploader'), '31. never imports the Arweave material uploader — material upload stays a separate concern');

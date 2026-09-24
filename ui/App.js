@@ -1,6 +1,6 @@
 import { provide } from 'vue';
 import UserWidget from './components/UserWidget.js';
-import { CreatePreviewUseCase } from '../application/CreatePreviewUseCase.js';
+import { CreatePreviewUseCase } from '../application/editor/CreatePreviewUseCase.js';
 
 export default {
     name: 'App',
@@ -9,7 +9,7 @@ export default {
     // provide/inject convention LoginModal's identityUseCase already
     // uses) so its cache and generation queue survive navigating
     // between Repository, Author, and back — see
-    // application/CreatePreviewUseCase.js.
+    // application/editor/CreatePreviewUseCase.js.
     setup() {
         const { previewService } = new CreatePreviewUseCase().execute();
         provide('previewService', previewService);

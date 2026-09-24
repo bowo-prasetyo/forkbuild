@@ -140,7 +140,7 @@ export default {
         // entry: Load REPLACES the current document with this one; Place
         // adds a StructurePlacement REFERENCING it to the document
         // that's already open, without leaving it. See
-        // application/EditorSession.js#placeDocument()'s own header for
+        // application/editor/EditorSession.js#placeDocument()'s own header for
         // why this deliberately doesn't open `doc.id`.
         function place(doc) {
             const placed = props.editorSession.placeDocument(doc.id, doc.title);

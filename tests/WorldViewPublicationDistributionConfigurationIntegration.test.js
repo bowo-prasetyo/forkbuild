@@ -1,9 +1,9 @@
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions } from '../application/PublicationDistributionConfigurationProvider.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { resolveArweaveUploaderOptions, resolveNostrPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -22,7 +22,7 @@ import { Signature } from '../core/Signature.js';
 // `resolveNostrPublisherOptions()`, all 0.9.105, unmodified here), fed fake
 // signer/gateway/relay collaborators standing in for a real wallet/relay
 // capability this codebase does not concretely implement yet — see
-// `application/PublicationDistributionConfigurationProvider.js`'s own
+// `application/publication/distribution/PublicationDistributionConfigurationProvider.js`'s own
 // header. Proves the exact user-facing action that used to end in
 // "Distribution could not be completed." now reaches the successful
 // distribution path once valid configuration is supplied, with World View
@@ -209,7 +209,7 @@ async function run() {
         await flushMicrotasks();
 
         assert(ctx.distributionExecuting === false, '9. today\'s configuration — execution still returns to idle');
-        assert(ctx.distributionError === 'ArweavePublicationMaterialUploader: a signer with a sign() method is required', '10. today\'s configuration — the click now surfaces the sanitized underlying cause (no wallet signer configured) instead of the old generic notice — see application/DistributionErrorMessageSanitizer.js');
+        assert(ctx.distributionError === 'ArweavePublicationMaterialUploader: a signer with a sign() method is required', '10. today\'s configuration — the click now surfaces the sanitized underlying cause (no wallet signer configured) instead of the old generic notice — see application/publication/distribution/DistributionErrorMessageSanitizer.js');
         assert(lifecycleStore.get(publication.id) === null, '11. today\'s configuration — the lifecycle store is left untouched, exactly as before this milestone');
 
         console.log('✓ Section B: composed the way ui/main.js composes it today, the identical click still reaches exactly today\'s existing honest failure');
@@ -223,7 +223,7 @@ async function run() {
         const source = await readFile(new URL('../ui/main.js', import.meta.url), 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js'"),
+        assert(codeOnly.includes("import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js'"),
             '12. ui/main.js imports the real composition function, never a hand-rolled equivalent');
         // 0.9.106 — Publication Distribution Runtime Configuration folded
         // ui/main.js's own two direct resolver calls into ONE named
@@ -232,7 +232,7 @@ async function run() {
         // for that seam's own flagship test. ui/main.js no longer imports
         // `resolveArweaveUploaderOptions`/`resolveNostrPublisherOptions`
         // directly; this assertion follows that legitimate, later move.
-        assert(codeOnly.includes("import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js'"),
+        assert(codeOnly.includes("import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js'"),
             '13. ui/main.js imports the real runtime configuration seam (0.9.106), which itself calls the real 0.9.105 configuration resolvers');
         assert(codeOnly.includes('composePublicationDistributionCommand({') && codeOnly.includes('lifecycleStore: publicationDistributionLifecycleStore'),
             '14. ui/main.js actually calls the composition function with the SAME lifecycle store 0.9.100/0.9.103 already wired for observation');

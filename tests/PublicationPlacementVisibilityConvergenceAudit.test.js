@@ -8,7 +8,7 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { License, LicenseId } from '../core/License.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -16,14 +16,14 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
-import { DiscoverPlacementsUseCase } from '../application/DiscoverPlacementsUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
+import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 
 // 0.9.309 — Publication Placement Visibility Convergence Audit.
@@ -137,7 +137,7 @@ function panelCtx(overrides = {}) {
 }
 
 async function runTests() {
-    // Shared real backend, mirroring application/CreatePlacementRegistryUseCase.js's
+    // Shared real backend, mirroring application/placement/CreatePlacementRegistryUseCase.js's
     // own composition and tests/RemovalRetractionLifecycleConvergenceAudit.test.js's
     // own setup — a full real stack, never a mock of the application layer.
     const storage = new InMemoryStorageProvider();
@@ -202,8 +202,8 @@ async function runTests() {
 
         // Structural: both routes terminate at the exact same one-line
         // registry call — never two independent queries.
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
-        const discoverSource = await rawSource('application/DiscoverPlacementsUseCase.js');
+        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
+        const discoverSource = await rawSource('application/placement/DiscoverPlacementsUseCase.js');
         assert(codeOnly(sessionSource).includes('this._placementRegistry.findByPublicationId(publicationId)'),
             'A4. getPlacementsForPublication() calls the registry\'s own findByPublicationId()');
         assert(codeOnly(discoverSource).includes('return this._placementRegistry.findByPublicationId(publicationId);'),
@@ -315,7 +315,7 @@ async function runTests() {
         // (unlike _resolvePlacementRecord/getPlacementInfoForPublication,
         // which both deliberately DO) — proving 0.9.308 added a capability
         // rather than silently redefining an existing one.
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
         const pluralBody = methodBody(codeOnly(sessionSource), 'getPlacementsForPublication\\(publicationId\\)', 4);
         assert(!pluralBody.includes('.reduce('), 'D6. getPlacementsForPublication()\'s own body performs no "latest" reduction');
         assert(!pluralBody.includes('getPlacementInfoForPublication'), 'D7. getPlacementsForPublication() does not call the singular method internally — the two are independent readers of the same registry, not one wrapping the other');
@@ -354,7 +354,7 @@ async function runTests() {
         // visibility feature — convergence holds because both read the
         // same registry, never because creation notifies/registers the
         // panel or the session.
-        const placeSource = await rawSource('application/PlacePublicationUseCase.js');
+        const placeSource = await rawSource('application/placement/PlacePublicationUseCase.js');
         assert(!/OwnPublicationPanel|getPlacementsForPublication|WorldNavigationSession/.test(codeOnly(placeSource)),
             'E6. PlacePublicationUseCase.js carries no reference to the visibility feature at all — convergence is structural (same registry), not synchronization');
 
@@ -436,7 +436,7 @@ async function runTests() {
         // Structural: neither the plural reader nor the shared enrichment
         // helper ever touches the World-facing collaborators — only the
         // placement registry.
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
         const source = codeOnly(sessionSource);
         const pluralBody = methodBody(source, 'getPlacementsForPublication\\(publicationId\\)', 4);
         const enrichBody = methodBody(source, '_enrichPlacementRecord\\(record\\)', 4);
@@ -547,7 +547,7 @@ async function runTests() {
     // lifecycle semantics, no new placement domain model.
     // -----------------------------------------------------------------
     {
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
         const sessionCode = codeOnly(sessionSource);
         const panelCode = codeOnly(panelSource);

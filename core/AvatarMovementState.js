@@ -1,6 +1,6 @@
 // 0.2.36 — a pure snapshot of a player's CURRENT movement INTENT,
 // built once per simulation tick from whatever input device is in
-// use (keyboard today — see application/AvatarMovementController.js
+// use (keyboard today — see application/avatar/AvatarMovementController.js
 // — a gamepad or touch stick later would produce the exact same
 // shape). This is deliberately NOT keyboard state: nothing here knows
 // what a "key" is, and nothing here is a `sequence`-bearing fact
@@ -26,7 +26,7 @@
 // what it changes about how speed is resolved.
 //
 // DELIBERATELY NOT BOUND TO ANY KEY, AS OF 0.9.92. Unlike `jumpRequested`
-// (Space, wired since 0.2.36), nothing in application/AvatarMovementController.js
+// (Space, wired since 0.2.36), nothing in application/avatar/AvatarMovementController.js
 // ever sets `brakingRequested` true — see that file's own header for why
 // deciding WHICH user action produces this fact is deliberately left to
 // a future input milestone. Constructing an `AvatarMovementState` with

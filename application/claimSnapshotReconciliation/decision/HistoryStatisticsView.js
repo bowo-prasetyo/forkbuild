@@ -10,7 +10,7 @@ import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHisto
 // projection" (see that file's own header, "Deliberately excluded," bullet
 // three). This file is that projection, and nothing more — the
 // decision-history analogue of
-// `application/PublisherLeaderboardClaimHistoryStatisticsView.js` (0.8.128),
+// `application/leaderboard/PublisherLeaderboardClaimHistoryStatisticsView.js` (0.8.128),
 // one subject over: where that file tallies a replica's own stored claim
 // RECEIPTS, this file tallies a replica's own stored reconciliation
 // DECISIONS (0.8.146's own, plain, ordered array of 0.8.145's own decision
@@ -29,7 +29,7 @@ import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHisto
 // many distinct," "how many of each" — and none of them interprets
 // `OBSERVE`/`DEFER`, determines whether a decision is still current, or
 // compares any decision against a freshly computed plan. See
-// `application/PublisherLeaderboardClaimHistoryStatisticsView.js`'s own
+// `application/leaderboard/PublisherLeaderboardClaimHistoryStatisticsView.js`'s own
 // header, "The question is 'what measurable facts exist?'," held here again
 // over a decision history instead of a claim history.
 //
@@ -114,7 +114,7 @@ import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHisto
 //
 // `dispositionCounts`/`candidateTypeCounts` PRESERVE FIRST-APPEARANCE
 // ORDER — NEVER ALPHABETICAL, NEVER SORTED BY COUNT. Mirroring
-// `application/PublisherLeaderboardClaimHistoryStatisticsView.js`'s own
+// `application/leaderboard/PublisherLeaderboardClaimHistoryStatisticsView.js`'s own
 // `signerIdentityCounts` convention exactly: each lists only the values
 // that actually occur in `history`, each entry's own `count` stating
 // exactly how many stored decisions carry that value, ordered by when that
@@ -153,7 +153,7 @@ import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHisto
 //
 // `describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics()`/
 // `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics()`
-// — THE IDENTICAL SPLIT `application/PublisherLeaderboardClaimHistoryStatisticsView.js`'s
+// — THE IDENTICAL SPLIT `application/leaderboard/PublisherLeaderboardClaimHistoryStatisticsView.js`'s
 // OWN 0.8.128/0.8.130 PAIR ALREADY HOLDS.
 // `describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryStatistics()`
 // is the pure computation, over one plain, in-memory decision-history array

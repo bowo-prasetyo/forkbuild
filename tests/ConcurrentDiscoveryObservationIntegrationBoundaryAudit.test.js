@@ -2,13 +2,13 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -553,7 +553,7 @@ async function run() {
         // computed value — the regex below is widened to admit that one
         // extra, still-derived-from-the-same-object line, never to relax
         // the underlying "one object, read twice" invariant itself.
-        const commandCode = codeOnly(await source('application/PublicationDistributionCommand.js'));
+        const commandCode = codeOnly(await source('application/publication/distribution/PublicationDistributionCommand.js'));
         assert(/next = transitioned;\s*changed = true;\s*if \(typeof lifecycleStore\.recordDiscoveryObservation === 'function'\) \{\s*const resolvedProvider = discoveryProvider \|\| 'nostr';\s*const discoveryOrigin = resolvedProvider === 'nostr' \? transitioned\.discovery\.origin : undefined;\s*lifecycleStore\.recordDiscoveryObservation\(result\.publication\.objectId, resolvedProvider, transitioned\.discovery, discoveryOrigin\);/.test(commandCode),
             n('E4. CONFIRMED FROM THE SOURCE: recordDiscoveryObservation() is fed the identical `transitioned.discovery` object later assigned into `next` and passed to set(), and its own `discoveryOrigin` argument is derived from that SAME object\'s `.origin` field — divergence between the two representations is impossible under this exact call shape, not merely unobserved in this test run'));
         assert(commandCode.indexOf('lifecycleStore.recordDiscoveryObservation(') < commandCode.indexOf('if (changed) {\n        lifecycleStore.set('),
@@ -856,7 +856,7 @@ async function run() {
         // method, confirming this milestone's own read-only audit changed
         // nothing that would alter that isolation.
         {
-            const anchorCode = await source('application/CreateArweaveAnchorPublisherUseCase.js');
+            const anchorCode = await source('application/anchoring/CreateArweaveAnchorPublisherUseCase.js');
             assert(!/recordDiscoveryObservation|getDiscoveryObservations/.test(anchorCode), n('J3. Proof/Anchor publishing still never references either of the 0.9.433 discovery-observation methods'));
         }
 
@@ -895,7 +895,7 @@ async function run() {
         // await, no fetch-shaped call, and no call to any method name a
         // publisher/uploader in this codebase actually exposes.
         {
-            const storeCode = codeOnly(await source('application/PublicationDistributionLifecycleStore.js'));
+            const storeCode = codeOnly(await source('application/publication/distribution/PublicationDistributionLifecycleStore.js'));
             const recordStart = storeCode.indexOf('recordDiscoveryObservation(publicationId, discoveryProvider, discoverySection) {');
             const recordEnd = storeCode.indexOf('\n    }', recordStart);
             const getStart = storeCode.indexOf('getDiscoveryObservations(publicationId) {');

@@ -7,9 +7,9 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
-import { PublicationCommentaryNostrDistribution } from '../application/PublicationCommentaryNostrDistribution.js';
-import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/DiscoverPublicationCommentaryFromNostrUseCase.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryNostrDistribution } from '../application/publication/commentary/PublicationCommentaryNostrDistribution.js';
+import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js';
 
 import {
     PublicationCommentaryDeliveryStatus,
@@ -33,7 +33,7 @@ import { createNostrRelayQueryClient } from '../nostr/NostrRelayQueryClient.js';
 // round trip. Its own verdict named exactly one remaining gap —
 // CONCRETE_PRODUCT_GAP: "a single small production adapter file...
 // never built here." This milestone builds exactly that adapter
-// (application/PublicationCommentaryNostrDistribution.js), the admission
+// (application/publication/commentary/PublicationCommentaryNostrDistribution.js), the admission
 // boundary on top of it (application/
 // DiscoverPublicationCommentaryFromNostrUseCase.js), and the ui/main.js
 // wiring making both reachable from the real, running application — the
@@ -208,7 +208,7 @@ async function run() {
         assert(describesConformingPublicationCommentaryAsynchronousDeliverySubstrate(distribution) === true,
             n('the new, real, permanent PublicationCommentaryNostrDistribution class — never a test-local composition — duck-type-conforms to core/PublicationCommentaryAsynchronousDeliveryContract.js\'s own publish()/retrieve() contract'));
         assert(distribution.relayUrl === 'wss://relay.example' && distribution.discoveryTag === '0.9.628-conformance',
-            n('relayUrl/discoveryTag are exposed exactly as constructed, mirroring application/NostrPublicationDiscoveryPublisher.js\'s own getters'));
+            n('relayUrl/discoveryTag are exposed exactly as constructed, mirroring application/nostr/NostrPublicationDiscoveryPublisher.js\'s own getters'));
 
         console.log('✓ A: the real production adapter conforms to the asynchronous delivery contract.');
     }
@@ -351,9 +351,9 @@ async function run() {
         assert(admitted.length === 1 && admitted[0].isNew === true, n('ADMITTED succeeds regardless of local Publication awareness — no discoveryProvider/Publication existence check of any kind is introduced anywhere on this path'));
         assert(readerStore.getById(commentary.commentaryId) !== null, n('the commentary really is on file'));
 
-        const useCaseSource = codeOnly(await rawSource('application/DiscoverPublicationCommentaryFromNostrUseCase.js'));
+        const useCaseSource = codeOnly(await rawSource('application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js'));
         assert(!/discoveryProvider|DiscoveryProvider|CanCommentOnPublicationUseCase/.test(useCaseSource),
-            n('application/DiscoverPublicationCommentaryFromNostrUseCase.js imports/mentions no Publication discovery or authorization collaborator of any kind — the same structural separation 0.9.627\'s own Section F already proved for the WebRTC path, reconfirmed here for Nostr'));
+            n('application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js imports/mentions no Publication discovery or authorization collaborator of any kind — the same structural separation 0.9.627\'s own Section F already proved for the WebRTC path, reconfirmed here for Nostr'));
 
         console.log('✓ E: a Commentary naming a locally unknown Publication is admitted through the new Nostr path exactly like every other transport.');
     }
@@ -407,7 +407,7 @@ async function run() {
         assert(Array.isArray(discovered) && discovered.every((entry) => entry && typeof entry === 'object'),
             n('discover() never includes a non-JSON/non-object candidate in its own result array'));
 
-        console.log('✓ F: relay unavailability is a rejection, a definite decline or malformed candidate degrades to null/is skipped, and a publishImpl violating its own contract throws — the identical semantics application/NostrPublicationDiscoveryPublisher.js already holds one substrate over.');
+        console.log('✓ F: relay unavailability is a rejection, a definite decline or malformed candidate degrades to null/is skipped, and a publishImpl violating its own contract throws — the identical semantics application/nostr/NostrPublicationDiscoveryPublisher.js already holds one substrate over.');
     }
 
     // ===============================================================
@@ -421,7 +421,7 @@ async function run() {
         const useCase = new DiscoverPublicationCommentaryFromNostrUseCase(spyDistribution, exchange);
         const result = await useCase.execute({});
         assert(Array.isArray(result) && result.length === 0 && discoverCalled === false,
-            n('a call with no publicationId returns [] without ever calling nostrDistribution.discover() — mirrors application/GetPublicationCommentariesUseCase.js\'s own composed guard restraint exactly'));
+            n('a call with no publicationId returns [] without ever calling nostrDistribution.discover() — mirrors application/publication/commentary/GetPublicationCommentariesUseCase.js\'s own composed guard restraint exactly'));
 
         console.log('✓ G: no publicationId, no discover() call, no thrown error.');
     }
@@ -431,7 +431,7 @@ async function run() {
     // ===============================================================
     {
         // UNIFIED — ui/main.js no longer constructs PublicationCommentaryNostrDistribution
-        // directly; it constructs application/NostrMultiRelayPublicationCommentaryDistribution.js
+        // directly; it constructs application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js
         // instead, which itself constructs one PublicationCommentaryNostrDistribution
         // instance per configured relay (fan-out across the unified Nostr
         // relay set — see core/NostrRelayConfiguration.js's own "unified"
@@ -441,7 +441,7 @@ async function run() {
         // else.
         const distributionSites = grepFiles('new PublicationCommentaryNostrDistribution\\(', ['ui', 'application']);
         assert(distributionSites.length === 1 && distributionSites[0].includes('NostrMultiRelayPublicationCommentaryDistribution.js'),
-            n(`exactly one production file constructs PublicationCommentaryNostrDistribution — application/NostrMultiRelayPublicationCommentaryDistribution.js — found: ${distributionSites.join(', ') || 'none'}`));
+            n(`exactly one production file constructs PublicationCommentaryNostrDistribution — application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js — found: ${distributionSites.join(', ') || 'none'}`));
         const multiRelayConstructionSites = grepFiles('new NostrMultiRelayPublicationCommentaryDistribution\\(', ['ui', 'application']);
         assert(multiRelayConstructionSites.length === 1 && multiRelayConstructionSites[0].includes('ui/main.js'),
             n(`exactly one production file constructs NostrMultiRelayPublicationCommentaryDistribution — ui/main.js — found: ${multiRelayConstructionSites.join(', ') || 'none'}`));
@@ -452,14 +452,14 @@ async function run() {
 
         const exchangeConstructionSites = grepFiles('new PublicationCommentaryDistribution(Exchange|PeerExchange)\\(', ['ui', 'application']);
         assert(exchangeConstructionSites.length === 1 && exchangeConstructionSites[0].includes('CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'),
-            n('this milestone constructs no second PublicationCommentaryDistributionExchange/PeerExchange anywhere — ui/main.js reuses the SAME instance application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js (0.9.620) already builds for WebRTC, for Nostr publish/import too'));
+            n('this milestone constructs no second PublicationCommentaryDistributionExchange/PeerExchange anywhere — ui/main.js reuses the SAME instance application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js (0.9.620) already builds for WebRTC, for Nostr publish/import too'));
 
         // UNIFIED — ui/main.js now imports the fan-out wrapper instead of
         // the single-relay class directly; see this file's own "production
         // wiring census" amendment, above.
         const mainSource = codeOnly(await rawSource('ui/main.js'));
-        assert(mainSource.includes("import { NostrMultiRelayPublicationCommentaryDistribution } from '../application/NostrMultiRelayPublicationCommentaryDistribution.js';")
-            && mainSource.includes("import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/DiscoverPublicationCommentaryFromNostrUseCase.js';"),
+        assert(mainSource.includes("import { NostrMultiRelayPublicationCommentaryDistribution } from '../application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js';")
+            && mainSource.includes("import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js';"),
             n('ui/main.js imports both new classes'));
         assert(mainSource.includes('publishImpl: nostrHostPublisher,') && mainSource.includes('queryImpl: nostrRelayQueryClient,') && mainSource.includes('relayUrl: resolvedNostrRelayUrl'),
             n('the Nostr distribution instance reuses the SAME nostrHostPublisher/nostrRelayQueryClient/resolvedNostrRelayUrl bindings every other Nostr capability in this file already reuses — no second host-capability resolution, no second relay-configuration mechanism'));
@@ -496,7 +496,7 @@ async function run() {
             n('the asynchronous-substrate publish call (Nostr or Arweave, per 0.9.631\'s own selection) is fire-and-forget with its own rejection handler — never awaited inline, so a slow or unreachable relay/gateway can never block a Commentary submission'));
         assert(wrapperBody.includes("? publicationCommentaryArweaveDistribution\n        : publicationCommentaryNostrDistribution;")
             || /publicationCommentaryArweaveDistribution[\s\S]{0,80}publicationCommentaryNostrDistribution/.test(wrapperBody),
-            n('0.9.631: the wrapper selects between the two asynchronous substrates rather than fanning out to both — the identical "selection, never fan-out" invariant application/PublicationDistributionRuntimeComposition.js already holds, extended here to Commentary'));
+            n('0.9.631: the wrapper selects between the two asynchronous substrates rather than fanning out to both — the identical "selection, never fan-out" invariant application/publication/distribution/PublicationDistributionRuntimeComposition.js already holds, extended here to Commentary'));
 
         console.log('✓ I (source): create → persist → announce → Nostr publish, confirmed by source order.');
     }
@@ -549,10 +549,10 @@ async function run() {
     // Section J — the read side stays untouched.
     // ===============================================================
     {
-        const getUseCaseSource = codeOnly(await rawSource('application/GetPublicationCommentariesUseCase.js'));
-        const createUseCaseSource = codeOnly(await rawSource('application/CreatePublicationCommentaryUseCase.js'));
+        const getUseCaseSource = codeOnly(await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js'));
+        const createUseCaseSource = codeOnly(await rawSource('application/publication/commentary/CreatePublicationCommentaryUseCase.js'));
         assert(!/Nostr/.test(getUseCaseSource) && !/Nostr/.test(createUseCaseSource),
-            n('application/GetPublicationCommentariesUseCase.js and application/CreatePublicationCommentaryUseCase.js — both unmodified by this milestone — mention nothing Nostr-shaped; the synchronous, storage-only read path is untouched, exactly as this milestone\'s own requesting brief required ("retrieval should remain explicitly separate")'));
+            n('application/publication/commentary/GetPublicationCommentariesUseCase.js and application/publication/commentary/CreatePublicationCommentaryUseCase.js — both unmodified by this milestone — mention nothing Nostr-shaped; the synchronous, storage-only read path is untouched, exactly as this milestone\'s own requesting brief required ("retrieval should remain explicitly separate")'));
 
         const mainSource = codeOnly(await rawSource('ui/main.js'));
         assert(mainSource.includes('function discoverPublicationCommentaryFromNostrCommand(publicationId) {')
@@ -566,9 +566,9 @@ async function run() {
     // Section K — notification reuse, never a second mechanism.
     // ===============================================================
     {
-        const bridgeSource = codeOnly(await rawSource('application/PublicationCommentaryRemoteNotificationBridge.js'));
+        const bridgeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js'));
         assert(!/Nostr/.test(bridgeSource),
-            n('application/PublicationCommentaryRemoteNotificationBridge.js is unmodified by this milestone — it still mentions nothing Nostr-shaped, because it does not need to: it already accepts the transport-agnostic { commentary, isNew } shape'));
+            n('application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js is unmodified by this milestone — it still mentions nothing Nostr-shaped, because it does not need to: it already accepts the transport-agnostic { commentary, isNew } shape'));
 
         const mainSource = codeOnly(await rawSource('ui/main.js'));
         // AMENDED BY 0.9.631 — Publication Commentary Arweave Asynchronous
@@ -589,8 +589,8 @@ async function run() {
     // Section L — exclusion guard.
     // ===============================================================
     {
-        const newFilesSource = codeOnly(await rawSource('application/PublicationCommentaryNostrDistribution.js'))
-            + codeOnly(await rawSource('application/DiscoverPublicationCommentaryFromNostrUseCase.js'));
+        const newFilesSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryNostrDistribution.js'))
+            + codeOnly(await rawSource('application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js'));
         assert(!/ArweaveAnnouncementPublisher|arweave\//i.test(newFilesSource),
             n('neither new file imports or references anything Arweave-shaped'));
         assert(!/relayRank|relayScore|relayPreference|fallbackRelay|retryQueue|backgroundSync|fan.?out/i.test(newFilesSource),
@@ -599,11 +599,11 @@ async function run() {
             n('no new Commentary identity field is introduced — a publish() result\'s own `locator` is a caller-side value only, never folded into the envelope'));
         assert((newFilesSource.match(/relayUrl/g) || []).length > 0, n('sanity: the exclusion scan actually read real, substantial file content, not an empty string'));
 
-        const peerExchangeSource = codeOnly(await rawSource('application/PublicationCommentaryDistributionPeerExchange.js'));
+        const peerExchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js'));
         assert(!/Nostr/.test(peerExchangeSource), n('the existing WebRTC peer exchange class remains completely unmodified and Nostr-unaware'));
 
-        const nostrDiscoveryPublisherSource = codeOnly(await rawSource('application/NostrPublicationDiscoveryPublisher.js'));
-        const nostrDiscoveryQueryServiceSource = codeOnly(await rawSource('application/NostrDiscoveryQueryService.js'));
+        const nostrDiscoveryPublisherSource = codeOnly(await rawSource('application/nostr/NostrPublicationDiscoveryPublisher.js'));
+        const nostrDiscoveryQueryServiceSource = codeOnly(await rawSource('application/nostr/NostrDiscoveryQueryService.js'));
         assert(!/Commentary/.test(nostrDiscoveryPublisherSource) && !/Commentary/.test(nostrDiscoveryQueryServiceSource),
             n('the existing Publication/Snapshot discovery-specific Nostr classes remain unmodified and mention no Commentary vocabulary of any kind — the architectural mismatch 0.9.625-0.9.627 already found stays exactly that; this milestone never repurposed either class'));
 
@@ -615,7 +615,7 @@ async function run() {
     // ===============================================================
     {
         console.log('\n=== 0.9.628 VERDICT ===');
-        console.log('  CONCRETE_PRODUCT_GAP (0.9.627)  -> CLOSED. application/PublicationCommentaryNostrDistribution.js');
+        console.log('  CONCRETE_PRODUCT_GAP (0.9.627)  -> CLOSED. application/publication/commentary/PublicationCommentaryNostrDistribution.js');
         console.log('                                     (the small, permanent adapter that milestone\'s own audit named)');
         console.log('                                     now exists, is wired into ui/main.js as a genuinely parallel');
         console.log('                                     path alongside the existing WebRTC announce, and its own');
@@ -627,7 +627,7 @@ async function run() {
         console.log('                                     only "at least one relay\'s OK," never Arweave-grade');
         console.log('                                     durability — this milestone introduces no confirmation step');
         console.log('                                     claiming otherwise.');
-        console.log('  Multi-relay fan-out/resilience  -> CLOSED. application/NostrMultiRelayPublicationCommentaryDistribution.js');
+        console.log('  Multi-relay fan-out/resilience  -> CLOSED. application/nostr/NostrMultiRelayPublicationCommentaryDistribution.js');
         console.log('                                     fans publish/retrieve/discover out across the unified Nostr relay');
         console.log('                                     set — see core/NostrRelayConfiguration.js\'s own "unified" header.');
         console.log(`\n✅ All Publication Commentary Nostr Asynchronous Distribution tests passed (${assertionCount} assertions).`);

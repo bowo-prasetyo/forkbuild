@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -170,7 +170,7 @@ async function run() {
     //    deliberately excluded.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/PublicationDistributionDescriptor.js', import.meta.url);
+        const sourceUrl = new URL('../application/publication/distribution/PublicationDistributionDescriptor.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

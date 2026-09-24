@@ -4,27 +4,27 @@ import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
-import { RoleProviderResolutionStatus } from '../application/RoleAwareProviderResolver.js';
+import { RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/CreateExternalPublicationAnchorOrchestratorUseCase.js';
-import { CreatePublicationAnchorCreationCoordinatorUseCase } from '../application/CreatePublicationAnchorCreationCoordinatorUseCase.js';
-import { CreatePreferredPublicationAnchorCreationCoordinatorUseCase } from '../application/CreatePreferredPublicationAnchorCreationCoordinatorUseCase.js';
-import { PreferredPublicationAnchorCreationCoordinator } from '../application/PreferredPublicationAnchorCreationCoordinator.js';
-import { ExternalAnchorCreationOutcome } from '../application/ExternalAnchorCreationOutcome.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/anchoring/CreateExternalPublicationAnchorOrchestratorUseCase.js';
+import { CreatePublicationAnchorCreationCoordinatorUseCase } from '../application/anchoring/CreatePublicationAnchorCreationCoordinatorUseCase.js';
+import { CreatePreferredPublicationAnchorCreationCoordinatorUseCase } from '../application/anchoring/CreatePreferredPublicationAnchorCreationCoordinatorUseCase.js';
+import { PreferredPublicationAnchorCreationCoordinator } from '../application/anchoring/PreferredPublicationAnchorCreationCoordinator.js';
+import { ExternalAnchorCreationOutcome } from '../application/anchoring/ExternalAnchorCreationOutcome.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 // Preferred Proof & Anchoring Provider Creation Integration.
 //
 // The PROOF_AND_ANCHORING mirror of tests/
 // ContentCreationProviderPreferenceIntegration.test.js (0.9.299) — proves
-// application/PreferredPublicationAnchorCreationCoordinator.js and its own
+// application/anchoring/PreferredPublicationAnchorCreationCoordinator.js and its own
 // composition root, application/
 // CreatePreferredPublicationAnchorCreationCoordinatorUseCase.js, end to end
 // against production-shaped composition (the SAME classes ui/main.js
-// wires: application/CreateExternalPublicationAnchorOrchestratorUseCase.js,
-// application/CreatePublicationAnchorCreationCoordinatorUseCase.js, and the
+// wires: application/anchoring/CreateExternalPublicationAnchorOrchestratorUseCase.js,
+// application/anchoring/CreatePublicationAnchorCreationCoordinatorUseCase.js, and the
 // wrapping preference layer), never a stand-in.
 //
 //   Section A — an explicit anchorType always wins; the preference store
@@ -114,7 +114,7 @@ function makeFakePublisher(anchorType, { locator = `locator-${anchorType}`, publ
 // LocalPublicationCatalog/LocalPublicationAnchorCatalog, application/
 // CreateExternalPublicationAnchorOrchestratorUseCase.js/application/
 // CreatePublicationAnchorCreationCoordinatorUseCase.js, and NOW
-// application/CreatePreferredPublicationAnchorCreationCoordinatorUseCase.js
+// application/anchoring/CreatePreferredPublicationAnchorCreationCoordinatorUseCase.js
 // wired together, exactly as ui/main.js now wires them.
 function makePublicationCenter({ publishers = [], identityProvider = makeIdentity('Alice'), preferenceStore = new RoleProviderPreferenceStore(new InMemoryStorageProvider()) } = {}) {
     const publicationCatalog = new LocalPublicationCatalog(new InMemoryStorageProvider());

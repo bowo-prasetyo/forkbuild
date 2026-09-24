@@ -3,8 +3,8 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 import { groupStructuresByCategory } from '../core/groupStructuresByCategory.js';
 import { stylesheetFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 

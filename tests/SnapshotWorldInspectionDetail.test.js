@@ -1,19 +1,19 @@
 import { readFile } from 'node:fs/promises';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldPositionClaimOutcome } from '../application/SnapshotWorldPositionClaimOutcome.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldPositionClaimOutcome } from '../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
@@ -25,7 +25,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //
 // 0.9.176 proved a materialized, placed, registered Snapshot resolves
 // sourceFamily SNAPSHOT through a real, mounted WorldEncounterCanvas. This
-// file proves the next, additive fact — application/WorldSnapshotInspection.js's
+// file proves the next, additive fact — application/snapshot/WorldSnapshotInspection.js's
 // own contentHash/publicationId/position descriptor — reaches that SAME
 // mounted canvas's own inspection panel for a REAL Nostr-discovered,
 // resolved, materialized, PLACED, and REGISTERED Snapshot, end to end:
@@ -42,7 +42,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              correct contentHash/publicationId/position — and the
 //              descriptor stays silent about the consumed claim, since
 //              that fact does not survive to this boundary (see this
-//              milestone's own application/WorldSnapshotInspection.js
+//              milestone's own application/snapshot/WorldSnapshotInspection.js
 //              header).
 //   Section B — an ordinary LOCAL Publication continues to report no
 //              Snapshot inspection detail at all.
@@ -53,7 +53,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              never guesses.
 //   Section E — structural sweep: no production file other than
 //              ui/components/WorldEncounterCanvas.js, css/main.css, and the
-//              new application/WorldSnapshotInspection.js was touched; the
+//              new application/snapshot/WorldSnapshotInspection.js was touched; the
 //              registration bridge and WorldEncounterMarker.js remain
 //              entirely untouched by this milestone.
 
@@ -352,7 +352,7 @@ async function run() {
 
         // The consumed claim itself is deliberately NOT part of the
         // descriptor — it does not survive to this boundary (see
-        // application/WorldSnapshotInspection.js's own header). This is a
+        // application/snapshot/WorldSnapshotInspection.js's own header). This is a
         // documented finding, not an oversight: proving it stays true even
         // in a scenario where a claim really was consumed is the whole
         // point of building this flagship around one.
@@ -442,16 +442,16 @@ async function run() {
     // Section E — structural sweep.
     // ---------------------------------------------------------------
     {
-        const bridgeSource = await readFile(new URL('../application/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
+        const bridgeSource = await readFile(new URL('../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
         assert(!bridgeSource.includes('WorldSnapshotInspection'), '1. the registration bridge is untouched by this milestone — it knows nothing about inspection');
 
         const markerSource = await readFile(new URL('../ui/components/WorldEncounterMarker.js', import.meta.url), 'utf8');
         assert(!/^\s*import /m.test(markerSource), '2. WorldEncounterMarker.js still imports nothing at all — no Snapshot-specific marker component was introduced, and pre-selection marker rendering is untouched by this milestone');
 
-        const inspectionSource = await readFile(new URL('../application/WorldSnapshotInspection.js', import.meta.url), 'utf8');
+        const inspectionSource = await readFile(new URL('../application/snapshot/WorldSnapshotInspection.js', import.meta.url), 'utf8');
         const inspectionCodeOnly = inspectionSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/fetch\(|localStorage|WebRTC|WorldDiscoverySourceRegistry|registry\.|deriveWorldEncounters\(/.test(inspectionCodeOnly),
-            '3. application/WorldSnapshotInspection.js performs no I/O and never recomputes the World from scratch — it is a pure join over two already-computed facts');
+            '3. application/snapshot/WorldSnapshotInspection.js performs no I/O and never recomputes the World from scratch — it is a pure join over two already-computed facts');
         assert(!/rank|trust|verified|best|preferred|reliable|freshness|quality|score/i.test(inspectionCodeOnly),
             '4. no rank/trust/verified/best/preferred/reliable/freshness/quality/score vocabulary anywhere in the new module\'s own executable code');
 

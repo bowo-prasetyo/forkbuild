@@ -10,13 +10,13 @@ import {
     PublicationCommentaryStore,
     PublicationCommentaryConflictError
 } from '../storage/PublicationCommentaryStore.js';
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
-import { PublicationCommentaryDistributionPeerExchange } from '../application/PublicationCommentaryDistributionPeerExchange.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryDistributionPeerExchange } from '../application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
@@ -99,7 +99,7 @@ import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 // constructed in ui/main.js, on the SAME app-wide peerMessageBus/
 // peerSessionManager.registry/identityProvider every sibling capability
 // already rides, and the EXISTING addPublicationCommentaryCommand
-// (application/CreatePublicationCommentaryUseCase.js, still completely
+// (application/publication/commentary/CreatePublicationCommentaryUseCase.js, still completely
 // unmodified) is now wrapped, at the ui/main.js composition boundary
 // only, with an ANNOUNCE side effect that fires after local creation
 // succeeds. Only Section B's own four production-absence assertions and
@@ -111,7 +111,7 @@ import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 // Sections A and D-I exercised the CAPABILITY layer directly (0.9.618's
 // own classes), never the production wiring — nothing about those
 // classes changed, so nothing there needed amending. Section C's own
-// live reproduction of application/CreatePublicationCommentaryUseCase.js
+// live reproduction of application/publication/commentary/CreatePublicationCommentaryUseCase.js
 // in isolation (never through ui/main.js's own wrapper) also still holds
 // unchanged: that one file, by itself, still returns exactly its
 // original two commands, with no announce/peerExchange capability of its
@@ -226,7 +226,7 @@ async function run() {
         // CreatePublicationAnchorPeerExchangeUseCase.js's own shape.
         const constructionSites = grepFiles('new PublicationCommentaryDistribution(Exchange|PeerExchange)\\(', ['ui', 'application']);
         assert(constructionSites.length === 1 && constructionSites[0].includes('CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'),
-            n(`exactly one file in ui/ or application/ now constructs the commentary-distribution classes — application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js (0.9.620), the new composition root this audit's own recommendation named — found: ${constructionSites.join(', ') || 'none'}`));
+            n(`exactly one file in ui/ or application/ now constructs the commentary-distribution classes — application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js (0.9.620), the new composition root this audit's own recommendation named — found: ${constructionSites.join(', ') || 'none'}`));
 
         // B2. AMENDED BY 0.9.620. ui/main.js now wraps
         // addPublicationCommentaryCommand with a real
@@ -247,23 +247,23 @@ async function run() {
         assert(commentaryAnnounceCallSites.length === 1 && commentaryAnnounceCallSites.some((file) => file.includes('ui/main.js')),
             n(`exactly one production \`.announce(\` call site now belongs to commentary — ui/main.js's own new addPublicationCommentaryCommand wrapper (0.9.620) — found: ${commentaryAnnounceCallSites.join(', ') || 'none'}`));
         assert(announceCallSites.length > 0,
-            n('sibling capabilities continue to have their own real production .announce() call sites (ui/views/EditorView.js\'s explicit "Publish to Network" click, application/PublicationPeerConnectionSync.js\'s automatic connection sync, application/CreatePublicationSnapshotPlacementUseCase.js\'s automatic post-save announce) — commentary\'s own new call site (above) joins them rather than replacing any of them'));
+            n('sibling capabilities continue to have their own real production .announce() call sites (ui/views/EditorView.js\'s explicit "Publish to Network" click, application/publication/PublicationPeerConnectionSync.js\'s automatic connection sync, application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js\'s automatic post-save announce) — commentary\'s own new call site (above) joins them rather than replacing any of them'));
 
         // B3. AMENDED BY 0.9.620. Every sibling capability has its own
         // Create*PeerExchangeUseCase.js composition root, wired into
         // ui/main.js. Commentary now does too.
         const siblingFactories = [
-            'application/CreatePublicationPeerExchangeUseCase.js',
-            'application/CreatePublicationAnchorPeerExchangeUseCase.js',
-            'application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js',
-            'application/CreatePublicationSnapshotContentPeerExchangeUseCase.js',
-            'application/CreatePublicationSnapshotPossessionPeerExchangeUseCase.js'
+            'application/publication/CreatePublicationPeerExchangeUseCase.js',
+            'application/anchoring/CreatePublicationAnchorPeerExchangeUseCase.js',
+            'application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js',
+            'application/snapshot/materialization/CreatePublicationSnapshotContentPeerExchangeUseCase.js',
+            'application/snapshot/possession/CreatePublicationSnapshotPossessionPeerExchangeUseCase.js'
         ];
         for (const file of siblingFactories) {
             assert(await sourceExists(file), n(`sanity: ${file} really does exist, on disk, as the established composition-root pattern this section measures Commentary against`));
         }
-        assert(await sourceExists('application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'),
-            n('application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js (0.9.620) now exists on disk — Commentary distribution now has exactly the same composition-root shape every sibling capability already had'));
+        assert(await sourceExists('application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'),
+            n('application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js (0.9.620) now exists on disk — Commentary distribution now has exactly the same composition-root shape every sibling capability already had'));
 
         // B4. AMENDED BY 0.9.620. ui/main.js — the one file that actually
         // assembles the running application's app-wide peerMessageBus/
@@ -273,7 +273,7 @@ async function run() {
         assert(/CommentaryDistribution/.test(mainSource),
             n('ui/main.js — the real, single composition root for the running app\'s peer wiring — now imports, constructs, and threads Commentary distribution onto the app-wide peerMessageBus (0.9.620)'));
 
-        console.log('✓ B: AMENDED BY 0.9.620 — the capability 0.9.618 built is now reachable from the real, running application. Exactly one composition root exists (application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js), ui/main.js wires it on the app-wide peerMessageBus/registry, and it has exactly one production .announce() call site — matching every sibling capability\'s own shape. See tests/PublicationCommentaryDistributionWiring.test.js for 0.9.620\'s own full coverage.');
+        console.log('✓ B: AMENDED BY 0.9.620 — the capability 0.9.618 built is now reachable from the real, running application. Exactly one composition root exists (application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js), ui/main.js wires it on the app-wide peerMessageBus/registry, and it has exactly one production .announce() call site — matching every sibling capability\'s own shape. See tests/PublicationCommentaryDistributionWiring.test.js for 0.9.620\'s own full coverage.');
     }
 
     // ===============================================================
@@ -285,11 +285,11 @@ async function run() {
         // that file's own 0.9.289 header. Reproduced here, live, exactly
         // as such a caller would use it, never by reaching past it into
         // PublicationCommentaryDistributionExchange directly.
-        const useCaseSource = codeOnly(await readSource('application/CreatePublicationCommentaryUseCase.js'));
+        const useCaseSource = codeOnly(await readSource('application/publication/commentary/CreatePublicationCommentaryUseCase.js'));
         assert(!/PeerMessageBus|ConnectedPeerRegistry|CommentaryDistribution|peerExchange/i.test(useCaseSource),
-            n('application/CreatePublicationCommentaryUseCase.js\'s own source imports and mentions nothing peer/distribution-shaped at all — structurally incapable of reaching a peer, not merely observed not to today'));
+            n('application/publication/commentary/CreatePublicationCommentaryUseCase.js\'s own source imports and mentions nothing peer/distribution-shaped at all — structurally incapable of reaching a peer, not merely observed not to today'));
 
-        const { CreatePublicationCommentaryUseCase } = await import('../application/CreatePublicationCommentaryUseCase.js');
+        const { CreatePublicationCommentaryUseCase } = await import('../application/publication/commentary/CreatePublicationCommentaryUseCase.js');
         let _backing = new Map();
         if (typeof globalThis.window === 'undefined') {
             globalThis.window = {
@@ -331,7 +331,7 @@ async function run() {
             n('and it is genuinely readable back through the SAME real composition root — local behavior through this path is fully functional; only the cross-device leg is missing'));
 
         // AMENDED BY 0.9.620: this section's own findings about
-        // application/CreatePublicationCommentaryUseCase.js IN ISOLATION
+        // application/publication/commentary/CreatePublicationCommentaryUseCase.js IN ISOLATION
         // all still hold, byte-for-byte — that file is completely
         // unmodified by 0.9.620, still imports nothing peer-shaped, and
         // still returns exactly its original two commands. What changed
@@ -343,7 +343,7 @@ async function run() {
         // and tests/PublicationCommentaryDistributionWiring.test.js's own
         // Sections B/C for the real, wired composition this section did
         // not reproduce).
-        console.log('✓ C: application/CreatePublicationCommentaryUseCase.js, in isolation, still works end to end for local create/read and still imports nothing peer-shaped — but (0.9.620) it is no longer the LAST composition step a real caller sees: ui/main.js now wraps its own addPublicationCommentaryCommand with a distribution announce, closing the gap this section\'s own isolated reproduction first proved.');
+        console.log('✓ C: application/publication/commentary/CreatePublicationCommentaryUseCase.js, in isolation, still works end to end for local create/read and still imports nothing peer-shaped — but (0.9.620) it is no longer the LAST composition step a real caller sees: ui/main.js now wraps its own addPublicationCommentaryCommand with a distribution announce, closing the gap this section\'s own isolated reproduction first proved.');
     }
 
     // ===============================================================
@@ -385,7 +385,7 @@ async function run() {
         await wait(30);
 
         assert(deviceBReceived.length === 1 && deviceBReceived[0].isNew === true,
-            n('Device B accepts and stores a validly signed Commentary about a publicationId it has NEVER heard of, no Publication record required — the real, unmodified restraint application/PublicationCommentaryDistributionExchange.js\'s own header already claims ("stops exactly where signature verification stops"), now measured against a receiver with zero Publication knowledge, not merely asserted from prose'));
+            n('Device B accepts and stores a validly signed Commentary about a publicationId it has NEVER heard of, no Publication record required — the real, unmodified restraint application/publication/commentary/PublicationCommentaryDistributionExchange.js\'s own header already claims ("stops exactly where signature verification stops"), now measured against a receiver with zero Publication knowledge, not merely asserted from prose'));
         assert(deviceBStore.getById(commentary.commentaryId).publicationId === commentary.publicationId,
             n('the stored Commentary\'s own publicationId is preserved exactly, even though it resolves to nothing on Device B — Commentary identity never depends on Publication resolvability'));
 
@@ -468,15 +468,15 @@ async function run() {
     // vocabulary, structurally or live.
     // ===============================================================
     {
-        const peerExchangeSource = codeOnly(await readSource('application/PublicationCommentaryDistributionPeerExchange.js'));
+        const peerExchangeSource = codeOnly(await readSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js'));
         assert(/MESSAGE_KIND_ANNOUNCE/.test(peerExchangeSource) && !/REQUEST|RESPONSE/.test(peerExchangeSource),
-            n('application/PublicationCommentaryDistributionPeerExchange.js defines exactly one message kind (ANNOUNCE) and no REQUEST/RESPONSE vocabulary of any kind, live-inspected on real source'));
+            n('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js defines exactly one message kind (ANNOUNCE) and no REQUEST/RESPONSE vocabulary of any kind, live-inspected on real source'));
         // Contrasted directly against a sibling that DOES have request/
         // response, proving this is a deliberate difference in KIND, not
         // an oversight this audit is inventing a rule to catch.
-        const anchorPeerExchangeSource = codeOnly(await readSource('application/PublicationAnchorPeerExchange.js'));
+        const anchorPeerExchangeSource = codeOnly(await readSource('application/anchoring/PublicationAnchorPeerExchange.js'));
         assert(/REQUEST/.test(anchorPeerExchangeSource) && /RESPONSE/.test(anchorPeerExchangeSource),
-            n('by contrast, application/PublicationAnchorPeerExchange.js really does define REQUEST/RESPONSE (0.8.5, for late-joiner catch-up) — Commentary distribution\'s own absence of that vocabulary is a real, deliberate, comparable-in-kind difference, not an unexercised feature'));
+            n('by contrast, application/anchoring/PublicationAnchorPeerExchange.js really does define REQUEST/RESPONSE (0.8.5, for late-joiner catch-up) — Commentary distribution\'s own absence of that vocabulary is a real, deliberate, comparable-in-kind difference, not an unexercised feature'));
 
         // Live: after Device B fully processes an incoming ANNOUNCE,
         // Device A's own peer exchange — which subscribed to the SAME
@@ -586,7 +586,7 @@ async function run() {
         // for a provable reason (local creation asks permission; remote
         // acceptance of an already-signed fact does not), not merely two
         // classes that happen not to share a parameter today.
-        const { AddPublicationCommentaryUseCase } = await import('../application/AddPublicationCommentaryUseCase.js');
+        const { AddPublicationCommentaryUseCase } = await import('../application/publication/commentary/AddPublicationCommentaryUseCase.js');
         assert(AddPublicationCommentaryUseCase.length === 3, n('AddPublicationCommentaryUseCase\'s own constructor also declares three parameters...'));
         let threwWithoutAuthorization = false;
         try { new AddPublicationCommentaryUseCase(store, alice, undefined); } catch { threwWithoutAuthorization = true; }
@@ -594,9 +594,9 @@ async function run() {
         // see that class's own guard clause.)
         assert(threwWithoutAuthorization, n('...but its third parameter is specifically an authorization collaborator whose absence is refused at construction — PublicationCommentaryDistributionExchange has no equivalent parameter to omit in the first place, because it never asks the question at all'));
 
-        const exchangeSource = codeOnly(await readSource('application/PublicationCommentaryDistributionExchange.js'));
+        const exchangeSource = codeOnly(await readSource('application/publication/commentary/PublicationCommentaryDistributionExchange.js'));
         assert(!/CanCommentOnPublicationUseCase|discoveryProvider/i.test(exchangeSource),
-            n('application/PublicationCommentaryDistributionExchange.js\'s own source never mentions CanCommentOnPublicationUseCase or a discoveryProvider at all — structurally incapable of inferring comment authorization from a valid signature, not merely untested for it'));
+            n('application/publication/commentary/PublicationCommentaryDistributionExchange.js\'s own source never mentions CanCommentOnPublicationUseCase or a discoveryProvider at all — structurally incapable of inferring comment authorization from a valid signature, not merely untested for it'));
 
         console.log('✓ H: authorization non-inference is guaranteed by the remote-acceptance exchange\'s own constructor SHAPE — it has no parameter through which an authorization check could even be threaded, contrasted directly against the local write path, which requires one.');
     }
@@ -699,7 +699,7 @@ async function run() {
             + 'constructs or wires it, and there is not one production .announce() call site for it anywhere in ui/ or '
             + 'application/ — confirmed by reproducing the REAL, app-facing composition root live (Section C) and showing it is '
             + 'structurally incapable of reaching a peer. RECOMMENDATION, for a later, separately-scoped, narrow milestone, never '
-            + 'built here: (1) application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js, mirroring '
+            + 'built here: (1) application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js, mirroring '
             + 'CreatePublicationAnchorPeerExchangeUseCase.js\'s own exact shape; (2) wire it into ui/main.js\'s existing app-wide '
             + 'peerMessageBus/registry; (3) a single, deliberate decision — left open here — about WHERE to call announce(): '
             + 'automatically after a successful local save (mirroring CreatePublicationSnapshotPlacementUseCase.js\'s own '

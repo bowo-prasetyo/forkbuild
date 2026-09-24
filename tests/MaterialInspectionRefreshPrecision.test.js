@@ -4,11 +4,11 @@ import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import {
     WorldEncounterMaterialLoadStatus,
     WorldEncounterMaterialSource
-} from '../application/WorldEncounterMaterialLoading.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+} from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import {
     describePeerWorldDiscoverySource,
     derivePeerWorldOrigin
@@ -20,9 +20,9 @@ import {
 import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { Document } from '../core/Document.js';
@@ -530,7 +530,7 @@ async function run() {
 
         // The registry advertises a Publication id that was never actually
         // published into local storage — a genuine, pre-existing
-        // UNAVAILABLE case (application/LocalWorldEncounterMaterialSource.js's
+        // UNAVAILABLE case (application/worldEncounter/LocalWorldEncounterMaterialSource.js's
         // own "not found in local storage" boundary), entirely unrelated to
         // this milestone's own optimization.
         const registry = new WorldDiscoverySourceRegistry();
@@ -625,7 +625,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-        const registrySource = await readFile(new URL('../application/WorldDiscoverySourceRegistry.js', import.meta.url), 'utf8');
+        const registrySource = await readFile(new URL('../application/discovery/WorldDiscoverySourceRegistry.js', import.meta.url), 'utf8');
 
         const forbiddenInFix = ['Nostr', 'nostr', 'Arweave', 'arweave', 'materialize', 'Materialize', 'ACTIVE', 'EXPIRED', 'STALE', 'SYNCED', 'INACTIVE', 'REVOKED'];
         const equalityFunctionMatch = canvasSource.match(/function resolvedEncounterSelectionsEqual\([^)]*\)\s*\{[\s\S]*?\n\}/);

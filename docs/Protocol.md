@@ -211,7 +211,7 @@ reads `payload`.
 | `forkbuild:avatar-presence` | core/AvatarPresenceAdvertisement.js | where an avatar is |
 | `forkbuild:avatar-profile` | core/AvatarProfileAdvertisement.js | what an avatar looks like |
 | `forkbuild:avatar-interaction` | core/AvatarInteractionAdvertisement.js | gestures |
-| `forkbuild:avatar-inventory-transfer` | application/AvatarInventoryTransferPeerProtocol.js | see "Avatar Inventory Transfer (0.9.702)" |
+| `forkbuild:avatar-inventory-transfer` | application/avatar/AvatarInventoryTransferPeerProtocol.js | see "Avatar Inventory Transfer (0.9.702)" |
 | `forkbuild:identity-lifecycle` | core/IdentityLifecycleGossip.js | succession and revocation records |
 | `forkbuild:device-authorization` | core/DeviceAuthorizationGossip.js | device grants and revocations |
 | `forkbuild:friendship` | core/FriendshipAdvertisement.js | friend requests and answers |
@@ -220,21 +220,21 @@ reads `payload`.
 | `forkbuild:chat-read` | core/ChatReadReceipt.js | read receipts |
 | `forkbuild:device-conversation-sync` | core/ConversationSyncEnvelope.js | history and read state between one identity's devices |
 | `forkbuild:voice-call` | core/VoiceCallSignal.js | call signalling |
-| `forkbuild:voice-media` | application/VoiceUseCase.js | in-band renegotiation for audio |
+| `forkbuild:voice-media` | application/chat/VoiceUseCase.js | in-band renegotiation for audio |
 | `forkbuild:world-sync` | core/WorldOperationEnvelope.js | World commands |
 | `forkbuild:world-membership` | core/WorldEditAuthorizationEnvelope.js | World edit grants |
 | `forkbuild:world-presence` | core/WorldPresenceAdvertisement.js | who is in a World |
 | `forkbuild:world-spatial-presence` | core/WorldSpatialPresenceAdvertisement.js | where they are looking |
-| `forkbuild:world-discovery` | application/WorldDiscoveryRuntimeBootstrap.js | World Encounter discovery |
-| `forkbuild:document-sync` | application/DocumentCommandPropagationUseCase.js | Editor document commands |
+| `forkbuild:world-discovery` | application/discovery/WorldDiscoveryRuntimeBootstrap.js | World Encounter discovery |
+| `forkbuild:document-sync` | application/document/DocumentCommandPropagationUseCase.js | Editor document commands |
 | `forkbuild:document-operation-recovery` | core/DocumentOperationRecoveryProtocol.js | fetching missed Editor operations |
-| `forkbuild:publication` | application/PublicationPeerExchange.js | Publications |
-| `forkbuild:content` | application/PeerContentProtocol.js | content bytes by hash |
-| `forkbuild:anchor` | application/PublicationAnchorPeerProtocol.js | anchor claims |
-| `forkbuild:snapshot-placement` | application/PublicationSnapshotPlacementPeerExchange.js | Snapshot placement claims |
-| `forkbuild:snapshot-possession` | application/PublicationSnapshotPossessionPeerExchange.js | which Snapshots a peer holds |
-| `forkbuild:snapshot-content-transfer` | application/PublicationSnapshotContentPeerExchange.js | Snapshot bytes |
-| `forkbuild:world-encounter-material` | application/PeerWorldEncounterMaterialSource.js | encounter content |
+| `forkbuild:publication` | application/publication/PublicationPeerExchange.js | Publications |
+| `forkbuild:content` | application/peer/PeerContentProtocol.js | content bytes by hash |
+| `forkbuild:anchor` | application/anchoring/PublicationAnchorPeerProtocol.js | anchor claims |
+| `forkbuild:snapshot-placement` | application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js | Snapshot placement claims |
+| `forkbuild:snapshot-possession` | application/snapshot/possession/PublicationSnapshotPossessionPeerExchange.js | which Snapshots a peer holds |
+| `forkbuild:snapshot-content-transfer` | application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js | Snapshot bytes |
+| `forkbuild:world-encounter-material` | application/worldEncounter/PeerWorldEncounterMaterialSource.js | encounter content |
 | `forkbuild:commentary-distribution` | core/PublicationCommentaryDistributionEnvelope.js | see "Publication Commentary Distribution" |
 
 Each protocol owns its own replay, ordering and deduplication rules.
@@ -398,7 +398,7 @@ An inventory entry serializes as:
                          //       or an ANIMAL_SPECIES ('DEER' | 'RABBIT')
 
 Transfers use the peer message-bus protocol `forkbuild:avatar-inventory-transfer`
-(`application/AvatarInventoryTransferPeerProtocol.js`), sent only to authenticated, connected peers:
+(`application/avatar/AvatarInventoryTransferPeerProtocol.js`), sent only to authenticated, connected peers:
 
     { kind: 'OFFER',   offerId, entry }
     { kind: 'ACCEPT',  offerId }

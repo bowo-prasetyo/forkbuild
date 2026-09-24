@@ -10,8 +10,8 @@
 // RENDEZVOUS_SERVICE joins it in 0.2.65 (see peer/
 // RendezvousDiscoveryProvider.js): a real network PUBLISH/LOOKUP, never a
 // local-only search. LAN and DISTRIBUTED remain named here, unimplemented,
-// purely so the application layer (application/DiscoverPeersUseCase.js,
-// application/FindPeerUseCase.js) and any future UI never have to
+// purely so the application layer (application/peer/DiscoverPeersUseCase.js,
+// application/peer/FindPeerUseCase.js) and any future UI never have to
 // special-case "what kind of discovery was this" beyond reading this
 // field — see docs/Principles.md, "A Discovery Source Describes Provenance,
 // Never Trustworthiness" (0.2.64): a record from RENDEZVOUS_SERVICE, or a

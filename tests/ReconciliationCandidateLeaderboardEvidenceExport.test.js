@@ -1,4 +1,4 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateFilteredEvidenceDetail
 } from '../application/claimSnapshotReconciliation/candidate/FilteredEvidenceDetailView.js';

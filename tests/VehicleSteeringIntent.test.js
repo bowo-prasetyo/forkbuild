@@ -9,7 +9,7 @@ import {
 import { VehicleInstance, vehicleInstanceFromPresence } from '../core/VehicleInstance.js';
 import { VehiclePresence } from '../core/VehiclePresence.js';
 import { VehicleType } from '../core/VehicleType.js';
-import { VehicleRuntimeInstances } from '../application/VehicleRuntimeInstances.js';
+import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
 import { resolveVehicleHeadingFromMovement } from '../core/VehicleMovementHeading.js';
 
 // 0.9.125 — Vehicle Steering Intent, core/VehicleSteeringIntent.js.
@@ -203,10 +203,10 @@ async function runTests() {
             '47. VehicleInstance#toJSON() carries exactly its existing five fields — no steering field added');
     }
     {
-        const sourceUrl = new URL('../application/VehicleRuntimeInstances.js', import.meta.url);
+        const sourceUrl = new URL('../application/world/VehicleRuntimeInstances.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-        assert(!/[Ss]teering/.test(codeOnly), '48. application/VehicleRuntimeInstances.js\'s own code never mentions steering — this milestone leaves it byte-for-byte unchanged');
+        assert(!/[Ss]teering/.test(codeOnly), '48. application/world/VehicleRuntimeInstances.js\'s own code never mentions steering — this milestone leaves it byte-for-byte unchanged');
     }
     {
         const sourceUrl = new URL('../core/VehicleInstance.js', import.meta.url);

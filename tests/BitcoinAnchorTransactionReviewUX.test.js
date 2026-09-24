@@ -5,7 +5,7 @@ import { BitcoinAnchorTransactionBroadcaster } from '../anchoring/BitcoinAnchorT
 import { BitcoinAnchorReviewedPsbtSigner } from '../anchoring/BitcoinAnchorReviewedPsbtSigner.js';
 import { BitcoinWalletConnection } from '../anchoring/BitcoinWalletConnection.js';
 import { BitcoinInjectedProviderWalletAdapter } from '../anchoring/BitcoinInjectedProviderWalletAdapter.js';
-import { describeBitcoinAnchorTransactionReview } from '../application/BitcoinAnchorTransactionReviewView.js';
+import { describeBitcoinAnchorTransactionReview } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionReviewView.js';
 
 // 0.8.59 — Explicit Bitcoin Anchor Transaction Review UI.
 //

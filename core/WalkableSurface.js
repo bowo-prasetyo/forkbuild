@@ -38,7 +38,7 @@ import { walkableTopAt } from './BrickWalkability.js';
 // question only: "if an avatar's feet were at this (x, z), what height
 // would they rest at, and on what kind of surface?" What a caller DOES
 // with that answer (snap onto it, reject too large a change — see
-// application/AvatarStepConstraint.js) stays entirely its own concern.
+// application/avatar/AvatarStepConstraint.js) stays entirely its own concern.
 
 export const WalkableSurfaceKind = Object.freeze({
     FLAT: 'flat',
@@ -81,7 +81,7 @@ export function walkableSurfaceKindFor(definitionId) {
 //   shapeKind         — a WalkableSurfaceKind (walkableSurfaceKindFor())
 //   center             — the brick's own world-space CENTER (its
 //                         Brick.position PLUS the document's own world
-//                         offset — see application/AvatarStepConstraint.js)
+//                         offset — see application/avatar/AvatarStepConstraint.js)
 //   width/height/depth — the brick's own BrickDefinition dimensions
 //   rotationDegrees    — the brick's own Brick.rotation, honored ONLY
 //                         for a directional shape (STEP/SLOPE) — see

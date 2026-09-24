@@ -70,7 +70,7 @@ export class DocumentThumbnailRenderer {
     // Renders `document` and returns a `data:` URL (PNG). Synchronous
     // — a single WebGL frame doesn't need to be awaited — but this is
     // still real, non-trivial main-thread work, so callers (see
-    // application/PreviewService.js) should only invoke this from an
+    // application/editor/PreviewService.js) should only invoke this from an
     // idle-scheduled queue, never back-to-back in a tight loop.
     renderDocument(document) {
         const bricks = [];
@@ -127,7 +127,7 @@ export class DocumentThumbnailRenderer {
 
     // Not called anywhere in the live app today (the service that owns
     // this renderer is a page-lifetime singleton — see
-    // application/PreviewService.js) but provided for completeness and
+    // application/editor/PreviewService.js) but provided for completeness and
     // for tests that construct a short-lived instance of their own.
     dispose() {
         this._clearMeshes();

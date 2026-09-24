@@ -1,16 +1,16 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreatePublicationReferenceRecordUseCase } from '../application/CreatePublicationReferenceRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { LeaderboardClaimRecord } from '../application/LeaderboardClaimRecord.js';
-import { appendLeaderboardClaimHistoryEntry } from '../application/LeaderboardClaimHistory.js';
-import { describePublisherLeaderboardClaimVerification } from '../application/PublisherLeaderboardClaimVerificationView.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { CreatePublisherLeaderboardSnapshotClaimUseCase } from '../application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { appendLeaderboardClaimHistoryEntry } from '../application/leaderboard/LeaderboardClaimHistory.js';
+import { describePublisherLeaderboardClaimVerification } from '../application/leaderboard/PublisherLeaderboardClaimVerificationView.js';
 import {
     describePublisherLeaderboardClaimVerificationHistory,
     reconstructPublisherLeaderboardClaimVerificationHistory
-} from '../application/PublisherLeaderboardClaimVerificationHistoryView.js';
+} from '../application/leaderboard/PublisherLeaderboardClaimVerificationHistoryView.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';

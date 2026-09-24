@@ -1,4 +1,4 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/claimSnapshotReconciliation/revalidationObservation/History.js';
 import {
@@ -18,9 +18,9 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference
 } from '../application/claimSnapshotReconciliation/revalidationObservation/HistoryDifference.js';
-import { fingerprintPublicationObservationArchive } from '../application/PublicationObservationArchiveFingerprint.js';
-import { reconstructAchievementEvidenceFingerprint } from '../application/AchievementEvidenceFingerprint.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
+import { fingerprintPublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveFingerprint.js';
+import { reconstructAchievementEvidenceFingerprint } from '../application/achievement/AchievementEvidenceFingerprint.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 

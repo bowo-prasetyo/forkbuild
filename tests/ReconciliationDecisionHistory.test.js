@@ -1,6 +1,6 @@
-import { describePublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/LeaderboardClaimRecord.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/claimSnapshotReconciliation/decision/Decision.js';
 import {
@@ -9,7 +9,7 @@ import {
     findPublisherLeaderboardClaimSnapshotReconciliationDecisionsBySnapshotIndex,
     findPublisherLeaderboardClaimSnapshotReconciliationDecisionsByDisposition
 } from '../application/claimSnapshotReconciliation/decision/History.js';
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';

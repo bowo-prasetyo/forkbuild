@@ -8,7 +8,7 @@ const DEFAULT_SIGNING_TIMEOUT_MS = 120000;
 
 // 0.9.121 — Nostr Injected Provider Publisher.
 //
-// application/NostrPublicationDistributionRuntimeAdapter.js (0.9.108)
+// application/nostr/NostrPublicationDistributionRuntimeAdapter.js (0.9.108)
 // closed the seam a host Nostr publishing capability plugs into, but named
 // "a concrete host Nostr publishing capability... a NIP-46/NIP-07
 // integration" as later, unscheduled work. This file is that concrete
@@ -28,7 +28,7 @@ const DEFAULT_SIGNING_TIMEOUT_MS = 120000;
 //   publish(relayUrl, eventTemplate) -> Promise<{ published, id? }>   | undefined
 //        │
 //        ▼
-//   application/NostrPublicationDistributionRuntimeAdapter.js   (0.9.108, unmodified)
+//   application/nostr/NostrPublicationDistributionRuntimeAdapter.js   (0.9.108, unmodified)
 //
 // A `publish` PRODUCER, NEVER A SECOND SEAM. 0.9.108's own adapter already
 // renames a host's own `publish` onto `publishImpl`; this file is what a
@@ -56,7 +56,7 @@ const DEFAULT_SIGNING_TIMEOUT_MS = 120000;
 // its own WebSocket to `relayUrl` and speaks the one NIP-01 exchange this
 // milestone needs — `["EVENT", event]` out, `["OK", id, ok, message]` back
 // — never a general-purpose relay client, never a subscription, never a
-// second relay for redundancy. `application/NostrPublicationDiscoveryPublisher.js`'s
+// second relay for redundancy. `application/nostr/NostrPublicationDiscoveryPublisher.js`'s
 // own header already draws this exact "signing and broadcast, one
 // indivisible exchange from the caller's own vantage point" line; this
 // file is the concrete thing living behind it.
@@ -87,17 +87,17 @@ const DEFAULT_SIGNING_TIMEOUT_MS = 120000;
 // rejection, never swallowed into a decline.
 //
 // NO EXTERNAL DEPENDENCY — plain `WebSocket`, injectable exactly like
-// `application/ArweavePublicationMaterialUploader.js`'s own `fetchImpl`,
+// `application/arweave/ArweavePublicationMaterialUploader.js`'s own `fetchImpl`,
 // so this file's own tests never open a real socket to a real relay.
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **NIP-04/NIP-44 encryption, NIP-46 remote signing, multi-relay
 //   fan-out, or relay-selection policy of any kind.** One relay, one
-//   publish, exactly as `application/NostrPublicationDiscoveryPublisher.js`'s
+//   publish, exactly as `application/nostr/NostrPublicationDiscoveryPublisher.js`'s
 //   own header already scopes itself.
 // - **Any UI, connection button, or persisted extension state.**
-// - **Any change to `application/NostrPublicationDistributionRuntimeAdapter.js`,
-//   `application/NostrPublicationDiscoveryPublisher.js`, or anything else
+// - **Any change to `application/nostr/NostrPublicationDistributionRuntimeAdapter.js`,
+//   `application/nostr/NostrPublicationDiscoveryPublisher.js`, or anything else
 //   under `application/`.** This file is a producer of the `publish`
 //   capability those files already accept, never a rewrite of either.
 export function createNostrInjectedProviderPublisher({

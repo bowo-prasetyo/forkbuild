@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 
-import { ArweaveSnapshotDiscoveryQueryService } from '../application/ArweaveSnapshotDiscoveryQueryService.js';
+import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
 import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 // 0.9.499 — Arweave Snapshot Discovery Query Service.
@@ -288,7 +288,7 @@ async function run() {
                 [ID_2]: envelopeJson({ contentHash: 'hash-2', locator: 'ar://content-2' }),
                 // Deliberately the SAME contentHash+locator+storage as ID_1's own
                 // envelope — this file performs no deduplication of its own;
-                // application/SnapshotCandidateDiscoveryQueryService.js's own
+                // application/snapshot/SnapshotCandidateDiscoveryQueryService.js's own
                 // dedup pass, one layer up, is the only place that happens.
                 [ID_3]: envelopeJson({ contentHash: 'hash-1', locator: 'ar://content-1' })
             }
@@ -355,7 +355,7 @@ async function run() {
     // Section J — source-boundary audit.
     // ---------------------------------------------------------------
     {
-        const fullSource = await readFile(new URL('../application/ArweaveSnapshotDiscoveryQueryService.js', import.meta.url), 'utf8');
+        const fullSource = await readFile(new URL('../application/arweave/ArweaveSnapshotDiscoveryQueryService.js', import.meta.url), 'utf8');
         // Strip comment-only lines before scanning — this file's own header
         // prose legitimately NAMES several of these files (the publisher it
         // is a sibling to, the resolver it feeds) while never importing or
@@ -375,7 +375,7 @@ async function run() {
         assert(!/\brank|\bsort\(|\.sort\b/i.test(codeOnly), '40. no ranking or sorting of candidates is performed');
         assert(!/dedup|Set\(\)/i.test(codeOnly), '41. no deduplication (across transactions or across sources) is performed by this file');
         assert(!codeOnly.includes('DecentralizedSnapshotResolver'), '42. never imports the resolver it feeds — resolution stays entirely the caller\'s own, later concern');
-        assert(codeOnly.includes("import { parseSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';"), '43. the ONE envelope import is the Snapshot vocabulary, unmodified');
+        assert(codeOnly.includes("import { parseSnapshotDiscoveryEnvelope } from '../../core/SnapshotDiscoveryEnvelope.js';"), '43. the ONE envelope import is the Snapshot vocabulary, unmodified');
 
         console.log('✓ Section J: source-boundary audit confirms this file resolves no Snapshot material, calculates no hash, uploads no content, publishes no announcement, queries no Nostr, and performs no walking-distance filtering, ranking, or deduplication of any kind');
     }

@@ -3,24 +3,24 @@ import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
-import { LocalSnapshotContentAvailabilityOutcome } from '../application/LocalSnapshotContentAvailabilityOutcome.js';
-import { SnapshotMaterializationSourceKind } from '../application/SnapshotMaterializationSourceKind.js';
-import { createSnapshotMaterializationAttempt } from '../application/SnapshotMaterializationAttempt.js';
-import { appendSnapshotMaterializationHistoryEntry } from '../application/SnapshotMaterializationHistory.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
+import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
+import { SnapshotMaterializationSourceKind } from '../application/snapshot/materialization/SnapshotMaterializationSourceKind.js';
+import { createSnapshotMaterializationAttempt } from '../application/snapshot/materialization/SnapshotMaterializationAttempt.js';
+import { appendSnapshotMaterializationHistoryEntry } from '../application/snapshot/materialization/SnapshotMaterializationHistory.js';
 import {
     describeSnapshotMaterializationHistoryEntry,
     describeSnapshotMaterializationHistoryDetails
-} from '../application/SnapshotMaterializationHistoryDetailView.js';
+} from '../application/snapshot/materialization/SnapshotMaterializationHistoryDetailView.js';
 
 // 0.8.44 — Explicit Snapshot Acquisition Attempt Inspection.
 //
 //   Section A: describeSnapshotMaterializationHistoryEntry() and
 //              describeSnapshotMaterializationHistoryDetails() are pure,
 //              frozen, chronologically ordered, and add no fact beyond
-//              what application/SnapshotMaterializationHistoryView.js's
+//              what application/snapshot/materialization/SnapshotMaterializationHistoryView.js's
 //              own describeSnapshotMaterializationHistory() already
 //              narrates — plus exactly one new, non-evaluative
 //              `outcomeShortLabel`.
@@ -160,7 +160,7 @@ async function run() {
         describeSnapshotMaterializationHistoryEntry(attempt);
 
         assert(JSON.stringify(history) === beforeJson, '1. INVARIANT: inspecting a history never mutates the history array or any attempt inside it');
-        assert(Object.isFrozen(attempt), '2. the individual attempt record itself stays frozen, exactly as application/SnapshotMaterializationAttempt.js already established');
+        assert(Object.isFrozen(attempt), '2. the individual attempt record itself stays frozen, exactly as application/snapshot/materialization/SnapshotMaterializationAttempt.js already established');
 
         // No network/store dependency exists anywhere in this module —
         // both functions are synchronous and take no coordinator, use

@@ -156,7 +156,7 @@
 //   unscheduled, decides which service(s) and how.
 // - **Deciding whether an accepted lead becomes a real
 //   `core/WorldDiscoverySource.js` contribution, or wiring it into
-//   `application/WorldDiscoverySourceRegistry.js`.** 0.9.26, unscheduled.
+//   `application/discovery/WorldDiscoverySourceRegistry.js`.** 0.9.26, unscheduled.
 // - **Retrieving content from IPFS, Arweave, a blockchain, or anywhere
 //   else a `uri` might point, and constructing a real, hash-verified
 //   `core/ContentReference.js`/`core/DecentralizedPublication.js` from an

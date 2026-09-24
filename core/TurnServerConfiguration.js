@@ -28,7 +28,7 @@ const REDACTED = '[redacted]';
 //        storage/IceServerConfigurationStore.js's own shape exactly
 //        │
 //        ▼
-//   (0.9.454, sibling file) application/TurnServerConfigurationProvider.js
+//   (0.9.454, sibling file) application/settings/TurnServerConfigurationProvider.js
 //        │
 //        ▼
 //   (0.9.455, NOT this milestone) WebRTC composition ->

@@ -4,12 +4,12 @@ import {
     PublicationCommentaryStore,
     PublicationCommentaryConflictError
 } from '../storage/PublicationCommentaryStore.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 // 0.9.244 — Publication Commentary Application Command Boundary. Covers
-// application/AddPublicationCommentaryUseCase.js — the one place user
+// application/publication/commentary/AddPublicationCommentaryUseCase.js — the one place user
 // intent turns into a persisted PublicationCommentary.
 //
 // 0.9.245 gave this use case an authorship boundary: authorIdentityId is

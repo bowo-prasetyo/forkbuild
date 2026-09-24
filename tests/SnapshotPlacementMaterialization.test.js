@@ -5,27 +5,27 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { AddPublicationSnapshotPlacementUseCase } from '../application/AddPublicationSnapshotPlacementUseCase.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { AddPublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
-import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 
-import { MaterializeSnapshotFromPlacementUseCase } from '../application/MaterializeSnapshotFromPlacementUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { SnapshotPlacementMaterializationCoordinator } from '../application/SnapshotPlacementMaterializationCoordinator.js';
-import { SnapshotPlacementMaterializationOutcome } from '../application/SnapshotPlacementMaterializationOutcome.js';
-import { SnapshotPlacementMaterializationUiState } from '../application/SnapshotPlacementMaterializationUiState.js';
+import { MaterializeSnapshotFromPlacementUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { SnapshotPlacementMaterializationCoordinator } from '../application/snapshot/placement/SnapshotPlacementMaterializationCoordinator.js';
+import { SnapshotPlacementMaterializationOutcome } from '../application/snapshot/placement/SnapshotPlacementMaterializationOutcome.js';
+import { SnapshotPlacementMaterializationUiState } from '../application/snapshot/placement/SnapshotPlacementMaterializationUiState.js';
 import {
     describePlacementMaterializationAttempt, describePlacementMaterializationButtonLabel
-} from '../application/SnapshotPlacementMaterializationView.js';
-import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
-import { LocalSnapshotContentAvailabilityOutcome } from '../application/LocalSnapshotContentAvailabilityOutcome.js';
+} from '../application/snapshot/placement/SnapshotPlacementMaterializationView.js';
+import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
+import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
 
 // 0.8.35 — Explicit Placement-Backed Snapshot Materialization.
 //

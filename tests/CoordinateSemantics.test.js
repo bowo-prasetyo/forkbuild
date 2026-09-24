@@ -1,7 +1,7 @@
 import { Position } from '../core/Position.js';
 import { WorldPlacement } from '../core/WorldPlacement.js';
 import { computeDeterministicGridPosition } from '../core/DeterministicGridPlacement.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';

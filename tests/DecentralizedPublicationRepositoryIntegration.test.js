@@ -5,21 +5,21 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License } from '../core/License.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { CreateDiscoveryUseCase } from '../application/CreateDiscoveryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscoveryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { DiscoveryProvider } from '../discovery/DiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -30,7 +30,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
-import { buildPlaceNamingClaimPublication, PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION as NAMING_SCHEMA_VERSION } from '../application/PlaceNamingClaimPublication.js';
+import { buildPlaceNamingClaimPublication, PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION as NAMING_SCHEMA_VERSION } from '../application/placeNaming/PlaceNamingClaimPublication.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.337 — Wire Resolved Decentralized Publications into Repository
@@ -242,7 +242,7 @@ async function run() {
         const bobConnectedPeer = bobConnect.connect({ candidateEndpoint: 'alice-repo-integration' });
         await wait(20);
         assert(bobConnectedPeer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED,
-            '1. setup: a real, live, authenticated peer connection (peer/LocalPeerConnectionProvider.js + application/ConnectToPeerUseCase.js, unmodified).');
+            '1. setup: a real, live, authenticated peer connection (peer/LocalPeerConnectionProvider.js + application/peer/ConnectToPeerUseCase.js, unmodified).');
 
         const verifier = new LocalAuthorizationVerifier();
         const sharedContentStorage = new InMemoryStorageProvider();
@@ -408,7 +408,7 @@ async function run() {
         assert(provider.list().length === 1 && provider.list()[0] === publicationView.content,
             '7. by contrast, a genuine forkbuild.publication resolution IS admitted — confirming the gate discriminates by content kind, not by rejecting everything.');
     }
-    console.log('✓ Section E: content-kind isolation. application/CreatePublicationDisplayKindRegistryUseCase.js\'s own content-kind dispatch stays authoritative: a resolved BlueprintAttribution and a resolved PlaceNamingClaim — both genuinely `resolved: true` — are never admitted into the Publication-only discovery provider, because resolvePublicationView()\'s own `content` is a publisher/Publication.js instance only for the forkbuild.publication content kind. A genuine Publication resolved through the identical provider immediately afterward proves the gate discriminates, rather than merely reflecting an empty provider.');
+    console.log('✓ Section E: content-kind isolation. application/publication/CreatePublicationDisplayKindRegistryUseCase.js\'s own content-kind dispatch stays authoritative: a resolved BlueprintAttribution and a resolved PlaceNamingClaim — both genuinely `resolved: true` — are never admitted into the Publication-only discovery provider, because resolvePublicationView()\'s own `content` is a publisher/Publication.js instance only for the forkbuild.publication content kind. A genuine Publication resolved through the identical provider immediately afterward proves the gate discriminates, rather than merely reflecting an empty provider.');
 
     // ===============================================================
     // Section F — Local Publication regression: LocalDiscoveryProvider
@@ -441,16 +441,16 @@ async function run() {
         assert(byTextAgain.items.length === 1 && byTextAgain.items[0].documentId === 'world-local-regression-1',
             '2. the local search result is completely unaffected by an unrelated DecentralizedPublicationDiscoveryProvider existing and holding its own, different Publication — the two providers share no state.');
 
-        // And application/CreateDiscoveryUseCase.js itself — the real
+        // And application/discovery/CreateDiscoveryUseCase.js itself — the real
         // composition root Repository actually uses — is untouched,
         // still wiring only LocalDiscoveryProvider, reconfirmed live.
         const { discoveryProvider, searchPublicationsUseCase } = new CreateDiscoveryUseCase().execute();
         assert(discoveryProvider instanceof LocalDiscoveryProvider && !(discoveryProvider instanceof DecentralizedPublicationDiscoveryProvider),
-            '3. application/CreateDiscoveryUseCase.js still constructs a plain LocalDiscoveryProvider, live — this milestone did not touch it.');
+            '3. application/discovery/CreateDiscoveryUseCase.js still constructs a plain LocalDiscoveryProvider, live — this milestone did not touch it.');
         assert(typeof searchPublicationsUseCase.execute === 'function',
             '4. its own searchPublicationsUseCase is still the real, callable SearchPublicationsUseCase.');
     }
-    console.log('✓ Section F: local Publication regression, reconfirmed live. LocalDiscoveryProvider + SearchPublicationsUseCase find a purely local publication exactly as before; an unrelated DecentralizedPublicationDiscoveryProvider existing in the same process, holding its own different Publication, changes nothing about that result. application/CreateDiscoveryUseCase.js — Repository\'s own real composition root — still constructs a plain LocalDiscoveryProvider, live.');
+    console.log('✓ Section F: local Publication regression, reconfirmed live. LocalDiscoveryProvider + SearchPublicationsUseCase find a purely local publication exactly as before; an unrelated DecentralizedPublicationDiscoveryProvider existing in the same process, holding its own different Publication, changes nothing about that result. application/discovery/CreateDiscoveryUseCase.js — Repository\'s own real composition root — still constructs a plain LocalDiscoveryProvider, live.');
 
     // ===============================================================
     // Section G — Identity: documentId/contentReference/title/author/
@@ -557,36 +557,36 @@ async function run() {
     //
     // UPDATED by 0.9.339 — Merge Decentralized Publication Discovery
     // into Repository Discovery. At the time THIS milestone (0.9.337)
-    // was written, application/CreateDiscoveryUseCase.js was ALSO
+    // was written, application/discovery/CreateDiscoveryUseCase.js was ALSO
     // untouched — that was never an architectural guarantee, only a
     // true statement about what 0.9.337 itself changed (this milestone
     // wired admission into the provider, at ui/views/
     // DecentralizedPublicationsView.js, deliberately leaving Repository's
     // own composition root for a later, separate milestone — see this
     // file's own header). 0.9.339 was that later milestone, and it
-    // deliberately DID change application/CreateDiscoveryUseCase.js —
+    // deliberately DID change application/discovery/CreateDiscoveryUseCase.js —
     // see tests/DecentralizedPublicationRepositoryMerge.test.js for its
     // own flagship proof. Dropped from this section's own untouched-file
     // list accordingly, rather than left to assert a stale guarantee.
     // ===============================================================
     {
         const untouched = gitDiffFiles([
-            'application/SearchPublicationsUseCase.js',
+            'application/publication/SearchPublicationsUseCase.js',
             'discovery/LocalDiscoveryProvider.js'
         ]);
         assert(untouched.length === 0,
-            `1. neither application/SearchPublicationsUseCase.js nor discovery/LocalDiscoveryProvider.js is modified relative to HEAD (found changed: ${untouched.join(', ') || 'none'}).`);
+            `1. neither application/publication/SearchPublicationsUseCase.js nor discovery/LocalDiscoveryProvider.js is modified relative to HEAD (found changed: ${untouched.join(', ') || 'none'}).`);
 
         // Reconfirmed structurally too, matching 0.9.336's own Section J
         // style: neither file references the new provider at all.
-        const searchUseCaseSource = await readSource('application/SearchPublicationsUseCase.js');
+        const searchUseCaseSource = await readSource('application/publication/SearchPublicationsUseCase.js');
         assert(!/DecentralizedPublicationDiscoveryProvider/.test(searchUseCaseSource),
-            '2. application/SearchPublicationsUseCase.js never references discovery/DecentralizedPublicationDiscoveryProvider.js — every proof above worked through its existing, single-discoveryProvider constructor unchanged.');
+            '2. application/publication/SearchPublicationsUseCase.js never references discovery/DecentralizedPublicationDiscoveryProvider.js — every proof above worked through its existing, single-discoveryProvider constructor unchanged.');
         const localDiscoverySource = await readSource('discovery/LocalDiscoveryProvider.js');
         assert(!/DecentralizedPublicationDiscoveryProvider/.test(localDiscoverySource),
             '3. discovery/LocalDiscoveryProvider.js never references it either.');
     }
-    console.log('✓ Section J: no Repository SEARCH-CLASS changes. application/SearchPublicationsUseCase.js and discovery/LocalDiscoveryProvider.js are untouched by any git diff and structurally reconfirmed to carry no reference to the new provider at all — Repository\'s own real search algorithm is exactly as it was, and every Section above worked through it unmodified. UPDATED (0.9.339): application/CreateDiscoveryUseCase.js — Repository\'s composition ROOT, one level above the search class itself — was later, deliberately modified by that milestone to merge in the shared decentralized provider; this section\'s own scope was always the search/storage classes, not that composition root (see this file\'s own header on why 0.9.337 left it for later).');
+    console.log('✓ Section J: no Repository SEARCH-CLASS changes. application/publication/SearchPublicationsUseCase.js and discovery/LocalDiscoveryProvider.js are untouched by any git diff and structurally reconfirmed to carry no reference to the new provider at all — Repository\'s own real search algorithm is exactly as it was, and every Section above worked through it unmodified. UPDATED (0.9.339): application/discovery/CreateDiscoveryUseCase.js — Repository\'s composition ROOT, one level above the search class itself — was later, deliberately modified by that milestone to merge in the shared decentralized provider; this section\'s own scope was always the search/storage classes, not that composition root (see this file\'s own header on why 0.9.337 left it for later).');
 
     console.log('\nAll Decentralized Publication Repository Integration tests passed.');
 }

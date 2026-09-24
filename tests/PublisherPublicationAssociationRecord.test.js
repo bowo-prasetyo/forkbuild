@@ -1,29 +1,29 @@
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { PublisherPublicationAssociationRecord } from '../application/PublisherPublicationAssociationRecord.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { PublisherPublicationAssociationRecord } from '../application/publisher/PublisherPublicationAssociationRecord.js';
 import {
     appendPublisherPublicationAssociationRecordHistoryEntry,
     findPublisherPublicationAssociationRecordsByPublisher,
     findPublisherPublicationAssociationRecordsByPublication
-} from '../application/PublisherPublicationAssociationRecordHistory.js';
+} from '../application/publisher/PublisherPublicationAssociationRecordHistory.js';
 import {
     describePublisherPublicationAssociationRecordHistoryEntry,
     describePublisherPublicationAssociationRecordHistory
-} from '../application/PublisherPublicationAssociationRecordHistoryView.js';
+} from '../application/publisher/PublisherPublicationAssociationRecordHistoryView.js';
 import {
     describePublisherAssociatedPublications,
     reconstructPublisherAssociatedPublications,
     describeDistinctPublisherIdentifiers,
     reconstructDistinctPublisherIdentifiers
-} from '../application/PublisherAssociationView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { reconstructAchievementEvents } from '../application/AchievementEvent.js';
-import { reconstructAchievementProfile } from '../application/AchievementProfileView.js';
-import { BlockchainKind } from '../application/BlockchainKind.js';
-import { BlockchainPublicationIdentity } from '../application/BlockchainPublicationIdentity.js';
+} from '../application/publisher/PublisherAssociationView.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { reconstructAchievementEvents } from '../application/achievement/AchievementEvent.js';
+import { reconstructAchievementProfile } from '../application/achievement/AchievementProfileView.js';
+import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
+import { BlockchainPublicationIdentity } from '../application/anchoring/BlockchainPublicationIdentity.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 
@@ -300,7 +300,7 @@ async function run() {
 
         // 0.9.393 — this assertion had gone stale at "8": SCHEMA_VERSION
         // has since been bumped twice more (to 9, then to 10 — see
-        // application/PublicationObservationArchive.js's own header),
+        // application/publication/observationArchive/PublicationObservationArchive.js's own header),
         // uncaught because nothing re-ran this guard until 0.9.393's own
         // full-suite execution.
         assert(PublicationObservationArchive.SCHEMA_VERSION === 10, '49. SCHEMA_VERSION is now 10 (bumped from 6 by 0.8.108, to 8 by 0.8.130, then to 9 and 10 by two later milestones)');

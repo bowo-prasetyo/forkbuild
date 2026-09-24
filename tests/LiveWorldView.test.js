@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
+import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import {
     bootstrapWorldDiscoveryRuntime,
     WORLD_DISCOVERY_PEER_PROTOCOL
-} from '../application/WorldDiscoveryRuntimeBootstrap.js';
+} from '../application/discovery/WorldDiscoveryRuntimeBootstrap.js';
 
 // 0.9.15 — Mount Live World View.
 //

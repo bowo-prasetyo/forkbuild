@@ -2,15 +2,15 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import NotificationHistoryPanel from '../ui/components/NotificationHistoryPanel.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { PublicationCommentaryStore, PublicationCommentaryConflictError } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer, PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/PublicationCommentaryNotificationProducer.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer, PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
-import { GetRecipientNotificationEventsUseCase } from '../application/GetRecipientNotificationEventsUseCase.js';
+import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { NotificationCollisionOutcome, notificationDeduplicationIdentity } from '../core/NotificationDeduplicationPolicy.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -136,7 +136,7 @@ async function grepCount(pattern, dirs, { excludeSuffix = null } = {}) {
 // Fixtures — the same real-infrastructure shape
 // tests/PublicationCommentaryNotificationRuntimeIntegration.test.js
 // (0.9.285) already established as isomorphic to
-// application/CreateWorldViewUseCase.js's own production wiring. Section
+// application/world/CreateWorldViewUseCase.js's own production wiring. Section
 // A re-derives that isomorphism claim directly from the composition
 // root's own source rather than merely trusting it, but the executable
 // fixtures below still reuse the identical shape for every section that
@@ -206,7 +206,7 @@ function makeSharedInfrastructure(storageProvider = new InMemoryStorageProvider(
     return { storageProvider, contentStore, publisherProvider, discoveryProvider, commentaryStore, canCommentOnPublicationUseCase, notificationEventStore };
 }
 
-// Builds the exact wiring shape application/CreateWorldViewUseCase.js's
+// Builds the exact wiring shape application/world/CreateWorldViewUseCase.js's
 // own execute() builds for one identityProvider: a real
 // AddPublicationCommentaryUseCase, decorated by a real
 // PublicationCommentaryNotificationProducer whose sink writes into the
@@ -295,8 +295,8 @@ async function runTests() {
     // test-only construction to reach.
     // ===============================================================
     {
-        const composition = await rawSource('application/CreateWorldViewUseCase.js');
-        const compositionCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
+        const composition = await rawSource('application/world/CreateWorldViewUseCase.js');
+        const compositionCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
 
         // A1. Exactly one production construction site for the producer,
         // anywhere in application/ or ui/ — the composition root, and
@@ -356,7 +356,7 @@ async function runTests() {
         // — this audit runs against the real, already-merged 0.9.285
         // state, never a locally-patched one.
         const gitDiffStat = execSync(
-            'git diff --stat HEAD -- application/AddPublicationCommentaryUseCase.js application/WorldNavigationSession.js core/NotificationEvent.js core/NotificationDeduplicationPolicy.js storage/NotificationEventStore.js application/PublicationCommentaryNotificationProducer.js application/GetRecipientNotificationEventsUseCase.js ui/views/WorldView.js ui/components/NotificationHistoryPanel.js ui/components/OwnPublicationPanel.js application/CreateWorldViewUseCase.js 2>/dev/null || true',
+            'git diff --stat HEAD -- application/publication/commentary/AddPublicationCommentaryUseCase.js application/world/WorldNavigationSession.js core/NotificationEvent.js core/NotificationDeduplicationPolicy.js storage/NotificationEventStore.js application/publication/commentary/PublicationCommentaryNotificationProducer.js application/chat/GetRecipientNotificationEventsUseCase.js ui/views/WorldView.js ui/components/NotificationHistoryPanel.js ui/components/OwnPublicationPanel.js application/world/CreateWorldViewUseCase.js 2>/dev/null || true',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         assert(gitDiffStat === '', `A6. None of the pre-existing files this chain depends on carry an uncommitted diff. Found: ${gitDiffStat || '(none)'}.`);
@@ -792,9 +792,9 @@ async function runTests() {
         // J4. This is documented as an accepted, non-atomic boundary, not
         // silently patched: the composition root itself introduces no
         // transaction/rollback/compensation vocabulary.
-        const compositionCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
+        const compositionCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
         assert(!/rollback|transaction|\.undo\(|compensat/i.test(compositionCode),
-            'J4. application/CreateWorldViewUseCase.js contains no rollback/transaction/compensation vocabulary.');
+            'J4. application/world/CreateWorldViewUseCase.js contains no rollback/transaction/compensation vocabulary.');
 
         console.log('✓ J: "Commentary persisted + notification persistence failed" remains the honest, documented, non-atomic outcome — the genuine storage failure propagates unmodified, the already-persisted Commentary is untouched, no notification of any kind exists for it, and no transaction/rollback machinery was introduced to hide any of this.');
     }
@@ -1075,9 +1075,9 @@ async function runTests() {
         const chainFiles = [
             'core/NotificationEvent.js',
             'core/NotificationDeduplicationPolicy.js',
-            'application/PublicationCommentaryNotificationProducer.js',
+            'application/publication/commentary/PublicationCommentaryNotificationProducer.js',
             'storage/NotificationEventStore.js',
-            'application/GetRecipientNotificationEventsUseCase.js',
+            'application/chat/GetRecipientNotificationEventsUseCase.js',
             'ui/components/NotificationHistoryPanel.js'
         ];
 
@@ -1117,7 +1117,7 @@ async function runTests() {
         // holds no cache, no Set/Map of seen ids, and never calls
         // NotificationEventStore or the deduplication policy itself — it
         // only ever constructs an event and hands it to its injected sink.
-        const producerCode = await codeOnlySource('application/PublicationCommentaryNotificationProducer.js');
+        const producerCode = await codeOnlySource('application/publication/commentary/PublicationCommentaryNotificationProducer.js');
         assert(!/NotificationEventStore|NotificationDeduplicationPolicy|new Set\(|new Map\(/.test(producerCode),
             'N3. PublicationCommentaryNotificationProducer.js never imports the store or the dedup policy, and holds no seen-id cache of its own — deduplication is entirely the store\'s responsibility.');
 

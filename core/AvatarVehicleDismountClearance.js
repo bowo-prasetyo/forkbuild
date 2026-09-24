@@ -29,7 +29,7 @@ import { avatarCollisionCircleAt, avatarTreeCollision } from './AvatarTreeCollis
 // avatarCollisionCircleAt() turns `position` into the same avatar
 // circle core/AvatarTreeCollision.js already builds for movement, and
 // avatarTreeCollision() is the same collides/doesn't-collide test
-// core/AvatarTreeMovement.js and application/AvatarTreeConstraint.js
+// core/AvatarTreeMovement.js and application/avatar/AvatarTreeConstraint.js
 // already trust. No new geometric convention, no new circle math, no
 // second AVATAR_COLLISION_RADIUS, is introduced here.
 //
@@ -62,7 +62,7 @@ import { avatarCollisionCircleAt, avatarTreeCollision } from './AvatarTreeCollis
 // core/AvatarTreeMovement.js (the resolver) have never been collapsed
 // into one file: query and detection stay two separately testable
 // concerns, and only an application-layer caller (mirroring
-// application/AvatarTreeConstraint.js's own existing composition of
+// application/avatar/AvatarTreeConstraint.js's own existing composition of
 // exactly those two pieces) ever combines them with a real seed.
 //
 // HORIZONTAL (X/Z) ONLY — Y IS NEVER CONSULTED. `position.y` is read

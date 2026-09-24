@@ -233,7 +233,7 @@ async function run() {
         assert(discoveryView, n('C3. ui/views/DecentralizedPublicationsView.js exists — the Discover step has a real, current view'));
         assert(routerSource.includes("component: DecentralizedPublicationsView"), n('C3. DecentralizedPublicationsView is actually wired into the router'));
 
-        const distributeAdapters = ['application/ArweavePublicationDistributionRuntimeAdapter.js', 'application/NostrPublicationDistributionRuntimeAdapter.js'];
+        const distributeAdapters = ['application/arweave/ArweavePublicationDistributionRuntimeAdapter.js', 'application/nostr/NostrPublicationDistributionRuntimeAdapter.js'];
         for (const f of distributeAdapters) {
             assert(await sourceExists(f), n(`C4. ${f} exists — the Distribute step has a real, current runtime adapter`));
         }

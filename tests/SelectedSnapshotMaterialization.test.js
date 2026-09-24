@@ -1,14 +1,14 @@
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { SnapshotCandidateMaterializationOutcome } from '../application/SnapshotCandidateMaterializationOutcome.js';
-import { SnapshotMaterializationSourceKind } from '../application/SnapshotMaterializationSourceKind.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { SnapshotCandidateMaterializationOutcome } from '../application/snapshot/materialization/SnapshotCandidateMaterializationOutcome.js';
+import { SnapshotMaterializationSourceKind } from '../application/snapshot/materialization/SnapshotMaterializationSourceKind.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { computeContentHash } from '../serializer/contentHash.js';
@@ -20,7 +20,7 @@ import { ContentReference } from '../core/ContentReference.js';
 // VERIFY -> ATTRIBUTE, entirely in memory: a verified Snapshot's bytes
 // live only inside a resolveCandidate() result, never turned into local
 // possession. This milestone adds exactly one seam beyond that pipeline —
-// application/MaterializeSnapshotFromSelectedCandidateUseCase.js — which
+// application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js — which
 // turns an ALREADY-RESOLVED, ALREADY-VERIFIED selected-candidate result
 // into bytes actually held in this replica's own local content/
 // ContentStore.js, through the SAME application/
@@ -481,7 +481,7 @@ async function run() {
         // MaterializeSnapshotFromSelectedCandidateUseCase never imports a
         // resolver, a query service, or a content store of its own — it
         // only ever consumes an already-computed resolution result.
-        const useCaseSource = await readFile(new URL('../application/MaterializeSnapshotFromSelectedCandidateUseCase.js', import.meta.url), 'utf8');
+        const useCaseSource = await readFile(new URL('../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js', import.meta.url), 'utf8');
         const useCaseImportLines = useCaseSource.split('\n').filter((line) => line.trim().startsWith('import '));
         assert(!useCaseImportLines.some((line) => /DecentralizedSnapshotResolver|NostrSnapshotDiscoveryQueryService|ArweaveContentStore|SnapshotPublicationAttribution/.test(line)),
             '6. MaterializeSnapshotFromSelectedCandidateUseCase imports no resolver, query service, remote content store, or attribution function of its own');

@@ -1,6 +1,6 @@
 // 0.2.96 — Shared World Command Propagation.
 //
-// The wire vocabulary for `application/WorldCommandPropagationUseCase.js`'s
+// The wire vocabulary for `application/document/WorldCommandPropagationUseCase.js`'s
 // own protocol (`forkbuild:world-sync`) — deliberately a SEPARATE protocol
 // from `forkbuild:chat`/`forkbuild:device-conversation-sync`, never a new
 // message kind riding either of those. See that use case's own header, and
@@ -9,7 +9,7 @@
 //
 // A single, closed shape — there is only one kind of thing that ever
 // travels here: one already-executed local `application/commands/Command.js`
-// instance, serialized exactly the way `application/CommandHistory.js`
+// instance, serialized exactly the way `application/editor/CommandHistory.js`
 // already persists it (`command.toJSON()`), addressed at a specific World
 // document. Nothing here ever carries a World snapshot, a Document diff, or
 // a placement list — see this milestone's own "do not synchronize the whole
@@ -40,7 +40,7 @@
 //                        why device-aware resolution happens strictly
 //                        AFTER this field is checked against the
 //                        connection's own proven identity, exactly the
-//                        two-step application/ChatUseCase.js#_handleIncoming()
+//                        two-step application/chat/ChatUseCase.js#_handleIncoming()
 //                        already established: "the claim in the payload"
 //                        is step 1, "what social identity does that
 //                        resolve to" is step 2, never conflated).
@@ -62,7 +62,7 @@
 //                        exact same "graceful degrade on read" way
 //                        core/WorldOperationOrder.js#worldOperationSortKey()
 //                        already documents; every envelope
-//                        `application/WorldCommandPropagationUseCase.js#
+//                        `application/document/WorldCommandPropagationUseCase.js#
 //                        broadcastCommand()` actually SENDS carries a
 //                        real one.
 export const WorldOperationKind = Object.freeze({

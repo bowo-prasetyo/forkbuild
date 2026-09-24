@@ -2,14 +2,14 @@ import {
     AVATAR_COLLISION_RADIUS, AVATAR_COLLISION_HEIGHT,
     avatarAabbAt, brickAabb, translateAabb, aabbsOverlap, resolveHorizontalMovement
 } from '../core/AvatarCollision.js';
-import { AvatarMovementConstraint } from '../application/AvatarMovementConstraint.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -19,11 +19,11 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -35,8 +35,8 @@ import { License, LicenseId } from '../core/License.js';
 // 0.2.42 — Avatar-World Collision & Movement Constraints.
 //
 //   Section A: core/AvatarCollision.js — pure geometry
-//   Section B: application/AvatarMovementConstraint.js — supplies loaded-world geometry
-//   Section C: application/AvatarMovementController.js — collision wired into the movement pipeline
+//   Section B: application/avatar/AvatarMovementConstraint.js — supplies loaded-world geometry
+//   Section C: application/avatar/AvatarMovementController.js — collision wired into the movement pipeline
 //   Section D: WorldNavigationSession integration — loaded geometry only, never the whole world
 //   Section E: FLAGSHIP — the design doc's own scripted scenario
 //
@@ -252,7 +252,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — application/AvatarMovementConstraint.js
+    // Section B — application/avatar/AvatarMovementConstraint.js
     // -------------------------------------------------------------
     {
         const constraint = new AvatarMovementConstraint({ loadedDocuments: new Map(), getWorldPosition: () => ({ x: 0, y: 0, z: 0 }), brickRegistry });
@@ -333,7 +333,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — application/AvatarMovementController.js
+    // Section C — application/avatar/AvatarMovementController.js
     // -------------------------------------------------------------
     {
         // Backward compatibility: a controller built the OLD way

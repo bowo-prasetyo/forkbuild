@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
-import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -168,7 +168,7 @@ async function run() {
         assert(mainCode.includes('const publicationDistributionCommand = composePublicationDistributionCommand({'),
             '2. that app-wide instance is built by composePublicationDistributionCommand() — a named, independently testable composition, never an inline closure');
 
-        const compositionCode = await codeOnlySource('application/PublicationDistributionCommandComposition.js');
+        const compositionCode = await codeOnlySource('application/publication/distribution/PublicationDistributionCommandComposition.js');
         assert(compositionCode.includes("return (request) => executePublicationDistributionCommand({") && compositionCode.includes('...request,'),
             '3. composePublicationDistributionCommand() forwards its own request verbatim into the SAME executePublicationDistributionCommand() 0.9.103 already established, plus the three composition-root collaborators');
 
@@ -229,10 +229,10 @@ async function run() {
         // Confirms EditorView's publishDocumentUseCase and WorldView's own
         // publish path are both built from the SAME PublishDocumentUseCase
         // class — never two divergent publish semantics for the two views.
-        const createPublisherCode = await codeOnlySource('application/CreatePublisherUseCase.js');
+        const createPublisherCode = await codeOnlySource('application/publisher/CreatePublisherUseCase.js');
         assert(createPublisherCode.includes('new PublishDocumentUseCase('),
             '9. EditorView\'s own publishDocumentUseCase (via CreatePublisherUseCase, injected in ui/views/EditorView.js) is a real PublishDocumentUseCase instance');
-        const createWorldViewCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
+        const createWorldViewCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
         assert(createWorldViewCode.includes('const publishDocumentUseCase = new PublishDocumentUseCase('),
             '10. World View\'s own publish path is composed from the SAME PublishDocumentUseCase class, not a parallel implementation — confirmed fresh');
 
@@ -268,7 +268,7 @@ async function run() {
     // Section C — Caller-agnostic proof, at the import-graph level.
     // ---------------------------------------------------------------
     {
-        const commandRaw = await rawSource('application/PublicationDistributionCommand.js');
+        const commandRaw = await rawSource('application/publication/distribution/PublicationDistributionCommand.js');
         const signatureMatch = commandRaw.match(/export function executePublicationDistributionCommand\(\{([\s\S]*?)\} = \{\}\)/);
         assert(signatureMatch, '13. executePublicationDistributionCommand()\'s own destructured signature is found in source');
         const parameterNames = signatureMatch[1].split(',').map((p) => p.trim()).filter(Boolean);
@@ -281,11 +281,11 @@ async function run() {
         // and mentions no WorldView/WorldEncounterCanvas/OwnPublicationPanel/
         // "encounter"/"selected" vocabulary anywhere in their own code.
         const chainFiles = [
-            'application/PublicationDistributionCommand.js',
-            'application/PublicationDistributionCommandComposition.js',
-            'application/PublicationDistributionOrchestrator.js',
-            'application/PublicationDistributionLifecycle.js',
-            'application/PublicationDistributionLifecycleTransition.js'
+            'application/publication/distribution/PublicationDistributionCommand.js',
+            'application/publication/distribution/PublicationDistributionCommandComposition.js',
+            'application/publication/distribution/PublicationDistributionOrchestrator.js',
+            'application/publication/distribution/PublicationDistributionLifecycle.js',
+            'application/publication/distribution/PublicationDistributionLifecycleTransition.js'
         ];
         for (const file of chainFiles) {
             const code = await codeOnlySource(file);
@@ -349,7 +349,7 @@ async function run() {
     // command availability, and unmount hygiene.
     // ---------------------------------------------------------------
     {
-        const publishUseCaseCode = await codeOnlySource('application/PublishDocumentUseCase.js');
+        const publishUseCaseCode = await codeOnlySource('application/publication/PublishDocumentUseCase.js');
         assert(!/async |await |Promise/.test(publishUseCaseCode),
             '22. PublishDocumentUseCase.execute() is fully synchronous — no async, no await, no Promise anywhere in its own source');
         const localPublisherCode = await codeOnlySource('publisher/LocalPublisherProvider.js');
@@ -431,7 +431,7 @@ async function run() {
         for (const term of forbiddenIoTerms) {
             assert(!publishFn.includes(term), `30. Toolbar.js's own publish() contains no "${term}" — Publish itself performs zero distribution I/O`);
         }
-        const publishUseCaseCode = await codeOnlySource('application/PublishDocumentUseCase.js');
+        const publishUseCaseCode = await codeOnlySource('application/publication/PublishDocumentUseCase.js');
         assert(!/Arweave|Nostr|Ipfs|Bitcoin|distribut/i.test(publishUseCaseCode),
             '31. PublishDocumentUseCase.js still carries no distribution vocabulary, reconfirmed fresh');
 
@@ -507,7 +507,7 @@ async function run() {
         // actions (undo/redo, delete, rotate, align, selection, palette)
         // only — never publication distribution, never an app-wide
         // capability dispatcher.
-        const registryHeader = (await rawSource('application/EditorActionRegistry.js')).split('\n').slice(0, 40).join('\n');
+        const registryHeader = (await rawSource('application/editor/EditorActionRegistry.js')).split('\n').slice(0, 40).join('\n');
         assert(!/[Pp]ublication[Dd]istribution/.test(registryHeader),
             '37. EditorActionRegistry.js\'s own header names nothing about Publication Distribution — it is a scoped editing-action registry, not a generic command bus this milestone could or should reuse');
 

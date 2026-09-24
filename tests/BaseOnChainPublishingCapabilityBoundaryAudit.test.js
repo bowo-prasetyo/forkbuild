@@ -9,7 +9,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // TYPE: test-only audit. PRODUCTION CHANGES: NONE.
 //
 // This milestone was requested on the hypothesis that Base sits where
-// 0.8.89 (application/BlockchainKind.js) left it: a chain identifier
+// 0.8.89 (application/anchoring/BlockchainKind.js) left it: a chain identifier
 // RESERVED for a future implementation, with read/observation capability
 // but no write path — and that the task ahead was to determine exactly
 // which of nine named seams (network identity, wallet/signing, transaction
@@ -39,8 +39,8 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // `core/RoleProviderRole.js` names, which Bitcoin and Arweave both already
 // fill), the SEPARATE, older, peer-shareable "claim + externally verify an
 // anchor" layer (`core/PublicationAnchor.js`,
-// `application/PublicationAnchorCreationCoordinator.js`,
-// `application/ExternalAnchorVerifier.js`) — a discovery/social surface
+// `application/anchoring/PublicationAnchorCreationCoordinator.js`,
+// `application/anchoring/ExternalAnchorVerifier.js`) — a discovery/social surface
 // layered ON TOP OF an anchor that already works standalone, never a
 // prerequisite for it. Section L finds the likely SOURCE of the original
 // hypothesis: both `docs/Roadmap.md` (as late as its own 0.9.383 entry)
@@ -173,14 +173,14 @@ async function run() {
     // never inferred by resemblance.
     // ===============================================================
     {
-        const chainIdSrc = await source('application/BaseChainId.js');
+        const chainIdSrc = await source('application/anchoring/base/BaseChainId.js');
         assert(/MAINNET:\s*8453/.test(chainIdSrc), n('B1. BaseChainId.MAINNET is the real, documented Base mainnet chain id, 8453'));
         assert(/TESTNET:\s*84532/.test(chainIdSrc), n('B2. BaseChainId.TESTNET is the real, documented Base Sepolia chain id, 84532'));
         assert(/NEVER GROWN BY INFERENCE/.test(chainIdSrc), n('B3. the vocabulary is documented closed — a chain id not listed is never treated as Base'));
 
         const observerSrc = await source('base/BaseNetworkObserver.js');
         assert(/fetchChainId/.test(observerSrc), n('B4. base/BaseNetworkObserver.js reads chain id through a real RPC call, never a connected provider\'s own self-report'));
-        assert(/CHAIN_MISMATCH/.test(await source('application/BaseNetworkObservationState.js')), n('B5. a chain id outside the closed set reports CHAIN_MISMATCH, never a guessed network name'));
+        assert(/CHAIN_MISMATCH/.test(await source('application/anchoring/base/BaseNetworkObservationState.js')), n('B5. a chain id outside the closed set reports CHAIN_MISMATCH, never a guessed network name'));
 
         console.log('✓ Section B: network identity exists as a closed, RPC-verified vocabulary — not a placeholder, not an inference from a URL or a wallet\'s own claim.');
     }
@@ -280,7 +280,7 @@ async function run() {
     // the raw contentHash byte string, deliberately undecorated.
     // ===============================================================
     {
-        const encodingSrc = await source('application/BasePublicationCommitmentEncoding.js');
+        const encodingSrc = await source('application/anchoring/base/BasePublicationCommitmentEncoding.js');
         assert(/export function encodeBasePublicationCommitment\(contentHash\)/.test(encodingSrc), n('G1. encodeBasePublicationCommitment() exists'));
         assert(/return '0x' \+ contentHash\.toLowerCase\(\);/.test(encodingSrc), n('G2. encoding is exactly "0x" + the contentHash bytes — no ABI encoding, no function selector, no FORKBUILD-specific tag'));
         assert(/NO ABI ENCODING\. NO FUNCTION SELECTOR\. NO FORKBUILD-SPECIFIC TAG OR/.test(encodingSrc), n('G3. the file\'s own header documents this as a deliberate rejection of ABI/selector/tag encoding, not an oversight'));
@@ -294,7 +294,7 @@ async function run() {
     // from the finalized artifact, never a parallel publication model.
     // ===============================================================
     {
-        const useCaseSrc = await source('application/CreateBaseAnchorPublicationRecordUseCase.js');
+        const useCaseSrc = await source('application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js');
         assert(/CALL THIS AT SUCCESSFUL FINALIZATION, NEVER EARLIER/.test(useCaseSrc), n('H1. the intended call site is documented as the FINALIZED boundary, never earlier'));
         assert(/THE TRANSACTION IDENTITY COMES FROM THE FINALIZED ARTIFACT, NEVER FROM/.test(useCaseSrc), n('H2. txid comes from the finalizer\'s own deterministic hash, never a network/RPC lookup'));
 
@@ -304,13 +304,13 @@ async function run() {
         assert(/txid:\s*entry\.baseSignedTransactionFinalizationOutcome\.finalizedTransaction\.transactionHash/.test(viewSrc),
             n('H4. the txid passed is the finalizer\'s own transactionHash — never a value read back from the broadcaster or an RPC receipt lookup'));
 
-        const archiveSrc = await source('application/PublicationObservationArchive.js');
+        const archiveSrc = await source('application/publication/observationArchive/PublicationObservationArchive.js');
         assert(/baseAnchorPublicationRecords/.test(archiveSrc) && /bitcoinAnchorPublicationRecords/.test(archiveSrc),
             n('H5. Base and Bitcoin anchor-publication records are sibling collections inside the SAME PublicationObservationArchive class — no separate, parallel "BasePublication" archive exists'));
 
         const rpcSrc = await source('base/BaseJsonRpcClient.js');
         assert(/async fetchTransactionReceipt\(txid\)/.test(rpcSrc) && /async fetchLatestBlockNumber\(\)/.test(rpcSrc), n('H6. inclusion observation reads are wrapped (eth_getTransactionReceipt, eth_blockNumber)'));
-        assert(await sourceExists('application/DurableBaseTransactionInclusionObservationArchive.js') || (await source('application/PublicationObservationArchive.js')).includes('baseTransactionInclusionObservationsByTransactionHash'),
+        assert(await sourceExists('application/DurableBaseTransactionInclusionObservationArchive.js') || (await source('application/publication/observationArchive/PublicationObservationArchive.js')).includes('baseTransactionInclusionObservationsByTransactionHash'),
             n('H7. a durable, keyed inclusion-observation collection exists, not merely an in-memory page-level value'));
 
         console.log('✓ Section H: a durable Base publication identity is minted exactly once, at the finalized-transaction boundary, from a deterministically-computed hash rather than a network lookup — and it is filed as a sibling row inside the identical archive class Bitcoin\'s own anchor records already share, never a second, parallel publication model.');
@@ -396,7 +396,7 @@ async function run() {
         assert(!(await sourceExists('anchoring/BaseProofVerifier.js')) && !(await sourceExists('anchoring/BaseOpReturnProofVerifier.js')) && !(await sourceExists('anchoring/BaseAnchorPublisher.js')),
             n('K4. no anchoring/Base*.js ProofVerifier or AnchorPublisher file exists — confirmed absent, not merely unwired'));
 
-        const anchorCreationSrc = await source('application/CreatePublicationAnchorUseCase.js');
+        const anchorCreationSrc = await source('application/anchoring/CreatePublicationAnchorUseCase.js');
         assert(/'bitcoin-op-return'/.test(anchorCreationSrc), n('K5. the peer-shareable PublicationAnchor creation path documents bitcoin-op-return as its own example anchorType'));
 
         const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));

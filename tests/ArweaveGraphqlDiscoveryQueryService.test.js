@@ -1,5 +1,5 @@
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
-import { DecentralizedDiscoveryQueryService } from '../application/DecentralizedWorldDiscoveryQuery.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
+import { DecentralizedDiscoveryQueryService } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
 
 // 0.9.25 — Decentralized Discovery Query Adapter (concrete service).
 //

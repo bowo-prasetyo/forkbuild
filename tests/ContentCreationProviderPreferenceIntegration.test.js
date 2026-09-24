@@ -2,18 +2,18 @@ import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlaceme
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
-import { RoleProviderResolutionStatus } from '../application/RoleAwareProviderResolver.js';
+import { RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
-import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
-import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
-import { PreferredSnapshotPlacementCreationCoordinator } from '../application/PreferredSnapshotPlacementCreationCoordinator.js';
-import { SnapshotPlacementCreationOutcome } from '../application/SnapshotPlacementCreationOutcome.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
+import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
+import { PreferredSnapshotPlacementCreationCoordinator } from '../application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js';
+import { SnapshotPlacementCreationOutcome } from '../application/snapshot/placement/SnapshotPlacementCreationOutcome.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -63,8 +63,8 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //               placements/availableStorageTypes gating) is byte-for-byte
 //               unchanged when driven through the wrapping coordinator.
 //
-// See application/PreferredSnapshotPlacementCreationCoordinator.js and
-// application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js
+// See application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js and
+// application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js
 // for the full design rationale.
 
 function assert(condition, message) {
@@ -131,7 +131,7 @@ function makeFakeIpfsNode({ network = new Map(), failAdd = false } = {}) {
 // bytes, the 0.8.25 bridge adapters, application/
 // CreateSnapshotPlacementOrchestratorUseCase.js/application/
 // CreateSnapshotPlacementCreationCoordinatorUseCase.js, and NOW
-// application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js
+// application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js
 // wired together, exactly as ui/main.js now wires them.
 function makePublicationCenter({ stores = [], identityProvider = makeIdentity('Alice'), preferenceStore = new RoleProviderPreferenceStore(new InMemoryStorageProvider()) } = {}) {
     const publicationCatalog = new LocalPublicationCatalog(new InMemoryStorageProvider());
@@ -399,12 +399,12 @@ async function run() {
         // is no second, independently-composed Content creation pipeline
         // anywhere in application/ or ui/ to integrate separately — every
         // section above already exercises the one real seam through the
-        // exact composition (application/CreateSnapshotPlacementOrchestratorUseCase.js
-        // + application/SnapshotPlacementCreationCoordinator.js) ui/main.js
+        // exact composition (application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js
+        // + application/snapshot/placement/SnapshotPlacementCreationCoordinator.js) ui/main.js
         // itself wires for both. Per this milestone's own scoping rule, a
         // genuinely separate second path is recorded as a follow-up rather
         // than invented here to pad out a second suite.
-        assert(true, '28. Publication and Snapshot placement creation share the SAME production seam (application/CreateExternalSnapshotPlacementUseCase.js via application/SnapshotPlacementCreationCoordinator.js) — Sections A-H above already integrate it exactly once');
+        assert(true, '28. Publication and Snapshot placement creation share the SAME production seam (application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js via application/snapshot/placement/SnapshotPlacementCreationCoordinator.js) — Sections A-H above already integrate it exactly once');
     }
     console.log('✓ Section I: Publication placement and Snapshot placement creation are the SAME real seam today — integrated once, not duplicated');
 

@@ -47,7 +47,7 @@ export class Renderer {
         // header. terrainHeightAt() below is the ONE shared query point
         // every ground-placement site in this codebase reads from
         // (renderer/WorldRenderer.js for buildings,
-        // application/RenderWorldViewUseCase.js for avatars) — never a
+        // application/world/RenderWorldViewUseCase.js for avatars) — never a
         // second, independently-computed terrain function anywhere else.
         this._terrainStreaming = new TerrainStreamingController(
             this._sceneManager,
@@ -180,7 +180,7 @@ export class Renderer {
     // rebuilds whichever ALREADY-LOADED tile `position` falls in — see
     // TerrainStreamingController#invalidateTile()'s own header for why
     // this is a single, targeted rebuild, never a full restream. A
-    // caller (application/WorldNavigationSession.js, once per catch
+    // caller (application/world/WorldNavigationSession.js, once per catch
     // event) hands this the exact position the animal stood at; this
     // method has no opinion on WHERE an animal came from or WHY it was
     // caught, only on making it stop rendering.

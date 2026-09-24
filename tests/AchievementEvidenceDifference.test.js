@@ -1,19 +1,19 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { CreatePublicationReferenceRecordUseCase } from '../application/CreatePublicationReferenceRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
 import {
     exportAchievementEvidence,
     importAchievementEvidence
-} from '../application/AchievementEvidenceExport.js';
-import { mergeAchievementEvidence } from '../application/AchievementEvidenceMerge.js';
-import { reconstructAchievementEvidenceFingerprint } from '../application/AchievementEvidenceFingerprint.js';
+} from '../application/achievement/AchievementEvidenceExport.js';
+import { mergeAchievementEvidence } from '../application/achievement/AchievementEvidenceMerge.js';
+import { reconstructAchievementEvidenceFingerprint } from '../application/achievement/AchievementEvidenceFingerprint.js';
 import {
     AchievementEvidenceDifferenceCollectionOrder,
     describeAchievementEvidenceDifference,
     reconstructAchievementEvidenceDifference
-} from '../application/AchievementEvidenceDifference.js';
+} from '../application/achievement/AchievementEvidenceDifference.js';
 
 // 0.8.117 — Achievement Evidence Difference Projection.
 //
@@ -196,7 +196,7 @@ function run() {
 
         // Target: the reference asserted once. Source: the identical fact
         // asserted TWICE — a legitimately retained duplicate, per
-        // application/PublicationReferenceRecord.js's own "NEVER
+        // application/publication/PublicationReferenceRecord.js's own "NEVER
         // DEDUPLICATED" header.
         let target = referenceUseCase.execute(base, { sourcePublicationIdentity: identityB, referencedPublicationIdentity: identityA, createdAt });
         let source = referenceUseCase.execute(target, { sourcePublicationIdentity: identityB, referencedPublicationIdentity: identityA, createdAt });

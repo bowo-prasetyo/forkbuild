@@ -26,7 +26,7 @@
 //               gravity is winning, whether that's the descending half
 //               of a jump's own arc or the result of walking off an
 //               edge with no supporting surface below (see
-//               application/AvatarStepConstraint.js's own 0.3.4 header).
+//               application/avatar/AvatarStepConstraint.js's own 0.3.4 header).
 //
 // Never part of AvatarPresence, never signed, never broadcast — see
 // core/AvatarMovementSimulation.js's own header ("AvatarPresence Is The
@@ -47,7 +47,7 @@ export function isValidAvatarVerticalState(value) {
 
 // `grounded`/`verticalVelocity` — exactly the two fields
 // core/AvatarMovementSimulation.js's own result (and
-// application/AvatarMovementController.js's own between-tick
+// application/avatar/AvatarMovementController.js's own between-tick
 // bookkeeping) already carries. A non-finite `verticalVelocity` is
 // treated as `0` — a stationary vertical speed, never a thrown error or
 // a propagated NaN — matching the "degrade gracefully" posture every

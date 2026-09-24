@@ -1,6 +1,6 @@
 import { ref, onMounted, computed, inject } from 'vue';
 import { useRoute } from 'vue-router';
-import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';
+import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
 import PublicationCatalog from '../components/PublicationCatalog.js';
 import ForkTree from '../components/ForkTree.js';
 import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
@@ -15,7 +15,7 @@ import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../../c
 import {
     derivePublicationAuthorNameIdentityConvergence,
     describePublicationAuthorNameIdentityConvergence
-} from '../../application/PublicationAuthorNameIdentityConvergence.js';
+} from '../../application/publication/PublicationAuthorNameIdentityConvergence.js';
 
 // As of 0.2.31, the paginated "Publications" listing above is
 // ui/components/PublicationCatalog.js scoped to this author — the

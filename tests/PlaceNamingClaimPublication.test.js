@@ -4,12 +4,12 @@ import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import {
     buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag
 } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { NostrPlaceNamingDiscoveryPublisher } from '../application/NostrPlaceNamingDiscoveryPublisher.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
+import { NostrPlaceNamingDiscoveryPublisher } from '../application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -248,7 +248,7 @@ async function runTests() {
     // persistence remains owned entirely by the existing claim use case.
     // ===============================================================
     {
-        const publisherSource = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
+        const publisherSource = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'));
         assert(!/LocalPlaceNamingClaimStore/.test(publisherSource),
             'E1. The publisher never imports LocalPlaceNamingClaimStore — it has no access to local persistence at all, structurally.');
 
@@ -341,11 +341,11 @@ async function runTests() {
     // Discovery.
     // ===============================================================
     {
-        const sourceSource = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoverySource.js'));
+        const sourceSource = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoverySource.js'));
         assert(!/NostrPlaceNamingDiscoveryPublisher/.test(sourceSource),
             'H1. The discovery source never imports the publisher — Publish and Discover share only the passive wire contract, never a code dependency.');
 
-        const queryServiceSource = codeOnlyLines(await rawSource('application/PlaceNamingDiscoveryQueryService.js'));
+        const queryServiceSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingDiscoveryQueryService.js'));
         assert(!/NostrPlaceNamingDiscoveryPublisher/.test(queryServiceSource),
             'H2. The discovery aggregator never imports the publisher either.');
 
@@ -387,7 +387,7 @@ async function runTests() {
     // specifically an Announcement & Discovery -> Nostr capability.
     // ===============================================================
     {
-        const publisherSource = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
+        const publisherSource = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'));
         const FORBIDDEN_SUBSTRATES = ['Arweave', 'IPFS', 'Bitcoin', 'Base'];
         for (const substrate of FORBIDDEN_SUBSTRATES) {
             assert(!new RegExp(substrate, 'i').test(publisherSource), `I1. The publisher never references ${substrate} anywhere in its own code.`);
@@ -419,7 +419,7 @@ async function runTests() {
         assert(retracted === true && replica.store.has('world-8', claim.id) === false,
             'J3. retract() still works exactly as before — local-only behavior is completely unaffected by this milestone.');
 
-        const useCaseSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimUseCase.js'));
+        const useCaseSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js'));
         assert(!/NostrPlaceNamingDiscoveryPublisher/.test(useCaseSource),
             'J4. PlaceNamingClaimUseCase itself never imports or calls the new publisher — publication is never automatic, and local creation never depends on network capability.');
 

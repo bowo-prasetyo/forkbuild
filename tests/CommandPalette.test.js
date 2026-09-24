@@ -1,5 +1,5 @@
-import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
-import { EditorActionContext } from '../application/EditorActionContext.js';
+import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { EditorActionContext } from '../application/editor/EditorActionContext.js';
 
 // 0.1.50 — Command palette tests. The component (ui/components/
 // CommandPalette.js) is a thin visual layer; everything testable

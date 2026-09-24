@@ -3,18 +3,18 @@ import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource,
     materializedSnapshotWorldOrigin
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeWorldFromDiscoveryRegistry } from '../application/WorldDiscoveryRegistryProjection.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 
 // 0.9.163 — Snapshot World Origin Collision Fix.
 //
 // 0.9.162's own Convergence Audit (Section B) proved a genuine, narrow
-// defect: `application/MaterializedSnapshotWorldDiscoveryBridge.js`'s own
+// defect: `application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js`'s own
 // `materializedSnapshotWorldOrigin(contentHash)` (0.9.160) derived a
 // registered Snapshot's registry slot from `contentHash` ALONE. Two
 // DIFFERENT Publications whose Snapshot bytes merely happened to hash
@@ -298,11 +298,11 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const { readFile } = await import('node:fs/promises');
-        const bridgeSource = await readFile(new URL('../application/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
+        const bridgeSource = await readFile(new URL('../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
         const codeOnly = bridgeSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/dedup|reconcil|merge|trust|ranking/i.test(codeOnly), '1. no deduplication/reconciliation/merging/trust/ranking vocabulary was introduced into the bridge\'s own executable code');
 
-        for (const relativePath of ['../core/WorldDiscoverySourceAssembly.js', '../application/WorldDiscoverySourceRegistry.js', '../core/WorldEncounter.js']) {
+        for (const relativePath of ['../core/WorldDiscoverySourceAssembly.js', '../application/discovery/WorldDiscoverySourceRegistry.js', '../core/WorldEncounter.js']) {
             const source = await readFile(new URL(relativePath, import.meta.url), 'utf8');
             const untouchedCodeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
             assert(!/snapshot:/.test(untouchedCodeOnly), `2. ${relativePath} contains no Snapshot-specific origin vocabulary of its own — the fix lives entirely inside the bridge (failed for ${relativePath})`);

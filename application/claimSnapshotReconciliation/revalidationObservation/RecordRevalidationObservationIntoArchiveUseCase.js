@@ -1,5 +1,5 @@
-import { PublicationObservationArchive } from '../../PublicationObservationArchive.js';
-import { PublicationObservationArchiveProvenanceOrigin, isValidPublicationObservationArchiveProvenanceOrigin } from '../../PublicationObservationArchiveProvenance.js';
+import { PublicationObservationArchive } from '../../publication/observationArchive/PublicationObservationArchive.js';
+import { PublicationObservationArchiveProvenanceOrigin, isValidPublicationObservationArchiveProvenanceOrigin } from '../../publication/observationArchive/PublicationObservationArchiveProvenance.js';
 
 // 0.8.167 — Durable Revalidation Observation History Archive Integration:
 // the recording boundary, now writing to a durable archive.
@@ -52,7 +52,7 @@ import { PublicationObservationArchiveProvenanceOrigin, isValidPublicationObserv
 // (0.8.160), or any other module in the revalidation family to re-derive,
 // verify, or second-guess the observation record a caller hands it — it
 // trusts the record's own `observed === true` exactly as far as
-// `application/PublicationObservationArchive.js`'s own
+// `application/publication/observationArchive/PublicationObservationArchive.js`'s own
 // `appendRevalidationObservationRecord()` already trusts it, and no
 // further. This class never deduplicates two observations naming the same
 // decision or plan, never computes or reads any "current"/"resolved"/

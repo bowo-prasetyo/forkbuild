@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { SnapshotCandidateDiscoveryQueryService } from '../application/SnapshotCandidateDiscoveryQueryService.js';
-import { SnapshotCandidateDiscoveryOutcome } from '../application/SnapshotCandidateDiscoveryOutcome.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { SnapshotCandidateDiscoveryQueryService } from '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
+import { SnapshotCandidateDiscoveryOutcome } from '../application/snapshot/SnapshotCandidateDiscoveryOutcome.js';
 import {
     executeDiscoverSnapshotCandidatesCommand,
     executeDiscoverSnapshotCandidatesCommandWithOutcome
-} from '../application/DiscoverSnapshotCandidatesCommand.js';
+} from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
@@ -186,18 +186,18 @@ async function runTests() {
     // Section C — production boundary: nothing behavioral changed.
     // ---------------------------------------------------------------
     {
-        const nostrSource = await codeOnlySource('application/NostrSnapshotDiscoveryQueryService.js');
+        const nostrSource = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         assert(/async search\(discoveryTag\) \{/.test(nostrSource), '12. search() still exists, same signature');
         assert(/return \[\];/.test(nostrSource), '13. search()\'s own catch/non-array branches still degrade to []');
         assert(/async searchWithOutcome\(discoveryTag\) \{/.test(nostrSource), '14. searchWithOutcome() exists as a documented sibling method');
 
-        const compositeSource = await codeOnlySource('application/SnapshotCandidateDiscoveryQueryService.js');
+        const compositeSource = await codeOnlySource('application/snapshot/SnapshotCandidateDiscoveryQueryService.js');
         assert(/async search\(discoveryTag\) \{/.test(compositeSource), '15. the composite\'s own search() still exists, same signature');
         assert(/async searchWithOutcome\(discoveryTag\) \{/.test(compositeSource), '16. the composite\'s own searchWithOutcome() exists as a documented sibling method');
 
         // The original command export is untouched, and the new one is a
         // pure sibling forwarding call.
-        const commandSource = await codeOnlySource('application/DiscoverSnapshotCandidatesCommand.js');
+        const commandSource = await codeOnlySource('application/snapshot/DiscoverSnapshotCandidatesCommand.js');
         assert(/return discoveryQueryService\.search\(discoveryTag\);/.test(commandSource),
             '17. executeDiscoverSnapshotCandidatesCommand() still forwards to search() verbatim, unmodified');
         assert(/return discoveryQueryService\.searchWithOutcome\(discoveryTag\);/.test(commandSource),
@@ -205,9 +205,9 @@ async function runTests() {
 
         // The walking-triggered background monitor's own file is entirely
         // untouched — this milestone never modifies it.
-        const monitorSource = await readSource('application/WorldSnapshotDiscoveryMonitor.js');
+        const monitorSource = await readSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js');
         assert(!/searchWithOutcome|SnapshotCandidateDiscoveryOutcome|WithOutcomeCommand/.test(monitorSource),
-            '19. application/WorldSnapshotDiscoveryMonitor.js has no idea this milestone\'s vocabulary exists — background discovery is untouched');
+            '19. application/snapshot/WorldSnapshotDiscoveryMonitor.js has no idea this milestone\'s vocabulary exists — background discovery is untouched');
 
         // The legacy command still behaves identically end to end.
         const legacyResult = await executeDiscoverSnapshotCandidatesCommand({
@@ -341,7 +341,7 @@ async function runTests() {
         // 0.9.588's own Section E already established, live, that
         // OwnPublicationPanel.js is the ONLY UI surface consuming
         // NostrSnapshotDiscoveryQueryService's own degrade-to-[] path,
-        // and that application/StructureDocumentResolver.js's own
+        // and that application/editor/StructureDocumentResolver.js's own
         // identical mechanism (I3b) has no consuming UI overclaim at all
         // (renderer/WorldRenderer.js asserts nothing about why a
         // placement is absent). This section reconfirms, live, that no

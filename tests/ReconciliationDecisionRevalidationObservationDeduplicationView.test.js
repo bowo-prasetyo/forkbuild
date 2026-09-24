@@ -264,7 +264,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication } = await import('../application/claimSnapshotReconciliation/revalidationObservation/DeduplicationView.js');
-        const { PublicationObservationArchive } = await import('../application/PublicationObservationArchive.js');
+        const { PublicationObservationArchive } = await import('../application/publication/observationArchive/PublicationObservationArchive.js');
 
         const emptyReconstructed = reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplication(PublicationObservationArchive.empty());
         assert(emptyReconstructed.observationCount === 0 && emptyReconstructed.distinctObservationCount === 0 && emptyReconstructed.observations.length === 0, '34. reconstruct() over a genuine, empty archive returns the all-zero result');

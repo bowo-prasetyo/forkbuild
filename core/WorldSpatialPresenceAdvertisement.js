@@ -3,11 +3,11 @@ import { isValidWorldSpatialSelectionPayload } from './WorldSpatialSelection.js'
 
 // 0.3.0 — Collaborative Spatial Presence.
 //
-// The wire shape of application/WorldSpatialPresenceUseCase.js's own
+// The wire shape of application/presence/WorldSpatialPresenceUseCase.js's own
 // protocol (`forkbuild:world-spatial-presence`) — a THIRD, separate
 // protocol from `forkbuild:world-sync` (application/
 // WorldCommandPropagationUseCase.js, durable World mutation) and
-// `forkbuild:world-presence` (application/WorldPresenceUseCase.js, coarse
+// `forkbuild:world-presence` (application/presence/WorldPresenceUseCase.js, coarse
 // "is this identity here at all" presence, 0.2.98). See
 // docs/Principles.md, "Collaborative Spatial Presence Is Ephemeral
 // Observation, Never World Content" (0.3.0):
@@ -47,7 +47,7 @@ import { isValidWorldSpatialSelectionPayload } from './WorldSpatialSelection.js'
 // `position` is `{ x, z }` only — never `y`. World View's terrain height
 // at (x, z) is already a purely rendering-time fact
 // (renderer/TerrainHeightField.js via Renderer#terrainHeightAt(), see
-// application/RenderWorldViewUseCase.js's own `withGroundElevation()`
+// application/world/RenderWorldViewUseCase.js's own `withGroundElevation()`
 // for the avatar-rendering precedent this reuses) — broadcasting a
 // sender's own local elevation reading would be redundant at best and a
 // second, competing source of "where is the ground" at worst. A

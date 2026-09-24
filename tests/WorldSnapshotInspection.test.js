@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
-import { describeWorldSnapshotInspection } from '../application/WorldSnapshotInspection.js';
-import { WorldEncounterPresentationSourceFamily } from '../application/WorldEncounterPresentation.js';
+import { describeWorldSnapshotInspection } from '../application/snapshot/WorldSnapshotInspection.js';
+import { WorldEncounterPresentationSourceFamily } from '../application/worldEncounter/WorldEncounterPresentation.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.177 — World Snapshot Inspection Detail.
 //
 // Unit coverage for the one new pure module this milestone introduces:
-// `application/WorldSnapshotInspection.js`. See that file's own header for
+// `application/snapshot/WorldSnapshotInspection.js`. See that file's own header for
 // the full rationale and, just as importantly, its own audit of which
 // Snapshot facts are honestly reachable at this boundary today — and which
 // are deliberately NOT (a publisher's claimed position, and a Snapshot's
@@ -295,7 +295,7 @@ function run() {
     // discovery/retrieval/hashing/network calls, no rank/trust vocabulary.
     // ---------------------------------------------------------------
     return (async () => {
-        const source = await readFile(new URL('../application/WorldSnapshotInspection.js', import.meta.url), 'utf8');
+        const source = await readFile(new URL('../application/snapshot/WorldSnapshotInspection.js', import.meta.url), 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(!/fetch\(|localStorage|WebRTC|WorldDiscoverySourceRegistry|registry\.|deriveWorldEncounters\(|resolveSnapshotWorldPlacement\(|resolveSnapshotWorldPositionClaim\(|registerMaterializedSnapshotWorldSource\(/.test(codeOnly),
@@ -308,7 +308,7 @@ function run() {
             '4. no Nostr/Arweave-specific vocabulary — this file operates entirely on already-established World facts, reached only through their existing origin-string encoding');
 
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-        assert(canvasSource.includes("import { describeWorldSnapshotInspection } from '../../application/WorldSnapshotInspection.js';"),
+        assert(canvasSource.includes("import { describeWorldSnapshotInspection } from '../../application/snapshot/WorldSnapshotInspection.js';"),
             '5. WorldEncounterCanvas.js wires the new pure module in as a plain import, exactly like every other application/ seam it depends on');
 
         console.log('✓ Section K: structural sweep — no I/O, no registry access, no re-invocation of upstream resolution/placement/registration, no hashing, and no rank/trust vocabulary');

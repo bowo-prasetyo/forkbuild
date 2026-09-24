@@ -1,16 +1,16 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { AddPublicationAnchorUseCase } from '../application/AddPublicationAnchorUseCase.js';
-import { CreatePublicationAnchorUseCase } from '../application/CreatePublicationAnchorUseCase.js';
-import { CreatePublicationEvidenceCoordinatorUseCase } from '../application/CreatePublicationEvidenceCoordinatorUseCase.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { createVerificationObservation } from '../application/PublicationAnchorVerificationObservation.js';
-import { derivePublicationEvidenceConvergence } from '../application/PublicationEvidenceConvergence.js';
-import { publicationAnchorDetailView, describeAnchorBinding } from '../application/PublicationAnchorDetailView.js';
-import { ExternalAnchorEvidenceViewRegistry } from '../application/ExternalAnchorEvidenceViewRegistry.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { AddPublicationAnchorUseCase } from '../application/anchoring/AddPublicationAnchorUseCase.js';
+import { CreatePublicationAnchorUseCase } from '../application/anchoring/CreatePublicationAnchorUseCase.js';
+import { CreatePublicationEvidenceCoordinatorUseCase } from '../application/publication/evidence/CreatePublicationEvidenceCoordinatorUseCase.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { createVerificationObservation } from '../application/anchoring/PublicationAnchorVerificationObservation.js';
+import { derivePublicationEvidenceConvergence } from '../application/publication/evidence/PublicationEvidenceConvergence.js';
+import { publicationAnchorDetailView, describeAnchorBinding } from '../application/anchoring/PublicationAnchorDetailView.js';
+import { ExternalAnchorEvidenceViewRegistry } from '../application/anchoring/ExternalAnchorEvidenceViewRegistry.js';
 import { BitcoinAnchorEvidenceView } from '../anchoring/BitcoinAnchorEvidenceView.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -35,7 +35,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 //   Section D: FLAGSHIP — Alice creates and signs a PublicationAnchor;
 //              Bob receives it through peer exchange (application/
 //              AddPublicationAnchorUseCase.js, the same boundary
-//              application/PublicationAnchorPeerExchange.js's own
+//              application/anchoring/PublicationAnchorPeerExchange.js's own
 //              ingestion uses) and discovers it. Bob opens "Inspect
 //              Evidence" — proven NOT to call ExternalAnchorVerifier,
 //              not to touch the network, not to modify the catalog, not
@@ -229,7 +229,7 @@ async function run() {
         // Bob's own, completely separate replica. The anchor "arrives
         // through peer exchange" the identical boundary application/
         // PublicationAnchorPeerExchange.js's own ingestion already uses —
-        // application/AddPublicationAnchorUseCase.js, fed the plain wire
+        // application/anchoring/AddPublicationAnchorUseCase.js, fed the plain wire
         // envelope Alice's anchor serializes to.
         const bobAnchorCatalog = new LocalPublicationAnchorCatalog(new InMemoryStorageProvider());
         const { anchor: bobAnchor } = new AddPublicationAnchorUseCase(bobAnchorCatalog).execute(aliceAnchor.toJSON());

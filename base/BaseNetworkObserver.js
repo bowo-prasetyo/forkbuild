@@ -1,6 +1,6 @@
-import { BaseNetworkObservationState } from '../application/BaseNetworkObservationState.js';
-import { BaseAccountObservation } from '../application/BaseAccountObservation.js';
-import { baseNetworkForBaseChainId } from '../application/BaseChainId.js';
+import { BaseNetworkObservationState } from '../application/anchoring/base/BaseNetworkObservationState.js';
+import { BaseAccountObservation } from '../application/anchoring/base/BaseAccountObservation.js';
+import { baseNetworkForBaseChainId } from '../application/anchoring/base/BaseChainId.js';
 
 const ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
 
@@ -51,7 +51,7 @@ const ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
 // balance from the wrong chain would silently attach a real number to a
 // network fact nobody asked to observe. `observeAccount()` never calls
 // `rpcSource.fetchBalance()` unless `rpcSource.fetchChainId()` already
-// reported a chain id `application/BaseChainId.js` recognizes as Base — a
+// reported a chain id `application/anchoring/base/BaseChainId.js` recognizes as Base — a
 // CHAIN_MISMATCH observation carries the actual chain id observed, but
 // never a balance, and never a `network` label. See application/
 // BaseNetworkObservationState.js's own header.
@@ -81,7 +81,7 @@ export class BaseNetworkObserver {
     }
 
     // Resolves to exactly one, frozen BaseAccountObservation
-    // (application/BaseAccountObservation.js):
+    // (application/anchoring/base/BaseAccountObservation.js):
     //
     //   { state: OBSERVED, address, network, chainId, nativeBalanceWei,
     //     reason: null, observedAt }

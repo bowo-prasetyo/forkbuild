@@ -3,19 +3,19 @@ import {
     describeDecentralizedWorldEncounterLeadSelectionOutcome,
     describeDecentralizedWorldEncounterLeadSelectionOutcomeFromRegistry,
     DecentralizedWorldEncounterLeadSelectionOutcomeStatus
-} from '../application/DecentralizedWorldEncounterLeadSelection.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterLeadSelection.js';
 import {
     resolveDecentralizedWorldEncounterLead,
     DecentralizedWorldEncounterLeadResolutionStatus
-} from '../application/DecentralizedWorldEncounterLeadResolution.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
-import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 
 // 0.9.40 — Decentralized Lead Resolution Integration.
 // See docs/Roadmap.md, "0.9.40 — Decentralized Lead Resolution
 // Integration."
 //
-// `application/DecentralizedWorldEncounterLeadSelection.js` is a thin
+// `application/worldEncounter/DecentralizedWorldEncounterLeadSelection.js` is a thin
 // renaming seam over 0.9.28's own already-authoritative
 // `resolveDecentralizedWorldEncounterLead()`/
 // `resolveDecentralizedWorldEncounterLeadFromRegistry()` — this file pins
@@ -189,12 +189,12 @@ const publicationMaterial = Object.freeze({ kind: 'PUBLICATION', objectId: 'pub-
 // 6. Architectural regression: forbidden imports and vocabulary.
 // ---------------------------------------------------------------------
 {
-    const path = '../application/DecentralizedWorldEncounterLeadSelection.js';
+    const path = '../application/worldEncounter/DecentralizedWorldEncounterLeadSelection.js';
     const sourceUrl = new URL(path, import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-    assert(!codeOnly.includes("from '../core/"), '19. never imports a core/ module directly');
+    assert(!codeOnly.includes("from '../../core/"), '19. never imports a core/ module directly');
     assert(!codeOnly.includes('DecentralizedWorldDiscoveryLeadRegistry.js'), '20. never imports the lead registry class directly — only reads an already-supplied registry\'s listLeads() via 0.9.28\'s own wrapper');
     assert(!codeOnly.includes('DecentralizedWorldDiscoveryQuery'), '21. never imports a discovery query module of any kind');
     assert(!/fetch\(/.test(codeOnly), '22. never calls fetch(...)');

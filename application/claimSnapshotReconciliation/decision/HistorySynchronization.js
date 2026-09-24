@@ -18,7 +18,7 @@ import {
 // purely as a read: it never moves anything itself. Neither file was ever
 // asked to work together in one call. This file is that missing connective
 // layer, one level above both — the identical composition
-// `application/PublisherLeaderboardClaimHistorySynchronization.js` (0.8.131)
+// `application/leaderboard/PublisherLeaderboardClaimHistorySynchronization.js` (0.8.131)
 // already proved one subject over, held here again over decision histories
 // instead of claim histories:
 //
@@ -69,7 +69,7 @@ import {
 // `target` alone. It never also computes or returns the reverse; a caller
 // wanting two replicas fully caught up calls this file's own functions
 // twice, with the two histories swapped, exactly as
-// `application/PublisherLeaderboardClaimHistorySynchronization.js`'s own
+// `application/leaderboard/PublisherLeaderboardClaimHistorySynchronization.js`'s own
 // header already documents one subject over ("a caller wanting two
 // replicas to fully converge runs the identical exchange in both
 // directions"). See this file's own FLAGSHIP test, below, for exactly

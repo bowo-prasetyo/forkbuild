@@ -4,17 +4,17 @@ import { readdir } from 'node:fs/promises';
 import { DiscoveryProvider } from '../discovery/DiscoveryProvider.js';
 import { ContentStore } from '../content/ContentStore.js';
 import { ProofVerifier } from '../anchoring/ProofVerifier.js';
-import { DecentralizedDiscoveryQueryService } from '../application/DecentralizedWorldDiscoveryQuery.js';
+import { DecentralizedDiscoveryQueryService } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
 
-import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQueryService.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/ArweaveWorldEncounterMaterialResolver.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
 
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
@@ -23,10 +23,10 @@ import { IpfsRemotePinningContentStore } from '../content/IpfsRemotePinningConte
 
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 
-import { ExternalProofVerifierRegistry } from '../application/ExternalProofVerifierRegistry.js';
-import { ExternalAnchorEvidenceViewRegistry } from '../application/ExternalAnchorEvidenceViewRegistry.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { SnapshotPlacementViewRegistry } from '../application/SnapshotPlacementViewRegistry.js';
+import { ExternalProofVerifierRegistry } from '../application/anchoring/ExternalProofVerifierRegistry.js';
+import { ExternalAnchorEvidenceViewRegistry } from '../application/anchoring/ExternalAnchorEvidenceViewRegistry.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { SnapshotPlacementViewRegistry } from '../application/snapshot/placement/SnapshotPlacementViewRegistry.js';
 
 // 0.9.292 — Decentralized Substrate Capability Matrix Audit.
 //
@@ -212,13 +212,13 @@ async function run() {
         // LOCAL/catalog discovery — LocalDiscoveryProvider and
         // PublicationCatalogDiscoveryProvider are its only two
         // implementations, and neither is substrate-specific.
-        // application/DecentralizedWorldDiscoveryQuery.js's own
+        // application/discovery/DecentralizedWorldDiscoveryQuery.js's own
         // DecentralizedDiscoveryQueryService answers a different question
         // — "search an external substrate, by discoveryTag, for a rumor of
         // where a Publication's material claims to live" — the shape a
         // Nostr relay or an Arweave gateway actually satisfies.
         assert(typeof DiscoveryProvider === 'function', 'A4. discovery/DiscoveryProvider.js — the LOCAL/catalog discovery shape');
-        assert(typeof DecentralizedDiscoveryQueryService === 'function', 'A5. application/DecentralizedWorldDiscoveryQuery.js — the SUBSTRATE announcement/query shape');
+        assert(typeof DecentralizedDiscoveryQueryService === 'function', 'A5. application/discovery/DecentralizedWorldDiscoveryQuery.js — the SUBSTRATE announcement/query shape');
 
         const localMethods = ['list', 'findById', 'findByAuthor', 'findByParentId', 'findByDocumentId'];
         for (const m of localMethods) {
@@ -229,10 +229,10 @@ async function run() {
         assert(!('search' in DiscoveryProvider.prototype), 'A9. DiscoveryProvider never carries DecentralizedDiscoveryQueryService\'s own search()-shaped vocabulary — confirmed the other direction too');
 
         // A THIRD shape: NostrSnapshotDiscoveryQueryService is real,
-        // production, and used (application/DecentralizedSnapshotResolver.js
+        // production, and used (application/snapshot/DecentralizedSnapshotResolver.js
         // calls it), yet extends neither of the above — proven from its own
         // source, never from a class-hierarchy guess.
-        const nostrSnapshotSource = await source('application/NostrSnapshotDiscoveryQueryService.js');
+        const nostrSnapshotSource = await source('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         assert(/class NostrSnapshotDiscoveryQueryService\s*\{/.test(nostrSnapshotSource), 'A10. NostrSnapshotDiscoveryQueryService extends NOTHING — a real, third, independently-typed Discovery shape, duck-compatible by search()/origin alone, never unified with the other two');
         assert(!(new NostrSnapshotDiscoveryQueryService({ queryImpl: neverCalled }) instanceof DecentralizedDiscoveryQueryService), 'A11. confirmed at the object level, not just the source text: a real instance is NOT an instanceof DecentralizedDiscoveryQueryService');
 
@@ -306,7 +306,7 @@ async function run() {
 
         const arweaveDiscovery = new ArweaveGraphqlDiscoveryQueryService({ fetchImpl: neverCalled });
         assert(arweaveDiscovery instanceof DecentralizedDiscoveryQueryService, 'B18. Arweave/Discovery = ◐ (read half) — ArweaveGraphqlDiscoveryQueryService is a real DecentralizedDiscoveryQueryService');
-        const arweaveDiscoverySource = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const arweaveDiscoverySource = await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         assert(/this class never writes a[\s\S]{0,40}transaction or a[\s\S]{0,10}tag/i.test(arweaveDiscoverySource), 'B19. the class\'s own header states, in its own words, that it never writes — never inferred by this audit');
         let arweaveDiscoveryPublisherCount = 0;
         for (const file of allProductionFiles) {
@@ -344,15 +344,15 @@ async function run() {
     // ===============================================================
     {
         const SEMANTICS = Object.freeze({
-            'Nostr → Discovery (Publication)': 'application/NostrDiscoveryQueryService.js + application/NostrPublicationDiscoveryPublisher.js',
-            'Nostr → Discovery (Snapshot)': 'application/NostrSnapshotDiscoveryQueryService.js + application/NostrSnapshotDiscoveryPublisher.js',
+            'Nostr → Discovery (Publication)': 'application/nostr/NostrDiscoveryQueryService.js + application/nostr/NostrPublicationDiscoveryPublisher.js',
+            'Nostr → Discovery (Snapshot)': 'application/nostr/NostrSnapshotDiscoveryQueryService.js + application/nostr/NostrSnapshotDiscoveryPublisher.js',
             'IPFS → Content': 'content/IpfsContentStore.js, content/IpfsGatewayContentStore.js, content/IpfsRemotePinningContentStore.js',
-            'Bitcoin → Proof': 'anchoring/BitcoinOpReturnProofVerifier.js, registered through application/ExternalProofVerifierRegistry.js',
+            'Bitcoin → Proof': 'anchoring/BitcoinOpReturnProofVerifier.js, registered through application/anchoring/ExternalProofVerifierRegistry.js',
             'Base → Proof (create/observe only)': 'base/BasePublicationTransactionPlanner.js, base/BaseTransactionBroadcaster.js, base/BaseTransactionInclusionObserver.js — no verify-side class',
             'Arweave → Content (Snapshot)': 'content/ArweaveContentStore.js',
-            'Arweave → Content (Publication, write-only)': 'application/ArweavePublicationMaterialUploader.js',
-            'Arweave → Content (World Encounter, read-only)': 'application/ArweaveWorldEncounterMaterialResolver.js',
-            'Arweave → Discovery (read-only)': 'application/ArweaveGraphqlDiscoveryQueryService.js — no write-side class'
+            'Arweave → Content (Publication, write-only)': 'application/arweave/ArweavePublicationMaterialUploader.js',
+            'Arweave → Content (World Encounter, read-only)': 'application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js',
+            'Arweave → Discovery (read-only)': 'application/arweave/ArweaveGraphqlDiscoveryQueryService.js — no write-side class'
         });
         assert(Object.keys(SEMANTICS).length === 9, 'C1. nine named seams — matching every non-empty/partial cell Section B found, no more, no fewer');
         for (const [label, seam] of Object.entries(SEMANTICS)) {
@@ -368,11 +368,11 @@ async function run() {
     // by re-describing what they say about themselves.
     // ===============================================================
     {
-        const distributionSource = await source('application/PublicationDistributionRuntimeComposition.js');
+        const distributionSource = await source('application/publication/distribution/PublicationDistributionRuntimeComposition.js');
         assert(distributionSource.includes("import { ArweavePublicationMaterialUploader }"), 'D1. the one real, shipped Publication distribution pipeline composes a CONTENT provider (Arweave)…');
         assert(distributionSource.includes("import { NostrPublicationDiscoveryPublisher }"), 'D2. …and a DISCOVERY provider (Nostr) — independently, in the same file');
-        const uploaderSource = await source('application/ArweavePublicationMaterialUploader.js');
-        const publisherSource = await source('application/NostrPublicationDiscoveryPublisher.js');
+        const uploaderSource = await source('application/arweave/ArweavePublicationMaterialUploader.js');
+        const publisherSource = await source('application/nostr/NostrPublicationDiscoveryPublisher.js');
         const importsClass = (text, className) => new RegExp(`^import\\b[^\\n]*\\b${className}\\b`, 'm').test(text);
         assert(!importsClass(uploaderSource, 'NostrPublicationDiscoveryPublisher'), 'D3. the CONTENT collaborator never IMPORTS the DISCOVERY collaborator (a header may still discuss it in prose, as this codebase\'s own convention already does — see the many prose mentions in the file this D4 check reads)');
         assert(!importsClass(publisherSource, 'ArweavePublicationMaterialUploader'), 'D4. …nor the other way around — role independence is a real absence of an import statement, not an absence of discussion');
@@ -381,7 +381,7 @@ async function run() {
         // pluggable providers side by side for World Encounter material —
         // a live reproduction, not merely an import check.
         const { composeDecentralizedWorldEncounterMaterialDiscoveryServices } =
-            await import('../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
+            await import('../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         const nostrCalls = [];
         const arweaveCalls = [];
         const services = composeDecentralizedWorldEncounterMaterialDiscoveryServices({
@@ -405,9 +405,9 @@ async function run() {
     {
         const arweaveNamedFiles = [
             'content/ArweaveContentStore.js',
-            'application/ArweavePublicationMaterialUploader.js',
-            'application/ArweaveWorldEncounterMaterialResolver.js',
-            'application/ArweaveGraphqlDiscoveryQueryService.js'
+            'application/arweave/ArweavePublicationMaterialUploader.js',
+            'application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js',
+            'application/arweave/ArweaveGraphqlDiscoveryQueryService.js'
         ];
         const texts = {};
         for (const f of arweaveNamedFiles) texts[f] = await source(f);
@@ -460,8 +460,8 @@ async function run() {
 
         // Discovery has no EQUIVALENT registry — checked precisely, not by
         // filename alone. Two Discovery-adjacent *Registry.js files do
-        // exist (application/DecentralizedWorldDiscoveryLeadRegistry.js,
-        // application/WorldDiscoverySourceRegistry.js) and this audit reads
+        // exist (application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js,
+        // application/discovery/WorldDiscoverySourceRegistry.js) and this audit reads
         // both rather than pretending a naming sweep alone settles it: both
         // are `set*(record)`/`list*()` MEMBERSHIP stores for already-
         // produced data (a lead; a live peer-derived WorldDiscoverySource
@@ -470,8 +470,8 @@ async function run() {
         // and ExternalProofVerifierRegistry both do (F1-F4). Confirmed
         // directly: neither file defines a `register` method at all.
         const allProductionFiles = await repoWideProductionFiles();
-        const leadRegistrySource = await source('application/DecentralizedWorldDiscoveryLeadRegistry.js');
-        const sourceRegistrySource = await source('application/WorldDiscoverySourceRegistry.js');
+        const leadRegistrySource = await source('application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js');
+        const sourceRegistrySource = await source('application/discovery/WorldDiscoverySourceRegistry.js');
         assert(!/\bregister\s*\(/.test(leadRegistrySource), 'F6a. DecentralizedWorldDiscoveryLeadRegistry has no register() method — it is a lead-membership store, not a provider-plugin registry');
         assert(!/\bregister\s*\(/.test(sourceRegistrySource), 'F6b. WorldDiscoverySourceRegistry has no register() method either — a live peer-source membership store, same distinction');
 
@@ -493,7 +493,7 @@ async function run() {
             const codeOnly = text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
             if (branchPattern.test(codeOnly)) uiBranchCount += 1;
         }
-        assert(uiBranchCount === 0, 'F7. zero ui/ files contain an `=== "nostr"`/`"arweave"`/`"ipfs"`/`"bitcoin"`/`"base"`-shaped substrate branch, outside comments — the ONE place this codebase discusses that exact anti-pattern (application/PublicationSnapshotPlacementDetailView.js\'s own header) is explaining why it built SnapshotPlacementViewRegistry.js instead');
+        assert(uiBranchCount === 0, 'F7. zero ui/ files contain an `=== "nostr"`/`"arweave"`/`"ipfs"`/`"bitcoin"`/`"base"`-shaped substrate branch, outside comments — the ONE place this codebase discusses that exact anti-pattern (application/snapshot/placement/PublicationSnapshotPlacementDetailView.js\'s own header) is explaining why it built SnapshotPlacementViewRegistry.js instead');
 
         console.log('✓ Section F: Configuration authority already lives in a keyed registry for Content (×2) and Proof (×2) — real, shipped, proven by round-trip — but has no equivalent for Discovery at all today, and ui/ itself never routes by substrate name anywhere in the current tree. A future Role Provider Configuration belongs beside these four registries, never inside ui/');
     }
@@ -512,7 +512,7 @@ async function run() {
     // RoleProviderPreference by role and hands one back, but still never
     // resolves, validates capability for, or falls back on one (see that
     // file's own header). 0.9.295 — Role-Aware Provider Resolution
-    // Boundary — added a fourth, application/RoleAwareProviderResolver.js:
+    // Boundary — added a fourth, application/settings/RoleAwareProviderResolver.js:
     // it reads a preference back out of 0.9.294's own store and looks its
     // providerKey up in a real per-role registry (application/
     // SnapshotPlacementStoreRegistry.js for Content, application/
@@ -523,7 +523,7 @@ async function run() {
     // (see that file's own header). 0.9.296 — Role Provider Resolution
     // Integration Readiness Audit — added no new file to this set (it is
     // test-only). 0.9.297 — Role Provider Preference Application Boundary
-    // — added a fifth, application/ResolvePreferredRoleProviderUseCase.js:
+    // — added a fifth, application/settings/ResolvePreferredRoleProviderUseCase.js:
     // the single application-level seam a future workflow calls instead of
     // importing the preference store or the resolver directly; it reads a
     // preference straight from 0.9.294's own store and delegates the
@@ -531,7 +531,7 @@ async function run() {
     // nothing, still never falls back, and is still not imported by any
     // composition root (see that file's own header). 0.9.299 — Content
     // Creation Provider Preference Integration — added a sixth and
-    // seventh file, application/PreferredSnapshotPlacementCreationCoordinator.js
+    // seventh file, application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js
     // and its own composition root, application/
     // CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js, AND —
     // for the first time — a real composition root, ui/main.js, which
@@ -570,16 +570,16 @@ async function run() {
             'core/RoleProviderRole.js',
             'core/RoleProviderPreference.js',
             'storage/RoleProviderPreferenceStore.js',
-            'application/RoleAwareProviderResolver.js',
-            'application/ResolvePreferredRoleProviderUseCase.js',
-            'application/PreferredSnapshotPlacementCreationCoordinator.js',
-            'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
+            'application/settings/RoleAwareProviderResolver.js',
+            'application/settings/ResolvePreferredRoleProviderUseCase.js',
+            'application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js',
+            'application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
             'ui/main.js',
-            'application/SnapshotPlacementCreationView.js',
-            'application/SnapshotPlacementCreationUiState.js',
+            'application/snapshot/placement/SnapshotPlacementCreationView.js',
+            'application/snapshot/placement/SnapshotPlacementCreationUiState.js',
             'ui/views/DecentralizedPublicationsView.js',
-            'application/SetRoleProviderPreferenceUseCase.js',
-            'application/RoleProviderPreferenceSettingsView.js',
+            'application/settings/SetRoleProviderPreferenceUseCase.js',
+            'application/settings/RoleProviderPreferenceSettingsView.js',
             'ui/views/ContentProviderSettingsView.js',
             'ui/router/index.js'
         ]);
@@ -596,7 +596,7 @@ async function run() {
         for (const file of hitFiles) {
             assert(KNOWN_PREFERENCE_BOUNDARY_FILES.has(file), `G2. the only file(s) allowed to mention a provider preference are 0.9.293/0.9.294/0.9.295/0.9.297/0.9.299/0.9.301's own boundary/integration files — "${file}" is not one of them`);
         }
-        console.log('✓ Section G: as of 0.9.301, a provider-preference concept exists in exactly the eleven files those six milestones introduced or wired (core/RoleProviderRole.js, core/RoleProviderPreference.js, storage/RoleProviderPreferenceStore.js, application/RoleAwareProviderResolver.js, application/ResolvePreferredRoleProviderUseCase.js, application/PreferredSnapshotPlacementCreationCoordinator.js, application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js, ui/main.js, application/SnapshotPlacementCreationView.js, application/SnapshotPlacementCreationUiState.js, ui/views/DecentralizedPublicationsView.js) — a pure semantic boundary with a durable home, a real tested resolution path, one stable application seam, one real production Content creation integration, and now one real, user-reachable UI trigger; every other production file this audit already knew about remains exactly as free of the concept as it was at 0.9.292');
+        console.log('✓ Section G: as of 0.9.301, a provider-preference concept exists in exactly the eleven files those six milestones introduced or wired (core/RoleProviderRole.js, core/RoleProviderPreference.js, storage/RoleProviderPreferenceStore.js, application/settings/RoleAwareProviderResolver.js, application/settings/ResolvePreferredRoleProviderUseCase.js, application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js, application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js, ui/main.js, application/snapshot/placement/SnapshotPlacementCreationView.js, application/snapshot/placement/SnapshotPlacementCreationUiState.js, ui/views/DecentralizedPublicationsView.js) — a pure semantic boundary with a durable home, a real tested resolution path, one stable application seam, one real production Content creation integration, and now one real, user-reachable UI trigger; every other production file this audit already knew about remains exactly as free of the concept as it was at 0.9.292');
     }
 
     // ===============================================================
@@ -610,10 +610,10 @@ async function run() {
             'content/ArweaveContentStore.js',
             'content/IpfsGatewayContentStore.js',
             'content/IpfsRemotePinningContentStore.js',
-            'application/ArweaveWorldEncounterMaterialResolver.js',
-            'application/ArweavePublicationMaterialUploader.js',
-            'application/NostrPublicationDiscoveryPublisher.js',
-            'application/NostrSnapshotDiscoveryPublisher.js',
+            'application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js',
+            'application/arweave/ArweavePublicationMaterialUploader.js',
+            'application/nostr/NostrPublicationDiscoveryPublisher.js',
+            'application/nostr/NostrSnapshotDiscoveryPublisher.js',
             'anchoring/BitcoinAnchorTransactionBroadcaster.js',
             'base/BaseTransactionBroadcaster.js'
         ];

@@ -1,4 +1,4 @@
-import { InputRouter } from '../../../application/InputRouter.js';
+import { InputRouter } from '../../../application/editor/InputRouter.js';
 
 const DRAG_THRESHOLD_PX = 6;
 

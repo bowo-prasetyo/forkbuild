@@ -3,18 +3,18 @@ import { fileURLToPath } from 'node:url';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { CreatePublicationAnchorUseCase } from '../application/CreatePublicationAnchorUseCase.js';
-import { publicationAnchorDetailView } from '../application/PublicationAnchorDetailView.js';
-import { ExternalAnchorEvidenceViewRegistry } from '../application/ExternalAnchorEvidenceViewRegistry.js';
-import { CreateExternalAnchorEvidenceViewRegistryUseCase } from '../application/CreateExternalAnchorEvidenceViewRegistryUseCase.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { CreatePublicationAnchorUseCase } from '../application/anchoring/CreatePublicationAnchorUseCase.js';
+import { publicationAnchorDetailView } from '../application/anchoring/PublicationAnchorDetailView.js';
+import { ExternalAnchorEvidenceViewRegistry } from '../application/anchoring/ExternalAnchorEvidenceViewRegistry.js';
+import { CreateExternalAnchorEvidenceViewRegistryUseCase } from '../application/anchoring/CreateExternalAnchorEvidenceViewRegistryUseCase.js';
 import { BaseAnchorEvidenceView } from '../anchoring/BaseAnchorEvidenceView.js';
-import { CreateBaseAnchorEvidenceViewUseCase } from '../application/CreateBaseAnchorEvidenceViewUseCase.js';
+import { CreateBaseAnchorEvidenceViewUseCase } from '../application/anchoring/base/CreateBaseAnchorEvidenceViewUseCase.js';
 import { BitcoinAnchorEvidenceView } from '../anchoring/BitcoinAnchorEvidenceView.js';
 import { ArweaveAnchorEvidenceView } from '../anchoring/ArweaveAnchorEvidenceView.js';
 import { BaseProofVerifier } from '../anchoring/BaseProofVerifier.js';
-import { encodeBasePublicationCommitment } from '../application/BasePublicationCommitmentEncoding.js';
+import { encodeBasePublicationCommitment } from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -203,7 +203,7 @@ async function run() {
         const mainPath = fileURLToPath(new URL('../ui/main.js', import.meta.url));
         const mainSrc = await readFile(mainPath, 'utf8');
 
-        assert(/import\s*\{\s*CreateBaseAnchorEvidenceViewUseCase\s*\}\s*from\s*['"]\.\.\/application\/CreateBaseAnchorEvidenceViewUseCase\.js['"]/.test(mainSrc),
+        assert(/import\s*\{\s*CreateBaseAnchorEvidenceViewUseCase\s*\}\s*from\s*['"]\.\.\/application\/anchoring\/base\/CreateBaseAnchorEvidenceViewUseCase\.js['"]/.test(mainSrc),
             '24. ui/main.js imports CreateBaseAnchorEvidenceViewUseCase');
         assert(/new CreateBaseAnchorEvidenceViewUseCase\(\)\.execute\(\)/.test(mainSrc),
             '25. ui/main.js constructs a real baseAnchorEvidenceView, the same bare no-options call its two siblings already use');

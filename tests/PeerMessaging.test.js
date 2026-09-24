@@ -2,7 +2,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import {
@@ -216,7 +216,7 @@ async function runTests() {
 
 // ---------------------------------------------------------------------
 // 5. Auto-detaches once the peer's lifecycle reaches CLOSED, mirroring
-//    application/ConnectedPeerRegistry.js's own auto-removal discipline
+//    application/peer/ConnectedPeerRegistry.js's own auto-removal discipline
 //    — no separate cleanup call required from whatever attached it.
 // ---------------------------------------------------------------------
 {

@@ -33,7 +33,7 @@
 // `movementSpeed`/`collisionRadius`/`movementDirections` (each resolved
 // fresh, statelessly, from a vehicle relationship alone),
 // `currentSpeed` is transient, tick-to-tick state — the direct
-// structural twin of `application/AvatarMovementController.js`'s own
+// structural twin of `application/avatar/AvatarMovementController.js`'s own
 // `_verticalVelocity`/`_grounded` bookkeeping (see that file's own
 // header: "this controller owns the only mutable state ... and feeds it
 // back in on the next call; this file never remembers anything itself").

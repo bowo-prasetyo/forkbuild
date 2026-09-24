@@ -2,14 +2,14 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
-import { ChatUseCase } from '../application/ChatUseCase.js';
-import { ChatOutbox } from '../application/ChatOutbox.js';
-import { ConversationStore, MAX_STORED_MESSAGES_PER_PEER } from '../application/ConversationStore.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { PeerReconnectionUseCase } from '../application/peer/PeerReconnectionUseCase.js';
+import { ChatUseCase } from '../application/chat/ChatUseCase.js';
+import { ChatOutbox } from '../application/chat/ChatOutbox.js';
+import { ConversationStore, MAX_STORED_MESSAGES_PER_PEER } from '../application/chat/ConversationStore.js';
 import { ConversationEntry, ChatMessageDirection, isValidChatMessageDirection } from '../core/ConversationEntry.js';
 import { toChatMessage, deriveConversationId } from '../core/ChatMessage.js';
 import { ChatDeliveryState } from '../core/ChatDeliveryState.js';
@@ -17,10 +17,10 @@ import { ChatDeliveryState } from '../core/ChatDeliveryState.js';
 // 0.2.69 — Reliable Offline Conversations.
 //
 // "What did Alice and Bob actually talk about?" — 0.2.61 deliberately
-// deferred that question (application/LiveConversation.js's own
+// deferred that question (application/chat/LiveConversation.js's own
 // header, "0.2.61 Ships Live Chat, Not A Message Database"). This file
 // proves the narrow, purely-local answer 0.2.69 gives it: a NEW durable
-// store (application/ConversationStore.js) that application/ChatUseCase.js
+// store (application/chat/ConversationStore.js) that application/chat/ChatUseCase.js
 // writes through to on every message and every delivery-state
 // transition, and rehydrates FROM on construction — so a simulated
 // reload (a brand-new ChatUseCase instance over the SAME storage)
@@ -138,7 +138,7 @@ async function runTests() {
 }
 
 // ---------------------------------------------------------------------
-// 2. application/ConversationStore.js — append/list/updateDeliveryState/
+// 2. application/chat/ConversationStore.js — append/list/updateDeliveryState/
 //    conversations(), scoped per owner, idempotent, bounded.
 // ---------------------------------------------------------------------
 {
@@ -186,7 +186,7 @@ async function runTests() {
     assert(evesHistory.length === MAX_STORED_MESSAGES_PER_PEER, 'a per-peer history beyond the cap is trimmed to the cap');
     assert(evesHistory[0].message.body === 'msg 11', 'the OLDEST entries are the ones dropped, never the newest');
     assert(capStore.list('frank').length === 1, 'a different peer\'s own history is completely unaffected by another peer\'s cap');
-    console.log('✓ application/ConversationStore.js: append/list/updateDeliveryState/conversations(), idempotent, per-owner, per-peer bounded');
+    console.log('✓ application/chat/ConversationStore.js: append/list/updateDeliveryState/conversations(), idempotent, per-owner, per-peer bounded');
 }
 
 // ---------------------------------------------------------------------
@@ -207,8 +207,8 @@ async function runTests() {
 
     // Alice's durable stores — SEPARATE storage keys, same underlying
     // InMemoryStorageProvider instance, the same way a real browser tab
-    // would share one localStorage across both application/ChatOutbox.js
-    // and application/ConversationStore.js.
+    // would share one localStorage across both application/chat/ChatOutbox.js
+    // and application/chat/ConversationStore.js.
     const aliceStorage = new InMemoryStorageProvider();
     const aliceOutbox = new ChatOutbox(aliceStorage, Alice.identityProvider);
     const aliceConversations = new ConversationStore(aliceStorage, Alice.identityProvider);
@@ -226,7 +226,7 @@ async function runTests() {
     //        own compose box actually calls — so this message gets a
     //        real DELIVERED transition to persist and later verify,
     //        unlike sendMessage(), which never tracks delivery state at
-    //        all (see application/ChatUseCase.js's own header).
+    //        all (see application/chat/ChatUseCase.js's own header).
     aliceChat.sendOrQueue(Bob.id, 'Hello Bob');
     await wait(20);
     assert(bobChat.getConversation(Alice.id).length === 1, 'Bob receives the first message');
@@ -289,7 +289,7 @@ async function runTests() {
 // authenticates as Charlie instead (0.2.62's own honest-mismatch
 // scenario) must never write anything into Charlie's own conversation
 // history, and must never corrupt or lose Bob's still-QUEUED entry —
-// see application/ConversationStore.js's own header, "A Durable
+// see application/chat/ConversationStore.js's own header, "A Durable
 // Conversation Store Is Addressed To An Identity, Never A Connection."
 // ---------------------------------------------------------------------
 {

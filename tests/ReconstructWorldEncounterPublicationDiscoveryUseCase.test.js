@@ -2,11 +2,11 @@ import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalWorldEncounterPublicationAdmissionLog } from '../application/LocalWorldEncounterPublicationAdmissionLog.js';
-import { ReconstructWorldEncounterPublicationDiscoveryUseCase } from '../application/ReconstructWorldEncounterPublicationDiscoveryUseCase.js';
+import { LocalWorldEncounterPublicationAdmissionLog } from '../application/worldEncounter/LocalWorldEncounterPublicationAdmissionLog.js';
+import { ReconstructWorldEncounterPublicationDiscoveryUseCase } from '../application/worldEncounter/ReconstructWorldEncounterPublicationDiscoveryUseCase.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -230,9 +230,9 @@ async function run() {
     {
         const mainSource = await readSource('ui/main.js');
 
-        assert(mainSource.includes("import { CreateWorldEncounterPublicationAdmissionLogUseCase } from '../application/CreateWorldEncounterPublicationAdmissionLogUseCase.js';"),
+        assert(mainSource.includes("import { CreateWorldEncounterPublicationAdmissionLogUseCase } from '../application/worldEncounter/CreateWorldEncounterPublicationAdmissionLogUseCase.js';"),
             '1. ui/main.js imports the composition-root use case.');
-        assert(mainSource.includes("import { ReconstructWorldEncounterPublicationDiscoveryUseCase } from '../application/ReconstructWorldEncounterPublicationDiscoveryUseCase.js';"),
+        assert(mainSource.includes("import { ReconstructWorldEncounterPublicationDiscoveryUseCase } from '../application/worldEncounter/ReconstructWorldEncounterPublicationDiscoveryUseCase.js';"),
             '2. ui/main.js imports the production reconstruction use case.');
 
         const providerConstructionIndex = mainSource.indexOf('const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();');

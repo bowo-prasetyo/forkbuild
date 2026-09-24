@@ -7,14 +7,14 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { ReplayDocumentUseCase } from '../application/ReplayDocumentUseCase.js';
-import { RestoreHistoryStateUseCase } from '../application/RestoreHistoryStateUseCase.js';
-import { RecoveryObserver } from '../application/RecoveryObserver.js';
+import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
+import { RestoreHistoryStateUseCase } from '../application/document/RestoreHistoryStateUseCase.js';
+import { RecoveryObserver } from '../application/document/RecoveryObserver.js';
 import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.206 — Post-Recovery Product Reassessment.
@@ -75,7 +75,7 @@ async function runTests() {
     // Section A — World interaction/navigation. COMPLETE, reconfirmed.
     //
     // Reconfirms 0.9.203's own Section A finding: nothing 0.9.204/0.9.205
-    // touched (EditorView.js, application/RecoveryObserver.js) is part of
+    // touched (EditorView.js, application/document/RecoveryObserver.js) is part of
     // this surface, so this is a pure regression check that the same
     // composition, and the same two lifecycle actions 0.9.197/0.9.198
     // added, remain wired.
@@ -135,8 +135,8 @@ async function runTests() {
         const vehicleTypeCode = codeOnlyLines(vehicleTypeSource).join('\n');
         assert(!/passenger|capacity|multi-?rider|\bfuel\b|\brange\b/i.test(vehicleTypeCode), 'B2. VehicleType.js\'s own CODE still declares no capacity/passenger/fuel vocabulary');
         const repoWideVehicleFiles = [
-            'application/AvatarVehicleInteractionController.js',
-            'application/AvatarVehicleMovementController.js',
+            'application/avatar/AvatarVehicleInteractionController.js',
+            'application/avatar/AvatarVehicleMovementController.js',
             'core/VehicleInstance.js',
             'core/VehiclePresence.js'
         ];
@@ -213,7 +213,7 @@ async function runTests() {
         // (CreateWorldViewUseCase.js), which hands it to WorldNavigationSession
         // — the SAME "correctly composed, never taken" shape 0.9.203 found
         // for the recovery stack before 0.9.204 gave it a caller.
-        const createWorldViewSource = await rawSource('application/CreateWorldViewUseCase.js');
+        const createWorldViewSource = await rawSource('application/world/CreateWorldViewUseCase.js');
         assert(/new ReplayDocumentUseCase\(/.test(createWorldViewSource), 'C3a. CreateWorldViewUseCase.js still composes ReplayDocumentUseCase');
         assert(/new RestoreHistoryStateUseCase\(/.test(createWorldViewSource), 'C3b. CreateWorldViewUseCase.js still composes RestoreHistoryStateUseCase');
         assert(/replayDocumentUseCase,\s*\n?\s*restoreHistoryStateUseCase,/.test(createWorldViewSource) || (/replayDocumentUseCase/.test(createWorldViewSource) && /restoreHistoryStateUseCase/.test(createWorldViewSource)), 'C3c. both are handed onward into the session it constructs');
@@ -290,7 +290,7 @@ async function runTests() {
         const unpublishHandlers = [...clickHandlers].filter((h) => /^unpublish|^retract/i.test(h));
         assert(unpublishHandlers.length === 1, 'D2. exactly one unpublish/retract-shaped handler remains wired');
 
-        const walletSignerSource = await rawSource('application/CreateBitcoinAnchorWalletSignerUseCase.js');
+        const walletSignerSource = await rawSource('application/anchoring/bitcoin/CreateBitcoinAnchorWalletSignerUseCase.js');
         assert(/execute\(\{\s*wallet\s*\}/.test(walletSignerSource), 'D3. CreateBitcoinAnchorWalletSignerUseCase still requires the caller to supply the wallet — no wallet capability of its own');
 
         // D4 — the survival chain Document -> Publication -> Placement ->
@@ -299,7 +299,7 @@ async function runTests() {
         // at all — autosave/recovery is scoped to the OPEN, UNPUBLISHED
         // editing session only, exactly as 0.9.203/0.9.204/0.9.205 all
         // documented, never a publication-side concern.
-        for (const file of ['application/PublishDocumentUseCase.js', 'application/UnpublishDocumentUseCase.js', 'application/RemoveWorldPlacementUseCase.js']) {
+        for (const file of ['application/publication/PublishDocumentUseCase.js', 'application/publication/UnpublishDocumentUseCase.js', 'application/placement/RemoveWorldPlacementUseCase.js']) {
             const source = await rawSource(file);
             assert(!/RecoveryStore|AutosaveScheduler|RecoveryObserver|CheckRecoveryUseCase/.test(source), `D4. ${file} still carries no recovery-subsystem coupling`);
         }
@@ -348,7 +348,7 @@ async function runTests() {
         // exportStructure()/importBlueprint() handlers call, wired to
         // BuildLibraryPanel's 'export-personal-structure'/'import-blueprint'
         // events in the template.
-        const editorSessionSource = await rawSource('application/EditorSession.js');
+        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
         // ForkStructureUseCase/CopyStructureIntoDocumentUseCase are
         // EditorSession's own constructor defaults (EditorView no longer
         // builds duplicate instances to pass in).
@@ -403,7 +403,7 @@ async function runTests() {
         // F1 — RecoveryObserver's probe is still wrapped, and the fix is
         // still exactly as narrow as 0.9.205 made it: one try/catch around
         // the CheckRecoveryUseCase.execute() call, nothing else touched.
-        const observerSource = await rawSource('application/RecoveryObserver.js');
+        const observerSource = await rawSource('application/document/RecoveryObserver.js');
         assert(/try\s*\{[^}]*this\._checkRecoveryUseCase\.execute\(documentId\)/s.test(observerSource), 'F1a. RecoveryObserver._checkCurrentDocument() still wraps CheckRecoveryUseCase.execute() in try/catch');
         assert(/catch\s*\(e\)\s*\{\s*this\._setStatus\(null\);/.test(observerSource), 'F1b. ...and still fails safe (offers nothing) on catch, exactly like "no checkpoint exists"');
 

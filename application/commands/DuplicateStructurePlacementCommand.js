@@ -10,7 +10,7 @@ import { Command } from './Command.js';
 // documentId(A) === documentId(C) while placementId(A) !== placementId(C)
 // — content identity and spatial instance identity are different
 // questions, and duplicating only ever answers the second one. Compare
-// application/ForkStructureUseCase.js, which is the (Editor-only, content-
+// application/editor/ForkStructureUseCase.js, which is the (Editor-only, content-
 // level) operation for when a NEW independent Document is actually
 // wanted — duplicating an instance is deliberately not that.
 //

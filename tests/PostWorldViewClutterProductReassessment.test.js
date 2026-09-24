@@ -419,7 +419,7 @@ async function run() {
         // Publication is always "selected" in that panel's own frame).
         // Both already reconfirmed above; capability itself checked once
         // more for its production wiring.
-        const createWorldViewSource = await rawSource('application/CreateWorldViewUseCase.js');
+        const createWorldViewSource = await rawSource('application/world/CreateWorldViewUseCase.js');
         assert(/PublicationCommentaryNotificationProducer/.test(createWorldViewSource), 'F2. Commentary still wraps through its notification producer');
         capabilityRows.push(['Publication commentary', 'Appropriate — contextual on the World Encounter surface, standing on one\'s own Publication panel']);
 

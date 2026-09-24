@@ -1,8 +1,8 @@
 import { Tool } from './Tool.js';
 import { SpatialBounds } from '../../core/SpatialBounds.js';
-import { StructurePlacementValidator } from '../StructurePlacementValidator.js';
+import { StructurePlacementValidator } from '../editor/StructurePlacementValidator.js';
 import { PlaceStructureCommand } from '../commands/PlaceStructureCommand.js';
-import { PlacementPositionService } from '../PlacementPositionService.js';
+import { PlacementPositionService } from '../editor/PlacementPositionService.js';
 
 // The structure-placement counterpart to application/tools/PlacementTool.js
 // — 0.2.90's "put this already-created structure here in the World."
@@ -21,7 +21,7 @@ import { PlacementPositionService } from '../PlacementPositionService.js';
 // snap math is the one thing that IS common, so that's what's shared —
 // see PlacementPositionService#calculateStructureGround().
 //
-// context.structureResolver (application/StructureDocumentResolver.js)
+// context.structureResolver (application/editor/StructureDocumentResolver.js)
 // is required to resolve the active Document's bounds for the collision
 // check and preview validity; a context built without one (an older
 // ToolContext, or a test harness that doesn't need collision) degrades

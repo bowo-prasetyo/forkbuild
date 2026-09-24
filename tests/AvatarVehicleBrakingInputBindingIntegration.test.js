@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability, AvatarMovementCapabilityKind } from '../core/AvatarVehicleMovementCapability.js';
 import { AvatarVehicleBrakingIntent } from '../core/AvatarVehicleBrakingIntent.js';
@@ -8,12 +8,12 @@ import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { Position } from '../core/Position.js';
 
 // 0.9.96 — Vehicle Braking Input Binding.
@@ -23,10 +23,10 @@ import { Position } from '../core/Position.js';
 // `core/AvatarVehicleBrakingInputAdapter.js` (a control's own
 // `brakedown`/`brakeup` transition -> `{ brakeRequested }`),
 // `core/AvatarVehicleBrakingIntent.js` (`{ brakeRequested }` -> NONE/
-// BRAKE), and `application/AvatarMovementController.js#setVehicleBrakingIntent()`
+// BRAKE), and `application/avatar/AvatarMovementController.js#setVehicleBrakingIntent()`
 // — and deliberately stopped there: nothing in this codebase's own real
 // input ever called `setVehicleBrakingIntent()`. This milestone adds
-// exactly ONE new thing, `application/WorldNavigationSession.js#
+// exactly ONE new thing, `application/world/WorldNavigationSession.js#
 // _processVehicleBrakingInput()`, wired into the same `avatarKeyDown`/
 // `avatarKeyUp` seam 0.9.65/0.9.66 already used for continuous movement
 // — the physical Control key's own down/up transition, translated into
@@ -201,7 +201,7 @@ async function runTests() {
     }
     {
         // Case-insensitivity, matching every other raw-key comparison
-        // already in this codebase (see application/AvatarMovementController.js#_setKey
+        // already in this codebase (see application/avatar/AvatarMovementController.js#_setKey
         // and core/AvatarContinuousMovementInputAdapter.js).
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack(registry, 'bind-a3');
         const session = buildSession(registry, avatarProfileUseCase, avatarPresenceSession);
@@ -493,7 +493,7 @@ async function runTests() {
     // Section E — architectural sweep
     // -------------------------------------------------------------
     {
-        const sessionSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const sessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
 
         const methodMatch = sessionSource.match(/_processVehicleBrakingInput\(key, type\)\s*\{([\s\S]*?)\n {4}\}/);
         assert(methodMatch !== null, '37. sanity: _processVehicleBrakingInput() exists and is extractable as a single method body');
@@ -523,10 +523,10 @@ async function runTests() {
         assert(!/\bkey\b|KeyboardEvent|'w'|'s'|control/i.test(adapterCodeOnly),
             '43. core/AvatarVehicleBrakingInputAdapter.js remains completely untouched by this milestone too — still no `key` parameter, still control-name-blind');
 
-        const controllerSource = await readFile(new URL('../application/AvatarMovementController.js', import.meta.url), 'utf8');
+        const controllerSource = await readFile(new URL('../application/avatar/AvatarMovementController.js', import.meta.url), 'utf8');
         const controllerCodeOnly = controllerSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/case\s+'control'/i.test(controllerCodeOnly),
-            '44. application/AvatarMovementController.js\'s own _setKey() still never recognizes Control — the binding never leaks into the controller\'s own raw key table');
+            '44. application/avatar/AvatarMovementController.js\'s own _setKey() still never recognizes Control — the binding never leaks into the controller\'s own raw key table');
     }
 
     console.log('✅ All Vehicle Braking Input Binding Integration tests passed.');

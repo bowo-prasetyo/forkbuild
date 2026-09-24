@@ -1,18 +1,18 @@
 import { computeContentHash } from '../serializer/contentHash.js';
-import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/IpfsPublicationRecord.js';
-import { IpfsPublicationContentVerificationCoordinatorState } from '../application/IpfsPublicationContentVerificationCoordinatorState.js';
-import { BitcoinAnchorBroadcastState } from '../application/BitcoinAnchorBroadcastState.js';
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
-import { BitcoinAnchorContentProofState } from '../application/BitcoinAnchorContentProofState.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { describePublicationObservationArchive } from '../application/PublicationObservationArchiveView.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { reconstructBitcoinAnchorPublicationLifecycleTimeline } from '../application/BitcoinAnchorPublicationLifecycleTimelineView.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
+import { IpfsPublicationContentVerificationCoordinatorState } from '../application/ipfs/IpfsPublicationContentVerificationCoordinatorState.js';
+import { BitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { describePublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveView.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { reconstructBitcoinAnchorPublicationLifecycleTimeline } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationLifecycleTimelineView.js';
 import {
     PublicationObservationArchiveImportOutcome,
     exportPublicationObservationArchive,
     importPublicationObservationArchive
-} from '../application/PublicationObservationArchiveExport.js';
+} from '../application/publication/observationArchive/PublicationObservationArchiveExport.js';
 
 // 0.8.82 — Durable Publication Archive Export & Import.
 //
@@ -56,7 +56,7 @@ function assert(condition, message) {
 // stamps every fact's provenance `IMPORTED`, regardless of what the
 // exported payload itself held (see application/
 // PublicationObservationArchive.js's own `withUniformProvenance()`, and
-// application/PublicationObservationArchiveExport.js's own header). An
+// application/publication/observationArchive/PublicationObservationArchiveExport.js's own header). An
 // archive built through this test file's own `buildFlagshipArchive()` —
 // every fact appended locally — therefore no longer serializes
 // byte-identically to its own reimport: the FACTS are identical, but the

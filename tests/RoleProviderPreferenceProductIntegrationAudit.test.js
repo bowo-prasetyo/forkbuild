@@ -4,10 +4,10 @@ import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
-import { RoleAwareProviderResolver } from '../application/RoleAwareProviderResolver.js';
-import { ResolvePreferredRoleProviderUseCase } from '../application/ResolvePreferredRoleProviderUseCase.js';
+import { RoleAwareProviderResolver } from '../application/settings/RoleAwareProviderResolver.js';
+import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';
 
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 
@@ -154,7 +154,7 @@ async function run() {
         // a single preferred service would shrink the evidence pool a
         // later lead-resolution step reasons over, not merely swap which
         // bytes are fetched.
-        const discoveryCompositionSource = await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
+        const discoveryCompositionSource = await source('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(/once per configured service, independently, never combined/.test(discoveryCompositionSource), 'A1a. Publication discovery composition documents, in its own words, that every configured service is queried independently and never combined into one answer');
         discoverySeams.push({ seam: 'Publication discovery (read path)', concern: 'narrowing "query every configured service" to "query the preferred one" would shrink the lead-resolution evidence pool a later step reasons over — a real behavior change, not a mechanical substitution' });
 
@@ -163,14 +163,14 @@ async function run() {
         // and this codebase's own header states, explicitly, that
         // provenance carries no preferred/rank/trust concept at all —
         // the exact confusion this milestone's own brief warns against.
-        const provenanceSource = await source('application/PublicationMaterialProvenance.js');
+        const provenanceSource = await source('application/publication/distribution/PublicationMaterialProvenance.js');
         assert(/no.*`trust`,\s*`rank`,\s*`preferred`,\s*`reliable`,\s*`freshness`,\s*or\s*`quality`\s*field/.test(normalizeComment(provenanceSource)), 'A2a. PublicationMaterialProvenance.js states, in its own words, that no preferred/rank/trust/quality concept exists near provenance, and never will');
         assert(/DELIBERATELY TWO VALUES, NEVER MORE/.test(provenanceSource), 'A2b. provenance is a two-value (LOCAL/DECENTRALIZED) loading-boundary fact, never a per-service breakout — confirming a future service-level preference is a different axis than this file, and must never be conflated with it');
         discoverySeams.push({ seam: 'material provenance (Origin: LOCAL/DECENTRALIZED)', concern: 'not a selection seam at all — a stored fact about which loading boundary produced an observation; a service-level preference is an orthogonal axis and must never be read as, or written into, Origin' });
 
         // A3: Snapshot discovery — exactly one Discovery-shaped
         // collaborator, hardcoded, no alternative to choose between.
-        const snapshotDiscoverySource = await source('application/DiscoverSnapshotRuntimeComposition.js');
+        const snapshotDiscoverySource = await source('application/snapshot/DiscoverSnapshotRuntimeComposition.js');
         const snapshotDiscoveryImports = snapshotDiscoverySource.split('\n').filter((l) => /^import\b/.test(l));
         assert(snapshotDiscoveryImports.filter((l) => /Nostr|Arweave/.test(l)).length === 2, 'A3a. Snapshot discovery imports exactly one Discovery-shaped collaborator (NostrSnapshotDiscoveryQueryService) and one Content-shaped collaborator (ArweaveContentStore), never a second alternative for either role');
         discoverySeams.push({ seam: 'Snapshot discovery (read path)', concern: 'no second provider exists for this role in this path — nothing for a preference to select between' });
@@ -196,7 +196,7 @@ async function run() {
         // placement's own historical storage field. A category-3
         // "historical record" seam (Section D names the category
         // formally) — a preference has no legitimate business here.
-        const resolverSource = await source('application/SnapshotPlacementResolver.js');
+        const resolverSource = await source('application/snapshot/placement/SnapshotPlacementResolver.js');
         assert(/storeRegistry\s*\?\s*storeRegistry\.get\(placement\.storage\)/.test(resolverSource), 'B1a. SnapshotPlacementResolver looks stores up by the PLACEMENT\'s own storage field, a fact about what already happened, never a live choice');
         contentSeams.push({ seam: 'CONTENT resolution (SnapshotPlacementResolver)', category: 'HISTORICAL_RECORD' });
 
@@ -204,7 +204,7 @@ async function run() {
         // workflow, and its own coordinator documents, in its own words,
         // that the offered set is never narrowed to a preferred/default
         // one.
-        const creationCoordinatorSource = await source('application/SnapshotPlacementCreationCoordinator.js');
+        const creationCoordinatorSource = await source('application/snapshot/placement/SnapshotPlacementCreationCoordinator.js');
         assert(/never ranked, never narrowed to a\s*"preferred" or "default" one/.test(normalizeComment(creationCoordinatorSource)), 'B2a. SnapshotPlacementCreationCoordinator\'s own header states, in its own words, that availableStorageTypes() is never narrowed to a preferred/default entry');
         contentSeams.push({ seam: 'CONTENT creation (SnapshotPlacementCreationCoordinator, per-action UI)', category: 'USER_CHOOSES' });
 
@@ -220,7 +220,7 @@ async function run() {
 
         // B3: distribution write paths — exactly one Content collaborator
         // each, hardcoded, unconditional, no branch.
-        for (const file of ['application/PublicationDistributionRuntimeComposition.js', 'application/SnapshotDistributionRuntimeComposition.js']) {
+        for (const file of ['application/publication/distribution/PublicationDistributionRuntimeComposition.js', 'application/snapshot/SnapshotDistributionRuntimeComposition.js']) {
             const text = await source(file);
             const contentImports = text.split('\n').filter((l) => /^import\b/.test(l) && /Arweave(PublicationMaterialUploader|ContentStore)/.test(l));
             assert(contentImports.length === 1, `B3a. ${file} imports exactly one hardcoded Content collaborator, no second implementation to choose between`);
@@ -239,14 +239,14 @@ async function run() {
         // C1: PROOF verification — dispatches on an anchor's own
         // historical anchorType field, the identical historical-record
         // shape as CONTENT resolution.
-        const verifierSource = await source('application/ExternalAnchorVerifier.js');
+        const verifierSource = await source('application/anchoring/ExternalAnchorVerifier.js');
         assert(/proofVerifierRegistry\s*\?\s*proofVerifierRegistry\.get\(anchor\.anchorType\)/.test(verifierSource), 'C1a. ExternalAnchorVerifier looks proofVerifiers up by the ANCHOR\'s own historical anchorType field, never a live choice');
         proofSeams.push({ seam: 'PROOF verification (ExternalAnchorVerifier)', category: 'HISTORICAL_RECORD' });
 
         // C2: PROOF creation — the per-action counterpart, with the
         // IDENTICAL "never preferred/default" restraint Section B2 found
         // for Content.
-        const anchorCreationSource = await source('application/PublicationAnchorCreationCoordinator.js');
+        const anchorCreationSource = await source('application/anchoring/PublicationAnchorCreationCoordinator.js');
         assert(/never ranked, never narrowed to\s*a\s*"preferred" or "default" one/.test(normalizeComment(anchorCreationSource)), 'C2a. PublicationAnchorCreationCoordinator\'s own header states the identical restraint for availableAnchorTypes()');
         proofSeams.push({ seam: 'PROOF creation (PublicationAnchorCreationCoordinator, per-action UI)', category: 'USER_CHOOSES' });
 
@@ -384,9 +384,9 @@ async function run() {
         // F2: the baseline — today's real Content-creation workflow does
         // NOT call any of this. Proved from real source, not assumed.
         const filesToCheck = [
-            'application/SnapshotPlacementCreationCoordinator.js',
-            'application/CreateExternalSnapshotPlacementUseCase.js',
-            'application/CreateSnapshotPlacementOrchestratorUseCase.js',
+            'application/snapshot/placement/SnapshotPlacementCreationCoordinator.js',
+            'application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js',
+            'application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js',
             'ui/views/DecentralizedPublicationsView.js'
         ];
         const preferenceReferencePattern = /RoleProviderPreference|RoleAwareProviderResolver|ResolvePreferredRoleProviderUseCase/;

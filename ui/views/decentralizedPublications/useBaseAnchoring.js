@@ -1,36 +1,36 @@
 import { inject, reactive } from 'vue';
-import { BaseWalletConnectionState } from '../../../application/BaseWalletConnectionState.js';
-import { describeBaseWalletConnection } from '../../../application/BaseWalletConnectionView.js';
+import { BaseWalletConnectionState } from '../../../application/anchoring/base/BaseWalletConnectionState.js';
+import { describeBaseWalletConnection } from '../../../application/anchoring/base/BaseWalletConnectionView.js';
 import {
     BASE_WALLET_CONNECTION_BADGE_CLASSES, BASE_ACCOUNT_OBSERVATION_BADGE_CLASSES,
     BASE_PUBLICATION_TRANSACTION_PLAN_BADGE_CLASSES, CREATION_BADGE_CLASSES,
     BASE_REVIEWED_SIGNING_BADGE_CLASSES, BASE_SIGNED_TRANSACTION_FINALIZATION_BADGE_CLASSES,
     BASE_TRANSACTION_BROADCAST_BADGE_CLASSES, BASE_TRANSACTION_INCLUSION_BADGE_CLASSES
 } from './presentation.js';
-import { describeBaseAccountObservation } from '../../../application/BaseAccountObservationView.js';
-import { BaseNetworkObservationState } from '../../../application/BaseNetworkObservationState.js';
-import { BasePublicationTransactionPlanState } from '../../../application/BasePublicationTransactionPlanState.js';
-import { describeBasePublicationTransactionPlan } from '../../../application/BasePublicationTransactionPlanView.js';
-import { describeBasePublicationTransactionReview } from '../../../application/BasePublicationTransactionReview.js';
-import { ExternalAnchorCreationOutcome } from '../../../application/ExternalAnchorCreationOutcome.js';
+import { describeBaseAccountObservation } from '../../../application/anchoring/base/BaseAccountObservationView.js';
+import { BaseNetworkObservationState } from '../../../application/anchoring/base/BaseNetworkObservationState.js';
+import { BasePublicationTransactionPlanState } from '../../../application/anchoring/base/BasePublicationTransactionPlanState.js';
+import { describeBasePublicationTransactionPlan } from '../../../application/anchoring/base/BasePublicationTransactionPlanView.js';
+import { describeBasePublicationTransactionReview } from '../../../application/anchoring/base/BasePublicationTransactionReview.js';
+import { ExternalAnchorCreationOutcome } from '../../../application/anchoring/ExternalAnchorCreationOutcome.js';
 import {
     describeCreationAttempt, describeCreationButtonLabel
-} from '../../../application/PublicationAnchorCreationView.js';
-import { ExternalAnchorCreationUiState } from '../../../application/ExternalAnchorCreationUiState.js';
-import { BaseReviewedSigningState } from '../../../application/BaseReviewedSigningState.js';
-import { describeBaseReviewedSigning } from '../../../application/BaseReviewedSigningView.js';
-import { BaseSignedTransactionFinalizationState } from '../../../application/BaseSignedTransactionFinalizationState.js';
+} from '../../../application/anchoring/PublicationAnchorCreationView.js';
+import { ExternalAnchorCreationUiState } from '../../../application/anchoring/ExternalAnchorCreationUiState.js';
+import { BaseReviewedSigningState } from '../../../application/anchoring/base/BaseReviewedSigningState.js';
+import { describeBaseReviewedSigning } from '../../../application/anchoring/base/BaseReviewedSigningView.js';
+import { BaseSignedTransactionFinalizationState } from '../../../application/anchoring/base/BaseSignedTransactionFinalizationState.js';
 import {
     describeBaseSignedTransactionFinalization
-} from '../../../application/BaseSignedTransactionFinalizationView.js';
-import { BaseTransactionBroadcastState } from '../../../application/BaseTransactionBroadcastState.js';
-import { describeBaseTransactionBroadcast } from '../../../application/BaseTransactionBroadcastView.js';
+} from '../../../application/anchoring/base/BaseSignedTransactionFinalizationView.js';
+import { BaseTransactionBroadcastState } from '../../../application/anchoring/base/BaseTransactionBroadcastState.js';
+import { describeBaseTransactionBroadcast } from '../../../application/anchoring/base/BaseTransactionBroadcastView.js';
 import {
     appendBaseTransactionInclusionObservationHistoryEntry
-} from '../../../application/BaseTransactionInclusionObservationHistory.js';
+} from '../../../application/anchoring/base/BaseTransactionInclusionObservationHistory.js';
 import {
     describeBaseTransactionInclusionObservation, describeBaseTransactionInclusionObservationHistory
-} from '../../../application/BaseTransactionInclusionObservationView.js';
+} from '../../../application/anchoring/base/BaseTransactionInclusionObservationView.js';
 
 // Base anchoring for the Decentralized Publications page: wallet connection,
 // account observation, and the per-entry plan / sign / finalize / broadcast /

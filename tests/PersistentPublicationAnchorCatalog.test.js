@@ -1,18 +1,18 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { LocalPublicationAnchorStore, PUBLICATION_ANCHOR_STORE_KEY } from '../application/LocalPublicationAnchorStore.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { LocalPublicationAnchorStore, PUBLICATION_ANCHOR_STORE_KEY } from '../application/anchoring/LocalPublicationAnchorStore.js';
 import {
     RestorePublicationAnchorCatalogUseCase,
     AnchorRestorationRejectionReason
-} from '../application/RestorePublicationAnchorCatalogUseCase.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
+} from '../application/anchoring/RestorePublicationAnchorCatalogUseCase.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
 import {
     deriveAnchorVerificationLifecycle
-} from '../application/PublicationAnchorVerificationLifecycleView.js';
-import { AnchorVerificationLifecycleState } from '../application/AnchorVerificationLifecycleState.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { createVerificationObservation } from '../application/PublicationAnchorVerificationObservation.js';
+} from '../application/anchoring/PublicationAnchorVerificationLifecycleView.js';
+import { AnchorVerificationLifecycleState } from '../application/anchoring/AnchorVerificationLifecycleState.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { createVerificationObservation } from '../application/anchoring/PublicationAnchorVerificationObservation.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';

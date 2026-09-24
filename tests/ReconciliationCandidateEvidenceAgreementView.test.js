@@ -5,7 +5,7 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreement,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceAgreement
 } from '../application/claimSnapshotReconciliation/candidate/EvidenceAgreementView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.176 — Reconciliation Candidate Evidence Agreement Projection.
 //

@@ -10,9 +10,9 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { License, LicenseId } from '../core/License.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { LoadPublishedWorldSessionUseCase } from '../application/LoadPublishedWorldSessionUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { LoadPublishedWorldSessionUseCase } from '../application/publication/LoadPublishedWorldSessionUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 

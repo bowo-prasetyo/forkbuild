@@ -27,7 +27,7 @@ import { Signature, SignatureType } from './Signature.js';
 // Deliberately NOT a World mutation: a PlaceNamingClaim carries a
 // `regionId` it refers to, but is never stored inside World#toJSON(),
 // never travels through a Command, never touches undo/redo, and is
-// never propagated by application/WorldCommandPropagationUseCase.js.
+// never propagated by application/document/WorldCommandPropagationUseCase.js.
 // Publishing a claim about someone else's region changes nothing about
 // that region, or about the World it lives in — exactly the same
 // "a name a client DISPLAYS must never become indistinguishable from
@@ -46,7 +46,7 @@ import { Signature, SignatureType } from './Signature.js';
 // `id` is its own identity (not derived from worldId/regionId/name), so
 // the SAME identity can publish more than one claim for the same region
 // over time (a redundant claim — no protocol reason to forbid it) and
-// so retracting one claim (application/PlaceNamingClaimUseCase.js#retract())
+// so retracting one claim (application/placeNaming/PlaceNamingClaimUseCase.js#retract())
 // never has to guess which of several a caller meant.
 export class PlaceNamingClaim {
     constructor({

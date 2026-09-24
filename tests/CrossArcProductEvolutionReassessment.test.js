@@ -4,9 +4,9 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
@@ -146,11 +146,11 @@ async function runTests() {
     {
         const arcs = [
             ['World View / navigation', 'ui/views/WorldView.js', 'export default'],
-            ['Vehicle interaction/movement', 'application/AvatarVehicleInteractionController.js', 'export class'],
+            ['Vehicle interaction/movement', 'application/avatar/AvatarVehicleInteractionController.js', 'export class'],
             ['Decentralized Publication discovery', 'discovery/LocalDiscoveryProvider.js', 'export class LocalDiscoveryProvider'],
-            ['Snapshot discovery/materialization/placement', 'application/SnapshotContentMaterializationCoordinator.js', 'export class'],
+            ['Snapshot discovery/materialization/placement', 'application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js', 'export class'],
             ['Publication lifecycle', 'publisher/Publication.js', 'export class Publication'],
-            ['Editor/autosave/history/undo-redo', 'application/AutosaveScheduler.js', 'export class'],
+            ['Editor/autosave/history/undo-redo', 'application/document/AutosaveScheduler.js', 'export class'],
             ['Live collaboration (causal chain)', 'core/DocumentOperationCausality.js', 'export class DocumentOperationCausalGraph'],
             ['Publication Commentary', 'core/PublicationCommentary.js', 'export class PublicationCommentary'],
             ['Place Naming', 'core/PlaceNamingClaim.js', 'export class PlaceNamingClaim'],
@@ -176,14 +176,14 @@ async function runTests() {
             'collaboration/AuthorityCollaborationTransport.js',
             'collaboration/LocalCollaborationTransport.js',
             'core/CollaborationEnvelope.js',
-            'application/CreateCollaborationUseCase.js'
+            'application/document/CreateCollaborationUseCase.js'
         ];
         for (const path of legacyCollabFiles) {
             assert(await sourceExists(path), `A11a. ${path} still exists — not deleted since 0.9.241 flagged it.`);
         }
         const legacyCallers = await grepCount('CreateCollaborationUseCase', ['application', 'ui']);
         // Only the file's own definition should match.
-        assert(legacyCallers <= 1, `A11b. application/CreateCollaborationUseCase.js still has no caller outside its own file across application/ and ui/ (found ${legacyCallers} matching file(s)).`);
+        assert(legacyCallers <= 1, `A11b. application/document/CreateCollaborationUseCase.js still has no caller outside its own file across application/ and ui/ (found ${legacyCallers} matching file(s)).`);
 
         console.log('✓ A: Baseline frozen. All ten completed arcs this milestone\'s own brief names are IMPLEMENTED and REACHABLE, one fresh signal each (A1-A10). The one ARCHITECTURALLY-POSSIBLE-ONLY exception reconfirmed: the 0.2.7-0.2.9 authority collaboration protocol still exists, unmodified, uncalled, unchanged since 0.9.241 first named it (A11) — forty-plus milestones of standing architecture debt, never escalated to deletion, never a product gap.');
     }
@@ -197,18 +197,18 @@ async function runTests() {
     {
         // B1. Capability exists? — Commentary read+write, at the
         // domain/application layer, unconditionally yes.
-        const canCommentSource = await rawSource('application/CanCommentOnPublicationUseCase.js');
-        const getCommentariesSource = await rawSource('application/GetPublicationCommentariesUseCase.js');
+        const canCommentSource = await rawSource('application/publication/CanCommentOnPublicationUseCase.js');
+        const getCommentariesSource = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
         assert(canCommentSource.includes('export class CanCommentOnPublicationUseCase')
             && getCommentariesSource.includes('export class GetPublicationCommentariesUseCase'),
             'B1. Capability exists — both the write-authorization and read-query classes are real, defined code.');
 
         // B2. Correctly composed? — CreateWorldViewUseCase wires both,
         // reconfirmed fresh.
-        const composition = await rawSource('application/CreateWorldViewUseCase.js');
+        const composition = await rawSource('application/world/CreateWorldViewUseCase.js');
         assert(composition.includes('new CanCommentOnPublicationUseCase(discoveryProvider)')
             && composition.includes('new GetPublicationCommentariesUseCase(publicationCommentaryStore)'),
-            'B2. Correctly composed — application/CreateWorldViewUseCase.js still constructs both from real collaborators, not stubs.');
+            'B2. Correctly composed — application/world/CreateWorldViewUseCase.js still constructs both from real collaborators, not stubs.');
 
         // B3. Reachable from UI? — Only through one component, checked
         // as a fresh grep (this is the entire finding).
@@ -291,8 +291,8 @@ async function runTests() {
         // vocabulary in Commentary's own six files (reconfirms
         // 0.9.250's own Section E finding, fresh).
         const commentaryFiles = ['core/PublicationCommentary.js', 'core/PublicationCommentaryCollection.js',
-            'storage/PublicationCommentaryStore.js', 'application/CanCommentOnPublicationUseCase.js',
-            'application/AddPublicationCommentaryUseCase.js', 'application/GetPublicationCommentariesUseCase.js'];
+            'storage/PublicationCommentaryStore.js', 'application/publication/CanCommentOnPublicationUseCase.js',
+            'application/publication/commentary/AddPublicationCommentaryUseCase.js', 'application/publication/commentary/GetPublicationCommentariesUseCase.js'];
         for (const path of commentaryFiles) {
             const source = await rawSource(path);
             assert(!/CausalGraph|CausalStamp|CollaborationSession|ReplayGuard/.test(source),
@@ -305,7 +305,7 @@ async function runTests() {
         // richer social/relationship semantics, discovery/navigation
         // "improvements" with no named defect. Checked as absence, not
         // dismissed by category.
-        const presenceNotifSource = await rawSource('application/WorldPresenceUseCase.js');
+        const presenceNotifSource = await rawSource('application/presence/WorldPresenceUseCase.js');
         assert(!/NotificationEvent|recipientIdentityId/.test(presenceNotifSource),
             'C6. World Presence still has no notification participation — a speculative pairing with no on-file evidence.');
         findings.push(['World Presence -> Notification pairing', 'SPECULATIVE — no evidence found']);
@@ -329,7 +329,7 @@ async function runTests() {
         // D2. Broader social/relationship semantics — FriendRelationshipUseCase
         // still resolves synchronously over a live peerMessageBus, no
         // durable/async fact log, reconfirmed fresh (0.9.287 Section E3).
-        const friendRelSource = await rawSource('application/FriendRelationshipUseCase.js');
+        const friendRelSource = await rawSource('application/identity/FriendRelationshipUseCase.js');
         assert(/peerMessageBus/.test(friendRelSource) && !/NotificationEvent/.test(friendRelSource),
             'D2. Friend Relationship still resolves over a live peerMessageBus with no NotificationEvent participation — unchanged since 0.9.287.');
 
@@ -346,7 +346,7 @@ async function runTests() {
         // (e.g. Commentary, Place Naming) since 0.9.241 first drew that
         // boundary. Reconfirmed: none of Commentary's/Place Naming's
         // own files import the causal chain.
-        const placeNamingUseCase = await sourceExists('application/PlaceNamingClaimUseCase.js') ? await rawSource('application/PlaceNamingClaimUseCase.js') : '';
+        const placeNamingUseCase = await sourceExists('application/placeNaming/PlaceNamingClaimUseCase.js') ? await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js') : '';
         assert(!/CausalGraph|CausalStamp/.test(placeNamingUseCase),
             'D4. Place Naming still carries no collaboration-causal vocabulary — collaboration expansion remains unevidenced.');
 
@@ -377,9 +377,9 @@ async function runTests() {
         // E1. The write-side policy is explicitly, deliberately
         // ownership-agnostic — read directly from its own source, not
         // inferred from a comment.
-        const canCommentSource = await rawSource('application/CanCommentOnPublicationUseCase.js');
+        const canCommentSource = await rawSource('application/publication/CanCommentOnPublicationUseCase.js');
         assert(/ANY authenticated identity may comment on ANY Publication that/.test(canCommentSource),
-            'E1. application/CanCommentOnPublicationUseCase.js still states its own policy exactly this way: any resolvable Publication, never "a Publication I own".');
+            'E1. application/publication/CanCommentOnPublicationUseCase.js still states its own policy exactly this way: any resolvable Publication, never "a Publication I own".');
         {
             // Proven live: Bob (a non-owner) can comment on Alice's
             // Publication through the real, unmodified use case.
@@ -394,9 +394,9 @@ async function runTests() {
         // E2. The read-side query carries NO authorization/ownership
         // concept at all — it is a bare publicationId -> [] query,
         // reconfirmed from its own source.
-        const getCommentariesSource = await rawSource('application/GetPublicationCommentariesUseCase.js');
+        const getCommentariesSource = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
         assert(!/identityProvider|ownerId|viewerIdentityId/.test(codeOnlyLines(getCommentariesSource)),
-            'E2. application/GetPublicationCommentariesUseCase.js still has no identity/ownership dependency of any kind in its own code.');
+            'E2. application/publication/commentary/GetPublicationCommentariesUseCase.js still has no identity/ownership dependency of any kind in its own code.');
 
         // E3. The ONE production wiring site — the same command,
         // already parameterized by an arbitrary publicationId, not by
@@ -523,8 +523,8 @@ async function runTests() {
         // in Section E/B — both GetRecipientNotificationEventsUseCase
         // and AddPublicationCommentaryUseCase resolve authorship from
         // the injected identityProvider, never a request parameter.
-        const notifQuerySource = await rawSource('application/GetRecipientNotificationEventsUseCase.js');
-        const addCommentarySource = await rawSource('application/AddPublicationCommentaryUseCase.js');
+        const notifQuerySource = await rawSource('application/chat/GetRecipientNotificationEventsUseCase.js');
+        const addCommentarySource = await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
         assert(notifQuerySource.includes('resolveSigningIdentityId') || /getSigningIdentity/.test(notifQuerySource),
             'F4a. GetRecipientNotificationEventsUseCase still resolves identity from the authenticated provider, never a caller-supplied field.');
         assert(!/identityId:\s*identityId\s*=>/.test(codeOnlyLines(addCommentarySource)) && /getSigningIdentity/.test(addCommentarySource),
@@ -568,7 +568,7 @@ async function runTests() {
         // reconfirmed from its own header/code (already checked in
         // Section B1, re-verified here against the specific temporal
         // claim: no Date.now()/new Date() anywhere in its own code).
-        const getCommentariesCode = codeOnlyLines(await rawSource('application/GetPublicationCommentariesUseCase.js'));
+        const getCommentariesCode = codeOnlyLines(await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js'));
         assert(!/Date\.now\(\)|new Date\(\)/.test(getCommentariesCode),
             'G3. GetPublicationCommentariesUseCase.js still stamps no timestamp of its own on retrieval — reading never mutates the temporal record.');
 
@@ -589,8 +589,8 @@ async function runTests() {
         // recomputed at placement time; checked structurally that
         // SnapshotContentMaterializationCoordinator and placement code
         // are two separate files with no shared mutable timestamp field.
-        assert(await sourceExists('application/SnapshotContentMaterializationCoordinator.js')
-            && await sourceExists('application/PlacePublicationUseCase.js'),
+        assert(await sourceExists('application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js')
+            && await sourceExists('application/placement/PlacePublicationUseCase.js'),
             'G5. Snapshot materialization and World placement remain two separate application-layer files, not merged into one lifecycle stage.');
 
         console.log('✓ G: Temporal-boundary audit. Creation, publication, discovery, retrieval, presentation, materialization, and placement each checked for conflation ACROSS arcs rather than merely within one (G1-G5) — no stage has quietly absorbed a neighboring one\'s timestamp or identity. This mirrors 0.9.286\'s own within-arc audit, extended here to the seams between arcs Section E identifies as newly relevant.');
@@ -632,7 +632,7 @@ async function runTests() {
         const candidate = {
             name: 'Wire Publication Commentary into Discovery-facing Publication views',
             q1_workflow: 'A Wanderer browsing Discovery (PublicationCatalog/PublicationCard/PublicationPreview/PublicationList/DecentralizedPublicationsView) or encountering a placed World in WorldEncounterCanvas can read the Publication\'s title, author, and license, but has no way to read or leave commentary on a Publication they do not own — even though Commentary was explicitly authorized, by name, for exactly this case (E1).',
-            q2_extends: 'GetPublicationCommentariesUseCase and AddPublicationCommentaryUseCase (0.9.242-0.9.248), already composed once in application/CreateWorldViewUseCase.js and already exposed as two generic, publicationId-parameterized commands on WorldNavigationSession.',
+            q2_extends: 'GetPublicationCommentariesUseCase and AddPublicationCommentaryUseCase (0.9.242-0.9.248), already composed once in application/world/CreateWorldViewUseCase.js and already exposed as two generic, publicationId-parameterized commands on WorldNavigationSession.',
             q3_semantic_fact: 'CanCommentOnPublicationUseCase\'s own written policy (0.9.246): "ANY authenticated identity may comment on ANY Publication that actually exists" — a semantic fact already on file, not inferred for this audit.',
             q4_seam: 'Bind the two already-existing commands (getPublicationCommentariesCommand/addPublicationCommentaryCommand) as props into ONE additional UI surface — the smallest being PublicationPreview or a new lightweight detail view reachable from PublicationCard\'s existing "open" emit — passing that surface\'s own already-in-scope publication.id. No new domain class, no new use case, no new store, no new field.'
         };

@@ -3,12 +3,12 @@ import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { LoadFailureReason } from '../application/LoadFailureReason.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { ForkFailureReason } from '../application/ForkFailureReason.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { LoadFailureReason } from '../application/document/LoadFailureReason.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { ForkFailureReason } from '../application/document/ForkFailureReason.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
@@ -21,7 +21,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
 import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
@@ -77,7 +77,7 @@ import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 // reverify/auto-redownload, no ranking, no Repository/World refactor.
 //
 // A structural constraint of THIS file, stated rather than hidden: it
-// deliberately avoids importing application/WorldNavigationSession.js
+// deliberately avoids importing application/world/WorldNavigationSession.js
 // (which pulls in renderer/RenderWorldViewUseCase.js, and transitively
 // `three`) so it can run under this repo's plain `node tests/*.test.js`
 // sweep. Section D's Explore-specific claim is therefore checked
@@ -137,7 +137,7 @@ function publishMinimalDocument(storage, title = 'Atlas', author = 'alice') {
 }
 
 // The exact real composition ui/components/PublicationCatalog.js itself
-// builds via application/CreateDiscoveryUseCase.js#execute() — Local
+// builds via application/discovery/CreateDiscoveryUseCase.js#execute() — Local
 // storage merged with a decentralized accumulator through
 // CompositeDiscoveryProvider — never a test-only stand-in shape.
 function makeRepositoryDiscoveryProvider(storage, decentralizedDiscoveryProvider) {
@@ -447,7 +447,7 @@ async function main() {
             'G1. The prior milestone\'s own file documents the exact gap this section fixes — confirming this is a named continuation, not a rediscovery claimed from nothing.');
 
         // G2. Live: LoadDocumentUseCase now attaches a structural
-        // reason — the same restraint application/ForkFailureReason.js
+        // reason — the same restraint application/document/ForkFailureReason.js
         // already established for Fork.
         const emptyStorage = new InMemoryStorageProvider();
         let err = null;
@@ -484,7 +484,7 @@ async function main() {
         assert(forkDialogSource.includes("This Publication's material is currently unavailable."),
             'G5. ForkFailureDialog.js\'s own pre-existing MATERIAL_UNAVAILABLE message is unchanged — Section G3c\'s new Open vocabulary matches it by deliberate reuse, not by editing Fork\'s own file.');
 
-        console.log('✓ Section G — the one genuine PRODUCT_GAP this milestone found and FIXED, narrowly: a failed Open (Section D3) used to leak LoadDocumentUseCase\'s own internal class name and a raw storage identifier verbatim into a Wanderer-facing toast — a gap 0.9.559 already named and deliberately deferred (G1). application/LoadFailureReason.js now gives LoadDocumentUseCase a structural reason (G2), and EditorView.js\'s own toast now shows the SAME honest vocabulary Fork already used for the identical condition since 0.9.353 (G3-G5) — no dialog redesign, no new Repository concept, no change to admission/identity/search at all.');
+        console.log('✓ Section G — the one genuine PRODUCT_GAP this milestone found and FIXED, narrowly: a failed Open (Section D3) used to leak LoadDocumentUseCase\'s own internal class name and a raw storage identifier verbatim into a Wanderer-facing toast — a gap 0.9.559 already named and deliberately deferred (G1). application/document/LoadFailureReason.js now gives LoadDocumentUseCase a structural reason (G2), and EditorView.js\'s own toast now shows the SAME honest vocabulary Fork already used for the identical condition since 0.9.353 (G3-G5) — no dialog redesign, no new Repository concept, no change to admission/identity/search at all.');
     }
 
     // ===============================================================
@@ -535,7 +535,7 @@ async function main() {
   - Unpublish is Local-provider-scoped: it withdraws this replica's own record, never a decentralized-admitted copy of the same publicationId another path already holds (Section F3/F4) — a structural consequence of decentralization (no replica has authority over another's copy of an announcement), not an oversight.
   - The Repository catalog record carries no availability/verification/currency field of its own (Section A3) — that question is answered separately, per action, by whichever real use case a Wanderer actually invokes (LoadFailureReason for Open, ForkFailureReason for Fork, PublicationResolutionOutcome for decentralized resolve, WorldEncounterMaterialVerificationStatus for World Encounter) — one unified status field was considered and deliberately not built, matching 0.9.525's own Section D finding that this vocabulary already exists, distinctly, where each action needs it.`);
         const chainSources = await Promise.all([
-            readSource('application/SearchPublicationsUseCase.js'),
+            readSource('application/publication/SearchPublicationsUseCase.js'),
             readSource('discovery/LocalDiscoveryProvider.js'),
             readSource('discovery/DecentralizedPublicationDiscoveryProvider.js'),
             readSource('discovery/CompositeDiscoveryProvider.js')
@@ -630,12 +630,12 @@ DELIBERATE_BOUNDARY (F, I), not a bug.
 ONE real, narrow PRODUCT_GAP was found and FIXED this milestone (G): a failed Open's own feedback toast leaked
 LoadDocumentUseCase's internal class name and a raw storage identifier verbatim to a Wanderer — a gap
 tests/PublicationDiscoveryToWorkContinuityProductReassessment.test.js (0.9.559) had already named and
-deliberately deferred as a "future milestone" concern. application/LoadFailureReason.js (new) gives
-LoadDocumentUseCase a real structural reason, mirroring application/ForkFailureReason.js's own already-shipped
+deliberately deferred as a "future milestone" concern. application/document/LoadFailureReason.js (new) gives
+LoadDocumentUseCase a real structural reason, mirroring application/document/ForkFailureReason.js's own already-shipped
 pattern for Fork; ui/views/EditorView.js's own toast now shows the SAME honest sentence
 ("This Publication's material is currently unavailable.") ForkFailureDialog.js has used for the identical
 condition since 0.9.353. No Repository/admission/identity/search code changed at all — the fix is exactly as
-narrow as the gap: three files (application/LoadFailureReason.js, application/LoadDocumentUseCase.js,
+narrow as the gap: three files (application/document/LoadFailureReason.js, application/document/LoadDocumentUseCase.js,
 ui/views/EditorView.js).
 
 Failure isolation holds through the fixed path too: neither a failed Open nor a failed Fork mutates, removes, or

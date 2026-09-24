@@ -4,13 +4,13 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { resolveSnapshotPublicationAttribution } from '../application/SnapshotPublicationAttribution.js';
-import { SnapshotPublicationAttributionOutcome } from '../application/SnapshotPublicationAttributionOutcome.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
+import { resolveSnapshotPublicationAttribution } from '../application/snapshot/SnapshotPublicationAttribution.js';
+import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 
 // 0.9.143 — Snapshot–Publication Attribution.
@@ -272,7 +272,7 @@ async function run() {
     // Section G — no I/O: architectural regression.
     // ---------------------------------------------------------------
     {
-        const code = await codeOnlySource('application/SnapshotPublicationAttribution.js');
+        const code = await codeOnlySource('application/snapshot/SnapshotPublicationAttribution.js');
 
         assert(!/\bfetch\(|WebSocket|localStorage|readFile|writeFile|XMLHttpRequest/.test(code),
             '32. no network, filesystem, or storage access of any kind');

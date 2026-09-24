@@ -23,8 +23,8 @@ const INVALID_COLOR = 0xe05252;
 //
 // Never touches the World, never creates a real Brick — the ghost is a
 // preview of the ONE PasteBricksCommand
-// application/CopyStructureIntoDocumentUseCase.js will eventually
-// build (via application/StructureCompositionTransform.js, the exact
+// application/editor/CopyStructureIntoDocumentUseCase.js will eventually
+// build (via application/editor/StructureCompositionTransform.js, the exact
 // composition this renderer's own _applyTransform() mirrors), not an
 // approximation of it.
 //
@@ -94,7 +94,7 @@ export class CompositionPreviewRenderer {
     // brick's local position, rotated around the origin by the
     // preview's own rotation, translated by the preview's position,
     // lifted by terrain sampled at that position. The SAME math
-    // application/StructureCompositionTransform.js#transformStructureBricks()
+    // application/editor/StructureCompositionTransform.js#transformStructureBricks()
     // applies at commit time, so what the ghost shows is exactly what
     // PasteBricksCommand will insert.
     _applyTransform(preview) {

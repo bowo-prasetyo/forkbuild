@@ -1,5 +1,5 @@
-import { LeaderboardClaimRecord } from '../LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardClaimSnapshotDivergence } from '../PublisherLeaderboardClaimSnapshotDivergenceView.js';
+import { LeaderboardClaimRecord } from '../leaderboard/LeaderboardClaimRecord.js';
+import { describePublisherLeaderboardClaimSnapshotDivergence } from '../leaderboard/PublisherLeaderboardClaimSnapshotDivergenceView.js';
 
 // 0.8.143 — Claim/Snapshot Reconciliation Plan Projection.
 //
@@ -172,14 +172,14 @@ import { describePublisherLeaderboardClaimSnapshotDivergence } from '../Publishe
 //
 // ARCHITECTURAL BOUNDARY — IMPORTS 0.8.142 AND 0.8.123'S OWN RECORD CLASS
 // ONLY. This file imports nothing from
-// `application/PublisherLeaderboardClaimSnapshotCorrespondenceView.js`,
-// `application/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js`,
-// `application/PublisherLeaderboardHistoricalClaimVerification.js`,
-// `application/PublisherLeaderboardClaimSnapshotAssociationView.js`,
-// `application/PublisherLeaderboardSnapshotDifference.js`,
-// `application/PublisherLeaderboardClaimEvolutionView.js`, any signing or
+// `application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceView.js`,
+// `application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js`,
+// `application/leaderboard/PublisherLeaderboardHistoricalClaimVerification.js`,
+// `application/leaderboard/PublisherLeaderboardClaimSnapshotAssociationView.js`,
+// `application/leaderboard/PublisherLeaderboardSnapshotDifference.js`,
+// `application/leaderboard/PublisherLeaderboardClaimEvolutionView.js`, any signing or
 // identity module, any archive module, any ranking module, or
-// `application/PublisherLeaderboardSnapshotTimelineView.js` — grep it and
+// `application/leaderboard/PublisherLeaderboardSnapshotTimelineView.js` — grep it and
 // none of that vocabulary appears. The dependency direction stays a
 // single line: 0.8.142 → 0.8.143, never a parallel engine duplicating it.
 //

@@ -4,12 +4,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import ReconciliationWorkspaceView from '../ui/views/ReconciliationWorkspaceView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimArchiveReceiptOutcome } from '../application/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { LeaderboardClaimArchiveReceiptOutcome } from '../application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
 import { RevalidationObservationArchiveOutcome } from '../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
-import { ReconcilePublisherLeaderboardSnapshotClaimOutcome } from '../application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js';
+import { ReconcilePublisherLeaderboardSnapshotClaimOutcome } from '../application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
@@ -20,7 +20,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //
 // Type: production implementation + comprehensive convergence test.
 //
-// 0.9.407 built application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js
+// 0.9.407 built application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js
 // — ONE explicit operation composing the five existing, UNCHANGED
 // reconciliation stages — and deliberately left it with no UI call site.
 // This milestone builds exactly that call site,
@@ -464,7 +464,7 @@ async function run() {
     console.log('RECONCILIATION_WORKSPACE_UI_ESTABLISHED');
     console.log('');
     console.log('ui/views/ReconciliationWorkspaceView.js is now the first user-facing');
-    console.log('surface over application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js');
+    console.log('surface over application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js');
     console.log('(0.9.407) — a small, explicit workspace: choose genuine inputs (the');
     console.log('existing local archive, a pasted peer claim), explicitly execute');
     console.log('reconciliation, expose the real result, and hand off to the existing,');

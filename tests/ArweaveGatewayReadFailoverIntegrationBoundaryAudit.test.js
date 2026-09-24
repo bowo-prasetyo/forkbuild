@@ -4,23 +4,23 @@ import { register } from 'node:module';
 import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL } from '../core/ArweaveGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
-import { SetArweaveGatewayConfigurationUseCase } from '../application/SetArweaveGatewayConfigurationUseCase.js';
+import { SetArweaveGatewayConfigurationUseCase } from '../application/settings/SetArweaveGatewayConfigurationUseCase.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ArweaveGatewayFailoverContentStore } from '../content/ArweaveGatewayFailoverContentStore.js';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/ArweaveWorldEncounterMaterialResolver.js';
-import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
+import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
+import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
-import { composeArweaveDecentralizedWorldEncounterMaterialSource } from '../application/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { CreateArweaveAnchorPublisherUseCase } from '../application/CreateArweaveAnchorPublisherUseCase.js';
-import { CreateArweaveAnchorProofVerifierUseCase } from '../application/CreateArweaveAnchorProofVerifierUseCase.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
+import { composeArweaveDecentralizedWorldEncounterMaterialSource } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { CreateArweaveAnchorPublisherUseCase } from '../application/anchoring/CreateArweaveAnchorPublisherUseCase.js';
+import { CreateArweaveAnchorProofVerifierUseCase } from '../application/anchoring/CreateArweaveAnchorProofVerifierUseCase.js';
 
 // 0.9.441 — Arweave Gateway Read Failover Integration Boundary Audit.
 //
@@ -53,7 +53,7 @@ import { CreateArweaveAnchorProofVerifierUseCase } from '../application/CreateAr
 // Section C: the real World Encounter material path —
 //            composeArweaveDecentralizedWorldEncounterMaterialSource() +
 //            DecentralizedWorldEncounterMaterialSource#load(), the actual
-//            method application/WorldEncounterMaterialLoading.js's own
+//            method application/worldEncounter/WorldEncounterMaterialLoading.js's own
 //            family calls.
 // Section D: the exact failover boundary, proven at those SAME outer entry
 //            points — A succeeds -> B/C zero calls; A unavailable -> B
@@ -287,7 +287,7 @@ async function run() {
         const resolvedLead = { uri: arUri };
         const material = await decentralized.load(resolvedSelection, resolvedLead);
         assert(material && material.kind === 'building' && material.blocks === 42,
-            'C2. DecentralizedWorldEncounterMaterialSource#load() — the actual method application/WorldEncounterMaterialLoading.js\'s own family calls — returns real material even though the first configured gateway had nothing (a 404)');
+            'C2. DecentralizedWorldEncounterMaterialSource#load() — the actual method application/worldEncounter/WorldEncounterMaterialLoading.js\'s own family calls — returns real material even though the first configured gateway had nothing (a 404)');
         assert(totalRequests(requestsByOrigin, A) === 1 && totalRequests(requestsByOrigin, B) === 1,
             'C3. gateway A was consulted exactly once (and had nothing), gateway B exactly once (and answered) — through the real .decentralized.load() entry point, never resolver.retrieveByUri() called directly');
 
@@ -341,7 +341,7 @@ async function run() {
         //   contacted (that file's own header, "an unexpected error shape
         //   never gets swallowed").
         //
-        //   application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js#retrieveByUri()
+        //   application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js#retrieveByUri()
         //   is PERMISSIVE, by explicit, documented design — ANY rejection
         //   from gateway A, not only a network-shaped one, is caught and
         //   treated as "try gateway B too" (that file's own header, "a
@@ -371,7 +371,7 @@ async function run() {
             assert(totalRequests(contentStoreRequests, B) === 0, 'D3c. gateway B was NEVER contacted — the content store failover class never treats an unexpected error as "try the next gateway"');
 
             // One layer further up, through the full Snapshot command:
-            // application/DecentralizedSnapshotResolver.js (0.9.134,
+            // application/snapshot/DecentralizedSnapshotResolver.js (0.9.134,
             // unmodified, outside this milestone's own scope) itself never
             // lets ANY store failure escape as a rejection ("resolve()
             // never throws for anything about discovery, the store, or the
@@ -502,9 +502,9 @@ async function run() {
         assert(!publicationDistributionConfigLine.includes('resolvedArweaveGatewayUrls'), 'F9. Publication distribution/announcement configuration never references the plural gateway list');
 
         const nostrSources = await Promise.all([
-            source('application/NostrPublicationDiscoveryPublisher.js'),
-            source('application/NostrSnapshotDiscoveryPublisher.js'),
-            source('application/NostrDiscoveryQueryService.js')
+            source('application/nostr/NostrPublicationDiscoveryPublisher.js'),
+            source('application/nostr/NostrSnapshotDiscoveryPublisher.js'),
+            source('application/nostr/NostrDiscoveryQueryService.js')
         ]);
         for (const src of nostrSources) {
             assert(!src.includes('ArweaveGatewayConfiguration') && !src.includes('ArweaveGatewayFailover'), 'F10. no Nostr file imports the Arweave gateway configuration or either failover class');
@@ -632,7 +632,7 @@ async function run() {
         ];
         const failoverSources = await Promise.all([
             source('content/ArweaveGatewayFailoverContentStore.js'),
-            source('application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js'),
+            source('application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js'),
             source('core/ArweaveGatewayConfiguration.js')
         ]);
         for (const src of failoverSources) {

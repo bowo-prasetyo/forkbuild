@@ -1,4 +1,4 @@
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
 
 const TXID_PATTERN = /^[0-9a-f]{64}$/i;
 
@@ -24,7 +24,7 @@ const TXID_PATTERN = /^[0-9a-f]{64}$/i;
 // CONFIRMED  NOT_CONFIRMED   UNAVAILABLE
 //
 // A SEPARATE, EXPLICITLY-TRIGGERED ACTION — NEVER PART OF PUBLISHING.
-// Nothing in application/BitcoinAnchorPublicationCoordinator.js (0.8.53)
+// Nothing in application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js (0.8.53)
 // calls this class, and this class never calls back into that pipeline
 // either. Reaching BROADCASTED never triggers a confirmation check
 // automatically, and a confirmation check never re-broadcasts, re-signs,
@@ -126,7 +126,7 @@ const TXID_PATTERN = /^[0-9a-f]{64}$/i;
 // Throwing is tolerated as a last resort — observeConfirmation() catches
 // it and reports the UNAVAILABLE form — mirroring exactly how anchoring/
 // BitcoinAnchorTransactionBroadcaster.js already treats a throwing
-// broadcaster, and application/ExternalAnchorVerifier.js a throwing
+// broadcaster, and application/anchoring/ExternalAnchorVerifier.js a throwing
 // proofVerifier.
 export class BitcoinAnchorConfirmationObserver {
     constructor({ confirmationSource } = {}) {

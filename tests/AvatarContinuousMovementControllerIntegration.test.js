@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
-import { AvatarTreeConstraint } from '../application/AvatarTreeConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
+import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
 import { AvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
@@ -8,19 +8,19 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.66 — Continuous Movement Controller Integration.
 //
-//   Section A: application/AvatarMovementController.js — priority rule
+//   Section A: application/avatar/AvatarMovementController.js — priority rule
 //              (ordinary W/S > continuous intent > idle), consumed via
 //              setContinuousMovementIntent()/continuousMovementIntent()
-//   Section B: application/WorldNavigationSession.js — real Alt +
+//   Section B: application/world/WorldNavigationSession.js — real Alt +
 //              W/S keyboard chords, wired end to end through
 //              core/AvatarContinuousMovementInputAdapter.js (0.9.65) and
 //              core/AvatarContinuousMovementIntent.js (0.9.64), with NO
@@ -110,7 +110,7 @@ async function runTests() {
     const realTree = findRealTree();
 
     // -------------------------------------------------------------
-    // Section A — application/AvatarMovementController.js: priority
+    // Section A — application/avatar/AvatarMovementController.js: priority
     // -------------------------------------------------------------
     {
         // A — no continuous intent at all: existing behavior unchanged.
@@ -215,7 +215,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — application/WorldNavigationSession.js: real Alt +
+    // Section B — application/world/WorldNavigationSession.js: real Alt +
     // W/S keyboard chords, end to end
     // -------------------------------------------------------------
     {
@@ -476,7 +476,7 @@ async function runTests() {
     // deterministic tree, through the entire chain — Keyboard ->
     // core/AvatarContinuousMovementInputAdapter.js (0.9.65) ->
     // core/AvatarContinuousMovementIntent.js (0.9.64) ->
-    // application/AvatarMovementController.js (0.9.66) -> building/
+    // application/avatar/AvatarMovementController.js (0.9.66) -> building/
     // terrain/step/tree constraints -> avatar position.
     // -------------------------------------------------------------
     {
@@ -568,7 +568,7 @@ async function runTests() {
     // learns what Alt is
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/AvatarMovementController.js', import.meta.url);
+        const sourceUrl = new URL('../application/avatar/AvatarMovementController.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -576,31 +576,31 @@ async function runTests() {
             .join('\n');
 
         assert(!/\balt\b/i.test(codeOnly) && !codeOnly.includes('Alt'),
-            '55. application/AvatarMovementController.js\'s own CODE (comments excluded) never references Alt in any form — this class has no idea it exists');
+            '55. application/avatar/AvatarMovementController.js\'s own CODE (comments excluded) never references Alt in any form — this class has no idea it exists');
         assert(!codeOnly.includes('getModifierState'),
-            '56. application/AvatarMovementController.js never reads a raw keyboard modifier state directly');
+            '56. application/avatar/AvatarMovementController.js never reads a raw keyboard modifier state directly');
         assert(!codeOnly.includes('AvatarContinuousMovementInputAdapter'),
-            '57. application/AvatarMovementController.js never imports the keyboard input adapter — that translation lives one layer up, in WorldNavigationSession');
+            '57. application/avatar/AvatarMovementController.js never imports the keyboard input adapter — that translation lives one layer up, in WorldNavigationSession');
         assert(!codeOnly.includes('deriveAvatarContinuousMovementIntent'),
-            '58. application/AvatarMovementController.js never calls the 0.9.64 transition function itself — it only ever CONSUMES an already-resolved intent value via setContinuousMovementIntent()');
+            '58. application/avatar/AvatarMovementController.js never calls the 0.9.64 transition function itself — it only ever CONSUMES an already-resolved intent value via setContinuousMovementIntent()');
         const forbidden = ['THREE', 'from \'three\'', 'Renderer', 'Math.random', 'localStorage', 'fetch(', 'WebSocket', 'setTimeout', 'setInterval', 'requestAnimationFrame'];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `59. application/AvatarMovementController.js's own code never references "${term}" — no new timers, no engine dependency, no persistence introduced by this milestone`);
+            assert(!codeOnly.includes(term), `59. application/avatar/AvatarMovementController.js's own code never references "${term}" — no new timers, no engine dependency, no persistence introduced by this milestone`);
         }
     }
     {
-        const sourceUrl = new URL('../application/WorldNavigationSession.js', import.meta.url);
+        const sourceUrl = new URL('../application/world/WorldNavigationSession.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
         assert(codeOnly.includes('deriveAvatarContinuousMovementInputEvent'),
-            '60. application/WorldNavigationSession.js does consume core/AvatarContinuousMovementInputAdapter.js\'s own deliberate 0.9.65 entry point — the keyboard-facing seam lives here, not in the controller');
+            '60. application/world/WorldNavigationSession.js does consume core/AvatarContinuousMovementInputAdapter.js\'s own deliberate 0.9.65 entry point — the keyboard-facing seam lives here, not in the controller');
         assert(codeOnly.includes('deriveAvatarContinuousMovementIntent'),
-            '61. application/WorldNavigationSession.js does consume core/AvatarContinuousMovementIntent.js\'s own deliberate 0.9.64 transition function');
+            '61. application/world/WorldNavigationSession.js does consume core/AvatarContinuousMovementIntent.js\'s own deliberate 0.9.64 transition function');
         assert(codeOnly.includes('setContinuousMovementIntent'),
-            '62. application/WorldNavigationSession.js feeds the resolved intent into AvatarMovementController through its own public setter, never by reaching into a private field');
+            '62. application/world/WorldNavigationSession.js feeds the resolved intent into AvatarMovementController through its own public setter, never by reaching into a private field');
     }
 
     console.log('✅ All Avatar Continuous Movement Controller Integration tests passed.');

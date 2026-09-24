@@ -6,20 +6,20 @@ import { fileURLToPath } from 'node:url';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/CreateExternalPublicationAnchorOrchestratorUseCase.js';
-import { PublicationAnchorCreationCoordinator } from '../application/PublicationAnchorCreationCoordinator.js';
-import { ExternalProofVerifierRegistry } from '../application/ExternalProofVerifierRegistry.js';
-import { ExternalAnchorCreationOutcome } from '../application/ExternalAnchorCreationOutcome.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { CreateBaseAnchorProofVerifierUseCase } from '../application/CreateBaseAnchorProofVerifierUseCase.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { CreateExternalPublicationAnchorOrchestratorUseCase } from '../application/anchoring/CreateExternalPublicationAnchorOrchestratorUseCase.js';
+import { PublicationAnchorCreationCoordinator } from '../application/anchoring/PublicationAnchorCreationCoordinator.js';
+import { ExternalProofVerifierRegistry } from '../application/anchoring/ExternalProofVerifierRegistry.js';
+import { ExternalAnchorCreationOutcome } from '../application/anchoring/ExternalAnchorCreationOutcome.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { CreateBaseAnchorProofVerifierUseCase } from '../application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js';
 import { BaseProofVerifier } from '../anchoring/BaseProofVerifier.js';
 import { BasePublicationTransactionPlanner } from '../base/BasePublicationTransactionPlanner.js';
-import { encodeBasePublicationCommitment } from '../application/BasePublicationCommitmentEncoding.js';
-import { CreateBitcoinAnchorProofVerifierUseCase } from '../application/CreateBitcoinAnchorProofVerifierUseCase.js';
-import { CreateArweaveAnchorProofVerifierUseCase } from '../application/CreateArweaveAnchorProofVerifierUseCase.js';
+import { encodeBasePublicationCommitment } from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
+import { CreateBitcoinAnchorProofVerifierUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorProofVerifierUseCase.js';
+import { CreateArweaveAnchorProofVerifierUseCase } from '../application/anchoring/CreateArweaveAnchorProofVerifierUseCase.js';
 import { BitcoinAnchorPublisher } from '../anchoring/BitcoinAnchorPublisher.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 import { ArweaveAnchorPublisher } from '../anchoring/ArweaveAnchorPublisher.js';
@@ -34,7 +34,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // TYPE: test-only integration-boundary audit. PRODUCTION CHANGES: NONE.
 //
 // 0.9.463 gave this codebase a real anchoring/BaseProofVerifier.js and a
-// real application/CreateBaseAnchorProofVerifierUseCase.js, unit-tested in
+// real application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js, unit-tested in
 // full isolation by tests/BaseTransactionProofVerifier.test.js. This
 // milestone asks the question that file's own scope deliberately never
 // asked: does the new verifier actually participate in the REAL,
@@ -58,7 +58,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //      fields a ProofVerifier can act on. Base's own real publishing path
 //      (base/BasePublicationTransactionPlanner.js through base/
 //      BaseSignedTransactionFinalizer.js) produces something structurally
-//      different — application/BaseAnchorPublicationRecord.js, a
+//      different — application/anchoring/base/BaseAnchorPublicationRecord.js, a
 //      `{ contentHash, txid, network, createdAt }` identity record with
 //      no `anchorType`, no `proof`, no signature, and no relationship to
 //      `core/PublicationAnchor.js` at all (confirmed independently by
@@ -88,7 +88,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //      anything a person using this application would ever trigger.
 //
 // Neither finding is a defect IN anchoring/BaseProofVerifier.js or
-// application/CreateBaseAnchorProofVerifierUseCase.js themselves — every
+// application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js themselves — every
 // section below proves those two files are mechanically sound and behave
 // identically to their Bitcoin/Arweave siblings at every seam this
 // codebase's own registry/use-case/ExternalAnchorVerifier pipeline
@@ -110,7 +110,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //      (PublicationAnchorCreationCoordinator.create(), the exact UI-facing
 //      seam) drives a real, signed anchorType:'base' PublicationAnchor
 //      into existence, backed by a REAL base/BasePublicationTransactionPlanner.js
-//      plan and a REAL application/BasePublicationCommitmentEncoding.js
+//      plan and a REAL application/anchoring/base/BasePublicationCommitmentEncoding.js
 //      commitment — the ONE substituted piece, named explicitly, is the
 //      `{ anchorType, publish() }` glue no production BaseAnchorPublisher
 //      exists to supply (see the finding above). Verification then runs
@@ -151,7 +151,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE. Building a BaseAnchorPublisher;
 // wiring CreateBaseAnchorProofVerifierUseCase into ui/main.js; any change
-// to anchoring/BaseProofVerifier.js, application/CreateBaseAnchorProofVerifierUseCase.js,
+// to anchoring/BaseProofVerifier.js, application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js,
 // the registries, the coordinator, or ui/. This file only reads and
 // exercises current production source; it modifies none of it. Whether to
 // build that publisher, or wire this verifier in, is the product question
@@ -343,9 +343,9 @@ async function run() {
         // source constructs exactly one BaseJsonRpcClient, handed straight
         // to BaseProofVerifier as rpcSource — reconfirmed from current
         // source, not assumed from 0.9.463's own prose.
-        const useCaseCode = codeOnly(await source('application/CreateBaseAnchorProofVerifierUseCase.js'));
+        const useCaseCode = codeOnly(await source('application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js'));
         const clientConstructions = (useCaseCode.match(/new BaseJsonRpcClient\(/g) || []).length;
-        check(clientConstructions === 1, 'B2. application/CreateBaseAnchorProofVerifierUseCase.js constructs exactly one BaseJsonRpcClient — never a second, parallel one');
+        check(clientConstructions === 1, 'B2. application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js constructs exactly one BaseJsonRpcClient — never a second, parallel one');
         check(/rpcSource: baseJsonRpcClient/.test(useCaseCode), 'B3. that exact instance is what is handed to BaseProofVerifier as rpcSource — never a different object built alongside it');
 
         // B4. THE FLAGSHIP NEGATIVE FINDING: is any of this actually
@@ -368,7 +368,7 @@ async function run() {
 
         check(!/CreateBaseAnchorProofVerifierUseCase/.test(mainCode), 'B6. ui/main.js NEVER imports, references, or constructs CreateBaseAnchorProofVerifierUseCase — unlike its Bitcoin/Arweave siblings just confirmed above');
         check(!/BaseProofVerifier/.test(mainCode), 'B7. ...and never references BaseProofVerifier by name either — no alternate, hand-rolled wiring path exists for it');
-        check(!/externalAnchorProofVerifierRegistry\.register\([^)]*[Bb]ase/.test(mainCode), 'B8. the live externalAnchorProofVerifierRegistry — the actual registry application/ExternalAnchorVerifier.js consults for every real verification this application performs — never has anything Base-shaped registered into it');
+        check(!/externalAnchorProofVerifierRegistry\.register\([^)]*[Bb]ase/.test(mainCode), 'B8. the live externalAnchorProofVerifierRegistry — the actual registry application/anchoring/ExternalAnchorVerifier.js consults for every real verification this application performs — never has anything Base-shaped registered into it');
 
         // B9. Confirmed repo-wide, not merely in ui/main.js: the use case
         // is referenced only by its own two implementation files and this
@@ -382,7 +382,7 @@ async function run() {
         }
         const referencingFiles = grepOutput.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => l.replace(/^\.\//, ''));
         const nonTestNonOwnFiles = referencingFiles.filter((f) =>
-            f !== 'application/CreateBaseAnchorProofVerifierUseCase.js' &&
+            f !== 'application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js' &&
             f !== 'anchoring/BaseProofVerifier.js' && // its own header prose names its composition-root sibling, no import
             !f.startsWith('tests/') &&
             f !== 'docs/Roadmap.md'
@@ -402,7 +402,7 @@ async function run() {
             makeReplica({ publishers: [net.fakeBasePublisher] });
 
         // The exact class ui/views/DecentralizedPublicationsView.js's own
-        // createAnchor() calls — application/PublicationAnchorCreationCoordinator.js
+        // createAnchor() calls — application/anchoring/PublicationAnchorCreationCoordinator.js
         // — sits in front of the orchestrator here, never bypassed, the
         // identical seam tests/ArweaveProofAnchorIntegrationBoundaryAudit
         // .test.js's own Section A already established for a real chain.
@@ -805,7 +805,7 @@ async function run() {
         // discuss a DIFFERENT, permitted identity concept (the anchor's
         // own SIGNER, i.e. "authorization"/"anchorIdentity"), which is
         // not the invariant this section is checking.
-        const filesToSweep = ['anchoring/BaseProofVerifier.js', 'application/CreateBaseAnchorProofVerifierUseCase.js'];
+        const filesToSweep = ['anchoring/BaseProofVerifier.js', 'application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js'];
         for (const file of filesToSweep) {
             const code = codeOnly(await source(file));
             check(!/\bowner\b|\bauthor\b|\bpublisher\b|\bwallet\b|\bsender\b|\bsigner\b(?!ature)/i.test(code), `J5[${file}]. no owner/author/publisher/wallet/sender/signer vocabulary anywhere in this real, exercised class`);
@@ -884,7 +884,7 @@ async function run() {
         // structurally unrelated to PublicationAnchor — the reason no
         // real "Base anchor" exists for this mechanism to carry in the
         // first place.
-        const recordSrc = await source('application/BaseAnchorPublicationRecord.js');
+        const recordSrc = await source('application/anchoring/base/BaseAnchorPublicationRecord.js');
         check(/constructor\(\{ contentHash, txid, network, createdAt \} = \{\}\)/.test(recordSrc), 'K3a. BaseAnchorPublicationRecord\'s own constructor destructures exactly { contentHash, txid, network, createdAt } — no publicationId, no anchorType, no proof, no signature');
         check(!/anchorType/.test(codeOnly(recordSrc)), 'K3b. no code in this file mentions anchorType at all — the field a ProofVerifier is keyed and dispatched by');
         check(!/instanceof PublicationAnchor|extends PublicationAnchor/.test(codeOnly(recordSrc)), 'K3c. it is not, and does not pretend to be, a PublicationAnchor');
@@ -940,7 +940,7 @@ async function run() {
         check(assertionCount > 60, 'M3. sanity: this audit is substantive, not a token pass');
 
         console.log('\n=== VERDICT: BASE_PROOF_VERIFIER_SOUND_BUT_NOT_YET_PRODUCTION_WIRED ===');
-        console.log('anchoring/BaseProofVerifier.js and application/CreateBaseAnchorProofVerifierUseCase.js are mechanically and');
+        console.log('anchoring/BaseProofVerifier.js and application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js are mechanically and');
         console.log('behaviorally sound at every seam this codebase\'s own registry/use-case/ExternalAnchorVerifier pipeline defines —');
         console.log('proven end to end (Sections A, C-J) with the SAME real classes, the SAME three-outcome semantics, the SAME call');
         console.log('discipline, and the SAME content-not-ownership restraint Bitcoin\'s and Arweave\'s own verifiers already hold, at');

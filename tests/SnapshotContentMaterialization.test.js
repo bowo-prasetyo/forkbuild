@@ -1,21 +1,21 @@
-import { SnapshotContentMaterializationCoordinator } from '../application/SnapshotContentMaterializationCoordinator.js';
-import { SnapshotContentMaterializationUiState } from '../application/SnapshotContentMaterializationUiState.js';
-import { describeMaterializationAttempt, describeMaterializationButtonLabel } from '../application/SnapshotContentMaterializationView.js';
-import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { SnapshotContentTransferOutcome } from '../application/SnapshotContentTransferOutcome.js';
-import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/BuildPublicationSnapshotTransferPackageUseCase.js';
-import { PublicationSnapshotTransferPackageError } from '../application/PublicationSnapshotTransferPackageValidator.js';
-import { buildPublicationReplicaPackage } from '../application/PublicationReplicaPackage.js';
-import { ImportPublicationReplicaPackageUseCase } from '../application/ImportPublicationReplicaPackageUseCase.js';
-import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
-import { LocalSnapshotContentAvailabilityOutcome } from '../application/LocalSnapshotContentAvailabilityOutcome.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
+import { SnapshotContentMaterializationCoordinator } from '../application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js';
+import { SnapshotContentMaterializationUiState } from '../application/snapshot/materialization/SnapshotContentMaterializationUiState.js';
+import { describeMaterializationAttempt, describeMaterializationButtonLabel } from '../application/snapshot/materialization/SnapshotContentMaterializationView.js';
+import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { SnapshotContentTransferOutcome } from '../application/snapshot/materialization/SnapshotContentTransferOutcome.js';
+import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js';
+import { PublicationSnapshotTransferPackageError } from '../application/snapshot/PublicationSnapshotTransferPackageValidator.js';
+import { buildPublicationReplicaPackage } from '../application/publication/replica/PublicationReplicaPackage.js';
+import { ImportPublicationReplicaPackageUseCase } from '../application/publication/replica/ImportPublicationReplicaPackageUseCase.js';
+import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
+import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -308,7 +308,7 @@ async function run() {
 
         // --- Carol: receives a valid transfer package for a publication
         // she has NEVER cataloged. The bytes are still stored — see
-        // application/ImportPublicationSnapshotTransferPackageUseCase.js's
+        // application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js's
         // own header: publicationKnown never gates storage. ---
         const carol = makeReplica();
         assert(carol.publicationCatalog.get(PUBLICATION_ID) === null, '15. Carol has never heard of this publication before importing');

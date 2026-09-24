@@ -4,7 +4,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
 import { DocumentOperationApplicationEligibility } from '../core/DocumentOperationApplicationEligibility.js';
@@ -25,7 +25,7 @@ import {
 // directly, pure, no peers, no network — the same "pure query, exercised
 // directly" posture `tests/DocumentOperationApplicationEligibility.test.js`
 // already established for its sibling file — plus a section that wires
-// real `application/CommandHistory.js` instances behind a small,
+// real `application/editor/CommandHistory.js` instances behind a small,
 // test-local execution-history adapter, to prove readiness reads REAL
 // execution state without any new method added to `CommandHistory` itself.
 //
@@ -33,7 +33,7 @@ import {
 // operation buffering, delayed/automatic application, causal reordering,
 // automatic replay, rollback, history rewriting, retransmission, retry,
 // CRDT, OT, conflict resolution, synchronized undo, or a convergence
-// guarantee. `application/CommandHistory.js` is untouched by this
+// guarantee. `application/editor/CommandHistory.js` is untouched by this
 // milestone — the one new method that appears in this file
 // (`executionHistoryFromCommandHistories()`, below) is TEST-ONLY glue, not
 // a change to `CommandHistory`'s own class.
@@ -260,7 +260,7 @@ function runTests() {
 // ===================================================================
 // Section I — Real CommandHistory integration: the SAME distinction proven
 // abstractly in Section D now proven against actual
-// `application/CommandHistory.js` instances, through the test-local
+// `application/editor/CommandHistory.js` instances, through the test-local
 // `executionHistoryFromCommandHistories()` adapter. No new method is added
 // to CommandHistory itself.
 // ===================================================================

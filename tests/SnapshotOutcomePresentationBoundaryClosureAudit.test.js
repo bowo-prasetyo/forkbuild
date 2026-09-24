@@ -3,12 +3,12 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { SnapshotPublicationAttributionOutcome } from '../application/SnapshotPublicationAttributionOutcome.js';
-import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../application/SnapshotOutcomeInspectionView.js';
-import { resolveSnapshotPublicationAttribution } from '../application/SnapshotPublicationAttribution.js';
-import { describeWorldEncounterMaterialVerificationStatusLabel } from '../application/WorldEncounterMaterialInspectionView.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
+import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../application/snapshot/SnapshotOutcomeInspectionView.js';
+import { resolveSnapshotPublicationAttribution } from '../application/snapshot/SnapshotPublicationAttribution.js';
+import { describeWorldEncounterMaterialVerificationStatusLabel } from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.529 — Snapshot Outcome Presentation Boundary Closure Audit.
@@ -22,7 +22,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // DecentralizedSnapshotResolutionOutcome/SnapshotPublicationAttributionOutcome
 // machine words directly ('resolved', 'not-discovered', 'match',
 // 'no-match', ...). The fix was a new, small, pure view file —
-// application/SnapshotOutcomeInspectionView.js — with exactly two
+// application/snapshot/SnapshotOutcomeInspectionView.js — with exactly two
 // functions, routed through all six real call sites. This milestone's own
 // job is to PROVE that fix is COMPLETE across every affected production
 // presentation path, that it preserves the underlying outcome semantics
@@ -69,7 +69,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //      Encounter, attribution, and evidence tests, re-executed live as
 //      real subprocesses.
 //   I. Production-change boundary — this audit itself changes no
-//      production file, and application/SnapshotOutcomeInspectionView.js
+//      production file, and application/snapshot/SnapshotOutcomeInspectionView.js
 //      remains presentation-only (no I/O, no mutation, touches only the
 //      `.outcome` field it is handed).
 //
@@ -122,7 +122,7 @@ async function run() {
 
     const panelSource = await source('ui/components/OwnPublicationPanel.js');
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
-    const viewSource = await source('application/SnapshotOutcomeInspectionView.js');
+    const viewSource = await source('application/snapshot/SnapshotOutcomeInspectionView.js');
     const panelCode = codeOnly(panelSource);
     const canvasCode = codeOnly(canvasSource);
     const viewCode = codeOnly(viewSource);
@@ -241,9 +241,9 @@ async function run() {
     // Section C — Both production UI paths.
     // ===============================================================
     {
-        assert(panelCode.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/SnapshotOutcomeInspectionView.js';"),
+        assert(panelCode.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/snapshot/SnapshotOutcomeInspectionView.js';"),
             n('C1. OwnPublicationPanel.js imports both presentation functions from the one shared view file'));
-        assert(canvasCode.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../../application/SnapshotOutcomeInspectionView.js';"),
+        assert(canvasCode.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../../application/snapshot/SnapshotOutcomeInspectionView.js';"),
             n('C2. WorldEncounterCanvas.js imports both presentation functions from the SAME shared view file — not a per-component duplicate'));
 
         // A GENERIC sweep, not merely the six known literal strings: any
@@ -346,7 +346,7 @@ async function run() {
         const forbiddenFieldReferences = ['.bytes', '.candidates', '.locator', '.storage', '.reason', '.contentHash', '.publicationHash', '.snapshotHash'];
         for (const field of forbiddenFieldReferences) {
             assert(!viewCode.includes(field),
-                n(`E1[${field}]. application/SnapshotOutcomeInspectionView.js's own executable code never references "${field}" — it reads only the outcome string it is handed, nothing else about the underlying result`));
+                n(`E1[${field}]. application/snapshot/SnapshotOutcomeInspectionView.js's own executable code never references "${field}" — it reads only the outcome string it is handed, nothing else about the underlying result`));
         }
 
         // Live-exercise: build a full resolvedSnapshot fixture carrying
@@ -454,7 +454,7 @@ async function run() {
         // excluded, since the file's own header quotes several of these
         // words while explicitly REFUSING them).
         assert(!BRIEF_OVERCLAIM_WORDS.test(viewCode),
-            n('G4. application/SnapshotOutcomeInspectionView.js\'s own executable code (comments excluded) never uses any of the seven named trust-boundary words'));
+            n('G4. application/snapshot/SnapshotOutcomeInspectionView.js\'s own executable code (comments excluded) never uses any of the seven named trust-boundary words'));
 
         console.log('✓ Section G: PRODUCT_COMPLETE — every one of the seven real, known labels, and the view file\'s own executable code, stay clear of both this milestone\'s own seven-word trust-language boundary and the wider overclaim list this audit series already established.');
     }
@@ -492,16 +492,16 @@ async function run() {
         assert(touchedProduction.length === 0,
             n(`I1. this closure audit touches ZERO production files — only its own new test file and its tests.html registration (found touched production files: ${JSON.stringify(touchedProduction)})`));
 
-        // application/SnapshotOutcomeInspectionView.js itself is
+        // application/snapshot/SnapshotOutcomeInspectionView.js itself is
         // unmodified by this milestone.
         let diffOutput = '';
         try {
-            diffOutput = execFileSync('git', ['diff', '--stat', '--', 'application/SnapshotOutcomeInspectionView.js'], { cwd: SOURCE_ROOT, encoding: 'utf8' });
+            diffOutput = execFileSync('git', ['diff', '--stat', '--', 'application/snapshot/SnapshotOutcomeInspectionView.js'], { cwd: SOURCE_ROOT, encoding: 'utf8' });
         } catch {
             diffOutput = 'diff failed';
         }
         assert(diffOutput.trim() === '',
-            n('I2. application/SnapshotOutcomeInspectionView.js carries no working-tree diff — this audit leaves the file this milestone examines byte-for-byte unchanged'));
+            n('I2. application/snapshot/SnapshotOutcomeInspectionView.js carries no working-tree diff — this audit leaves the file this milestone examines byte-for-byte unchanged'));
 
         // The file remains presentation-only: no I/O, no mutation, no
         // async, no side-effecting global access — the identical purity
@@ -510,12 +510,12 @@ async function run() {
         const forbiddenPurityTokens = ['fetch(', 'XMLHttpRequest', 'localStorage', 'sessionStorage', 'Date.now', 'Math.random', 'async ', 'await ', 'this.', 'window.', 'document.', 'throw '];
         for (const token of forbiddenPurityTokens) {
             assert(!viewCode.includes(token),
-                n(`I3[${token.trim()}]. application/SnapshotOutcomeInspectionView.js's own executable code contains no "${token.trim()}" — it stays pure, synchronous, read-only, and non-throwing`));
+                n(`I3[${token.trim()}]. application/snapshot/SnapshotOutcomeInspectionView.js's own executable code contains no "${token.trim()}" — it stays pure, synchronous, read-only, and non-throwing`));
         }
         assert(!viewCode.includes('export class') && !viewCode.includes('export default'),
             n('I4. the file exports plain functions only — no class, no default export, no hidden state container'));
 
-        console.log('✓ Section I: PRODUCT_COMPLETE — this closure audit is test-only; application/SnapshotOutcomeInspectionView.js is byte-for-byte unmodified and remains structurally pure, synchronous, and read-only.');
+        console.log('✓ Section I: PRODUCT_COMPLETE — this closure audit is test-only; application/snapshot/SnapshotOutcomeInspectionView.js is byte-for-byte unmodified and remains structurally pure, synchronous, and read-only.');
     }
 
     console.log('\n=== Verdict ===');

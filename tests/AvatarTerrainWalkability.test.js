@@ -1,20 +1,20 @@
 import { slopeBetween, isWalkableSlope, DEFAULT_MAX_WALKABLE_SLOPE } from '../core/TerrainWalkability.js';
-import { AvatarTerrainConstraint } from '../application/AvatarTerrainConstraint.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.2.77 — Terrain-Aware Avatar Grounding & Movement.
 //
 //   Section A: core/TerrainWalkability.js — pure slope geometry
-//   Section B: application/AvatarTerrainConstraint.js — real + injected terrain
-//   Section C: application/AvatarMovementController.js — terrain constraint wired into the movement pipeline
+//   Section B: application/avatar/AvatarTerrainConstraint.js — real + injected terrain
+//   Section C: application/avatar/AvatarMovementController.js — terrain constraint wired into the movement pipeline
 //   Section D: WorldNavigationSession integration
 //   Section E: FLAGSHIP — the design doc's own scripted scenario
 //
@@ -118,7 +118,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — application/AvatarTerrainConstraint.js
+    // Section B — application/avatar/AvatarTerrainConstraint.js
     // -------------------------------------------------------------
     {
         // No horizontal movement at all (e.g. jumping in place) is
@@ -176,7 +176,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — application/AvatarMovementController.js
+    // Section C — application/avatar/AvatarMovementController.js
     // -------------------------------------------------------------
     {
         // Backward compatibility: a controller built without a third

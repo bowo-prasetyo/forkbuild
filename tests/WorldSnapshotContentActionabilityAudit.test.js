@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -224,8 +224,8 @@ function extractMethodBody(source, name) {
 async function run() {
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
     const canvasCodeOnly = stripLineComments(canvasSource);
-    const contentViewSource = await readFile(new URL('../application/WorldSnapshotContentView.js', import.meta.url), 'utf8');
-    const contentComparisonViewSource = await readFile(new URL('../application/WorldSnapshotContentComparisonView.js', import.meta.url), 'utf8');
+    const contentViewSource = await readFile(new URL('../application/snapshot/materialization/WorldSnapshotContentView.js', import.meta.url), 'utf8');
+    const contentComparisonViewSource = await readFile(new URL('../application/snapshot/materialization/WorldSnapshotContentComparisonView.js', import.meta.url), 'utf8');
 
     // ---------------------------------------------------------------
     // Section A — existing action inventory.
@@ -565,9 +565,9 @@ async function run() {
         const forbiddenVocabulary = /merge|duplicat|replace this|deduplicat|\baccept\b|\badopt\b|use this snapshot|materialize.{0,20}comparison/i;
 
         assert(!forbiddenVocabulary.test(stripLineComments(contentViewSource)),
-            '1. application/WorldSnapshotContentView.js carries no accept/merge/adopt/replace/deduplicate vocabulary');
+            '1. application/snapshot/materialization/WorldSnapshotContentView.js carries no accept/merge/adopt/replace/deduplicate vocabulary');
         assert(!forbiddenVocabulary.test(stripLineComments(contentComparisonViewSource)),
-            '2. application/WorldSnapshotContentComparisonView.js carries no accept/merge/adopt/replace/deduplicate vocabulary either');
+            '2. application/snapshot/materialization/WorldSnapshotContentComparisonView.js carries no accept/merge/adopt/replace/deduplicate vocabulary either');
 
         const contentViewPanelMatch = canvasSource.match(/<div v-if="selectedEncounterSnapshotInspection" class="world-snapshot-content-view-panel">[\s\S]*?\n            <\/div>/);
         const comparisonViewPanelMatch = canvasSource.match(/<div v-if="comparisonEncounter" class="world-snapshot-content-comparison-panel">[\s\S]*?\n            <\/div>/);

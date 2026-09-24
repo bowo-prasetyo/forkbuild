@@ -7,8 +7,8 @@ import { LocalPeerDiscoveryProvider } from './LocalPeerDiscoveryProvider.js';
 // permanent, hard-coded authority — it answers it by making "which
 // discovery mechanisms this device currently trusts enough to ask" an
 // explicit, inspectable, and CHANGEABLE list, itself just another
-// PeerDiscoveryProvider — so application/FindPeerUseCase.js and
-// application/PeerSessionManager.js never have to know or care how many
+// PeerDiscoveryProvider — so application/peer/FindPeerUseCase.js and
+// application/peer/PeerSessionManager.js never have to know or care how many
 // mechanisms are behind it, exactly the same seam peer/
 // PeerDiscoveryProvider.js's own header already promised for LAN, a
 // rendezvous service, or a DHT.

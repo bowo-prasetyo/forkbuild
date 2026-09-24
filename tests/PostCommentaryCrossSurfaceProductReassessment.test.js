@@ -5,7 +5,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -119,23 +119,23 @@ async function runTests() {
     {
         const domain = await rawSource('core/PublicationCommentary.js');
         const store = await rawSource('storage/PublicationCommentaryStore.js');
-        const addUseCase = await rawSource('application/AddPublicationCommentaryUseCase.js');
-        const getUseCase = await rawSource('application/GetPublicationCommentariesUseCase.js');
-        const canComment = await rawSource('application/CanCommentOnPublicationUseCase.js');
-        const producer = await rawSource('application/PublicationCommentaryNotificationProducer.js');
+        const addUseCase = await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
+        const getUseCase = await rawSource('application/publication/commentary/GetPublicationCommentariesUseCase.js');
+        const canComment = await rawSource('application/publication/CanCommentOnPublicationUseCase.js');
+        const producer = await rawSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js');
 
         assert(domain.includes('class PublicationCommentary') && domain.includes('publicationId'),
             'A1. core/PublicationCommentary.js still keys commentary on a publicationId.');
         assert(store.includes('class PublicationCommentaryStore') && store.includes('getForPublication('),
             'A2. storage/PublicationCommentaryStore.js still exposes getForPublication() over an injected StorageProvider.');
         assert(addUseCase.includes('class AddPublicationCommentaryUseCase') && addUseCase.includes('resolveSigningIdentityId'),
-            'A3. application/AddPublicationCommentaryUseCase.js still resolves authorship from the identity infrastructure.');
+            'A3. application/publication/commentary/AddPublicationCommentaryUseCase.js still resolves authorship from the identity infrastructure.');
         assert(getUseCase.includes('class GetPublicationCommentariesUseCase'),
-            'A4. application/GetPublicationCommentariesUseCase.js still exists as the read path.');
+            'A4. application/publication/commentary/GetPublicationCommentariesUseCase.js still exists as the read path.');
         assert(canComment.includes('class CanCommentOnPublicationUseCase') && canComment.includes('discoveryProvider.findById'),
-            'A5. application/CanCommentOnPublicationUseCase.js still authorizes via Publication existence, not ownership.');
+            'A5. application/publication/CanCommentOnPublicationUseCase.js still authorizes via Publication existence, not ownership.');
         assert(producer.includes('class PublicationCommentaryNotificationProducer'),
-            'A6. application/PublicationCommentaryNotificationProducer.js still exists as the notification path.');
+            'A6. application/publication/commentary/PublicationCommentaryNotificationProducer.js still exists as the notification path.');
 
         // A7. The three live UI bindings, confirmed by their own
         // real, current prop/inject declarations rather than assumed.
@@ -417,7 +417,7 @@ async function runTests() {
     // C-F) actually varies per surface.
     // ---------------------------------------------------------------
     {
-        const canCommentCode = await codeOnlySource('application/CanCommentOnPublicationUseCase.js');
+        const canCommentCode = await codeOnlySource('application/publication/CanCommentOnPublicationUseCase.js');
         assert(!/ownerId|isOwn|ownPublication|isMine|role\s*[:=]/i.test(canCommentCode),
             'G1. CanCommentOnPublicationUseCase.js\'s own CODE (comments explicitly document these as deliberately excluded) carries no ownership/role vocabulary of any kind.');
 

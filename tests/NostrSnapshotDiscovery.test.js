@@ -5,8 +5,8 @@ import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 
 // 0.9.133 — Snapshot Location Discovery via Nostr.
 //
@@ -138,8 +138,8 @@ async function codeOnlySource(relativePath) {
 
 const NOSTR_SNAPSHOT_DISCOVERY_FILES = [
     'core/SnapshotDiscoveryEnvelope.js',
-    'application/NostrSnapshotDiscoveryPublisher.js',
-    'application/NostrSnapshotDiscoveryQueryService.js'
+    'application/nostr/NostrSnapshotDiscoveryPublisher.js',
+    'application/nostr/NostrSnapshotDiscoveryQueryService.js'
 ];
 
 async function run() {
@@ -237,7 +237,7 @@ async function run() {
             const code = await codeOnlySource(file);
             assert(!code.includes('PublicationDistribution'), `5a. ${file} never references the PublicationDistribution family`);
             assert(!code.includes('ArweavePublicationMaterialUploader'), `5b. ${file} never references ArweavePublicationMaterialUploader`);
-            assert(!code.includes('NostrPublicationDiscoveryPublisher'), `5c. ${file} never references application/NostrPublicationDiscoveryPublisher.js — a deliberately distinct semantic contract, never reused`);
+            assert(!code.includes('NostrPublicationDiscoveryPublisher'), `5c. ${file} never references application/nostr/NostrPublicationDiscoveryPublisher.js — a deliberately distinct semantic contract, never reused`);
             assert(!code.includes('DecentralizedDiscoveryEnvelope'), `5d. ${file} never references the Signed Claim's own envelope shape`);
         }
         console.log('✓ 5. the Signed Claim distribution family is never imported, constructed, or read by this milestone\'s own files');

@@ -166,13 +166,13 @@ import { VehicleType } from './VehicleType.js';
 //
 // 0.9.117 UPDATE — ALSO ACCEPTS A VehicleInstance, THE ONE CHANGE THIS
 // MILESTONE MAKES HERE. Through 0.9.116, every caller of this function
-// (in practice, only `application/AvatarVehicleInteractionController.js`)
+// (in practice, only `application/avatar/AvatarVehicleInteractionController.js`)
 // could only ever hand it a freshly-requeried `VehiclePresence` — whose
 // `position` is, by that type's own contract, always the vehicle's FIXED
 // deterministic spawn point (see core/VehiclePresence.js's own header).
 // That was honest through 0.9.113, but became a live bug the moment
 // core/VehicleInstance.js (0.9.114) gave a vehicle a `position` that can
-// actually differ from `spawnPosition`, and application/AvatarVehicleMovementController.js
+// actually differ from `spawnPosition`, and application/avatar/AvatarVehicleMovementController.js
 // (0.9.116) started actually moving it: a mounted, ridden vehicle's own
 // dismount destination kept resolving from where it STARTED, never from
 // where it now IS. This function's own core promise — "the same shape of
@@ -193,7 +193,7 @@ import { VehicleType } from './VehicleType.js';
 // caller handing in a `VehicleInstance` automatically gets the CURRENT
 // runtime position resolved from, never the frozen spawn one, with zero
 // new code path or special case here. See
-// application/AvatarVehicleInteractionController.js's own 0.9.117
+// application/avatar/AvatarVehicleInteractionController.js's own 0.9.117
 // header for the call-site half of this fix — the actual switch from
 // "always hand this function a spawn-anchored VehiclePresence" to
 // "prefer handing it the mounted vehicle's own current VehicleInstance."

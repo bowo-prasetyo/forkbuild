@@ -134,7 +134,7 @@ async function run() {
             '9. WorldView.js never computes a World Encounter projection itself — that stays WorldEncounterCanvas\'s own job');
         assert(!worldViewCodeOnly.includes('assembleWorldDiscoveryInputs'),
             '10. WorldView.js never assembles World discovery inputs directly');
-        assert(!worldViewCodeOnly.includes("from '../../application/WorldDiscoverySourceRegistry.js'") && !worldViewCodeOnly.includes('new WorldDiscoverySourceRegistry('),
+        assert(!worldViewCodeOnly.includes("from '../../application/discovery/WorldDiscoverySourceRegistry.js'") && !worldViewCodeOnly.includes('new WorldDiscoverySourceRegistry('),
             '11. WorldView.js never constructs its own WorldDiscoverySourceRegistry — it only ever receives the one instance ui/main.js already provides');
 
         console.log('✓ Section B: WorldView.js performs no discovery logic of its own around worldDiscoverySourceRegistry — every behavior stays WorldEncounterCanvas\'s own job');

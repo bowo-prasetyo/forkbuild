@@ -6,10 +6,10 @@ import { FriendshipState } from '../../core/FriendshipState.js';
 // The "aggregate conversation-list/inbox UI" 0.2.69 named and
 // deliberately declined to build (see docs/Roadmap.md, "to keep the
 // change reviewable") — reading exactly the data that milestone's own
-// header pointed at (`application/ChatUseCase.js#getConversations()`
+// header pointed at (`application/chat/ChatUseCase.js#getConversations()`
 // "now genuinely returns every persisted conversation on construction,
 // and a future UI could read it directly"), now joined with
-// `application/PeerPresenceUseCase.js`'s own reconciliation so a row
+// `application/presence/PeerPresenceUseCase.js`'s own reconciliation so a row
 // here answers a genuinely richer question than "what did we talk
 // about": is this identity known, are we friends, are they connected
 // RIGHT NOW, how many messages are unread, and how many are still
@@ -63,14 +63,14 @@ export default {
             return date.toLocaleString();
         }
 
-        // Delegates to application/ChatUseCase.js#canChat() — a mutual
+        // Delegates to application/chat/ChatUseCase.js#canChat() — a mutual
         // friendship AND not blocked — so this view never offers
         // "Open Chat" for anyone ChatView would refuse to send to: not
         // for a non-friend (even if a conversation exists from before an
         // unfriend; history is never deleted — see
-        // application/ConversationStore.js's own header), and not for a
+        // application/chat/ConversationStore.js's own header), and not for a
         // friend this device has blocked (blocking never ends the
-        // friendship — see application/PeerBlockUseCase.js).
+        // friendship — see application/peer/PeerBlockUseCase.js).
         function canOpenChat(summary) {
             return chatUseCase.canChat(summary.identityId);
         }

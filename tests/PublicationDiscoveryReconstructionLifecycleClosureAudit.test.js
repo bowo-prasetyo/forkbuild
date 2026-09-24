@@ -4,20 +4,20 @@ import { execSync } from 'node:child_process';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { ReconstructPublicationDiscoveryUseCase } from '../application/ReconstructPublicationDiscoveryUseCase.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { ReconstructPublicationDiscoveryUseCase } from '../application/publication/ReconstructPublicationDiscoveryUseCase.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -25,7 +25,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // 0.9.609 — Publication Discovery Reconstruction Lifecycle Closure Audit.
 //
 // 0.9.608 promoted 0.9.607's own test-local proof into a real,
-// constructor-injected use case (application/ReconstructPublicationDiscoveryUseCase.js)
+// constructor-injected use case (application/publication/ReconstructPublicationDiscoveryUseCase.js)
 // and wired it into ui/main.js's composition root. This audit is the
 // deliberately smaller closure pass 0.9.608's own brief called for: not
 // re-proving the architecture (tests/ReconstructPublicationDiscoveryUseCase.test.js
@@ -317,7 +317,7 @@ async function run() {
         catalog.add(missingEnvelope);
 
         // D5. Incomplete catalog metadata — a REQUIRED field (per
-        // application/PublicationContentValidator.js's own
+        // application/publication/PublicationContentValidator.js's own
         // validatePublicationContent(): id/documentId/publishedAt are
         // required, matching 0.9.608's own Section B fixture exactly)
         // stripped from the wrapped content.
@@ -560,7 +560,7 @@ async function run() {
         // a placement-derived field — its own return shape is
         // `{ reconstructed }`, a count, nothing UI could mistake for a
         // placement or World-presence verdict.
-        const useCaseSource = await readSource('application/ReconstructPublicationDiscoveryUseCase.js');
+        const useCaseSource = await readSource('application/publication/ReconstructPublicationDiscoveryUseCase.js');
         assert(/return\s*\{\s*reconstructed\s*\};/.test(useCaseSource),
             '3. execute() returns only `{ reconstructed }` — a plain count of newly-discoverable entries, carrying no placement or World-presence claim a caller could misread as one.');
 
@@ -613,7 +613,7 @@ async function run() {
             changedFiles = null;
         }
         if (changedFiles !== null) {
-            assert(changedFiles.length <= 1 && (changedFiles.length === 0 || changedFiles[0] === 'application/ReconstructPublicationDiscoveryUseCase.js'),
+            assert(changedFiles.length <= 1 && (changedFiles.length === 0 || changedFiles[0] === 'application/publication/ReconstructPublicationDiscoveryUseCase.js'),
                 `3. this milestone's own commit touches at most the one production file its own Section B finding required (found: ${JSON.stringify(changedFiles)}) — no new provider, repository, caching layer, startup scheduler, network discovery, automatic material acquisition, placement restoration mechanism, UI redesign, notification, ranking/fallback, or change to World rendering.`);
         }
 

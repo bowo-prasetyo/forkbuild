@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
-import { composeMultiRelayNostrPublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { composeMultiRelayNostrPublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';

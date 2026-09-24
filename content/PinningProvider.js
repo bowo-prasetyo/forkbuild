@@ -9,7 +9,7 @@
 // else. It is deliberately NOT a second content/ContentStore.js: a
 // pinning provider is not addressed by a `storage`/`ContentReference`
 // pair, never resolves anything, and is never registered into
-// application/SnapshotPlacementStoreRegistry.js directly. content/
+// application/snapshot/placement/SnapshotPlacementStoreRegistry.js directly. content/
 // IpfsRemotePinningContentStore.js is the adapter that bridges the two —
 // see that file's own header.
 //

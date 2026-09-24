@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
-import { composePublicationDistributionRuntime } from '../application/PublicationDistributionRuntimeComposition.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
+import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
 import { parseDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 
 // 0.9.47 — Publication Distribution Runtime Composition.
@@ -253,7 +253,7 @@ async function run() {
     // Section G — architectural regression.
     // ---------------------------------------------------------------
     {
-        const path = '../application/PublicationDistributionRuntimeComposition.js';
+        const path = '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
         const fullSource = await readFile(new URL(path, import.meta.url), 'utf8');
         const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -271,13 +271,13 @@ async function run() {
             assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `45. code must never use "${term}" — composition only, no execution/state/trust vocabulary`);
         }
 
-        const descriptorSource = await readFile(new URL('../application/PublicationDistributionDescriptor.js', import.meta.url), 'utf8');
+        const descriptorSource = await readFile(new URL('../application/publication/distribution/PublicationDistributionDescriptor.js', import.meta.url), 'utf8');
         assert(!descriptorSource.includes('PublicationDistributionRuntimeComposition'), '46. the 0.9.44 descriptor itself is never modified to know about this composition file');
 
-        const uploaderSource = await readFile(new URL('../application/ArweavePublicationMaterialUploader.js', import.meta.url), 'utf8');
+        const uploaderSource = await readFile(new URL('../application/arweave/ArweavePublicationMaterialUploader.js', import.meta.url), 'utf8');
         assert(!uploaderSource.includes('PublicationDistributionRuntimeComposition'), '47. the 0.9.45 uploader itself is never modified to know about this composition file');
 
-        const publisherSource = await readFile(new URL('../application/NostrPublicationDiscoveryPublisher.js', import.meta.url), 'utf8');
+        const publisherSource = await readFile(new URL('../application/nostr/NostrPublicationDiscoveryPublisher.js', import.meta.url), 'utf8');
         assert(!publisherSource.includes('PublicationDistributionRuntimeComposition'), '48. the 0.9.46 publisher itself is never modified to know about this composition file');
 
         console.log('✓ Section G: architectural regression — no orchestration entry point, no re-implemented envelope/upload/publish semantics, no execution/state/trust vocabulary; 0.9.44/0.9.45/0.9.46 untouched');

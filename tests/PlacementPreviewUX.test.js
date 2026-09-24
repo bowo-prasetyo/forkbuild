@@ -2,10 +2,10 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateEditorContextUseCase } from '../application/CreateEditorContextUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { PlacementTool } from '../application/tools/PlacementTool.js';
 import { PreviewState } from '../application/editor-state/PreviewState.js';
 import { SpatialPlacementState } from '../application/spatial-state/SpatialPlacementState.js';
@@ -30,7 +30,7 @@ import { SpatialPlacementState } from '../application/spatial-state/SpatialPlace
 // = actual Brick.placement.rotation." Terrain elevation (the OTHER half
 // of this milestone) is deliberately NOT under test here: it is a
 // rendering-time-only offset applied in renderer/PreviewRenderer.js and
-// application/WorldNavigationSession.js#_presentPlacementPreview(), never
+// application/world/WorldNavigationSession.js#_presentPlacementPreview(), never
 // part of PreviewState/SpatialPlacementState's own position field — see
 // those two files' own headers.
 

@@ -9,9 +9,9 @@ import { LocalRendezvousNetwork } from '../peer/LocalRendezvousNetwork.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { DiscoveryBootstrap } from '../peer/DiscoveryBootstrap.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
 
 // 0.2.65 — Distributed Peer Rendezvous.
 //
@@ -22,7 +22,7 @@ import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
 // network — PUBLISH/LOOKUP/REMOVE (peer/RendezvousTransport.js, peer/
 // LocalRendezvousNetwork.js) — behind the exact same peer/
 // PeerDiscoveryProvider.js contract, plus a way to ask SEVERAL such
-// networks at once without application/FindPeerUseCase.js ever having to
+// networks at once without application/peer/FindPeerUseCase.js ever having to
 // change (peer/DiscoveryBootstrap.js).
 //
 // Central principle under test throughout: RENDEZVOUS DISTRIBUTES
@@ -58,7 +58,7 @@ function makeDevice(label, network) {
     return { storage, identityProvider: provider, transport, connect, id: provider.getSigningIdentity().id };
 }
 
-// A minimal, honestly-labeled stand-in for application/PeerSessionManager.js's
+// A minimal, honestly-labeled stand-in for application/peer/PeerSessionManager.js's
 // own importCandidate()/discoverCandidates()/connectToDiscovered()/
 // onIdentityMismatch() surface — the same shape tests/
 // PeerIdentityDiscovery.test.js already established, here parameterized by

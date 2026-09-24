@@ -6,8 +6,8 @@ import { PeerConnectionAnswer } from '../peer/PeerConnectionAnswer.js';
 import { PeerConnectionState } from '../peer/PeerConnectionState.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerDiscoveryProvider } from '../peer/LocalPeerDiscoveryProvider.js';
-import { DiscoverPeersUseCase } from '../application/DiscoverPeersUseCase.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { DiscoverPeersUseCase } from '../application/peer/DiscoverPeersUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 
 // 0.2.51 — Real WebRTC Peer Transport & Signaling Handoff.
 //
@@ -222,7 +222,7 @@ let flagshipCleanup;
     // Alice opens a WebRTC offer and attaches it to 0.2.49 authentication
     // + the registry immediately — before Bob has even seen it, let alone
     // answered it. Authentication does not actually START until the
-    // connection reaches CONNECTED; see application/ConnectToPeerUseCase.js.
+    // connection reaches CONNECTED; see application/peer/ConnectToPeerUseCase.js.
     const aliceConnection = aliceTransport.createOffer();
     const aliceConnectedPeer = aliceConnect.attach(aliceConnection);
     const offer = await waitForLocalSignal(aliceConnection);

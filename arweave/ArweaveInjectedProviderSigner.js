@@ -17,7 +17,7 @@ const MAX_SINGLE_CHUNK_BYTES = 256 * 1024;
 
 // 0.9.121 — Arweave Injected Provider Signer.
 //
-// application/ArweavePublicationDistributionRuntimeAdapter.js (0.9.109)
+// application/arweave/ArweavePublicationDistributionRuntimeAdapter.js (0.9.109)
 // closed the seam a host Arweave signing capability plugs into, but named
 // "a concrete host Arweave signing capability... a wallet-extension
 // integration" as later, unscheduled work — the one thing standing between
@@ -38,7 +38,7 @@ const MAX_SINGLE_CHUNK_BYTES = 256 * 1024;
 //   { sign(material) -> Promise<{ id, transaction }> }   | undefined
 //        │
 //        ▼
-//   application/ArweavePublicationDistributionRuntimeAdapter.js   (0.9.109, unmodified)
+//   application/arweave/ArweavePublicationDistributionRuntimeAdapter.js   (0.9.109, unmodified)
 //
 // A SIGNER PRODUCER, NEVER A SECOND SEAM. 0.9.109's own adapter already
 // forwards a `signer` verbatim; this file is what a caller (`ui/main.js`)
@@ -76,7 +76,7 @@ const MAX_SINGLE_CHUNK_BYTES = 256 * 1024;
 //
 // A SINGLE-CHUNK TRANSACTION ONLY — NEVER MULTI-CHUNK ARWEAVE UPLOAD. Real
 // Arweave transactions merkle-chunk `data` above 256 KiB; that scheme is
-// deliberately unimplemented here. `application/ArweavePublicationMaterialUploader.js`'s
+// deliberately unimplemented here. `application/arweave/ArweavePublicationMaterialUploader.js`'s
 // own `DEFAULT_MAX_MATERIAL_BYTES` (48 * 1024) already guarantees `sign()`
 // is never called with material anywhere near that ceiling — this file
 // enforces the boundary anyway, throwing rather than silently producing a
@@ -129,10 +129,10 @@ const MAX_SINGLE_CHUNK_BYTES = 256 * 1024;
 // EXACT RECOMBINATION `tests/ArweaveAnnouncementDiscoveryCapabilityBoundaryAudit.test.js`
 // (0.9.489) Section C5 named: this file's own `tags: []` field, made
 // non-empty. `sign(material, tags = [])` is fully backward compatible —
-// every existing caller (`application/ArweavePublicationMaterialUploader.js`,
+// every existing caller (`application/arweave/ArweavePublicationMaterialUploader.js`,
 // `anchoring/ArweaveAnchorPublisher.js`) still calls `sign(material)` with
 // one argument and still gets the identical `tags: []` it always got.
-// `application/ArweaveTaggedTransactionUpload.js` (NEW, 0.9.490) is the one
+// `application/arweave/ArweaveTaggedTransactionUpload.js` (NEW, 0.9.490) is the one
 // caller passing a real, non-empty `tags` array. Each `{ name, value }` pair
 // is base64url-encoded here, the same JSON-safe convention `data`/
 // `data_root` already use — never left as a raw string, since Arweave Tags,
@@ -150,8 +150,8 @@ const MAX_SINGLE_CHUNK_BYTES = 256 * 1024;
 //   above.
 // - **Any UI, connection button, or persisted wallet state.** See "No
 //   explicit connect step," above.
-// - **Any change to `application/ArweavePublicationDistributionRuntimeAdapter.js`,
-//   `application/ArweavePublicationMaterialUploader.js`, or anything else
+// - **Any change to `application/arweave/ArweavePublicationDistributionRuntimeAdapter.js`,
+//   `application/arweave/ArweavePublicationMaterialUploader.js`, or anything else
 //   under `application/`.** This file is a producer of the `signer` those
 //   files already accept, never a rewrite of either.
 export function createArweaveInjectedProviderSigner({
@@ -424,7 +424,7 @@ function withSigningTimeout(promise, ms, label) {
 
 // Bounded GET returning trimmed text, or a rejection on a non-2xx response,
 // a timeout, or a transport failure — a genuine gateway failure, never
-// swallowed. Mirrors application/ArweavePublicationMaterialUploader.js's
+// swallowed. Mirrors application/arweave/ArweavePublicationMaterialUploader.js's
 // own AbortController/timeout shape, one call at a time rather than one
 // POST.
 async function fetchText(fetchFn, url, timeoutMs, label) {

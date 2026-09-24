@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
-import { AvatarTreeConstraint } from '../application/AvatarTreeConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
+import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
 import { AvatarContinuousMovementIntent } from '../core/AvatarContinuousMovementIntent.js';
 import { AvatarContinuousMovementMode } from '../core/AvatarContinuousMovementMode.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
@@ -9,21 +9,21 @@ import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.69 — Continuous Movement Direction + Mode Integration.
 //
-//   Section A: application/AvatarMovementController.js — the new
+//   Section A: application/avatar/AvatarMovementController.js — the new
 //              running priority rule (ordinary Shift+W/S > continuous
 //              mode > idle), mirroring 0.9.66's own forwardAxis
 //              priority rule exactly, consumed via
 //              setContinuousMovementMode()/continuousMovementMode()
-//   Section B: application/WorldNavigationSession.js — real Alt +
+//   Section B: application/world/WorldNavigationSession.js — real Alt +
 //              Shift + W/S keyboard chords, wired end to end through
 //              core/AvatarContinuousMovementInputAdapter.js (0.9.68),
 //              core/AvatarContinuousMovementIntent.js (0.9.64), and
@@ -125,7 +125,7 @@ async function runTests() {
     const realTree = findRealTree();
 
     // -------------------------------------------------------------
-    // Section A — application/AvatarMovementController.js: the new
+    // Section A — application/avatar/AvatarMovementController.js: the new
     // running priority rule
     // -------------------------------------------------------------
     {
@@ -218,7 +218,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — application/WorldNavigationSession.js: real Caps
+    // Section B — application/world/WorldNavigationSession.js: real Caps
     // Lock + Shift + W/S keyboard chords, end to end
     // -------------------------------------------------------------
     {
@@ -525,7 +525,7 @@ async function runTests() {
     // Section F — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/AvatarMovementController.js', import.meta.url);
+        const sourceUrl = new URL('../application/avatar/AvatarMovementController.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -533,35 +533,35 @@ async function runTests() {
             .join('\n');
 
         assert(!/\balt\b/i.test(codeOnly) && !codeOnly.includes('Alt'),
-            '49. application/AvatarMovementController.js\'s own CODE (comments excluded) never references Alt in any form');
+            '49. application/avatar/AvatarMovementController.js\'s own CODE (comments excluded) never references Alt in any form');
         assert(!codeOnly.includes('shiftDown'),
-            '50. application/AvatarMovementController.js\'s own CODE never tracks a physical Shift hold-state — that stays one layer up, in WorldNavigationSession');
+            '50. application/avatar/AvatarMovementController.js\'s own CODE never tracks a physical Shift hold-state — that stays one layer up, in WorldNavigationSession');
         assert(!codeOnly.includes('getModifierState'),
-            '51. application/AvatarMovementController.js never reads a raw keyboard modifier state directly');
+            '51. application/avatar/AvatarMovementController.js never reads a raw keyboard modifier state directly');
         assert(!codeOnly.includes('AvatarContinuousMovementInputAdapter'),
-            '52. application/AvatarMovementController.js never imports the keyboard input adapter');
+            '52. application/avatar/AvatarMovementController.js never imports the keyboard input adapter');
         assert(!codeOnly.includes('deriveAvatarContinuousMovementMode'),
-            '53. application/AvatarMovementController.js never calls the 0.9.67 transition function itself — it only ever CONSUMES an already-resolved mode value via setContinuousMovementMode()');
+            '53. application/avatar/AvatarMovementController.js never calls the 0.9.67 transition function itself — it only ever CONSUMES an already-resolved mode value via setContinuousMovementMode()');
         assert(!codeOnly.includes('RUN_SPEED') && !codeOnly.includes('WALK_SPEED'),
-            '54. application/AvatarMovementController.js defines no new continuous-running speed constant of its own — speed still lives entirely in core/AvatarMovementSimulation.js');
+            '54. application/avatar/AvatarMovementController.js defines no new continuous-running speed constant of its own — speed still lives entirely in core/AvatarMovementSimulation.js');
         const forbidden = ['THREE', 'from \'three\'', 'Renderer', 'Math.random', 'localStorage', 'fetch(', 'WebSocket', 'setTimeout', 'setInterval', 'requestAnimationFrame'];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `55. application/AvatarMovementController.js's own code never references "${term}" — no new timers, no engine dependency, no persistence introduced by this milestone`);
+            assert(!codeOnly.includes(term), `55. application/avatar/AvatarMovementController.js's own code never references "${term}" — no new timers, no engine dependency, no persistence introduced by this milestone`);
         }
     }
     {
-        const sourceUrl = new URL('../application/WorldNavigationSession.js', import.meta.url);
+        const sourceUrl = new URL('../application/world/WorldNavigationSession.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
         assert(codeOnly.includes('deriveAvatarContinuousMovementMode'),
-            '56. application/WorldNavigationSession.js does consume core/AvatarContinuousMovementMode.js\'s own 0.9.67 transition function');
+            '56. application/world/WorldNavigationSession.js does consume core/AvatarContinuousMovementMode.js\'s own 0.9.67 transition function');
         assert(codeOnly.includes('setContinuousMovementMode'),
-            '57. application/WorldNavigationSession.js feeds the resolved mode into AvatarMovementController through its own public setter, never by reaching into a private field');
+            '57. application/world/WorldNavigationSession.js feeds the resolved mode into AvatarMovementController through its own public setter, never by reaching into a private field');
         assert(codeOnly.includes('this._shiftDown'),
-            '58. application/WorldNavigationSession.js tracks its own Shift hold-state, the direct structural twin of _altDown');
+            '58. application/world/WorldNavigationSession.js tracks its own Shift hold-state, the direct structural twin of _altDown');
     }
 
     console.log('✅ All Avatar Continuous Movement Direction + Mode Integration tests passed.');

@@ -3,16 +3,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { ExternalProofVerifierRegistry } from '../application/ExternalProofVerifierRegistry.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { CreateBaseAnchorProofVerifierUseCase } from '../application/CreateBaseAnchorProofVerifierUseCase.js';
+import { ExternalProofVerifierRegistry } from '../application/anchoring/ExternalProofVerifierRegistry.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { CreateBaseAnchorProofVerifierUseCase } from '../application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js';
 import { BaseProofVerifier } from '../anchoring/BaseProofVerifier.js';
-import { CreateBitcoinAnchorProofVerifierUseCase } from '../application/CreateBitcoinAnchorProofVerifierUseCase.js';
-import { CreateArweaveAnchorProofVerifierUseCase } from '../application/CreateArweaveAnchorProofVerifierUseCase.js';
+import { CreateBitcoinAnchorProofVerifierUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorProofVerifierUseCase.js';
+import { CreateArweaveAnchorProofVerifierUseCase } from '../application/anchoring/CreateArweaveAnchorProofVerifierUseCase.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransactionDataProofVerifier.js';
-import { encodeBasePublicationCommitment } from '../application/BasePublicationCommitmentEncoding.js';
+import { encodeBasePublicationCommitment } from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -168,12 +168,12 @@ async function run() {
     // Section A — production registration.
     // ===============================================================
     {
-        check(/import \{ CreateBaseAnchorProofVerifierUseCase \} from '\.\.\/application\/CreateBaseAnchorProofVerifierUseCase\.js';/.test(mainCode),
+        check(/import \{ CreateBaseAnchorProofVerifierUseCase \} from '\.\.\/application\/anchoring\/base\/CreateBaseAnchorProofVerifierUseCase\.js';/.test(mainCode),
             'A1. ui/main.js imports CreateBaseAnchorProofVerifierUseCase');
         check(/const \{ baseProofVerifier \} = new CreateBaseAnchorProofVerifierUseCase\(\)\.execute\(\);/.test(mainCode),
             'A2. ui/main.js constructs a real baseProofVerifier from it');
         check(/externalAnchorProofVerifierRegistry\.register\(baseProofVerifier\);/.test(mainCode),
-            'A3. ...and registers it into the live externalAnchorProofVerifierRegistry — the exact instance application/ExternalAnchorVerifier.js consults for every real verification this application performs');
+            'A3. ...and registers it into the live externalAnchorProofVerifierRegistry — the exact instance application/anchoring/ExternalAnchorVerifier.js consults for every real verification this application performs');
 
         // Bitcoin's and Arweave's own registrations remain exactly as
         // 0.9.464's own Section B5 already found them — this milestone
@@ -245,7 +245,7 @@ async function run() {
         // exactly one BaseJsonRpcClient and hands that SAME instance to
         // BaseProofVerifier as rpcSource — reconfirmed fresh from current
         // source.
-        const useCaseCode = codeOnly(await source('application/CreateBaseAnchorProofVerifierUseCase.js'));
+        const useCaseCode = codeOnly(await source('application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js'));
         check((useCaseCode.match(/new BaseJsonRpcClient\(/g) || []).length === 1, 'D1. CreateBaseAnchorProofVerifierUseCase constructs exactly one BaseJsonRpcClient');
         check(/rpcSource: baseJsonRpcClient/.test(useCaseCode), 'D2. that exact instance is handed to BaseProofVerifier as rpcSource');
 
@@ -465,7 +465,7 @@ async function run() {
         const afterJson = signedAnchor.toJSON();
         check(JSON.stringify(beforeJson) === JSON.stringify(afterJson), 'L3. the anchor\'s own JSON — including anchorIdentity and signature — is unchanged by verification; content verification never mutates or substitutes ownership/authorship fields');
 
-        const filesToSweep = ['anchoring/BaseProofVerifier.js', 'application/CreateBaseAnchorProofVerifierUseCase.js'];
+        const filesToSweep = ['anchoring/BaseProofVerifier.js', 'application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js'];
         for (const file of filesToSweep) {
             const code = codeOnly(await source(file));
             check(!/\bowner\b|\bauthor\b|\bpublisher\b|\bwallet\b|\bsender\b/i.test(code), `L4[${file}]. no owner/author/publisher/wallet/sender vocabulary anywhere in the class this composition root now wires`);
@@ -481,7 +481,7 @@ async function run() {
         // Re-binds directly to ui/main.js's own current source text — a
         // future refactor that silently deletes Base's own registration
         // line here fails THIS check even if anchoring/BaseProofVerifier.js
-        // and application/CreateBaseAnchorProofVerifierUseCase.js's own
+        // and application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js's own
         // unit tests keep passing unchanged, because those files know
         // nothing about ui/main.js at all.
         const freshMainCode = codeOnly(await source('ui/main.js'));

@@ -138,7 +138,7 @@ async function run() {
         // A2. Spot-reconfirm, fresh against current source (never
         // inherited from 0.9.383's own prose), the specific facts this
         // milestone's own candidate evaluations depend on.
-        const searchCode = await codeOnlySource('application/SearchPublicationsUseCase.js');
+        const searchCode = await codeOnlySource('application/publication/SearchPublicationsUseCase.js');
         assert(!/Arweave|Nostr|Ipfs|fetch\(|WebSocket/i.test(searchCode) && !/async execute/.test(searchCode),
             n('A2. SearchPublicationsUseCase.js is still synchronous with no network collaborator — proactive Repository discovery remains unbuilt, not silently shipped since 0.9.383'));
         const notificationEventCode = await codeOnlySource('core/NotificationEvent.js');
@@ -200,11 +200,11 @@ async function run() {
     // discovery.
     // ===============================================================
     {
-        const searchCode = await codeOnlySource('application/SearchPublicationsUseCase.js');
+        const searchCode = await codeOnlySource('application/publication/SearchPublicationsUseCase.js');
         const isSynchronousNoNetwork = !/Arweave|Nostr|Ipfs|fetch\(|WebSocket/i.test(searchCode) && !/async execute/.test(searchCode);
         assert(isSynchronousNoNetwork, n('C1. SearchPublicationsUseCase.js confirmed synchronous, no network collaborator — the largest deferred capability remains genuinely unbuilt'));
 
-        assert(await sourceExists('application/ResolvePublicationUseCase.js') && await sourceExists('discovery/LocalDiscoveryProvider.js'),
+        assert(await sourceExists('application/publication/ResolvePublicationUseCase.js') && await sourceExists('discovery/LocalDiscoveryProvider.js'),
             n('C1. the seams a proactive-discovery journey would reuse (ResolvePublicationUseCase, discoveryProvider/admitToRepositoryDiscovery) already exist and already work for the reactive paths'));
 
         const roadmap = await readSource('docs/Roadmap.md');
@@ -284,7 +284,7 @@ async function run() {
         const notificationEventCode = await codeOnlySource('core/NotificationEvent.js');
         assert(!/deliveredAt\s*=|seenAt\s*=|readAt\s*=/.test(notificationEventCode),
             n('E1. NotificationEvent.js confirmed still carries no delivered/seen/read field'));
-        assert(await sourceExists('application/GetRecipientNotificationEventsUseCase.js') && await sourceExists('ui/components/NotificationHistoryPanel.js'),
+        assert(await sourceExists('application/chat/GetRecipientNotificationEventsUseCase.js') && await sourceExists('ui/components/NotificationHistoryPanel.js'),
             n('E1. the existing durable-history path (query use case + mounted panel) is real and already reachable'));
 
         // E2. Reconfirm 0.9.383 Section I already named and rejected
@@ -318,7 +318,7 @@ async function run() {
     // Section F — Candidate 4: Global Place Naming, richer semantics.
     // ===============================================================
     {
-        assert(await sourceExists('core/PlaceNamingClaim.js') && await sourceExists('core/PlaceNamingView.js') && await sourceExists('application/NostrPlaceNamingDiscoverySource.js'),
+        assert(await sourceExists('core/PlaceNamingClaim.js') && await sourceExists('core/PlaceNamingView.js') && await sourceExists('application/placeNaming/NostrPlaceNamingDiscoverySource.js'),
             n('F1. the full existing Place Naming arc (create -> persist -> publish -> discover -> adopt) is real and COMPLETE'));
 
         // F2. "Richer global naming semantics" names no concrete

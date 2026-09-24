@@ -28,7 +28,7 @@ const VOICE_END_REASON_MESSAGE = Object.freeze({
 // Deliberately modest, per the design doc: one peer, one live
 // transcript, a compose box, a Send button. No typing indicators, no
 // read receipts, no reactions, no editing/deleting, no attachments, no
-// notification framework — see application/ChatUseCase.js's own header
+// notification framework — see application/chat/ChatUseCase.js's own header
 // on why 0.2.61 ships exactly one message kind and nothing to persist.
 //
 // Routed at /chat/:identityId — reached from the Friends list on
@@ -37,21 +37,21 @@ const VOICE_END_REASON_MESSAGE = Object.freeze({
 // navigation /world/:documentId already uses). `identityId` is the
 // PEER's — never carried in the URL as anything requiring trust; every
 // actual authorization decision is re-derived here, live, from
-// application/ChatUseCase.js/application/FriendRelationshipUseCase.js/
-// application/PeerBlockUseCase.js, exactly the way this view finds its
+// application/chat/ChatUseCase.js/application/identity/FriendRelationshipUseCase.js/
+// application/peer/PeerBlockUseCase.js, exactly the way this view finds its
 // own ConnectedPeer fresh from peerSessionManager rather than trusting
 // anything the route itself claims.
 //
 // 0.2.63 — the compose box now calls chatUseCase.sendOrQueue(), never
 // sendMessage(): a message typed here is meant to reach the recipient
 // eventually even if they're offline right now, not merely if they
-// happen to be connected THIS instant — see application/ChatUseCase.js's
+// happen to be connected THIS instant — see application/chat/ChatUseCase.js's
 // own header. `isConnected` no longer gates the compose box at all;
 // only `canChat` (friend, not blocked) does. Each outgoing bubble shows
 // its own deliveryLabel() (Queued/Sent/Delivered/Undelivered), read
-// straight off the `deliveryState` application/ChatUseCase.js's
+// straight off the `deliveryState` application/chat/ChatUseCase.js's
 // onMessage() already attaches — this view never talks to
-// application/ChatOutbox.js directly.
+// application/chat/ChatOutbox.js directly.
 //
 // 0.2.70 — a "Show details" toggle surfaces application/
 // PeerPresenceUseCase.js's own reconciled snapshot (identity/
@@ -73,7 +73,7 @@ const VOICE_END_REASON_MESSAGE = Object.freeze({
 // exists. `sendReadReceipt()` independently recomputes the same
 // "highest incoming sequence" fact from `chatUseCase`'s own live
 // conversation and queues/transmits it — see
-// application/ChatUseCase.js's own header on why these are two
+// application/chat/ChatUseCase.js's own header on why these are two
 // genuinely independent computations, never one derived from the
 // other. Each outgoing bubble now also shows a "Seen" mark once
 // `chatUseCase.getPeerReadThroughSequence()` reports the peer has
@@ -81,8 +81,8 @@ const VOICE_END_REASON_MESSAGE = Object.freeze({
 //
 // 0.2.73 — a "Call" button next to the compose box, reusing the SAME
 // `connectedPeer`/`canChat` gates already computed above (voice requires
-// the identical eligibility chat does — see application/VoiceUseCase.js's
-// own header) plus one new one, `application/VoiceUseCase.js#supportsVoice()`,
+// the identical eligibility chat does — see application/chat/VoiceUseCase.js's
+// own header) plus one new one, `application/chat/VoiceUseCase.js#supportsVoice()`,
 // which is false for anything but a real WebRTC connection. The call bar
 // (incoming banner, or in-progress controls) is deliberately keyed on
 // `activeCall.value.peerIdentityId === peerIdentityId` — application/
@@ -91,7 +91,7 @@ const VOICE_END_REASON_MESSAGE = Object.freeze({
 // as this peer's own call bar.
 //
 // 0.2.75 — Voice UX & Device Controls. Three additions, all presentation
-// over application/VoiceUseCase.js's own 0.2.75 surface, never a new
+// over application/chat/VoiceUseCase.js's own 0.2.75 surface, never a new
 // state machine of their own:
 // (1) the Hang Up button reads "Cancel" while CALLING (an outgoing call
 //     nobody has answered yet) and "Hang Up" once media is actually
@@ -120,7 +120,7 @@ const VOICE_END_REASON_MESSAGE = Object.freeze({
 // call bar's own presentation is completely unaffected: a locked-in
 // multi-device call is, from `callForThisPeer`'s perspective, identical
 // to any other call once it reaches CONNECTING/ACTIVE — see
-// application/VoiceUseCase.js's own 0.2.86 header, "Do Not Create A
+// application/chat/VoiceUseCase.js's own 0.2.86 header, "Do Not Create A
 // Multi-Device VoiceSession."
 export default {
     name: 'ChatView',
@@ -144,7 +144,7 @@ export default {
         const messageListEl = ref(null);
         // 0.2.70 — a reconciled snapshot of everything this device knows
         // about this one identity, independent of connection state — see
-        // application/PeerPresenceUseCase.js's own header. Refreshed
+        // application/presence/PeerPresenceUseCase.js's own header. Refreshed
         // alongside `messages`/`peers` below, never a separate polling
         // loop of its own.
         const presence = ref(peerPresenceUseCase.getSummary(peerIdentityId));
@@ -152,7 +152,7 @@ export default {
         // the peer told me they've read?" Refreshed alongside `presence`
         // below and on every `chatUseCase.onReadReceipt()` event.
         const peerReadThroughSequence = ref(chatUseCase.getPeerReadThroughSequence(peerIdentityId));
-        // 0.2.73 — application/VoiceUseCase.js's own single, device-wide
+        // 0.2.73 — application/chat/VoiceUseCase.js's own single, device-wide
         // call snapshot — see this view's own header on why the call bar
         // only renders for a call whose peerIdentityId matches this route.
         const activeCall = ref(voiceUseCase ? voiceUseCase.getActiveCall() : null);
@@ -165,7 +165,7 @@ export default {
         // eagerly on mount — enumerateDevices() needs no permission, but
         // there is nothing useful to pick a device FOR until a call
         // reaches CONNECTING/ACTIVE. `selectedInputDeviceId` mirrors
-        // application/VoiceUseCase.js#getInputDevice() (this device's own
+        // application/chat/VoiceUseCase.js#getInputDevice() (this device's own
         // STANDING preference); `selectedOutputDeviceId` is pure UI state
         // — see this view's own header on why output selection never
         // reaches voiceUseCase at all.
@@ -200,7 +200,7 @@ export default {
         const isBlocked = computed(() => peerBlockUseCase.isBlocked(peerIdentityId));
         const friendState = computed(() => friendRelationshipUseCase.getState(peerIdentityId));
         const isFriend = computed(() => friendState.value === FriendshipState.FRIEND);
-        // The exact same gate application/ChatUseCase.js#canChat()
+        // The exact same gate application/chat/ChatUseCase.js#canChat()
         // itself applies — read here purely to decide what the compose
         // box shows; sendMessage() below re-checks everything anyway.
         const canChat = computed(() => chatUseCase.canChat(peerIdentityId));
@@ -220,7 +220,7 @@ export default {
             && [VoiceSessionState.CONNECTING, VoiceSessionState.ACTIVE].includes(callForThisPeer.value.state));
         // 0.2.86 — "can Bob reach Alice's IDENTITY right now," not merely
         // "is THIS ONE connectedPeer voice-capable" — see
-        // application/VoiceUseCase.js#canCallIdentity()'s own header. A UI
+        // application/chat/VoiceUseCase.js#canCallIdentity()'s own header. A UI
         // gate on the identity, matching call()'s own new
         // startCallToIdentity() gesture below.
         const canCall = computed(() => Boolean(voiceUseCase) && !activeCall.value
@@ -253,7 +253,7 @@ export default {
         // 0.2.70 — re-reads the reconciled snapshot, then marks
         // everything currently stored for this peer as read: this view
         // being open and rendering `messages` IS "the owner looked," the
-        // same moment `application/PeerPresenceUseCase.js#markRead()`'s
+        // same moment `application/presence/PeerPresenceUseCase.js#markRead()`'s
         // own header describes. Harmless to call repeatedly — marking
         // read is a monotonic high-water mark (core/
         // ConversationReadMarker.js), never a toggle.
@@ -286,7 +286,7 @@ export default {
 
         // 0.2.63 — uses sendOrQueue(), not sendMessage(): a message typed
         // here is a deliberate, durable "Send," not merely a live one —
-        // see application/ChatUseCase.js's own header, "Send Means Live
+        // see application/chat/ChatUseCase.js's own header, "Send Means Live
         // Delivery; SendOrQueue Means Deliberate Durability." No
         // isConnected check gates this anymore; sendOrQueue() itself
         // decides whether to transmit immediately or queue.
@@ -325,7 +325,7 @@ export default {
 
         const showDetail = ref(false);
 
-        // 0.2.73 — re-reads application/VoiceUseCase.js's own snapshot;
+        // 0.2.73 — re-reads application/chat/VoiceUseCase.js's own snapshot;
         // called from every voiceUseCase event, mirroring
         // refreshPeers()/refreshMessages()'s own "re-derive, never
         // locally mutate" discipline.
@@ -355,7 +355,7 @@ export default {
                 // peerIdentityId's currently reachable, voice-capable
                 // devices at once, never just the ONE connection
                 // `connectedPeer` happens to name — see
-                // application/VoiceUseCase.js#startCallToIdentity()'s own
+                // application/chat/VoiceUseCase.js#startCallToIdentity()'s own
                 // header.
                 voiceUseCase.startCallToIdentity(peerIdentityId);
                 refreshVoice();
@@ -394,7 +394,7 @@ export default {
         }
 
         // 0.2.75 — "what could setInputDevice() below choose among?" A
-        // plain call to application/VoiceUseCase.js's own pass-through;
+        // plain call to application/chat/VoiceUseCase.js's own pass-through;
         // this view invents no device vocabulary of its own.
         async function refreshInputDevices() {
             if (!voiceUseCase) return;
@@ -404,7 +404,7 @@ export default {
 
         // 0.2.75 — deliberately calls `navigator.mediaDevices` DIRECTLY,
         // never through voiceUseCase — see this view's own header and
-        // application/VoiceUseCase.js's own header, "Output Device
+        // application/chat/VoiceUseCase.js's own header, "Output Device
         // Selection Never Enters This Class." Degrades to an empty list
         // (no picker shown) in a browser without device enumeration.
         async function refreshOutputDevices() {
@@ -426,7 +426,7 @@ export default {
             }
             // Re-reads the STANDING preference regardless of success —
             // on failure this restores the dropdown to whatever device is
-            // actually still attached, per application/VoiceUseCase.js
+            // actually still attached, per application/chat/VoiceUseCase.js
             // #setInputDevice()'s own "never partially switched" contract.
             selectedInputDeviceId.value = voiceUseCase.getInputDevice() || '';
         }
@@ -607,7 +607,7 @@ export default {
                      friendship/connection/conversation are five
                      independent facts, shown as five independent lines
                      rather than collapsed into the one-word statusLabel
-                     badge above — see application/PeerPresenceUseCase.js's
+                     badge above — see application/presence/PeerPresenceUseCase.js's
                      own header on why offline never implies any of the
                      other four are also gone. -->
                 <div v-if="showDetail" class="peer-detail-row chat-detail-panel">

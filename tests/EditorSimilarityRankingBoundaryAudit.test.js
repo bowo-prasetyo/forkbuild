@@ -13,7 +13,7 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 // Type: test-only architectural/product boundary audit. Production
 // changes: NONE. Every section below is either (a) a regex/substring
 // match against the real, unmodified ui/views/EditorView.js,
-// ui/components/StructureInfoPanel.js, application/BlueprintLineageUseCase.js
+// ui/components/StructureInfoPanel.js, application/blueprint/BlueprintLineageUseCase.js
 // or docs/Principles.md source, or (b) a live execution of
 // computeSimilarityCandidates() — reproduced VERBATIM from
 // ui/views/EditorView.js and guarded by Section A's own literal-text
@@ -64,7 +64,7 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 // unifying this with core/BlueprintAttributionView.js#rankAttributionsByAuthor()
 // or any other ranking in the codebase, consolidating isValidContentHash
 // (that is 0.9.593's own, separate audit), and any change to
-// core/BlueprintSimilarity.js, application/BlueprintLineageUseCase.js, or
+// core/BlueprintSimilarity.js, application/blueprint/BlueprintLineageUseCase.js, or
 // ui/views/EditorView.js/ui/components/StructureInfoPanel.js themselves.
 
 let assertionCount = 0;
@@ -317,7 +317,7 @@ async function run() {
         // EditorView.js computes it in its own structure inspection module.
         assert(uiHits.every((line) => line.startsWith('ui/views/editorView/useStructureInspection.js') || line.startsWith('ui/components/StructureInfoPanel.js')),
             n('D1. every ui/ reference to the similarity module is in EditorView.js (computes) or StructureInfoPanel.js (renders the label via describeBlueprintSimilarity, a different export) — no third UI surface touches it'));
-        assert(appHits.every((line) => line.startsWith('application/BlueprintLineageUseCase.js')),
+        assert(appHits.every((line) => line.startsWith('application/blueprint/BlueprintLineageUseCase.js')),
             n('D2. the one application/ hit is BlueprintLineageUseCase.js\'s own header COMMENT explicitly saying it never calls compareBlueprintSimilarity() — confirmed a negative reference, not a second consumer'));
         assert(coreHits.length > 0, n('D3. core/BlueprintSimilarity.js itself is the sole definition site, as expected'));
 
@@ -509,12 +509,12 @@ async function run() {
     {
         const { execSync } = await import('node:child_process');
         const candidateSeamFiles = execSync('grep -rli "SimilarityRanking\\|SimilarityUseCase\\|RankSimilarCandidates\\|CandidateRanking\\|BlueprintSimilarity" application --include="*.js" || true', { cwd: SOURCE_ROOT }).toString().trim().split('\n').filter(Boolean);
-        assert(candidateSeamFiles.length === 1 && candidateSeamFiles[0] === 'application/BlueprintLineageUseCase.js',
+        assert(candidateSeamFiles.length === 1 && candidateSeamFiles[0] === 'application/blueprint/BlueprintLineageUseCase.js',
             n(`H1. no application/*.js file names anything resembling a similarity-ranking use case or seam, other than BlueprintLineageUseCase.js's own header comment (already confirmed in D2 to be a NEGATIVE reference — "never calls compareBlueprintSimilarity()") — found: ${JSON.stringify(candidateSeamFiles)} — there is no half-built or naturally-fitting application-layer seam already waiting for this ranking to move into`));
 
         // The plain word "similarity" DOES appear a few more times in
         // application/, always to say the OPPOSITE of what a seam here
-        // would need — e.g. application/AchievementEvent.js's own
+        // would need — e.g. application/achievement/AchievementEvent.js's own
         // "NEVER CONTENT SIMILARITY" and application/
         // application/claimSnapshotReconciliation/evidenceExportComparison/RecordIdentityView.js's
         // own "[never] a similarity score... between" two records. These
@@ -523,7 +523,7 @@ async function run() {
         // resemblance-based scoring" recurs beyond just this one feature.
         const wordHitFiles = execSync('grep -rli "similarity" application --include="*.js" || true', { cwd: SOURCE_ROOT }).toString().trim().split('\n').filter(Boolean);
         const wordHitSources = await Promise.all(wordHitFiles.map((f) => source(f)));
-        assert(wordHitFiles.every((f, i) => f === 'application/BlueprintLineageUseCase.js' || /never|NEVER/.test(wordHitSources[i])),
+        assert(wordHitFiles.every((f, i) => f === 'application/blueprint/BlueprintLineageUseCase.js' || /never|NEVER/.test(wordHitSources[i])),
             n('H1b. every OTHER application/ mention of the word "similarity" is itself a refusal to use similarity as a decision input — reinforcing, not undermining, the conclusion that resemblance-based scoring is deliberately kept out of application-layer decision logic in this codebase'));
 
         // Contrast with the two seams that DO exist one concept over —
@@ -535,7 +535,7 @@ async function run() {
         // here: there is no store of "similarity claims" to wrap, only
         // an on-demand pairwise comparison over two in-memory catalogs
         // that never leave EditorView's own hands today.
-        const lineageUseCaseSource = await source('application/BlueprintLineageUseCase.js');
+        const lineageUseCaseSource = await source('application/blueprint/BlueprintLineageUseCase.js');
         assert(/this\._store\.list\(fingerprint\)/.test(lineageUseCaseSource),
             n('H2. BlueprintLineageUseCase#lineageView() wraps a real STORE read (this._store.list) before handing claims to core/BlueprintLineageView.js — the thing an application-layer seam here would own is persisted state, which similarity ranking, by design, has none of (core/BlueprintSimilarity.js never persists — see its own header)'));
 
@@ -559,7 +559,7 @@ async function run() {
         // AMENDED BY 0.9.638 — adds ui/components/PublicationCard.js/
         // PublicationList.js, its own unrelated, separately-justified
         // Commentary distribution-selector UI change.
-        const expectedLaterMilestoneFiles = ['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js', 'ui/components/PublicationCard.js', 'ui/components/PublicationList.js'];
+        const expectedLaterMilestoneFiles = ['application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js', 'ui/components/PublicationCard.js', 'ui/components/PublicationList.js'];
         const changesToProduction = (await (async () => {
             const { execSync } = await import('node:child_process');
             return execSync('git status --porcelain -- core/ application/ ui/ ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */, { cwd: SOURCE_ROOT }).toString().trim()
@@ -623,13 +623,13 @@ async function run() {
         // the ORDER shown (J1, J2). A human decides whether to click
         // "Derived from this" on whichever row they read (Section C).
         // Neither layer decided lineage itself — that decision belongs
-        // exclusively to application/BlueprintLineageUseCase.js#publish(),
+        // exclusively to application/blueprint/BlueprintLineageUseCase.js#publish(),
         // reachable ONLY through the explicit click, confirmed in
         // Section C above. This is Outcome 1 from the requesting brief:
         // EditorView -> similarity calculation + ordering -> rendering
         // only, with the human decision (claim-lineage) sitting entirely
         // outside the ranking function itself.
-        console.log('✓ Section J: the flagship scenario confirms EditorView owns the ORDER a person sees, live recomputed from real design content on every change; it owns no more than that — the actual lineage decision remains exclusively a human click into application/BlueprintLineageUseCase.js');
+        console.log('✓ Section J: the flagship scenario confirms EditorView owns the ORDER a person sees, live recomputed from real design content on every change; it owns no more than that — the actual lineage decision remains exclusively a human click into application/blueprint/BlueprintLineageUseCase.js');
     }
 
     // ===============================================================

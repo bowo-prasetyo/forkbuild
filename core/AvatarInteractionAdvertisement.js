@@ -13,7 +13,7 @@ import { AvatarInteractionKind, isValidInteractionKind } from './AvatarInteracti
 // both describe ongoing STATE a receiver keeps the LATEST value of. A
 // GREET/WAVE/POINT describes something that HAPPENED once, is rendered
 // briefly, and is then genuinely forgotten — see
-// application/AvatarInteractionSyncService.js's own header for why
+// application/avatar/AvatarInteractionSyncService.js's own header for why
 // nothing here is ever retained as "current" the way a presence/
 // profile record is.
 //
@@ -26,7 +26,7 @@ import { AvatarInteractionKind, isValidInteractionKind } from './AvatarInteracti
 //                     fallback identity check
 //                     core/PresenceAuthority.js's PresenceAuthorityRegistry
 //                     already performs, reused as-is for interactions
-//                     (see application/AvatarInteractionTrustBoundary.js).
+//                     (see application/avatar/AvatarInteractionTrustBoundary.js).
 //   interactionId  — a fresh UUID per performed gesture. The anchor
 //                     for duplicate suppression
 //                     (core/AvatarInteractionReplayWindow.js),
@@ -85,7 +85,7 @@ export function toAvatarInteractionAdvertisement({ avatarId, ownerIdentity, kind
 }
 
 // A defensive shape check applied at the ingestion boundary — see
-// application/AvatarInteractionTrustBoundary.js. Nothing arriving over
+// application/avatar/AvatarInteractionTrustBoundary.js. Nothing arriving over
 // a broadcast transport is trusted structurally, let alone
 // authoritatively; a malformed message is simply discarded, the same
 // failure-isolation posture core/AvatarPresenceAdvertisement.js's own

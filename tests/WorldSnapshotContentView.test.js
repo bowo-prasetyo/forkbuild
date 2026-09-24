@@ -1,14 +1,14 @@
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { registerPeerWorldSource } from '../peer/PeerWorldDiscoveryLifecycleBridge.js';
 import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -30,7 +30,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // Content View — entirely by joining two already-existing, unmodified
 // computeds (`selectedEncounterSnapshotInspection`, 0.9.177, and
 // `materialInspection`, 0.9.39) through the new, pure
-// `application/WorldSnapshotContentView.js#describeWorldSnapshotContentView()`,
+// `application/snapshot/materialization/WorldSnapshotContentView.js#describeWorldSnapshotContentView()`,
 // wired into `ui/components/WorldEncounterCanvas.js`'s own new
 // `selectedSnapshotContentView` computed and
 // `openSnapshotContentView()`/`closeSnapshotContentView()` methods.
@@ -172,7 +172,7 @@ function stripLineComments(source) {
 
 async function run() {
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-    const contentViewSource = await readFile(new URL('../application/WorldSnapshotContentView.js', import.meta.url), 'utf8');
+    const contentViewSource = await readFile(new URL('../application/snapshot/materialization/WorldSnapshotContentView.js', import.meta.url), 'utf8');
 
     // ---------------------------------------------------------------
     // Section A — explicit viewing.
@@ -439,7 +439,7 @@ async function run() {
         assert(callSites.length === 2, `7. exactly two call sites of describeWorldSnapshotContentView() in WorldEncounterCanvas.js as of 0.9.184 — one per side of a comparison (found ${callSites.length})`);
 
         assert(!/inspectWorldEncounterMaterial|loadWorldEncounterMaterial|WorldDiscoverySourceRegistry|registerMaterializedSnapshotWorldSource/.test(strippedContentView),
-            '8. application/WorldSnapshotContentView.js never imports/references any loading or registry mechanism of its own');
+            '8. application/snapshot/materialization/WorldSnapshotContentView.js never imports/references any loading or registry mechanism of its own');
 
         console.log('✓ Section I: "View Snapshot" performs no discovery, resolution, materialization, distribution, or registry mutation of its own');
     }

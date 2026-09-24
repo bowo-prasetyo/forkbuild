@@ -5,12 +5,12 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
-import { ForkStructureUseCase } from '../application/ForkStructureUseCase.js';
-import { CopyStructureIntoDocumentUseCase } from '../application/CopyStructureIntoDocumentUseCase.js';
-import { transformStructureBricks } from '../application/StructureCompositionTransform.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
+import { ForkStructureUseCase } from '../application/editor/ForkStructureUseCase.js';
+import { CopyStructureIntoDocumentUseCase } from '../application/editor/CopyStructureIntoDocumentUseCase.js';
+import { transformStructureBricks } from '../application/editor/StructureCompositionTransform.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { BrickRenderer } from '../renderer/BrickRenderer.js';
 
 // 0.4.4 — Village Library Expansion.
@@ -259,7 +259,7 @@ async function run() {
 
         for (const structure of allStructures) {
             // The exact geometry a ghost preview would show, per
-            // application/StructureCompositionTransform.js.
+            // application/editor/StructureCompositionTransform.js.
             const previewed = transformStructureBricks(structure, transform)
                 .map((item) => `${item.definitionId}|${item.position.x}|${item.position.y}|${item.position.z}|${item.rotation}`)
                 .sort();

@@ -27,7 +27,7 @@ import { PeerRelationshipStatus, isValidPeerRelationshipStatus } from './PeerRel
 // on this class — every one of those is exactly as ephemeral as the
 // peer/PeerConnection.js they came from, and persisting any of them
 // here would tempt a caller into skipping a fresh handshake on
-// reconnect, which application/PeerRelationshipUseCase.js's own
+// reconnect, which application/peer/PeerRelationshipUseCase.js's own
 // header explains this milestone never allows.
 //
 // `identityId`/`publicKey` reuse the EXACT self-consistency guarantee
@@ -35,7 +35,7 @@ import { PeerRelationshipStatus, isValidPeerRelationshipStatus } from './PeerRel
 // from the public key, so the two can never be forged independently
 // of each other) — a PeerRelationship is only ever constructed FROM a
 // verified PeerIdentity (see PeerRelationship.fromPeerIdentity below
-// and application/PeerRelationshipUseCase.js#rememberPeer), never from
+// and application/peer/PeerRelationshipUseCase.js#rememberPeer), never from
 // a bare identityId string or an invitation's unauthenticated
 // identityHint.
 //
@@ -128,7 +128,7 @@ export class PeerRelationship {
 
     // The one and only way a PeerRelationship is meant to come into
     // existence outside of fromJSON() — see this class's own header
-    // and application/PeerRelationshipUseCase.js#rememberPeer, which is
+    // and application/peer/PeerRelationshipUseCase.js#rememberPeer, which is
     // the sole caller. This is a plain SHAPE check only (identityId/
     // publicKey strings, verified self-consistent by the constructor
     // above) — core/ never imports peer/PeerIdentity.js, the same
@@ -138,7 +138,7 @@ export class PeerRelationship {
     // invitation's identityHint or any other unauthenticated claim —
     // is enforced one layer up, by rememberPeer()'s own `instanceof
     // PeerIdentity` check, which is why rememberPeer(), not this
-    // method, is the boundary application/PeerRelationshipUseCase.js's
+    // method, is the boundary application/peer/PeerRelationshipUseCase.js's
     // own header calls out.
     static fromPeerIdentity(peerIdentity, { alias = null, now = new Date() } = {}) {
         if (!peerIdentity || typeof peerIdentity.identityId !== 'string' || typeof peerIdentity.publicKey !== 'string') {

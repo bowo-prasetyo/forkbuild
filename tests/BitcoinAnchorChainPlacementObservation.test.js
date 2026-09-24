@@ -1,15 +1,15 @@
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
 import {
     BitcoinAnchorChainPlacementObservationOutcome,
     isValidBitcoinAnchorChainPlacementObservationOutcome,
     compareBitcoinAnchorChainPlacementObservations
-} from '../application/BitcoinAnchorChainPlacementObservation.js';
-import { observeBitcoinAnchorChainPlacementChanges } from '../application/BitcoinAnchorChainPlacementObserver.js';
+} from '../application/anchoring/bitcoin/BitcoinAnchorChainPlacementObservation.js';
+import { observeBitcoinAnchorChainPlacementChanges } from '../application/anchoring/bitcoin/BitcoinAnchorChainPlacementObserver.js';
 import {
     describeBitcoinAnchorChainPlacementObservationOutcomeLabel,
     describeBitcoinAnchorChainPlacementObservations
-} from '../application/BitcoinAnchorChainPlacementObservationView.js';
-import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/BitcoinAnchorConfirmationObservationHistory.js';
+} from '../application/anchoring/bitcoin/BitcoinAnchorChainPlacementObservationView.js';
+import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js';
 
 // 0.8.76 — Bitcoin Anchor Chain Placement Change Observation.
 //

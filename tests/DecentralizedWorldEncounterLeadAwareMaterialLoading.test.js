@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { loadWorldEncounterMaterialFromResolvedLead } from '../application/DecentralizedWorldEncounterLeadAwareMaterialLoading.js';
-import { DecentralizedWorldEncounterMaterialSource } from '../application/DecentralizedWorldEncounterMaterialSource.js';
+import { loadWorldEncounterMaterialFromResolvedLead } from '../application/worldEncounter/DecentralizedWorldEncounterLeadAwareMaterialLoading.js';
+import { DecentralizedWorldEncounterMaterialSource } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js';
 import {
     loadWorldEncounterMaterial,
     WorldEncounterMaterialLoadStatus,
     WorldEncounterMaterialSource
-} from '../application/WorldEncounterMaterialLoading.js';
+} from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 
 // 0.9.34 — Lead-Aware Decentralized Material Loading Boundary.
@@ -290,7 +290,7 @@ class FakeDecentralizedSource extends WorldEncounterMaterialSource {
 //     vocabulary, and the 0.9.21 boundary file is never modified.
 // ---------------------------------------------------------------------
 {
-    const path = '../application/DecentralizedWorldEncounterLeadAwareMaterialLoading.js';
+    const path = '../application/worldEncounter/DecentralizedWorldEncounterLeadAwareMaterialLoading.js';
     const sourceUrl = new URL(path, import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -312,7 +312,7 @@ class FakeDecentralizedSource extends WorldEncounterMaterialSource {
         assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `45. code must never use "${term}" — no trust/verification vocabulary at this boundary`);
     }
 
-    const loadingBoundarySource = await readFile(new URL('../application/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
+    const loadingBoundarySource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
     assert(!loadingBoundarySource.includes('DecentralizedWorldEncounterLeadAwareMaterialLoading'), '46. the 0.9.21 loading boundary itself is never modified to know about this file');
     assert(!loadingBoundarySource.includes('resolvedLead'), '47. the 0.9.21 loading boundary gains no resolvedLead parameter of its own');
 

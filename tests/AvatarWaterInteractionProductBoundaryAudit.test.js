@@ -1,9 +1,9 @@
-import { AvatarTerrainConstraint } from '../application/AvatarTerrainConstraint.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -58,7 +58,7 @@ import { deriveSpatialContext } from '../core/WorldSpatialContext.js';
 // the gap this classification recommended closing; 0.9.614 then
 // narrowed it to a minimal, render-time-only candidate, and 0.9.615
 // installed exactly that candidate for real in
-// application/RenderWorldViewUseCase.js#withGroundElevation(). Assertion
+// application/world/RenderWorldViewUseCase.js#withGroundElevation(). Assertion
 // 14's own comment and message are amended in place, below, to say what
 // they now measure precisely (the PRE-0.9.615 raw formula, replicated by
 // hand, not what a viewer watching a real avatar actually sees anymore)
@@ -255,7 +255,7 @@ async function runTests() {
                 // AMENDED BY 0.9.615 — Avatar Basic Water Surface
                 // Constraint (see this file's own "PARTIALLY SUPERSEDED"
                 // header note, above). This is no longer "what a viewer
-                // actually sees": application/RenderWorldViewUseCase.js's
+                // actually sees": application/world/RenderWorldViewUseCase.js's
                 // own withGroundElevation() now floors the AVATAR's own
                 // rendered Y at max(terrainHeight, LAKE_SURFACE_HEIGHT)
                 // wherever ground is WATER — see
@@ -273,7 +273,7 @@ async function runTests() {
             `12. FLAGSHIP: ${stepCount} real steps (${(stepSize * stepCount).toFixed(0)} world units) straight into the lake interior are NEVER blocked by the real, unmodified AvatarTerrainConstraint`);
         assert(sawWaterGround === true, '13. FLAGSHIP: the walk genuinely crosses onto WATER-classified ground, not merely toward it');
         assert(maxSubmersion > 0,
-            '14. AMENDED BY 0.9.615 — FLAGSHIP (historical): the RAW position.y + terrainHeightAt() value (still exactly what AvatarPresence/terrain kinematics produce, unchanged by 0.9.615) sinks below the fixed LAKE_SURFACE_HEIGHT the farther the avatar walks. This is no longer the avatar\'s own real rendered elevation — application/RenderWorldViewUseCase.js#withGroundElevation() now floors it at the lake surface before anything reaches the screen; see tests/AvatarBasicWaterSurfaceConstraint.test.js, Section B, for proof against the real, shipped rendering function.');
+            '14. AMENDED BY 0.9.615 — FLAGSHIP (historical): the RAW position.y + terrainHeightAt() value (still exactly what AvatarPresence/terrain kinematics produce, unchanged by 0.9.615) sinks below the fixed LAKE_SURFACE_HEIGHT the farther the avatar walks. This is no longer the avatar\'s own real rendered elevation — application/world/RenderWorldViewUseCase.js#withGroundElevation() now floors it at the lake surface before anything reaches the screen; see tests/AvatarBasicWaterSurfaceConstraint.test.js, Section B, for proof against the real, shipped rendering function.');
 
         // The exact same coordinate the avatar just walked onto,
         // unblocked, is independently confirmed to be real WATER ground

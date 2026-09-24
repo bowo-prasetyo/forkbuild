@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
-import { hydratePublicationDistributionLifecycles } from '../application/PublicationDistributionLifecycleHydration.js';
-import { PublicationDistributionLifecycleRestorer } from '../application/PublicationDistributionLifecycleRestorer.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionLifecyclePersistence } from '../application/PublicationDistributionLifecyclePersistence.js';
+import { hydratePublicationDistributionLifecycles } from '../application/publication/distribution/PublicationDistributionLifecycleHydration.js';
+import { PublicationDistributionLifecycleRestorer } from '../application/publication/distribution/PublicationDistributionLifecycleRestorer.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionLifecyclePersistence } from '../application/publication/distribution/PublicationDistributionLifecyclePersistence.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
 // 0.9.57 — Publication Distribution Lifecycle Hydration Composition.
@@ -274,7 +274,7 @@ async function run() {
     // class, or a discovery mechanism.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/PublicationDistributionLifecycleHydration.js', import.meta.url);
+        const sourceUrl = new URL('../application/publication/distribution/PublicationDistributionLifecycleHydration.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -282,7 +282,7 @@ async function run() {
         assert(!codeOnly.includes("from './PublicationDistributionLifecycleStore"), '33. never imports the 0.9.52/0.9.53 memory store module');
         assert(!codeOnly.includes("from './PublicationDistributionLifecyclePersistence"), '34. never imports the 0.9.54 persistence module');
         assert(!codeOnly.includes("from './PublicationDistributionLifecyclePersistenceBridge"), '35. never imports the 0.9.55 bridge module');
-        assert(!codeOnly.includes("from './PublicationDistributionLifecycle"), '36. never imports the 0.9.50 lifecycle module');
+        assert(!codeOnly.includes("from '../../PublicationDistributionLifecycle"), '36. never imports the 0.9.50 lifecycle module');
         assert(!codeOnly.includes("from './PublicationDistributionLifecycleTransition"), '37. never imports the 0.9.51 transition module');
         assert(!codeOnly.includes('class '), '38. defines no class of its own — a plain, stateless function, matching this file\'s own header, "The entire public surface"');
         assert(!codeOnly.includes('.list(') && !codeOnly.includes('.load(') && !codeOnly.includes('.save(') && !codeOnly.includes('.set(') && !codeOnly.includes('.get('), '39. never calls restorer.list()/persistence.load()/persistence.save()/store.set()/store.get() directly — it calls exactly restorer.restore(), nothing else');

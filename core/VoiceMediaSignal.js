@@ -17,13 +17,13 @@
 // already AUTHENTICATED — there is no "out of band" left to route it
 // through, and no expiry question: a stale renegotiation offer for a
 // call that no longer exists is simply ignored by
-// application/VoiceUseCase.js because it no longer recognizes the
+// application/chat/VoiceUseCase.js because it no longer recognizes the
 // callId, never because a timer says so.
 //
 //   callId — which call (core/VoiceCallSignal.js#callId) this SDP
 //            belongs to. A media signal for a callId this device is not
 //            currently tracking is dropped — see
-//            application/VoiceUseCase.js#_handleIncomingMedia()'s own
+//            application/chat/VoiceUseCase.js#_handleIncomingMedia()'s own
 //            header on why this is the ONE new trust question this
 //            vocabulary adds beyond "sender matches the proven
 //            connection."
@@ -33,7 +33,7 @@
 //            simply rejected by peer/WebRtcPeerConnection.js's own
 //            underlying RTCPeerConnection#setRemoteDescription()).
 //   sdp    — the raw SDP text. Opaque to every trust check in this file
-//            and in application/VoiceUseCase.js — nobody here parses or
+//            and in application/chat/VoiceUseCase.js — nobody here parses or
 //            validates SDP content; that is entirely
 //            RTCPeerConnection's own job, exactly like
 //            peer/PeerConnectionOffer.js's own `sdp` field is opaque to

@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
-import { ArweaveSnapshotDiscoveryPublisher } from '../application/ArweaveSnapshotDiscoveryPublisher.js';
-import { createArweaveTaggedTransactionUpload } from '../application/ArweaveTaggedTransactionUpload.js';
+import { ArweaveSnapshotDiscoveryPublisher } from '../application/arweave/ArweaveSnapshotDiscoveryPublisher.js';
+import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';
 import { parseSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 // 0.9.498 — Arweave Snapshot Discovery Publisher.
-// See application/ArweaveSnapshotDiscoveryPublisher.js's own header for the
+// See application/arweave/ArweaveSnapshotDiscoveryPublisher.js's own header for the
 // full contract this file verifies, and 0.9.497's own capability boundary
 // audit (tests/ArweaveSnapshotDiscoveryCapabilityBoundaryAudit.test.js) for
 // why this class is a legitimate, narrow addition rather than an adapter
@@ -145,9 +145,9 @@ async function run() {
         const publisher = new ArweaveSnapshotDiscoveryPublisher({ discoveryTag: 'forkbuild-snapshot', uploadTaggedTransaction: upload.uploadTaggedTransaction });
         await publisher.publish(fieldsOf());
         assert(upload.calls.length === 1, '17. publish() invokes the injected uploadTaggedTransaction exactly once per call');
-        assert(typeof upload.calls[0].material === 'string', '18. uploadTaggedTransaction is called with a serialized string, the exact (material, tag) shape application/ArweaveTaggedTransactionUpload.js already documents');
+        assert(typeof upload.calls[0].material === 'string', '18. uploadTaggedTransaction is called with a serialized string, the exact (material, tag) shape application/arweave/ArweaveTaggedTransactionUpload.js already documents');
 
-        // C2 — against the REAL application/ArweaveTaggedTransactionUpload.js
+        // C2 — against the REAL application/arweave/ArweaveTaggedTransactionUpload.js
         // adapter, proving this publisher composes with the real substrate
         // primitive, not merely a test double shaped like it.
         let signCalls = 0;
@@ -279,7 +279,7 @@ async function run() {
     // fallback, or Nostr coordination.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/ArweaveSnapshotDiscoveryPublisher.js', import.meta.url);
+        const sourceUrl = new URL('../application/arweave/ArweaveSnapshotDiscoveryPublisher.js', import.meta.url);
         const fullSource = await readFile(sourceUrl, 'utf8');
         const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -288,7 +288,7 @@ async function run() {
         assert(!codeOnly.includes('ArweaveGraphqlDiscoveryQueryService') && !codeOnly.includes('GraphQL') && !codeOnly.includes('graphql'), '45. never queries GraphQL or any discovery query service');
         assert(!codeOnly.includes('DecentralizedSnapshotResolver') && !codeOnly.includes('SnapshotPlacementResolver'), '46. never resolves material — resolution stays entirely a consuming side\'s concern');
         assert(!codeOnly.includes('NostrSnapshotDiscoveryPublisher') && !codeOnly.includes('NostrPublicationDiscoveryPublisher'), '47. never coordinates with Nostr — selecting Arweave announces to Arweave alone');
-        assert(!codeOnly.includes('ArweaveAnnouncementPublisher'), '48. never imports or wraps application/ArweaveAnnouncementPublisher.js — a sibling, never a wrapper');
+        assert(!codeOnly.includes('ArweaveAnnouncementPublisher'), '48. never imports or wraps application/arweave/ArweaveAnnouncementPublisher.js — a sibling, never a wrapper');
         assert(!codeOnly.includes('DecentralizedDiscoveryEnvelope'), '49. never imports the unrelated Decentralized (Publication/Avatar) envelope vocabulary');
         assert(!codeOnly.includes('PublicationSnapshotPlacement') && !codeOnly.includes('SnapshotPlacementStoreRegistry'), '50. never imports the Snapshot Placement family\'s own signing/catalog machinery');
         assert(!codeOnly.includes('crypto') && !codeOnly.includes('Wallet') && !codeOnly.includes('JWK') && !codeOnly.includes('nsec'), '51. never references key/wallet material of any kind — signing is fully delegated to the injected uploadTaggedTransaction');
@@ -299,7 +299,7 @@ async function run() {
         }
 
         assert(codeOnly.includes('describeSnapshotDiscoveryEnvelope'), '53. reuses the existing envelope validator rather than inventing a second format');
-        assert(codeOnly.includes("from '../application/ArweaveTaggedTransactionUpload.js'") === false, '54. does not even import ArweaveTaggedTransactionUpload.js directly — it is injected, never constructed by this file');
+        assert(codeOnly.includes("from '../application/arweave/ArweaveTaggedTransactionUpload.js'") === false, '54. does not even import ArweaveTaggedTransactionUpload.js directly — it is injected, never constructed by this file');
 
         console.log('✓ Section G: no application logic — source audit confirms no hashing, content upload, discovery query, resolution, verification, dedup, retry, fallback, or Nostr coordination');
     }
@@ -373,7 +373,7 @@ async function run() {
         assert(announcementPostBody.tags[0].value === 'e2e-round-trip-tag', '67. the real signed transaction carries the exact configured discovery tag value');
 
         // The candidate this round trip recovers is exactly what
-        // application/DecentralizedSnapshotResolver.js already resolves and
+        // application/snapshot/DecentralizedSnapshotResolver.js already resolves and
         // verifies with zero code change, per 0.9.497 Section F — this
         // section stops at the discovered candidate itself, since
         // resolution is deliberately out of scope for this publisher (see

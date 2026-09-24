@@ -1,4 +1,4 @@
-import { ForkFailureReason } from '../../application/ForkFailureReason.js';
+import { ForkFailureReason } from '../../application/document/ForkFailureReason.js';
 
 // 0.9.353 — Fork Failure Reason Presentation.
 //
@@ -12,7 +12,7 @@ import { ForkFailureReason } from '../../application/ForkFailureReason.js';
 // failure, because both shared one undifferentiated Error type.
 //
 // This dialog is the presentation half of that fix (the other half,
-// application/ForkFailureReason.js, is the signal it reads). It is
+// application/document/ForkFailureReason.js, is the signal it reads). It is
 // deliberately the SAME small `.modal-overlay`/`.modal-panel`/
 // `.modal-actions` shell ui/components/CreateBlueprintDialog.js and
 // ui/components/MetadataEditorDialog.js already established — no

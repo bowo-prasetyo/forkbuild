@@ -1,7 +1,7 @@
 import { Tool } from './Tool.js';
 import { SpatialBounds } from '../../core/SpatialBounds.js';
-import { StructurePlacementValidator } from '../StructurePlacementValidator.js';
-import { PlacementPositionService } from '../PlacementPositionService.js';
+import { StructurePlacementValidator } from '../editor/StructurePlacementValidator.js';
+import { PlacementPositionService } from '../editor/PlacementPositionService.js';
 import { ToolId } from '../editor-state/ToolId.js';
 
 // 0.4.1 — Interactive Structure Composition UX: the "Copy Into
@@ -13,7 +13,7 @@ import { ToolId } from '../editor-state/ToolId.js';
 // creates a live REFERENCE to another Document; composing a Structure
 // flattens its bricks into the CURRENT document's own bricks, via
 // exactly the ONE PasteBricksCommand
-// application/CopyStructureIntoDocumentUseCase.js already produces
+// application/editor/CopyStructureIntoDocumentUseCase.js already produces
 // non-interactively (0.4.0) — this tool only changes HOW the transform
 // passed to that use case is chosen (interactively, instead of always
 // the deterministic auto-offset), never what gets committed. See
@@ -24,12 +24,12 @@ import { ToolId } from '../editor-state/ToolId.js';
 // this tool's live preview (via context.compositionPreviewUseCase ->
 // renderer/CompositionPreviewRenderer.js) and its eventual commit read
 // the SAME { position, rotation } transform and resolve it through
-// application/StructureCompositionTransform.js#transformStructureBricks()
+// application/editor/StructureCompositionTransform.js#transformStructureBricks()
 // (transitively, via CopyStructureIntoDocumentUseCase#execute()) — the
 // preview is a visualization of the exact command that will run, never
 // an approximation of it.
 //
-// Collision reuses application/StructurePlacementValidator.js exactly —
+// Collision reuses application/editor/StructurePlacementValidator.js exactly —
 // the Structure's own AABB (SpatialBounds.fromBricks(structure.bricks,
 // registry)) checked against the World's existing bricks and
 // StructurePlacements, the same conservative "not rotated" posture that

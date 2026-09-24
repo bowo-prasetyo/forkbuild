@@ -127,7 +127,7 @@
 //
 // ARCHITECTURAL BOUNDARY — NO IMPORTS AT ALL. This file imports nothing
 // from `application/claimSnapshotReconciliation/PlanView.js`,
-// `application/PublisherLeaderboardClaimSnapshotDivergenceView.js`, or any
+// `application/leaderboard/PublisherLeaderboardClaimSnapshotDivergenceView.js`, or any
 // other module in this family — it trusts nothing about how `plan` was
 // produced beyond its own documented shape, and never calls 0.8.143 a
 // second time to re-derive or double-check it.

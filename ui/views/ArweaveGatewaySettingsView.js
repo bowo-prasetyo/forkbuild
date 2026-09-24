@@ -20,7 +20,7 @@ import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfigurat
 //      current override / Save / Use Deployment Default
 //      │
 //      ▼
-//   application/SetArweaveGatewayConfigurationUseCase.js (Save)   (this same milestone)
+//   application/settings/SetArweaveGatewayConfigurationUseCase.js (Save)   (this same milestone)
 //   storage/ArweaveGatewayConfigurationStore.js#clear() (Use Deployment Default)   (0.9.364, unmodified)
 //      │
 //      ▼

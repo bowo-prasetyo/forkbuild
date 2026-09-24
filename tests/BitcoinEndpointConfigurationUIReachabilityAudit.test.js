@@ -85,7 +85,7 @@ async function run() {
     {
         assert(await sourceExists('core/BitcoinEsploraConfiguration.js'), n('K1. core/BitcoinEsploraConfiguration.js now exists'));
         assert(await sourceExists('storage/BitcoinEsploraConfigurationStore.js'), n('K2. storage/BitcoinEsploraConfigurationStore.js now exists'));
-        assert(await sourceExists('application/SetBitcoinEsploraConfigurationUseCase.js'), n('K3. application/SetBitcoinEsploraConfigurationUseCase.js now exists'));
+        assert(await sourceExists('application/settings/SetBitcoinEsploraConfigurationUseCase.js'), n('K3. application/settings/SetBitcoinEsploraConfigurationUseCase.js now exists'));
         console.log('✓ Section K: the configuration/persistence/write-use-case layer this audit\'s own former Section C found completely absent now exists.');
     }
 

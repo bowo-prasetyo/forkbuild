@@ -25,7 +25,7 @@ import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 //        parseSnapshotDiscoveryEnvelope()
 //                    │
 //                    ▼
-//   application/NostrSnapshotDiscoveryPublisher.js / NostrSnapshotDiscoveryQueryService.js
+//   application/nostr/NostrSnapshotDiscoveryPublisher.js / NostrSnapshotDiscoveryQueryService.js
 //        (0.9.133, siblings — write this shape into a Nostr event's own
 //        `content`, and read it back out)
 //
@@ -85,7 +85,7 @@ import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 // THIS FILE. Any signature/authenticity mechanism for an envelope; any
 // registry, cache, or deduplication pass over more than one; wiring an
 // envelope into `core/PublicationSnapshotPlacement.js`'s own
-// signing/catalog machinery or `application/SnapshotPlacementResolver.js`'s
+// signing/catalog machinery or `application/snapshot/placement/SnapshotPlacementResolver.js`'s
 // own resolution path — see tests/SnapshotDistributionBoundary.test.js's
 // own point 4: a Snapshot's own placement/resolution family stays
 // peer-based and never references Nostr; this envelope is consumed only by
@@ -99,7 +99,7 @@ import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 // retrieved from (`locator`/`storage`). None of it ever answered a
 // question about SPACE — a stranger's Snapshot, once discovered and
 // verified, has always arrived with its spatial meaning already lost (see
-// `application/SnapshotWorldPlacement.js`'s own 0.9.159 header: a
+// `application/snapshot/placement/SnapshotWorldPlacement.js`'s own 0.9.159 header: a
 // materialized Snapshot is placed only by borrowing the RECEIVER's own,
 // already-existing `WorldPlacement` for the same Publication — the
 // PUBLISHER's own placement is never consulted at all). This milestone
@@ -116,10 +116,10 @@ import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 // validates `claimedPosition`'s own SHAPE only (three finite numbers) —
 // never that the claimed position is correct, current, or the same one
 // the publisher's own World actually shows. Nothing in this file, or in
-// `application/NostrSnapshotDiscoveryQueryService.js`, ever turns a
+// `application/nostr/NostrSnapshotDiscoveryQueryService.js`, ever turns a
 // `claimedPosition` into a `WorldPlacement`, a registry entry, or anything
 // rendered — see that file's own header, "consumption is a separate,
-// later, unscheduled question," and `application/SnapshotWorldPlacement.js`,
+// later, unscheduled question," and `application/snapshot/placement/SnapshotWorldPlacement.js`,
 // deliberately UNMODIFIED by this milestone.
 //
 // `publicationId` AND `claimedPosition` TRAVEL TOGETHER, OR NOT AT ALL —
@@ -168,10 +168,10 @@ import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
 // - **Consuming `publicationId`/`claimedPosition` anywhere.** See
-//   `application/NostrSnapshotDiscoveryQueryService.js`'s own header,
+//   `application/nostr/NostrSnapshotDiscoveryQueryService.js`'s own header,
 //   "preserved, never consumed" — this milestone only defines and carries
 //   the claim; whether a materialized Snapshot's claim should ever become
-//   its `WorldPlacement` is `application/SnapshotWorldPlacement.js`'s own,
+//   its `WorldPlacement` is `application/snapshot/placement/SnapshotWorldPlacement.js`'s own,
 //   entirely separate, unscheduled next question.
 // - **A signature over `claimedPosition`, or any stronger evidence than
 //   the self-declared claim every other field here already is.**

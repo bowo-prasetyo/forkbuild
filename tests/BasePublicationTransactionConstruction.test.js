@@ -1,23 +1,23 @@
 import {
     encodeBasePublicationCommitment,
     decodeBasePublicationCommitment
-} from '../application/BasePublicationCommitmentEncoding.js';
+} from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
 import { BaseJsonRpcClient } from '../base/BaseJsonRpcClient.js';
 import { BasePublicationTransactionPlanner } from '../base/BasePublicationTransactionPlanner.js';
 import {
     BasePublicationTransactionPlanState,
     isValidBasePublicationTransactionPlanState
-} from '../application/BasePublicationTransactionPlanState.js';
-import { BasePublicationTransactionPlanCoordinator } from '../application/BasePublicationTransactionPlanCoordinator.js';
+} from '../application/anchoring/base/BasePublicationTransactionPlanState.js';
+import { BasePublicationTransactionPlanCoordinator } from '../application/anchoring/base/BasePublicationTransactionPlanCoordinator.js';
 import {
     describeBasePublicationTransactionPlanStateLabel,
     describeBasePublicationTransactionPlan
-} from '../application/BasePublicationTransactionPlanView.js';
-import { BaseNetworkObservationState } from '../application/BaseNetworkObservationState.js';
-import { BaseAccountObservation } from '../application/BaseAccountObservation.js';
+} from '../application/anchoring/base/BasePublicationTransactionPlanView.js';
+import { BaseNetworkObservationState } from '../application/anchoring/base/BaseNetworkObservationState.js';
+import { BaseAccountObservation } from '../application/anchoring/base/BaseAccountObservation.js';
 import { BitcoinAnchorTransactionBuilder } from '../anchoring/BitcoinAnchorTransactionBuilder.js';
-import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/BitcoinAnchorTransactionConstructionCoordinator.js';
-import { BitcoinAnchorTransactionConstructionState } from '../application/BitcoinAnchorTransactionConstructionState.js';
+import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionCoordinator.js';
+import { BitcoinAnchorTransactionConstructionState } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js';
 
 // 0.8.91 — Explicit Base Publication Transaction Construction.
 //

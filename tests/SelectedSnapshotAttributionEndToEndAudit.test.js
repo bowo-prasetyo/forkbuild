@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { resolveSnapshotPublicationAttribution } from '../application/SnapshotPublicationAttribution.js';
-import { SnapshotPublicationAttributionOutcome } from '../application/SnapshotPublicationAttributionOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { resolveSnapshotPublicationAttribution } from '../application/snapshot/SnapshotPublicationAttribution.js';
+import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -603,9 +603,9 @@ async function run() {
         // function — never two parallel comparison implementations.
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         const importLines = panelCode.match(/import\s*\{\s*resolveSnapshotPublicationAttribution\s*\}/g) || [];
-        assert(importLines.length === 1, 'F6. resolveSnapshotPublicationAttribution is imported exactly once, from application/SnapshotPublicationAttribution.js — never reimplemented for either path');
+        assert(importLines.length === 1, 'F6. resolveSnapshotPublicationAttribution is imported exactly once, from application/snapshot/SnapshotPublicationAttribution.js — never reimplemented for either path');
         const callSites = panelCode.match(/resolveSnapshotPublicationAttribution\(/g) || [];
-        assert(callSites.length === 2, 'F7. exactly two call sites exist in this file — discoverOwnSnapshot()\'s own (0.9.144) and attributeSelectedSnapshot()\'s own (0.9.154) — both invoking the identical imported function, per resolveSnapshotPublicationAttribution() itself (application/SnapshotPublicationAttribution.js), rather than a second, independent comparison');
+        assert(callSites.length === 2, 'F7. exactly two call sites exist in this file — discoverOwnSnapshot()\'s own (0.9.144) and attributeSelectedSnapshot()\'s own (0.9.154) — both invoking the identical imported function, per resolveSnapshotPublicationAttribution() itself (application/snapshot/SnapshotPublicationAttribution.js), rather than a second, independent comparison');
 
         console.log('✓ Section F: the already-known-contentHash path and the browsed-and-selected path converge on the identical resolveSnapshotPublicationAttribution() call, producing identical verdicts and hashes for the identical real bytes, while keeping fully independent UI-state fields');
     }

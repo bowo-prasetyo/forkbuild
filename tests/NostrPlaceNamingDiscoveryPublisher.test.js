@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 
-import { NostrPlaceNamingDiscoveryPublisher } from '../application/NostrPlaceNamingDiscoveryPublisher.js';
+import { NostrPlaceNamingDiscoveryPublisher } from '../application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js';
 import { parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -261,7 +261,7 @@ async function run() {
     // vocabulary.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/NostrPlaceNamingDiscoveryPublisher.js', import.meta.url);
+        const sourceUrl = new URL('../application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js', import.meta.url);
         const fullSource = await readFile(sourceUrl, 'utf8');
         const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

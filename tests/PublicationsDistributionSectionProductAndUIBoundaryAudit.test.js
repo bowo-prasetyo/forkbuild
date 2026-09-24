@@ -6,10 +6,10 @@ import { fileURLToPath } from 'node:url';
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.435 — Publications Distribution Section Product & UI Boundary Audit.
@@ -171,7 +171,7 @@ function makeRealComposedCommand() {
 // never imported from that file (this audit never constructs, mounts, or
 // drives the real Vue component, mirroring 0.9.432's own identical
 // restraint). `.publication` is a REAL core/DecentralizedPublication.js
-// instance, mirroring application/LocalPublicationCatalog.js's own stored
+// instance, mirroring application/publication/LocalPublicationCatalog.js's own stored
 // value exactly — never a plain, hand-shaped stand-in for it.
 function makeCatalogShapedEntry({ id, publisherIdentity = null } = {}) {
     const publication = new DecentralizedPublication({
@@ -180,7 +180,7 @@ function makeCatalogShapedEntry({ id, publisherIdentity = null } = {}) {
         contentReference: new ContentReference({ hash: `sha256:${id}` }),
         publisherIdentity,
         // A real, minimally-valid Signature — required by
-        // application/PublicationDistributionDescriptor.js's own
+        // application/publication/distribution/PublicationDistributionDescriptor.js's own
         // `if (!publication.signature) return null` guard (this audit's
         // fake must satisfy the same real precondition every genuinely
         // signed Publication already does; it is not this audit's own
@@ -367,8 +367,8 @@ async function run() {
         assert(/creationAttempts:\s*\{\}/.test(viewSource), n('C1b. ...and `entry.creationAttempts: {}` likewise'));
         assert(/entry\.publication\.id/.test(viewSource) && /entry\.publication\.contentReference\.hash/.test(viewSource), n('C1c. ...and `entry.publication` is read as a real domain object (`.id`, `.contentReference.hash`), never a plain serialized blob'));
 
-        const catalogSource = await source('application/LocalPublicationCatalog.js');
-        assert(/a DecentralizedPublication instance/i.test(catalogSource), n('C1d. application/LocalPublicationCatalog.js\'s own header confirms it stores real DecentralizedPublication instances — the exact class `entry.publication` is confirmed (C1c) to be, live, in Section C2 below'));
+        const catalogSource = await source('application/publication/LocalPublicationCatalog.js');
+        assert(/a DecentralizedPublication instance/i.test(catalogSource), n('C1d. application/publication/LocalPublicationCatalog.js\'s own header confirms it stores real DecentralizedPublication instances — the exact class `entry.publication` is confirmed (C1c) to be, live, in Section C2 below'));
 
         // C2 — real execution: build a catalog-shaped entry (never the
         // "currently active document," never a WorldEncounter selection —
@@ -391,8 +391,8 @@ async function run() {
         // publisherIdentity at all in C2/C3 above; confirmed structurally
         // by reading the orchestrator's own real source, not merely by
         // one passing call.
-        const orchestratorSource = codeOnly(await source('application/PublicationDistributionOrchestrator.js'));
-        assert(!/publisherIdentity/.test(orchestratorSource), n('C5. application/PublicationDistributionOrchestrator.js never reads `publisherIdentity` anywhere in its own real code — confirming C2/C3 succeeded because the command is genuinely ownership-agnostic, never because this section\'s fake happened to look like "my own" publication'));
+        const orchestratorSource = codeOnly(await source('application/publication/distribution/PublicationDistributionOrchestrator.js'));
+        assert(!/publisherIdentity/.test(orchestratorSource), n('C5. application/publication/distribution/PublicationDistributionOrchestrator.js never reads `publisherIdentity` anywhere in its own real code — confirming C2/C3 succeeded because the command is genuinely ownership-agnostic, never because this section\'s fake happened to look like "my own" publication'));
         // The identical restraint WorldEncounterCanvas.js already commits
         // to in production, for OTHER Wanderers' discovered publications —
         // this experiment's own finding is therefore not a novel discovery
@@ -521,7 +521,7 @@ async function run() {
     // store-side and portable.
     // ===============================================================
     {
-        const storeSource = codeOnly(await source('application/PublicationDistributionLifecycleStore.js'));
+        const storeSource = codeOnly(await source('application/publication/distribution/PublicationDistributionLifecycleStore.js'));
         assert(/recordDiscoveryObservation\(publicationId, discoveryProvider, discoverySection, discoveryOrigin\)/.test(storeSource), n('F1. recordDiscoveryObservation() is confirmed real production code, keyed by (publicationId, discoveryProvider) — or, since 0.9.443, (publicationId, discoveryProvider, discoveryOrigin) when a caller supplies one — never by which UI component happened to call it'));
         assert(/getDiscoveryObservations\(publicationId\)/.test(storeSource), n('F2. getDiscoveryObservations(publicationId) reads by publicationId alone too'));
 

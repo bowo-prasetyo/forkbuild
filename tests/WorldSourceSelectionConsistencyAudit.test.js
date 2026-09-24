@@ -1,21 +1,21 @@
 import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { registerPeerWorldSource, unregisterPeerWorldSource } from '../peer/PeerWorldDiscoveryLifecycleBridge.js';
 import { derivePeerWorldOrigin } from '../peer/PeerWorldDataIngress.js';
 import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { describeWorldEncounterSelectionCandidatesFromRegistry } from '../application/WorldEncounterSelectionResolution.js';
-import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelectionOutcomeStatus } from '../application/WorldEncounterSelectionOutcome.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { describeWorldEncounterSelectionCandidatesFromRegistry } from '../application/worldEncounter/WorldEncounterSelectionResolution.js';
+import { describeWorldEncounterSelectionOutcomeFromRegistry, WorldEncounterSelectionOutcomeStatus } from '../application/worldEncounter/WorldEncounterSelectionOutcome.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Document } from '../core/Document.js';
@@ -662,8 +662,8 @@ async function run() {
         // `WorldEncounterMaterialLoading.js`'s own `materialSourceFor()` —
         // never here.
         const selectionLayerFiles = [
-            '../application/WorldEncounterSelectionResolution.js',
-            '../application/WorldEncounterSelectionOutcome.js',
+            '../application/worldEncounter/WorldEncounterSelectionResolution.js',
+            '../application/worldEncounter/WorldEncounterSelectionOutcome.js',
             '../core/WorldEncounterSelectionIdentity.js'
         ];
         const originFamilyBranchingPattern = /startsWith\(\s*['"]peer:|startsWith\(\s*['"]snapshot:|===\s*['"]local['"]|===\s*LOCAL_WORLD_DISCOVERY_ORIGIN/;
@@ -678,11 +678,11 @@ async function run() {
         // decision was never introduced to resolve this milestone's own
         // ambiguity cases.
         const noRankingFiles = [
-            '../application/WorldEncounterSelectionResolution.js',
-            '../application/WorldEncounterSelectionOutcome.js',
+            '../application/worldEncounter/WorldEncounterSelectionResolution.js',
+            '../application/worldEncounter/WorldEncounterSelectionOutcome.js',
             '../core/WorldEncounterSelectionIdentity.js',
-            '../application/WorldEncounterMaterialLoading.js',
-            '../application/WorldEncounterMaterialInspection.js',
+            '../application/worldEncounter/WorldEncounterMaterialLoading.js',
+            '../application/worldEncounter/WorldEncounterMaterialInspection.js',
             '../ui/components/WorldEncounterCanvas.js'
         ];
         const forbiddenJudgmentPattern = /\b(RANK|SCORE|PREFERRED|PRIMARY|FALLBACK|DEDUP|DEDUPLICATE)\b\s*[:=]|['"](RANK|SCORE|PREFERRED|PRIMARY|FALLBACK|DEDUP|DEDUPLICATE)['"]|\.sort\(/;
@@ -702,7 +702,7 @@ async function run() {
 
         // WorldEncounterSelectionOutcome.js's own three statuses are
         // unchanged — no fourth status was added to solve this audit.
-        const outcomeSource = await readFile(new URL('../application/WorldEncounterSelectionOutcome.js', import.meta.url), 'utf8');
+        const outcomeSource = await readFile(new URL('../application/worldEncounter/WorldEncounterSelectionOutcome.js', import.meta.url), 'utf8');
         const statusMatches = outcomeSource.match(/^\s{4}(\w+):\s*'\w+'/gm) || [];
         assert(statusMatches.length === 3, `4. WorldEncounterSelectionOutcomeStatus still carries exactly three statuses (UNAVAILABLE/RESOLVED/AMBIGUOUS); found ${statusMatches.length}`);
 

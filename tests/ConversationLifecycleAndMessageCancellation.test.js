@@ -2,15 +2,15 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
-import { PeerBlockUseCase } from '../application/PeerBlockUseCase.js';
-import { ChatUseCase } from '../application/ChatUseCase.js';
-import { ChatOutbox } from '../application/ChatOutbox.js';
-import { ConversationStore } from '../application/ConversationStore.js';
-import { ConversationReadOutbox } from '../application/ConversationReadOutbox.js';
-import { RemoteReadReceiptStore } from '../application/RemoteReadReceiptStore.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
+import { PeerBlockUseCase } from '../application/peer/PeerBlockUseCase.js';
+import { ChatUseCase } from '../application/chat/ChatUseCase.js';
+import { ChatOutbox } from '../application/chat/ChatOutbox.js';
+import { ConversationStore } from '../application/chat/ConversationStore.js';
+import { ConversationReadOutbox } from '../application/chat/ConversationReadOutbox.js';
+import { RemoteReadReceiptStore } from '../application/chat/RemoteReadReceiptStore.js';
 import { ChatDeliveryState } from '../core/ChatDeliveryState.js';
 import { toChatMessage } from '../core/ChatMessage.js';
 
@@ -25,7 +25,7 @@ import { toChatMessage } from '../core/ChatMessage.js';
 //      never deletes conversation history, never un-reads an already-
 //      read message, and never erases a peer's already-recorded read
 //      receipt of THIS device's own messages — see
-//      application/ChatUseCase.js's own header. This is proven directly
+//      application/chat/ChatUseCase.js's own header. This is proven directly
 //      rather than merely assumed, because nothing NEW enforces it: the
 //      guarantee already fell out of 0.2.69/0.2.70/0.2.71's own write-
 //      ordering, and this milestone's job is to demonstrate that stays
@@ -134,7 +134,7 @@ async function runTests() {
 }
 
 // ---------------------------------------------------------------------
-// 2. application/ChatOutbox.js#cancel() — cancels only QUEUED entries
+// 2. application/chat/ChatOutbox.js#cancel() — cancels only QUEUED entries
 //    for the given peer, leaves SENT and every other peer untouched,
 //    and is idempotent.
 // ---------------------------------------------------------------------
@@ -159,11 +159,11 @@ async function runTests() {
     assert(outbox.list('dora').length === 1, "dora's own independent entry is completely unaffected by bob's cancellation");
 
     assert(outbox.cancel('bob').length === 0, 'cancelling the same peer again finds nothing left to cancel — idempotent, never throws or double-reports');
-    console.log('✓ application/ChatOutbox.js#cancel(): QUEUED-only, per-peer scoped, idempotent');
+    console.log('✓ application/chat/ChatOutbox.js#cancel(): QUEUED-only, per-peer scoped, idempotent');
 }
 
 // ---------------------------------------------------------------------
-// 3. application/ConversationReadOutbox.js#cancel() — discards a
+// 3. application/chat/ConversationReadOutbox.js#cancel() — discards a
 //    PENDING entry, leaves a SENT one alone, per-peer scoped.
 // ---------------------------------------------------------------------
 {
@@ -182,7 +182,7 @@ async function runTests() {
     assert(readOutbox.list('bob').length === 0, "bob's entry is gone entirely — a coalescing outbox has no history to preserve, unlike the message outbox");
     assert(readOutbox.cancel('dora') === null, 'cancel() never touches an entry that is already SENT — it already reached the wire');
     assert(readOutbox.list('dora').length === 1 && readOutbox.list('dora')[0].state === 'SENT', "dora's already-SENT entry is completely untouched");
-    console.log('✓ application/ConversationReadOutbox.js#cancel(): PENDING-only, per-peer scoped');
+    console.log('✓ application/chat/ConversationReadOutbox.js#cancel(): PENDING-only, per-peer scoped');
 }
 
 // ---------------------------------------------------------------------

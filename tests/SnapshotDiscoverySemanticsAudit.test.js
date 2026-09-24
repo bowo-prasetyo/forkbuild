@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { resolveSnapshotPublicationAttribution } from '../application/SnapshotPublicationAttribution.js';
-import { SnapshotPublicationAttributionOutcome } from '../application/SnapshotPublicationAttributionOutcome.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { resolveSnapshotPublicationAttribution } from '../application/snapshot/SnapshotPublicationAttribution.js';
+import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -17,7 +17,7 @@ import { ContentReference } from '../core/ContentReference.js';
 // but every scenario in it, and in every Snapshot-discovery test before
 // it, asked the identical shape of question: "does a locator exist for
 // THIS ONE, already-known contentHash?" That is `resolve()`'s own
-// contract (application/DecentralizedSnapshotResolver.js, 0.9.134) —
+// contract (application/snapshot/DecentralizedSnapshotResolver.js, 0.9.134) —
 // attribution-oriented resolution, not browsing. Nothing in this codebase
 // has ever asked the OTHER question `application/
 // NostrSnapshotDiscoveryQueryService.js#search()` was already, quietly,
@@ -32,8 +32,8 @@ import { ContentReference } from '../core/ContentReference.js';
 //
 // TEST-ONLY. ZERO PRODUCTION CHANGES. `application/
 // NostrSnapshotDiscoveryQueryService.js`, `application/
-// DecentralizedSnapshotResolver.js`, `application/DiscoverSnapshotCommand.js`,
-// `application/DiscoverSnapshotRuntimeComposition.js`, `application/
+// DecentralizedSnapshotResolver.js`, `application/snapshot/DiscoverSnapshotCommand.js`,
+// `application/snapshot/DiscoverSnapshotRuntimeComposition.js`, `application/
 // SnapshotPublicationAttribution.js`, and `core/SnapshotDiscoveryEnvelope.js`
 // are read only, never edited by this milestone. Every behavior this file
 // exercises was already true before this audit ran; nothing here changes
@@ -251,9 +251,9 @@ async function run() {
         // fixture coincidence: the vocabulary a caller could even ask
         // for from a resolved/attributed result never appears in the
         // discovery layer's own source.
-        const queryServiceCode = await codeOnlySource('application/NostrSnapshotDiscoveryQueryService.js');
+        const queryServiceCode = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         assert(!/\bMATCH\b|\bNO_MATCH\b|VERIFIED|RESOLVED\b/.test(queryServiceCode),
-            'C2. application/NostrSnapshotDiscoveryQueryService.js itself never references MATCH/NO_MATCH/VERIFIED/RESOLVED — that vocabulary belongs entirely to the resolution/attribution layers, never to discovery');
+            'C2. application/nostr/NostrSnapshotDiscoveryQueryService.js itself never references MATCH/NO_MATCH/VERIFIED/RESOLVED — that vocabulary belongs entirely to the resolution/attribution layers, never to discovery');
 
         console.log('✓ Section C: a bare discovered candidate carries no outcome/status/verdict field of any kind, structurally as well as behaviorally — discovery cannot manufacture a verdict merely by existing');
     }
@@ -289,9 +289,9 @@ async function run() {
         // imports a ContentStore, and never calls a `.get(` retrieval
         // method — the architectural reason D1's runtime behavior is
         // guaranteed, not coincidental.
-        const queryServiceCode = await codeOnlySource('application/NostrSnapshotDiscoveryQueryService.js');
+        const queryServiceCode = await codeOnlySource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         assert(!queryServiceCode.includes('ContentStore'),
-            'D4. application/NostrSnapshotDiscoveryQueryService.js never imports any ContentStore — it structurally cannot retrieve bytes');
+            'D4. application/nostr/NostrSnapshotDiscoveryQueryService.js never imports any ContentStore — it structurally cannot retrieve bytes');
         assert(!/\.get\s*\(/.test(queryServiceCode),
             'D5. ...and never calls a `.get()` retrieval method of any kind');
 

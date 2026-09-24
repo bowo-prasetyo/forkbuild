@@ -4,7 +4,7 @@ import { DiscoveryProvider } from './DiscoveryProvider.js';
 // Discovery.
 //
 // 0.9.338's own audit located the ONE remaining gap precisely:
-// application/CreateDiscoveryUseCase.js — the composition root Repository,
+// application/discovery/CreateDiscoveryUseCase.js — the composition root Repository,
 // Author, Editor's fork/load lookup, and World View all independently
 // call — constructs a fresh discovery/LocalDiscoveryProvider.js every
 // time and never merges in the app-wide
@@ -24,7 +24,7 @@ import { DiscoveryProvider } from './DiscoveryProvider.js';
 //     implementation detail of composition, not a designed "local
 //     first" or "decentralized first" policy — nothing here chooses it
 //     on the results' behalf. It is also, in practice, rarely visible:
-//     application/SearchPublicationsUseCase.js's own execute() already
+//     application/publication/SearchPublicationsUseCase.js's own execute() already
 //     re-sorts the FULL candidate set via query.sort immediately after
 //     calling list() (see its own header), so a Repository search
 //     result's actual display order never depends on this class's

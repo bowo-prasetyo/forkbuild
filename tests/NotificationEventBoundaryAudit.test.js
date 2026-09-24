@@ -5,9 +5,9 @@ import { NotificationEvent, isValidEventType } from '../core/NotificationEvent.j
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 import {
     toFriendshipAdvertisement, isValidFriendshipAdvertisement,
     getFriendshipSigningDescriptor, FriendshipAction
@@ -52,7 +52,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //               real domain data, not merely asserting the shape would
 //               work.
 //   Section F — The ChatOutbox boundary: a dedicated regression proving
-//               `application/ChatOutbox.js` is a durable-delivery
+//               `application/chat/ChatOutbox.js` is a durable-delivery
 //               PRECEDENT, never a hidden NotificationEvent producer or
 //               a generic notification store.
 //   Section G — Candidate classification and the producer-selection
@@ -157,26 +157,26 @@ async function runTests() {
             'A2. core/FriendshipRecord.js still resets BOTH incomingAction/outgoingAction to null on any terminal action — the arrival fact is durable only conditionally, never a permanent log entry the way Commentary A1 is.');
 
         // A3. Place Naming claim — durably persisted in
-        // application/LocalPlaceNamingClaimStore.js once imported, but this
+        // application/placeNaming/LocalPlaceNamingClaimStore.js once imported, but this
         // is each REPLICA's own local copy of a claim it discovered, never
         // a fact recorded FOR another identity — see Section B3 below.
-        assert(await sourceExists('application/LocalPlaceNamingClaimStore.js'),
-            'A3. application/LocalPlaceNamingClaimStore.js still exists — the underlying fact (a claim exists) is durable, but see Section B3 for why that is not the same as being addressed to a recipient.');
+        assert(await sourceExists('application/placeNaming/LocalPlaceNamingClaimStore.js'),
+            'A3. application/placeNaming/LocalPlaceNamingClaimStore.js still exists — the underlying fact (a claim exists) is durable, but see Section B3 for why that is not the same as being addressed to a recipient.');
 
         // A4. Publication/Snapshot distribution result — durably
         // persisted, but as a SINGLE CURRENT VALUE per publicationId, never
-        // a history (application/PublicationDistributionLifecycleStore.js's
+        // a history (application/publication/distribution/PublicationDistributionLifecycleStore.js's
         // own header, reconfirmed fresh).
-        const lifecycleStoreSource = await rawSource('application/PublicationDistributionLifecycleStore.js');
+        const lifecycleStoreSource = await rawSource('application/publication/distribution/PublicationDistributionLifecycleStore.js');
         assert(/holds a single current value per publication/.test(lifecycleStoreSource),
-            'A4. application/PublicationDistributionLifecycleStore.js still holds a single current value per publication, never a history — reconfirmed fresh, one milestone after 0.9.272 D4a first found it.');
+            'A4. application/publication/distribution/PublicationDistributionLifecycleStore.js still holds a single current value per publication, never a history — reconfirmed fresh, one milestone after 0.9.272 D4a first found it.');
 
         // A5. World Presence change — NEVER persisted, by explicit,
-        // permanent design (application/WorldPresenceUseCase.js's own
+        // permanent design (application/presence/WorldPresenceUseCase.js's own
         // header, reconfirmed fresh, one milestone after 0.9.272 D1).
-        const presenceUseCase = await rawSource('application/WorldPresenceUseCase.js');
+        const presenceUseCase = await rawSource('application/presence/WorldPresenceUseCase.js');
         assert(/COMPUTED from currently live, authenticated peer connections, never\s*\n\/\/ PERSISTED/.test(presenceUseCase),
-            'A5. application/WorldPresenceUseCase.js still states presence is COMPUTED from live connections, never persisted — the underlying fact this candidate would need simply is not represented anywhere on disk.');
+            'A5. application/presence/WorldPresenceUseCase.js still states presence is COMPUTED from live connections, never persisted — the underlying fact this candidate would need simply is not represented anywhere on disk.');
 
         // A6. Document Collaboration causal-gap observation — held only in
         // an in-memory Map (core/DocumentOperationCausality.js), never
@@ -184,11 +184,11 @@ async function runTests() {
         // storage/ import anywhere in the causal-gap chain.
         const causalitySource = codeOnlyLines(await rawSource('core/DocumentOperationCausality.js'));
         const gapDetectorSource = codeOnlyLines(await rawSource('core/DocumentOperationCausalGapDetector.js'));
-        const gapObserverSource = codeOnlyLines(await rawSource('application/DocumentOperationCausalGapObservationUseCase.js'));
+        const gapObserverSource = codeOnlyLines(await rawSource('application/document/DocumentOperationCausalGapObservationUseCase.js'));
         assert(causalitySource.includes('this._predecessors = new Map()') && !/storage\//.test(causalitySource),
             'A6a. core/DocumentOperationCausality.js still holds causal history in a bare in-memory Map, with no storage/ import anywhere in the file.');
         assert(!/storage\//.test(gapDetectorSource) && !/storage\//.test(gapObserverSource),
-            'A6b. Neither core/DocumentOperationCausalGapDetector.js nor application/DocumentOperationCausalGapObservationUseCase.js imports anything from storage/ — the causal-gap fact never reaches durable storage anywhere in this chain, reconfirming 0.9.272 D5a/b at the storage layer specifically.');
+            'A6b. Neither core/DocumentOperationCausalGapDetector.js nor application/document/DocumentOperationCausalGapObservationUseCase.js imports anything from storage/ — the causal-gap fact never reaches durable storage anywhere in this chain, reconfirming 0.9.272 D5a/b at the storage layer specifically.');
 
         // A7. Publication Commentary reply/threading — does not exist.
         // 0.9.242's own header lists "threading, replies" as EXPLICITLY
@@ -272,21 +272,21 @@ async function runTests() {
         // near itself, never a claim being pushed AT a specific other
         // identity. There is no candidate recipient at all, and this
         // section does not manufacture one.
-        const nostrSource = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoverySource.js'));
+        const nostrSource = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoverySource.js'));
         assert(!/publishEvent|sendEvent|broadcast|\.publish\(/i.test(nostrSource),
-            'B3. application/NostrPlaceNamingDiscoverySource.js still contains no publish/send/broadcast call — reconfirmed fresh: discovery is pull-only, so a naming claim has no natural recipient to address a NotificationEvent to.');
+            'B3. application/placeNaming/NostrPlaceNamingDiscoverySource.js still contains no publish/send/broadcast call — reconfirmed fresh: discovery is pull-only, so a naming claim has no natural recipient to address a NotificationEvent to.');
 
         // B4. Publication/Snapshot distribution result — reconfirmed
         // structurally, one milestone after 0.9.272 D4a/b: the only
         // "recipient" is the SAME local actor who initiated the
         // operation, and the other side of the exchange (a second replica
         // importing the Snapshot) never informs the first party at all.
-        const lifecycleStoreHeader = await rawSource('application/PublicationDistributionLifecycleStore.js');
+        const lifecycleStoreHeader = await rawSource('application/publication/distribution/PublicationDistributionLifecycleStore.js');
         assert(/talks to another process, tab, or machine/.test(lifecycleStoreHeader),
-            'B4a. application/PublicationDistributionLifecycleStore.js\'s own header still states it never talks to another process, tab, or machine.');
-        const importSnapshotSource = codeOnlyLines(await rawSource('application/ImportPublicationSnapshotTransferPackageUseCase.js'));
+            'B4a. application/publication/distribution/PublicationDistributionLifecycleStore.js\'s own header still states it never talks to another process, tab, or machine.');
+        const importSnapshotSource = codeOnlyLines(await rawSource('application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js'));
         assert(!/acknowledge|receipt|notifyPublisher|notifyOrigin/i.test(importSnapshotSource),
-            'B4b. application/ImportPublicationSnapshotTransferPackageUseCase.js still contains no acknowledge/receipt/notify call back to the original publisher.');
+            'B4b. application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js still contains no acknowledge/receipt/notify call back to the original publisher.');
 
         // B5. World Presence — recipients ARE structurally identifiable
         // (each roster entry's own identityId is real and distinct from
@@ -316,8 +316,8 @@ async function runTests() {
         // authenticated identities (every collaborator), reconfirmed
         // structurally; moot in the same way B5's participant side is
         // moot, given Section A6's MISSING_FACT finding.
-        assert(gapObserverSourceHasAttachHeader(await rawSource('application/DocumentOperationCausalGapObservationUseCase.js')),
-            'B6. application/DocumentOperationCausalGapObservationUseCase.js\'s own header still describes attaching to the live propagation feed operations already flow through — collaborators are real, named identities, but this is moot given Section A6\'s finding that no durable fact exists to notify FROM.');
+        assert(gapObserverSourceHasAttachHeader(await rawSource('application/document/DocumentOperationCausalGapObservationUseCase.js')),
+            'B6. application/document/DocumentOperationCausalGapObservationUseCase.js\'s own header still describes attaching to the live propagation feed operations already flow through — collaborators are real, named identities, but this is moot given Section A6\'s finding that no durable fact exists to notify FROM.');
 
         console.log('✓ B: Recipient determination complete for all seven candidates. Two candidates (Commentary, Friend Relationship) have a distinct recipient determinable without inventing any new relationship (B1/B2) — Friend Relationship\'s is structurally the stronger of the two, since it is the wire protocol\'s own address rather than a derived field. Two (Place Naming, Distribution) have no natural recipient at all (B3/B4). Two (World Presence, Collaboration) have real recipient candidates that are moot next to their own Section A MISSING_FACT finding — except World Presence\'s newly examined World-author angle, which surfaces a genuinely different privacy-policy gap (B5).');
     }
@@ -358,13 +358,13 @@ async function runTests() {
         // incomingAction, which Section A2 already showed gets
         // overwritten or cleared. A NotificationEvent for this candidate
         // could only be constructed by a producer wired directly at the
-        // ingestion boundary (application/FriendRelationshipUseCase.js
+        // ingestion boundary (application/identity/FriendRelationshipUseCase.js
         // #_handleIncoming), at the moment the advertisement arrives —
         // never derived later from stored relationship state, the way
         // Commentary's can be.
-        const friendUseCaseSource = await rawSource('application/FriendRelationshipUseCase.js');
+        const friendUseCaseSource = await rawSource('application/identity/FriendRelationshipUseCase.js');
         assert(friendUseCaseSource.includes('_handleIncoming(payload, meta)') && friendUseCaseSource.includes('withIncomingAction(payload)'),
-            'C2. application/FriendRelationshipUseCase.js#_handleIncoming still both verifies and stores the incoming advertisement in one place — the only point in this codebase where the full, still-fresh advertisement (including its own stable signature identity) is available, before any later action can overwrite or clear it.');
+            'C2. application/identity/FriendRelationshipUseCase.js#_handleIncoming still both verifies and stores the incoming advertisement in one place — the only point in this codebase where the full, still-fresh advertisement (including its own stable signature identity) is available, before any later action can overwrite or clear it.');
 
         // C3. Place Naming claim — claim.id IS stable (reconfirmed: the
         // discovery envelope round-trips the same id), but this is moot
@@ -524,7 +524,7 @@ async function runTests() {
     // ---------------------------------------------------------------
     // Section F — The ChatOutbox boundary.
     //
-    // A dedicated regression: application/ChatOutbox.js is 0.9.272's own
+    // A dedicated regression: application/chat/ChatOutbox.js is 0.9.272's own
     // real durable-delivery precedent (D6), reconfirmed fresh here, PLUS
     // a check 0.9.272 could not have made — NotificationEvent.js did not
     // exist yet — that the coupling stays absent in BOTH directions, now
@@ -533,9 +533,9 @@ async function runTests() {
     {
         // F1. ChatOutbox genuinely exists and genuinely enqueues messages
         // addressed to a peerIdentityId — reconfirmed fresh.
-        const chatOutboxSource = await rawSource('application/ChatOutbox.js');
+        const chatOutboxSource = await rawSource('application/chat/ChatOutbox.js');
         assert(chatOutboxSource.includes('export class ChatOutbox') && chatOutboxSource.includes('enqueue(message, peerIdentityId'),
-            'F1. application/ChatOutbox.js still genuinely exists and enqueues messages addressed to a peerIdentityId.');
+            'F1. application/chat/ChatOutbox.js still genuinely exists and enqueues messages addressed to a peerIdentityId.');
         assert(chatOutboxSource.includes('Addressed To An Identity, Never A Connection'),
             'F1b. Its own header still states the architectural precedent explicitly.');
 
@@ -548,9 +548,9 @@ async function runTests() {
         // reconfirmed fresh with a live re-grep, not trusted from 0.9.272.
         const allChatOutboxImporters = execSync('grep -rl "from .*ChatOutbox\\.js." application ui core --include="*.js" || true', { cwd: SOURCE_ROOT.pathname })
             .toString().trim().split('\n').filter(Boolean);
-        const nonChatOutboxImporters = allChatOutboxImporters.filter((f) => !/chat|conversation/i.test(f) && f !== 'application/PeerPresenceUseCase.js');
+        const nonChatOutboxImporters = allChatOutboxImporters.filter((f) => !/chat|conversation/i.test(f) && f !== 'application/presence/PeerPresenceUseCase.js');
         assert(nonChatOutboxImporters.length === 0,
-            `F3. Every file importing application/ChatOutbox.js is still Chat/Conversation-domain code, plus exactly the one read-only summary reader — found ${nonChatOutboxImporters.length} unexplained importer(s): ${nonChatOutboxImporters.join(', ')}.`);
+            `F3. Every file importing application/chat/ChatOutbox.js is still Chat/Conversation-domain code, plus exactly the one read-only summary reader — found ${nonChatOutboxImporters.length} unexplained importer(s): ${nonChatOutboxImporters.join(', ')}.`);
 
         // F4. NEW — core/NotificationEvent.js imports nothing from
         // ChatOutbox/ChatOutboxEntry/ChatMessage, reconfirmed independently
@@ -563,20 +563,20 @@ async function runTests() {
         // F5. NEW — the reverse direction, uncheckable before this
         // milestone because NotificationEvent.js did not exist when
         // ChatOutbox.js/ChatOutboxEntry.js were last touched:
-        // application/ChatOutbox.js and core/ChatOutboxEntry.js import
+        // application/chat/ChatOutbox.js and core/ChatOutboxEntry.js import
         // nothing from core/NotificationEvent.js. ChatOutbox stays a
         // closed, ChatMessage-specific precedent — it has not silently
         // absorbed the new seam as a special case of itself.
         const chatOutboxEntryRawSource = await rawSource('core/ChatOutboxEntry.js');
         assert(!/NotificationEvent/.test(codeOnlyLines(chatOutboxSource)) && !/NotificationEvent/.test(codeOnlyLines(chatOutboxEntryRawSource)),
-            'F5. Neither application/ChatOutbox.js nor core/ChatOutboxEntry.js references NotificationEvent anywhere — the coupling this milestone must not introduce stays absent in the direction 0.9.272 could not yet have checked.');
+            'F5. Neither application/chat/ChatOutbox.js nor core/ChatOutboxEntry.js references NotificationEvent anywhere — the coupling this milestone must not introduce stays absent in the direction 0.9.272 could not yet have checked.');
 
         // F6. Still a bounded, 7-day, best-effort guarantee, never a
         // durable inbox — reconfirmed fresh.
         assert(outboxEntrySource.includes('DEFAULT_OUTBOX_TTL_MS') && /best-effort, not forever/.test(await rawSource('core/ChatOutboxEntry.js')),
             'F6. core/ChatOutboxEntry.js still bounds delivery to a 7-day, explicitly "best-effort, not forever" TTL.');
 
-        console.log('✓ F: application/ChatOutbox.js reconfirmed, fresh, as a real durable-delivery precedent (F1) that stays narrowly typed to ChatMessage (F2) with zero non-Chat callers (F3) and a bounded, best-effort guarantee (F6) — none of that has drifted since 0.9.272. And the coupling this milestone must not introduce is checked directly in BOTH directions: NotificationEvent.js still imports nothing Chat-shaped (F4, reconfirming 0.9.273\'s own regression independently), and — newly checkable now that NotificationEvent.js exists — ChatOutbox.js/ChatOutboxEntry.js reference nothing NotificationEvent-shaped either (F5). ChatOutbox remains exactly what 0.9.272 found it to be: an architectural precedent, never a hidden NotificationEvent producer or a generic notification store.');
+        console.log('✓ F: application/chat/ChatOutbox.js reconfirmed, fresh, as a real durable-delivery precedent (F1) that stays narrowly typed to ChatMessage (F2) with zero non-Chat callers (F3) and a bounded, best-effort guarantee (F6) — none of that has drifted since 0.9.272. And the coupling this milestone must not introduce is checked directly in BOTH directions: NotificationEvent.js still imports nothing Chat-shaped (F4, reconfirming 0.9.273\'s own regression independently), and — newly checkable now that NotificationEvent.js exists — ChatOutbox.js/ChatOutboxEntry.js reference nothing NotificationEvent-shaped either (F5). ChatOutbox remains exactly what 0.9.272 found it to be: an architectural precedent, never a hidden NotificationEvent producer or a generic notification store.');
     }
 
     // ---------------------------------------------------------------

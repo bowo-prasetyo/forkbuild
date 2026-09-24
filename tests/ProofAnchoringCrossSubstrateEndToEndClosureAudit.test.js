@@ -6,32 +6,32 @@ import { fileURLToPath } from 'node:url';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { CreatePublicationAnchorUseCase } from '../application/CreatePublicationAnchorUseCase.js';
-import { CreateExternalPublicationAnchorUseCase } from '../application/CreateExternalPublicationAnchorUseCase.js';
-import { ExternalAnchorPublisherRegistry } from '../application/ExternalAnchorPublisherRegistry.js';
-import { ExternalProofVerifierRegistry } from '../application/ExternalProofVerifierRegistry.js';
-import { ExternalAnchorEvidenceViewRegistry } from '../application/ExternalAnchorEvidenceViewRegistry.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { ExternalAnchorCreationOutcome } from '../application/ExternalAnchorCreationOutcome.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { CreatePublicationAnchorUseCase } from '../application/anchoring/CreatePublicationAnchorUseCase.js';
+import { CreateExternalPublicationAnchorUseCase } from '../application/anchoring/CreateExternalPublicationAnchorUseCase.js';
+import { ExternalAnchorPublisherRegistry } from '../application/anchoring/ExternalAnchorPublisherRegistry.js';
+import { ExternalProofVerifierRegistry } from '../application/anchoring/ExternalProofVerifierRegistry.js';
+import { ExternalAnchorEvidenceViewRegistry } from '../application/anchoring/ExternalAnchorEvidenceViewRegistry.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { ExternalAnchorCreationOutcome } from '../application/anchoring/ExternalAnchorCreationOutcome.js';
 
-import { BitcoinAnchorPublicationCoordinator } from '../application/BitcoinAnchorPublicationCoordinator.js';
-import { BitcoinAnchorPublicationLifecycleState } from '../application/BitcoinAnchorPublicationLifecycleState.js';
+import { BitcoinAnchorPublicationCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js';
+import { BitcoinAnchorPublicationLifecycleState } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationLifecycleState.js';
 import { BitcoinAnchorTransactionBroadcaster } from '../anchoring/BitcoinAnchorTransactionBroadcaster.js';
-import { BitcoinAnchorBroadcastCoordinator } from '../application/BitcoinAnchorBroadcastCoordinator.js';
-import { BitcoinAnchorBroadcastState } from '../application/BitcoinAnchorBroadcastState.js';
+import { BitcoinAnchorBroadcastCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastCoordinator.js';
+import { BitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
 import { BitcoinAnchorEvidenceView } from '../anchoring/BitcoinAnchorEvidenceView.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 
 import { BaseAnchorPublisher } from '../anchoring/BaseAnchorPublisher.js';
-import { BaseReviewedSigningCoordinator } from '../application/BaseReviewedSigningCoordinator.js';
+import { BaseReviewedSigningCoordinator } from '../application/anchoring/base/BaseReviewedSigningCoordinator.js';
 import { BaseTransactionBroadcaster } from '../base/BaseTransactionBroadcaster.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { describeBasePublicationTransactionReview } from '../application/BasePublicationTransactionReview.js';
-import { encodeBasePublicationCommitment } from '../application/BasePublicationCommitmentEncoding.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { describeBasePublicationTransactionReview } from '../application/anchoring/base/BasePublicationTransactionReview.js';
+import { encodeBasePublicationCommitment } from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
 import { BaseAnchorEvidenceView } from '../anchoring/BaseAnchorEvidenceView.js';
 import { BaseProofVerifier } from '../anchoring/BaseProofVerifier.js';
 
@@ -684,7 +684,7 @@ async function run() {
         const bitcoinPublisherImports = importLines(await source('anchoring/BitcoinAnchorPublisher.js'));
         const basePublisherImports = importLines(await source('anchoring/BaseAnchorPublisher.js'));
         const arweavePublisherImports = importLines(await source('anchoring/ArweaveAnchorPublisher.js'));
-        const coordinatorImports = importLines(await source('application/BitcoinAnchorPublicationCoordinator.js'));
+        const coordinatorImports = importLines(await source('application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js'));
         assert(!/BaseAnchorPublisher|ArweaveAnchorPublisher/.test(bitcoinPublisherImports) && !/BaseAnchorPublisher|ArweaveAnchorPublisher/.test(coordinatorImports),
             n('G6. Bitcoin\'s own publisher/coordinator never imports Base\'s or Arweave\'s publisher'));
         assert(!/BitcoinAnchorPublisher|ArweaveAnchorPublisher/.test(basePublisherImports), n('G7. Base\'s own publisher never imports Bitcoin\'s or Arweave\'s publisher'));
@@ -696,7 +696,7 @@ async function run() {
         // those roles at all.
         const anchoringFiles = [
             'anchoring/BitcoinAnchorPublisher.js', 'anchoring/BaseAnchorPublisher.js', 'anchoring/ArweaveAnchorPublisher.js',
-            'application/BitcoinAnchorPublicationCoordinator.js'
+            'application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js'
         ];
         for (const file of anchoringFiles) {
             const src = codeOnly(await source(file));

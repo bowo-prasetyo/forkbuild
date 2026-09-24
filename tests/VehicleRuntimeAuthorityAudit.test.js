@@ -1,18 +1,18 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarVehicleInteractionController } from '../application/AvatarVehicleInteractionController.js';
-import { VehicleRuntimeInstances } from '../application/VehicleRuntimeInstances.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarVehicleInteractionController } from '../application/avatar/AvatarVehicleInteractionController.js';
+import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { BICYCLE_DISMOUNT_OFFSET_X } from '../core/AvatarVehicleDismountPosition.js';
 import { Position } from '../core/Position.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.118 — Vehicle Runtime Authority Audit.
 //
@@ -27,15 +27,15 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //              consumer (movement, rendering, dismount) is swept for a
 //              stray `.spawnPosition` read or a second, parallel
 //              VehicleInstance construction path; only
-//              core/VehicleInstance.js/application/NearbyVehicleInstances.js
+//              core/VehicleInstance.js/application/world/NearbyVehicleInstances.js
 //              themselves are allowed to mention either
 //   Section B: FLAGSHIP — the one gap this audit found: mount TARGET
 //              resolution could only ever find a vehicle by its
 //              deterministic spawn point, so a vehicle ridden away from
 //              spawn and left there could never be mounted again from
 //              where it now actually sits. Proves the fix:
-//              application/AvatarVehicleInteractionController.js#_nearbyVehicles()
-//              now also consults application/VehicleRuntimeInstances.js's
+//              application/avatar/AvatarVehicleInteractionController.js#_nearbyVehicles()
+//              now also consults application/world/VehicleRuntimeInstances.js's
 //              own current-position record
 //   Section C: FLAGSHIP — cross-pipeline: mount, real 0.9.116 movement,
 //              real 0.9.115 render sync, several more reconciliation
@@ -50,7 +50,7 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //              minimal wiring (a widened input type on
 //              core/AvatarVehicleInteractionTarget.js, one new
 //              non-mutating reader on
-//              application/VehicleRuntimeInstances.js, one merge at the
+//              application/world/VehicleRuntimeInstances.js, one merge at the
 //              one existing candidate-list call site) — never a second
 //              target-resolution policy, never a new vehicle capability
 //
@@ -168,11 +168,11 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const currentPositionConsumers = [
-            '../application/AvatarVehicleMovementController.js',
+            '../application/avatar/AvatarVehicleMovementController.js',
             '../renderer/VehicleFieldRenderer.js',
-            '../application/RenderWorldViewUseCase.js',
-            '../application/WorldNavigationSession.js',
-            '../application/VehicleRuntimeInstances.js'
+            '../application/world/RenderWorldViewUseCase.js',
+            '../application/world/WorldNavigationSession.js',
+            '../application/world/VehicleRuntimeInstances.js'
         ];
         for (const path of currentPositionConsumers) {
             const codeOnly = await sourceOf(path);
@@ -199,11 +199,11 @@ async function runTests() {
         // position movement had already produced.
         const bridgeCallSites = [];
         for (const path of [
-            '../application/NearbyVehicleInstances.js',
-            '../application/VehicleRuntimeInstances.js',
-            '../application/AvatarVehicleMovementController.js',
-            '../application/AvatarVehicleInteractionController.js',
-            '../application/WorldNavigationSession.js',
+            '../application/world/NearbyVehicleInstances.js',
+            '../application/world/VehicleRuntimeInstances.js',
+            '../application/avatar/AvatarVehicleMovementController.js',
+            '../application/avatar/AvatarVehicleInteractionController.js',
+            '../application/world/WorldNavigationSession.js',
             '../renderer/VehicleFieldRenderer.js'
         ]) {
             const codeOnly = await sourceOf(path);
@@ -211,25 +211,25 @@ async function runTests() {
             const count = (nonImportLines.join('\n').match(/\bvehicleInstanceFromPresence\b/g) || []).length;
             if (count > 0) bridgeCallSites.push({ path, count });
         }
-        assert(bridgeCallSites.length === 1 && bridgeCallSites[0].path === '../application/NearbyVehicleInstances.js' && bridgeCallSites[0].count === 1,
-            `3. vehicleInstanceFromPresence() is referenced (as a call, not merely imported) from exactly one production call site (application/NearbyVehicleInstances.js) — got ${JSON.stringify(bridgeCallSites)}`);
+        assert(bridgeCallSites.length === 1 && bridgeCallSites[0].path === '../application/world/NearbyVehicleInstances.js' && bridgeCallSites[0].count === 1,
+            `3. vehicleInstanceFromPresence() is referenced (as a call, not merely imported) from exactly one production call site (application/world/NearbyVehicleInstances.js) — got ${JSON.stringify(bridgeCallSites)}`);
 
-        // application/VehicleRuntimeInstances.js is the only writer of a
+        // application/world/VehicleRuntimeInstances.js is the only writer of a
         // VehicleInstance's own current position (via
         // VehicleInstance#withPosition()) reachable from application-layer
         // wiring — movement writes through its own setPosition(), and
         // nothing else in application/ or renderer/ calls
         // `.withPosition(` directly.
         for (const path of [
-            '../application/AvatarVehicleMovementController.js',
-            '../application/AvatarVehicleInteractionController.js',
-            '../application/WorldNavigationSession.js',
-            '../application/NearbyVehicleInstances.js',
+            '../application/avatar/AvatarVehicleMovementController.js',
+            '../application/avatar/AvatarVehicleInteractionController.js',
+            '../application/world/WorldNavigationSession.js',
+            '../application/world/NearbyVehicleInstances.js',
             '../renderer/VehicleFieldRenderer.js'
         ]) {
             const codeOnly = await sourceOf(path);
             assert(!codeOnly.includes('.withPosition('),
-                `4. ${path} never calls VehicleInstance#withPosition() directly — application/VehicleRuntimeInstances.js#setPosition() is the one place a tracked vehicle's position ever changes`);
+                `4. ${path} never calls VehicleInstance#withPosition() directly — application/world/VehicleRuntimeInstances.js#setPosition() is the one place a tracked vehicle's position ever changes`);
         }
     }
 
@@ -281,7 +281,7 @@ async function runTests() {
         assert(session.avatarVehicleMount() === null, '8. setup: dismounted next to the vehicle\'s current, ridden-to position');
 
         // Walk away — but deliberately still within
-        // application/NearbyVehicleInstances.js's own VEHICLE_RENDER_RADIUS
+        // application/world/NearbyVehicleInstances.js's own VEHICLE_RENDER_RADIUS
         // (50) of the vehicle's current position, so the render loop's own
         // sync() never evicts it from the runtime store; eviction-on-
         // walk-away is a real, separate, and correct behavior this test
@@ -326,7 +326,7 @@ async function runTests() {
 
         // Discovery: the first frame's render sync discovers the vehicle
         // with position === spawnPosition, exactly as
-        // application/NearbyVehicleInstances.js's own bridge always
+        // application/world/NearbyVehicleInstances.js's own bridge always
         // produces for a never-moved vehicle.
         fireFrame(session, 0.016);
         const discovered = session._vehicleRuntimeInstances.get(REAL_VEHICLE_ID);
@@ -344,7 +344,7 @@ async function runTests() {
 
         // Movement + rendering, together, one frame at a time: ride
         // forward, and on EVERY one of these frames the render facade's
-        // own syncVehicles() also runs (application/WorldNavigationSession.js
+        // own syncVehicles() also runs (application/world/WorldNavigationSession.js
         // wires both loops independently — see this file's own header).
         session.avatarKeyDown('w');
         // 0.9.119 — Vehicle–World Collision Constraint. 58, not 60:
@@ -407,9 +407,9 @@ async function runTests() {
 
         // RECONCILIATION NEVER RESETS MOVEMENT: several more idle frames,
         // now genuinely unmounted, each re-run
-        // application/VehicleRuntimeInstances.js's own sync(), which
+        // application/world/VehicleRuntimeInstances.js's own sync(), which
         // re-derives a fresh, spawn-equal CANDIDATE from
-        // application/NearbyVehicleInstances.js every single time — the
+        // application/world/NearbyVehicleInstances.js every single time — the
         // moved, already-tracked, now-riderless vehicle must survive
         // every one of them at its ridden-to position, never snapping
         // back toward spawnPosition.
@@ -508,9 +508,9 @@ async function runTests() {
         assert(JSON.stringify(exportedTargetNames) === JSON.stringify(['resolveAvatarVehicleInteractionTarget']),
             '34. core/AvatarVehicleInteractionTarget.js still exports exactly its one resolver — the fix widened its INPUT type, never its public surface');
 
-        const runtimeInstancesCode = await sourceOf('../application/VehicleRuntimeInstances.js');
+        const runtimeInstancesCode = await sourceOf('../application/world/VehicleRuntimeInstances.js');
         assert(runtimeInstancesCode.includes('nearby('),
-            '35. application/VehicleRuntimeInstances.js exposes the new nearby() reader');
+            '35. application/world/VehicleRuntimeInstances.js exposes the new nearby() reader');
         // nearby() must never call sync(), and must never mutate
         // `_instances` — see that method's own header for exactly why
         // (a second, differently-radius'd sync() call would evict a
@@ -521,18 +521,18 @@ async function runTests() {
         assert(!nearbyMethodSource.includes('this._instances.set') && !nearbyMethodSource.includes('this._instances.delete') && !nearbyMethodSource.includes('sync('),
             '36. nearby() never mutates the store and never calls sync() — a pure, non-evicting read');
 
-        const controllerCode = await sourceOf('../application/AvatarVehicleInteractionController.js');
+        const controllerCode = await sourceOf('../application/avatar/AvatarVehicleInteractionController.js');
         const nearbyCallSites = controllerCode.split('_vehicleRuntimeInstances.nearby(').length - 1;
         assert(nearbyCallSites === 1,
-            '37. application/AvatarVehicleInteractionController.js calls vehicleRuntimeInstances.nearby() from exactly one place — the one _nearbyVehicles() merge, never duplicated');
+            '37. application/avatar/AvatarVehicleInteractionController.js calls vehicleRuntimeInstances.nearby() from exactly one place — the one _nearbyVehicles() merge, never duplicated');
         assert(!controllerCode.includes('_vehicleRuntimeInstances.sync('),
-            '38. application/AvatarVehicleInteractionController.js never calls sync() itself — discovery/eviction stays entirely application/WorldNavigationSession.js\'s own _setupVehicleRendering() job');
+            '38. application/avatar/AvatarVehicleInteractionController.js never calls sync() itself — discovery/eviction stays entirely application/world/WorldNavigationSession.js\'s own _setupVehicleRendering() job');
 
         // No new vehicle capability of any kind was introduced by this
         // audit milestone — matching its own brief precisely.
         for (const path of [
-            '../application/AvatarVehicleInteractionController.js',
-            '../application/VehicleRuntimeInstances.js',
+            '../application/avatar/AvatarVehicleInteractionController.js',
+            '../application/world/VehicleRuntimeInstances.js',
             '../core/AvatarVehicleInteractionTarget.js'
         ]) {
             const codeOnly = await sourceOf(path);
@@ -540,13 +540,13 @@ async function runTests() {
                 `39. ${path} introduces no persistence, networking, or multiplayer concept — this milestone is strictly an audit plus its one wiring fix`);
         }
         // MOTORCYCLE/CAR/DRONE stayed absent from all three through this
-        // milestone's own diff — application/AvatarVehicleInteractionController.js
+        // milestone's own diff — application/avatar/AvatarVehicleInteractionController.js
         // legitimately references DRONE now (its own dismount-while-
         // airborne gate, Aerial Movement Pipeline milestone), a later,
         // unrelated change this older audit never anticipated. The other
         // two files remain untouched by that milestone, so the original
         // guard still holds for them.
-        for (const path of ['../application/VehicleRuntimeInstances.js', '../core/AvatarVehicleInteractionTarget.js']) {
+        for (const path of ['../application/world/VehicleRuntimeInstances.js', '../core/AvatarVehicleInteractionTarget.js']) {
             const codeOnly = await sourceOf(path);
             assert(!/MOTORCYCLE|CAR\b|DRONE/.test(codeOnly),
                 `39a. ${path} still introduces no new movable vehicle type — unaffected by any later vehicle-type milestone`);

@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
-import { DecentralizedDiscoveryQueryService } from '../application/DecentralizedWorldDiscoveryQuery.js';
-import { queryDecentralizedWorldDiscoveryIntoRegistry } from '../application/DecentralizedWorldDiscoveryQueryRegistryBridge.js';
-import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { DecentralizedDiscoveryQueryService } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
+import { queryDecentralizedWorldDiscoveryIntoRegistry } from '../application/discovery/DecentralizedWorldDiscoveryQueryRegistryBridge.js';
+import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 
 // 0.9.27 — Decentralized World Discovery Query → Lead Registry Bridge.
 //
@@ -171,7 +171,7 @@ async function run() {
     //    seams it bridges, and carries no trust/dedup vocabulary.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/DecentralizedWorldDiscoveryQueryRegistryBridge.js', import.meta.url);
+        const sourceUrl = new URL('../application/discovery/DecentralizedWorldDiscoveryQueryRegistryBridge.js', import.meta.url);
         const fullSource = await readFile(sourceUrl, 'utf8');
         const codeOnly = fullSource
             .split('\n')

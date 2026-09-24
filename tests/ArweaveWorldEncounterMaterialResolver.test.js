@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/ArweaveWorldEncounterMaterialResolver.js';
-import { DecentralizedWorldEncounterMaterialSource } from '../application/DecentralizedWorldEncounterMaterialSource.js';
+import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
+import { DecentralizedWorldEncounterMaterialSource } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 
 // 0.9.35 — Arweave World Encounter Material Resolver.
@@ -275,7 +275,7 @@ async function run() {
     // vocabulary.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/ArweaveWorldEncounterMaterialResolver.js', import.meta.url);
+        const sourceUrl = new URL('../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js', import.meta.url);
         const fullSource = await readFile(sourceUrl, 'utf8');
         const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -293,7 +293,7 @@ async function run() {
             assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `35. code must never use "${term}" — retrieval only, no trust/verification vocabulary`);
         }
 
-        const decentralizedSourceText = await readFile(new URL('../application/DecentralizedWorldEncounterMaterialSource.js', import.meta.url), 'utf8');
+        const decentralizedSourceText = await readFile(new URL('../application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js', import.meta.url), 'utf8');
         assert(!decentralizedSourceText.includes('ArweaveWorldEncounterMaterialResolver'), '36. the 0.9.33 source itself is never modified to know about this concrete resolver');
 
         console.log('✓ Section L: architectural regression — no forbidden imports, no lead awareness, no trust vocabulary');

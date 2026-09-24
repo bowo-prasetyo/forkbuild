@@ -55,7 +55,7 @@ const DEFAULT_TIMEOUT_MS = 5000;
 // This class never validates the retrieved bytes against any expected
 // hash — that discipline belongs, unchanged, to core/ContentReference.js
 // #verify() and to the callers that already invoke it (application/
-// PublicationResolver.js, application/SnapshotPlacementResolver.js). A
+// PublicationResolver.js, application/snapshot/placement/SnapshotPlacementResolver.js). A
 // gateway is one more untrusted source of bytes, structurally no
 // different from a Kubo node: this class hands back exactly what the
 // gateway returned, and if those bytes do not hash to what was signed,

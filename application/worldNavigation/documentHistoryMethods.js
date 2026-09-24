@@ -1,5 +1,5 @@
 import { Document } from '../../core/Document.js';
-import { CommandHistory } from '../CommandHistory.js';
+import { CommandHistory } from '../editor/CommandHistory.js';
 
 // WorldNavigationSession document history: the timeline, restoring a past
 // state, and previewing history without changing the live World.

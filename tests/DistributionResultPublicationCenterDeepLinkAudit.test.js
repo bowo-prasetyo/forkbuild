@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
-import { composeMultiRelayNostrPublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { composeMultiRelayNostrPublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -39,7 +39,7 @@ import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worl
 // produced by `PublishDocumentUseCase`/distributed by
 // `PublicationDistributionCommand`) and the catalog
 // `ui/views/DecentralizedPublicationsView.js` ("the Publication Center",
-// `/publications`) actually reads (`application/LocalPublicationCatalog.js`,
+// `/publications`) actually reads (`application/publication/LocalPublicationCatalog.js`,
 // holding `core/DecentralizedPublication.js` envelopes) are two
 // structurally disjoint domains — see this file's own header comment in
 // `discovery/PublicationCatalogDiscoveryProvider.js`, cited fresh in
@@ -284,7 +284,7 @@ async function run() {
     // Section A — Result identity.
     // ---------------------------------------------------------------
     {
-        const resultCode = await readSource('application/PublicationDistributionResult.js');
+        const resultCode = await readSource('application/publication/distribution/PublicationDistributionResult.js');
         assert(resultCode.includes("publication: Object.freeze({ kind: WorldEncounterKind.PUBLICATION, objectId: publication.id })"),
             n('describePublicationDistributionResult() names the result\'s own publication section exactly { kind, objectId: publication.id } — objectId IS Publication.id, verbatim, never a derived or re-hashed value'));
         assert(!resultCode.includes('.title') && !resultCode.includes('.author') && !resultCode.includes('contentHash'),
@@ -350,7 +350,7 @@ async function run() {
         // B3 — THE CORRECTION. Trace whether this milestone's own
         // Publication (publisher/Publication.js, produced by
         // PublishDocumentUseCase) can ever become one of `entries`
-        // (catalog.list(), i.e. application/LocalPublicationCatalog.js).
+        // (catalog.list(), i.e. application/publication/LocalPublicationCatalog.js).
         const catalogBridgeCode = await readSource('discovery/PublicationCatalogDiscoveryProvider.js');
         assert(catalogBridgeCode.includes('it catalogs core/DecentralizedPublication.js instances') || catalogBridgeCode.includes('core/DecentralizedPublication.js instances'),
             n('discovery/PublicationCatalogDiscoveryProvider.js\'s own header states plainly, in production prose: the Publication Center catalogs core/DecentralizedPublication.js instances — a DIFFERENT class from publisher/Publication.js'));
@@ -371,7 +371,7 @@ async function run() {
         assert(editorPublishBlock.includes('contentKind: BLUEPRINT_ATTRIBUTION_KIND'),
             n('that one production call site publishes contentKind: BLUEPRINT_ATTRIBUTION_KIND — never PUBLICATION_CONTENT_KIND'));
         // PUBLICATION_CONTENT_KIND itself is defined and display-registered
-        // (application/PublicationContentKind.js, application/
+        // (application/publication/PublicationContentKind.js, application/
         // CreatePublicationDisplayKindRegistryUseCase.js) but — per the
         // single-caller check just above — never actually handed to any
         // production .publish() call. The display-only kindPlugin has no
@@ -379,10 +379,10 @@ async function run() {
 
         // B5 — the publish/distribute path this milestone's own result
         // comes from never touches the catalog at all.
-        const publishUseCaseCode = await codeOnlySource('application/PublishDocumentUseCase.js');
+        const publishUseCaseCode = await codeOnlySource('application/publication/PublishDocumentUseCase.js');
         const publisherProviderCode = await codeOnlySource('publisher/LocalPublisherProvider.js');
         assert(!publishUseCaseCode.includes('Catalog') && !publishUseCaseCode.includes('PublicationResolver'),
-            n('application/PublishDocumentUseCase.js imports neither LocalPublicationCatalog nor PublicationResolver'));
+            n('application/publication/PublishDocumentUseCase.js imports neither LocalPublicationCatalog nor PublicationResolver'));
         assert(!publisherProviderCode.includes('Catalog') && !publisherProviderCode.includes('PublicationResolver'),
             n('publisher/LocalPublisherProvider.js imports neither LocalPublicationCatalog nor PublicationResolver'));
 

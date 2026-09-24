@@ -1,4 +1,4 @@
-import { WorldViewPrimaryMode } from '../../../application/WorldViewNavigationState.js';
+import { WorldViewPrimaryMode } from '../../../application/world/WorldViewNavigationState.js';
 
 // Home and the Locations panel. Unlike focusWorld(), these never load a document,
 // touch the route or change the active document.

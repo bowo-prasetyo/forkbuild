@@ -2,16 +2,16 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
-import { ChatUseCase } from '../application/ChatUseCase.js';
-import { ChatOutbox } from '../application/ChatOutbox.js';
-import { ConversationStore } from '../application/ConversationStore.js';
-import { ConversationReadOutbox } from '../application/ConversationReadOutbox.js';
-import { RemoteReadReceiptStore } from '../application/RemoteReadReceiptStore.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { PeerReconnectionUseCase } from '../application/peer/PeerReconnectionUseCase.js';
+import { ChatUseCase } from '../application/chat/ChatUseCase.js';
+import { ChatOutbox } from '../application/chat/ChatOutbox.js';
+import { ConversationStore } from '../application/chat/ConversationStore.js';
+import { ConversationReadOutbox } from '../application/chat/ConversationReadOutbox.js';
+import { RemoteReadReceiptStore } from '../application/chat/RemoteReadReceiptStore.js';
 import { ConversationReadOutboxEntry, ReadReceiptOutboxState } from '../core/ConversationReadOutboxEntry.js';
 import { RemoteReadReceipt } from '../core/RemoteReadReceipt.js';
 import { toChatReadReceipt, isValidChatReadReceipt } from '../core/ChatReadReceipt.js';
@@ -19,18 +19,18 @@ import { toChatMessage, deriveConversationId } from '../core/ChatMessage.js';
 
 // 0.2.71 — Explicit Read Acknowledgement.
 //
-// 0.2.70's `application/ConversationReadTracker.js` deliberately only
+// 0.2.70's `application/chat/ConversationReadTracker.js` deliberately only
 // ever answered "what has THIS device seen" — a local, unsigned,
 // never-transmitted note. This file proves the genuinely different
 // question 0.2.71 adds on top of it, without ever touching that
 // class: "what does the OTHER participant know that I have seen?" —
 // a real, authenticated, peer-bound network fact, carried on its own
 // wire protocol (`ChatUseCase.READ_PROTOCOL`), queued through its own
-// coalescing outbox (`application/ConversationReadOutbox.js`) when the
+// coalescing outbox (`application/chat/ConversationReadOutbox.js`) when the
 // recipient isn't reachable yet, and recorded on arrival in its own
-// store (`application/RemoteReadReceiptStore.js`) — never derived from,
+// store (`application/chat/RemoteReadReceiptStore.js`) — never derived from,
 // and never a transmission of, the local marker. See
-// application/ChatUseCase.js's own header, and docs/Principles.md, "A
+// application/chat/ChatUseCase.js's own header, and docs/Principles.md, "A
 // Read Receipt Is Computed Independently From The Local Read Marker,
 // Never Transmitted From It" (0.2.71).
 
@@ -198,7 +198,7 @@ async function runTests() {
 }
 
 // ---------------------------------------------------------------------
-// 4. application/ConversationReadOutbox.js — one entry per peer,
+// 4. application/chat/ConversationReadOutbox.js — one entry per peer,
 //    coalescing, PENDING/SENT, durable, per-owner scoped.
 // ---------------------------------------------------------------------
 {
@@ -236,13 +236,13 @@ async function runTests() {
 
     const reloaded = new ConversationReadOutbox(storage, identityProvider);
     assert(reloaded.list('bob')[0].readThroughSequence === 12, 'a brand-new ConversationReadOutbox over the same storage restores durable state');
-    console.log('✓ application/ConversationReadOutbox.js: coalescing, PENDING/SENT, durable, per-owner scoped');
+    console.log('✓ application/chat/ConversationReadOutbox.js: coalescing, PENDING/SENT, durable, per-owner scoped');
 }
 
 // ---------------------------------------------------------------------
-// 5. application/RemoteReadReceiptStore.js — durable, monotonic,
+// 5. application/chat/RemoteReadReceiptStore.js — durable, monotonic,
 //    per-owner, the opposite-direction store from
-//    application/ConversationReadTracker.js.
+//    application/chat/ConversationReadTracker.js.
 // ---------------------------------------------------------------------
 {
     const storage = new InMemoryStorageProvider();
@@ -263,7 +263,7 @@ async function runTests() {
 
     const reloaded = new RemoteReadReceiptStore(storage, identityProvider);
     assert(reloaded.getReadThroughSequence('alice') === 8, 'a brand-new RemoteReadReceiptStore over the same storage restores durable state');
-    console.log('✓ application/RemoteReadReceiptStore.js: durable, monotonic, per-owner — the received-claim counterpart to the local read marker');
+    console.log('✓ application/chat/RemoteReadReceiptStore.js: durable, monotonic, per-owner — the received-claim counterpart to the local read marker');
 }
 
 // ---------------------------------------------------------------------
@@ -303,7 +303,7 @@ async function runTests() {
     assert(bob.remoteReadReceipts.getReadThroughSequence(Alice.id) === 0, 'Bob has received nothing yet — his own store is untouched while Alice is offline');
 
     // Calling it again (e.g. the UI re-rendering) must not pile up a
-    // second queued entry — see application/ConversationReadOutbox.js's
+    // second queued entry — see application/chat/ConversationReadOutbox.js's
     // own coalescing guarantee.
     alice.chat.sendReadReceipt(Bob.id);
     assert(alice.readOutbox.list(Bob.id).length === 1, 'a repeated sendReadReceipt() call for the same peer never accumulates a second queued entry');

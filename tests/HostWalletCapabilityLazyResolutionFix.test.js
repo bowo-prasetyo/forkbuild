@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
 import { createNostrInjectedProviderPublisher } from '../nostr/NostrInjectedProviderPublisher.js';
-import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 
 // Host Wallet Capability Lazy Resolution Fix.
 //
@@ -286,7 +286,7 @@ async function run() {
         // longer passes composeSnapshotDistributionRuntime() an
         // arweaveContentStoreOptions of its own at all — Content is now
         // resolved from snapshotPlacementStoreRegistry instead (see
-        // application/SnapshotDistributionContentBackendSelection.js). What
+        // application/snapshot/SnapshotDistributionContentBackendSelection.js). What
         // this section actually exists to guard — arweaveHostSigner's own
         // LAZY resolution, unaffected by that change — is still true, and
         // still confirmed: that same signer instance is what Placement's

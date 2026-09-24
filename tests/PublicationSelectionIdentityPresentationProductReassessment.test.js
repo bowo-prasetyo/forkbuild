@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
@@ -13,13 +13,13 @@ import { Position } from '../core/Position.js';
 import { License, LicenseId } from '../core/License.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
 import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../core/PublicationDateAmbiguity.js';
 import {
     derivePublicationAuthorNameIdentityConvergence,
     describePublicationAuthorNameIdentityConvergence
-} from '../application/PublicationAuthorNameIdentityConvergence.js';
+} from '../application/publication/PublicationAuthorNameIdentityConvergence.js';
 
 import PublicationCard from '../ui/components/PublicationCard.js';
 import PublicationList from '../ui/components/PublicationList.js';

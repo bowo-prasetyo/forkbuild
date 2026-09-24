@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
-import { WorldEncounterMaterialIdentityVerifier } from '../application/WorldEncounterMaterialIdentityVerifier.js';
+import { WorldEncounterMaterialIdentityVerifier } from '../application/worldEncounter/WorldEncounterMaterialIdentityVerifier.js';
 import {
     verifyWorldEncounterMaterial,
     WorldEncounterMaterialVerificationStatus,
     WorldEncounterMaterialVerifier
-} from '../application/WorldEncounterMaterialVerification.js';
+} from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 
 // 0.9.38 — World Encounter Material Identity Verifier.
@@ -264,7 +264,7 @@ function leadOf({ uri = 'ar://tx-abc123', origin = 'nostr:wss://relay.example', 
 //     0.9.37's own boundary file is never modified.
 // ---------------------------------------------------------------------
 {
-    const path = '../application/WorldEncounterMaterialIdentityVerifier.js';
+    const path = '../application/worldEncounter/WorldEncounterMaterialIdentityVerifier.js';
     const sourceUrl = new URL(path, import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -284,7 +284,7 @@ function leadOf({ uri = 'ar://tx-abc123', origin = 'nostr:wss://relay.example', 
         assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `28. code must never use "${term}" — no trust/ranking vocabulary at this boundary`);
     }
 
-    const boundarySource = await readFile(new URL('../application/WorldEncounterMaterialVerification.js', import.meta.url), 'utf8');
+    const boundarySource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialVerification.js', import.meta.url), 'utf8');
     assert(!boundarySource.includes('WorldEncounterMaterialIdentityVerifier'), '29. the 0.9.37 verification boundary is never modified to know about this concrete verifier');
 
     console.log('✓ Architectural regression: no cryptographic/network/storage machinery, no trust vocabulary, no generic objectId, boundary file untouched');

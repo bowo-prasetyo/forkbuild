@@ -1,13 +1,13 @@
 import { computeNearbyAvatars } from '../core/AvatarProximity.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 
@@ -372,7 +372,7 @@ async function runTests() {
         bobPull();
         assert(bobSession.getNearbyAvatars()[0].lifecycleState === 'present', '32. FLAGSHIP: fresh again -> PRESENT');
 
-        await wait(2700); // staleAfterMs = 2500 (application/LocalPresenceStore.js default)
+        await wait(2700); // staleAfterMs = 2500 (application/presence/LocalPresenceStore.js default)
         const staleList = bobSession.getNearbyAvatars();
         assert(staleList.length === 1 && staleList[0].lifecycleState === 'stale',
             '33. FLAGSHIP: real elapsed time with no new movement -> STALE, still listed');

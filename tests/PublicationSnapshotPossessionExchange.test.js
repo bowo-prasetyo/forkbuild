@@ -2,14 +2,14 @@ import { ContentReference } from '../core/ContentReference.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
-import { LocalSnapshotContentAvailabilityOutcome } from '../application/LocalSnapshotContentAvailabilityOutcome.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
+import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 import {
@@ -19,26 +19,26 @@ import {
     toSnapshotPossessionRequestMessage,
     toSnapshotPossessionResponseMessage,
     isValidPeerSnapshotPossessionMessage
-} from '../application/PeerSnapshotPossessionProtocol.js';
-import { PublicationSnapshotPossessionPeerExchange } from '../application/PublicationSnapshotPossessionPeerExchange.js';
-import { SnapshotPeerPossessionState } from '../application/SnapshotPeerPossessionState.js';
-import { toSnapshotPeerPossessionObservation, isPeerSnapshotPossessed } from '../application/SnapshotPeerPossessionObservation.js';
-import { ObservePeerSnapshotPossessionUseCase } from '../application/ObservePeerSnapshotPossessionUseCase.js';
-import { SnapshotPeerPossessionCoordinator } from '../application/SnapshotPeerPossessionCoordinator.js';
-import { SnapshotPeerPossessionUiState } from '../application/SnapshotPeerPossessionUiState.js';
-import { describePeerPossessionAttempt, describePeerPossessionButtonLabel } from '../application/SnapshotPeerPossessionView.js';
+} from '../application/snapshot/possession/PeerSnapshotPossessionProtocol.js';
+import { PublicationSnapshotPossessionPeerExchange } from '../application/snapshot/possession/PublicationSnapshotPossessionPeerExchange.js';
+import { SnapshotPeerPossessionState } from '../application/snapshot/possession/SnapshotPeerPossessionState.js';
+import { toSnapshotPeerPossessionObservation, isPeerSnapshotPossessed } from '../application/snapshot/possession/SnapshotPeerPossessionObservation.js';
+import { ObservePeerSnapshotPossessionUseCase } from '../application/snapshot/possession/ObservePeerSnapshotPossessionUseCase.js';
+import { SnapshotPeerPossessionCoordinator } from '../application/snapshot/possession/SnapshotPeerPossessionCoordinator.js';
+import { SnapshotPeerPossessionUiState } from '../application/snapshot/possession/SnapshotPeerPossessionUiState.js';
+import { describePeerPossessionAttempt, describePeerPossessionButtonLabel } from '../application/snapshot/possession/SnapshotPeerPossessionView.js';
 
 // Also exercises "Get Snapshot from Peer" (0.8.37) for the flagship's own
 // "knowing is not possessing" step.
-import { MaterializeSnapshotFromPeerUseCase } from '../application/MaterializeSnapshotFromPeerUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { PublicationSnapshotContentPeerExchange } from '../application/PublicationSnapshotContentPeerExchange.js';
-import { PeerSnapshotMaterializationOutcome } from '../application/PeerSnapshotMaterializationOutcome.js';
+import { MaterializeSnapshotFromPeerUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromPeerUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { PublicationSnapshotContentPeerExchange } from '../application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js';
+import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
 
 // 0.8.40 — Snapshot Possession Observation Exchange.
 //
 //   Section A: PeerSnapshotPossessionProtocol — REQUEST/RESPONSE wire
-//              shapes; unlike application/PeerSnapshotContentProtocol.js
+//              shapes; unlike application/snapshot/materialization/PeerSnapshotContentProtocol.js
 //              (0.8.37), there is no third, silence-shaped outcome — a
 //              RESPONSE always carries an explicit AVAILABLE or
 //              NOT_AVAILABLE, never a CONTENT_HASH_MISMATCH-shaped value.
@@ -48,7 +48,7 @@ import { PeerSnapshotMaterializationOutcome } from '../application/PeerSnapshotM
 //              bytes and when it does not — never silence, the one
 //              structural difference from application/
 //              PublicationSnapshotContentPeerExchange.js), reuses
-//              application/CheckLocalSnapshotContentAvailabilityUseCase.js
+//              application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js
 //              UNCHANGED, collapses CONTENT_HASH_MISMATCH to NOT_AVAILABLE
 //              on the wire, and reports the answering peer's own
 //              connectionId as `peerId`; dispose() stops both directions.
@@ -155,7 +155,7 @@ function stubPeer(connectionId, state) {
     return { connectionId, getLifecycleState: () => state };
 }
 
-// A minimal fake application/PublicationSnapshotPossessionPeerExchange.js
+// A minimal fake application/snapshot/possession/PublicationSnapshotPossessionPeerExchange.js
 // for Section C, so ObservePeerSnapshotPossessionUseCase's own
 // timing/mapping logic can be tested deterministically without a real
 // transport.

@@ -1,18 +1,18 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { PublicationAnchorPeerExchange } from '../application/PublicationAnchorPeerExchange.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { CreatePublicationAnchorUseCase } from '../application/CreatePublicationAnchorUseCase.js';
-import { ImportPackageAnchorsUseCase, PackageAnchorImportReason } from '../application/ImportPackageAnchorsUseCase.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { PublicationAnchorPeerExchange } from '../application/anchoring/PublicationAnchorPeerExchange.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { CreatePublicationAnchorUseCase } from '../application/anchoring/CreatePublicationAnchorUseCase.js';
+import { ImportPackageAnchorsUseCase, PackageAnchorImportReason } from '../application/anchoring/ImportPackageAnchorsUseCase.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { AnchorAcquisitionKind, isValidAnchorAcquisitionKind } from '../application/AnchorAcquisitionKind.js';
-import { createAnchorKnowledgeRecord, anchorKnowledgeRecordFromJSON, anchorKnowledgeRecordToJSON } from '../application/AnchorKnowledgeRecord.js';
-import { LocalAnchorKnowledgeStore } from '../application/LocalAnchorKnowledgeStore.js';
-import { describeAnchorKnowledge } from '../application/PublicationAnchorKnowledgeView.js';
+import { AnchorAcquisitionKind, isValidAnchorAcquisitionKind } from '../application/anchoring/AnchorAcquisitionKind.js';
+import { createAnchorKnowledgeRecord, anchorKnowledgeRecordFromJSON, anchorKnowledgeRecordToJSON } from '../application/anchoring/AnchorKnowledgeRecord.js';
+import { LocalAnchorKnowledgeStore } from '../application/anchoring/LocalAnchorKnowledgeStore.js';
+import { describeAnchorKnowledge } from '../application/anchoring/PublicationAnchorKnowledgeView.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -201,7 +201,7 @@ async function run() {
 
         // Durability — a fresh store instance over the SAME underlying
         // storage sees exactly what was already on file, unchanged,
-        // mirroring application/LocalPublicationAnchorStore.js's own
+        // mirroring application/anchoring/LocalPublicationAnchorStore.js's own
         // restart behavior.
         const restarted = new LocalAnchorKnowledgeStore(storageProvider);
         assert(restarted.get('anchor-1').acquisition.kind === AnchorAcquisitionKind.PEER, '15. a fresh store instance over the same storage still reports the original acquisition kind after a simulated restart');

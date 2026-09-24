@@ -1,23 +1,23 @@
 import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeWorldFromDiscoveryRegistry } from '../application/WorldDiscoveryRegistryProjection.js';
-import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
+import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource, derivePeerWorldOrigin } from '../peer/PeerWorldDataIngress.js';
-import { bootstrapWorldDiscoveryRuntime } from '../application/WorldDiscoveryRuntimeBootstrap.js';
+import { bootstrapWorldDiscoveryRuntime } from '../application/discovery/WorldDiscoveryRuntimeBootstrap.js';
 import {
     registerMaterializedSnapshotWorldSource,
     materializedSnapshotWorldOrigin
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
 import { deriveWorldEncounters, WorldEncounterKind } from '../core/WorldEncounter.js';
 import { describeWorldEncounterSelectionIdentity } from '../core/WorldEncounterSelectionIdentity.js';
 import {
     loadWorldEncounterMaterial,
     WorldEncounterMaterialSource,
     WorldEncounterMaterialLoadStatus
-} from '../application/WorldEncounterMaterialLoading.js';
+} from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { Publication } from '../publisher/Publication.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
@@ -89,7 +89,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //   Section F: THE GENUINE GAP THIS AUDIT FOUND — FIXED BY 0.9.166. A
 //              materialized, registered, rendered Snapshot's own resolved
 //              selection could never load its material through
-//              `application/WorldEncounterMaterialLoading.js`'s ordinary
+//              `application/worldEncounter/WorldEncounterMaterialLoading.js`'s ordinary
 //              `loadWorldEncounterMaterial()` path. That file's own
 //              `materialSourceFor()` (0.9.21) recognized exactly two
 //              origin families — `origin === 'local'` and
@@ -331,8 +331,8 @@ async function run() {
         const snapshotSource = registry.listSources().find((s) => s.origin === snapshotOrigin);
 
         // THE COMBINED PROJECTION — what WorldEncounterCanvas actually
-        // renders (application/WorldDiscoveryRegistryProjection.js, 0.9.10,
-        // via application/WorldEncounterIntegration.js, 0.9.8).
+        // renders (application/discovery/WorldDiscoveryRegistryProjection.js, 0.9.10,
+        // via application/worldEncounter/WorldEncounterIntegration.js, 0.9.8).
         const combinedView = describeWorldFromDiscoveryRegistry(registry);
         assert(combinedView.publications.length === 3, `1. sanity — three sources sharing one publicationId still produce three encounters (0.9.162's own established finding); got ${combinedView.publications.length}`);
         assert(combinedView.publications.every((p) => p.anchorCount === 2),
@@ -399,7 +399,7 @@ async function run() {
         // call registry.setSource('local', ...)/removeSource('local')
         // again — confirmed directly against that file's own,
         // unmodified source rather than merely cited from its header.
-        const bootstrapSource = await readFile(new URL('../application/WorldDiscoveryRuntimeBootstrap.js', import.meta.url), 'utf8');
+        const bootstrapSource = await readFile(new URL('../application/discovery/WorldDiscoveryRuntimeBootstrap.js', import.meta.url), 'utf8');
         const bootstrapCodeOnly = bootstrapSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         const setSourceCallCount = (bootstrapCodeOnly.match(/registry\.setSource\(/g) || []).length;
         assert(setSourceCallCount === 1, `5. THE GAP NAMED, NOT CLOSED — bootstrapWorldDiscoveryRuntime() calls registry.setSource() exactly ONCE in its own EXECUTABLE code (the one-time local registration); it contains no live path that would ever replace or remove 'local' again, even though the registry itself (Sections above) places no such restriction — got ${setSourceCallCount} call(s)`);
@@ -534,7 +534,7 @@ async function run() {
         // Structural confirmation, tied to the behavioral proof above:
         // materialSourceFor() now DOES mention 'snapshot' — exactly one
         // branch, routing to materialSources.local, never a new slot name.
-        const loadingSource = await readFile(new URL('../application/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
+        const loadingSource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
         const materialSourceForStart = loadingSource.indexOf('function materialSourceFor(');
         const materialSourceForEnd = loadingSource.indexOf('\n}\n', materialSourceForStart);
         const materialSourceForBody = loadingSource.slice(materialSourceForStart, materialSourceForEnd);
@@ -551,11 +551,11 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const filesToSweep = [
-            '../application/WorldDiscoverySourceRegistry.js',
-            '../application/WorldDiscoveryRuntimeBootstrap.js',
-            '../application/MaterializedSnapshotWorldDiscoveryBridge.js',
-            '../application/WorldDiscoveryRegistryProjection.js',
-            '../application/WorldEncounterMaterialLoading.js',
+            '../application/discovery/WorldDiscoverySourceRegistry.js',
+            '../application/discovery/WorldDiscoveryRuntimeBootstrap.js',
+            '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js',
+            '../application/discovery/WorldDiscoveryRegistryProjection.js',
+            '../application/worldEncounter/WorldEncounterMaterialLoading.js',
             '../core/WorldEncounter.js',
             '../core/WorldDiscoverySourceAssembly.js'
         ];

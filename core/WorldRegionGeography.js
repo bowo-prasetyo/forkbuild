@@ -61,7 +61,7 @@ export function describePlace(containingRegions = []) {
 // grouping only (see core/WorldRegion.js's own header), never consulted
 // by regionsContaining() above. If the named parent was since removed,
 // this simply returns whatever regions still claim it — the same
-// graceful-absence posture application/WorldLocationDirectory.js already
+// graceful-absence posture application/world/WorldLocationDirectory.js already
 // applies to a removed StructurePlacement, never a dangling-reference
 // error.
 export function childRegions(regionId, regions = []) {

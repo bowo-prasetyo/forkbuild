@@ -2,15 +2,15 @@ import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import NotificationHistoryPanel from '../ui/components/NotificationHistoryPanel.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer, PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/PublicationCommentaryNotificationProducer.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer, PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
-import { GetRecipientNotificationEventsUseCase } from '../application/GetRecipientNotificationEventsUseCase.js';
+import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { notificationDeduplicationIdentity } from '../core/NotificationDeduplicationPolicy.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -34,7 +34,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // query and a Notification History panel — on top of that durable store.
 // Every one of those milestones constructed the producer ITSELF, inside
 // its own test file; none of them ever wired it into
-// application/CreateWorldViewUseCase.js, the one real composition root
+// application/world/CreateWorldViewUseCase.js, the one real composition root
 // every other Commentary/notification collaborator is already built
 // through. This milestone closes exactly that gap — composition only:
 //
@@ -60,7 +60,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // This file is the first test in this arc to exercise that whole chain
 // through the REAL production composition root's own wiring shape — a
 // real WorldNavigationSession built with the SAME decorated capability
-// application/CreateWorldViewUseCase.js itself now constructs, never a
+// application/world/CreateWorldViewUseCase.js itself now constructs, never a
 // producer built and used only as a side, test-only fixture the way
 // tests/NotificationHistoryUILifecycle.test.js's own makeProducer() and
 // tests/PostNotificationPersistenceProductReassessment.test.js's own
@@ -188,7 +188,7 @@ function makeDocument(title, author) {
 
 // A single shared storageProvider backs EVERY collaborator here — the
 // SAME "one storageProvider, every local store built off it" shape
-// application/CreateWorldViewUseCase.js's own execute() uses (never a
+// application/world/CreateWorldViewUseCase.js's own execute() uses (never a
 // separate notification-only storage provider, unlike
 // tests/NotificationHistoryUILifecycle.test.js's own deliberately
 // simpler fixture). This is the one new fixture shape this milestone's
@@ -204,7 +204,7 @@ function makeSharedInfrastructure(storageProvider = new InMemoryStorageProvider(
     return { storageProvider, contentStore, publisherProvider, discoveryProvider, commentaryStore, canCommentOnPublicationUseCase, notificationEventStore };
 }
 
-// Builds the EXACT wiring shape application/CreateWorldViewUseCase.js's
+// Builds the EXACT wiring shape application/world/CreateWorldViewUseCase.js's
 // own execute() now builds for one identityProvider: a real
 // AddPublicationCommentaryUseCase, decorated by a real
 // PublicationCommentaryNotificationProducer whose sink writes into the
@@ -299,15 +299,15 @@ async function runTests() {
     // NotificationEventStore, or WorldView/WorldNavigationSession.
     // ===============================================================
     {
-        const composition = await rawSource('application/CreateWorldViewUseCase.js');
-        const compositionCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
+        const composition = await rawSource('application/world/CreateWorldViewUseCase.js');
+        const compositionCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
 
         // A1. The composition root imports and constructs the real
         // producer, wrapping the SAME addPublicationCommentaryUseCase
         // instance it already builds — never a second, parallel
         // AddPublicationCommentaryUseCase.
-        assert(composition.includes("import { PublicationCommentaryNotificationProducer } from './PublicationCommentaryNotificationProducer.js';"),
-            'A1a. application/CreateWorldViewUseCase.js now imports PublicationCommentaryNotificationProducer.');
+        assert(composition.includes("import { PublicationCommentaryNotificationProducer } from '../publication/commentary/PublicationCommentaryNotificationProducer.js';"),
+            'A1a. application/world/CreateWorldViewUseCase.js now imports PublicationCommentaryNotificationProducer.');
         assert(/new PublicationCommentaryNotificationProducer\(\s*addPublicationCommentaryUseCase,\s*discoveryProvider,/.test(compositionCode),
             'A1b. The composition root constructs PublicationCommentaryNotificationProducer wrapping the exact addPublicationCommentaryUseCase/discoveryProvider it already built — no second instance of either.');
 
@@ -334,9 +334,9 @@ async function runTests() {
         // notification-aware — the domain boundary 0.9.275 already
         // established, reconfirmed here as this milestone's own
         // architectural invariant, not merely inherited.
-        const addUseCaseCode = await codeOnlySource('application/AddPublicationCommentaryUseCase.js');
+        const addUseCaseCode = await codeOnlySource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
         assert(!/Notification/i.test(addUseCaseCode),
-            'A4. application/AddPublicationCommentaryUseCase.js\'s own CODE still contains no Notification vocabulary of any kind.');
+            'A4. application/publication/commentary/AddPublicationCommentaryUseCase.js\'s own CODE still contains no Notification vocabulary of any kind.');
 
         // A5. NotificationEvent and NotificationEventStore know nothing
         // of Commentary, or of the producer that wraps it — the
@@ -367,16 +367,16 @@ async function runTests() {
         // no idea, and no need to know, that its own
         // addPublicationCommentaryUseCase collaborator now also produces
         // a notification.
-        const sessionCode = await codeOnlySource('application/WorldNavigationSession.js');
+        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
         assert(!/PublicationCommentaryNotificationProducer/.test(sessionCode),
-            'A7. application/WorldNavigationSession.js never imports or references PublicationCommentaryNotificationProducer.');
+            'A7. application/world/WorldNavigationSession.js never imports or references PublicationCommentaryNotificationProducer.');
         const gitDiffStat = execSync(
-            'git diff --stat HEAD -- application/AddPublicationCommentaryUseCase.js application/WorldNavigationSession.js core/NotificationEvent.js core/NotificationDeduplicationPolicy.js storage/NotificationEventStore.js application/PublicationCommentaryNotificationProducer.js application/GetRecipientNotificationEventsUseCase.js ui/views/WorldView.js ui/components/NotificationHistoryPanel.js ui/components/OwnPublicationPanel.js 2>/dev/null || true',
+            'git diff --stat HEAD -- application/publication/commentary/AddPublicationCommentaryUseCase.js application/world/WorldNavigationSession.js core/NotificationEvent.js core/NotificationDeduplicationPolicy.js storage/NotificationEventStore.js application/publication/commentary/PublicationCommentaryNotificationProducer.js application/chat/GetRecipientNotificationEventsUseCase.js ui/views/WorldView.js ui/components/NotificationHistoryPanel.js ui/components/OwnPublicationPanel.js 2>/dev/null || true',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         assert(gitDiffStat === '', `A8. None of the pre-existing domain/application/UI files this milestone depends on carry an uncommitted diff. Found: ${gitDiffStat || '(none)'}.`);
 
-        console.log('✓ A: application/CreateWorldViewUseCase.js — the one real composition root — now constructs a real PublicationCommentaryNotificationProducer wrapping the exact AddPublicationCommentaryUseCase/discoveryProvider it already built, sinks into the exact same NotificationEventStore instance the read side already uses, and hands the DECORATED capability — never the raw use case — to WorldNavigationSession. AddPublicationCommentaryUseCase.js, NotificationEvent.js, NotificationEventStore.js, WorldNavigationSession.js, and WorldView.js all remain unaware the producer exists — the dependency direction runs core/storage <- application <- composition root <- UI, never the reverse, exactly as this milestone\'s own brief requires.');
+        console.log('✓ A: application/world/CreateWorldViewUseCase.js — the one real composition root — now constructs a real PublicationCommentaryNotificationProducer wrapping the exact AddPublicationCommentaryUseCase/discoveryProvider it already built, sinks into the exact same NotificationEventStore instance the read side already uses, and hands the DECORATED capability — never the raw use case — to WorldNavigationSession. AddPublicationCommentaryUseCase.js, NotificationEvent.js, NotificationEventStore.js, WorldNavigationSession.js, and WorldView.js all remain unaware the producer exists — the dependency direction runs core/storage <- application <- composition root <- UI, never the reverse, exactly as this milestone\'s own brief requires.');
     }
 
     // ===============================================================
@@ -589,7 +589,7 @@ async function runTests() {
             && aliceNotifications[0].recipientIdentityId === alice.getSigningIdentity().id,
             'H3. author and recipient are the SAME identity for a self-comment — no suppression rule was introduced by this milestone\'s own composition change.');
 
-        const compositionCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
+        const compositionCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
         assert(!/authorIdentityId\s*!==?\s*.*publisherIdentity|self-?comment/i.test(compositionCode),
             'H4. the composition root itself contains no self-comment suppression logic of any kind.');
 
@@ -662,9 +662,9 @@ async function runTests() {
 
         // J4. No transaction/rollback vocabulary was introduced anywhere
         // in the composition root to paper over this.
-        const compositionCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
+        const compositionCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
         assert(!/rollback|transaction|\.undo\(|compensat/i.test(compositionCode),
-            'J4. application/CreateWorldViewUseCase.js contains no rollback/transaction/compensation vocabulary — the Commentary write and the notification write remain two separate, non-atomic operations, exactly as this milestone\'s own brief requires.');
+            'J4. application/world/CreateWorldViewUseCase.js contains no rollback/transaction/compensation vocabulary — the Commentary write and the notification write remain two separate, non-atomic operations, exactly as this milestone\'s own brief requires.');
 
         console.log('✓ J: a genuine notification storage failure propagates unmodified out of the real, composed capability, exactly as PublicationCommentaryNotificationProducer.js\'s own header already documents — and the Commentary persisted BEFORE that failure remains durably on file. "Commentary persisted + notification persistence failed" is the honest, non-atomic outcome; no transaction or rollback was introduced to hide it.');
     }
@@ -725,7 +725,7 @@ async function runTests() {
         // nowhere else.
         const producerConstructionSites = await grepCount('new PublicationCommentaryNotificationProducer(', ['application', 'ui'], { excludeSuffix: 'PublicationCommentaryNotificationProducer\\.js' });
         assert(producerConstructionSites === 1,
-            `L1. Exactly one production file constructs a PublicationCommentaryNotificationProducer (found ${producerConstructionSites}) — application/CreateWorldViewUseCase.js, and no other application/ui file.`);
+            `L1. Exactly one production file constructs a PublicationCommentaryNotificationProducer (found ${producerConstructionSites}) — application/world/CreateWorldViewUseCase.js, and no other application/ui file.`);
 
         // L2. WorldNavigationSession's own addPublicationCommentary()
         // calls its injected use case's .execute() exactly once — never
@@ -734,7 +734,7 @@ async function runTests() {
         // independent production trigger that store-side deduplication
         // (Section F) could silently mask by identity, never by catching
         // the double call itself.
-        const sessionCode = await codeOnlySource('application/WorldNavigationSession.js');
+        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
         const addCommentaryMethodBody = extractMethodBody(sessionCode, /addPublicationCommentary\(\{ publicationId, content \}\) \{/);
         assert(addCommentaryMethodBody, 'L2a. WorldNavigationSession#addPublicationCommentary() still exists in its own, single, recognizable shape.');
         const executeCallsInMethod = (addCommentaryMethodBody.match(/\.execute\(/g) || []).length;
@@ -747,7 +747,7 @@ async function runTests() {
         // — a second, independently constructed store instance sharing
         // the same underlying storageProvider could silently duplicate
         // history without either one, alone, ever showing two rows.
-        const compositionCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
+        const compositionCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
         const storeConstructions = (compositionCode.match(/new NotificationEventStore\(/g) || []).length;
         assert(storeConstructions === 1, `L3. Exactly one NotificationEventStore is constructed in the composition root (found ${storeConstructions}).`);
 

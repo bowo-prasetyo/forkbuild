@@ -6,17 +6,17 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { WorldPosition } from '../core/WorldPosition.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
-import { ReplayDocumentUseCase } from '../application/ReplayDocumentUseCase.js';
-import { RestoreHistoryStateUseCase } from '../application/RestoreHistoryStateUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
+import { RestoreHistoryStateUseCase } from '../application/document/RestoreHistoryStateUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
@@ -60,7 +60,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //     selection) but not _historyPreview. A stale `active: true` left
 //     behind by dispose() permanently blocks undo()/redo() on whatever
 //     session state comes next, since both check `_historyPreview.active`
-//     before doing anything (see application/WorldNavigationSession.js's
+//     before doing anything (see application/world/WorldNavigationSession.js's
 //     own undo()/redo()).
 //
 // Everything else below found the existing machinery already correct and
@@ -594,11 +594,11 @@ async function run() {
         // Structural: no history-specific autosave path exists anywhere,
         // and no new document lifecycle vocabulary was introduced.
         const SOURCE_ROOT = new URL('../', import.meta.url);
-        const navSource = await readFile(new URL('application/WorldNavigationSession.js', SOURCE_ROOT), 'utf8');
+        const navSource = await readFile(new URL('application/world/WorldNavigationSession.js', SOURCE_ROOT), 'utf8');
         assert(!/Autosave|Recovery/.test(navSource), 'WorldNavigationSession.js references neither Autosave nor Recovery machinery — restore rides on ordinary dirty state alone');
         assert(!/\bRESTORED\b|\bHISTORICAL\b/.test(navSource), 'no new RESTORED/HISTORICAL document lifecycle state was introduced for history restore');
 
-        const lifecycleSource = await readFile(new URL('application/DocumentLifecycleStatus.js', SOURCE_ROOT), 'utf8');
+        const lifecycleSource = await readFile(new URL('application/document/DocumentLifecycleStatus.js', SOURCE_ROOT), 'utf8');
         assert(!/\bRESTORED\b|\bHISTORICAL\b/.test(lifecycleSource), 'DocumentLifecycleStatus.js itself carries no history-specific status either');
 
         console.log('✓ H. restore rides on ordinary dirty/autosave/lifecycle machinery — no parallel history-specific path exists');
@@ -612,12 +612,12 @@ async function run() {
     // -------------------------------------------------------------
     {
         const SOURCE_ROOT = new URL('../', import.meta.url);
-        const recoveryObserverSource = await readFile(new URL('application/RecoveryObserver.js', SOURCE_ROOT), 'utf8');
-        const checkRecoverySource = await readFile(new URL('application/CheckRecoveryUseCase.js', SOURCE_ROOT), 'utf8');
+        const recoveryObserverSource = await readFile(new URL('application/document/RecoveryObserver.js', SOURCE_ROOT), 'utf8');
+        const checkRecoverySource = await readFile(new URL('application/document/CheckRecoveryUseCase.js', SOURCE_ROOT), 'utf8');
         assert(!/CommandHistory|HistoryPreview|historyPreview|restoreHistoryAt/i.test(recoveryObserverSource), 'RecoveryObserver.js has no idea history preview/restore exist');
         assert(!/CommandHistory|HistoryPreview|historyPreview|restoreHistoryAt/i.test(checkRecoverySource), 'CheckRecoveryUseCase.js has no idea history preview/restore exist');
 
-        const restoreUseCaseSource = await readFile(new URL('application/RestoreHistoryStateUseCase.js', SOURCE_ROOT), 'utf8');
+        const restoreUseCaseSource = await readFile(new URL('application/document/RestoreHistoryStateUseCase.js', SOURCE_ROOT), 'utf8');
         assert(!/Recovery|Autosave/.test(restoreUseCaseSource), 'RestoreHistoryStateUseCase.js has no idea recovery/autosave exist, and vice versa — genuinely independent mechanisms, not one built to know about the other');
 
         console.log('✓ I. recovery interaction: recovery and history restore remain two independent mechanisms with no cross-references either direction');
@@ -713,7 +713,7 @@ async function run() {
         // Structural: neither method body reaches into publish/placement/
         // storage machinery directly.
         const SOURCE_ROOT = new URL('../', import.meta.url);
-        const navSource = await readFile(new URL('application/WorldNavigationSession.js', SOURCE_ROOT), 'utf8');
+        const navSource = await readFile(new URL('application/world/WorldNavigationSession.js', SOURCE_ROOT), 'utf8');
         const extractMethod = (name) => {
             const re = new RegExp(`\\b${name}\\s*\\([^)]*\\)\\s*\\{`);
             const start = navSource.search(re);
@@ -744,7 +744,7 @@ async function run() {
     // -------------------------------------------------------------
     {
         const SOURCE_ROOT = new URL('../', import.meta.url);
-        const navSource = await readFile(new URL('application/WorldNavigationSession.js', SOURCE_ROOT), 'utf8');
+        const navSource = await readFile(new URL('application/world/WorldNavigationSession.js', SOURCE_ROOT), 'utf8');
         assert((navSource.match(/new CommandHistory\(/g) || []).length >= 1, 'WorldNavigationSession.js constructs history state via the ONE CommandHistory class');
         assert(!/class\s+\w*History\w*\s*\{/.test(navSource), 'WorldNavigationSession.js defines no second, competing history class of its own');
 

@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { BrickRegistry } from '../core/BrickRegistry.js';
 import { CoreLibrary } from '../core/library/CoreLibrary.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { PaletteUseCase } from '../application/PaletteUseCase.js';
-import { EditorContext } from '../application/EditorContext.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { PaletteUseCase } from '../application/editor/PaletteUseCase.js';
+import { EditorContext } from '../application/editor/EditorContext.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -11,7 +11,7 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { PlacementValidator } from '../core/PlacementValidator.js';
-import { SelectionBoundsService } from '../application/SelectionBoundsService.js';
+import { SelectionBoundsService } from '../application/editor/SelectionBoundsService.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { BrickRenderer } from '../renderer/BrickRenderer.js';
 import { ThreeBrickFactory } from '../renderer/ThreeBrickFactory.js';
@@ -166,7 +166,7 @@ function assertApprox(actual, expected, tolerance, message) {
     assert(registry.search('roof').some((d) => d.id === 'core:roof_hip'), 'search() finds core:roof_hip by tag');
     assert(registry.search('roof').some((d) => d.id === 'core:slope_45'), 'search() still finds core:slope_45 by tag');
 
-    // application/PaletteUseCase.js exposes the same grouping to the UI.
+    // application/editor/PaletteUseCase.js exposes the same grouping to the UI.
     const editorContext = new EditorContext();
     const paletteUseCase = new PaletteUseCase(registry, editorContext);
     const paletteGroups = paletteUseCase.getGroupedDefinitions();
@@ -188,7 +188,7 @@ async function runRendererTests() {
         // Every one of the 15 ids builds a real mesh whose bounding box
         // approximately matches its BrickDefinition's own width/height/depth
         // — the same AABB approximation core/AvatarCollision.js and
-        // application/SelectionBoundsService.js already rely on for every
+        // application/editor/SelectionBoundsService.js already rely on for every
         // brick, proving the new geometry (boxes, a cylinder, a cone, and
         // two Shape/ExtrudeGeometry primitives) is actually sized the way
         // its definition claims, not silently falling back to a 1x1x1 box.

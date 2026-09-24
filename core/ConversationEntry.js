@@ -4,16 +4,16 @@ import { isValidChatDeliveryState } from './ChatDeliveryState.js';
 // 0.2.69 — Reliable Offline Conversations.
 //
 // The durable half of what a live core/ChatMessage.js becomes once
-// application/ChatUseCase.js decides to remember it past this session
-// — see application/ConversationStore.js's own header for the store
-// this belongs to, and application/LiveConversation.js's own header
+// application/chat/ChatUseCase.js decides to remember it past this session
+// — see application/chat/ConversationStore.js's own header for the store
+// this belongs to, and application/chat/LiveConversation.js's own header
 // for the in-memory sibling this class is deliberately NOT: a
 // ConversationEntry is written to survive a reload; a LiveConversation
 // entry is written to be re-read THIS session, nothing more. The two
-// are always kept in sync by application/ChatUseCase.js (never by
+// are always kept in sync by application/chat/ChatUseCase.js (never by
 // either of them reaching into the other), the same "one class owns
 // the write-through, the stores never talk to each other" discipline
-// application/ChatOutbox.js and application/LiveConversation.js
+// application/chat/ChatOutbox.js and application/chat/LiveConversation.js
 // already kept separate in 0.2.63.
 //
 // Carries exactly what 0.2.61/0.2.63 already track per message —
@@ -21,7 +21,7 @@ import { isValidChatDeliveryState } from './ChatDeliveryState.js';
 // re-derived or re-validated here), `direction` (OUTGOING/INCOMING),
 // and `deliveryState` (nullable, 0.2.63's own four-value vocabulary —
 // null for every incoming message, exactly like
-// application/LiveConversation.js#append already documents) — plus one
+// application/chat/LiveConversation.js#append already documents) — plus one
 // field this store actually needs that a live-only transcript never
 // did: `peerIdentityId`, so a stored entry is self-describing without
 // depending on which per-peer slice it happens to be filed under, the

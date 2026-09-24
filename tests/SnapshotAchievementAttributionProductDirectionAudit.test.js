@@ -3,11 +3,11 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { AchievementKind } from '../application/AchievementEvent.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { SnapshotPublicationAttributionOutcome } from '../application/SnapshotPublicationAttributionOutcome.js';
-import { resolveSnapshotPublicationAttribution } from '../application/SnapshotPublicationAttribution.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { AchievementKind } from '../application/achievement/AchievementEvent.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
+import { resolveSnapshotPublicationAttribution } from '../application/snapshot/SnapshotPublicationAttribution.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 
 // 0.9.420 — Snapshot Achievement Attribution Product Direction Audit.
 //
@@ -123,8 +123,8 @@ async function run() {
     let placementSource, attributionSource, positionClaimSource;
     {
         placementSource = await readSource('core/PublicationSnapshotPlacement.js');
-        attributionSource = await readSource('application/SnapshotPublicationAttribution.js');
-        positionClaimSource = await readSource('application/SnapshotWorldPositionClaim.js');
+        attributionSource = await readSource('application/snapshot/SnapshotPublicationAttribution.js');
+        positionClaimSource = await readSource('application/snapshot/placement/SnapshotWorldPositionClaim.js');
 
         const identityBearingFields = [
             {
@@ -205,7 +205,7 @@ async function run() {
     // Section D — Durable archive census.
     // ===============================================================
     {
-        const archiveSource = await readSource('application/PublicationObservationArchive.js');
+        const archiveSource = await readSource('application/publication/observationArchive/PublicationObservationArchive.js');
         const collectionGetters = [...archiveSource.matchAll(/get (\w+)\(\) \{ return this\._\w+; \}/g)].map((m) => m[1]);
         assert(collectionGetters.length >= 15, n(`D1. PublicationObservationArchive.js exposes a real, substantial set of collection getters (found ${collectionGetters.length}), not a strawman-small archive`));
         const snapshotCollections = collectionGetters.filter((g) => /snapshot/i.test(g));
@@ -223,9 +223,9 @@ async function run() {
     // Section E — Ranking-chain dependency census.
     // ===============================================================
     {
-        const rankingPolicySource = codeOnly(await readSource('application/PublisherRankingPolicy.js'));
-        const leaderboardViewSource = codeOnly(await readSource('application/PublisherLeaderboardView.js'));
-        const achievementEventSource = codeOnly(await readSource('application/AchievementEvent.js'));
+        const rankingPolicySource = codeOnly(await readSource('application/leaderboard/PublisherRankingPolicy.js'));
+        const leaderboardViewSource = codeOnly(await readSource('application/leaderboard/PublisherLeaderboardView.js'));
+        const achievementEventSource = codeOnly(await readSource('application/achievement/AchievementEvent.js'));
 
         for (const [label, source] of [
             ['PublisherRankingPolicy.js', rankingPolicySource],
@@ -243,7 +243,7 @@ async function run() {
     // Section F — Placer/author independence proof.
     // ===============================================================
     {
-        const validatorSource = await readSource('application/PublicationSnapshotPlacementValidator.js');
+        const validatorSource = await readSource('application/snapshot/placement/PublicationSnapshotPlacementValidator.js');
         assert(validatorSource.includes('validatePlacerIdentity'), n('F1. PublicationSnapshotPlacementValidator.js validates placerIdentity as a real, named step'));
         assert(!/publisherPublicationAssociationRecord|publisherIdentity\.publisherId ===|record\.publisherId/i.test(validatorSource), n('F2. that validation never compares placerIdentity against a publication\'s own publisher association — it checks SHAPE only (the identity object carries the expected string fields), never that the placer IS the publication\'s own publisher'));
 

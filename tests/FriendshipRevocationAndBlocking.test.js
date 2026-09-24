@@ -3,9 +3,9 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerIdentity } from '../peer/PeerIdentity.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
 import { FriendshipState } from '../core/FriendshipState.js';
 import { FriendshipRecord } from '../core/FriendshipRecord.js';
 import {
@@ -20,21 +20,21 @@ import {
 } from '../core/FriendshipAdvertisement.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerBlockRecord } from '../core/PeerBlockRecord.js';
-import { PeerBlockUseCase } from '../application/PeerBlockUseCase.js';
-import { PresenceTrustBoundary } from '../application/PresenceTrustBoundary.js';
-import { AvatarProfileTrustBoundary } from '../application/AvatarProfileTrustBoundary.js';
-import { AvatarInteractionTrustBoundary } from '../application/AvatarInteractionTrustBoundary.js';
+import { PeerBlockUseCase } from '../application/peer/PeerBlockUseCase.js';
+import { PresenceTrustBoundary } from '../application/presence/PresenceTrustBoundary.js';
+import { AvatarProfileTrustBoundary } from '../application/avatar/AvatarProfileTrustBoundary.js';
+import { AvatarInteractionTrustBoundary } from '../application/avatar/AvatarInteractionTrustBoundary.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { toAvatarPresenceAdvertisement } from '../core/AvatarPresenceAdvertisement.js';
-import { signAvatarPresenceAdvertisement } from '../application/PresenceSigning.js';
+import { signAvatarPresenceAdvertisement } from '../application/presence/PresenceSigning.js';
 import { toAvatarProfileAdvertisement } from '../core/AvatarProfileAdvertisement.js';
-import { signAvatarProfileAdvertisement } from '../application/AvatarProfileSigning.js';
+import { signAvatarProfileAdvertisement } from '../application/avatar/AvatarProfileSigning.js';
 import { toAvatarInteractionAdvertisement } from '../core/AvatarInteractionAdvertisement.js';
-import { signAvatarInteractionAdvertisement } from '../application/AvatarInteractionSigning.js';
+import { signAvatarInteractionAdvertisement } from '../application/avatar/AvatarInteractionSigning.js';
 import { AvatarInteractionKind } from '../core/AvatarInteractionKind.js';
 import { TrustStatus } from '../core/TrustObservation.js';
 import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
@@ -53,12 +53,12 @@ import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
 //     replay this milestone's own cyclic vocabulary would otherwise
 //     reopen (see core/FriendshipAdvertisement.js's own header).
 //   - Blocking: a completely separate, LOCAL-ONLY, unilateral store
-//     (core/PeerBlockRecord.js/application/PeerBlockUseCase.js) that
+//     (core/PeerBlockRecord.js/application/peer/PeerBlockUseCase.js) that
 //     never sends anything over the network, gating BOTH the sender
 //     side (presence/PeerAvatarPresenceBroadcastProvider.js's own
 //     isBlocked) and the receiver side (every avatar-social trust
 //     boundary's own isBlocked) independently, plus the friendship
-//     protocol itself (application/FriendRelationshipUseCase.js).
+//     protocol itself (application/identity/FriendRelationshipUseCase.js).
 //
 // Deliberately built over peer/LocalPeerConnectionProvider.js (a real,
 // in-process, bidirectional transport — see that file's own header)
@@ -180,7 +180,7 @@ async function runTests() {
 }
 
 // ---------------------------------------------------------------------
-// 3. core/PeerBlockRecord.js + application/PeerBlockUseCase.js — the
+// 3. core/PeerBlockRecord.js + application/peer/PeerBlockUseCase.js — the
 //    local-only, unilateral block store.
 // ---------------------------------------------------------------------
 {
@@ -224,7 +224,7 @@ async function runTests() {
     assert(threw, 'unblocking an identity that is not blocked is a clear error, never silent');
 
     unsubscribe();
-    console.log('✓ core/PeerBlockRecord.js + application/PeerBlockUseCase.js: local-only, idempotent, persistent, never touches the network');
+    console.log('✓ core/PeerBlockRecord.js + application/peer/PeerBlockUseCase.js: local-only, idempotent, persistent, never touches the network');
 }
 
 // ---------------------------------------------------------------------
@@ -421,7 +421,7 @@ async function runTests() {
 
     // Profile/interaction trust boundaries share the identical gate —
     // proven directly against their own evaluate(), the same shape
-    // application/PresenceTrustBoundary.js's own is proven against
+    // application/presence/PresenceTrustBoundary.js's own is proven against
     // above (a full peer-transport round trip would only re-exercise
     // byte-identical code).
     const bobProfileAdvertisement = signAvatarProfileAdvertisement(toAvatarProfileAdvertisement(bobProfile), bob);

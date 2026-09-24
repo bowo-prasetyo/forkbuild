@@ -1,16 +1,16 @@
-import { describePublicationSnapshotPossession } from '../application/PublicationSnapshotPossessionView.js';
-import { LocalSnapshotContentAvailabilityOutcome } from '../application/LocalSnapshotContentAvailabilityOutcome.js';
-import { SnapshotMaterializationSourceKind } from '../application/SnapshotMaterializationSourceKind.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { createSnapshotMaterializationAttempt } from '../application/SnapshotMaterializationAttempt.js';
-import { appendSnapshotMaterializationHistoryEntry } from '../application/SnapshotMaterializationHistory.js';
-import { describePublicationSnapshotAcquisition } from '../application/PublicationSnapshotAcquisitionView.js';
-import { derivePublicationSnapshotPlacementConvergence } from '../application/PublicationSnapshotPlacementConvergence.js';
-import { publicationSnapshotPlacementConvergenceView } from '../application/PublicationSnapshotPlacementConvergenceView.js';
-import { SnapshotPlacementRelationship } from '../application/SnapshotPlacementRelationship.js';
-import { SnapshotPeerPossessionState } from '../application/SnapshotPeerPossessionState.js';
-import { describeSnapshotPeerPossessionComparison } from '../application/SnapshotPeerPossessionComparisonView.js';
-import { describeSnapshotStateInspection } from '../application/SnapshotStateInspectionView.js';
+import { describePublicationSnapshotPossession } from '../application/snapshot/possession/PublicationSnapshotPossessionView.js';
+import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
+import { SnapshotMaterializationSourceKind } from '../application/snapshot/materialization/SnapshotMaterializationSourceKind.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { createSnapshotMaterializationAttempt } from '../application/snapshot/materialization/SnapshotMaterializationAttempt.js';
+import { appendSnapshotMaterializationHistoryEntry } from '../application/snapshot/materialization/SnapshotMaterializationHistory.js';
+import { describePublicationSnapshotAcquisition } from '../application/snapshot/PublicationSnapshotAcquisitionView.js';
+import { derivePublicationSnapshotPlacementConvergence } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergence.js';
+import { publicationSnapshotPlacementConvergenceView } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergenceView.js';
+import { SnapshotPlacementRelationship } from '../application/snapshot/placement/SnapshotPlacementRelationship.js';
+import { SnapshotPeerPossessionState } from '../application/snapshot/possession/SnapshotPeerPossessionState.js';
+import { describeSnapshotPeerPossessionComparison } from '../application/snapshot/possession/SnapshotPeerPossessionComparisonView.js';
+import { describeSnapshotStateInspection } from '../application/snapshot/SnapshotStateInspectionView.js';
 
 // 0.8.46 — Unified Snapshot State Inspection.
 //

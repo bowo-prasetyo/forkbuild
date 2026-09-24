@@ -1,35 +1,35 @@
 import {
     describePublicationReplicaKnowledgeDetail, describeAcquisitionBreakdown
-} from '../application/PublicationReplicaKnowledgeDetailView.js';
-import { createAnchorKnowledgeRecord } from '../application/AnchorKnowledgeRecord.js';
-import { createSnapshotPlacementKnowledgeRecord } from '../application/SnapshotPlacementKnowledgeRecord.js';
-import { AnchorAcquisitionKind } from '../application/AnchorAcquisitionKind.js';
-import { PlacementAcquisitionKind } from '../application/PlacementAcquisitionKind.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { createVerificationObservation } from '../application/PublicationAnchorVerificationObservation.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
-import { createResolutionObservation } from '../application/SnapshotPlacementResolutionObservation.js';
-import { derivePublicationEvidenceConvergence } from '../application/PublicationEvidenceConvergence.js';
-import { publicationEvidenceConvergenceView } from '../application/PublicationEvidenceConvergenceView.js';
-import { derivePublicationSnapshotPlacementConvergence } from '../application/PublicationSnapshotPlacementConvergence.js';
-import { publicationSnapshotPlacementConvergenceView } from '../application/PublicationSnapshotPlacementConvergenceView.js';
-import { ContentBindingSetRelationship } from '../application/ContentBindingSetRelationship.js';
-import { SnapshotPlacementRelationship } from '../application/SnapshotPlacementRelationship.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { PublicationAnchorPeerExchange } from '../application/PublicationAnchorPeerExchange.js';
-import { PublicationAnchorDiscoveryCoordinator } from '../application/PublicationAnchorDiscoveryCoordinator.js';
-import { LocalAnchorKnowledgeStore } from '../application/LocalAnchorKnowledgeStore.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { PublicationSnapshotPlacementPeerExchange } from '../application/PublicationSnapshotPlacementPeerExchange.js';
-import { PublicationSnapshotPlacementDiscoveryCoordinator } from '../application/PublicationSnapshotPlacementDiscoveryCoordinator.js';
-import { LocalPlacementKnowledgeStore } from '../application/LocalPlacementKnowledgeStore.js';
-import { PublicationKnowledgeSynchronizationCoordinator } from '../application/PublicationKnowledgeSynchronizationCoordinator.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { buildPublicationReplicaPackage } from '../application/PublicationReplicaPackage.js';
-import { ImportPublicationReplicaPackageUseCase } from '../application/ImportPublicationReplicaPackageUseCase.js';
+} from '../application/publication/replica/PublicationReplicaKnowledgeDetailView.js';
+import { createAnchorKnowledgeRecord } from '../application/anchoring/AnchorKnowledgeRecord.js';
+import { createSnapshotPlacementKnowledgeRecord } from '../application/snapshot/placement/SnapshotPlacementKnowledgeRecord.js';
+import { AnchorAcquisitionKind } from '../application/anchoring/AnchorAcquisitionKind.js';
+import { PlacementAcquisitionKind } from '../application/placement/PlacementAcquisitionKind.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { createVerificationObservation } from '../application/anchoring/PublicationAnchorVerificationObservation.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
+import { createResolutionObservation } from '../application/snapshot/placement/SnapshotPlacementResolutionObservation.js';
+import { derivePublicationEvidenceConvergence } from '../application/publication/evidence/PublicationEvidenceConvergence.js';
+import { publicationEvidenceConvergenceView } from '../application/publication/evidence/PublicationEvidenceConvergenceView.js';
+import { derivePublicationSnapshotPlacementConvergence } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergence.js';
+import { publicationSnapshotPlacementConvergenceView } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergenceView.js';
+import { ContentBindingSetRelationship } from '../application/publication/evidence/ContentBindingSetRelationship.js';
+import { SnapshotPlacementRelationship } from '../application/snapshot/placement/SnapshotPlacementRelationship.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { PublicationAnchorPeerExchange } from '../application/anchoring/PublicationAnchorPeerExchange.js';
+import { PublicationAnchorDiscoveryCoordinator } from '../application/anchoring/PublicationAnchorDiscoveryCoordinator.js';
+import { LocalAnchorKnowledgeStore } from '../application/anchoring/LocalAnchorKnowledgeStore.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';
+import { PublicationSnapshotPlacementDiscoveryCoordinator } from '../application/snapshot/placement/PublicationSnapshotPlacementDiscoveryCoordinator.js';
+import { LocalPlacementKnowledgeStore } from '../application/placement/LocalPlacementKnowledgeStore.js';
+import { PublicationKnowledgeSynchronizationCoordinator } from '../application/publication/evidence/PublicationKnowledgeSynchronizationCoordinator.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { buildPublicationReplicaPackage } from '../application/publication/replica/PublicationReplicaPackage.js';
+import { ImportPublicationReplicaPackageUseCase } from '../application/publication/replica/ImportPublicationReplicaPackageUseCase.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
@@ -39,7 +39,7 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.8.31 — Replica Knowledge Provenance & Synchronization Inspection.
@@ -185,7 +185,7 @@ async function run() {
         assert(known.evidence.claims.length === 0, '8. a convergence view with a nonzero count still reports zero CLAIMS when none were supplied — this file never invents a claim row from a count alone');
 
         // A claim with no knowledge record at all — an entirely ordinary
-        // result (see application/PublicationAnchorKnowledgeView.js's own
+        // result (see application/anchoring/PublicationAnchorKnowledgeView.js's own
         // header), never an error.
         const noRecord = describePublicationReplicaKnowledgeDetail({
             publicationId: 'pub-no-record',
@@ -211,7 +211,7 @@ async function run() {
         });
         const rowPeer = withPeer.evidence.claims[0];
         assert(rowPeer.acquisitionKind === AnchorAcquisitionKind.PEER, '13. acquisitionKind reflects the real record');
-        assert(rowPeer.acquisitionLabel === 'Learned via peer exchange', '14. acquisitionLabel is the SAME understated wording application/PublicationAnchorKnowledgeView.js already established — no peer identity anywhere');
+        assert(rowPeer.acquisitionLabel === 'Learned via peer exchange', '14. acquisitionLabel is the SAME understated wording application/anchoring/PublicationAnchorKnowledgeView.js already established — no peer identity anywhere');
         assert(rowPeer.firstSeenAt === '2026-01-01T00:00:00.000Z', '15. firstSeenAt is the ISO string from the real record');
         assert(rowPeer.verificationState === 'verified' && rowPeer.verificationStateLabel === 'Verified', '16. a VALID observation lifts the state to VERIFIED');
 
@@ -249,7 +249,7 @@ async function run() {
             evidenceClaims: [{ anchorId: 'anchor-y', knowledgeRecord: peerRecord, verificationObservations: [createVerificationObservation({ anchorId: 'anchor-y', outcome: AnchorVerificationOutcome.VALID })] }]
         })), '24. PURITY: calling this twice with byte-identical arguments returns a byte-identical result');
     }
-    console.log('✓ Section A: describePublicationReplicaKnowledgeDetail() argument handling — composes application/PublicationReplicaKnowledgeView.js for dimension-level facts and application/PublicationAnchorKnowledgeView.js/application/PublicationAnchorVerificationLifecycleView.js (and their placement-side siblings) for each claim row, with no new derivation, no adjudication vocabulary, and no peer identity anywhere');
+    console.log('✓ Section A: describePublicationReplicaKnowledgeDetail() argument handling — composes application/publication/replica/PublicationReplicaKnowledgeView.js for dimension-level facts and application/anchoring/PublicationAnchorKnowledgeView.js/application/anchoring/PublicationAnchorVerificationLifecycleView.js (and their placement-side siblings) for each claim row, with no new derivation, no adjudication vocabulary, and no peer identity anywhere');
 
     // ---------------------------------------------------------------
     // Section B — FLAGSHIP: four replicas, package + simultaneous
@@ -272,7 +272,7 @@ async function run() {
         const placementY = signPlacement(carol, { publicationId: PUBLICATION_ID, contentHash: CONTENT_HASH, storage: 'local', locator: 'local://replica-detail-y' });
 
         // --- Dave: entirely offline import of Alice's package (Anchor A
-        // + Placement X), exactly application/PublicationReplicaPackage.js's
+        // + Placement X), exactly application/publication/replica/PublicationReplicaPackage.js's
         // own 0.8.29 transfer. No peer connection to Alice is ever
         // established anywhere in this test. ---
         const replicaPackage = buildPublicationReplicaPackage(publication, { anchors: [anchorA], placements: [placementX] });

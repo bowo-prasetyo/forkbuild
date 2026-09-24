@@ -1,12 +1,12 @@
-import { PublicationObservationArchive } from '../../application/PublicationObservationArchive.js';
-import { reconstructPublisherLeaderboard } from '../../application/PublisherLeaderboardView.js';
+import { PublicationObservationArchive } from '../../application/publication/observationArchive/PublicationObservationArchive.js';
+import { reconstructPublisherLeaderboard } from '../../application/leaderboard/PublisherLeaderboardView.js';
 
 // 0.9.417 — Publisher Performance Leaderboard UI.
 //
 // 0.9.416's own audit (tests/PublisherPerformanceLeaderboardProductGapAudit
 // .test.js) found the ranking capability real and live-tested, and found
-// application/PublisherLeaderboardView.js's own reconstructPublisherLeaderboard()
-// (0.8.113, UNCHANGED — itself composing application/PublisherRankingPolicy.js's
+// application/leaderboard/PublisherLeaderboardView.js's own reconstructPublisherLeaderboard()
+// (0.8.113, UNCHANGED — itself composing application/leaderboard/PublisherRankingPolicy.js's
 // own reconstructPublisherRanking(), 0.8.112, UNCHANGED) already the correct
 // presentation boundary over it — but reachable by no UI path at all: zero
 // UI imports, zero routes, zero contextual entries (that audit's own
@@ -28,7 +28,7 @@ import { reconstructPublisherLeaderboard } from '../../application/PublisherLead
 // or scores a publisher — its own `leaderboard` computed property below
 // calls reconstructPublisherLeaderboard() exactly once and the template
 // renders its own `entries`, in its own order, unchanged. See
-// application/PublisherRankingPolicy.js's and application/
+// application/leaderboard/PublisherRankingPolicy.js's and application/
 // PublisherLeaderboardView.js's own headers for why a rank is never
 // recomputed above the one place it is decided.
 //

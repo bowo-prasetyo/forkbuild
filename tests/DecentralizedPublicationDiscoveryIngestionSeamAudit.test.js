@@ -5,19 +5,19 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License } from '../core/License.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { CreateDiscoveryUseCase } from '../application/CreateDiscoveryUseCase.js';
-import { PUBLICATION_CONTENT_KIND, createPublicationContentKind } from '../application/PublicationContentKind.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscoveryUseCase.js';
+import { PUBLICATION_CONTENT_KIND, createPublicationContentKind } from '../application/publication/PublicationContentKind.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -51,13 +51,13 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //
 //   Section A — Vocabulary/diagram correction: the brief's own Route A
 //               diagram names a PublicationResolver call that does not
-//               exist in application/PublicationPeerExchange.js or
-//               application/PublicationExchange.js.
+//               exist in application/publication/PublicationPeerExchange.js or
+//               application/publication/PublicationExchange.js.
 //   Section B — Route A, traced fresh: what peer reception actually
 //               produces (a cataloged ENVELOPE, never a resolved
 //               Publication) and the one real event it fires.
 //   Section C — Where resolution of that envelope actually happens today:
-//               application/PublicationResolutionView.js#resolvePublicationView(),
+//               application/publication/PublicationResolutionView.js#resolvePublicationView(),
 //               an application-layer function, wired to the peer event
 //               from exactly one production call site.
 //   Section D — FLAGSHIP: the whole Route A seam, live, over a real
@@ -163,17 +163,17 @@ async function run() {
         //   PublicationResolver -> Publication -> ??? -> provider.
         // Both files' own headers state, directly, that this call never
         // happens.
-        const peerExchangeSource = await readSource('application/PublicationPeerExchange.js');
-        assert(proseIncludes(peerExchangeSource, 'it NEVER calls application/PublicationResolver.js, and never inspects the wrapped content or the locator\'s reachability'),
-            '1. application/PublicationPeerExchange.js\'s own header states directly it never calls PublicationResolver.');
+        const peerExchangeSource = await readSource('application/publication/PublicationPeerExchange.js');
+        assert(proseIncludes(peerExchangeSource, 'it NEVER calls application/publication/PublicationResolver.js, and never inspects the wrapped content or the locator\'s reachability'),
+            '1. application/publication/PublicationPeerExchange.js\'s own header states directly it never calls PublicationResolver.');
         assert(!/^import .*PublicationResolver/m.test(peerExchangeSource),
-            '2. confirmed structurally: application/PublicationPeerExchange.js never even IMPORTS application/PublicationResolver.js (the header discusses it in prose only — checked by import statement, not by bare string match).');
+            '2. confirmed structurally: application/publication/PublicationPeerExchange.js never even IMPORTS application/publication/PublicationResolver.js (the header discusses it in prose only — checked by import statement, not by bare string match).');
 
-        const publicationExchangeSource = await readSource('application/PublicationExchange.js');
-        assert(proseIncludes(publicationExchangeSource, 'never retrieves the wrapped content, never calls application/PublicationResolver.js'),
-            "3. application/PublicationExchange.js's own header states the identical restraint one layer down.");
+        const publicationExchangeSource = await readSource('application/publication/PublicationExchange.js');
+        assert(proseIncludes(publicationExchangeSource, 'never retrieves the wrapped content, never calls application/publication/PublicationResolver.js'),
+            "3. application/publication/PublicationExchange.js's own header states the identical restraint one layer down.");
         assert(!/^import .*PublicationResolver/m.test(publicationExchangeSource),
-            '4. confirmed structurally: application/PublicationExchange.js never IMPORTS application/PublicationResolver.js either.');
+            '4. confirmed structurally: application/publication/PublicationExchange.js never IMPORTS application/publication/PublicationResolver.js either.');
 
         // A2. What importPublication() actually returns — a cataloged
         // DecentralizedPublication (the signed ENVELOPE/locator), never
@@ -182,9 +182,9 @@ async function run() {
             publicationExchangeSource.includes('const publication = DecentralizedPublication.fromJSON(publicationJson);'),
             '5. importPublication() constructs and catalogs a DecentralizedPublication instance — the envelope — never the wrapped Publication.');
         assert(!/publisher\/Publication\.js/.test(publicationExchangeSource),
-            '6. confirmed structurally: application/PublicationExchange.js never imports publisher/Publication.js at all — it cannot produce one.');
+            '6. confirmed structurally: application/publication/PublicationExchange.js never imports publisher/Publication.js at all — it cannot produce one.');
     }
-    console.log('✓ Section A: the brief\'s own Route A diagram does not survive contact with source. Neither application/PublicationPeerExchange.js nor application/PublicationExchange.js ever calls application/PublicationResolver.js — both their own headers say so directly, and confirmed structurally by import search. Receiving a publication over a peer connection catalogs a signed DecentralizedPublication ENVELOPE (a locator), never a resolved publisher/Publication.js instance. The real Route A has one fewer automatic step than the brief assumed.');
+    console.log('✓ Section A: the brief\'s own Route A diagram does not survive contact with source. Neither application/publication/PublicationPeerExchange.js nor application/publication/PublicationExchange.js ever calls application/publication/PublicationResolver.js — both their own headers say so directly, and confirmed structurally by import search. Receiving a publication over a peer connection catalogs a signed DecentralizedPublication ENVELOPE (a locator), never a resolved publisher/Publication.js instance. The real Route A has one fewer automatic step than the brief assumed.');
 
     // ===============================================================
     // Section B — Route A, traced fresh: what peer reception actually
@@ -243,7 +243,7 @@ async function run() {
             '2. what it carries is a DecentralizedPublication — the ENVELOPE — proven by instanceof, not a publisher/Publication.js instance.');
         assert(!(observations[0].publication instanceof Publication),
             '3. and it is specifically NOT a Publication instance — the two classes are structurally distinct, confirmed live off the real object this event actually produced.');
-        assert(observations[0].isNew === true, '4. isNew is true for a genuinely new envelope, mirroring application/LocalPublicationCatalog.js#add()\'s own contract unchanged.');
+        assert(observations[0].isNew === true, '4. isNew is true for a genuinely new envelope, mirroring application/publication/LocalPublicationCatalog.js#add()\'s own contract unchanged.');
 
         // B2. The envelope this event carries already names its own
         // contentKind — enough for a caller to DECIDE whether resolution
@@ -263,12 +263,12 @@ async function run() {
     // from exactly one production call site.
     // ===============================================================
     {
-        // C1. application/PublicationResolutionView.js#resolvePublicationView()
+        // C1. application/publication/PublicationResolutionView.js#resolvePublicationView()
         // is a real, UI-agnostic application-layer function — it imports
-        // no DOM/Vue module, only application/PublicationResolutionOutcome.js.
-        const resolutionViewSource = await readSource('application/PublicationResolutionView.js');
+        // no DOM/Vue module, only application/publication/PublicationResolutionOutcome.js.
+        const resolutionViewSource = await readSource('application/publication/PublicationResolutionView.js');
         assert(!/from ['"]vue['"]|document\.|window\./.test(resolutionViewSource),
-            '1. application/PublicationResolutionView.js imports no UI framework and touches no DOM/window global — genuinely application-layer, not embedded UI logic.');
+            '1. application/publication/PublicationResolutionView.js imports no UI framework and touches no DOM/window global — genuinely application-layer, not embedded UI logic.');
         assert(resolutionViewSource.includes('export async function resolvePublicationView('),
             '2. resolvePublicationView() is exported, callable by any collaborator, not a private helper.');
 
@@ -282,10 +282,10 @@ async function run() {
 
         // C3. The registry it is handed already includes the Publication
         // content kind (0.9.333) — reconfirmed fresh, not cited.
-        const registrySource = await readSource('application/CreatePublicationDisplayKindRegistryUseCase.js');
+        const registrySource = await readSource('application/publication/CreatePublicationDisplayKindRegistryUseCase.js');
         assert(registrySource.includes('createPublicationContentKind({ verifier })') &&
             registrySource.includes('[publicationKind.contentKind]: publicationKind'),
-            '4. application/CreatePublicationDisplayKindRegistryUseCase.js registers the Publication content kind — a contentKind match at Section C2\'s dispatch actually resolves to a real Publication.');
+            '4. application/publication/CreatePublicationDisplayKindRegistryUseCase.js registers the Publication content kind — a contentKind match at Section C2\'s dispatch actually resolves to a real Publication.');
 
         // C4. Exactly one production call site wires the peer event
         // (Section B) to resolvePublicationView(): ui/views/
@@ -320,7 +320,7 @@ async function run() {
             viewSource.includes('discoveryProvider.add(view.content)'),
             '8. UPDATED (0.9.337): ui/views/DecentralizedPublicationsView.js now references discovery/DecentralizedPublicationDiscoveryProvider.js by injecting the application-lifetime instance and admitting a resolved Publication via discoveryProvider.add(view.content) — the resolved content is no longer used for display alone.');
     }
-    console.log('✓ Section C: resolution of a peer-delivered envelope already happens today, at application/PublicationResolutionView.js#resolvePublicationView() — a real, exported, UI-agnostic application-layer function, dispatching by contentKind through a registry that already includes the Publication content kind (0.9.333). Exactly one production call site wires it to the peer event from Section B: ui/views/DecentralizedPublicationsView.js\'s refreshList()/resolveEntry(), which only resolves entries with no view yet (never re-resolving a repeat announce). UPDATED (0.9.337): that call site\'s own resolved `content` is now also admitted into Repository discovery via the shared DecentralizedPublicationDiscoveryProvider instance, whenever resolution succeeded with a genuine Publication.');
+    console.log('✓ Section C: resolution of a peer-delivered envelope already happens today, at application/publication/PublicationResolutionView.js#resolvePublicationView() — a real, exported, UI-agnostic application-layer function, dispatching by contentKind through a registry that already includes the Publication content kind (0.9.333). Exactly one production call site wires it to the peer event from Section B: ui/views/DecentralizedPublicationsView.js\'s refreshList()/resolveEntry(), which only resolves entries with no view yet (never re-resolving a repeat announce). UPDATED (0.9.337): that call site\'s own resolved `content` is now also admitted into Repository discovery via the shared DecentralizedPublicationDiscoveryProvider instance, whenever resolution succeeded with a genuine Publication.');
 
     // ===============================================================
     // Section D — FLAGSHIP: the whole Route A seam, live, over a real
@@ -422,7 +422,7 @@ async function run() {
         aliceTransport.dispose();
         bobTransport.dispose();
     }
-    console.log('✓ Section D: FLAGSHIP. Over a real, live, authenticated peer connection (peer/LocalPeerConnectionProvider.js + application/ConnectToPeerUseCase.js, unmodified), Alice\'s self-published Publication reaches Bob\'s onPublicationReceived as a signed envelope; the REAL production resolvePublicationView() call — with the REAL CreatePublicationDisplayKindRegistryUseCase output, never a stub — resolves it back to a genuine publisher/Publication.js instance; and a single, test-only `if (view.resolved && view.content instanceof Publication) provider.add(view.content);` line is enough to make it visible to Repository\'s own real, unmodified SearchPublicationsUseCase, by title text and by author, with documentId intact. Nothing about PublicationPeerExchange, PublicationExchange, PublicationResolver, PublicationResolutionView, or the provider itself needed to change — the entire gap is exactly that one line, at exactly that call site.');
+    console.log('✓ Section D: FLAGSHIP. Over a real, live, authenticated peer connection (peer/LocalPeerConnectionProvider.js + application/peer/ConnectToPeerUseCase.js, unmodified), Alice\'s self-published Publication reaches Bob\'s onPublicationReceived as a signed envelope; the REAL production resolvePublicationView() call — with the REAL CreatePublicationDisplayKindRegistryUseCase output, never a stub — resolves it back to a genuine publisher/Publication.js instance; and a single, test-only `if (view.resolved && view.content instanceof Publication) provider.add(view.content);` line is enough to make it visible to Repository\'s own real, unmodified SearchPublicationsUseCase, by title text and by author, with documentId intact. Nothing about PublicationPeerExchange, PublicationExchange, PublicationResolver, PublicationResolutionView, or the provider itself needed to change — the entire gap is exactly that one line, at exactly that call site.');
 
     // ===============================================================
     // Section E — Is the seam application-level or UI-only? Answered
@@ -438,9 +438,9 @@ async function run() {
         // (ui/views/DecentralizedPublicationsView.js) — confirmed by
         // grep: no application/ file calls resolvePublicationView().
         const applicationCallers = grepFiles('await resolvePublicationView\\(', ['application'])
-            .filter((f) => !f.includes('.test.js') && !f.endsWith('application/PublicationResolutionView.js'));
+            .filter((f) => !f.includes('.test.js') && !f.endsWith('application/publication/PublicationResolutionView.js'));
         assert(applicationCallers.length === 0,
-            `1. no application/ file other than its own definition actually CALLS resolvePublicationView() today (found: ${applicationCallers.join(', ') || 'none'}) — every production call is made from ui/. (Checked by the real call pattern "await resolvePublicationView(", not a bare string match — application/CreatePublicationDisplayKindRegistryUseCase.js's own header cites the function name in prose without calling it.)`);
+            `1. no application/ file other than its own definition actually CALLS resolvePublicationView() today (found: ${applicationCallers.join(', ') || 'none'}) — every production call is made from ui/. (Checked by the real call pattern "await resolvePublicationView(", not a bare string match — application/publication/CreatePublicationDisplayKindRegistryUseCase.js's own header cites the function name in prose without calling it.)`);
         const uiCallers = grepFiles('await resolvePublicationView\\(', ['ui']);
         assert(uiCallers.length === 1 && uiCallers[0] === 'ui/views/DecentralizedPublicationsView.js',
             `2. exactly one production caller exists, and it is a UI view (found: ${uiCallers.join(', ') || 'none'}).`);
@@ -472,12 +472,12 @@ async function run() {
         const discoveryEnvelope = await readSource('core/DecentralizedDiscoveryEnvelope.js');
         assert(proseIncludes(discoveryEnvelope, 'a small, JSON, substrate-neutral envelope a publisher can attach to whatever payload field THEIR substrate already offers'),
             "3. core/DecentralizedDiscoveryEnvelope.js's own header names its own purpose directly: a location envelope, not a content-kind envelope.");
-        const nostrPublisher = await readSource('application/NostrPublicationDiscoveryPublisher.js');
+        const nostrPublisher = await readSource('application/nostr/NostrPublicationDiscoveryPublisher.js');
         assert(proseIncludes(nostrPublisher, "It never imports `publisher/Publication.js`, signs anything belonging to a Publication, or reads a Publication's own `signature` field"),
-            '4. application/NostrPublicationDiscoveryPublisher.js\'s own header confirms it never touches Publication or its signature.');
-        const nostrQueryService = await readSource('application/NostrDiscoveryQueryService.js');
+            '4. application/nostr/NostrPublicationDiscoveryPublisher.js\'s own header confirms it never touches Publication or its signature.');
+        const nostrQueryService = await readSource('application/nostr/NostrDiscoveryQueryService.js');
         assert(!/DecentralizedPublication\b|PublicationResolver|createPublicationContentKind/.test(nostrQueryService),
-            '5. application/NostrDiscoveryQueryService.js cannot produce a resolvable forkbuild.publication candidate today — reconfirmed fresh.');
+            '5. application/nostr/NostrDiscoveryQueryService.js cannot produce a resolvable forkbuild.publication candidate today — reconfirmed fresh.');
 
         // F3. Question B, answered directly: "does the existing Nostr
         // publication discovery mechanism produce enough information to
@@ -488,7 +488,7 @@ async function run() {
         // caller to even receive. Resolution does not terminate early;
         // it never begins.
     }
-    console.log('✓ Section F: reconfirmed fresh (not cited). No existing Nostr mechanism in this codebase — publisher or query service — imports or references core/DecentralizedPublication.js, application/PublicationResolver.js, application/LocalPublicationCatalog.js, or application/PublicationExchange.js. The Nostr pipeline that DOES exist for Publications speaks core/DecentralizedDiscoveryEnvelope.js, a self-declared {protocol,kind,objectId,uri} LOCATION claim for material belonging to a publication the caller already knows about — never a forkbuild.publication envelope. Question B\'s honest answer is not "resolution terminates at the caller" — it is "resolution never begins": no producer of a resolvable candidate exists on the Nostr side today, at all.');
+    console.log('✓ Section F: reconfirmed fresh (not cited). No existing Nostr mechanism in this codebase — publisher or query service — imports or references core/DecentralizedPublication.js, application/publication/PublicationResolver.js, application/publication/LocalPublicationCatalog.js, or application/publication/PublicationExchange.js. The Nostr pipeline that DOES exist for Publications speaks core/DecentralizedDiscoveryEnvelope.js, a self-declared {protocol,kind,objectId,uri} LOCATION claim for material belonging to a publication the caller already knows about — never a forkbuild.publication envelope. Question B\'s honest answer is not "resolution terminates at the caller" — it is "resolution never begins": no producer of a resolvable candidate exists on the Nostr side today, at all.');
 
     // ===============================================================
     // Section G — One seam or two? Answered: one, and it is
@@ -503,11 +503,11 @@ async function run() {
         // G2. And that one seam is not actually "peer ingestion" — it is
         // "any cataloged envelope, resolved for display." A second real
         // production writer into the identical LocalPublicationCatalog
-        // exists: application/ImportPublicationReplicaPackageUseCase.js,
+        // exists: application/publication/replica/ImportPublicationReplicaPackageUseCase.js,
         // via the identical PublicationExchange#importPublication() call.
-        const importUseCase = await readSource('application/ImportPublicationReplicaPackageUseCase.js');
+        const importUseCase = await readSource('application/publication/replica/ImportPublicationReplicaPackageUseCase.js');
         assert(importUseCase.includes('this._publicationExchange.importPublication(pkg.publication)'),
-            '1. application/ImportPublicationReplicaPackageUseCase.js catalogs through the identical PublicationExchange#importPublication() call Route A uses — the same envelope-cataloging step, over a file-package transport instead of a live peer.');
+            '1. application/publication/replica/ImportPublicationReplicaPackageUseCase.js catalogs through the identical PublicationExchange#importPublication() call Route A uses — the same envelope-cataloging step, over a file-package transport instead of a live peer.');
 
         // G3. Whichever transport wrote the entry, ui/views/
         // DecentralizedPublicationsView.js's own refreshList() reads
@@ -525,7 +525,7 @@ async function run() {
         assert(wiredCallers.length === 0,
             `2. confirmed: ImportPublicationReplicaPackageUseCase has no production UI caller today (found: ${wiredCallers.join(', ') || 'none'}) — a second real writer into the same catalog, currently dormant.`);
     }
-    console.log('✓ Section G: exactly one existing ingestion seam, and it is shaped by the CATALOG, not the TRANSPORT. Given Section F (Route B produces nothing), there is no second live route to converge with. And what looked like "Route A\'s own seam" is really "any application/LocalPublicationCatalog.js entry\'s own seam" — a second production writer, application/ImportPublicationReplicaPackageUseCase.js, catalogs through the identical PublicationExchange#importPublication() call over a file-package transport instead of a live peer (currently unwired into any UI, confirmed by grep), and would flow through the identical resolvePublicationView() call site the moment it were wired. Peer, package-import, and self-publish all converge on ONE catalog and ONE resolution seam today.');
+    console.log('✓ Section G: exactly one existing ingestion seam, and it is shaped by the CATALOG, not the TRANSPORT. Given Section F (Route B produces nothing), there is no second live route to converge with. And what looked like "Route A\'s own seam" is really "any application/publication/LocalPublicationCatalog.js entry\'s own seam" — a second production writer, application/publication/replica/ImportPublicationReplicaPackageUseCase.js, catalogs through the identical PublicationExchange#importPublication() call over a file-package transport instead of a live peer (currently unwired into any UI, confirmed by grep), and would flow through the identical resolvePublicationView() call site the moment it were wired. Peer, package-import, and self-publish all converge on ONE catalog and ONE resolution seam today.');
 
     // ===============================================================
     // Section H — Provider lifetime, characterized against the TWO
@@ -540,12 +540,12 @@ async function run() {
         const mainSource = await readSource('ui/main.js');
         const peerExchangeConstructions = (mainSource.match(/new CreatePublicationPeerExchangeUseCase\(\)/g) || []).length;
         assert(peerExchangeConstructions === 1,
-            `1. application/CreatePublicationPeerExchangeUseCase.js is constructed exactly once in ui/main.js (found ${peerExchangeConstructions}) — an application-lifetime singleton, its catalog/peerExchange shared app-wide via app.provide().`);
+            `1. application/publication/CreatePublicationPeerExchangeUseCase.js is constructed exactly once in ui/main.js (found ${peerExchangeConstructions}) — an application-lifetime singleton, its catalog/peerExchange shared app-wide via app.provide().`);
         assert(mainSource.includes("app.provide('publicationCatalog', publicationCatalog);") &&
             mainSource.includes("app.provide('publicationPeerExchange', publicationPeerExchange);"),
             '2. both are handed to every view through Vue\'s own provide/inject, confirmed directly.');
 
-        // H2. By sharp contrast, application/CreateDiscoveryUseCase.js —
+        // H2. By sharp contrast, application/discovery/CreateDiscoveryUseCase.js —
         // the composition root that actually builds SearchPublicationsUseCase's
         // own discoveryProvider — is NEVER constructed in ui/main.js at
         // all, and IS constructed fresh, per call, inside five separate
@@ -584,7 +584,7 @@ async function run() {
         assert(providerInstanceTwo.list().length === 0,
             '8. a SECOND, independently-constructed instance holds nothing — proving, live, that constructing this provider the SAME per-call way CreateDiscoveryUseCase constructs LocalDiscoveryProvider today would silently discard every previously ingested candidate the instant any other view\'s setup() ran again.');
     }
-    console.log('✓ Section H: ANSWER. Two composition patterns already coexist in this codebase, and only one of them is compatible with an in-memory accumulator. publicationCatalog/publicationPeerExchange/publicationResolutionCoordinator are constructed EXACTLY ONCE in ui/main.js (confirmed by grep count) and shared app-wide via app.provide() — application lifetime. application/CreateDiscoveryUseCase.js, by contrast, is never constructed in ui/main.js at all and is instead constructed FRESH inside every consuming view\'s own setup() — safe today only because LocalDiscoveryProvider is a stateless projection over persistent localStorage, proven live: two execute() calls return distinct discoveryProvider references. A live probe with two independently-constructed DecentralizedPublicationDiscoveryProvider instances proves the concrete failure mode directly: an item added through one is invisible through the other. The only existing lifetime scope this evidence supports is APPLICATION LIFETIME — a single instance built once, alongside publicationCatalog/publicationPeerExchange, in ui/main.js. Wiring it through CreateDiscoveryUseCase\'s own present per-call shape would be a real regression, not a neutral choice, unless that composition root itself changes to accept an injected, shared instance instead of constructing one.');
+    console.log('✓ Section H: ANSWER. Two composition patterns already coexist in this codebase, and only one of them is compatible with an in-memory accumulator. publicationCatalog/publicationPeerExchange/publicationResolutionCoordinator are constructed EXACTLY ONCE in ui/main.js (confirmed by grep count) and shared app-wide via app.provide() — application lifetime. application/discovery/CreateDiscoveryUseCase.js, by contrast, is never constructed in ui/main.js at all and is instead constructed FRESH inside every consuming view\'s own setup() — safe today only because LocalDiscoveryProvider is a stateless projection over persistent localStorage, proven live: two execute() calls return distinct discoveryProvider references. A live probe with two independently-constructed DecentralizedPublicationDiscoveryProvider instances proves the concrete failure mode directly: an item added through one is invisible through the other. The only existing lifetime scope this evidence supports is APPLICATION LIFETIME — a single instance built once, alongside publicationCatalog/publicationPeerExchange, in ui/main.js. Wiring it through CreateDiscoveryUseCase\'s own present per-call shape would be a real regression, not a neutral choice, unless that composition root itself changes to accept an injected, shared instance instead of constructing one.');
 
     // ===============================================================
     // Section I — Repeated observations, characterized live.
@@ -600,13 +600,13 @@ async function run() {
         // envelope — produce two DIFFERENT envelope ids (core/
         // DecentralizedPublication.js's own id defaults to a fresh
         // createId() per construction), so LocalPublicationCatalog's own
-        // id-based dedup (application/LocalPublicationCatalog.js's own
+        // id-based dedup (application/publication/LocalPublicationCatalog.js's own
         // header, "Deduplicates by the envelope's own id, never by
         // content hash") never collapses them.
         const envelopeOne = await resolver.publish({ content: publication, contentKind: PUBLICATION_CONTENT_KIND, identityProvider: dave });
         const envelopeTwo = await resolver.publish({ content: publication, contentKind: PUBLICATION_CONTENT_KIND, identityProvider: dave });
         assert(envelopeOne.id !== envelopeTwo.id,
-            '1. two independent publish() calls for the SAME Publication content produce two DIFFERENT envelope ids, live — never deduplicated by application/LocalPublicationCatalog.js.');
+            '1. two independent publish() calls for the SAME Publication content produce two DIFFERENT envelope ids, live — never deduplicated by application/publication/LocalPublicationCatalog.js.');
 
         const catalog = new LocalPublicationCatalog(new InMemoryStorageProvider());
         catalog.add(envelopeOne);
@@ -646,7 +646,7 @@ async function run() {
         const catalogResult = catalog.add(envelopeOne);
         assert(catalogResult.isNew === false, '6. re-adding the IDENTICAL envelope to the catalog is a no-op, isNew: false — the suppression point upstream of the seam.');
     }
-    console.log('✓ Section I: characterized live, not built. A literal re-announce of the IDENTICAL signed envelope is suppressed upstream of the seam entirely — application/LocalPublicationCatalog.js\'s own id-based dedup makes it isNew:false, and the real UI call site (Section C7) only resolves entries with no view yet, so it never reaches resolvePublicationView() or add() a second time. But TWO INDEPENDENTLY signed envelopes wrapping the identical underlying Publication (proven live: two publish() calls of the same content yield two different envelope ids, both cataloged, both resolved to two distinct object references sharing one Publication.id/documentId) are NOT deduplicated anywhere in this pipeline — handed to a real provider, both are retained, exactly matching discovery/DecentralizedPublicationDiscoveryProvider.js\'s own documented "no invented deduplication policy." This is real evidence for a future federated-observation-identity decision, not a bug this milestone should fix.');
+    console.log('✓ Section I: characterized live, not built. A literal re-announce of the IDENTICAL signed envelope is suppressed upstream of the seam entirely — application/publication/LocalPublicationCatalog.js\'s own id-based dedup makes it isNew:false, and the real UI call site (Section C7) only resolves entries with no view yet, so it never reaches resolvePublicationView() or add() a second time. But TWO INDEPENDENTLY signed envelopes wrapping the identical underlying Publication (proven live: two publish() calls of the same content yield two different envelope ids, both cataloged, both resolved to two distinct object references sharing one Publication.id/documentId) are NOT deduplicated anywhere in this pipeline — handed to a real provider, both are retained, exactly matching discovery/DecentralizedPublicationDiscoveryProvider.js\'s own documented "no invented deduplication policy." This is real evidence for a future federated-observation-identity decision, not a bug this milestone should fix.');
 
     // ===============================================================
     // Section J — Repository visibility, proven end to end without
@@ -662,12 +662,12 @@ async function run() {
         // root carries any trace of this milestone's own additions —
         // Repository's real seam is genuinely untouched, not merely
         // unmentioned in a header.
-        const searchUseCaseSource = await readSource('application/SearchPublicationsUseCase.js');
+        const searchUseCaseSource = await readSource('application/publication/SearchPublicationsUseCase.js');
         assert(!/DecentralizedPublicationDiscoveryProvider/.test(searchUseCaseSource),
-            '1. application/SearchPublicationsUseCase.js never references discovery/DecentralizedPublicationDiscoveryProvider.js — Section D\'s proof required no change to it.');
+            '1. application/publication/SearchPublicationsUseCase.js never references discovery/DecentralizedPublicationDiscoveryProvider.js — Section D\'s proof required no change to it.');
         // UPDATED by 0.9.339 — Merge Decentralized Publication Discovery
         // into Repository Discovery. At the time THIS audit was written,
-        // application/CreateDiscoveryUseCase.js wired only
+        // application/discovery/CreateDiscoveryUseCase.js wired only
         // LocalDiscoveryProvider, exactly as 0.9.335 left it. 0.9.339
         // closed exactly the gap this audit's own Section H named ("the
         // only lifetime this evidence supports is APPLICATION LIFETIME
@@ -679,13 +679,13 @@ async function run() {
         // milestone's own flagship proof. Reconfirmed fresh, the same
         // "reconfirmed in place rather than left to rot" discipline this
         // file's own Section C5/C8 predecessor claim already applied.
-        const createDiscoveryUseCaseSource = await readSource('application/CreateDiscoveryUseCase.js');
+        const createDiscoveryUseCaseSource = await readSource('application/discovery/CreateDiscoveryUseCase.js');
         assert(createDiscoveryUseCaseSource.includes('new LocalDiscoveryProvider(storageProvider)') &&
             createDiscoveryUseCaseSource.includes('CompositeDiscoveryProvider') &&
             createDiscoveryUseCaseSource.includes('decentralizedDiscoveryProvider'),
-            '2. UPDATED (0.9.339): application/CreateDiscoveryUseCase.js still constructs LocalDiscoveryProvider exactly as before, and now ALSO accepts an optional decentralizedDiscoveryProvider, merged in through discovery/CompositeDiscoveryProvider.js when supplied.');
+            '2. UPDATED (0.9.339): application/discovery/CreateDiscoveryUseCase.js still constructs LocalDiscoveryProvider exactly as before, and now ALSO accepts an optional decentralizedDiscoveryProvider, merged in through discovery/CompositeDiscoveryProvider.js when supplied.');
     }
-    console.log('✓ Section J: Section D\'s own flagship already IS this proof — decentralized source (a real, live peer connection) -> resolve (the real application/PublicationResolutionView.js#resolvePublicationView() seam) -> add (the one test-only line) -> Repository\'s own real, unmodified SearchPublicationsUseCase -> a real Repository-shaped { items } result, matched by title and by author. Nothing about application/CreateDiscoveryUseCase.js or any Repository UI file was touched or imported to produce it.');
+    console.log('✓ Section J: Section D\'s own flagship already IS this proof — decentralized source (a real, live peer connection) -> resolve (the real application/publication/PublicationResolutionView.js#resolvePublicationView() seam) -> add (the one test-only line) -> Repository\'s own real, unmodified SearchPublicationsUseCase -> a real Repository-shaped { items } result, matched by title and by author. Nothing about application/discovery/CreateDiscoveryUseCase.js or any Repository UI file was touched or imported to produce it.');
 
     // ===============================================================
     // Section K — No production file touched.
@@ -703,7 +703,7 @@ async function run() {
         // the same reason). Amended to exclude exactly 0.9.597's own,
         // already-accounted-for files, while still catching any OTHER,
         // unexpected production drift.
-        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js']);
+        const expectedLaterMilestoneFiles = new Set(['application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js']);
         const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
             .filter((f) => !expectedLaterMilestoneFiles.has(f));
         assert(unexpectedNonTestFiles.length === 0, `1. AMENDED BY 0.9.597 — no UNEXPECTED production file is modified by this milestone (0.9.597's own, separately-justified files excepted) — found: ${unexpectedNonTestFiles.join(', ') || 'none'}.`);
@@ -728,7 +728,7 @@ async function run() {
 '\n' +
 "WHY. Route A (peer): Section A corrected the brief's own diagram — PublicationPeerExchange/PublicationExchange never\n" +
 'call PublicationResolver; peer reception catalogs a signed ENVELOPE, never a resolved Publication (Section B). The\n' +
-'real resolution seam is application/PublicationResolutionView.js#resolvePublicationView() (Section C) — an\n' +
+'real resolution seam is application/publication/PublicationResolutionView.js#resolvePublicationView() (Section C) — an\n' +
 'application-layer, UI-agnostic function, dispatching by contentKind through a registry that already includes the\n' +
 'Publication content kind — wired to the peer event from exactly one production call site, a UI view. Section D\n' +
 'proved the entire route live, over a real authenticated peer connection, using the real production kindPlugins\n' +
@@ -743,12 +743,12 @@ async function run() {
 'belonging to an ALREADY-KNOWN publication) — resolution does not terminate early on this route; it never begins.\n' +
 '\n' +
 'One seam or two (Section G): given Route B produces nothing, there is only one live route — and it is catalog-\n' +
-'shaped, not peer-specific: application/ImportPublicationReplicaPackageUseCase.js writes into the identical catalog\n' +
+'shaped, not peer-specific: application/publication/replica/ImportPublicationReplicaPackageUseCase.js writes into the identical catalog\n' +
 'through the identical importPublication() call (currently unwired into any UI), and would flow through the\n' +
 'identical resolvePublicationView() seam the moment it were wired.\n' +
 '\n' +
 'Provider lifetime (Section H): publicationCatalog/publicationPeerExchange are application-lifetime singletons, built\n' +
-'once in ui/main.js; application/CreateDiscoveryUseCase.js is instead built FRESH per view, proven live to return\n' +
+'once in ui/main.js; application/discovery/CreateDiscoveryUseCase.js is instead built FRESH per view, proven live to return\n' +
 'distinct instances — safe today only because LocalDiscoveryProvider is a stateless localStorage projection. A live\n' +
 'probe proves an in-memory accumulator built the same per-call way would silently lose every prior candidate. The\n' +
 'only lifetime this evidence supports is APPLICATION LIFETIME, alongside publicationCatalog/publicationPeerExchange.\n' +

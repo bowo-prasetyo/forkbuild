@@ -3,23 +3,23 @@ import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { ReconstructPublicationDiscoveryUseCase } from '../application/ReconstructPublicationDiscoveryUseCase.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { ReconstructPublicationDiscoveryUseCase } from '../application/publication/ReconstructPublicationDiscoveryUseCase.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -192,8 +192,8 @@ async function run() {
     // Section B — Publication journey chain, reconfirmed wired.
     // ===============================================================
     {
-        const publishSource = codeOnly(await rawSource('application/PublishDocumentUseCase.js'));
-        const distributionSource = codeOnly(await rawSource('application/PublicationDistributionCommand.js'));
+        const publishSource = codeOnly(await rawSource('application/publication/PublishDocumentUseCase.js'));
+        const distributionSource = codeOnly(await rawSource('application/publication/distribution/PublicationDistributionCommand.js'));
         const decentralizedViewSource = codeOnly((await Promise.all(publicationsPageFiles().map((file) => rawSource(file)))).join('\n'));
         const worldEncounterCanvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n'));
         const discoveryProviderSource = codeOnly(await rawSource('discovery/DecentralizedPublicationDiscoveryProvider.js'));
@@ -242,7 +242,7 @@ async function run() {
         // through the "normal" path this codebase's own peer-gossip
         // family and 0.9.607/0.9.608/0.9.609's own reconstruction fix
         // already cover — resolver.publish() + catalog.add(), exactly
-        // application/CreatePublicationPeerExchangeUseCase.js's own shape.
+        // application/publication/CreatePublicationPeerExchangeUseCase.js's own shape.
         const survivorPub = makePublication({ id: 'survivor-650', documentId: 'survivor-650-doc', title: 'Reaches Repository via the catalog' }, author);
         const survivorEnvelope = await session1.resolver.publish({ content: survivorPub, contentKind: PUBLICATION_CONTENT_KIND, identityProvider: author });
         session1.catalog.add(survivorEnvelope);
@@ -261,8 +261,8 @@ async function run() {
         // for LocalPublicationCatalog finds zero references — confirmed
         // immediately below, from real source, before this test trusts
         // its own fixture to be representative.
-        const cascadeSource = await rawSource('application/AutomaticSnapshotEncounterCascade.js');
-        assert(!cascadeSource.includes('LocalPublicationCatalog'), n('setup check: application/AutomaticSnapshotEncounterCascade.js — the real production pipeline behind World-Encounter snapshot discovery — never references LocalPublicationCatalog, confirming the fixture below reproduces its actual admission shape, not a hypothetical one'));
+        const cascadeSource = await rawSource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
+        assert(!cascadeSource.includes('LocalPublicationCatalog'), n('setup check: application/snapshot/AutomaticSnapshotEncounterCascade.js — the real production pipeline behind World-Encounter snapshot discovery — never references LocalPublicationCatalog, confirming the fixture below reproduces its actual admission shape, not a hypothetical one'));
         const worldEncounterCanvasSourceForCheck = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(!/LocalPublicationCatalog/.test(worldEncounterCanvasSourceForCheck) && worldEncounterCanvasSourceForCheck.includes('this.decentralizedPublicationDiscoveryProvider.add(loading.material)'),
             n('setup check: ui/components/WorldEncounterCanvas.js\'s own admitToRepositoryDiscovery() calls ONLY decentralizedPublicationDiscoveryProvider.add() — confirmed, not assumed'));
@@ -332,7 +332,7 @@ async function run() {
     // ===============================================================
     {
         const mainSource = codeOnly(await rawSource('ui/main.js'));
-        const nostrDiscoverSource = await rawSource('application/DiscoverPublicationCommentaryFromNostrUseCase.js');
+        const nostrDiscoverSource = await rawSource('application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js');
 
         // D1. Local authoring/distribution: real UI entry points, real
         // local persistence, real (best-effort, fire-and-forget)
@@ -348,7 +348,7 @@ async function run() {
         // Nostr/Arweave remote-Commentary-discovery commands, but nothing
         // in the UI ever invoked either one, so only WebRTC ever delivered
         // a remote Commentary. AMENDED — the deferred product decision
-        // (application/DiscoverPublicationCommentaryFromNostrUseCase.js,
+        // (application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js,
         // "deciding WHEN this runs... is a separate, later product
         // decision") has since been made: fetch when a Publication's
         // Commentary is opened, plus an explicit "Check for new comments".
@@ -398,7 +398,7 @@ async function run() {
         // PERSISTED STATE, never resumed mid-flight; this is the
         // capability's own documented scope, not an oversight.
         assert(mainSourceRaw.includes('hydratePublicationDistributionLifecycles('), 'E3a. Distribution lifecycle state: reconstructed at boot — COMES BACK.');
-        const restorerSource = await rawSource('application/PublicationDistributionLifecycleRestorer.js');
+        const restorerSource = await rawSource('application/publication/distribution/PublicationDistributionLifecycleRestorer.js');
         assert(!/resume|retry|reattempt/i.test(codeOnly(restorerSource)),
             'E3b. ...restoring last-known state only — no resume/retry vocabulary anywhere in the restorer itself; an in-flight distribution interrupted by a restart is not re-attempted. INTENTIONAL_BOUNDARY, per the class\'s own scope.');
 
@@ -468,8 +468,8 @@ async function run() {
         // F4. No accidental parameter-name mix-up at two real call
         // sites that read a Publication's own two id-shaped fields side
         // by side.
-        const previewServiceSource = codeOnly(await rawSource('application/PreviewService.js'));
-        assert(previewServiceSource.includes('documentId: publication.documentId'), 'F4. application/PreviewService.js reads publication.documentId under a documentId key — never publication.id.');
+        const previewServiceSource = codeOnly(await rawSource('application/editor/PreviewService.js'));
+        assert(previewServiceSource.includes('documentId: publication.documentId'), 'F4. application/editor/PreviewService.js reads publication.documentId under a documentId key — never publication.id.');
 
         console.log('✓ F: eight identity concepts named in this milestone\'s own brief (documentId, publicationId, commentaryId, contentHash, snapshot identity, placement identity, storage identity, proof identity) each have a real, independent generation point; six were proven pairwise-distinct live in this section, the rest structurally. No accidental collapse found. Classification: ALREADY_CORRECT.');
     }
@@ -531,7 +531,7 @@ async function run() {
         // own "Content unavailable" label.
         const ipfsContentStoreSource = await rawSource('content/IpfsContentStore.js');
         assert(ipfsContentStoreSource.includes('class ContentUnavailableError'), 'G4a. A real, dedicated error type exists for missing content.');
-        const resolutionViewSource = await rawSource('application/PublicationResolutionView.js');
+        const resolutionViewSource = await rawSource('application/publication/PublicationResolutionView.js');
         assert(resolutionViewSource.includes("case PublicationResolutionOutcome.CONTENT_UNAVAILABLE: return 'Content unavailable';"),
             'G4b. ...and it surfaces as a distinct, honest, human-readable outcome label — never silently defaulted to a positive-looking status. ALREADY_CORRECT.');
 
@@ -547,8 +547,8 @@ async function run() {
     // Section H — UI truthfulness.
     // ===============================================================
     {
-        const inspectionViewSource = await rawSource('application/WorldEncounterMaterialInspectionView.js');
-        const resolutionViewSource = await rawSource('application/PublicationResolutionView.js');
+        const inspectionViewSource = await rawSource('application/worldEncounter/WorldEncounterMaterialInspectionView.js');
+        const resolutionViewSource = await rawSource('application/publication/PublicationResolutionView.js');
 
         // H1. "Verified" is never rendered as a bare word for World
         // Encounter material — it is expanded to a precise claim about
@@ -634,8 +634,8 @@ concrete, previously-unrecorded findings survive:
      Placed but not durably discoverable: it silently vanishes from
      World rendering after a session boundary, indistinguishable from
      never having been admitted, because that admission path never
-     reaches application/LocalPublicationCatalog.js — the one durable
-     record application/ReconstructPublicationDiscoveryUseCase.js (built
+     reaches application/publication/LocalPublicationCatalog.js — the one durable
+     record application/publication/ReconstructPublicationDiscoveryUseCase.js (built
      at 0.9.607-0.9.609 for exactly this class of problem, on a
      DIFFERENT path) replays at boot. This is the SAME class of issue
      0.9.607 already found and fixed once, recurring on a second,
@@ -661,7 +661,7 @@ RECOMMENDATION: a single, small, separately-scoped next milestone
 (0.9.651) closing finding #1 only — mirroring the fix shape 0.9.607/
 0.9.608 already established for the catalog-backed path: when
 WorldEncounterCanvas.js#admitToRepositoryDiscovery() admits a
-Publication, also record it in application/LocalPublicationCatalog.js
+Publication, also record it in application/publication/LocalPublicationCatalog.js
 (the same durable record CreatePublicationPeerExchangeUseCase.js
 already writes for its own admissions), so
 ReconstructPublicationDiscoveryUseCase can rebuild it after restart.

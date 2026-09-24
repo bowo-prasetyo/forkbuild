@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { IpfsGatewayConfiguration, DEFAULT_IPFS_GATEWAY_URL, isValidIpfsGatewayUrl } from '../core/IpfsGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { IpfsGatewayConfigurationStore } from '../storage/IpfsGatewayConfigurationStore.js';
-import { SetIpfsGatewayConfigurationUseCase } from '../application/SetIpfsGatewayConfigurationUseCase.js';
+import { SetIpfsGatewayConfigurationUseCase } from '../application/settings/SetIpfsGatewayConfigurationUseCase.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 
 // 0.9.665 — IPFS Gateway Settings UI.
@@ -74,7 +74,7 @@ async function run() {
     // ===============================================================
     {
         const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { SetIpfsGatewayConfigurationUseCase } from '../application/SetIpfsGatewayConfigurationUseCase.js';"),
+        assert(mainSource.includes("import { SetIpfsGatewayConfigurationUseCase } from '../application/settings/SetIpfsGatewayConfigurationUseCase.js';"),
             '1. ui/main.js imports the new write use case');
         assert(/new SetIpfsGatewayConfigurationUseCase\(\{\s*ipfsGatewayConfigurationStore\s*\}\)/.test(mainSource),
             '2. ui/main.js wires SetIpfsGatewayConfigurationUseCase against the SAME shared ipfsGatewayConfigurationStore both real retrieval call sites already resolve through, never a second disconnected store');
@@ -323,7 +323,7 @@ async function run() {
     // Section J — architecture sweep of the new use case file.
     // ===============================================================
     {
-        const useCaseSource = await source('application/SetIpfsGatewayConfigurationUseCase.js');
+        const useCaseSource = await source('application/settings/SetIpfsGatewayConfigurationUseCase.js');
         const executable = useCaseSource.replace(/\/\/.*$/gm, '');
         assert(!/\bfetch\s*\(/.test(executable), '52. no network call of any kind');
         assert(!/localStorage/.test(executable), '53. no direct localStorage access — persistence stays behind the injected store');

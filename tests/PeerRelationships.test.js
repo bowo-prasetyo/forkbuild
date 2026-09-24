@@ -2,8 +2,8 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerIdentity } from '../peer/PeerIdentity.js';
 import { PeerRelationship } from '../core/PeerRelationship.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { PeerSessionManager } from '../application/PeerSessionManager.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 
 // 0.2.56 — Persistent Peer Relationships.
@@ -12,7 +12,7 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 // Bob without pretending the old connection is still alive?" This file
 // proves the answer core/PeerRelationship.js and application/
 // PeerRelationshipUseCase.js give, end to end over a REAL WebRTC
-// connection (application/PeerSessionManager.js, 0.2.55, unmodified) —
+// connection (application/peer/PeerSessionManager.js, 0.2.55, unmodified) —
 // not a mock, matching this codebase's standing rule that a real
 // transport is exercised with real code.
 //
@@ -20,7 +20,7 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 // connections are ephemeral, relationships are durable, and identity is
 // the bridge between them. Alice remembers Bob, disconnects, "reloads"
 // (a brand-new PeerRelationshipUseCase over the SAME storage), and Bob
-// is still there — while application/ConnectedPeerRegistry.js, the
+// is still there — while application/peer/ConnectedPeerRegistry.js, the
 // thing 0.2.50 through 0.2.55 already proved never persists anything,
 // is empty the entire time.
 class InMemoryStorageProvider extends StorageProvider {
@@ -123,7 +123,7 @@ async function runTests() {
 }
 
 // ---------------------------------------------------------------------
-// 2. application/PeerRelationshipUseCase.js — the security boundary:
+// 2. application/peer/PeerRelationshipUseCase.js — the security boundary:
 //    only a REAL, verified PeerIdentity may become a relationship.
 // ---------------------------------------------------------------------
 {

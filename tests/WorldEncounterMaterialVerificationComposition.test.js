@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
-import { WorldEncounterMaterialVerificationComposition } from '../application/WorldEncounterMaterialVerificationComposition.js';
+import { WorldEncounterMaterialVerificationComposition } from '../application/worldEncounter/WorldEncounterMaterialVerificationComposition.js';
 import {
     verifyWorldEncounterMaterial,
     WorldEncounterMaterialVerificationStatus,
     WorldEncounterMaterialVerifier
-} from '../application/WorldEncounterMaterialVerification.js';
-import { WorldEncounterMaterialIdentityVerifier } from '../application/WorldEncounterMaterialIdentityVerifier.js';
-import { WorldEncounterMaterialSignatureVerifier } from '../application/WorldEncounterMaterialSignatureVerifier.js';
+} from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { WorldEncounterMaterialIdentityVerifier } from '../application/worldEncounter/WorldEncounterMaterialIdentityVerifier.js';
+import { WorldEncounterMaterialSignatureVerifier } from '../application/worldEncounter/WorldEncounterMaterialSignatureVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
@@ -325,7 +325,7 @@ function signedPublication(identityProvider, overrides = {}) {
 //     boundary nor either existing concrete verifier is ever modified.
 // ---------------------------------------------------------------------
 {
-    const path = '../application/WorldEncounterMaterialVerificationComposition.js';
+    const path = '../application/worldEncounter/WorldEncounterMaterialVerificationComposition.js';
     const sourceUrl = new URL(path, import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -343,13 +343,13 @@ function signedPublication(identityProvider, overrides = {}) {
         assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `31. code must never use "${term}" — no trust/ranking vocabulary at this boundary`);
     }
 
-    const verificationBoundarySource = await readFile(new URL('../application/WorldEncounterMaterialVerification.js', import.meta.url), 'utf8');
+    const verificationBoundarySource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialVerification.js', import.meta.url), 'utf8');
     assert(!verificationBoundarySource.includes('WorldEncounterMaterialVerificationComposition'), '32. 0.9.37\'s own verification boundary is never modified to know about this file');
 
-    const identityVerifierSource = await readFile(new URL('../application/WorldEncounterMaterialIdentityVerifier.js', import.meta.url), 'utf8');
+    const identityVerifierSource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialIdentityVerifier.js', import.meta.url), 'utf8');
     assert(!identityVerifierSource.includes('WorldEncounterMaterialVerificationComposition'), '33. the 0.9.38 identity verifier is never modified to know about this file');
 
-    const signatureVerifierSource = await readFile(new URL('../application/WorldEncounterMaterialSignatureVerifier.js', import.meta.url), 'utf8');
+    const signatureVerifierSource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialSignatureVerifier.js', import.meta.url), 'utf8');
     assert(!signatureVerifierSource.includes('WorldEncounterMaterialVerificationComposition'), '34. the 0.9.41 signature verifier is never modified to know about this file');
 
     console.log('✓ Architectural regression: no concrete-verifier knowledge, no field reads, no trust vocabulary; nothing upstream is modified');

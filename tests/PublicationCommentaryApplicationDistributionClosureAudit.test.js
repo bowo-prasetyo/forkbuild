@@ -11,14 +11,14 @@ import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStor
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { Publication } from '../publisher/Publication.js';
 
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
-import { PublicationCommentaryDistributionPeerExchange } from '../application/PublicationCommentaryDistributionPeerExchange.js';
-import { CreatePublicationCommentaryUseCase } from '../application/CreatePublicationCommentaryUseCase.js';
-import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryDistributionPeerExchange } from '../application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js';
+import { CreatePublicationCommentaryUseCase } from '../application/publication/commentary/CreatePublicationCommentaryUseCase.js';
+import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
 
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.9.621 — Publication Commentary Application Distribution Closure Audit.
@@ -264,7 +264,7 @@ async function run() {
         assert(/new CreatePublicationCommentaryDistributionPeerExchangeUseCase\(\)\.execute\(\{\s*\n\s*identityProvider,\s*\n\s*peerMessageBus,\s*\n\s*connectedPeerRegistry: peerSessionManager\.registry\s*\n\s*\}\)/.test(mainSource),
             n('that one construction site is fed the SAME app-wide identityProvider/peerMessageBus/peerSessionManager.registry every sibling capability rides — never a distinct instance of any of the three'));
 
-        const useCaseSource = codeOnly(await rawSource('application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'));
+        const useCaseSource = codeOnly(await rawSource('application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'));
         assert(/new PublicationCommentaryStore\(/.test(useCaseSource) && !/new LocalStorageProvider\(\)\.load|Map\(\)/.test(useCaseSource),
             n('the composition root constructs exactly the existing storage/PublicationCommentaryStore.js — no in-memory cache, no second persistence class, of its own'));
         assert(!/LocalPublicationCommentaryStore|DistributedPublicationCommentaryStore|CommentaryReplicationStore|CommentaryNetworkStore/.test(useCaseSource),
@@ -665,9 +665,9 @@ async function run() {
     // Section J — authorization separation.
     // ===============================================================
     {
-        const useCaseSource = codeOnly(await rawSource('application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'));
-        const peerExchangeSource = codeOnly(await rawSource('application/PublicationCommentaryDistributionPeerExchange.js'));
-        const exchangeSource = codeOnly(await rawSource('application/PublicationCommentaryDistributionExchange.js'));
+        const useCaseSource = codeOnly(await rawSource('application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'));
+        const peerExchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js'));
+        const exchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionExchange.js'));
         const mainSource = codeOnly(await rawSource('ui/main.js'));
         const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
         const wrapperBody = wrapperMatch ? wrapperMatch[1] : '';
@@ -676,7 +676,7 @@ async function run() {
         // Distribution added a `discoveryProvider` STRING parameter to the
         // ui/main.js wrapper (`input.discoveryProvider`, 'nostr' | 'arweave')
         // selecting which asynchronous TRANSPORT SUBSTRATE to publish
-        // through — the exact term application/PublicationDistributionRuntimeComposition.js's
+        // through — the exact term application/publication/distribution/PublicationDistributionRuntimeComposition.js's
         // own `discoveryProvider` option already uses for the identical
         // concept, one layer over. This is a different thing from what this
         // assertion actually guards against: a Publication EXISTENCE/
@@ -736,7 +736,7 @@ async function run() {
     // application.
     // ===============================================================
     {
-        const peerExchangeSource = codeOnly(await rawSource('application/PublicationCommentaryDistributionPeerExchange.js'));
+        const peerExchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js'));
         // Deliberately does NOT flag `.subscribe(`/`.unsubscribe(`/
         // `onChange(` — the ordinary PeerMessageBus/EventBus transport
         // primitives every sibling *PeerExchange class in this codebase
@@ -744,14 +744,14 @@ async function run() {
         // application-level historical-sync vocabulary: a second message
         // kind beyond ANNOUNCE, or a backfill/request-response protocol.
         assert(!/REQUEST|RESPONSE|BACKFILL|HISTORY_SYNC|historical.sync/i.test(peerExchangeSource),
-            n('application/PublicationCommentaryDistributionPeerExchange.js — the class ui/main.js now constructs into the running application — carries no request/response, backfill, or historical-synchronization vocabulary of any kind'));
+            n('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js — the class ui/main.js now constructs into the running application — carries no request/response, backfill, or historical-synchronization vocabulary of any kind'));
         const messageKindConstants = (peerExchangeSource.match(/MESSAGE_KIND_\w+/g) || []);
         assert(new Set(messageKindConstants).size === 1 && messageKindConstants[0] === 'MESSAGE_KIND_ANNOUNCE',
             n('exactly one message-kind constant exists in this file — MESSAGE_KIND_ANNOUNCE — never a second REQUEST/RESPONSE/HISTORY kind'));
         assert(/MESSAGE_KIND_ANNOUNCE = 'ANNOUNCE'/.test(peerExchangeSource),
             n('exactly one message kind exists — ANNOUNCE — and it is the only one this file\'s own _handleIncoming() ever accepts'));
 
-        const useCaseSource = codeOnly(await rawSource('application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'));
+        const useCaseSource = codeOnly(await rawSource('application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js'));
         assert(!/request|response|subscribe|backfill|history/i.test(useCaseSource),
             n('the composition root itself introduces no request/response or historical-sync wiring of its own'));
 
@@ -808,7 +808,7 @@ async function run() {
         // file, standing in for "networking unavailable" rather than a
         // constructor-time failure (the composition root's own
         // constructor legitimately lists current peers up front — see
-        // application/PublicationCommentaryDistributionPeerExchange.js's
+        // application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js's
         // own constructor — so a registry that THROWS on list() is not a
         // real degradation scenario ui/main.js's own peerSessionManager.registry
         // could ever produce; "no peers reachable" is representative,

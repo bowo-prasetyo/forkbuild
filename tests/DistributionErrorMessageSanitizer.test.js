@@ -1,4 +1,4 @@
-import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
+import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 
 // Post-Publish Distribution Error Sanitization.
 //

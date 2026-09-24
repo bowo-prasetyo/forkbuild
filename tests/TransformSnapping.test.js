@@ -3,15 +3,15 @@ import { Building } from '../core/Building.js';
 import { Document } from '../core/Document.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { SpatialEditingService } from '../application/SpatialEditingService.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { SpatialEditingService } from '../application/editor/SpatialEditingService.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { TransformMath } from '../application/TransformMath.js';
-import { TransformSnap } from '../application/TransformSnap.js';
-import { TransformSettings } from '../application/TransformSettings.js';
+import { TransformMath } from '../application/editor/TransformMath.js';
+import { TransformSnap } from '../application/editor/TransformSnap.js';
+import { TransformSettings } from '../application/editor/TransformSettings.js';
 
 // 0.1.47 — Transform Precision, Snapping & Editing Polish tests.
 //

@@ -1,13 +1,13 @@
-import { AvatarAnimalInteractionController } from '../application/AvatarAnimalInteractionController.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { AnimalRuntimeInstances } from '../application/AnimalRuntimeInstances.js';
+import { AvatarAnimalInteractionController } from '../application/avatar/AvatarAnimalInteractionController.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { AnimalRuntimeInstances } from '../application/world/AnimalRuntimeInstances.js';
 import { animalPresenceInRegion } from '../core/AnimalPlacement.js';
 import { Position } from '../core/Position.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { InventoryEntryKind } from '../core/AvatarInventory.js';
 
 // 0.9.700 — Avatar-Animal Catch/Release Runtime Integration,
-// application/AvatarAnimalInteractionController.js.
+// application/avatar/AvatarAnimalInteractionController.js.
 //
 // Mirrors tests/AvatarVehicleInteractionController.test.js's own fixture
 // discipline: a real, deterministically-placed animal under a real seed,

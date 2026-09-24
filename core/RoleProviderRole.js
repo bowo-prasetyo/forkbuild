@@ -23,7 +23,7 @@
 // provider answers, not a wire the provider speaks.
 //
 //   ANNOUNCEMENT_AND_DISCOVERY — "where can a rumor of this Publication's
-//       material be found" (application/DecentralizedWorldDiscoveryQuery.js's
+//       material be found" (application/discovery/DecentralizedWorldDiscoveryQuery.js's
 //       own DecentralizedDiscoveryQueryService shape, and its Nostr/
 //       Arweave/Snapshot variants — 0.9.292 Section A/B).
 //   CONTENT — "where are this Publication's actual bytes retrievable

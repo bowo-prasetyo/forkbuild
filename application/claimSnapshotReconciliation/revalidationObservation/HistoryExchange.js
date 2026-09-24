@@ -197,7 +197,7 @@ import { isPlainObject } from '../../../utils/typeGuards.js';
 //   0.8.166's own difference projection and this file's own exchange —
 //   never duplicated here.
 // - **Any archive integration.** Neither function here reads or writes
-//   `application/PublicationObservationArchive.js` — a caller who keeps its
+//   `application/publication/observationArchive/PublicationObservationArchive.js` — a caller who keeps its
 //   observation history durably via 0.8.167 owns reading it out and writing
 //   the merged result back in as its own, separate steps.
 // - **Verification, authorization, or approval of any kind.** See "No

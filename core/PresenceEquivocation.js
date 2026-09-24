@@ -14,7 +14,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 // `EquivocationDetector`. That class needs to accumulate because a
 // SpatialIndexRoot has no single "current" slot to compare against —
 // many roots can coexist across the discovery layer. A presence
-// record has exactly one: whatever `application/LocalPresenceStore.js`
+// record has exactly one: whatever `application/presence/LocalPresenceStore.js`
 // currently has stored for that avatarId. Comparing the incoming claim
 // against THAT is sufficient and bounded — no separate accumulating
 // map is needed, which also avoids giving a high-frequency, ephemeral
@@ -25,7 +25,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 // This is only ever meaningful once `core/PresenceAuthority.js` has
 // already confirmed the incoming claim comes from the SAME bound
 // authority as the currently-stored one — see
-// application/PresenceTrustBoundary.js's ordering. A forged claim from
+// application/presence/PresenceTrustBoundary.js's ordering. A forged claim from
 // a different signer never reaches this comparison at all; it is
 // rejected earlier as UNAUTHORIZED/INVALID_SIGNATURE, which is a
 // STRONGER outcome than equivocation, not a weaker one. Equivocation
@@ -72,7 +72,7 @@ function presenceContentHash(advertisement) {
 // otherwise — including the ordinary "nothing stored yet" and
 // "genuinely a newer sequence" cases, which are never equivocation,
 // and the "identical content at an equal sequence" case, which is a
-// REPLAY (see application/PresenceTrustBoundary.js), not a conflict.
+// REPLAY (see application/presence/PresenceTrustBoundary.js), not a conflict.
 export function detectPresenceEquivocation(currentAdvertisement, incomingAdvertisement) {
     if (!currentAdvertisement || !incomingAdvertisement) {
         return null;

@@ -38,5 +38,5 @@ export function animalPresenceInRegion(seed, minX, minZ, maxX, maxZ) {
 // own header — every rule lives in core/WildlifeField.js); catching,
 // carrying, or releasing an animal; rendering; input; collision;
 // persistence; a runtime/current position distinct from the
-// deterministic one (application/AnimalRuntimeInstances.js's own job,
-// mirroring application/VehicleRuntimeInstances.js).
+// deterministic one (application/world/AnimalRuntimeInstances.js's own job,
+// mirroring application/world/VehicleRuntimeInstances.js).

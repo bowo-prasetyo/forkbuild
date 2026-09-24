@@ -8,7 +8,7 @@
 // fires when `AvatarMovementState.brakingRequested` is `true` — and, as
 // that milestone's own header was explicit about, nothing in this
 // codebase has ever set it: "nothing in
-// application/AvatarMovementController.js ever sets `brakingRequested`
+// application/avatar/AvatarMovementController.js ever sets `brakingRequested`
 // true... deciding WHICH user action produces this fact is deliberately
 // left to a future input milestone." This file is the first half of
 // that future milestone: the vocabulary-only-level SEMANTIC FACT a

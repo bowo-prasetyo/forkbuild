@@ -3,9 +3,9 @@ import { Building } from '../core/Building.js';
 import { Document } from '../core/Document.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { SpatialEditingService } from '../application/SpatialEditingService.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { SpatialEditingService } from '../application/editor/SpatialEditingService.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 
 function assert(condition, message) {

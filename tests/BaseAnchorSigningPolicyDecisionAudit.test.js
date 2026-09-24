@@ -38,7 +38,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // principle. Section E finds a closer, previously unexamined precedent:
 // this exact codebase already built a COMPLETE, real, one-call,
 // wallet-signing Bitcoin anchor-publication pipeline with no review gate
-// at all (`application/BitcoinAnchorPublicationCoordinator.js`, 0.8.53) —
+// at all (`application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js`, 0.8.53) —
 // and has left it entirely unwired from the running app, through the
 // present commit, even though every piece it needs has been ready since
 // long before 0.9.466. Section F confirms, by reading every file under
@@ -274,9 +274,9 @@ async function run() {
     // pipeline already exists and has been left deliberately unwired.
     // ===============================================================
     {
-        assert(await sourceExists('application/BitcoinAnchorPublicationCoordinator.js'), n('E1. application/BitcoinAnchorPublicationCoordinator.js (0.8.53) exists — a real class, not a hypothetical this audit invents'));
+        assert(await sourceExists('application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js'), n('E1. application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js (0.8.53) exists — a real class, not a hypothetical this audit invents'));
 
-        const coordinatorSrc = await source('application/BitcoinAnchorPublicationCoordinator.js');
+        const coordinatorSrc = await source('application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js');
         assert(/bitcoinAnchorWalletSigner,?\s*\n/.test(coordinatorSrc) || /bitcoinAnchorWalletSigner/.test(coordinatorSrc), n('E2. it is constructed with bitcoinAnchorWalletSigner — Bitcoin\'s RAW, non-reviewed wallet signer (0.8.50), not the review-gated sibling (0.8.59)'));
         assert(!/reviewed/i.test(coordinatorSrc), n('E3. the word "reviewed" appears NOWHERE in this file — confirmed by reading the entire real source, not inferred — this coordinator genuinely never asks anything to review a plan before signing it'));
         assert(/async publishAnchor\(/.test(coordinatorSrc), n('E4. it exposes ONE async publishAnchor() call — the identical one-call shape a BaseAnchorPublisher would need'));
@@ -310,8 +310,8 @@ async function run() {
             assert(!/review/i.test(src), n(`F2[${file}]. contains no mention of "review" anywhere, in code or comments`));
         }
 
-        const uploaderSrc = await source('application/ArweavePublicationMaterialUploader.js');
-        assert(!/review/i.test(uploaderSrc), n('F3. application/ArweavePublicationMaterialUploader.js — the file ArweaveAnchorPublisher.js\'s own header cites as establishing the signer.sign(material) contract Arweave anchoring reuses — also contains no mention of "review"'));
+        const uploaderSrc = await source('application/arweave/ArweavePublicationMaterialUploader.js');
+        assert(!/review/i.test(uploaderSrc), n('F3. application/arweave/ArweavePublicationMaterialUploader.js — the file ArweaveAnchorPublisher.js\'s own header cites as establishing the signer.sign(material) contract Arweave anchoring reuses — also contains no mention of "review"'));
 
         const publisherSrc = await source('anchoring/ArweaveAnchorPublisher.js');
         assert(/signer\.sign\(contentHash\)/.test(publisherSrc), n('F4. anchoring/ArweaveAnchorPublisher.js hands signer.sign() the bare contentHash directly, confirmed at the real call site — the one-shot shape 0.9.466 already found, re-confirmed fresh'));
@@ -330,7 +330,7 @@ async function run() {
         assert(/const NATIVE_VALUE_WEI = '0';/.test(plannerSrc), n('G3. `value` is hardcoded to "0" — no ETH ever moves in a Base publication transaction'));
         assert(/const data = encodeBasePublicationCommitment\(contentHash\);/.test(plannerSrc), n('G4. `data` is derived from contentHash alone, via one pure function call — nothing else feeds this transaction\'s payload'));
 
-        const encodingSrc = await source('application/BasePublicationCommitmentEncoding.js');
+        const encodingSrc = await source('application/anchoring/base/BasePublicationCommitmentEncoding.js');
         assert(/NO ABI ENCODING\. NO FUNCTION SELECTOR\./.test(encodingSrc), n('G5. that encoding function\'s own header states, explicitly, that it adds no ABI encoding and no function selector — nothing resembling a contract call'));
         assert(/return '0x' \+ contentHash\.toLowerCase\(\);/.test(encodingSrc), n('G6. confirmed in the real function body: the entire payload is exactly "0x" + the raw contentHash bytes, nothing more'));
 
@@ -353,8 +353,8 @@ async function run() {
         // H2: Option 3 (claim-after-the-fact) - confirm
         // CreatePublicationAnchorUseCase's own contract accepts arbitrary
         // evidence with no signer/broadcaster/publisher consulted.
-        const createAnchorSrc = await source('application/CreatePublicationAnchorUseCase.js');
-        assert(/execute\(publicationId, \{ anchorType, locator, proof = null, anchoredAt = new Date\(\) \} = \{\}\) \{/.test(createAnchorSrc), n('H2. application/CreatePublicationAnchorUseCase.js#execute() already accepts an arbitrary { anchorType, locator, proof } directly, confirmed at its own real signature'));
+        const createAnchorSrc = await source('application/anchoring/CreatePublicationAnchorUseCase.js');
+        assert(/execute\(publicationId, \{ anchorType, locator, proof = null, anchoredAt = new Date\(\) \} = \{\}\) \{/.test(createAnchorSrc), n('H2. application/anchoring/CreatePublicationAnchorUseCase.js#execute() already accepts an arbitrary { anchorType, locator, proof } directly, confirmed at its own real signature'));
         const createAnchorCodeOnly = codeOnly(createAnchorSrc);
         assert(!/\bsigner\b/i.test(createAnchorCodeOnly) && !/\bbroadcaster\b/i.test(createAnchorCodeOnly) && !/\.publish\(/.test(createAnchorCodeOnly), n('H3. that same file\'s real code never references a signer, a broadcaster, or any publisher\'s publish() — it only ever assembles and signs a CLAIM about evidence the caller already obtained, exactly as its own header states'));
 
@@ -395,7 +395,7 @@ async function run() {
     // reconfirmed fresh for every option.
     // ===============================================================
     {
-        const outcomeSrc = await source('application/ExternalAnchorCreationOutcome.js');
+        const outcomeSrc = await source('application/anchoring/ExternalAnchorCreationOutcome.js');
         assert(/CREATED:\s*'created'/.test(outcomeSrc) && /PUBLISH_REJECTED/.test(outcomeSrc) && /PUBLISH_UNAVAILABLE/.test(outcomeSrc), n('J1. the three-value ExternalAnchorCreationOutcome vocabulary remains unchanged and would still cover Options 1/2 unmodified'));
 
         const verifierSrc = await source('anchoring/BaseProofVerifier.js');

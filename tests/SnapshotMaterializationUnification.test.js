@@ -5,39 +5,39 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { AddPublicationSnapshotPlacementUseCase } from '../application/AddPublicationSnapshotPlacementUseCase.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { AddPublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
-import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
 
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotMaterializationSourceKind } from '../application/SnapshotMaterializationSourceKind.js';
-import { createSnapshotMaterializationAttempt } from '../application/SnapshotMaterializationAttempt.js';
-import { describeSnapshotMaterializationSourceLabel, describeLocalSnapshotMaterializationSource } from '../application/SnapshotMaterializationView.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotMaterializationSourceKind } from '../application/snapshot/materialization/SnapshotMaterializationSourceKind.js';
+import { createSnapshotMaterializationAttempt } from '../application/snapshot/materialization/SnapshotMaterializationAttempt.js';
+import { describeSnapshotMaterializationSourceLabel, describeLocalSnapshotMaterializationSource } from '../application/snapshot/materialization/SnapshotMaterializationView.js';
 
-import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/BuildPublicationSnapshotTransferPackageUseCase.js';
-import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
-import { SnapshotContentTransferOutcome } from '../application/SnapshotContentTransferOutcome.js';
+import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js';
+import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js';
+import { SnapshotContentTransferOutcome } from '../application/snapshot/materialization/SnapshotContentTransferOutcome.js';
 
-import { MaterializeSnapshotFromPlacementUseCase } from '../application/MaterializeSnapshotFromPlacementUseCase.js';
-import { SnapshotPlacementMaterializationOutcome } from '../application/SnapshotPlacementMaterializationOutcome.js';
+import { MaterializeSnapshotFromPlacementUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js';
+import { SnapshotPlacementMaterializationOutcome } from '../application/snapshot/placement/SnapshotPlacementMaterializationOutcome.js';
 
-import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
-import { LocalSnapshotContentAvailabilityOutcome } from '../application/LocalSnapshotContentAvailabilityOutcome.js';
+import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
+import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
 
 // 0.8.36 — Unified Explicit Snapshot Materialization Sources.
 //
-//   Section A: application/StoreSnapshotContentUseCase.js constructor
+//   Section A: application/snapshot/materialization/StoreSnapshotContentUseCase.js constructor
 //              validation and execute() over all three application/
 //              StoreSnapshotContentOutcome.js values, plus application/
 //              SnapshotMaterializationSourceKind.js/application/
 //              SnapshotMaterializationAttempt.js validation and
-//              application/SnapshotMaterializationView.js's own pure
+//              application/snapshot/materialization/SnapshotMaterializationView.js's own pure
 //              functions — including that neither source label is ever
 //              "preferred," "best," "trusted," "primary," or "secondary."
 //   Section B — FLAGSHIP: Alice publishes P, holds S locally, and creates
@@ -209,7 +209,7 @@ async function run() {
             sourceKind: SnapshotMaterializationSourceKind.PACKAGE, outcome: StoreSnapshotContentOutcome.STORED, contentReference: first.contentReference
         });
         assert(packageAttempt.source.kind === SnapshotMaterializationSourceKind.PACKAGE, '13. the attempt carries the source kind it was built with');
-        assert(Object.isFrozen(packageAttempt) && Object.isFrozen(packageAttempt.source), '14. an attempt record is frozen, exactly like application/SnapshotPlacementResolutionObservation.js\'s own record');
+        assert(Object.isFrozen(packageAttempt) && Object.isFrozen(packageAttempt.source), '14. an attempt record is frozen, exactly like application/snapshot/placement/SnapshotPlacementResolutionObservation.js\'s own record');
 
         assert(describeSnapshotMaterializationSourceLabel(SnapshotMaterializationSourceKind.PACKAGE) === 'Transfer package', '15. the package source has its own label');
         assert(describeSnapshotMaterializationSourceLabel(SnapshotMaterializationSourceKind.PLACEMENT) === 'Placement', '16. the placement source has its own, DIFFERENT label');

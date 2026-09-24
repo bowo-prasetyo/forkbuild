@@ -3,13 +3,13 @@ import { readFile } from 'node:fs/promises';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License, LicenseId } from '../core/License.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { ForkFailureReason } from '../application/ForkFailureReason.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { ForkFailureReason } from '../application/document/ForkFailureReason.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { Document } from '../core/Document.js';
 import { World } from '../core/World.js';
@@ -29,10 +29,10 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 // no way back to the Publication they came from. This milestone closes
 // that gap at the smallest seam 0.9.352 itself recommended (Section J):
 //
-//   application/ForkFailureReason.js   — a small, named enum (NEW),
-//       mirroring application/PublicationResolutionOutcome.js's own
+//   application/document/ForkFailureReason.js   — a small, named enum (NEW),
+//       mirroring application/publication/PublicationResolutionOutcome.js's own
 //       already-proven shape.
-//   application/ForkDocumentUseCase.js — its two existing throw sites
+//   application/document/ForkDocumentUseCase.js — its two existing throw sites
 //       (license denial, missing document) now attach `.reason` from
 //       that enum. Domain semantics UNCHANGED: still throws, still the
 //       same message text, still enforced before any load/clone/save.
@@ -188,7 +188,7 @@ async function run() {
         assert(ForkFailureReason.LICENSE_DENIED !== ForkFailureReason.MATERIAL_UNAVAILABLE,
             '1. the two ForkFailureReason values are genuinely distinct.');
         assert(Object.isFrozen(ForkFailureReason),
-            '2. ForkFailureReason is a frozen enum — mirroring application/PublicationResolutionOutcome.js\'s own shape, never a mutable bag a caller could redefine.');
+            '2. ForkFailureReason is a frozen enum — mirroring application/publication/PublicationResolutionOutcome.js\'s own shape, never a mutable bag a caller could redefine.');
 
         // Live, side by side: same storage, two different Publications,
         // two different, correctly-attributed reasons.
@@ -374,7 +374,7 @@ async function run() {
 
         // Structural: no origin-specific branch was introduced anywhere
         // in this milestone's own new/changed files.
-        for (const file of ['application/ForkFailureReason.js', 'application/ForkDocumentUseCase.js', 'ui/components/ForkFailureDialog.js']) {
+        for (const file of ['application/document/ForkFailureReason.js', 'application/document/ForkDocumentUseCase.js', 'ui/components/ForkFailureDialog.js']) {
             const source = await readSource(file);
             assert(!/decentralized|peer-sourced|isPeer|isDecentralized/i.test(source),
                 `3. ${file} contains no "decentralized"/origin-branching concept of any kind.`);
@@ -388,11 +388,11 @@ async function run() {
     // re-derives one.
     // ===============================================================
     {
-        const forkUseCaseSource = await readSource('application/ForkDocumentUseCase.js');
+        const forkUseCaseSource = await readSource('application/document/ForkDocumentUseCase.js');
         assert(!/vue|dialog|toast|feedback\.show|router\./i.test(forkUseCaseSource),
-            '1. application/ForkDocumentUseCase.js contains no UI vocabulary of any kind — it still only ever attaches a plain `.reason` code to a thrown Error.');
+            '1. application/document/ForkDocumentUseCase.js contains no UI vocabulary of any kind — it still only ever attaches a plain `.reason` code to a thrown Error.');
 
-        const reasonSource = await readSource('application/ForkFailureReason.js');
+        const reasonSource = await readSource('application/document/ForkFailureReason.js');
         assert(/^export const ForkFailureReason = Object\.freeze\(\{/m.test(reasonSource),
             '2. ForkFailureReason.js is a plain frozen value enum — mirroring PublicationResolutionOutcome.js\'s own shape, never a class hierarchy.');
         assert(!/class\s+\w*Error/.test(reasonSource), '3. ForkFailureReason.js defines no Error subclass of its own.');
@@ -417,7 +417,7 @@ async function run() {
         // banned vocabulary is a PERSISTENT lifecycle state built on top
         // of it (a bare `RETRYING`/`BLOCKED`/`FORK_FAILED` constant, or a
         // retry loop), never the reason code itself.
-        for (const file of ['application/ForkFailureReason.js', 'application/ForkDocumentUseCase.js', 'ui/components/ForkFailureDialog.js']) {
+        for (const file of ['application/document/ForkFailureReason.js', 'application/document/ForkDocumentUseCase.js', 'ui/components/ForkFailureDialog.js']) {
             const source = await readSource(file);
             assert(!/RETRYING|BLOCKED|FORK_FAILED|setInterval|retry\(/i.test(source),
                 `1. ${file} introduces no retry loop and no persistent lifecycle state constant.`);

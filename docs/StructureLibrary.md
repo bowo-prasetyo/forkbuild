@@ -59,7 +59,7 @@ wall_1x3 bricks — deliberately: see docs/Roadmap.md, 0.4.4, "Structure
 
 ## Forking a Structure
 
-application/ForkStructureUseCase.js turns a Structure into a brand-new,
+application/editor/ForkStructureUseCase.js turns a Structure into a brand-new,
 independent Document:
 
     const document = new ForkStructureUseCase().execute(structure, identityProvider);
@@ -77,7 +77,7 @@ keeps existing (and forkable again) exactly as it was, indefinitely.
 
 Forking a Structure does NOT create a WorldPlacement — forking is a
 content operation, placing is a spatial operation, the exact separation
-application/ForkPublishedWorldUseCase.js already draws for published
+application/publication/ForkPublishedWorldUseCase.js already draws for published
 worlds. A forked Document is placed in the World like any other document,
 whenever that becomes a separate, later action.
 
@@ -113,7 +113,7 @@ without copying its bricks?
 one rung down (which places a whole published World in shared global
 space); a StructurePlacement places one Document inside another
 Document's own `core/World.js`, alongside its ordinary Buildings and
-Groups. It never owns bricks. `application/StructureDocumentResolver.js`
+Groups. It never owns bricks. `application/editor/StructureDocumentResolver.js`
 resolves `documentId` to its CURRENT content fresh from storage on every
 call — there is exactly one authoritative representation of a
 structure's bricks, never a cached copy that could drift out of sync
@@ -142,7 +142,7 @@ own "deliberately not" list); 'R'/Shift+R rotate the pending placement in
 `PlaceStructureCommand`, exactly like `PlaceBrickCommand` one rung down,
 with the same undo/redo and CommandRegistry serialization support.
 Collision is conservative and AABB-only
-(`application/StructurePlacementValidator.js`, translate-only, rotation
+(`application/editor/StructurePlacementValidator.js`, translate-only, rotation
 ignored — the same V1 simplification `core/SpatialBounds.js` already
 declared for whole-World bounds) against both ordinary bricks and other
 placements.
@@ -175,7 +175,7 @@ bricks directly into the document I'm already building, so House + Well
 docs/Principles.md, "Copying Composes A Blueprint; Forking Creates One
 (0.4.0)."
 
-`application/CopyStructureIntoDocumentUseCase.js` turns a Structure into
+`application/editor/CopyStructureIntoDocumentUseCase.js` turns a Structure into
 ONE `PasteBricksCommand` (0.1.42) — the same command a clipboard paste
 already produces, reused rather than duplicated (see that use case's own
 header for why no parallel `PasteStructureCommand` exists):
@@ -232,9 +232,9 @@ user moves anything. From there:
 - Hovering the ground moves the ghost (`PlacementPositionService#calculateStructureGround()`,
   shared with `StructurePlacementTool`).
 - `R`/`Shift+R` rotates the ghost in exact 90° steps — the SAME
-  rotation convention (and the same `application/TransformMath.js`
+  rotation convention (and the same `application/editor/TransformMath.js`
   formula) every other rotation gesture in this codebase already uses.
-- Collision reuses `application/StructurePlacementValidator.js`
+- Collision reuses `application/editor/StructurePlacementValidator.js`
   unchanged — the Structure's own AABB checked against the World's
   existing bricks and `StructurePlacement`s; an occupied position tints
   the ghost and refuses to commit.
@@ -244,7 +244,7 @@ user moves anything. From there:
   falling back to `defaultTransform()` — still ONE `PasteBricksCommand`,
   still no `PasteStructureCommand`, still no provenance field. Preview
   and commit resolve through the SAME
-  `application/StructureCompositionTransform.js#transformStructureBricks()`
+  `application/editor/StructureCompositionTransform.js#transformStructureBricks()`
   pipeline, so the ghost is a visualization of the exact command that
   will run, never an approximation of it.
 - `Escape` cancels with zero Document mutation. Composing is one-shot —
@@ -274,11 +274,11 @@ Structure:
 
     Structure --copy/compose--> Document --extract--> Structure
 
-`application/CreateStructureFromSelectionUseCase.js` reads a selection
+`application/editor/CreateStructureFromSelectionUseCase.js` reads a selection
 (`application/editor-state/SelectionState.js`) out of a Document and
 returns a brand-new `core/Structure.js` instance — pure observation, the
 same "no UI, no persistence, no World mutation" restraint
-`application/CopySelectionUseCase.js` already applies to the clipboard:
+`application/editor/CopySelectionUseCase.js` already applies to the clipboard:
 
     const farmstead = new CreateStructureFromSelectionUseCase().execute(selection, document, {
         registry: brickRegistry,
@@ -317,7 +317,7 @@ exactly what it was before the call — same bricks, same ids, same
 geometry. The new Structure's bricks are fresh instances with fresh
 ids, never references to the Document's own bricks.
 
-`application/EditorActionRegistry.js` exposes this as `structure.createFromSelection`
+`application/editor/EditorActionRegistry.js` exposes this as `structure.createFromSelection`
 ("Create Structure") in a new `Structure` category, gated exactly like
 `clipboard.copy` except a `StructurePlacement` selection, which is never
 eligible — reachable today from the Command Palette (0.1.50), where
@@ -340,7 +340,7 @@ coverage.
 0.4.2 answered "can I turn what I just built into something reusable?"
 but stopped at `createStructureFromSelection()` returning a valid
 Structure — it is never saved anywhere by that call. 0.4.3 gives it
-somewhere to go: `application/LocalStructureLibraryStore.js`, a local,
+somewhere to go: `application/editor/LocalStructureLibraryStore.js`, a local,
 per-device catalog of the user's OWN Structures, architecturally separate
 from both the shared World (`World`/`Document`/`Command`) and the
 built-in Village Library (`core/StructureRegistry.js`/
@@ -366,7 +366,7 @@ contents exactly the same way the built-in one always has, rather than a
 second grouping loop.
 
 **Basic operations**, backed by the same `StorageProvider` (`storage/
-LocalStorageProvider.js` in the browser) `application/LocalWorldExperienceStore.js`
+LocalStorageProvider.js` in the browser) `application/world/LocalWorldExperienceStore.js`
 (0.3.10) already uses for its own per-device state:
 
     addStructure(structure)
@@ -378,9 +378,9 @@ LocalStorageProvider.js` in the browser) `application/LocalWorldExperienceStore.
     groupByCategory()                 // same [{ category, structures }] shape as StructureRegistry
     search(tags)                      // same contract as StructureRegistry#search()
 
-`application/CreatePersonalStructureLibraryUseCase.js` is the composition-
-root factory — the same shape `application/CreatePersistenceUseCase.js`
-and `application/CreateWorldViewUseCase.js` already establish for their
+`application/editor/CreatePersonalStructureLibraryUseCase.js` is the composition-
+root factory — the same shape `application/document/CreatePersistenceUseCase.js`
+and `application/world/CreateWorldViewUseCase.js` already establish for their
 own local-only stores.
 
 **Saving, chained, not folded in.** `EditorSession.saveStructureToPersonalLibrary(structure)`
@@ -391,7 +391,7 @@ pure, unpersisted observation 0.4.2 made it:
     const structure = editorSession.createStructureFromSelection(metadata);  // 0.4.2, unchanged
     editorSession.saveStructureToPersonalLibrary(structure);                 // 0.4.3, chained after
 
-`application/EditorActionRegistry.js`'s `structure.createFromSelection`
+`application/editor/EditorActionRegistry.js`'s `structure.createFromSelection`
 action performed exactly this chain in 0.4.3. Since 0.6.3 the action only
 opens the Create Blueprint dialog, and `ui/views/EditorView.js#onCreateBlueprint()`
 runs the chain and refreshes the list itself. The optional
@@ -470,7 +470,7 @@ else that implies a live World or a live dependency on Alice's device.
 See docs/Principles.md, "A Blueprint Package Is Portable Data, Never A
 Live Dependency (0.4.6)."
 
-**The package.** `application/BlueprintPackage.js#buildBlueprintPackage()`
+**The package.** `application/blueprint/BlueprintPackage.js#buildBlueprintPackage()`
 wraps a Structure's own `toJSON()` in a small, versioned envelope:
 
     { kind: "forkbuild.blueprint", schemaVersion: 1, structure: { id, name, category, tags, description, bricks } }
@@ -483,7 +483,7 @@ package format already established one domain over — a later schema
 version could add `author`/`thumbnail` without breaking a v1 package's
 own importability.
 
-**Export.** `application/ExportBlueprintUseCase.js` is pure — no file
+**Export.** `application/blueprint/ExportBlueprintUseCase.js` is pure — no file
 I/O, no persistence — mirroring `ForkStructureUseCase`/
 `CreateStructureFromSelectionUseCase`'s own "one execute(), one job"
 shape. `EditorSession#exportBlueprint(structure)` delegates straight to
@@ -496,7 +496,7 @@ from "My Structures" own "⋮" menu — personal Structures only, alongside
 Fork/Rename/Remove.
 
 **Validation, strictly separate from construction.**
-`application/BlueprintImportValidator.js#validateBlueprintPackage()`
+`application/blueprint/BlueprintImportValidator.js#validateBlueprintPackage()`
 answers exactly one question — "is this package well-formed?" — and
 never constructs a Structure. A blueprint file is untrusted input, so
 every failure mode is checked before anything is built: schema version,
@@ -513,7 +513,7 @@ a portable identity package, one domain over:
     Import -> execute arbitrary command                                     — never
 
 **Import, and why every id is fresh.**
-`application/ImportBlueprintUseCase.js` constructs a brand-new
+`application/blueprint/ImportBlueprintUseCase.js` constructs a brand-new
 `core/Structure.js` from an already-validated package — its own id AND
 every brick's own id are freshly minted (`createId()`), never trusted
 from the package, the identical "an id crossing a boundary always
@@ -573,7 +573,7 @@ Description as three separate native dialogs) with one small modal —
 the same shell `ui/components/MetadataEditorDialog.js` already
 established — showing a live preview of a throwaway Structure (the
 current selection run through `CreateStructureFromSelectionUseCase`
-with placeholder metadata) before any name is typed. `application/EditorActionRegistry.js`'s
+with placeholder metadata) before any name is typed. `application/editor/EditorActionRegistry.js`'s
 `structure.createFromSelection` (relabeled "Create Structure" ->
 **"Create Blueprint"**, `tier: 'advanced'`) now prefers a
 `ui.openCreateBlueprintDialog()` hook over the 0.4.2 `ui.promptCreateStructure()`
@@ -586,7 +586,7 @@ longer Command-Palette-only.
 **Fork to My Structures — a second kind of fork.** "Forking a
 Structure" (above) has always meant one specific thing:
 `ForkStructureUseCase` turning a library Structure into a brand-new,
-editable DOCUMENT. `application/ForkStructureToLibraryUseCase.js`
+editable DOCUMENT. `application/editor/ForkStructureToLibraryUseCase.js`
 (0.6.3) names and builds the other operation that word could mean:
 turning a library Structure into a brand-new, independent personal
 STRUCTURE, with no Document involved at all —

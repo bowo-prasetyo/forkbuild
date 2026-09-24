@@ -1,17 +1,17 @@
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
@@ -19,16 +19,16 @@ import { ContentReference } from '../core/ContentReference.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { readFile } from 'node:fs/promises';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
@@ -487,8 +487,8 @@ async function run() {
     {
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const otherFilesToCheck = [
-            '../application/WorldNavigationSession.js',
-            '../application/CreateWorldViewUseCase.js',
+            '../application/world/WorldNavigationSession.js',
+            '../application/world/CreateWorldViewUseCase.js',
             '../ui/components/OwnPublicationPanel.js'
         ];
         for (const rel of otherFilesToCheck) {

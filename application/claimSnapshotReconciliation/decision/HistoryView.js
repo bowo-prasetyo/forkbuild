@@ -1,15 +1,15 @@
-import { PublicationObservationArchive } from '../../PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../../publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.150 — Durable Reconciliation Decision History Archive Integration:
 // the ONE reconstruction seam.
 //
 // 0.8.146 built `PublisherLeaderboardClaimSnapshotReconciliationDecisionHistory`
 // as a plain, in-memory array of 0.8.145's own decision records, deliberately
-// never touching `application/PublicationObservationArchive.js` at all (see
+// never touching `application/publication/observationArchive/PublicationObservationArchive.js` at all (see
 // that file's own header, "Architectural boundary — no imports at all").
 // 0.8.150 gave the archive itself a durable home for exactly that array —
 // `reconciliationDecisionRecords`. This file is the single seam between the
-// two, mirroring `application/PublisherLeaderboardClaimHistoryView.js`'s own
+// two, mirroring `application/leaderboard/PublisherLeaderboardClaimHistoryView.js`'s own
 // 0.8.130 `reconstructPublisherLeaderboardClaimHistory()` exactly, one
 // subsystem over:
 //
@@ -39,7 +39,7 @@ import { PublicationObservationArchive } from '../../PublicationObservationArchi
 // returns a byte-identical result.
 //
 // ARCHITECTURAL BOUNDARY — EXACTLY ONE IMPORT,
-// `application/PublicationObservationArchive.js` ITSELF. This file imports
+// `application/publication/observationArchive/PublicationObservationArchive.js` ITSELF. This file imports
 // nothing from `application/claimSnapshotReconciliation/decision/Decision.js`,
 // `application/claimSnapshotReconciliation/decision/History.js`,
 // or any other module in this family — it trusts nothing about how a

@@ -2,11 +2,11 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
@@ -32,12 +32,12 @@ import { publicationsPageFiles, worldEncounterCanvasFiles } from './support/Sour
 // THE FIX. `PublicationDistributionLifecycleStore.js#recordDiscoveryObservation()`
 // gains one new, OPTIONAL fourth argument, `discoveryOrigin` — widening the
 // EFFECTIVE key to `(publicationId, discoveryProvider, discoveryOrigin)`
-// only when a caller actually supplies it. `application/PublicationDistributionCommand.js`
+// only when a caller actually supplies it. `application/publication/distribution/PublicationDistributionCommand.js`
 // now supplies it — the real relay URL the SAME call already computed —
 // but ONLY when the resolved provider is `'nostr'`; every other provider
 // (today: `'arweave'`) keeps recording with exactly three arguments,
 // unchanged. `discoveryProvider` itself is NEVER redefined:
-// `application/PublicationDistributionRuntimeComposition.js`'s own strict
+// `application/publication/distribution/PublicationDistributionRuntimeComposition.js`'s own strict
 // two-value substrate selector is untouched by this milestone.
 //
 // TEN LETTERED SECTIONS, MATCHING THIS MILESTONE'S OWN REQUESTED STRUCTURE:
@@ -341,7 +341,7 @@ async function run() {
 
         // Structural confirmation: the command only threads discoveryOrigin
         // for the 'nostr' branch.
-        const commandCode = codeOnly(await source('application/PublicationDistributionCommand.js'));
+        const commandCode = codeOnly(await source('application/publication/distribution/PublicationDistributionCommand.js'));
         assert(/const discoveryOrigin = resolvedProvider === 'nostr' \? transitioned\.discovery\.origin : undefined;/.test(commandCode), n('F8. CONFIRMED FROM THE SOURCE: discoveryOrigin is derived only for the \'nostr\' provider — every other provider is recorded exactly as 0.9.433 left it'));
 
         console.log('✓ Section F: Nostr relay identity and Arweave provider identity are fully isolated from one another — Arweave remains conceptually publicationId + arweave');
@@ -510,11 +510,11 @@ async function run() {
     // new lifecycle vocabulary appears anywhere this milestone touches.
     // ===============================================================
     {
-        const runtimeCompositionSource = await source('application/PublicationDistributionRuntimeComposition.js');
+        const runtimeCompositionSource = await source('application/publication/distribution/PublicationDistributionRuntimeComposition.js');
         assert(/unrecognized discoveryProvider/.test(runtimeCompositionSource), n('K1. PublicationDistributionRuntimeComposition.js still rejects any discoveryProvider outside "nostr"/"arweave" — this milestone never widened that selector to admit a relay-qualified value'));
 
-        const storeCode = codeOnly(await source('application/PublicationDistributionLifecycleStore.js'));
-        const commandCode = codeOnly(await source('application/PublicationDistributionCommand.js'));
+        const storeCode = codeOnly(await source('application/publication/distribution/PublicationDistributionLifecycleStore.js'));
+        const commandCode = codeOnly(await source('application/publication/distribution/PublicationDistributionCommand.js'));
         assert(!/Promise\.all|Promise\.allSettled|Promise\.race/.test(storeCode) && !/Promise\.all|Promise\.allSettled|Promise\.race/.test(commandCode), n('K2. neither the store nor the command contains any fan-out primitive (Promise.all/allSettled/race) — this milestone introduces no concurrent execution of any kind'));
 
         const forbiddenVocabulary = ['PARTIAL_SUCCESS', 'AGGREGATE', 'FAILOVER', 'FANOUT', 'FAN_OUT', 'RELAY_HEALTH', 'RELAY_RANK'];

@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 
-import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState, describePublicationDistributionLifecycle } from '../application/PublicationDistributionLifecycle.js';
-import { IpfsRemotePublicationCoordinator } from '../application/IpfsRemotePublicationCoordinator.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState, describePublicationDistributionLifecycle } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { IpfsRemotePublicationCoordinator } from '../application/ipfs/IpfsRemotePublicationCoordinator.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -24,7 +24,7 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.379 — Post-Distribution Product Evolution Reassessment.
@@ -384,38 +384,38 @@ async function run() {
         const routerCode = await readSource('ui/router/index.js');
 
         // 1. Publication distribution (material + discovery). COMPLETE.
-        const commandCode = await readSource('application/PublicationDistributionCommand.js');
+        const commandCode = await readSource('application/publication/distribution/PublicationDistributionCommand.js');
         assert(commandCode.includes('export function executePublicationDistributionCommand'),
-            n('Publication distribution: application/PublicationDistributionCommand.js exports the command boundary — COMPLETE'));
+            n('Publication distribution: application/publication/distribution/PublicationDistributionCommand.js exports the command boundary — COMPLETE'));
 
         // 2. Nostr announcement — the discovery half of #1, its own named
         // substrate rather than a generic "discovery" abstraction.
-        const orchestratorCode = await readSource('application/PublicationDistributionOrchestrator.js');
+        const orchestratorCode = await readSource('application/publication/distribution/PublicationDistributionOrchestrator.js');
         assert(orchestratorCode.includes('NostrPublicationDiscoveryPublisher') || orchestratorCode.includes('nostrPublisherOptions'),
             n('Nostr announcement: the orchestrator composes a real Nostr discovery publisher from nostrPublisherOptions — COMPLETE, reachable as the "discovery" half of Publication distribution on all three surfaces'));
 
         // 3. Snapshot distribution. COMPLETE, independently reachable.
-        const snapshotCommandCode = await readSource('application/SnapshotDistributionCommand.js');
+        const snapshotCommandCode = await readSource('application/snapshot/SnapshotDistributionCommand.js');
         assert(snapshotCommandCode.includes('export function executeSnapshotDistributionCommand'),
-            n('Snapshot distribution: application/SnapshotDistributionCommand.js exports its own command, still separate from Publication distribution — COMPLETE'));
+            n('Snapshot distribution: application/snapshot/SnapshotDistributionCommand.js exports its own command, still separate from Publication distribution — COMPLETE'));
 
         // 4. IPFS placement/pinning. COMPLETE but gated by a real external
         // prerequisite (a pre-configured hosted pinning endpoint) —
         // reachable from the Publication Center, not the immediate
         // post-publish surface, unchanged since 0.9.349.
-        const ipfsCode = await readSource('application/IpfsRemotePublicationCoordinator.js');
+        const ipfsCode = await readSource('application/ipfs/IpfsRemotePublicationCoordinator.js');
         assert(ipfsCode.includes('class IpfsRemotePublicationCoordinator'),
-            n('IPFS placement/pinning: application/IpfsRemotePublicationCoordinator.js exists — COMPLETE'));
+            n('IPFS placement/pinning: application/ipfs/IpfsRemotePublicationCoordinator.js exists — COMPLETE'));
         const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(publicationsViewSource.includes('IpfsRemotePublicationCoordinator') || publicationsViewSource.includes('IpfsRemotePublishingConfiguration'),
             n('IPFS placement/pinning is wired into the real Publication Center view (ui/views/DecentralizedPublicationsView.js), not merely defined and unreached'));
 
         // 5. Bitcoin anchoring — COMPLETE, real wallet prerequisite named
         // on file. Base anchoring — DEFERRED, explicitly reserved.
-        const bitcoinCode = await readSource('application/CreateBitcoinAnchorPublisherUseCase.js');
+        const bitcoinCode = await readSource('application/anchoring/bitcoin/CreateBitcoinAnchorPublisherUseCase.js');
         assert(/never the wallet\/transaction capability/i.test(bitcoinCode),
             n('Bitcoin anchoring: COMPLETE, with its own source explicit that a connected, funded wallet is a separate prerequisite it does not itself supply'));
-        const blockchainKindCode = await readSource('application/BlockchainKind.js');
+        const blockchainKindCode = await readSource('application/anchoring/BlockchainKind.js');
         assert(/RESERVED/i.test(blockchainKindCode) && blockchainKindCode.includes("BASE: 'base'"),
             n('Base anchoring: DEFERRED — BlockchainKind.BASE remains named but reserved, reconfirmed fresh'));
         assert((await grepCodeOnlyFiles('class.*Base.*Publisher', PRODUCTION_DIRS)).length === 0,
@@ -620,7 +620,7 @@ async function run() {
         // D3 — reconfirm, fresh, that Repository search itself still does
         // not reach out over the network on its own initiative — the
         // larger, already-deferred seam this milestone does NOT reopen.
-        const searchCode = await codeOnlySource('application/SearchPublicationsUseCase.js');
+        const searchCode = await codeOnlySource('application/publication/SearchPublicationsUseCase.js');
         assert(!/Arweave|Nostr|Ipfs|fetch\(|WebSocket/i.test(searchCode),
             n('SearchPublicationsUseCase.js still imports no network/discovery collaborator and stays synchronous — proactive Repository discovery remains correctly DEFERRED, not reopened by this finding'));
 
@@ -806,13 +806,13 @@ async function run() {
         // reconfirmed fresh, the same structural guarantee that makes a
         // "distribution history" feature a genuinely new capability to
         // build, never a thin view over data already collected.
-        const storeCode = await codeOnlySource('application/PublicationDistributionLifecycleStore.js');
+        const storeCode = await codeOnlySource('application/publication/distribution/PublicationDistributionLifecycleStore.js');
         assert(!storeCode.includes('push('),
             n('PublicationDistributionLifecycleStore.js still accumulates no history array — each Publication maps to its single latest fact only, reconfirmed fresh'));
 
         // The lifecycle vocabulary itself is unchanged — still exactly
         // two states, not something this milestone's own audit grew.
-        const lifecycleStateCode = await readSource('application/PublicationDistributionLifecycle.js');
+        const lifecycleStateCode = await readSource('application/publication/distribution/PublicationDistributionLifecycle.js');
         const stateValues = [...lifecycleStateCode.matchAll(/^\s{4}([A-Z_]+):\s*'([A-Z_]+)'/gm)].map((m) => m[2]);
         assert(stateValues.length === 2 && stateValues.includes('ABSENT') && stateValues.includes('PRESENT'),
             n(`PublicationDistributionState still carries exactly ABSENT/PRESENT and nothing else — found: ${JSON.stringify(stateValues)}`));

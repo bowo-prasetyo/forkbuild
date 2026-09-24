@@ -3,7 +3,7 @@ import {
     loadWorldEncounterMaterial,
     WorldEncounterMaterialLoadStatus,
     WorldEncounterMaterialSource
-} from '../application/WorldEncounterMaterialLoading.js';
+} from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -207,7 +207,7 @@ const peerSelection = Object.freeze({ kind: 'AVATAR', objectId: 'avatar-1', orig
 // 10. Architectural regression: forbidden imports and vocabulary.
 // ---------------------------------------------------------------------
 {
-    const path = '../application/WorldEncounterMaterialLoading.js';
+    const path = '../application/worldEncounter/WorldEncounterMaterialLoading.js';
     const sourceUrl = new URL(path, import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');

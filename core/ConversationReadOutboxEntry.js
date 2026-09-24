@@ -1,7 +1,7 @@
 // 0.2.71 — Explicit Read Acknowledgement.
 //
 // The durable half of one peer's pending read acknowledgement — see
-// application/ConversationReadOutbox.js's own header for the store this
+// application/chat/ConversationReadOutbox.js's own header for the store this
 // belongs to. Deliberately NOT shaped like core/ChatOutboxEntry.js
 // (0.2.63): that class holds one entry per MESSAGE, because every
 // queued message is its own genuine event that must eventually be
@@ -19,10 +19,10 @@
 // There is no DELIVERED here, and deliberately no replay/ack loop the
 // way core/ChatDeliveryAck.js closes for core/ChatOutboxEntry.js: a
 // read receipt is idempotent and monotonic on the RECEIVING side too
-// (application/RemoteReadReceiptStore.js's own Math.max write), so a
+// (application/chat/RemoteReadReceiptStore.js's own Math.max write), so a
 // receipt genuinely lost in flight after being marked SENT self-heals
 // the next time this device marks the same conversation read again —
-// see application/ChatUseCase.js#sendReadReceipt()'s own header. There
+// see application/chat/ChatUseCase.js#sendReadReceipt()'s own header. There
 // is also no EXPIRED/TTL: an outdated read acknowledgement is never
 // wrong to deliver late, only redundant, so there is nothing here worth
 // giving up on.
@@ -77,12 +77,12 @@ export class ConversationReadOutboxEntry {
         });
     }
 
-    // PENDING -> SENT once application/ChatUseCase.js has actually
+    // PENDING -> SENT once application/chat/ChatUseCase.js has actually
     // handed this exact readThroughSequence to peer/PeerMessageBus.js#send()
     // over a live, AUTHENTICATED connection. `expectedSequence` guards
     // against marking a NEWER value (that arrived after the send was
     // already in flight) as sent by mistake — see
-    // application/ConversationReadOutbox.js#markSent()'s own header.
+    // application/chat/ConversationReadOutbox.js#markSent()'s own header.
     withState(state, updatedAt = new Date()) {
         return new ConversationReadOutboxEntry({
             peerIdentityId: this._peerIdentityId,

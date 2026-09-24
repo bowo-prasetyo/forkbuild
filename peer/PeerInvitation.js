@@ -89,7 +89,7 @@ export class PeerInvitation {
     }
 
     // Alice's side of "create invitation." `identityHint` is whatever the
-    // caller supplies — application/DiscoverPeersUseCase.js supplies the
+    // caller supplies — application/peer/DiscoverPeersUseCase.js supplies the
     // issuer's OWN identityId when one is currently authenticated, but this
     // constructor has no opinion about that; it is pure data assembly.
     static create({ endpoint, identityHint = null, ttlMs = DEFAULT_INVITATION_TTL_MS, now = new Date() } = {}) {

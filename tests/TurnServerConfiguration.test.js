@@ -4,7 +4,7 @@ import util from 'node:util';
 
 import { TurnServerConfiguration, isValidTurnUrl } from '../core/TurnServerConfiguration.js';
 import { TurnServerConfigurationStore } from '../storage/TurnServerConfigurationStore.js';
-import { resolveTurnServerConfiguration } from '../application/TurnServerConfigurationProvider.js';
+import { resolveTurnServerConfiguration } from '../application/settings/TurnServerConfigurationProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { IceServerConfiguration, isValidStunUrl } from '../core/IceServerConfiguration.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
@@ -17,7 +17,7 @@ import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvid
 // realistically prototyped) code, the exact shape this milestone promotes
 // to production: core/TurnServerConfiguration.js (the value object),
 // storage/TurnServerConfigurationStore.js (its dedicated persistence), and
-// application/TurnServerConfigurationProvider.js (the narrow read seam).
+// application/settings/TurnServerConfigurationProvider.js (the narrow read seam).
 // This file is the real regression suite for all three, run against the
 // actual production classes rather than the audit's own in-file prototype.
 //
@@ -381,7 +381,7 @@ async function run() {
         const ALLOWED_FILES = new Set([
             'core/TurnServerConfiguration.js',
             'storage/TurnServerConfigurationStore.js',
-            'application/TurnServerConfigurationProvider.js',
+            'application/settings/TurnServerConfigurationProvider.js',
             'tests/TurnServerConfiguration.test.js',
             'tests.html'
         ]);
@@ -398,7 +398,7 @@ async function run() {
         assert(unexpected.length === 0, n(`K1. this milestone's own working-tree changes touch only its named files (unexpected: ${JSON.stringify(unexpected)})`));
 
         console.log('\n=== SECTION K: PRODUCTION-CHANGE GUARD ===');
-        console.log('✓ Section K: only core/TurnServerConfiguration.js, storage/TurnServerConfigurationStore.js, application/TurnServerConfigurationProvider.js, this test file, and tests.html are touched — no UI, no router entry, no WebRTC runtime change.');
+        console.log('✓ Section K: only core/TurnServerConfiguration.js, storage/TurnServerConfigurationStore.js, application/settings/TurnServerConfigurationProvider.js, this test file, and tests.html are touched — no UI, no router entry, no WebRTC runtime change.');
     }
 
     console.log('\n✅ All TURN Server Configuration + Persistence + Provider tests passed.');

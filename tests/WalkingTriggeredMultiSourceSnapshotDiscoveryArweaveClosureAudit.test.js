@@ -1,28 +1,28 @@
 import { execSync } from 'node:child_process';
 
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { ArweaveSnapshotDiscoveryQueryService } from '../application/ArweaveSnapshotDiscoveryQueryService.js';
-import { SnapshotCandidateDiscoveryQueryService } from '../application/SnapshotCandidateDiscoveryQueryService.js';
-import { composeSnapshotCandidateDiscoveryRuntime } from '../application/SnapshotCandidateDiscoveryRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/ShouldRefreshSnapshotDiscovery.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/AutomaticSnapshotEncounterCascadeOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeWorldFromDiscoveryRegistry } from '../application/WorldDiscoveryRegistryProjection.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
+import { SnapshotCandidateDiscoveryQueryService } from '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
+import { composeSnapshotCandidateDiscoveryRuntime } from '../application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/snapshot/ShouldRefreshSnapshotDiscovery.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/snapshot/AutomaticSnapshotEncounterCascadeOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
@@ -56,7 +56,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //   Walking
 //      │
 //      ▼
-//   distance threshold (application/ShouldRefreshSnapshotDiscovery.js)
+//   distance threshold (application/snapshot/ShouldRefreshSnapshotDiscovery.js)
 //      │
 //      ▼
 //   DiscoverSnapshotCandidatesCommand
@@ -87,7 +87,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //
 // THE AUTOMATIC CASCADE ALREADY EXISTS AND IS ALREADY WIRED — a finding
 // this milestone's own requesting brief did not assume. Some file headers
-// in this arc (`application/WorldSnapshotDiscoveryMonitor.js`'s own
+// in this arc (`application/snapshot/WorldSnapshotDiscoveryMonitor.js`'s own
 // 0.9.186 comment) still describe "composing background discovery with
 // [resolve/materialize/place/register]" as "a separate, later, unscheduled
 // seam" — true when THAT file was written, superseded since 0.9.187/0.9.193:
@@ -606,15 +606,15 @@ async function run() {
     // ===============================================================
     {
         const filesThatMustNotMentionArweave = [
-            'application/WorldSnapshotDiscoveryMonitor.js',
-            'application/DiscoverSnapshotCandidatesCommand.js',
-            'application/SnapshotPlacementResolver.js',
-            'application/SnapshotWorldPlacement.js',
-            'application/MaterializedSnapshotWorldDiscoveryBridge.js',
-            'application/AutomaticSnapshotEncounterCascade.js',
-            'application/WorldEncounterIntegration.js',
-            'application/WorldDiscoveryRegistryProjection.js',
-            'application/WorldDiscoverySourceRegistry.js',
+            'application/snapshot/WorldSnapshotDiscoveryMonitor.js',
+            'application/snapshot/DiscoverSnapshotCandidatesCommand.js',
+            'application/snapshot/placement/SnapshotPlacementResolver.js',
+            'application/snapshot/placement/SnapshotWorldPlacement.js',
+            'application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js',
+            'application/snapshot/AutomaticSnapshotEncounterCascade.js',
+            'application/worldEncounter/WorldEncounterIntegration.js',
+            'application/discovery/WorldDiscoveryRegistryProjection.js',
+            'application/discovery/WorldDiscoverySourceRegistry.js',
             'core/WorldEncounter.js'
         ];
         for (const file of filesThatMustNotMentionArweave) {
@@ -632,19 +632,19 @@ async function run() {
 
         // UPDATED 0.9.505 — Register Arweave as Snapshot Content Store.
         // 'ui/main.js' is now a third known site: it registers Arweave into
-        // application/SnapshotPlacementStoreRegistry.js for Snapshot
+        // application/snapshot/placement/SnapshotPlacementStoreRegistry.js for Snapshot
         // PLACEMENT (create/resolve a placement's own content) — a
         // genuinely different concern from either pre-existing site
         // (Discovery's read-only retrieval, Distribution's write+announce),
         // and still no Snapshot-DISCOVERY-specific material-loading path,
         // which remains this section's own invariant.
         const arweaveContentStoreSites = execSync('grep -rlE "new ArweaveContentStore\\(" application ui --include="*.js" || true', { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean);
-        const knownPreExistingSites = ['application/DiscoverSnapshotRuntimeComposition.js', 'application/SnapshotDistributionRuntimeComposition.js', 'ui/main.js'];
+        const knownPreExistingSites = ['application/snapshot/DiscoverSnapshotRuntimeComposition.js', 'application/snapshot/SnapshotDistributionRuntimeComposition.js', 'ui/main.js'];
         assert(arweaveContentStoreSites.every((f) => knownPreExistingSites.includes(f)),
             `3. every ArweaveContentStore construction site is one of the known, unrelated (discovery/distribution/placement) composition roots — no new, Snapshot-discovery-specific material-loading path was introduced (found: ${JSON.stringify(arweaveContentStoreSites)}).`);
         // UPDATED 0.9.505 — ui/main.js now constructs exactly ONE
         // ArweaveContentStore directly, for Snapshot Placement (registered
-        // into application/SnapshotPlacementStoreRegistry.js) — never a
+        // into application/snapshot/placement/SnapshotPlacementStoreRegistry.js) — never a
         // second, Discovery-specific one; Discovery-side retrieval still
         // goes exclusively through composeDiscoverSnapshotRuntime()'s own
         // construction, untouched by this milestone.
@@ -655,9 +655,9 @@ async function run() {
         // The composite/composition files, and the cascade itself, stay
         // generic across sources — no `if (storage === 'ar')` branch
         // anywhere.
-        const genericSource = stripLineComments(readSource('application/SnapshotCandidateDiscoveryQueryService.js'))
-            + stripLineComments(readSource('application/SnapshotCandidateDiscoveryRuntimeComposition.js'))
-            + stripLineComments(readSource('application/AutomaticSnapshotEncounterCascade.js'));
+        const genericSource = stripLineComments(readSource('application/snapshot/SnapshotCandidateDiscoveryQueryService.js'))
+            + stripLineComments(readSource('application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js'))
+            + stripLineComments(readSource('application/snapshot/AutomaticSnapshotEncounterCascade.js'));
         assert(!/storage\s*===?\s*['"](ar|arweave)['"]/i.test(genericSource),
             '4. the composite, its composition file, and the automatic cascade contain no storage-string branch singling out Arweave — every source is treated identically.');
 
@@ -778,7 +778,7 @@ async function run() {
         const arweaveCandidate = { contentHash: arweaveHash, locator: `ar://${CONTENT_TX}`, storage: 'ar', publicationId: 'pub-k-arweave' };
 
         // ONE shared multi-store dispatcher — the SAME idea
-        // `application/SnapshotPlacementStoreRegistry.js` already embodies
+        // `application/snapshot/placement/SnapshotPlacementStoreRegistry.js` already embodies
         // one layer over, built inline here only because this section's
         // whole point is "one shared cascade, three different sources,"
         // never a NEW production abstraction.
@@ -827,13 +827,13 @@ async function run() {
             '3. the Arweave-origin encounter sits at exactly its own placed position, alongside the Local- and Nostr-origin ones, indistinguishable in shape.');
 
         // The cascade's own source never branches on `candidate.storage`.
-        assert(!/candidate\.storage/i.test(stripLineComments(readSource('application/AutomaticSnapshotEncounterCascade.js'))),
+        assert(!/candidate\.storage/i.test(stripLineComments(readSource('application/snapshot/AutomaticSnapshotEncounterCascade.js'))),
             '4. AutomaticSnapshotEncounterCascade.js never reads candidate.storage at all — it cannot branch on something it never looks at.');
         // Nor does the resolver, materializer, or placement/registration bridge.
-        const downstreamSource = stripLineComments(readSource('application/DecentralizedSnapshotResolver.js'))
-            + stripLineComments(readSource('application/MaterializeSnapshotFromSelectedCandidateUseCase.js'))
-            + stripLineComments(readSource('application/SnapshotWorldPlacement.js'))
-            + stripLineComments(readSource('application/MaterializedSnapshotWorldDiscoveryBridge.js'));
+        const downstreamSource = stripLineComments(readSource('application/snapshot/DecentralizedSnapshotResolver.js'))
+            + stripLineComments(readSource('application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js'))
+            + stripLineComments(readSource('application/snapshot/placement/SnapshotWorldPlacement.js'))
+            + stripLineComments(readSource('application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js'));
         assert(!/storage\s*===\s*['"](ar|arweave|ipfs|local)['"]/i.test(downstreamSource),
             '5. none of the resolver, materializer, placement, or registration files branch on a specific storage string.');
 

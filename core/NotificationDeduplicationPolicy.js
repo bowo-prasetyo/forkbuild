@@ -24,7 +24,7 @@
 // reimplementing or absorbing it.
 //
 // THE ADOPTED IDENTITY, for the current Commentary producer only
-// (`application/PublicationCommentaryNotificationProducer.js`):
+// (`application/publication/commentary/PublicationCommentaryNotificationProducer.js`):
 // `commentaryId + eventType + recipientIdentityId` — 0.9.278 Section I's
 // own surviving content-based candidate. Deliberately excluded from it,
 // per 0.9.278/0.9.279's own findings:

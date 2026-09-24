@@ -5,17 +5,17 @@ import {
     resolveWalkableSurfaceAt
 } from '../core/WalkableSurface.js';
 import { isStepClimbable, DEFAULT_MAX_STEP_HEIGHT } from '../core/BrickWalkability.js';
-import { AvatarStepConstraint } from '../application/AvatarStepConstraint.js';
-import { AvatarMovementConstraint } from '../application/AvatarMovementConstraint.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarStepConstraint } from '../application/avatar/AvatarStepConstraint.js';
+import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -25,8 +25,8 @@ import { Position } from '../core/Position.js';
 //
 //   Section A: core/WalkableSurface.js — pure per-shape surface geometry
 //   Section B: walkableSurfaceKindFor() — the definitionId -> shape lookup
-//   Section C: application/AvatarStepConstraint.js — real stair/slope support height
-//   Section D: application/AvatarMovementConstraint.js — a directional shape is
+//   Section C: application/avatar/AvatarStepConstraint.js — real stair/slope support height
+//   Section D: application/avatar/AvatarMovementConstraint.js — a directional shape is
 //              never a flat-topped wall, even when its own peak is unreachable
 //   Section E: AvatarMovementController — climbing a stair and a slope end to end
 //   Section F: FLAGSHIP — the design doc's own scripted scenario
@@ -229,7 +229,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section C — application/AvatarStepConstraint.js: real stair/slope
+    // Section C — application/avatar/AvatarStepConstraint.js: real stair/slope
     // support height, through the exact same public supportHeightAt()
     // 0.3.2 already established.
     // -------------------------------------------------------------
@@ -269,7 +269,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section D — application/AvatarMovementConstraint.js: a
+    // Section D — application/avatar/AvatarMovementConstraint.js: a
     // directional shape is never a flat wall via its own peak height.
     // -------------------------------------------------------------
     {

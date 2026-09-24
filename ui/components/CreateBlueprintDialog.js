@@ -14,7 +14,7 @@ import BuildLibraryPreview from './BuildLibraryPreview.js';
 // is about to be extracted before any name is typed. It is never
 // itself saved — Create re-runs extraction with the REAL metadata this
 // form collects, the same two-step "extract, then persist" shape
-// application/EditorSession.js#createStructureFromSelection()/
+// application/editor/EditorSession.js#createStructureFromSelection()/
 // saveStructureToPersonalLibrary() has always had; this dialog is a
 // third, earlier look at the first step's output, not a shortcut past
 // either.

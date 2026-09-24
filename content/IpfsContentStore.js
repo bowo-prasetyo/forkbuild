@@ -35,7 +35,7 @@ const DEFAULT_TIMEOUT_MS = 5000;
 // PublicationResolver.js never importing this file.
 //
 // `get()`/`has()` never conflate "could not reach it" with "it doesn't
-// exist" — see application/PublicationResolutionOutcome.js's own
+// exist" — see application/publication/PublicationResolutionOutcome.js's own
 // CONTENT_UNAVAILABLE for why that distinction matters the moment a
 // ContentStore is backed by a real network instead of a local disk.
 // `get()` THROWS a ContentUnavailableError for every kind of failure

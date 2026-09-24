@@ -331,7 +331,7 @@ export const LAKE_SURFACE_COLOR = SURFACE_PALETTE[SURFACE_CATEGORY.WATER];
 // forced to); rainfall simulation, fluid particles, real-time water
 // physics, erosion, or seasonal flooding (see docs/Roadmap.md, 0.2.89's
 // own non-goals); swimming or any avatar movement state tied to water
-// (core/TerrainWalkability.js and application/AvatarTerrainConstraint.js
+// (core/TerrainWalkability.js and application/avatar/AvatarTerrainConstraint.js
 // stay exactly the slope-only decision 0.2.77 established — no
 // HYDROLOGY_FEATURE is "this ground is unwalkable" or "this ground
 // requires swimming"); water blocking or otherwise constraining

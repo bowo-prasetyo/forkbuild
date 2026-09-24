@@ -6,20 +6,20 @@ import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { CopySelectionUseCase } from '../application/CopySelectionUseCase.js';
-import { PasteClipboardUseCase } from '../application/PasteClipboardUseCase.js';
-import { RepeatSelectionUseCase } from '../application/RepeatSelectionUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { EditorContext } from '../application/EditorContext.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
-import { EditorActionContext } from '../application/EditorActionContext.js';
-import { LocalStructureLibraryStore } from '../application/LocalStructureLibraryStore.js';
+import { CopySelectionUseCase } from '../application/editor/CopySelectionUseCase.js';
+import { PasteClipboardUseCase } from '../application/editor/PasteClipboardUseCase.js';
+import { RepeatSelectionUseCase } from '../application/editor/RepeatSelectionUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { EditorContext } from '../application/editor/EditorContext.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { EditorActionContext } from '../application/editor/EditorActionContext.js';
+import { LocalStructureLibraryStore } from '../application/editor/LocalStructureLibraryStore.js';
 
 // 0.6.2 — Editor UX Consolidation.
 //

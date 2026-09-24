@@ -10,13 +10,13 @@ import {
     PublicationCommentaryStore,
     PublicationCommentaryConflictError
 } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
 import {
     PublicationCommentaryNotificationProducer,
     PUBLICATION_COMMENTED_EVENT_TYPE
-} from '../application/PublicationCommentaryNotificationProducer.js';
+} from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
@@ -52,7 +52,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // Commentary (core/PublicationCommentary.js, 0.9.242+) is attached to a
 // Publication, never to a Snapshot — a Snapshot is 3D scene material
 // distributed/discovered through its own, separate substrate
-// (application/SnapshotDistributionCommand.js,
+// (application/snapshot/SnapshotDistributionCommand.js,
 // core/SnapshotDiscoveryEnvelope.js), keyed by `contentHash`, never by a
 // `publicationId`. This audit follows the real domain vocabulary and
 // treats "Snapshot Commentary" as shorthand for "Publication Commentary,"
@@ -120,7 +120,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // production code with no changes needed: Section C's Device A/Device B
 // persistence-boundary reproduction and Section H's flagship both still
 // hold EXACTLY as measured — 0.9.618 added a NEW, separate distribution
-// path (application/PublicationCommentaryDistributionExchange.js +
+// path (application/publication/commentary/PublicationCommentaryDistributionExchange.js +
 // PublicationCommentaryDistributionPeerExchange.js), never a change to
 // AddPublicationCommentaryUseCase.js/PublicationCommentaryNotificationProducer.js
 // or the plain local write/read chain those two sections exercise. See
@@ -190,7 +190,7 @@ function makePublication({ id, documentId, snapshotId, contentHash, publisherPro
 }
 
 // One real, fully composed write chain, over one injected storage backend —
-// deliberately the SAME composition application/CreatePublicationCommentaryUseCase.js
+// deliberately the SAME composition application/publication/commentary/CreatePublicationCommentaryUseCase.js
 // performs in production, spelled out explicitly here so this audit exercises
 // every real collaborator rather than a shortcut through it. `storage` and
 // `discoveryProvider` are BOTH injected so Section C/H can point this chain
@@ -382,9 +382,9 @@ async function run() {
 
         // Structural: the producer's only two external calls are a
         // read-only Publication lookup and the injected local sink.
-        const producerSrc = codeOnly(await rawSource('application/PublicationCommentaryNotificationProducer.js'));
+        const producerSrc = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js'));
         assert(!/nostr|arweave|fetch\(|WebSocket|relay/i.test(producerSrc),
-            '17. application/PublicationCommentaryNotificationProducer.js contains no network/transport vocabulary of any kind');
+            '17. application/publication/commentary/PublicationCommentaryNotificationProducer.js contains no network/transport vocabulary of any kind');
         const notificationEventSrc = codeOnly(await rawSource('core/NotificationEvent.js'));
         assert(!/nostr|arweave|fetch\(|WebSocket|relay|distribut/i.test(notificationEventSrc),
             '18. core/NotificationEvent.js itself carries no distribution vocabulary either — this audit does not make Notification carry Distribution\'s own job, and today\'s code already agrees');
@@ -433,13 +433,13 @@ async function run() {
             '23. Commentary structurally has none of contentHash/locator/storage — it cannot be described as "content placed on a ContentStore" without being repurposed, not merely re-described');
 
         // E3 — the two live distribution call chains never mention Commentary.
-        for (const file of ['application/PublicationDistributionCommand.js', 'application/SnapshotDistributionCommand.js', 'application/NostrPublicationDiscoveryPublisher.js', 'application/ArweaveAnnouncementPublisher.js']) {
+        for (const file of ['application/publication/distribution/PublicationDistributionCommand.js', 'application/snapshot/SnapshotDistributionCommand.js', 'application/nostr/NostrPublicationDiscoveryPublisher.js', 'application/arweave/ArweaveAnnouncementPublisher.js']) {
             const src = await rawSource(file);
             assert(!/Commentary/.test(src),
                 `24. ${file} never mentions Commentary anywhere in its source — today's complete disjointness confirmed directly, not inferred from absence of a test`);
         }
-        assert(typeof (await import('../application/PublicationDistributionCommand.js')).executePublicationDistributionCommand === 'function'
-            && typeof (await import('../application/SnapshotDistributionCommand.js')).executeSnapshotDistributionCommand === 'function',
+        assert(typeof (await import('../application/publication/distribution/PublicationDistributionCommand.js')).executePublicationDistributionCommand === 'function'
+            && typeof (await import('../application/snapshot/SnapshotDistributionCommand.js')).executeSnapshotDistributionCommand === 'function',
             '25. both real distribution entry points exist and are callable functions — this audit is naming a real, live seam, not a hypothetical one');
 
         console.log('✓ E: neither existing envelope (Publication discovery: closed kind enum; Snapshot discovery: requires content-addressed fields) fits Commentary\'s real, live shape without being repurposed — riding either substrate as-is is not available; a third, sibling envelope mirroring the existing two would be new code, following an existing pattern, never a new architecture.');

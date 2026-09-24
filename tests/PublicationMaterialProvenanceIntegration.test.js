@@ -1,16 +1,16 @@
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { inspectWorldEncounterMaterial } from '../application/WorldEncounterMaterialInspection.js';
-import { WorldEncounterMaterialSource, WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerifier, WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
+import { inspectWorldEncounterMaterial } from '../application/worldEncounter/WorldEncounterMaterialInspection.js';
+import { WorldEncounterMaterialSource, WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerifier, WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
     composeDecentralizedWorldEncounterMaterialDiscoveryRuntime
-} from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
-import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';
-import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
-import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
-import { PublicationMaterialProvenanceOrigin } from '../application/PublicationMaterialProvenance.js';
-import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
+import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
+import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
+import { PublicationMaterialProvenanceOrigin } from '../application/publication/distribution/PublicationMaterialProvenance.js';
+import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -34,7 +34,7 @@ import { Publication } from '../publisher/Publication.js';
 //
 // 0.9.112 — Publication Provenance in World View.
 // See docs/Roadmap.md, "0.9.112 — Publication Provenance in World View," and
-// application/PublicationMaterialProvenance.js's own header for the full
+// application/publication/distribution/PublicationMaterialProvenance.js's own header for the full
 // design. This file proves the milestone's own six flagship scenarios end
 // to end, through the real running collaborators (WorldEncounterCanvas's
 // own computed, the real decentralized runtime composition, a real signed

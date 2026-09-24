@@ -9,17 +9,17 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { DocumentCommandPropagationUseCase } from '../application/DocumentCommandPropagationUseCase.js';
-import { RemoteDocumentOperationApplicationUseCase, DocumentOperationApplicationOutcome } from '../application/RemoteDocumentOperationApplicationUseCase.js';
+import { DocumentCommandPropagationUseCase } from '../application/document/DocumentCommandPropagationUseCase.js';
+import { RemoteDocumentOperationApplicationUseCase, DocumentOperationApplicationOutcome } from '../application/document/RemoteDocumentOperationApplicationUseCase.js';
 import { CausalGapStatus, DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
-import { DocumentOperationCausalGapObservationUseCase } from '../application/DocumentOperationCausalGapObservationUseCase.js';
-import { DocumentOperationRecoveryUseCase } from '../application/DocumentOperationRecoveryUseCase.js';
+import { DocumentOperationCausalGapObservationUseCase } from '../application/document/DocumentOperationCausalGapObservationUseCase.js';
+import { DocumentOperationRecoveryUseCase } from '../application/document/DocumentOperationRecoveryUseCase.js';
 import { DocumentOperationProvenance } from '../core/DocumentOperationProvenance.js';
 import {
     DocumentOperationApplicationEligibility,
@@ -344,7 +344,7 @@ bob.connectedPeerRegistry.add(peerB);
         const unsubscribeGapToPropagation = gapObservation.attachToPropagation(propagation);
         const unsubscribeRecoveryRequest = recovery.attachToGapObservation(gapObservation);
         // Recovered operations become KNOWN through the SAME shared
-        // detector eligibility itself reads — mirrors application/EditorSession.js's
+        // detector eligibility itself reads — mirrors application/editor/EditorSession.js's
         // own wiring of recovery's onOperationReceived() into gap observation.
         const unsubscribeGapToRecovery = gapObservation.attachToPropagation(recovery);
         return {

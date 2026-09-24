@@ -3,21 +3,21 @@ import { execSync } from 'node:child_process';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/LocalSnapshotCandidateDiscoveryQueryService.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { SnapshotCandidateDiscoveryQueryService } from '../application/SnapshotCandidateDiscoveryQueryService.js';
-import { composeSnapshotCandidateDiscoveryRuntime } from '../application/SnapshotCandidateDiscoveryRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { SnapshotPlacementResolver } from '../application/SnapshotPlacementResolver.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { SnapshotCandidateDiscoveryQueryService } from '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
+import { composeSnapshotCandidateDiscoveryRuntime } from '../application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 // 0.9.485 — Walking-Triggered Snapshot Candidate Query Service Integration
 // Audit.
 //
-// Production changes: application/LocalSnapshotCandidateDiscoveryQueryService.js
-// (new), application/SnapshotCandidateDiscoveryQueryService.js (new),
-// application/SnapshotCandidateDiscoveryRuntimeComposition.js (new), and
+// Production changes: application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js
+// (new), application/snapshot/SnapshotCandidateDiscoveryQueryService.js (new),
+// application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js (new), and
 // ui/main.js (composes + provides the new service under
 // `snapshotCandidateDiscoveryQueryService`; the pre-existing
 // `discoverSnapshotCandidatesCommand`/`worldSnapshotDiscoveryMonitor`
@@ -111,9 +111,9 @@ function makeNostrEnvelopeEvent({ contentHash, locator, storage, publicationId, 
 }
 
 const PRODUCTION_FILES = [
-    'application/LocalSnapshotCandidateDiscoveryQueryService.js',
-    'application/SnapshotCandidateDiscoveryQueryService.js',
-    'application/SnapshotCandidateDiscoveryRuntimeComposition.js'
+    'application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js',
+    'application/snapshot/SnapshotCandidateDiscoveryQueryService.js',
+    'application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js'
 ];
 
 async function run() {
@@ -130,7 +130,7 @@ async function run() {
         assert(typeof localSource.search === 'function' && typeof nostrSource.search === 'function',
             '1. both Local and Nostr sources expose a search() method.');
         assert(localSource.search.length <= 1 && nostrSource.search.length <= 1,
-            '2. both search() methods accept exactly one (discoveryTag) argument — the identical shape application/DiscoverSnapshotCandidatesCommand.js already requires.');
+            '2. both search() methods accept exactly one (discoveryTag) argument — the identical shape application/snapshot/DiscoverSnapshotCandidatesCommand.js already requires.');
 
         const composite = new SnapshotCandidateDiscoveryQueryService([nostrSource, localSource]);
         assert(typeof composite.search === 'function',
@@ -167,8 +167,8 @@ async function run() {
         // tests/PassivePeerSnapshotDiscoveryEndToEndIntegrationAudit.test.js
         // (0.9.484) already proved, live, over a real two-peer connection,
         // that a peer ANNOUNCE reaches this exact catalog via
-        // application/PublicationSnapshotPlacementPeerExchange.js#_importAndPublish()
-        // -> application/PublicationSnapshotPlacementExchange.js#importPlacement()
+        // application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js#_importAndPublish()
+        // -> application/snapshot/placement/PublicationSnapshotPlacementExchange.js#importPlacement()
         // -> catalog.add() — and that the catalog itself then holds a
         // placement indistinguishable, by shape, from one added locally.
         // Re-running that whole live transport here would only re-derive
@@ -311,14 +311,14 @@ async function run() {
     // Section H — Provenance.
     // ===============================================================
     {
-        const compositeSource = stripLineComments(readSource('application/SnapshotCandidateDiscoveryQueryService.js'));
-        const localSourceCode = stripLineComments(readSource('application/LocalSnapshotCandidateDiscoveryQueryService.js'));
+        const compositeSource = stripLineComments(readSource('application/snapshot/SnapshotCandidateDiscoveryQueryService.js'));
+        const localSourceCode = stripLineComments(readSource('application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js'));
         assert(!/PlacementAcquisitionKind/.test(compositeSource) && !/PlacementAcquisitionKind/.test(localSourceCode),
-            '1. neither the composite service nor the Local adapter imports or references application/PlacementAcquisitionKind.js — no new PEER query-source identity is invented merely because a candidate might have originated from a peer.');
+            '1. neither the composite service nor the Local adapter imports or references application/placement/PlacementAcquisitionKind.js — no new PEER query-source identity is invented merely because a candidate might have originated from a peer.');
         assert(!/\borigin\b|acquisitionKind|provenance/i.test(compositeSource),
             '2. the composite service carries no origin/acquisitionKind/provenance field or concept of its own anywhere in its source.');
 
-        console.log('✓ Section H: existing acquisition/provenance semantics (application/PlacementAcquisitionKind.js, unmodified) are preserved exactly as they already were — this milestone invents no new PEER query-source identity, and no candidate the composite returns ever carries a provenance field.');
+        console.log('✓ Section H: existing acquisition/provenance semantics (application/placement/PlacementAcquisitionKind.js, unmodified) are preserved exactly as they already were — this milestone invents no new PEER query-source identity, and no candidate the composite returns ever carries a provenance field.');
     }
 
     // ===============================================================
@@ -473,8 +473,8 @@ async function run() {
         assert(!/new NostrSnapshotDiscoveryQueryService\([^)]*\)[\s\S]{0,400}composeSnapshotCandidateDiscoveryRuntime/.test(mainSource),
             '6. no second NostrSnapshotDiscoveryQueryService is constructed near this wiring.');
         const catalogConstructionSites = grepFiles('new LocalPublicationSnapshotPlacementCatalog\\(', ['application', 'ui']);
-        assert(!catalogConstructionSites.includes('application/SnapshotCandidateDiscoveryRuntimeComposition.js')
-            && !catalogConstructionSites.includes('application/LocalSnapshotCandidateDiscoveryQueryService.js')
+        assert(!catalogConstructionSites.includes('application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js')
+            && !catalogConstructionSites.includes('application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js')
             && !catalogConstructionSites.includes('ui/main.js'),
             `7. this milestone's own new files, and ui/main.js, construct no NEW LocalPublicationSnapshotPlacementCatalog of their own (found catalog construction sites: ${JSON.stringify(catalogConstructionSites)}) — they only ever receive the one pre-existing instance.`);
         assert(/app\.provide\('snapshotCandidateDiscoveryQueryService', snapshotCandidateDiscoveryQueryService\)/.test(mainSource),
@@ -493,7 +493,7 @@ async function run() {
         // N1. No peer protocol / peer exchange coupling.
         assert(!/import[^\n]*Peer|new\s+\w*Peer\w*\(/.test(allCode),
             '1. none of this milestone\'s three new files import or construct any Peer-named class — Peer\'s own contribution arrives entirely through the already-populated catalog.');
-        const peerProtocolSource = stripLineComments(readSource('application/PublicationSnapshotPlacementPeerProtocol.js'));
+        const peerProtocolSource = stripLineComments(readSource('application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js'));
         assert(!/SnapshotCandidateDiscoveryQueryService/.test(peerProtocolSource),
             '2. the peer protocol file has no knowledge of this milestone\'s new service either — the separation holds in both directions.');
 
@@ -514,14 +514,14 @@ async function run() {
         // only ever READS through the existing, unmodified query service.
         assert(!/NostrSnapshotDiscoveryPublisher|publishImpl/.test(allCode),
             '6. no Nostr publishing capability is referenced anywhere in this milestone\'s new files — this is a read-only composition.');
-        const publisherSource = readSource('application/NostrSnapshotDiscoveryPublisher.js');
+        const publisherSource = readSource('application/nostr/NostrSnapshotDiscoveryPublisher.js');
         assert(!/SnapshotCandidateDiscoveryQueryService/.test(publisherSource),
             '7. the Nostr publisher file is untouched by, and has no knowledge of, this milestone\'s new service.');
 
         // N6. Placement creation untouched.
-        const createUseCaseSource = readSource('application/CreatePublicationSnapshotPlacementUseCase.js');
+        const createUseCaseSource = readSource('application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js');
         assert(!/SnapshotCandidateDiscoveryQueryService/.test(createUseCaseSource),
-            '8. application/CreatePublicationSnapshotPlacementUseCase.js is untouched by this milestone.');
+            '8. application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js is untouched by this milestone.');
 
         // N7. This milestone's own diff is scoped to exactly what its own
         // header names: three new application files, this one new test
@@ -561,7 +561,7 @@ async function run() {
 'browsing, and passive Peer ingestion into Local -- now compose into one, real, production-wired discovery\n' +
 'capability: Local + Nostr as query sources, Peer remaining a passive, catalog-populating ingestion path, never a\n' +
 'third query provider. It is provided, not yet consumed -- threading it into\n' +
-"application/DiscoverSnapshotCandidatesCommand.js's own walking-triggered command, so movement actually converges\n" +
+"application/snapshot/DiscoverSnapshotCandidatesCommand.js's own walking-triggered command, so movement actually converges\n" +
 "Local+Nostr+passive-Peer, is 0.9.486's own, deliberately separate, next and now very small step.\n");
 
     console.log('\n✅ All Snapshot Candidate Discovery Query Service Integration Audit tests passed.');

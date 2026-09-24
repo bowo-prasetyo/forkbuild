@@ -13,18 +13,18 @@ import { ContentResolver } from './ContentResolver.js';
 // `Publisher`-based world.
 //
 // The Publication Center this codebase actually ships stores a
-// publication's bytes differently: application/PublicationResolver.js
+// publication's bytes differently: application/publication/PublicationResolver.js
 // (0.7.0/0.7.1) puts them, content-addressed, into a content/
 // ContentStore.js keyed by the publication's OWN contentReference — never
 // by publicationId. This class is the bridge between the two: given a
 // publicationId, it looks the publication up in an application/
 // LocalPublicationCatalog.js (for its contentReference) and then reads
 // the bytes back from the SAME content/ContentStore.js instance
-// application/CreatePublicationResolverUseCase.js already wired for
+// application/publication/CreatePublicationResolverUseCase.js already wired for
 // local publish/resolve — never a second, disconnected store.
 //
 // LOCAL, SYNCHRONOUS, DELIBERATELY. `resolve()`/`verify()` are called
-// unawaited by application/CreateExternalSnapshotPlacementUseCase.js
+// unawaited by application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js
 // itself (see that file's own "local integrity check" / "retrieve local
 // bytes" pipeline steps, both explicitly local) — so this class only
 // ever makes sense wired against a synchronous content/LocalContentStore
@@ -58,7 +58,7 @@ export class PublicationCatalogContentResolver extends ContentResolver {
     // contentReference.hash, per application/
     // CreateExternalSnapshotPlacementUseCase.js's own header. Delegates to
     // core/ContentReference.js#verify(), the identical recomputation
-    // application/PublicationResolver.js#resolve() step 5 already runs.
+    // application/publication/PublicationResolver.js#resolve() step 5 already runs.
     verify(publicationId, expectedHash) {
         const publication = this._publicationCatalog.get(publicationId);
         if (!publication) return false;

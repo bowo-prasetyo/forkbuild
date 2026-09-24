@@ -1,18 +1,18 @@
 import { readFile } from 'node:fs/promises';
 
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
-import { describePublicationDistributionResult } from '../application/PublicationDistributionResult.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/ArweaveWorldEncounterMaterialResolver.js';
-import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
+import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
+import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
+import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { ArweaveAnchorPublisher } from '../anchoring/ArweaveAnchorPublisher.js';
-import { executePublicationDistribution } from '../application/PublicationDistributionExecutor.js';
-import { composePublicationDistributionRuntime } from '../application/PublicationDistributionRuntimeComposition.js';
-import { resolveArweaveAnnouncementPublisherOptions } from '../application/PublicationDistributionConfigurationProvider.js';
+import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
+import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
+import { resolveArweaveAnnouncementPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.489 — Arweave Announcement/Discovery Capability Boundary Audit.
@@ -46,7 +46,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // a live dead end," without changing what the fix is.
 //
 // LETTERED SECTIONS (mirroring the requesting brief's own lettering):
-//   A. Existing publisher contract — application/ArweaveAnnouncementPublisher.js
+//   A. Existing publisher contract — application/arweave/ArweaveAnnouncementPublisher.js
 //      (0.9.428), re-confirmed live: what it already fully defines
 //      (payload, discovery tag, content identity, transaction metadata,
 //      success/failure semantics) versus what it deliberately leaves to an
@@ -143,7 +143,7 @@ function fakeOkTextResponse(text = '') {
 // tests/ArweaveAnnouncementDiscoveryIntegrationBoundaryAudit.test.js's own
 // makeSharedFakeArweaveSubstrate() — reconstructed here, independently,
 // rather than imported, per this whole family's own "two independent files"
-// convention (see application/ArweaveAnnouncementPublisher.js's own header).
+// convention (see application/arweave/ArweaveAnnouncementPublisher.js's own header).
 function makeSharedFakeArweaveSubstrate() {
     const ledger = new Map(); // id -> { data, tag: { name, value } | null }
     let nextId = 0;
@@ -248,7 +248,7 @@ async function run() {
 
         check(typeof publisher.tagName === 'string' && publisher.tagName === ArweaveAnnouncementPublisher.DEFAULT_TAG_NAME, 'A9. transaction metadata (which Arweave Tag NAME carries the discovery tag) is already fully defined, defaulting to the exact literal the real reader already expects');
 
-        console.log('✓ Section A: application/ArweaveAnnouncementPublisher.js already fully defines announcement payload, discovery tag, transaction metadata, and success/failure semantics — confirmed live, not merely read from its own header. The ONE thing it deliberately leaves undefined is uploadTaggedTransaction itself (Section C).');
+        console.log('✓ Section A: application/arweave/ArweaveAnnouncementPublisher.js already fully defines announcement payload, discovery tag, transaction metadata, and success/failure semantics — confirmed live, not merely read from its own header. The ONE thing it deliberately leaves undefined is uploadTaggedTransaction itself (Section C).');
     }
 
     // ===============================================================
@@ -265,7 +265,7 @@ async function run() {
         // INJECTED? — trace the exact production resolution current source
         // performs: createPublicationDistributionRuntimeProvider() regroups
         // an absent uploadTaggedTransaction into its own arweaveAnnouncement
-        // section (application/PublicationDistributionRuntimeProvider.js),
+        // section (application/publication/distribution/PublicationDistributionRuntimeProvider.js),
         // which resolveArweaveAnnouncementPublisherOptions() then resolves.
         const productionShapedCapabilities = {
             uploadTaggedTransaction: undefined, // exactly what ui/main.js's real call produces today
@@ -320,7 +320,7 @@ async function run() {
     // precedent for the harder half of the same problem.
     // ===============================================================
     {
-        const publisherSource = await source('application/ArweaveAnnouncementPublisher.js');
+        const publisherSource = await source('application/arweave/ArweaveAnnouncementPublisher.js');
         const codeOnly = publisherSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         check(!/kind\s*[:=]\s*['"]|WorldEncounterKind|objectId\s*=|selectDiscoveryTag|chooseCampaign/.test(codeOnly), 'C1. ArweaveAnnouncementPublisher.js\'s own CODE never chooses what to announce (no envelope construction beyond re-validating the caller\'s own argument), which tag to create (discoveryTag is caller-supplied, once, at construction), or which candidate to select — confirmed by source sweep, not merely by its own header prose');
         check(!/NostrPublicationDiscoveryPublisher|nostr/i.test(codeOnly), 'C2. ...and never decides whether Nostr should also be used — no reference to the sibling substrate anywhere in its own code');
@@ -348,9 +348,9 @@ async function run() {
         // sign(material) -> Promise<{id, transaction}> contract, PLUS a tag
         // parameter that signer already has a hardcoded, empty slot for.
         const signerSource = await source('arweave/ArweaveInjectedProviderSigner.js');
-        check(/tags:\s*\[\]/.test(signerSource), 'C5. arweave/ArweaveInjectedProviderSigner.js (0.9.121) — the one real, already-shipped, wallet-integrated Arweave signer this codebase has — already builds its own transaction with a `tags: []` field, currently always empty. The hard part of uploadTaggedTransaction (wallet interaction, data_root/Merkle computation, base64url encoding, gateway anchor/price fetch) is therefore ALREADY SOLVED, once, in production source; a concrete implementation is that same signing step with a non-empty tags array, plus the POST/tx call application/ArweavePublicationMaterialUploader.js#upload() already performs separately for CONTENT — never a new wallet integration or a new Arweave-protocol primitive');
-        const uploaderSource = await source('application/ArweavePublicationMaterialUploader.js');
-        check(/POST['"]?,?\s*\{[\s\S]{0,80}\/tx/.test(uploaderSource) || /\$\{this\._gatewayUrl\}\/tx/.test(uploaderSource), 'C6. ...and the POST <gatewayUrl>/tx call a concrete uploadTaggedTransaction would need is byte-for-byte the same wire operation application/ArweavePublicationMaterialUploader.js#upload() already performs for CONTENT — a second, structurally identical call site, never a new protocol');
+        check(/tags:\s*\[\]/.test(signerSource), 'C5. arweave/ArweaveInjectedProviderSigner.js (0.9.121) — the one real, already-shipped, wallet-integrated Arweave signer this codebase has — already builds its own transaction with a `tags: []` field, currently always empty. The hard part of uploadTaggedTransaction (wallet interaction, data_root/Merkle computation, base64url encoding, gateway anchor/price fetch) is therefore ALREADY SOLVED, once, in production source; a concrete implementation is that same signing step with a non-empty tags array, plus the POST/tx call application/arweave/ArweavePublicationMaterialUploader.js#upload() already performs separately for CONTENT — never a new wallet integration or a new Arweave-protocol primitive');
+        const uploaderSource = await source('application/arweave/ArweavePublicationMaterialUploader.js');
+        check(/POST['"]?,?\s*\{[\s\S]{0,80}\/tx/.test(uploaderSource) || /\$\{this\._gatewayUrl\}\/tx/.test(uploaderSource), 'C6. ...and the POST <gatewayUrl>/tx call a concrete uploadTaggedTransaction would need is byte-for-byte the same wire operation application/arweave/ArweavePublicationMaterialUploader.js#upload() already performs for CONTENT — a second, structurally identical call site, never a new protocol');
 
         console.log('✓ Section C: uploadTaggedTransaction is a pure I/O translation boundary (C1-C4, confirmed by source sweep and one live executor run) — it never selects a candidate, a tag, a fallback substrate, or decides authenticity. Its concrete implementation is precisely sized: ArweaveInjectedProviderSigner.js\'s own sign() already solves wallet interaction and transaction-shape construction with an already-present, currently-empty tags slot (C5), and ArweavePublicationMaterialUploader.js\'s own POST /tx is the identical wire call needed to broadcast it (C6) — a concrete uploadTaggedTransaction is a recombination of two already-shipped mechanisms, never new protocol work.');
     }
@@ -372,7 +372,7 @@ async function run() {
         const candidates = await discoveryQueryService.search('campaign-d');
         check(candidates.length === 1 && candidates[0].announcementId === published.id && candidates[0].uri === 'ar://materialtx-d', 'D3. the real reader (0.9.494, envelope-aware) matches this exact tag/value pair and finds exactly this transaction, reporting the announced material\'s own uri with the announcement transaction id preserved alongside it — the application discovery identity and the Arweave transaction identity are already the same tag, never two vocabularies a caller must keep in sync');
 
-        const discoverySource = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const discoverySource = await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         check(!/kind\s*:\s*|objectId\s*:\s*|protocol\s*:\s*['"]forkbuild/.test(discoverySource), 'D4. the reader\'s own matching logic never redefines discovery identity in terms of envelope fields (kind/objectId/protocol) — a discoveryTag is compared to an Arweave Tag value only, confirming application discovery identity and Arweave transaction identity are never conflated into a new, third vocabulary');
 
         console.log('✓ Section D: discoveryTag maps 1:1 onto a single Arweave Tag, exactly the mechanism the real reader already matches against — confirmed live via a real publish-then-search round trip, never a new discovery semantic invented for this bar.');
@@ -383,7 +383,7 @@ async function run() {
     // the announcement carries the existing materialUri fact verbatim.
     // ===============================================================
     {
-        const publisherSource = await source('application/ArweaveAnnouncementPublisher.js');
+        const publisherSource = await source('application/arweave/ArweaveAnnouncementPublisher.js');
         check(!/contentHash|sha256|crypto\.subtle|createHash/i.test(publisherSource), 'E1. ArweaveAnnouncementPublisher.js never imports, computes, or references contentHash or any hashing primitive of any kind — it has no concept of content identity of its own');
 
         const net = makeSharedFakeArweaveSubstrate();
@@ -440,7 +440,7 @@ async function run() {
         const retrieved = await materialResolver.retrieveByUri(candidates[0].uri);
         check(retrieved !== null && JSON.stringify(retrieved) === JSON.stringify({ body: 'round-trip-f' }), 'F3. upload -> tagged announcement -> discovery query -> candidate -> the existing, unmodified material resolver retrieves the exact distributed publication material DIRECTLY off candidate.uri, all through already-existing production classes — the complete "upload tagged transaction -> discovery mechanism -> candidate -> material" chain the requesting brief asked this section to verify, corrected per 0.9.494 to never require a second envelope-recovery hop on the resolve side');
 
-        check(!/node\.tags|tags:\s*\{/.test(await source('application/ArweaveGraphqlDiscoveryQueryService.js')), 'F4. this full round trip required zero query-shape change — DISCOVERY_QUERY_MECHANISM is READY today, at the bar production actually needs, confirmed live rather than assumed from 0.9.427/0.9.429\'s own now-stale evidence');
+        check(!/node\.tags|tags:\s*\{/.test(await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js')), 'F4. this full round trip required zero query-shape change — DISCOVERY_QUERY_MECHANISM is READY today, at the bar production actually needs, confirmed live rather than assumed from 0.9.427/0.9.429\'s own now-stale evidence');
 
         console.log('✓ Section F: Arweave already has a real, live, working discovery/query mechanism — search() genuinely finds a tagged announcement and reports the announced material\'s own uri directly, and the existing (discovery-unaware) material resolver completes the round trip straight to the real content. If the query side had NOT existed, the missing piece would have been larger than uploadTaggedTransaction; it already exists, so it is not.');
     }
@@ -451,11 +451,11 @@ async function run() {
     // announcement write or discovery query.
     // ===============================================================
     {
-        const failoverSource = await source('application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js');
-        check(!/ArweaveAnnouncementPublisher|ArweaveGraphqlDiscoveryQueryService|discoveryTag|uploadTaggedTransaction/.test(failoverSource), 'G1. application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js — the CONTENT-retrieval failover class — never imports or references the announcement-write or discovery-query classes, or their own vocabulary (discoveryTag/uploadTaggedTransaction)');
+        const failoverSource = await source('application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js');
+        check(!/ArweaveAnnouncementPublisher|ArweaveGraphqlDiscoveryQueryService|discoveryTag|uploadTaggedTransaction/.test(failoverSource), 'G1. application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js — the CONTENT-retrieval failover class — never imports or references the announcement-write or discovery-query classes, or their own vocabulary (discoveryTag/uploadTaggedTransaction)');
 
-        const publisherSource = await source('application/ArweaveAnnouncementPublisher.js');
-        const discoverySource = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const publisherSource = await source('application/arweave/ArweaveAnnouncementPublisher.js');
+        const discoverySource = await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         check(!/GatewayFailover|gatewayUrls\s*:\s*\[/.test(publisherSource), 'G2. ...and the converse: ArweaveAnnouncementPublisher.js never references gateway failover or a multi-gateway list of its own — it composes exactly one gatewayUrl, per its own header, "one gateway, one discovery tag, per instance"');
         check(!/GatewayFailover|gatewayUrls\s*:\s*\[/.test(discoverySource), 'G3. ...neither does ArweaveGraphqlDiscoveryQueryService.js — discovery querying has no failover concept of its own either, confirmed by source sweep');
 
@@ -550,7 +550,7 @@ async function run() {
         // H1/H2 above is still present, untouched, on the shared ledger —
         // no delete/rollback of any kind was ever attempted.
         check(net.ledger.has(malformedResult.material.uri.replace('ar://', '')), 'H5. the material transaction from the malformed-announcement case (H1) still exists on the substrate, completely undisturbed — no rollback, retry, or compensating action of any kind was attempted against it');
-        const executorSource = await source('application/PublicationDistributionExecutor.js');
+        const executorSource = await source('application/publication/distribution/PublicationDistributionExecutor.js');
         const executorCode = executorSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         check(!/rollback|compensate|undo|delete.*material|revert/i.test(executorCode), 'H6. PublicationDistributionExecutor.js\'s own code contains no rollback/compensation vocabulary of any kind — confirmed by source sweep, not merely inferred from one live scenario');
 
@@ -575,7 +575,7 @@ async function run() {
         const candidates = await discoveryQueryService.search('campaign-i');
         check(candidates.length === 2, 'I2. discovery finds BOTH transactions — the substrate and the reader both treat repeated publication as two independent, equally-valid announcements, never de-duplicating on a caller\'s behalf');
 
-        const publisherSource = await source('application/ArweaveAnnouncementPublisher.js');
+        const publisherSource = await source('application/arweave/ArweaveAnnouncementPublisher.js');
         check(/NO[\s\S]{0,20}DEDUPLICATION/.test(publisherSource), 'I3. this is a documented, deliberate decision, not an oversight — the class\'s own header already states "no caching, no retry, no deduplication"');
         const codeOnly = publisherSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         check(!/new Set\(|new Map\(|_published|_seen|_history/.test(codeOnly), 'I4. and the class carries no internal Set/Map/history of previously-published envelopes to enforce one, even informally');
@@ -659,8 +659,8 @@ async function run() {
         }), 'K3. an Arweave announcement failure propagates as a rejection');
         check(nostrPublishCalls === 0, 'K4. ...and never triggers a fallback attempt on Nostr — the spying nostrPublisherOptions passed to the SAME composition call was never touched, because composePublicationDistributionRuntime() never constructs the unselected substrate\'s own publisher at all (K1/K2), let alone calls it');
 
-        const compositionSource = await source('application/PublicationDistributionRuntimeComposition.js');
-        const executorSource = await source('application/PublicationDistributionExecutor.js');
+        const compositionSource = await source('application/publication/distribution/PublicationDistributionRuntimeComposition.js');
+        const executorSource = await source('application/publication/distribution/PublicationDistributionExecutor.js');
         check(!/catch[\s\S]{0,120}(nostr|arweave)/i.test(compositionSource) && !/catch[\s\S]{0,120}(nostr|arweave)/i.test(executorSource), 'K5. neither file contains any catch-and-retry-on-the-other-substrate logic — confirmed by source sweep, not merely by this section\'s own one live failure scenario');
 
         console.log('✓ Section K: Nostr and Arweave remain additive, mutually exclusive discovery substrates — selecting one never constructs or invokes the other, and a failure on one never falls back to the other, confirmed live and by source sweep. No replacement of Nostr occurs or is proposed by anything in this milestone.');
@@ -705,9 +705,9 @@ async function run() {
         console.log('  implementation next (0.9.490), scoped exactly per Section C: a');
         console.log('  recombination of arweave/ArweaveInjectedProviderSigner.js\'s own already-');
         console.log('  shipped signing/wallet-interaction logic (its "tags: []" made non-empty)');
-        console.log('  and application/ArweavePublicationMaterialUploader.js\'s own already-');
+        console.log('  and application/arweave/ArweavePublicationMaterialUploader.js\'s own already-');
         console.log('  shipped POST /tx call. That implementation should touch neither');
-        console.log('  application/ArweaveAnnouncementPublisher.js, application/');
+        console.log('  application/arweave/ArweaveAnnouncementPublisher.js, application/');
         console.log('  PublicationDistributionRuntimeComposition.js, nor any other file this');
         console.log('  audit reconfirmed correct — it is a new adapter satisfying an existing,');
         console.log('  already-proven contract, never a redesign.');

@@ -13,16 +13,16 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { executePublicationDistribution } from '../application/PublicationDistributionExecutor.js';
-import { composePublicationDistributionRuntime } from '../application/PublicationDistributionRuntimeComposition.js';
+import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
+import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
 
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
-import { SnapshotPlacementCreationOutcome } from '../application/SnapshotPlacementCreationOutcome.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { SnapshotPlacementResolver } from '../application/SnapshotPlacementResolver.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { SnapshotPlacementCreationOutcome } from '../application/snapshot/placement/SnapshotPlacementCreationOutcome.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 // 0.9.131 — Snapshot Distribution Boundary.
@@ -31,15 +31,15 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // distributing a SIGNED CLAIM — `publisher/Publication.js`'s own signed
 // record — onto Arweave (its serialized bytes, `application/
 // ArweavePublicationMaterialUploader.js`) and announcing it on Nostr
-// (`application/NostrPublicationDiscoveryPublisher.js`), sequenced by
-// `application/PublicationDistributionExecutor.js` into one
+// (`application/nostr/NostrPublicationDiscoveryPublisher.js`), sequenced by
+// `application/publication/distribution/PublicationDistributionExecutor.js` into one
 // `PublicationDistributionResult` whose own header already insists
 // `material`/`discovery` stay two independent, independently-absent
 // facts. Separately, and much earlier, 0.8.18 built an entire subsystem
 // for distributing a SNAPSHOT — the actual World content a publication's
 // own `contentReference.hash` names — as an additive, signed `core/
 // PublicationSnapshotPlacement.js` locator, resolved independently by
-// `application/SnapshotPlacementResolver.js` against whichever
+// `application/snapshot/placement/SnapshotPlacementResolver.js` against whichever
 // `content/ContentStore.js` a `application/
 // SnapshotPlacementStoreRegistry.js` names for that placement's own
 // `storage`.
@@ -213,24 +213,24 @@ async function fileExists(relativePath) {
 }
 
 const CLAIM_DISTRIBUTION_FILES = [
-    'application/PublicationDistributionDescriptor.js',
-    'application/PublicationDistributionExecutor.js',
-    'application/PublicationDistributionResult.js',
-    'application/PublicationDistributionOrchestrator.js',
-    'application/PublicationDistributionRuntimeComposition.js',
-    'application/PublicationDistributionCommand.js',
-    'application/ArweavePublicationMaterialUploader.js',
-    'application/NostrPublicationDiscoveryPublisher.js'
+    'application/publication/distribution/PublicationDistributionDescriptor.js',
+    'application/publication/distribution/PublicationDistributionExecutor.js',
+    'application/publication/distribution/PublicationDistributionResult.js',
+    'application/publication/distribution/PublicationDistributionOrchestrator.js',
+    'application/publication/distribution/PublicationDistributionRuntimeComposition.js',
+    'application/publication/distribution/PublicationDistributionCommand.js',
+    'application/arweave/ArweavePublicationMaterialUploader.js',
+    'application/nostr/NostrPublicationDiscoveryPublisher.js'
 ];
 
 const SNAPSHOT_PLACEMENT_FILES = [
     'core/PublicationSnapshotPlacement.js',
-    'application/CreatePublicationSnapshotPlacementUseCase.js',
-    'application/CreateExternalSnapshotPlacementUseCase.js',
-    'application/SnapshotPlacementResolver.js',
-    'application/SnapshotPlacementStoreRegistry.js',
-    'application/PublicationSnapshotPlacementDiscoveryCoordinator.js',
-    'application/PublicationSnapshotPlacementExchange.js',
+    'application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js',
+    'application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js',
+    'application/snapshot/placement/SnapshotPlacementResolver.js',
+    'application/snapshot/placement/SnapshotPlacementStoreRegistry.js',
+    'application/snapshot/placement/PublicationSnapshotPlacementDiscoveryCoordinator.js',
+    'application/snapshot/placement/PublicationSnapshotPlacementExchange.js',
     'content/ContentStore.js',
     'content/IpfsContentStore.js',
     'content/LocalContentStore.js',
@@ -342,7 +342,7 @@ async function run() {
         assert(claimResult.material.storage === 'ar', '5d. sanity: the claim really was distributed onto the "ar" storage label');
 
         // The registry a real composition root actually builds
-        // (application/CreateSnapshotPlacementOrchestratorUseCase.js)
+        // (application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js)
         // only ever gets whatever `stores` a caller EXPLICITLY passes it
         // — content/ArweaveContentStore.js existing changes nothing here,
         // because no caller anywhere in this codebase's own production

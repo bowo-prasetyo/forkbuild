@@ -20,11 +20,11 @@ import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { DocumentManifest } from '../application/DocumentManifest.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { DocumentManifest } from '../application/document/DocumentManifest.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.640 — Editor Document Portability Boundary Audit.
@@ -148,7 +148,7 @@ async function run() {
         assert(metadataKeys.join(',') === 'author,authorIdentityId,created,description,engineVersion,license,modified,parentDocumentId,parentStructureId,protocolVersion,title',
             n('DocumentMetadata\'s full, current field set is exactly these eleven fields, live-confirmed against real toJSON() output'));
 
-        const saveSource = codeOnly(await rawSource('application/SaveDocumentUseCase.js'));
+        const saveSource = codeOnly(await rawSource('application/document/SaveDocumentUseCase.js'));
         assert(/const id = document\.world\.id;/.test(saveSource),
             n('SaveDocumentUseCase\'s own real source resolves the persistence key from `document.world.id` — documentId IS world.id, confirmed at the exact call site that writes to storage'));
 
@@ -234,7 +234,7 @@ async function run() {
         ).toString().trim().split('\n').filter(Boolean);
         assert(grepOutput.length >= 10,
             n(`DocumentSerializer is already constructed by at least ${grepOutput.length} distinct production application/ classes (Save, Load, Fork, ForkPublishedWorld, Recover, Autosave, ResolvePublication, LoadPublicationDocument, LoadPublishedSnapshot, and more) — live-counted, not asserted from memory`));
-        assert(grepOutput.includes('application/SaveDocumentUseCase.js') && grepOutput.includes('application/LoadDocumentUseCase.js') && grepOutput.includes('application/ForkDocumentUseCase.js'),
+        assert(grepOutput.includes('application/document/SaveDocumentUseCase.js') && grepOutput.includes('application/document/LoadDocumentUseCase.js') && grepOutput.includes('application/document/ForkDocumentUseCase.js'),
             n('the three flows most relevant to Export/Import — Save, Load, and Fork (the closest existing precedent for "new local identity from existing content") — all already share this exact class'));
 
         // The migrate -> validate -> construct pipeline is not
@@ -260,7 +260,7 @@ async function run() {
     {
         // documentId IS world.id — already shown live in Section A/B.
         // Here: what depends on it, and why Import cannot preserve it.
-        const manifestSource = await rawSource('application/DocumentManifest.js');
+        const manifestSource = await rawSource('application/document/DocumentManifest.js');
         const manifestKeyMatch = manifestSource.match(/MANIFEST_KEY = '([^']+)'/);
         assert(manifestKeyMatch !== null, n('DocumentManifest\'s own storage key constant is found in its real source'));
         const manifestKey = manifestKeyMatch[1];
@@ -336,10 +336,10 @@ async function run() {
             'serializer/DocumentSerializer.js',
             'serializer/DocumentValidator.js',
             'serializer/DocumentSchemaMigrator.js',
-            'application/DocumentCloneService.js',
-            'application/DocumentManager.js',
-            'application/SaveDocumentUseCase.js',
-            'application/LoadDocumentUseCase.js'
+            'application/document/DocumentCloneService.js',
+            'application/document/DocumentManager.js',
+            'application/document/SaveDocumentUseCase.js',
+            'application/document/LoadDocumentUseCase.js'
         ];
         for (const file of files) {
             const source = await rawSource(file);
@@ -352,7 +352,7 @@ async function run() {
 
         // Publish is a wholly separate, explicitly-invoked use case —
         // confirmed it is never imported transitively by any of the above.
-        const publishSource = await rawSource('application/PublishDocumentUseCase.js');
+        const publishSource = await rawSource('application/publication/PublishDocumentUseCase.js');
         assert(/this\._publisherProvider\.publish\(document/.test(publishSource),
             n('PublishDocumentUseCase is the sole call site that turns a Document into a Publication — a fact this milestone confirms is untouched by any file in the Export/Import composition above'));
 
@@ -518,7 +518,7 @@ async function run() {
         // Empty document (0 buildings): valid for Save/Import; Publish is stricter, deliberately.
         const emptyDoc = new Document({ world: new World(), metadata: new DocumentMetadata({ title: 'Empty' }) });
         assert(DocumentValidator.validate(emptyDoc.toJSON()).valid === true,
-            n('an empty document (zero buildings) is structurally valid — Save/Load/Import\'s validation bar is deliberately lower than Publish\'s own additional, separate non-empty-world check (application/PublishDocumentUseCase.js#_validate), confirming Import safety and Publish eligibility are two different, already-separate concerns'));
+            n('an empty document (zero buildings) is structurally valid — Save/Load/Import\'s validation bar is deliberately lower than Publish\'s own additional, separate non-empty-world check (application/publication/PublishDocumentUseCase.js#_validate), confirming Import safety and Publish eligibility are two different, already-separate concerns'));
 
         // Large document: completes, no crash — flagged as an open question, not a defect.
         const largeDoc = createRichDocument({ brickCount: 3000 });
@@ -672,7 +672,7 @@ async function run() {
         // existed on Toolbar.js or EditorView.js; that absence was this
         // Section's own finding, not an assumption. 0.9.641 implemented
         // Export (see tests/EditorDocumentExport.test.js); 0.9.642 then
-        // implemented Import — application/ImportDocumentUseCase.js,
+        // implemented Import — application/document/ImportDocumentUseCase.js,
         // running exactly this audit's own Section F flagship pipeline
         // (DocumentSerializer.deserialize() -> DocumentCloneService.execute())
         // — on the same Toolbar.js surface, right beside it. See

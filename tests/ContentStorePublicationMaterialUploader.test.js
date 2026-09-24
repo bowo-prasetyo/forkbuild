@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
-import { ContentStorePublicationMaterialUploader } from '../application/ContentStorePublicationMaterialUploader.js';
+import { ContentStorePublicationMaterialUploader } from '../application/publication/distribution/ContentStorePublicationMaterialUploader.js';
 
 // 0.9.670 — Content-Store-Backed Publication Material Uploader.
-// See application/ContentStorePublicationMaterialUploader.js's own header
+// See application/publication/distribution/ContentStorePublicationMaterialUploader.js's own header
 // for the full report this closes.
 //
 //   Section A: flagship — material uploads through an injected contentStore
@@ -162,7 +162,7 @@ async function run() {
     // Section H — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/ContentStorePublicationMaterialUploader.js', import.meta.url);
+        const sourceUrl = new URL('../application/publication/distribution/ContentStorePublicationMaterialUploader.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

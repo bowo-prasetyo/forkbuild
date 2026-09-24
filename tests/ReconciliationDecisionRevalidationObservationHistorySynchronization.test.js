@@ -15,7 +15,7 @@ import {
     exportPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization,
     applyPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistorySynchronization
 } from '../application/claimSnapshotReconciliation/revalidationObservation/HistorySynchronization.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.169 — Revalidation Observation History Synchronization.
 //

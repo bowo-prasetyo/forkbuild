@@ -1,12 +1,12 @@
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { resolvePublicationDistributionRuntimeConfiguration } from '../application/PublicationDistributionRuntimeConfiguration.js';
-import { createPublicationDistributionRuntimeProvider } from '../application/PublicationDistributionRuntimeProvider.js';
-import { createArweavePublicationDistributionRuntimeAdapter } from '../application/ArweavePublicationDistributionRuntimeAdapter.js';
-import { createNostrPublicationDistributionRuntimeAdapter } from '../application/NostrPublicationDistributionRuntimeAdapter.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js';
+import { createPublicationDistributionRuntimeProvider } from '../application/publication/distribution/PublicationDistributionRuntimeProvider.js';
+import { createArweavePublicationDistributionRuntimeAdapter } from '../application/arweave/ArweavePublicationDistributionRuntimeAdapter.js';
+import { createNostrPublicationDistributionRuntimeAdapter } from '../application/nostr/NostrPublicationDistributionRuntimeAdapter.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -229,7 +229,7 @@ async function run() {
         await flushMicrotasks();
 
         assert(ctx.distributionExecuting === false, '9. today\'s configuration — execution still returns to idle');
-        assert(ctx.distributionError === 'ArweavePublicationMaterialUploader: a signer with a sign() method is required', '10. today\'s configuration — the click now surfaces the sanitized underlying cause (no wallet signer configured) instead of the old generic notice — see application/DistributionErrorMessageSanitizer.js');
+        assert(ctx.distributionError === 'ArweavePublicationMaterialUploader: a signer with a sign() method is required', '10. today\'s configuration — the click now surfaces the sanitized underlying cause (no wallet signer configured) instead of the old generic notice — see application/publication/distribution/DistributionErrorMessageSanitizer.js');
         assert(lifecycleStore.get(publication.id) === null, '11. today\'s configuration — the lifecycle store is left untouched');
 
         console.log('✓ Section B: with both adapters fed no host capability, the way ui/main.js builds it today, the identical click still reaches exactly today\'s existing honest failure');
@@ -243,7 +243,7 @@ async function run() {
         const source = await readFile(new URL('../ui/main.js', import.meta.url), 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("import { createArweavePublicationDistributionRuntimeAdapter } from '../application/ArweavePublicationDistributionRuntimeAdapter.js'"),
+        assert(codeOnly.includes("import { createArweavePublicationDistributionRuntimeAdapter } from '../application/arweave/ArweavePublicationDistributionRuntimeAdapter.js'"),
             '12. ui/main.js imports the real Arweave runtime adapter, never a hand-rolled equivalent');
         assert(codeOnly.includes('createArweavePublicationDistributionRuntimeAdapter({ signer: arweaveHostSigner })'),
             '13. ui/main.js actually calls the new adapter — as of 0.9.121, with a real host capability resolved via createArweaveInjectedProviderSigner(), superseding this test\'s own original 0.9.109-era snapshot ({})');

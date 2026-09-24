@@ -9,15 +9,15 @@ import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
-import { isMovableVehicleType, AvatarVehicleMovementController } from '../application/AvatarVehicleMovementController.js';
+import { isMovableVehicleType, AvatarVehicleMovementController } from '../application/avatar/AvatarVehicleMovementController.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.130 — Vehicle Steering UX / Control Contract.
 //
@@ -350,7 +350,7 @@ async function runTests() {
         assert(isMovableVehicleType(VehicleType.DRONE) === true, '9d. DRONE is movable too, as of the Aerial Movement Pipeline milestone');
 
         // Steering genuinely drives a MOTORCYCLE through this exact same
-        // pipeline, matching application/AvatarVehicleMovementController.js's
+        // pipeline, matching application/avatar/AvatarVehicleMovementController.js's
         // own generic `canMove()` gate — never a vehicle-specific
         // steering implementation.
         let motorcycleInstance = new VehicleInstance({

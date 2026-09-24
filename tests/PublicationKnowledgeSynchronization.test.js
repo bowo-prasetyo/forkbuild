@@ -1,36 +1,36 @@
-import { PublicationKnowledgeSynchronizationCoordinator } from '../application/PublicationKnowledgeSynchronizationCoordinator.js';
-import { CreatePublicationKnowledgeSynchronizationCoordinatorUseCase } from '../application/CreatePublicationKnowledgeSynchronizationCoordinatorUseCase.js';
-import { PublicationKnowledgeSynchronizationUiState } from '../application/PublicationKnowledgeSynchronizationUiState.js';
-import { describeSynchronizationAttempt, describeSynchronizationButtonLabel } from '../application/PublicationKnowledgeSynchronizationView.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { PublicationAnchorPeerExchange } from '../application/PublicationAnchorPeerExchange.js';
-import { PublicationAnchorDiscoveryCoordinator } from '../application/PublicationAnchorDiscoveryCoordinator.js';
-import { LocalAnchorKnowledgeStore } from '../application/LocalAnchorKnowledgeStore.js';
-import { AnchorAcquisitionKind } from '../application/AnchorAcquisitionKind.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { PublicationSnapshotPlacementPeerExchange } from '../application/PublicationSnapshotPlacementPeerExchange.js';
-import { PublicationSnapshotPlacementDiscoveryCoordinator } from '../application/PublicationSnapshotPlacementDiscoveryCoordinator.js';
-import { LocalPlacementKnowledgeStore } from '../application/LocalPlacementKnowledgeStore.js';
-import { PlacementAcquisitionKind } from '../application/PlacementAcquisitionKind.js';
-import { buildPublicationReplicaPackage } from '../application/PublicationReplicaPackage.js';
-import { ImportPublicationReplicaPackageUseCase } from '../application/ImportPublicationReplicaPackageUseCase.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
+import { PublicationKnowledgeSynchronizationCoordinator } from '../application/publication/evidence/PublicationKnowledgeSynchronizationCoordinator.js';
+import { CreatePublicationKnowledgeSynchronizationCoordinatorUseCase } from '../application/publication/evidence/CreatePublicationKnowledgeSynchronizationCoordinatorUseCase.js';
+import { PublicationKnowledgeSynchronizationUiState } from '../application/publication/evidence/PublicationKnowledgeSynchronizationUiState.js';
+import { describeSynchronizationAttempt, describeSynchronizationButtonLabel } from '../application/publication/evidence/PublicationKnowledgeSynchronizationView.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { PublicationAnchorPeerExchange } from '../application/anchoring/PublicationAnchorPeerExchange.js';
+import { PublicationAnchorDiscoveryCoordinator } from '../application/anchoring/PublicationAnchorDiscoveryCoordinator.js';
+import { LocalAnchorKnowledgeStore } from '../application/anchoring/LocalAnchorKnowledgeStore.js';
+import { AnchorAcquisitionKind } from '../application/anchoring/AnchorAcquisitionKind.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';
+import { PublicationSnapshotPlacementDiscoveryCoordinator } from '../application/snapshot/placement/PublicationSnapshotPlacementDiscoveryCoordinator.js';
+import { LocalPlacementKnowledgeStore } from '../application/placement/LocalPlacementKnowledgeStore.js';
+import { PlacementAcquisitionKind } from '../application/placement/PlacementAcquisitionKind.js';
+import { buildPublicationReplicaPackage } from '../application/publication/replica/PublicationReplicaPackage.js';
+import { ImportPublicationReplicaPackageUseCase } from '../application/publication/replica/ImportPublicationReplicaPackageUseCase.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { derivePublicationEvidenceConvergence } from '../application/PublicationEvidenceConvergence.js';
-import { publicationEvidenceConvergenceView } from '../application/PublicationEvidenceConvergenceView.js';
-import { ContentBindingSetRelationship } from '../application/ContentBindingSetRelationship.js';
+import { derivePublicationEvidenceConvergence } from '../application/publication/evidence/PublicationEvidenceConvergence.js';
+import { publicationEvidenceConvergenceView } from '../application/publication/evidence/PublicationEvidenceConvergenceView.js';
+import { ContentBindingSetRelationship } from '../application/publication/evidence/ContentBindingSetRelationship.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.8.30 — Explicit Replica Knowledge Synchronization.
@@ -344,10 +344,10 @@ async function run() {
 
         // OBSERVATION BOUNDARY: synchronization never carries a
         // verification or resolution outcome. Nothing in this test ever
-        // called application/ExternalAnchorVerifier.js or application/
+        // called application/anchoring/ExternalAnchorVerifier.js or application/
         // SnapshotPlacementResolver.js for Carol — her own knowledge
         // store has no notion of verified/resolved at all, exactly as
-        // application/LocalAnchorKnowledgeStore.js's own shape (LOCAL/
+        // application/anchoring/LocalAnchorKnowledgeStore.js's own shape (LOCAL/
         // PACKAGE/PEER plus firstSeenAt only) already guarantees
         // structurally, never as a runtime check this coordinator has to
         // perform.
@@ -430,7 +430,7 @@ async function run() {
 
         assert(daveAnchorCatalog.findByPublicationId(PUBLICATION_ID).length === 1, '3. Dave still knows exactly one anchor — Bob re-sent the SAME Anchor A, not a new one');
         assert(daveAnchorKnowledge.get(anchorA.id).acquisition.kind === AnchorAcquisitionKind.PACKAGE,
-            '4. FIRST-SEEN-WINS: Dave\'s knowledge store STILL reports PACKAGE for Anchor A, never PEER — this milestone\'s own combined synchronize() crosses the IDENTICAL knowledgeStore.record() boundary application/PublicationAnchorPeerExchange.js already held itself to, never a second one');
+            '4. FIRST-SEEN-WINS: Dave\'s knowledge store STILL reports PACKAGE for Anchor A, never PEER — this milestone\'s own combined synchronize() crosses the IDENTICAL knowledgeStore.record() boundary application/anchoring/PublicationAnchorPeerExchange.js already held itself to, never a second one');
 
         bobReplica.dispose();
         stopBob(); stopDave();

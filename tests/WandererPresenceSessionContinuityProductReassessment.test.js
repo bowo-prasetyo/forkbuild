@@ -6,35 +6,35 @@ import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeer
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
-import { AutoConnectKnownPeersUseCase } from '../application/AutoConnectKnownPeersUseCase.js';
-import { resolveDirectSocialIdentity } from '../application/SocialIdentityResolver.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { PeerReconnectionUseCase } from '../application/peer/PeerReconnectionUseCase.js';
+import { AutoConnectKnownPeersUseCase } from '../application/peer/AutoConnectKnownPeersUseCase.js';
+import { resolveDirectSocialIdentity } from '../application/identity/SocialIdentityResolver.js';
 
 import { AvatarProfile } from '../core/AvatarProfile.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { PresenceSyncService } from '../application/PresenceSyncService.js';
-import { LocalPresenceStore } from '../application/LocalPresenceStore.js';
-import { PresenceTrustBoundary } from '../application/PresenceTrustBoundary.js';
-import { RemoteAvatarRegistry } from '../application/RemoteAvatarRegistry.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { PresenceSyncService } from '../application/presence/PresenceSyncService.js';
+import { LocalPresenceStore } from '../application/presence/LocalPresenceStore.js';
+import { PresenceTrustBoundary } from '../application/presence/PresenceTrustBoundary.js';
+import { RemoteAvatarRegistry } from '../application/avatar/RemoteAvatarRegistry.js';
 import { toAvatarPresenceAdvertisement } from '../core/AvatarPresenceAdvertisement.js';
 import { PresenceLifecycleState } from '../core/PresenceLifecycleState.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
 import { PresenceVisibility } from '../core/PresenceVisibility.js';
-import { PresenceVisibilityUseCase } from '../application/PresenceVisibilityUseCase.js';
+import { PresenceVisibilityUseCase } from '../application/presence/PresenceVisibilityUseCase.js';
 
-import { WorldPresenceUseCase } from '../application/WorldPresenceUseCase.js';
+import { WorldPresenceUseCase } from '../application/presence/WorldPresenceUseCase.js';
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
-import { WorldSpatialPresenceUseCase } from '../application/WorldSpatialPresenceUseCase.js';
+import { WorldSpatialPresenceUseCase } from '../application/presence/WorldSpatialPresenceUseCase.js';
 import { WorldSpatialActivity } from '../core/WorldSpatialActivity.js';
 import { isValidWorldSpatialPresenceAdvertisement } from '../core/WorldSpatialPresenceAdvertisement.js';
 
 import { WorldPlacement } from '../core/WorldPlacement.js';
 import { Position } from '../core/Position.js';
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
 import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 
 // 0.9.582 — Wanderer Presence & Session Continuity Product Reassessment.
@@ -50,7 +50,7 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 // without confusing presence with World content or publication identity?
 //
 // A structural constraint, identical in kind to every "World Lifecycle"-
-// class milestone since 0.9.574: application/WorldNavigationSession.js
+// class milestone since 0.9.574: application/world/WorldNavigationSession.js
 // transitively imports renderer/RenderWorldViewUseCase.js, which imports
 // `three` — a package this checkout has no node_modules for at all
 // (confirmed directly: this checkout has no package.json/node_modules,
@@ -61,16 +61,16 @@ import { worldNavigationSessionFiles } from './support/SourceFileGroups.js';
 // direct source citation (readSource() + exact string/regex match)
 // rather than execution — the same discipline 0.9.576 established.
 // Every real presence/session/identity/peer collaborator this file
-// actually needs — application/AvatarPresenceSession.js,
-// application/PresenceSyncService.js, application/LocalPresenceStore.js,
-// application/PresenceTrustBoundary.js, application/RemoteAvatarRegistry.js,
-// application/WorldPresenceUseCase.js, application/WorldSpatialPresenceUseCase.js,
-// application/ConnectedPeer.js, application/ConnectedPeerRegistry.js,
-// application/DeviceAuthorizationPropagationUseCase.js,
-// application/PeerRelationshipUseCase.js, application/PeerReconnectionUseCase.js,
-// application/AutoConnectKnownPeersUseCase.js, application/SocialIdentityResolver.js,
-// application/ConnectedIdentityPeers.js, presence/PeerAvatarPresenceBroadcastProvider.js,
-// application/PresenceVisibilityUseCase.js, application/ObserverLocalEncounterStore.js,
+// actually needs — application/avatar/AvatarPresenceSession.js,
+// application/presence/PresenceSyncService.js, application/presence/LocalPresenceStore.js,
+// application/presence/PresenceTrustBoundary.js, application/avatar/RemoteAvatarRegistry.js,
+// application/presence/WorldPresenceUseCase.js, application/presence/WorldSpatialPresenceUseCase.js,
+// application/peer/ConnectedPeer.js, application/peer/ConnectedPeerRegistry.js,
+// application/identity/DeviceAuthorizationPropagationUseCase.js,
+// application/peer/PeerRelationshipUseCase.js, application/peer/PeerReconnectionUseCase.js,
+// application/peer/AutoConnectKnownPeersUseCase.js, application/identity/SocialIdentityResolver.js,
+// application/peer/ConnectedIdentityPeers.js, presence/PeerAvatarPresenceBroadcastProvider.js,
+// application/presence/PresenceVisibilityUseCase.js, application/worldEncounter/ObserverLocalEncounterStore.js,
 // peer/PeerMessageBus.js, peer/LocalPeerConnectionProvider.js,
 // peer/PeerAuthenticationSession.js, identity/LocalIdentityProvider.js —
 // was confirmed, live, to import cleanly under plain `node` before this
@@ -220,7 +220,7 @@ async function connectAndAuthenticate(network, addressA, deviceA, addressB, devi
 
 // One replica's own presence stack — device authorization plus all
 // THREE real presence protocols this milestone's own Section A finds —
-// the identical composition shape application/CreateWorldViewUseCase.js
+// the identical composition shape application/world/CreateWorldViewUseCase.js
 // wires in a real deployment.
 function makeStack(device, { now = () => Date.now(), minIntervalMs = 30 } = {}) {
     const peerMessageBus = new PeerMessageBus();
@@ -260,8 +260,8 @@ async function main() {
     {
         // A1. Three, genuinely separate, namespaced protocols — never one
         // "presence" mechanism a caller could mistake for a single seam.
-        const worldSource = await readSource('application/WorldPresenceUseCase.js');
-        const spatialSource = await readSource('application/WorldSpatialPresenceUseCase.js');
+        const worldSource = await readSource('application/presence/WorldPresenceUseCase.js');
+        const spatialSource = await readSource('application/presence/WorldSpatialPresenceUseCase.js');
         assert(/WorldPresenceUseCase\.DEFAULT_PROTOCOL = 'forkbuild:world-presence';/.test(worldSource),
             "A1a. WorldPresenceUseCase owns its own namespaced protocol, 'forkbuild:world-presence'.");
         assert(/WorldSpatialPresenceUseCase\.DEFAULT_PROTOCOL = 'forkbuild:world-spatial-presence';/.test(spatialSource),
@@ -294,12 +294,12 @@ async function main() {
         stack.worldPresence.dispose(); stack.spatialPresence.dispose();
 
         // A4. Authoritative vs. ephemeral, classified against real
-        // construction rather than assumed: application/ConnectedPeer.js
-        // and application/ConnectedPeerRegistry.js are the one
+        // construction rather than assumed: application/peer/ConnectedPeer.js
+        // and application/peer/ConnectedPeerRegistry.js are the one
         // AUTHORITATIVE fact underneath all three protocols (a real,
         // live, authenticated transport connection) — every presence
         // protocol above is computed FROM that fact, never the reverse.
-        const connectedPeerSource = await readSource('application/ConnectedPeer.js');
+        const connectedPeerSource = await readSource('application/peer/ConnectedPeer.js');
         assert(/Null until authenticationSession reaches AUTHENTICATED/.test(connectedPeerSource),
             'A4. ConnectedPeer.remoteIdentity is the one AUTHORITATIVE identity fact — proven by a real handshake, never claimed by any of the three presence payloads themselves.');
 
@@ -344,7 +344,7 @@ async function main() {
         const bob2 = makeDevice('bob-b3');
         const first = await connectAndAuthenticate(network2, 'alice-b3-1', alice2, 'bob-b3-1', bob2);
         const firstConnectionId = first.peerB.connectionId;
-        // Captured BEFORE closing — application/ConnectedPeer.js's own
+        // Captured BEFORE closing — application/peer/ConnectedPeer.js's own
         // header states closing discards remoteIdentity (mirroring
         // peer/PeerAuthenticationSession.js's own discipline), so this is
         // the last moment first.peerB.remoteIdentity is still readable.
@@ -402,9 +402,9 @@ async function main() {
         const lifecycleSource = await readSource('core/PresenceLifecycleState.js');
         assert(/Presence Lifecycle State Is A Derived\s*\n\/\/ Observation, Not A Stored Fact/.test(lifecycleSource),
             'C2a. core/PresenceLifecycleState.js\'s own header: absence is a derived observation the RECEIVER computes, never a fact a sender declares.');
-        const sessionSource = await readSource('application/AvatarPresenceSession.js');
+        const sessionSource = await readSource('application/avatar/AvatarPresenceSession.js');
         assert(!/leave\(/.test(sessionSource) && !/\bdispose\(/.test(sessionSource),
-            'C2b. application/AvatarPresenceSession.js itself exposes no leave()/dispose() at all — there is structurally nothing to call to announce departure.');
+            'C2b. application/avatar/AvatarPresenceSession.js itself exposes no leave()/dispose() at all — there is structurally nothing to call to announce departure.');
 
         // C3. Live: World Presence's leaveWorld() is explicit and
         // immediate — the peer on the other end sees the roster entry
@@ -445,7 +445,7 @@ async function main() {
         // imported live (see this file's own header) — republishes the
         // UNCHANGED presence on a fixed interval comfortably inside the
         // default staleAfterMs window (2000ms heartbeat vs. 2500ms
-        // default staleAfterMs — see application/LocalPresenceStore.js's
+        // default staleAfterMs — see application/presence/LocalPresenceStore.js's
         // own constructor default), so an idle Wanderer is never
         // mistaken for a disconnected one.
         const wnsSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
@@ -476,9 +476,9 @@ async function main() {
         // than re-derived, since exercising the full mismatch path needs
         // peer/PeerSessionManager.js's real invitation machinery, already
         // proven independently by tests/PeerReconnection.test.js.
-        const reconnectionSource = await readSource('application/PeerReconnectionUseCase.js');
+        const reconnectionSource = await readSource('application/peer/PeerReconnectionUseCase.js');
         assert(/A Reconnect Verifies An\s*\n\/\/ Identity; It Never Assumes One/.test(reconnectionSource),
-            "D2. application/PeerReconnectionUseCase.js's own header states the exact rule this section's live tests below exercise: reconnecting only ever re-proves who a device already remembered, it is never trusted merely because SOME valid handshake completed.");
+            "D2. application/peer/PeerReconnectionUseCase.js's own header states the exact rule this section's live tests below exercise: reconnecting only ever re-proves who a device already remembered, it is never trusted merely because SOME valid handshake completed.");
         assertThrows(() => new PeerReconnectionUseCase({
             peerSessionManager: { createInvitation: () => {} },
             peerRelationshipUseCase: peerRelationships
@@ -647,7 +647,7 @@ async function main() {
         // own remote map is keyed by worldDocumentId, so an entry
         // recorded under 'world-f-a' can never be read back under
         // 'world-f-b'.
-        const worldSource = await readSource('application/WorldPresenceUseCase.js');
+        const worldSource = await readSource('application/presence/WorldPresenceUseCase.js');
         assert(/this\._remote = new Map\(\);/.test(worldSource) && /byConnection = this\._remote\.get\(payload\.worldDocumentId\);/.test(worldSource),
             "F3a. WorldPresenceUseCase's own _remote map is keyed by worldDocumentId — an entry can only ever be read back under the SAME World it was recorded for.");
         // Live corroboration: a SECOND replica (Charlie) who joins and
@@ -683,9 +683,9 @@ async function main() {
         // G1. A real, cited, deliberate architectural decision: mount
         // state was explicitly considered for AvatarPresence and
         // rejected.
-        const controllerSource = await readSource('application/AvatarVehicleInteractionController.js');
+        const controllerSource = await readSource('application/avatar/AvatarVehicleInteractionController.js');
         assert(/growing AvatarPresence with a `mountedVehicleId` was explicitly\s*\n\/\/ rejected/.test(controllerSource),
-            "G1. application/AvatarVehicleInteractionController.js's own header states, in these words, that folding mount state into AvatarPresenceSession/AvatarPresence 'was explicitly rejected' — this is a decision on record, not an omission this milestone is the first to notice.");
+            "G1. application/avatar/AvatarVehicleInteractionController.js's own header states, in these words, that folding mount state into AvatarPresenceSession/AvatarPresence 'was explicitly rejected' — this is a decision on record, not an omission this milestone is the first to notice.");
         const mountSource = await readSource('core/AvatarVehicleMount.js');
         assert(/never `vehicleType`/.test(mountSource),
             'G1b. core/AvatarVehicleMount.js itself carries only a `vehicleId` reference — never even a vehicle TYPE, let alone folding into the avatar\'s own identity/presence model.');
@@ -777,7 +777,7 @@ async function main() {
             'I1b. A WorldPlacement is never an AvatarPresence, and vice versa — two structurally unrelated classes, confirmed by prototype, not merely by field-shape resemblance.');
         assert(remoteWandererBody.profile !== undefined || true, 'I1c. sanity: remote/local avatar bodies constructed independently.');
         assert(observerStore.list().length === 1 && observerStore.list()[0].publicationId === 'pub-i1',
-            "I1d. The observer-local encounter is recorded in a THIRD store entirely (application/ObserverLocalEncounterStore.js) — it never touches the WorldPlacement or either avatar's own presence object.");
+            "I1d. The observer-local encounter is recorded in a THIRD store entirely (application/worldEncounter/ObserverLocalEncounterStore.js) — it never touches the WorldPlacement or either avatar's own presence object.");
 
         // I2. Mutating one never mutates another — the defining proof
         // that all four are independently represented, not merely
@@ -791,9 +791,9 @@ async function main() {
         // WorldView mount, never a cross-Wanderer registry, exactly
         // like each Wanderer's own AvatarPresenceSession belongs to
         // exactly one local avatar.
-        const observerSource = await readSource('application/ObserverLocalEncounterStore.js');
+        const observerSource = await readSource('application/worldEncounter/ObserverLocalEncounterStore.js');
         assert(/two separate\s*\n\/\/ `WorldView` mounts, two separate `AutomaticSnapshotEncounterCascade`\s*\n\/\/ instances, two separate `ObserverLocalEncounterStore` instances — never\s*\n\/\/ share a single encounter recorded here/.test(observerSource),
-            "I3. application/ObserverLocalEncounterStore.js's own header states, in these words, that two Wanderers never share one store — the cross-Wanderer isolation this section's brief asks for falls out of construction, not a runtime guard.");
+            "I3. application/worldEncounter/ObserverLocalEncounterStore.js's own header states, in these words, that two Wanderers never share one store — the cross-Wanderer isolation this section's brief asks for falls out of construction, not a runtime guard.");
 
         console.log('✓ Section I: a remote Wanderer\'s presence, a Publication\'s WorldPlacement, an observer-local encounter, and a local Wanderer\'s own body all independently occupy the identical coordinate with zero shared class, store, or mutation path between them, live-confirmed by construction and by mutating one without effect on the other three (I1, I2); and observer-local encounters are, by construction, never shared cross-Wanderer at all (I3).');
     }
@@ -885,13 +885,13 @@ async function main() {
         // files to even attempt it, confirmed live by real construction
         // (no such constructor parameter accepted) AND by source.
         const ephemeralFiles = [
-            'application/AvatarPresenceSession.js',
-            'application/PresenceSyncService.js',
-            'application/LocalPresenceStore.js',
-            'application/WorldPresenceUseCase.js',
-            'application/WorldSpatialPresenceUseCase.js',
-            'application/ConnectedPeer.js',
-            'application/ConnectedPeerRegistry.js'
+            'application/avatar/AvatarPresenceSession.js',
+            'application/presence/PresenceSyncService.js',
+            'application/presence/LocalPresenceStore.js',
+            'application/presence/WorldPresenceUseCase.js',
+            'application/presence/WorldSpatialPresenceUseCase.js',
+            'application/peer/ConnectedPeer.js',
+            'application/peer/ConnectedPeerRegistry.js'
         ];
         for (const file of ephemeralFiles) {
             const source = await readSource(file);
@@ -899,7 +899,7 @@ async function main() {
                 `K1. ${file} never imports StorageProvider and never holds a _storage field — EPHEMERAL by construction, not merely by unused capability.`);
         }
 
-        // K2. PERSISTENT: application/PresenceVisibilityUseCase.js — a
+        // K2. PERSISTENT: application/presence/PresenceVisibilityUseCase.js — a
         // real StorageProvider round-trip, live.
         const alice = makeDevice('alice-k2');
         const storage = new InMemoryStorageProvider();
@@ -925,12 +925,12 @@ async function main() {
         // K4. Classification table, asserted directly rather than left
         // as prose: PERSISTENT (K2's class), RECONSTRUCTED (K3's class,
         // and every AvatarPresenceSession — a fresh one per WorldView
-        // mount, per application/AvatarPresenceSession.js's own header),
+        // mount, per application/avatar/AvatarPresenceSession.js's own header),
         // EPHEMERAL (K1's seven files — never even reconstructable from
         // storage because there is nothing stored to reconstruct from).
-        const sessionSource = await readSource('application/AvatarPresenceSession.js');
+        const sessionSource = await readSource('application/avatar/AvatarPresenceSession.js');
         assert(/Tracks ONE\s*\n\/\/ user's own live presence for the duration of a World View session/.test(sessionSource),
-            "K4. application/AvatarPresenceSession.js's own header: scoped to the duration of ONE World View session — RECONSTRUCTED fresh on every session, exactly K3's own class of behavior, never persisted (K1) and never a durable record the way K2's policy is.");
+            "K4. application/avatar/AvatarPresenceSession.js's own header: scoped to the duration of ONE World View session — RECONSTRUCTED fresh on every session, exactly K3's own class of behavior, never persisted (K1) and never a durable record the way K2's policy is.");
 
         console.log('✓ Section K: seven real classes are confirmed, live and structurally, to be EPHEMERAL — no StorageProvider dependency exists at all (K1); PresenceVisibilityUseCase is confirmed PERSISTENT via a real cross-instance storage round-trip (K2); and WorldPresenceUseCase (and, by its own header, AvatarPresenceSession) is confirmed RECONSTRUCTED — a fresh, independently-empty instance every time, never a cached singleton (K3, K4).');
     }
@@ -951,10 +951,10 @@ async function main() {
         // enum constants — are translated to human words in exactly one
         // place before a viewer ever sees them, never the raw constant
         // string leaking through.
-        const labelsSource = await readSource('application/AvatarPresenceLabels.js');
+        const labelsSource = await readSource('application/avatar/AvatarPresenceLabels.js');
         assert(/'Present'/.test(labelsSource) && /'Stale'/.test(labelsSource) && /'Trusted'/.test(labelsSource),
-            'L2a. application/AvatarPresenceLabels.js translates the raw PresenceLifecycleState/TrustStatus vocabulary into plain words.');
-        const { describeLifecycleState } = await import('../application/AvatarPresenceLabels.js');
+            'L2a. application/avatar/AvatarPresenceLabels.js translates the raw PresenceLifecycleState/TrustStatus vocabulary into plain words.');
+        const { describeLifecycleState } = await import('../application/avatar/AvatarPresenceLabels.js');
         assert(describeLifecycleState(PresenceLifecycleState.PRESENT) === 'Present' && describeLifecycleState('not-a-real-state') === 'Unknown',
             'L2b. Live: a genuine state resolves to its human label; an unrecognized one degrades to "Unknown" rather than leaking the raw internal value or throwing.');
 
@@ -989,7 +989,7 @@ async function main() {
         spatialPresence.updateSpatial('world-m1', { position: { x: 1, z: 1 } }); // immediate (selection/activity path not touched, but nothing sent yet inside the throttle window from the SECOND call)
         // Nothing is actually connected, so send() never has a live peer
         // to reach — the assertion here is about the TIMER, not delivery:
-        const sourceBefore = await readSource('application/WorldSpatialPresenceUseCase.js');
+        const sourceBefore = await readSource('application/presence/WorldSpatialPresenceUseCase.js');
         assert(/this\._flushTimers = new Map\(\);/.test(sourceBefore) && /_clearFlush\(worldDocumentId\)/.test(sourceBefore),
             'M1a. Flush timers are tracked per-worldDocumentId in their own Map, with a dedicated per-World cancellation method.');
         spatialPresence.leaveWorld('world-m1');
@@ -1147,7 +1147,7 @@ async function main() {
         // N10 — a genuine, worth-naming architectural characteristic
         // rather than a bug: a presence broadcast reaches every
         // currently AUTHENTICATED peer, full stop (see
-        // application/WorldPresenceUseCase.js's own header, "computed
+        // application/presence/WorldPresenceUseCase.js's own header, "computed
         // from live, AUTHORIZED connections" — authorized means
         // authenticated, never "also present in the same World"). Bob
         // and Alice are still directly connected, so Bob's own _remote

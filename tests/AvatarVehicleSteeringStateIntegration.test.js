@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -43,7 +43,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              own rate (Aerial Movement Pipeline milestone)
 //   Section L: architectural regression — the integration seam lives
 //              exactly where core/AvatarMovementSimulation.js's and
-//              application/AvatarMovementController.js's own 0.9.94
+//              application/avatar/AvatarMovementController.js's own 0.9.94
 //              headers say it does, and no second heading/orientation
 //              vocabulary was introduced
 //
@@ -514,24 +514,24 @@ async function runTests() {
     // Section L — architectural regression
     // -------------------------------------------------------------
     {
-        const controllerSource = await readFile(new URL('../application/AvatarMovementController.js', import.meta.url), 'utf8');
+        const controllerSource = await readFile(new URL('../application/avatar/AvatarMovementController.js', import.meta.url), 'utf8');
         const controllerCodeOnly = controllerSource
             .split('\n')
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
 
         assert(!/\bBICYCLE\b|\bMOTORCYCLE\b|\bCAR\b|\bDRONE\b/.test(controllerCodeOnly),
-            '25. application/AvatarMovementController.js never references BICYCLE/MOTORCYCLE/CAR/DRONE — it knows only about a resolved capability\'s own generic steering.steeringRate number');
+            '25. application/avatar/AvatarMovementController.js never references BICYCLE/MOTORCYCLE/CAR/DRONE — it knows only about a resolved capability\'s own generic steering.steeringRate number');
         assert(!controllerCodeOnly.includes('AvatarMovementSteeringKind') && !/\.kind\b/.test(controllerCodeOnly.replace(/movementKind/g, '')),
-            '26. application/AvatarMovementController.js never reads AvatarMovementSteeringCapability\'s own .kind — the bare steeringRate number alone (always exactly 0 for INSTANT, always > 0 for RATE_LIMITED) already carries the distinction');
+            '26. application/avatar/AvatarMovementController.js never reads AvatarMovementSteeringCapability\'s own .kind — the bare steeringRate number alone (always exactly 0 for INSTANT, always > 0 for RATE_LIMITED) already carries the distinction');
         assert(!controllerCodeOnly.includes('AvatarMovementSteeringSimulation') && !controllerCodeOnly.includes('resolveMovementHeading'),
-            '27. application/AvatarMovementController.js never imports core/AvatarMovementSteeringSimulation.js or calls resolveMovementHeading() directly — it only ever hands a bare number to core/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
+            '27. application/avatar/AvatarMovementController.js never imports core/AvatarMovementSteeringSimulation.js or calls resolveMovementHeading() directly — it only ever hands a bare number to core/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
         assert(controllerCodeOnly.includes('_resolvedSteeringRate'),
-            '28. application/AvatarMovementController.js exposes the _resolvedSteeringRate() seam this milestone exists to add');
+            '28. application/avatar/AvatarMovementController.js exposes the _resolvedSteeringRate() seam this milestone exists to add');
         assert(!controllerCodeOnly.includes('_currentMovementHeading') && !controllerCodeOnly.includes('VehicleOrientation'),
-            '29. application/AvatarMovementController.js introduces no new transient heading field, and no second VehicleOrientation vocabulary — the avatar\'s existing rotationY/AvatarPresence.rotation.y IS the stateful heading this milestone connects the pure math to');
+            '29. application/avatar/AvatarMovementController.js introduces no new transient heading field, and no second VehicleOrientation vocabulary — the avatar\'s existing rotationY/AvatarPresence.rotation.y IS the stateful heading this milestone connects the pure math to');
         assert(!/VehicleMovementController/.test(controllerCodeOnly),
-            '30. no second, per-vehicle movement controller was introduced — application/AvatarMovementController.js remains the one movement executor');
+            '30. no second, per-vehicle movement controller was introduced — application/avatar/AvatarMovementController.js remains the one movement executor');
 
         const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         assert(simulationSource.includes('AvatarMovementSteeringSimulation') && simulationSource.includes('resolveMovementHeading'),

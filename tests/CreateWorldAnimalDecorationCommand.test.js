@@ -2,7 +2,7 @@ import { World } from '../core/World.js';
 import { Position } from '../core/Position.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { CreateWorldAnimalDecorationCommand } from '../application/commands/CreateWorldAnimalDecorationCommand.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 
 // 0.9.702 — World Animal Decorations, application/commands/
 // CreateWorldAnimalDecorationCommand.js. The direct structural twin of

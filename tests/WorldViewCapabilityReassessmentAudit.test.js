@@ -5,14 +5,14 @@ import {
     loadWorldEncounterMaterial,
     WorldEncounterMaterialLoadStatus,
     WorldEncounterMaterialSource
-} from '../application/WorldEncounterMaterialLoading.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+} from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { describeWorldEncounterSelectionIdentity } from '../core/WorldEncounterSelectionIdentity.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeWorldFromDiscoveryRegistry } from '../application/WorldDiscoveryRegistryProjection.js';
-import { bootstrapWorldDiscoveryRuntime } from '../application/WorldDiscoveryRuntimeBootstrap.js';
-import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
+import { bootstrapWorldDiscoveryRuntime } from '../application/discovery/WorldDiscoveryRuntimeBootstrap.js';
+import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import {
     describePeerWorldDiscoverySource,
     derivePeerWorldOrigin
@@ -25,9 +25,9 @@ import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource,
     materializedSnapshotWorldOrigin
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { Document } from '../core/Document.js';
@@ -264,14 +264,14 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const boundaryFiles = [
-            '../application/WorldDiscoveryRegistryProjection.js',
+            '../application/discovery/WorldDiscoveryRegistryProjection.js',
             '../core/WorldEncounter.js',
-            '../application/WorldEncounterReadModel.js',
-            '../application/WorldEncounterView.js',
-            '../application/WorldEncounterSelectionOutcome.js',
-            '../application/WorldEncounterSelectionResolution.js',
-            '../application/WorldEncounterMaterialInspection.js',
-            '../application/WorldDiscoverySourceRegistry.js'
+            '../application/worldEncounter/WorldEncounterReadModel.js',
+            '../application/worldEncounter/WorldEncounterView.js',
+            '../application/worldEncounter/WorldEncounterSelectionOutcome.js',
+            '../application/worldEncounter/WorldEncounterSelectionResolution.js',
+            '../application/worldEncounter/WorldEncounterMaterialInspection.js',
+            '../application/discovery/WorldDiscoverySourceRegistry.js'
         ];
 
         function codeOnly(source) {
@@ -452,10 +452,10 @@ async function run() {
 
         // No new lifecycle vocabulary exists anywhere this audit imports.
         const lifecycleFiles = [
-            '../application/WorldDiscoverySourceRegistry.js',
-            '../application/MaterializedSnapshotWorldDiscoveryBridge.js',
+            '../application/discovery/WorldDiscoverySourceRegistry.js',
+            '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js',
             '../peer/PeerWorldDiscoveryLifecycleBridge.js',
-            '../application/SnapshotWorldRegistrationOutcome.js'
+            '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js'
         ];
         const inventedLifecycleTerms = ['ACTIVE', 'EXPIRED', 'STALE', 'SYNCED', 'INACTIVE', 'REVOKED'];
         for (const relativePath of lifecycleFiles) {
@@ -483,10 +483,10 @@ async function run() {
         // registration pipeline runs on no timer of its own: a structural
         // sweep for setInterval/setTimeout across exactly those files.
         const snapshotPipelineFiles = [
-            '../application/MaterializedSnapshotWorldDiscoveryBridge.js',
-            '../application/DiscoverSnapshotCandidatesCommand.js',
-            '../application/ResolveSelectedSnapshotCommand.js',
-            '../application/MaterializeSelectedSnapshotCommand.js'
+            '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js',
+            '../application/snapshot/DiscoverSnapshotCandidatesCommand.js',
+            '../application/snapshot/ResolveSelectedSnapshotCommand.js',
+            '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js'
         ];
         for (const relativePath of snapshotPipelineFiles) {
             const source = await readFile(new URL(relativePath, import.meta.url), 'utf8');

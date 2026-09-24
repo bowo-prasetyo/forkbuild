@@ -15,7 +15,7 @@ import { StructurePlacement } from '../core/StructurePlacement.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { geographicPlaceLocationId } from '../core/GeographicPlaceNavigation.js';
 
 // 0.5.8 — World View Contextual Focus & Information Hierarchy.
@@ -31,7 +31,7 @@ import { geographicPlaceLocationId } from '../core/GeographicPlaceNavigation.js'
 // Section A: core/WorldFocusContext.js — pure derivation for all five
 //            kinds, determinism, no mutation, arrival-phrase wording,
 //            graceful nulls.
-// Section B: application/WorldNavigationSession.js wiring —
+// Section B: application/world/WorldNavigationSession.js wiring —
 //            getFocusContextForLocation()/getFocusContextForCollaborator(),
 //            reusing the exact same collections every other read-only
 //            method already gathers.
@@ -84,7 +84,7 @@ function setAvatarPosition(session, x, z) {
 
 // The exact grouped-by-identity, `devices: [...]` shape
 // WorldSpatialPresenceUseCase#getSpatialRoster() really returns — see
-// application/WorldNavigationSession.js#_getPresentCollaborators()'s own
+// application/world/WorldNavigationSession.js#_getPresentCollaborators()'s own
 // consumption of it.
 function stubCollaboratorRoster(session, worldId, rows) {
     session._presentSpatialWorldDocumentIds = new Set([worldId]);
@@ -207,7 +207,7 @@ async function run() {
     console.log('✓ Section A: core/WorldFocusContext.js — all five kinds derive correctly, graceful nulls, byte-identical toJSON()');
 
     // -------------------------------------------------------------
-    // Section B: application/WorldNavigationSession.js wiring
+    // Section B: application/world/WorldNavigationSession.js wiring
     // -------------------------------------------------------------
     {
         const bareSession = makeReplica([]);
@@ -259,7 +259,7 @@ async function run() {
         assert(firstRead !== secondRead, '56. each read rebuilds a fresh instance, never a cached singleton');
         assert(JSON.stringify(firstRead) === JSON.stringify(secondRead), '57. despite being freshly rebuilt, two reads of the same target are byte-identical');
     }
-    console.log('✓ Section B: application/WorldNavigationSession.js — getFocusContextForLocation()/getFocusContextForCollaborator(), no mutation, deterministic');
+    console.log('✓ Section B: application/world/WorldNavigationSession.js — getFocusContextForLocation()/getFocusContextForCollaborator(), no mutation, deterministic');
 
     // -------------------------------------------------------------
     // Section C: CAPSTONE — cross-surface consistency, Focus ≠ Go ≠ Map

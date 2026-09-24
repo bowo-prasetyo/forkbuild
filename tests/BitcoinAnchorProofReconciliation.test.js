@@ -1,9 +1,9 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { BitcoinAnchorConfirmationObserver } from '../anchoring/BitcoinAnchorConfirmationObserver.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
-import { BitcoinAnchorProofReconciliationView } from '../application/BitcoinAnchorProofReconciliationView.js';
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
-import { BitcoinAnchorContentProofState } from '../application/BitcoinAnchorContentProofState.js';
+import { BitcoinAnchorProofReconciliationView } from '../application/anchoring/bitcoin/BitcoinAnchorProofReconciliationView.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorContentProofState } from '../application/anchoring/bitcoin/BitcoinAnchorContentProofState.js';
 
 // 0.8.55 — Bitcoin Anchor Proof Reconciliation.
 //

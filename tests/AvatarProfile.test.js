@@ -1,5 +1,5 @@
 import { AvatarProfile, DEFAULT_AVATAR_TEMPLATE_ID } from '../core/AvatarProfile.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -7,7 +7,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 
 // 0.2.33/0.2.34 — Avatar Identity, Presence & Customization. This
 // file covers the PERSISTENT half: core/AvatarProfile.js (the value
-// object) and application/AvatarProfileUseCase.js — including 0.2.34's
+// object) and application/avatar/AvatarProfileUseCase.js — including 0.2.34's
 // validate-on-write (updateProfile) and never-fail-on-read
 // (getEffectiveAvatar) postures. See tests/AvatarPresence.test.js for
 // the EPHEMERAL half and tests/AvatarTemplate.test.js for the
@@ -105,7 +105,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // application/AvatarProfileUseCase.js — basic load/create/persist
+    // application/avatar/AvatarProfileUseCase.js — basic load/create/persist
     // (unchanged behavior from 0.2.33, now against the real registry)
     // -------------------------------------------------------------
     {

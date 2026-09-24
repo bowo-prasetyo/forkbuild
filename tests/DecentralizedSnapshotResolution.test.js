@@ -4,11 +4,11 @@ import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 
 // 0.9.134 — Snapshot Retrieval from Decentralized Discovery.
 //
@@ -19,7 +19,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/Decentral
 // case — that discovery is not verification. Neither milestone connected
 // the two: discovering a candidate and actually retrieving/verifying its
 // bytes remained two entirely separate, manually-driven steps. This
-// milestone is that connection: application/DecentralizedSnapshotResolver.js,
+// milestone is that connection: application/snapshot/DecentralizedSnapshotResolver.js,
 // a narrow application-level resolver that turns
 // `(discoveryTag, contentHash)` into either a verified Snapshot or a
 // specific, structural reason it could not be produced.
@@ -59,7 +59,7 @@ import { DecentralizedSnapshotResolutionOutcome } from '../application/Decentral
 //        store cannot presently retrieve it
 //     5. VERIFICATION failure — a false discovery record: retrieval
 //        genuinely succeeds, but the bytes don't match
-//     6. Reuses application/SnapshotPlacementStoreRegistry.js — no new
+//     6. Reuses application/snapshot/placement/SnapshotPlacementStoreRegistry.js — no new
 //        ContentStoreRegistry is built
 //     7. Multiple candidates are preserved, never silently ranked
 //     8. resolve() never throws for a discovery/store/network failure —
@@ -150,8 +150,8 @@ async function fileExists(relativePath) {
 }
 
 const RESOLUTION_FILES = [
-    'application/DecentralizedSnapshotResolver.js',
-    'application/DecentralizedSnapshotResolutionOutcome.js'
+    'application/snapshot/DecentralizedSnapshotResolver.js',
+    'application/snapshot/DecentralizedSnapshotResolutionOutcome.js'
 ];
 
 // One assembled scenario: a real ArweaveContentStore, a real Nostr
@@ -272,16 +272,16 @@ async function run() {
     }
 
     // 6 — no new ContentStoreRegistry is built; the resolver reuses
-    // application/SnapshotPlacementStoreRegistry.js exclusively.
+    // application/snapshot/placement/SnapshotPlacementStoreRegistry.js exclusively.
     {
         for (const file of RESOLUTION_FILES) {
             const code = await codeOnlySource(file);
             assert(!code.includes('ContentStoreRegistry'), `6a. ${file} never references a 'ContentStoreRegistry' — SnapshotPlacementStoreRegistry is reused, never re-invented under a new name`);
         }
-        const resolverCode = await codeOnlySource('application/DecentralizedSnapshotResolver.js');
-        assert(!resolverCode.includes("import { SnapshotPlacementStoreRegistry }"), '6b. DecentralizedSnapshotResolver.js never imports a concrete registry — a caller supplies one, exactly as application/SnapshotPlacementResolver.js already requires');
+        const resolverCode = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
+        assert(!resolverCode.includes("import { SnapshotPlacementStoreRegistry }"), '6b. DecentralizedSnapshotResolver.js never imports a concrete registry — a caller supplies one, exactly as application/snapshot/placement/SnapshotPlacementResolver.js already requires');
         assert(!resolverCode.includes('ArweaveContentStore') && !resolverCode.includes('IpfsContentStore'), '6c. DecentralizedSnapshotResolver.js never imports a concrete ContentStore — it only ever calls a resolved store\'s own get()');
-        console.log('✓ 6. application/SnapshotPlacementStoreRegistry.js is reused as-is — no second, competing ContentStoreRegistry is built');
+        console.log('✓ 6. application/snapshot/placement/SnapshotPlacementStoreRegistry.js is reused as-is — no second, competing ContentStoreRegistry is built');
     }
 
     // 7 — multiple candidates for the same contentHash are preserved,
@@ -345,7 +345,7 @@ async function run() {
     {
         const uiMain = await codeOnlySource('ui/main.js');
         assert(!uiMain.includes('DecentralizedSnapshotResolver'), '9a. ui/main.js never references DecentralizedSnapshotResolver — this milestone wires no composition root');
-        assert(await fileExists('application/DecentralizedSnapshotResolver.js'), '9b. sanity: the file itself does exist');
+        assert(await fileExists('application/snapshot/DecentralizedSnapshotResolver.js'), '9b. sanity: the file itself does exist');
         console.log('✓ 9. no composition wiring — DecentralizedSnapshotResolver is a plain, constructible collaborator, not yet wired into any composition root or UI');
     }
 

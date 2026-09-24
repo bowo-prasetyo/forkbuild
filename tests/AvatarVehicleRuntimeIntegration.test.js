@@ -1,21 +1,21 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
-import { AvatarVehicleInteractionController } from '../application/AvatarVehicleInteractionController.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
+import { AvatarVehicleInteractionController } from '../application/avatar/AvatarVehicleInteractionController.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { Position } from '../core/Position.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.83 — Avatar-Vehicle Mount/Dismount Runtime Integration,
-// application/WorldNavigationSession.js's own wiring of
-// application/AvatarVehicleInteractionController.js.
+// application/world/WorldNavigationSession.js's own wiring of
+// application/avatar/AvatarVehicleInteractionController.js.
 //
 //   Section A: keyboard wiring — 'E' reaches the vehicle interaction
 //              controller through the exact same avatarKeyDown/
@@ -32,7 +32,7 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 //
 // Central architectural claim under test throughout: this milestone
 // adds NO new mount/dismount policy inside WorldNavigationSession — it
-// only constructs application/AvatarVehicleInteractionController.js
+// only constructs application/avatar/AvatarVehicleInteractionController.js
 // alongside the existing AvatarMovementController, ticks it on the
 // same animation frame, and forwards the 'E' key through the same
 // avatarKeyDown/avatarKeyUp methods W/A/S/D already flow through. See
@@ -180,7 +180,7 @@ async function runTests() {
         );
 
         // Genuine release + re-press to dismount (see
-        // application/AvatarVehicleInteractionController.js's own
+        // application/avatar/AvatarVehicleInteractionController.js's own
         // header for why merely continuing to hold E would not — this
         // is the SAME held-key discipline tests/AvatarVehicleInteractionController.test.js
         // already proves in isolation).
@@ -239,7 +239,7 @@ async function runTests() {
     // Section D — architectural regression
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/WorldNavigationSession.js', import.meta.url);
+        const sourceUrl = new URL('../application/world/WorldNavigationSession.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -247,7 +247,7 @@ async function runTests() {
             .join('\n');
 
         assert(codeOnly.includes('AvatarVehicleInteractionController'),
-            '16. application/WorldNavigationSession.js does construct application/AvatarVehicleInteractionController.js — the integration this milestone exists to make');
+            '16. application/world/WorldNavigationSession.js does construct application/avatar/AvatarVehicleInteractionController.js — the integration this milestone exists to make');
         // 0.9.85 note: `VehicleMovement(?!Capability)` deliberately still
         // catches a parallel `VehicleMovementController`/vehicle speed
         // system (what THIS milestone, 0.9.83, forbids), while allowing
@@ -259,8 +259,8 @@ async function runTests() {
         // kind, capability integration included).
         //
         // 0.9.116 note: the negative lookahead now also allows
-        // `...Controller` — application/WorldNavigationSession.js
-        // legitimately constructs application/AvatarVehicleMovementController.js
+        // `...Controller` — application/world/WorldNavigationSession.js
+        // legitimately constructs application/avatar/AvatarVehicleMovementController.js
         // as of that milestone, the ONE generic vehicle movement
         // controller connecting the capability layer 0.9.85 already
         // integrates to an actual moving VehicleInstance (see that
@@ -271,7 +271,7 @@ async function runTests() {
         // BicycleMovementController/MotorcycleMovementController/
         // CarMovementController/DroneMovementController.
         assert(!/vehicleSpeed|VehicleMovement(?!Capability|Controller)|vehicleVelocity/.test(codeOnly),
-            '17. application/WorldNavigationSession.js never references vehicle speed, vehicle velocity, or an ad-hoc parallel vehicle movement system — 0.9.85\'s own capability integration and 0.9.116\'s own generic AvatarVehicleMovementController are the two allowed exceptions');
+            '17. application/world/WorldNavigationSession.js never references vehicle speed, vehicle velocity, or an ad-hoc parallel vehicle movement system — 0.9.85\'s own capability integration and 0.9.116\'s own generic AvatarVehicleMovementController are the two allowed exceptions');
         // The composition itself stays a one-line construction + a
         // one-line tick() call + a pass-through in avatarKeyDown/
         // avatarKeyUp — never a second copy of the mount/dismount rule

@@ -10,7 +10,7 @@ import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHisto
 // difference between two replicas' histories. That is 0.8.149's own,
 // separately sized, later question."). This file answers exactly that
 // question, and nothing else — the decision-history analogue of
-// `application/PublisherLeaderboardClaimHistoryDifference.js` (0.8.127), one
+// `application/leaderboard/PublisherLeaderboardClaimHistoryDifference.js` (0.8.127), one
 // subject over: where that file diffs a replica's own stored claim
 // RECEIPTS, this file diffs a replica's own stored reconciliation DECISIONS
 // (0.8.146's own, plain, ordered array of 0.8.145's own decision records):
@@ -112,7 +112,7 @@ import { reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHisto
 // application/claimSnapshotReconciliation/decision/HistoryView.js`'s
 // own `reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistory()`
 // — the ONE seam that reads the archive, applied independently to each side
-// (mirroring `application/PublisherLeaderboardClaimHistoryDifference.js`'s
+// (mirroring `application/leaderboard/PublisherLeaderboardClaimHistoryDifference.js`'s
 // own 0.8.130 update), without disturbing the pure computation above or any
 // caller already using it directly.
 //

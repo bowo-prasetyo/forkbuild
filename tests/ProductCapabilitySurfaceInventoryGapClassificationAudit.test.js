@@ -1,14 +1,15 @@
 import { readFile } from 'node:fs/promises';
+import { applicationPath } from './support/ApplicationFiles.js';
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { CreateEmptyWorldUseCase } from '../application/CreateEmptyWorldUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { CreateEmptyWorldUseCase } from '../application/world/CreateEmptyWorldUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -19,16 +20,16 @@ import { License, LicenseId } from '../core/License.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { LocalWorldExperienceStore } from '../application/LocalWorldExperienceStore.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
+import { LocalWorldExperienceStore } from '../application/world/LocalWorldExperienceStore.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.586 — Product Capability Surface Inventory & Gap Classification
@@ -134,7 +135,7 @@ async function main() {
     // door, or a journey with MULTIPLE independent mechanisms).
     // ===============================================================
     {
-        // A1. Create: application/CreateEmptyWorldUseCase.js is the real
+        // A1. Create: application/world/CreateEmptyWorldUseCase.js is the real
         // "New Document" entry point — confirmed by its own execute()
         // shape (a fresh World with one empty Building, no bricks).
         const world = new CreateEmptyWorldUseCase().execute();
@@ -142,9 +143,9 @@ async function main() {
             'A1. CreateEmptyWorldUseCase#execute() is a real, live "Create" entry point producing exactly one empty Building.');
 
         // A2. Save is a genuinely distinct mechanism from Publish and
-        // from Autosave — confirmed by application/SaveDocumentUseCase.js's
+        // from Autosave — confirmed by application/document/SaveDocumentUseCase.js's
         // own header, which names both boundaries explicitly.
-        const saveSource = await readSource('application/SaveDocumentUseCase.js');
+        const saveSource = await readSource('application/document/SaveDocumentUseCase.js');
         assert(/distinct from autosave.*and from publish/is.test(saveSource),
             'A2. SaveDocumentUseCase\'s own header states, in its own words, that Save is distinct from both Autosave and Publish — not an assumption this audit is inventing.');
 
@@ -154,15 +155,15 @@ async function main() {
         // out through discovery/CompositeDiscoveryProvider.js. This is
         // reported as a finding, not assumed to be wrong — see Section J.
         const discoverUseCases = ['DiscoverWorldsUseCase.js', 'DiscoverPeersUseCase.js', 'DiscoverPlacementsUseCase.js', 'DiscoverWorldAreaUseCase.js'];
-        const discoverExistence = await Promise.all(discoverUseCases.map((f) => sourceExists(`application/${f}`)));
+        const discoverExistence = await Promise.all(discoverUseCases.map((f) => applicationPath(f) !== null && sourceExists(applicationPath(f))));
         assert(discoverExistence.every(Boolean),
             'A3. All four parallel "Discover" use cases are real, live files — the "no single front door" finding is a real structural fact, not a naming coincidence.');
 
         // A4. Fork has THREE separate mechanisms — Document-level,
         // published-World-level ("Edit a Copy"), and Structure-level —
         // confirmed live, each a real class.
-        assert(await sourceExists('application/ForkDocumentUseCase.js')
-            && await sourceExists('application/ForkStructureUseCase.js'),
+        assert(await sourceExists('application/document/ForkDocumentUseCase.js')
+            && await sourceExists('application/editor/ForkStructureUseCase.js'),
             'A4. Fork has at least two independently named use-case classes (Document-level, Structure-level) confirmed to exist as real files — a genuinely plural mechanism, not one entry point wearing three names arbitrarily.');
 
         // A5. Return has NO single mechanism — RecentlyVisited (storage-
@@ -170,8 +171,8 @@ async function main() {
         // welcomeIsReturning (an arrival-framing flag) are three
         // independent concerns. Confirmed live below in Section L,
         // where the storage-backed half is actually exercised.
-        assert(await sourceExists('application/LocalWorldExperienceStore.js'),
-            'A5. application/LocalWorldExperienceStore.js (0.3.10, "World Persistence & Return Experience") is a real, live file — the storage-backed half of the plural "Return" mechanism.');
+        assert(await sourceExists('application/world/LocalWorldExperienceStore.js'),
+            'A5. application/world/LocalWorldExperienceStore.js (0.3.10, "World Persistence & Return Experience") is a real, live file — the storage-backed half of the plural "Return" mechanism.');
 
         console.log('✓ Section A: eighteen journeys mapped to real production entry-point chains; Discover (4 parallel use cases) and Fork (3 separate mechanisms) and Return (3 independent concerns) are confirmed-plural, not a single front door wearing several names.');
     }
@@ -255,9 +256,9 @@ async function main() {
         // protocol modules, with a comment in one acknowledging the
         // duplication is deliberate ("restated here rather than imported").
         const [peerContentSource, possessionSource, contentProtoSource] = await Promise.all([
-            readSource('application/PeerContentProtocol.js'),
-            readSource('application/PeerSnapshotPossessionProtocol.js'),
-            readSource('application/PeerSnapshotContentProtocol.js')
+            readSource('application/peer/PeerContentProtocol.js'),
+            readSource('application/snapshot/possession/PeerSnapshotPossessionProtocol.js'),
+            readSource('application/snapshot/materialization/PeerSnapshotContentProtocol.js')
         ]);
         const definesIsValidContentHash = (src) => /export function isValidContentHash\(hash\)/.test(src);
         assert(definesIsValidContentHash(peerContentSource) && definesIsValidContentHash(possessionSource) && definesIsValidContentHash(contentProtoSource),
@@ -370,18 +371,18 @@ async function main() {
         // F3. operation failed (generic) — Commentary has no dedicated
         // enum; confirmed live that it throws plain, distinct-message
         // Errors rather than an unclassified generic failure.
-        const commentarySource = await readSource('application/AddPublicationCommentaryUseCase.js');
+        const commentarySource = await readSource('application/publication/commentary/AddPublicationCommentaryUseCase.js');
         const distinctErrorMessages = new Set((commentarySource.match(/throw new Error\('([^']+)'\)/g) || []));
         assert(distinctErrorMessages.size >= 2,
-            `F3. application/AddPublicationCommentaryUseCase.js throws ${distinctErrorMessages.size} distinct, specific error messages (not one generic "operation failed") — the sixth brief-named class exists as real, distinguishable outcomes even without a dedicated enum class.`);
+            `F3. application/publication/commentary/AddPublicationCommentaryUseCase.js throws ${distinctErrorMessages.size} distinct, specific error messages (not one generic "operation failed") — the sixth brief-named class exists as real, distinguishable outcomes even without a dedicated enum class.`);
 
         // F4. No raw enum identifier or stack trace leaks into a
         // user-facing label — spot-checked on the sanitizer that guards
         // the one place wallet-originated (least trustworthy) error
         // text reaches the UI.
-        const sanitizerSource = await readSource('application/DistributionErrorMessageSanitizer.js');
+        const sanitizerSource = await readSource('application/publication/distribution/DistributionErrorMessageSanitizer.js');
         assert(/sanitizeDistributionErrorMessage/.test(sanitizerSource),
-            'F4. application/DistributionErrorMessageSanitizer.js exists and is a real, live sanitizer specifically for wallet-originated error text before display — confirming the codebase treats raw-error-leakage as a solved, guarded concern in its most exposed spot, not an oversight.');
+            'F4. application/publication/distribution/DistributionErrorMessageSanitizer.js exists and is a real, live sanitizer specifically for wallet-originated error text before display — confirming the codebase treats raw-error-leakage as a solved, guarded concern in its most exposed spot, not an oversight.');
 
         console.log('✓ Section F: all six brief-named failure classes (not found, unavailable, unresolvable, unverified, mismatch, operation failed) are confirmed live as real, distinguishable outcomes — five via dedicated enums, one (Commentary) via distinct specific error messages — with a dedicated sanitizer guarding the one highest-risk leak point.');
     }
@@ -478,12 +479,12 @@ async function main() {
         // I3. Silent fallback — the two genuine hits from research,
         // verified live, both already commented as intentional but
         // still collapsing "absence" and "failure" into one value.
-        const nostrSnapshotSource = await readSource('application/NostrSnapshotDiscoveryQueryService.js');
-        const structureResolverSource = await readSource('application/StructureDocumentResolver.js');
+        const nostrSnapshotSource = await readSource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
+        const structureResolverSource = await readSource('application/editor/StructureDocumentResolver.js');
         assert(/catch \{\s*\n\s*return \[\];/.test(nostrSnapshotSource),
-            'I3a. application/NostrSnapshotDiscoveryQueryService.js#search() collapses a query timeout/network error into the same [] a genuine zero-results response returns — confirmed live. A narrow ARCHITECTURAL_GAP: the caller cannot distinguish "nothing found" from "could not ask."');
+            'I3a. application/nostr/NostrSnapshotDiscoveryQueryService.js#search() collapses a query timeout/network error into the same [] a genuine zero-results response returns — confirmed live. A narrow ARCHITECTURAL_GAP: the caller cannot distinguish "nothing found" from "could not ask."');
         assert(/catch \(error\) \{\s*\n\s*return null;/.test(structureResolverSource),
-            'I3b. application/StructureDocumentResolver.js collapses a deserialize failure (corrupt/foreign blob) into the same null a genuine "not found" returns — confirmed live. Same class of narrow ARCHITECTURAL_GAP as I3a.');
+            'I3b. application/editor/StructureDocumentResolver.js collapses a deserialize failure (corrupt/foreign blob) into the same null a genuine "not found" returns — confirmed live. Same class of narrow ARCHITECTURAL_GAP as I3a.');
 
         // I4. Duplicate implementations — reconfirms C2 from this
         // section's own required checklist.
@@ -491,9 +492,9 @@ async function main() {
 
         // I5. Protocol-specific branch outside a provider file — the
         // one genuine hit from research, verified live.
-        const distributionCommandSource = await readSource('application/PublicationDistributionCommand.js');
+        const distributionCommandSource = await readSource('application/publication/distribution/PublicationDistributionCommand.js');
         assert(/resolvedProvider === 'nostr'/.test(distributionCommandSource),
-            'I5. application/PublicationDistributionCommand.js — generic distribution-lifecycle code — special-cases the literal string \'nostr\' rather than going through the DiscoveryProvider abstraction. Confirmed live; the file\'s own adjacent comment justifies it as reflecting a real data-model asymmetry (only Nostr multi-relay has a per-relay "origin"), so this is reported as a narrow, justified ARCHITECTURAL_GAP rather than an oversight.');
+            'I5. application/publication/distribution/PublicationDistributionCommand.js — generic distribution-lifecycle code — special-cases the literal string \'nostr\' rather than going through the DiscoveryProvider abstraction. Confirmed live; the file\'s own adjacent comment justifies it as reflecting a real data-model asymmetry (only Nostr multi-relay has a per-relay "origin"), so this is reported as a narrow, justified ARCHITECTURAL_GAP rather than an oversight.');
 
         console.log('✓ Section I: five drift categories searched mechanically; one clean (I1, no UI-layer domain construction), four with narrow, previously-uncatalogued findings (I2 raw-state render x2, I3 silent-fallback x2, I5 one protocol-string branch) — all small, all already partly self-disclosed in adjacent comments, none touching Discovery/Publication identity.');
     }

@@ -15,24 +15,24 @@ import { LocalContentResolver } from '../discovery/LocalContentResolver.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { PublicationSnapshotPlacementPeerExchange } from '../application/PublicationSnapshotPlacementPeerExchange.js';
-import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
-import { CreatePublicationSnapshotPlacementUseCase } from '../application/CreatePublicationSnapshotPlacementUseCase.js';
-import { SnapshotPlacementCreationOutcome } from '../application/SnapshotPlacementCreationOutcome.js';
-import { SnapshotPlacementResolver } from '../application/SnapshotPlacementResolver.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
-import { PlacementAcquisitionKind } from '../application/PlacementAcquisitionKind.js';
-import { LocalPlacementKnowledgeStore } from '../application/LocalPlacementKnowledgeStore.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { PublicationSnapshotPlacementPeerMessageKind } from '../application/PublicationSnapshotPlacementPeerProtocol.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';
+import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { CreatePublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js';
+import { SnapshotPlacementCreationOutcome } from '../application/snapshot/placement/SnapshotPlacementCreationOutcome.js';
+import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
+import { PlacementAcquisitionKind } from '../application/placement/PlacementAcquisitionKind.js';
+import { LocalPlacementKnowledgeStore } from '../application/placement/LocalPlacementKnowledgeStore.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { PublicationSnapshotPlacementPeerMessageKind } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 
 // 0.9.483 — Activate Production Snapshot Placement Peer Announcement.
 //
@@ -46,7 +46,7 @@ import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
 // else. It activates announce() at the ONE production operation that
 // makes a PublicationSnapshotPlacement exist at all: application/
 // CreatePublicationSnapshotPlacementUseCase.js#execute() (reached, in
-// production, only through application/CreateExternalSnapshotPlacementUseCase.js).
+// production, only through application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js).
 // No new peer manager, transport, discovery registry, or persistence
 // mechanism is built — every collaborator this milestone touches already
 // existed before it started.
@@ -126,7 +126,7 @@ function readSource(relativePath) {
     return execSync(`cat "${relativePath}"`, { cwd: SOURCE_ROOT.pathname }).toString();
 }
 
-// application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
+// application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
 // constructs a real storage/LocalStorageProvider.js, which reads
 // window.localStorage — a minimal in-memory shim, installed ONLY when no
 // window already exists. Mirrors tests/PassivePeerContributionToWalking
@@ -287,29 +287,29 @@ async function run() {
         // are model-internal, never a second creation site.
         const constructionSites = grepFiles('new PublicationSnapshotPlacement\\(', ['application', 'ui'])
             .filter((f) => f !== 'core/PublicationSnapshotPlacement.js');
-        assert(constructionSites.length === 1 && constructionSites[0] === 'application/CreatePublicationSnapshotPlacementUseCase.js',
-            `1. exactly one production file constructs a new PublicationSnapshotPlacement — application/CreatePublicationSnapshotPlacementUseCase.js — found: ${JSON.stringify(constructionSites)}.`);
+        assert(constructionSites.length === 1 && constructionSites[0] === 'application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js',
+            `1. exactly one production file constructs a new PublicationSnapshotPlacement — application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js — found: ${JSON.stringify(constructionSites)}.`);
 
         // A2. Exactly one production caller of its own execute() —
-        // application/CreateExternalSnapshotPlacementUseCase.js — never
+        // application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js — never
         // ui/main.js directly.
         const executeCallers = grepFiles('createPublicationSnapshotPlacementUseCase\\.execute\\(', ['application', 'ui']);
-        assert(executeCallers.length === 1 && executeCallers[0] === 'application/CreateExternalSnapshotPlacementUseCase.js',
-            `2. exactly one production caller of createPublicationSnapshotPlacementUseCase.execute() — application/CreateExternalSnapshotPlacementUseCase.js — found: ${JSON.stringify(executeCallers)}.`);
+        assert(executeCallers.length === 1 && executeCallers[0] === 'application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js',
+            `2. exactly one production caller of createPublicationSnapshotPlacementUseCase.execute() — application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js — found: ${JSON.stringify(executeCallers)}.`);
 
         // A3. The restore-on-startup path and the package-import path
         // never reference the creation use case at all — a restored or
         // package-imported placement is never a NEW claim this replica
         // is making, and this milestone must never re-announce either on
         // every app launch or every package import.
-        const restoreSource = readSource('application/RestorePublicationSnapshotPlacementCatalogUseCase.js');
-        const packageImportSource = readSource('application/ImportPackageSnapshotPlacementsUseCase.js');
+        const restoreSource = readSource('application/snapshot/placement/RestorePublicationSnapshotPlacementCatalogUseCase.js');
+        const packageImportSource = readSource('application/snapshot/placement/ImportPackageSnapshotPlacementsUseCase.js');
         assert(!/CreatePublicationSnapshotPlacementUseCase/.test(restoreSource) && !/announce/i.test(restoreSource),
-            '3. application/RestorePublicationSnapshotPlacementCatalogUseCase.js never references the creation use case or announce() — restored placements are never re-announced on startup.');
+            '3. application/snapshot/placement/RestorePublicationSnapshotPlacementCatalogUseCase.js never references the creation use case or announce() — restored placements are never re-announced on startup.');
         assert(!/CreatePublicationSnapshotPlacementUseCase/.test(packageImportSource) && !/announce/i.test(packageImportSource),
-            '4. application/ImportPackageSnapshotPlacementsUseCase.js never references the creation use case or announce() either — a package import is not this replica declaring a new claim.');
+            '4. application/snapshot/placement/ImportPackageSnapshotPlacementsUseCase.js never references the creation use case or announce() either — a package import is not this replica declaring a new claim.');
 
-        console.log('✓ Section A: the ONE production operation that causes a PublicationSnapshotPlacement to become locally known is application/CreatePublicationSnapshotPlacementUseCase.js#execute(), reached only through application/CreateExternalSnapshotPlacementUseCase.js — confirmed by grep, not assumed. Restore-on-startup and package import never touch it.');
+        console.log('✓ Section A: the ONE production operation that causes a PublicationSnapshotPlacement to become locally known is application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js#execute(), reached only through application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js — confirmed by grep, not assumed. Restore-on-startup and package import never touch it.');
     }
 
     // ===============================================================
@@ -317,7 +317,7 @@ async function run() {
     // optional collaborator, mirroring `knowledgeStore` exactly.
     // ===============================================================
     {
-        const source = readSource('application/CreatePublicationSnapshotPlacementUseCase.js');
+        const source = readSource('application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js');
         assert(/peerExchange\s*=\s*null/.test(source), '1. peerExchange is OPTIONAL, defaulting to null — mirrors knowledgeStore\'s own 0.8.24 parameter shape exactly.');
         assert(!/new PeerMessageBus\(|new .*PeerConnection|new .*ConnectedPeerRegistry/.test(source),
             '2. this file constructs no new peer transport, connection, or registry of its own — it only ever calls a peerExchange it is HANDED.');
@@ -352,7 +352,7 @@ async function run() {
     // Section C — Production reachability.
     // ===============================================================
     {
-        const orchestratorSource = readSource('application/CreateSnapshotPlacementOrchestratorUseCase.js');
+        const orchestratorSource = readSource('application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js');
         assert(/peerExchange\s*=\s*null/.test(orchestratorSource) && /placementCatalog,\s*knowledgeStore,\s*peerExchange/.test(orchestratorSource),
             '1. CreateSnapshotPlacementOrchestratorUseCase.js accepts an optional peerExchange and threads it straight into CreatePublicationSnapshotPlacementUseCase, unchanged in shape.');
 
@@ -362,7 +362,7 @@ async function run() {
         assert(wiringStart !== -1 && wiringEnd !== -1, '1b. ui/main.js still calls CreateSnapshotPlacementOrchestratorUseCase().execute({...}) exactly once, as a single object-literal call.');
         const wiringBlock = mainSource.slice(wiringStart, wiringEnd);
         assert(/peerExchange:\s*publicationSnapshotPlacementPeerExchange/.test(wiringBlock),
-            '2. ui/main.js really does thread `publicationSnapshotPlacementPeerExchange` — the SAME instance application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js already returns for this replica — into the creation orchestrator, never a second, disconnected exchange.');
+            '2. ui/main.js really does thread `publicationSnapshotPlacementPeerExchange` — the SAME instance application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js already returns for this replica — into the creation orchestrator, never a second, disconnected exchange.');
         assert((mainSource.match(/publicationSnapshotPlacementPeerExchange/g) || []).length >= 2,
             '3. that identifier is declared once and reused, never redeclared as a second instance.');
 
@@ -390,7 +390,7 @@ async function run() {
         assert(result.outcome === SnapshotPlacementCreationOutcome.CREATED, '5. the ordinary external placement creation call still succeeds.');
         assert(bus.sent.length === 1, '6. calling ONLY createExternalSnapshotPlacementUseCase.execute() — the exact call ui/views/DecentralizedPublicationsView.js already makes — reached announce() through the full production composition, with no explicit announce() call written anywhere in this test.');
 
-        console.log('✓ Section C: ui/main.js and application/CreateSnapshotPlacementOrchestratorUseCase.js really do thread the SAME publicationSnapshotPlacementPeerExchange instance through, by source; and live, the real orchestrator reaches announce() from an ordinary creation call alone.');
+        console.log('✓ Section C: ui/main.js and application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js really do thread the SAME publicationSnapshotPlacementPeerExchange instance through, by source; and live, the real orchestrator reaches announce() from an ordinary creation call alone.');
     }
 
     // ===============================================================
@@ -425,7 +425,7 @@ async function run() {
         const alicePeerExchange = new PublicationSnapshotPlacementPeerExchange(aliceExchange, new PeerMessageBus(), aliceConnect.registry);
 
         // Bob: the REAL production composition root ui/main.js itself
-        // calls — application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
+        // calls — application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
         // — over his own real, live registry.
         const bobComposition = new CreatePublicationSnapshotPlacementPeerExchangeUseCase().execute({
             peerMessageBus: new PeerMessageBus(), connectedPeerRegistry: bobConnect.registry
@@ -708,8 +708,8 @@ async function run() {
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim().split('\n').filter(Boolean).sort();
         const expectedChangedFiles = [
-            'application/CreatePublicationSnapshotPlacementUseCase.js',
-            'application/CreateSnapshotPlacementOrchestratorUseCase.js',
+            'application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js',
+            'application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js',
             'ui/main.js'
         ].sort();
         assert(JSON.stringify(changedFiles) === JSON.stringify(expectedChangedFiles),
@@ -719,7 +719,7 @@ async function run() {
         const newClassFiles = grepFiles('PublicationSnapshotPlacementPeerConnectionSync|SnapshotPlacementAnnouncementManager|SnapshotPlacementDiscoveryRegistry', ['application', 'ui']);
         assert(newClassFiles.length === 0, '2. no new peer-connection-sync class, announcement-manager class, or discovery-registry class exists anywhere — this milestone activates the existing announce(), nothing else.');
 
-        console.log('✓ Section K: the production diff is exactly application/CreatePublicationSnapshotPlacementUseCase.js, application/CreateSnapshotPlacementOrchestratorUseCase.js, and ui/main.js — no new peer manager, transport, discovery registry, or persistence mechanism. Every collaborator this milestone touches already existed before it started.');
+        console.log('✓ Section K: the production diff is exactly application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js, application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js, and ui/main.js — no new peer manager, transport, discovery registry, or persistence mechanism. Every collaborator this milestone touches already existed before it started.');
     }
 
     console.log('\n✓ FINAL DECISION.\n' +
@@ -729,10 +729,10 @@ async function run() {
 "WHY. 0.9.482 found that PublicationSnapshotPlacementPeerExchange#announce() -- fully implemented, mechanically\n" +
 'proven live since 0.8.19 -- was never called anywhere in this codebase\'s own production wiring. This milestone\n' +
 'closes exactly that gap, at exactly the place the originating request named: the one production operation that\n' +
-'causes a PublicationSnapshotPlacement to become locally known at all (application/CreatePublicationSnapshotPlacementUseCase.js\n' +
-'#execute(), reached only through application/CreateExternalSnapshotPlacementUseCase.js -- Section A). peerExchange\n' +
+'causes a PublicationSnapshotPlacement to become locally known at all (application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js\n' +
+'#execute(), reached only through application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js -- Section A). peerExchange\n' +
 'joins that class as an optional collaborator in exactly the shape its own existing knowledgeStore parameter already\n' +
-'established (Section B), threaded through application/CreateSnapshotPlacementOrchestratorUseCase.js and wired in\n' +
+'established (Section B), threaded through application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js and wired in\n' +
 'ui/main.js to the SAME publicationSnapshotPlacementPeerExchange instance this replica already builds (Section C).\n' +
 '\n' +
 'Section D (FLAGSHIP) proves this is production activation, not merely another mechanism test: over a REAL, live,\n' +

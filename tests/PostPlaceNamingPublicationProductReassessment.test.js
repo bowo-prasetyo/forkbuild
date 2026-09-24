@@ -4,16 +4,16 @@ import { execSync } from 'node:child_process';
 import PlaceNamingPanel from '../ui/components/PlaceNamingPanel.js';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { buildPlaceNamingClaimPublication } from '../application/PlaceNamingClaimPublication.js';
-import { composePlaceNamingPublicationRuntime } from '../application/PlaceNamingPublicationRuntimeComposition.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
-import { PlaceNamingDiscoveryMonitor } from '../application/PlaceNamingDiscoveryMonitor.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
+import { buildPlaceNamingClaimPublication } from '../application/placeNaming/PlaceNamingClaimPublication.js';
+import { composePlaceNamingPublicationRuntime } from '../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
+import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -325,7 +325,7 @@ async function run() {
         // publisher, the composition seam, or Nostr at all — the SAME
         // structural fact 0.9.318 Section D1 already established, still
         // true after 0.9.320/0.9.321.
-        const useCaseCode = codeOnlyLines(await rawSource('application/PlaceNamingClaimUseCase.js'));
+        const useCaseCode = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js'));
         assert(!useCaseCode.includes('NostrPlaceNamingDiscoveryPublisher') && !useCaseCode.includes('composePlaceNamingPublicationRuntime'),
             'B1. PlaceNamingClaimUseCase#publish() still never references the publisher or the publication runtime — creating a claim locally still triggers no network write, automatic or otherwise.');
 
@@ -335,7 +335,7 @@ async function run() {
         for (let i = 0; i < 5; i++) {
             replica.useCase.publish('world-b', `region-b-${i}`, `Silent Name ${i}`);
         }
-        const useCaseCodeAgain = await rawSource('application/PlaceNamingClaimUseCase.js');
+        const useCaseCodeAgain = await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js');
         assert(!useCaseCodeAgain.includes('discoveryPublisher.publish('),
             'B2. PlaceNamingClaimUseCase.js\'s own source contains no call to a discovery publisher\'s publish() method — the five claims just created above triggered no relay write, confirmed structurally rather than merely by absence of a relay double in this section.');
 
@@ -358,8 +358,8 @@ async function run() {
         const roadmap = await rawSource('docs/Roadmap.md');
         assert(roadmap.includes('publishing to Nostr stays **never automatic**'),
             'B4. docs/Roadmap.md still carries the exact, explicit "never automatic" product decision — not silently dropped or reworded by any milestone since.');
-        const placeNamingFamilyForB4 = ['application/PlaceNamingClaimUseCase.js', 'application/PlaceNamingPublicationRuntimeComposition.js',
-            'application/NostrPlaceNamingDiscoveryPublisher.js', 'ui/views/WorldView.js', 'ui/components/PlaceNamingPanel.js', 'ui/main.js'];
+        const placeNamingFamilyForB4 = ['application/placeNaming/PlaceNamingClaimUseCase.js', 'application/placeNaming/PlaceNamingPublicationRuntimeComposition.js',
+            'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js', 'ui/views/WorldView.js', 'ui/components/PlaceNamingPanel.js', 'ui/main.js'];
         for (const file of placeNamingFamilyForB4) {
             const code = codeOnlyLines(await rawSource(file));
             assert(!/auto.?publish|publish.*automatically|automatically.*publish/i.test(code),
@@ -373,8 +373,8 @@ async function run() {
     // Section C — Publication feedback reassessment.
     // ===============================================================
     {
-        const publisherCode = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
-        const compositionCode = codeOnlyLines(await rawSource('application/PlaceNamingPublicationRuntimeComposition.js'));
+        const publisherCode = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'));
+        const compositionCode = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingPublicationRuntimeComposition.js'));
         const panelJs = codeOnlyLines(await rawSource('ui/components/PlaceNamingPanel.js'));
         const worldViewJs = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
 
@@ -584,16 +584,16 @@ async function run() {
         // sweep of the entire Place Naming family, not merely by "the
         // brief didn't ask for one."
         const familyFiles = ['core/PlaceNamingClaim.js', 'core/PlaceNamingDiscoveryEnvelope.js',
-            'core/PlaceNamingProximitySelection.js', 'application/PlaceNamingClaimUseCase.js',
-            'application/PlaceNamingClaimExchange.js', 'application/NostrPlaceNamingDiscoveryPublisher.js',
-            'application/NostrPlaceNamingDiscoverySource.js', 'application/PlaceNamingDiscoveryQueryService.js',
-            'application/PlaceNamingDiscoveryMonitor.js', 'ui/views/WorldView.js', 'ui/components/PlaceNamingPanel.js'];
+            'core/PlaceNamingProximitySelection.js', 'application/placeNaming/PlaceNamingClaimUseCase.js',
+            'application/placeNaming/PlaceNamingClaimExchange.js', 'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js',
+            'application/placeNaming/NostrPlaceNamingDiscoverySource.js', 'application/placeNaming/PlaceNamingDiscoveryQueryService.js',
+            'application/placeNaming/PlaceNamingDiscoveryMonitor.js', 'ui/views/WorldView.js', 'ui/components/PlaceNamingPanel.js'];
         // Deliberately specific, feature-shaped identifiers — never bare
         // words like "vote" or "ranking," both of which this codebase's
         // own headers already use constantly in NEGATING disclaimers (e.g.
         // core/PlaceNamingProximitySelection.js's own "NO RANKING... this
         // function never picks a winner," ui/components/PlaceNamingPanel.js's
-        // own "a claim, not a vote," application/PlaceNamingClaimUseCase.js's
+        // own "a claim, not a vote," application/placeNaming/PlaceNamingClaimUseCase.js's
         // own "retract() is never a moderation tool") — a bare-word sweep
         // would flag those disclaimers themselves as evidence of the very
         // thing they explicitly rule out.
@@ -611,8 +611,8 @@ async function run() {
         // omission explicitly, live.
         const proximitySelectionSource = await rawSource('core/PlaceNamingProximitySelection.js');
         assert(/NO RANKING/.test(proximitySelectionSource), 'E6b. core/PlaceNamingProximitySelection.js still explicitly disclaims ranking in its own header, rather than silently lacking it.');
-        const useCaseSourceForModeration = await rawSource('application/PlaceNamingClaimUseCase.js');
-        assert(/never a moderation tool/.test(useCaseSourceForModeration), 'E6c. application/PlaceNamingClaimUseCase.js still explicitly disclaims moderation for retract() in its own header.');
+        const useCaseSourceForModeration = await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js');
+        assert(/never a moderation tool/.test(useCaseSourceForModeration), 'E6c. application/placeNaming/PlaceNamingClaimUseCase.js still explicitly disclaims moderation for retract() in its own header.');
 
         console.log('✓ E: Every one of the five questions this milestone\'s own brief names — who named it (E1), which world/region (E2), what was claimed (E3), can a stranger discover it (E4), and can they adopt/inspect it (E5) — is already answered by the existing claim model and shipped UI, live and field by field, with zero profile/reputation/voting/ranking/moderation vocabulary anywhere in the family (E6). "Published place names sound social" does not, on this evidence, mean this feature needs social machinery.');
     }
@@ -647,10 +647,10 @@ async function run() {
         assert(mainJs.includes('composePublicationDistributionCommand'), 'F2a. Publication distribution\'s own composed command still exists.');
         const snapshotPublisherFiles = grepFiles('class NostrSnapshotDiscoveryPublisher', ['application']);
         assert(snapshotPublisherFiles.length === 1, 'F2b. Snapshot distribution\'s own publisher class still exists, standalone.');
-        assert(await sourceExists('application/NostrPlaceNamingDiscoveryPublisher.js'), 'F2c. Place Naming publication\'s own publisher class still exists, standalone.');
-        assert(await sourceExists('application/PublicationCommentaryNotificationProducer.js'), 'F2d. Publication Commentary\'s own notification producer still exists, standalone.');
+        assert(await sourceExists('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'), 'F2c. Place Naming publication\'s own publisher class still exists, standalone.');
+        assert(await sourceExists('application/publication/commentary/PublicationCommentaryNotificationProducer.js'), 'F2d. Publication Commentary\'s own notification producer still exists, standalone.');
         assert(await sourceExists('core/NotificationEvent.js'), 'F2e. Notifications\' own domain-neutral representation still exists.');
-        assert(await sourceExists('application/CreateCollaborationUseCase.js'), 'F2f. Collaboration\'s own use case still exists, standalone.');
+        assert(await sourceExists('application/document/CreateCollaborationUseCase.js'), 'F2f. Collaboration\'s own use case still exists, standalone.');
         assert(await sourceExists('core/RoleProviderPreference.js'), 'F2g. Provider preferences\' own domain model still exists, standalone.');
 
         const genericPublisherFiles = grepFiles('class.*DecentralizedPublisher\\|class.*NostrPublisher\\b\\|class.*GenericPublicationFramework', ['application', 'core']);
@@ -663,8 +663,8 @@ async function run() {
         // does a Place Naming publication ever produce a Notification, or
         // accept Commentary, or require Collaboration, or read a Provider
         // preference?
-        const publisherCode = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
-        const compositionCode = codeOnlyLines(await rawSource('application/PlaceNamingPublicationRuntimeComposition.js'));
+        const publisherCode = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'));
+        const compositionCode = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingPublicationRuntimeComposition.js'));
         assert(!publisherCode.includes('NotificationEvent') && !compositionCode.includes('NotificationEvent'),
             'F4a. Place Naming publication produces no NotificationEvent — publishing a place name never notifies anyone, unlike Publication Commentary (0.9.285\'s own producer), which does.');
         assert(!publisherCode.includes('PublicationCommentary') && !compositionCode.includes('PublicationCommentary'),
@@ -702,11 +702,11 @@ async function run() {
         // non-self, non-comment production reference exists, and it is a
         // real construction, not a forward-looking comment.
         const publisherReferences = grepFiles('NostrPlaceNamingDiscoveryPublisher', ['application', 'ui', 'core', 'identity', 'server']);
-        const nonSelfReferences = publisherReferences.filter((f) => f !== 'application/NostrPlaceNamingDiscoveryPublisher.js');
+        const nonSelfReferences = publisherReferences.filter((f) => f !== 'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js');
         assert(nonSelfReferences.length >= 1, 'G1a. at least one non-self production file references the publisher.');
-        const compositionSource = await rawSource('application/PlaceNamingPublicationRuntimeComposition.js');
+        const compositionSource = await rawSource('application/placeNaming/PlaceNamingPublicationRuntimeComposition.js');
         assert(compositionSource.includes('new NostrPlaceNamingDiscoveryPublisher('),
-            'G1b. application/PlaceNamingPublicationRuntimeComposition.js genuinely constructs the publisher in real code, not a comment.');
+            'G1b. application/placeNaming/PlaceNamingPublicationRuntimeComposition.js genuinely constructs the publisher in real code, not a comment.');
         const mainJs = await rawSource('ui/main.js');
         assert(mainJs.includes('composePlaceNamingPublicationRuntime(') && mainJs.includes("app.provide('publishPlaceNamingClaimToNostrCommand'"),
             'G1c. ui/main.js genuinely composes the runtime and provides the resulting command app-wide.');
@@ -722,7 +722,7 @@ async function run() {
         // 0.9.320/0.9.321: every non-test file those two milestones added
         // has a real, live caller.
         const filesFromThisArc = [
-            'application/PlaceNamingPublicationRuntimeComposition.js'
+            'application/placeNaming/PlaceNamingPublicationRuntimeComposition.js'
         ];
         for (const file of filesFromThisArc) {
             assert(await sourceExists(file), `G3a. ${file} still exists.`);
@@ -785,7 +785,7 @@ async function run() {
             ['Global naming browser', 'no-concrete-blocked-journey-identified-yet', 'Section D: proximity-based discovery already answers "find names published near me"; "browse anywhere, without walking there" is a genuinely different journey with no recorded user request — EVIDENCE REQUIRED, not READY and not dismissed.'],
             ['Ranking names', 'the-feature-sounds-social', 'Section E6: no ranking vocabulary exists anywhere in the family; core/PlaceNamingProximitySelection.js\'s own header explicitly disclaims ranking by design.'],
             ['Reputation', 'the-feature-sounds-social', 'Section E6: no reputation vocabulary exists anywhere in the family.'],
-            ['Moderation', 'the-feature-sounds-social', 'Section E6: no moderation vocabulary exists anywhere in the family; retract() (identity-scoped self-retraction) is not moderation, per application/PlaceNamingClaimUseCase.js\'s own header.'],
+            ['Moderation', 'the-feature-sounds-social', 'Section E6: no moderation vocabulary exists anywhere in the family; retract() (identity-scoped self-retraction) is not moderation, per application/placeNaming/PlaceNamingClaimUseCase.js\'s own header.'],
             ['Unpublish', 'this-architecture-could-be-generalized', '0.9.318 Section D6, reconfirmed: Nostr\'s own append-only relay model makes this a new cross-cutting design question, and no erroneous-publication report is on file.']
         ];
         assert(candidateMatrix.length === 10, `H2. All ten candidates from this milestone\'s own table are scored (found ${candidateMatrix.length}).`);

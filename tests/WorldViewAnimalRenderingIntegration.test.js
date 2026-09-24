@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { AnimalRuntimeInstances, ANIMAL_RENDER_RADIUS } from '../application/AnimalRuntimeInstances.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { AnimalRuntimeInstances, ANIMAL_RENDER_RADIUS } from '../application/world/AnimalRuntimeInstances.js';
 import { animalPresenceInRegion } from '../core/AnimalPlacement.js';
 import { AnimalPresence } from '../core/AnimalPresence.js';
 import { Position } from '../core/Position.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -202,12 +202,12 @@ async function runTests() {
     // Section F — architectural regression
     // -------------------------------------------------------------
     {
-        const controllerSource = await readFile(new URL('../application/AvatarAnimalInteractionController.js', import.meta.url), 'utf8');
+        const controllerSource = await readFile(new URL('../application/avatar/AvatarAnimalInteractionController.js', import.meta.url), 'utf8');
         for (const term of ['AnimalRenderer', 'AnimalVisual', 'AnimalFieldRenderer', 'THREE', 'syncAnimals']) {
             assert(!controllerSource.includes(term),
-                `14. application/AvatarAnimalInteractionController.js never references "${term}" — catch/release stays entirely independent of rendering`);
+                `14. application/avatar/AvatarAnimalInteractionController.js never references "${term}" — catch/release stays entirely independent of rendering`);
         }
-        const sessionSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const sessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
         assert(sessionSource.includes('avatarAnimalInteractionState'),
             '15. the existing catch/release observation seam is still exposed, untouched by this milestone');
     }

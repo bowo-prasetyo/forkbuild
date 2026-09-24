@@ -234,13 +234,13 @@ async function runTests() {
     }
     {
         // SUPERSEDED BY 0.9.91 — Vehicle Acceleration State Integration
-        // (see application/AvatarMovementController.js's and
+        // (see application/avatar/AvatarMovementController.js's and
         // core/AvatarMovementSimulation.js's own 0.9.91 headers). This
         // suite's own header already named "a future milestone" as the
         // one that wires this seam in; 0.9.91 is that milestone.
         // core/AvatarMovementSimulation.js is now the ONE place that
         // actually imports and calls resolveMovementSpeed() — chosen
-        // over application/AvatarMovementController.js because that file
+        // over application/avatar/AvatarMovementController.js because that file
         // already owns the one true "target speed a base speed plus
         // running implies" computation this integration needs to reuse
         // (RUN_SPEED_MULTIPLIER), and duplicating that arithmetic in the
@@ -254,13 +254,13 @@ async function runTests() {
         // architectural regression check in this codebase), it only ever
         // hands core/AvatarMovementSimulation.js a bare acceleration rate
         // plus its own transient `currentMovementSpeed` bookkeeping.
-        const controllerSource = await readFile(new URL('../application/AvatarMovementController.js', import.meta.url), 'utf8');
+        const controllerSource = await readFile(new URL('../application/avatar/AvatarMovementController.js', import.meta.url), 'utf8');
         const controllerCodeOnly = controllerSource
             .split('\n')
             .filter((line) => !line.trim().startsWith('//'))
             .join('\n');
         assert(!controllerCodeOnly.includes('AvatarMovementAccelerationSimulation') && !controllerCodeOnly.includes('resolveMovementSpeed'),
-            '41. (as of 0.9.91) application/AvatarMovementController.js\'s own CODE (comments aside) still never imports this file or calls resolveMovementSpeed() directly — it only ever passes bare numbers to core/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
+            '41. (as of 0.9.91) application/avatar/AvatarMovementController.js\'s own CODE (comments aside) still never imports this file or calls resolveMovementSpeed() directly — it only ever passes bare numbers to core/AvatarMovementSimulation.js, which is the one place this seam is actually wired in');
 
         const simulationSource = await readFile(new URL('../core/AvatarMovementSimulation.js', import.meta.url), 'utf8');
         assert(simulationSource.includes('AvatarMovementAccelerationSimulation') && simulationSource.includes('resolveMovementSpeed'),

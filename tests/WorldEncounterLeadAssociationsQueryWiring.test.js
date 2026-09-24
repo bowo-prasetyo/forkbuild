@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldEncounterMaterialSource } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerification.js';
-import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { WorldEncounterMaterialSource } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
-import { composeWorldEncounterLeadAssociationsQuery } from '../application/WorldEncounterLeadAssociationsQueryComposition.js';
+import { composeWorldEncounterLeadAssociationsQuery } from '../application/worldEncounter/WorldEncounterLeadAssociationsQueryComposition.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // Connects WorldEncounterCanvas's "Location" / "Choose Location" panel to

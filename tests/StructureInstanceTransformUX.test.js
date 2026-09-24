@@ -6,24 +6,24 @@ import { StructurePlacement } from '../core/StructurePlacement.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
-import { ForkStructureUseCase } from '../application/ForkStructureUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { StructureDocumentResolver } from '../application/StructureDocumentResolver.js';
-import { CreateEditorContextUseCase } from '../application/CreateEditorContextUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
+import { ForkStructureUseCase } from '../application/editor/ForkStructureUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { StructureDocumentResolver } from '../application/editor/StructureDocumentResolver.js';
+import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { StructurePreviewUseCase } from '../application/StructurePreviewUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { StructurePlacementGestureService } from '../application/StructurePlacementGestureService.js';
-import { GizmoGestureRouter } from '../application/GizmoGestureRouter.js';
-import { TransformSettings } from '../application/TransformSettings.js';
-import { TransformMath } from '../application/TransformMath.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { StructurePreviewUseCase } from '../application/editor/StructurePreviewUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { StructurePlacementGestureService } from '../application/editor/StructurePlacementGestureService.js';
+import { GizmoGestureRouter } from '../application/editor/GizmoGestureRouter.js';
+import { TransformSettings } from '../application/editor/TransformSettings.js';
+import { TransformMath } from '../application/editor/TransformMath.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -489,7 +489,7 @@ async function run() {
 
         // Collision rules are identical: dragging the gizmo onto an
         // occupied cell is refused exactly like a keyboard move already
-        // is (application/EditorSession.js#_structurePlacementFits()).
+        // is (application/editor/EditorSession.js#_structurePlacementFits()).
         {
             const village = new World({});
             const placementA = new StructurePlacement({ documentId: house.world.id, position: new Position(300, 0, 300), rotation: 0 });

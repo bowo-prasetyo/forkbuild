@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 
-import { SnapshotCandidateDiscoveryQueryService } from '../application/SnapshotCandidateDiscoveryQueryService.js';
-import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/LocalSnapshotCandidateDiscoveryQueryService.js';
-import { composeSnapshotCandidateDiscoveryRuntime } from '../application/SnapshotCandidateDiscoveryRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
+import { SnapshotCandidateDiscoveryQueryService } from '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
+import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js';
+import { composeSnapshotCandidateDiscoveryRuntime } from '../application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { describeSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
@@ -30,7 +30,7 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 // THE ONE FINDING THIS AUDIT ADDS THAT THE REQUESTING BRIEF DID NOT
 // ANTICIPATE: the hypothesis's premise conflates two independently-built,
 // deliberately-separate discovery vocabularies that both happen to touch
-// Arweave. `application/ArweaveGraphqlDiscoveryQueryService.js`'s own
+// Arweave. `application/arweave/ArweaveGraphqlDiscoveryQueryService.js`'s own
 // `search()` — the exact class 0.9.489-0.9.495 hardened — reports
 // `{ uri, storage, announcementId }`, built for `core/
 // DecentralizedDiscoveryEnvelope.js`'s own OBJECT-ID-KEYED vocabulary (a
@@ -38,7 +38,7 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 // SnapshotCandidateDiscoveryQueryService.js`'s own candidate contract
 // requires `{ contentHash, locator, storage }` — CONTENT-HASH-KEYED, per
 // `core/SnapshotDiscoveryEnvelope.js`'s own, entirely separate envelope.
-// `application/NostrSnapshotDiscoveryQueryService.js`'s own header already
+// `application/nostr/NostrSnapshotDiscoveryQueryService.js`'s own header already
 // named this split explicitly for Nostr ("a candidate, never a lead...
 // deliberately NOT a DecentralizedDiscoveryQueryService") — this audit is
 // the first to trace the identical split through to Arweave's own
@@ -76,8 +76,8 @@ import { WorldEncounterKind } from '../core/WorldEncounter.js';
 //   J. Verdict and recommended next milestone.
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Any change to `application/ArweaveGraphqlDiscoveryQueryService.js`,
-//   `application/SnapshotCandidateDiscoveryQueryService.js`, `application/
+// - **Any change to `application/arweave/ArweaveGraphqlDiscoveryQueryService.js`,
+//   `application/snapshot/SnapshotCandidateDiscoveryQueryService.js`, `application/
 //   SnapshotCandidateDiscoveryRuntimeComposition.js`, `application/
 //   WorldSnapshotDiscoveryMonitor.js`, or `application/
 //   DiscoverSnapshotCandidatesCommand.js`.** This file is test-only,
@@ -223,16 +223,16 @@ async function run() {
     {
         const snapshotEnvelopeSource = await readFile(new URL('../core/SnapshotDiscoveryEnvelope.js', import.meta.url), 'utf8');
         const decentralizedEnvelopeSource = await readFile(new URL('../core/DecentralizedDiscoveryEnvelope.js', import.meta.url), 'utf8');
-        const arweaveGraphqlSource = await readFile(new URL('../application/ArweaveGraphqlDiscoveryQueryService.js', import.meta.url), 'utf8');
-        const arweaveAnnouncementPublisherSource = await readFile(new URL('../application/ArweaveAnnouncementPublisher.js', import.meta.url), 'utf8');
-        const nostrSnapshotQuerySource = await readFile(new URL('../application/NostrSnapshotDiscoveryQueryService.js', import.meta.url), 'utf8');
+        const arweaveGraphqlSource = await readFile(new URL('../application/arweave/ArweaveGraphqlDiscoveryQueryService.js', import.meta.url), 'utf8');
+        const arweaveAnnouncementPublisherSource = await readFile(new URL('../application/arweave/ArweaveAnnouncementPublisher.js', import.meta.url), 'utf8');
+        const nostrSnapshotQuerySource = await readFile(new URL('../application/nostr/NostrSnapshotDiscoveryQueryService.js', import.meta.url), 'utf8');
 
         check(snapshotEnvelopeSource.includes("'forkbuild-snapshot-discovery'"), 'C1. core/SnapshotDiscoveryEnvelope.js\'s own protocol string is confirmed live: content-hash-keyed, Snapshot-specific');
         check(decentralizedEnvelopeSource.includes("'forkbuild'") && !decentralizedEnvelopeSource.includes('forkbuild-snapshot-discovery'), 'C2. core/DecentralizedDiscoveryEnvelope.js\'s own protocol string is confirmed distinct: objectId-keyed, never the Snapshot one');
 
         check(!arweaveGraphqlSource.includes('SnapshotDiscoveryEnvelope'), 'C3. ArweaveGraphqlDiscoveryQueryService.js never imports or reads core/SnapshotDiscoveryEnvelope.js — it exclusively speaks core/DecentralizedDiscoveryEnvelope.js\'s own vocabulary (imported at this file\'s own top)');
         check(!arweaveAnnouncementPublisherSource.includes('SnapshotDiscoveryEnvelope'), 'C4. ArweaveAnnouncementPublisher.js — the ONLY thing in this codebase that writes a discovery envelope onto Arweave — never writes core/SnapshotDiscoveryEnvelope.js\'s own shape either');
-        check(nostrSnapshotQuerySource.includes('deliberately NOT a `DecentralizedDiscoveryQueryService`') || nostrSnapshotQuerySource.toLowerCase().includes('deliberately not a'), 'C5. application/NostrSnapshotDiscoveryQueryService.js\'s own header already names this exact split for Nostr — this audit confirms it was never crossed for Arweave either, by any file, ever');
+        check(nostrSnapshotQuerySource.includes('deliberately NOT a `DecentralizedDiscoveryQueryService`') || nostrSnapshotQuerySource.toLowerCase().includes('deliberately not a'), 'C5. application/nostr/NostrSnapshotDiscoveryQueryService.js\'s own header already names this exact split for Nostr — this audit confirms it was never crossed for Arweave either, by any file, ever');
 
         // Confirm, by a codebase-wide sweep, that no concrete class named
         // for this exact pairing exists yet. Note this is a NAME sweep,
@@ -312,8 +312,8 @@ async function run() {
     // Section F. Walking monitor / command total obliviousness.
     // ===============================================================
     {
-        const monitorSource = await readFile(new URL('../application/WorldSnapshotDiscoveryMonitor.js', import.meta.url), 'utf8');
-        const commandSource = await readFile(new URL('../application/DiscoverSnapshotCandidatesCommand.js', import.meta.url), 'utf8');
+        const monitorSource = await readFile(new URL('../application/snapshot/WorldSnapshotDiscoveryMonitor.js', import.meta.url), 'utf8');
+        const commandSource = await readFile(new URL('../application/snapshot/DiscoverSnapshotCandidatesCommand.js', import.meta.url), 'utf8');
 
         // Strip `//` line comments before checking — both files' own
         // headers already, honestly, NAME "Nostr"/"Arweave" in prose
@@ -330,8 +330,8 @@ async function run() {
         const commandCode = codeOnly(commandSource);
 
         for (const name of ['Nostr', 'Arweave', 'Local', 'GraphQL', 'fetch', 'WebSocket']) {
-            check(!monitorCode.includes(name), `F1.${name}. application/WorldSnapshotDiscoveryMonitor.js's own REAL CODE (comments excluded) never names "${name}" anywhere — it is provably oblivious to which, or how many, sources back the queryService it is handed`);
-            check(!commandCode.includes(name), `F2.${name}. application/DiscoverSnapshotCandidatesCommand.js's own real code never names "${name}" either`);
+            check(!monitorCode.includes(name), `F1.${name}. application/snapshot/WorldSnapshotDiscoveryMonitor.js's own REAL CODE (comments excluded) never names "${name}" anywhere — it is provably oblivious to which, or how many, sources back the queryService it is handed`);
+            check(!commandCode.includes(name), `F2.${name}. application/snapshot/DiscoverSnapshotCandidatesCommand.js's own real code never names "${name}" either`);
         }
 
         // Live-confirm the obliviousness, not just the source-text
@@ -392,7 +392,7 @@ async function run() {
 
         // Simulate three successive walking observations (the cadence
         // `ui/views/WorldView.js`'s own refreshSpatialUI() already runs,
-        // per application/WorldSnapshotDiscoveryMonitor.js's own header)
+        // per application/snapshot/WorldSnapshotDiscoveryMonitor.js's own header)
         // against an UNCHANGED discoveryTag, to show the request count
         // this would add PER OBSERVATION, not merely once.
         graphqlCalls = 0;
@@ -432,18 +432,18 @@ async function run() {
     // ===============================================================
     {
         const filesToCheck = [
-            '../application/SnapshotCandidateDiscoveryQueryService.js',
-            '../application/SnapshotCandidateDiscoveryRuntimeComposition.js',
-            '../application/WorldSnapshotDiscoveryMonitor.js',
-            '../application/DiscoverSnapshotCandidatesCommand.js',
-            '../application/LocalSnapshotCandidateDiscoveryQueryService.js'
+            '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js',
+            '../application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js',
+            '../application/snapshot/WorldSnapshotDiscoveryMonitor.js',
+            '../application/snapshot/DiscoverSnapshotCandidatesCommand.js',
+            '../application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js'
         ];
         // Real import lines only — several of these files' own headers
         // honestly NAME SnapshotPlacementResolver.js/ContentStore.js in
         // prose explaining what they deliberately never call (see e.g.
-        // application/SnapshotCandidateDiscoveryQueryService.js's own
+        // application/snapshot/SnapshotCandidateDiscoveryQueryService.js's own
         // "never resolves bytes, never touches
-        // application/SnapshotPlacementResolver.js"); what this section
+        // application/snapshot/placement/SnapshotPlacementResolver.js"); what this section
         // needs is the actual import graph, not a substring match against
         // prose that mentions those names in order to disclaim them.
         const importLines = (source) => source
@@ -454,7 +454,7 @@ async function run() {
         for (const relativePath of filesToCheck) {
             const source = await readFile(new URL(relativePath, import.meta.url), 'utf8');
             const imports = importLines(source);
-            check(!imports.includes('SnapshotPlacementResolver'), `I1. ${relativePath} has no import line naming application/SnapshotPlacementResolver.js`);
+            check(!imports.includes('SnapshotPlacementResolver'), `I1. ${relativePath} has no import line naming application/snapshot/placement/SnapshotPlacementResolver.js`);
             check(!imports.includes('ContentStore'), `I2. ${relativePath} has no import line naming any content/ContentStore.js family module`);
             check(!/materializ/i.test(imports), `I3. ${relativePath} imports nothing whose own name suggests materialization`);
         }
@@ -498,7 +498,7 @@ async function run() {
         console.log('  ArweaveSnapshotDiscoveryPublisher / ArweaveSnapshotDiscoveryQueryService pair, mirroring application/');
         console.log('  NostrSnapshotDiscoveryPublisher.js / NostrSnapshotDiscoveryQueryService.js exactly one substrate over: write and read');
         console.log('  core/SnapshotDiscoveryEnvelope.js\'s own contentHash-keyed shape on an Arweave transaction\'s own tagged payload, reusing');
-        console.log('  application/ArweaveTaggedTransactionUpload.js\'s own upload primitive (0.9.490) and the exact gateway-read-plus-envelope-');
+        console.log('  application/arweave/ArweaveTaggedTransactionUpload.js\'s own upload primitive (0.9.490) and the exact gateway-read-plus-envelope-');
         console.log('  decode primitive 0.9.494 already proved correct for the OTHER vocabulary. Only once that pair exists and reports real');
         console.log('  { contentHash, locator, storage } candidates does composing it into SnapshotCandidateDiscoveryRuntimeComposition.js become');
         console.log('  the small, mechanical DI step the requesting brief\'s own 0.9.497 anticipated — everything this audit checked in Sections');

@@ -6,10 +6,10 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.637 — Publication Commentary Distribution Provider Selection UI
@@ -254,17 +254,17 @@ async function run() {
         assert(!/nostr|arweave|Distribution|peerExchange|announce/i.test(worldViewSource.match(/function addPublicationCommentaryCommand[\s\S]*?\n {8}\}/)[0]),
             n('confirmed by direct text search: that function body contains zero distribution vocabulary of any kind'));
 
-        const sessionSource = codeOnly(await rawSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnly(await rawSource('application/world/WorldNavigationSession.js'));
         const sessionMethodMatch = sessionSource.match(/addPublicationCommentary\(\{ publicationId, content, commentaryId, createdAt \}\) \{[\s\S]*?\n {4}\}/);
         assert(sessionMethodMatch !== null, n('WorldNavigationSession.addPublicationCommentary() is found, source-level'));
         assert(/this\._addPublicationCommentaryUseCase\.execute\(\{ publicationId, content, commentaryId, createdAt \}\)/.test(sessionMethodMatch[0]),
             n('it forwards the identical four fields to whatever _addPublicationCommentaryUseCase was injected at construction — no distribution vocabulary here either'));
 
-        const createWorldViewSource = codeOnly(await rawSource('application/CreateWorldViewUseCase.js'));
+        const createWorldViewSource = codeOnly(await rawSource('application/world/CreateWorldViewUseCase.js'));
         assert(/new PublicationCommentaryNotificationProducer\(\s*addPublicationCommentaryUseCase,\s*discoveryProvider,\s*\(notificationEvent\) => notificationEventStore\.save\(notificationEvent\)\s*\)/.test(createWorldViewSource),
             n('CreateWorldViewUseCase.js wires WorldNavigationSession\'s own _addPublicationCommentaryUseCase to a PublicationCommentaryNotificationProducer — LOCAL PERSISTENCE + NOTIFICATION ONLY; this composition never imports PublicationCommentaryNostrDistribution, PublicationCommentaryArweaveDistribution, or PublicationCommentaryDistributionPeerExchange'));
         assert(!/PublicationCommentaryNostrDistribution|PublicationCommentaryArweaveDistribution|PublicationCommentaryDistributionPeerExchange/.test(createWorldViewSource),
-            n('confirmed: none of the three distribution classes is imported anywhere in application/CreateWorldViewUseCase.js'));
+            n('confirmed: none of the three distribution classes is imported anywhere in application/world/CreateWorldViewUseCase.js'));
 
         console.log('✓ C: two structurally different wiring mechanisms coexist. PATH 1 (PublicationCard.js/PublicationList.js) injects ui/main.js\'s own app-wide, distribution-wrapped command. PATH 2 (OwnPublicationPanel.js/WorldEncounterCanvas.js) takes a plain prop that WorldView.js — the only binder in the codebase — fills with its own, entirely separate, session-scoped function, which reaches only local persistence and notification, never WebRTC/Nostr/Arweave, confirmed live against current source at every layer of the chain.');
     }

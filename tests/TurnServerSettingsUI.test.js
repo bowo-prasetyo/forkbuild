@@ -5,7 +5,7 @@ import util from 'node:util';
 import { TurnServerConfiguration } from '../core/TurnServerConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { TurnServerConfigurationStore } from '../storage/TurnServerConfigurationStore.js';
-import { SetTurnServerConfigurationUseCase } from '../application/SetTurnServerConfigurationUseCase.js';
+import { SetTurnServerConfigurationUseCase } from '../application/settings/SetTurnServerConfigurationUseCase.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 
 // 0.9.456 — TURN Server Settings UI.
@@ -15,7 +15,7 @@ import { IceServerConfigurationStore } from '../storage/IceServerConfigurationSt
 // TurnServerConfigurationProvider.js) -> 0.9.455 (composition into
 // ui/main.js's own resolvedIceServers) built a complete, real TURN
 // configuration boundary with no user-facing surface at all. This milestone
-// is that missing surface — application/SetTurnServerConfigurationUseCase.js
+// is that missing surface — application/settings/SetTurnServerConfigurationUseCase.js
 // (this same milestone, the write seam) and ui/views/TurnServerSettingsView.js
 // (this same milestone, the settings page), reachable at
 // /settings/turn-server. This suite proves the whole chain end to end,
@@ -400,7 +400,7 @@ async function run() {
         assert(/router-link to="\/settings"/.test(appSource), n('L4. a real top-nav link reaches the Network Settings hub, the one hop before the TURN settings link above'));
 
         const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { SetTurnServerConfigurationUseCase } from '../application/SetTurnServerConfigurationUseCase.js';"),
+        assert(mainSource.includes("import { SetTurnServerConfigurationUseCase } from '../application/settings/SetTurnServerConfigurationUseCase.js';"),
             n('L5. ui/main.js imports the new write use case'));
         assert(/new SetTurnServerConfigurationUseCase\(\{\s*turnServerConfigurationStore\s*\}\)/.test(mainSource),
             n('L6. ui/main.js wires SetTurnServerConfigurationUseCase against the SAME shared turnServerConfigurationStore already constructed for 0.9.455, never a second disconnected store'));
@@ -512,7 +512,7 @@ async function run() {
         assert(!/Use Deployment Default|Reset to Defaults/.test(templateMatchForDefaults[1]),
             n('P2. the real, user-facing template carries no "reset to a default" copy — its clear action reads "Clear," never a phrase implying a fallback TURN server exists'));
 
-        const useCaseSource = await source('application/SetTurnServerConfigurationUseCase.js');
+        const useCaseSource = await source('application/settings/SetTurnServerConfigurationUseCase.js');
         assert(!/DEFAULT_TURN/.test(useCaseSource), n('P3. the write use case references no DEFAULT_TURN* constant of any kind'));
 
         const { store, injectionContext } = freshTriple();

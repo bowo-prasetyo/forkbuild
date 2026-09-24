@@ -3,16 +3,16 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
-import { LeaderboardClaimRecord } from '../application/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
-import { reconstructPublisherLeaderboard } from '../application/PublisherLeaderboardView.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { reconstructPublisherLeaderboard } from '../application/leaderboard/PublisherLeaderboardView.js';
 import {
     ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase,
     LeaderboardClaimArchiveReceiptOutcome
-} from '../application/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
+} from '../application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/claimSnapshotReconciliation/decision/Decision.js';
 import {
@@ -26,7 +26,7 @@ import {
 } from '../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
@@ -197,10 +197,10 @@ async function run() {
     // ===============================================================
     {
         const backendFiles = [
-            'application/LeaderboardClaimRecord.js',
-            'application/ReceivePublisherLeaderboardSnapshotClaimUseCase.js',
-            'application/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js',
-            'application/PublisherLeaderboardView.js',
+            'application/leaderboard/LeaderboardClaimRecord.js',
+            'application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimUseCase.js',
+            'application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js',
+            'application/leaderboard/PublisherLeaderboardView.js',
             'application/claimSnapshotReconciliation/PlanView.js',
             'application/claimSnapshotReconciliation/ReconciliationCandidate.js',
             'application/claimSnapshotReconciliation/decision/Decision.js',
@@ -353,7 +353,7 @@ async function run() {
     // ===============================================================
     {
         const publicationsViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
-        assert(publicationsViewSource.includes("import { reconstructAchievementBadges } from '../../application/AchievementBadgeView.js';"), n('E1. DecentralizedPublicationsView already reads real achievement evidence off its own archive ref'));
+        assert(publicationsViewSource.includes("import { reconstructAchievementBadges } from '../../application/achievement/AchievementBadgeView.js';"), n('E1. DecentralizedPublicationsView already reads real achievement evidence off its own archive ref'));
         assert(/reconstructAchievementBadges\(publicationObservationArchive\.value\)/.test(publicationsViewSource), n('E2. that call is made directly against the SAME live archive ref reconstructPublisherLeaderboard(archive) would also need — no second archive, no fetch, no peer'));
         assert(!publicationsViewSource.includes('reconstructPublisherLeaderboard('), n('E3. yet reconstructPublisherLeaderboard() itself is never called from that file — the zero-network half of a candidate is real, wired for achievements, but not for the leaderboard snapshot'));
 

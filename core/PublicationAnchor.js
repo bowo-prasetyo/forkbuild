@@ -32,7 +32,7 @@ import { Signature, SignatureType } from './Signature.js';
 // locator tuple. Verifying the `proof` itself against the external
 // system it names is a SEPARATE, anchorType-specific question this
 // milestone deliberately does not answer — see
-// application/ExternalAnchorVerifier.js's own header for why that step
+// application/anchoring/ExternalAnchorVerifier.js's own header for why that step
 // is a pluggable `proofVerifier`, never something this class or its
 // verifier hard-codes, and docs/Roadmap.md for why no concrete backend
 // (a real chain, a local test double) ships in 0.8.0 at all.

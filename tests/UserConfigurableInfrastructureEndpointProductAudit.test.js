@@ -90,8 +90,8 @@ async function run() {
         // never imported from one shared module.
         const arweaveGatewayFiles = [
             'content/ArweaveContentStore.js',
-            'application/ArweaveWorldEncounterMaterialResolver.js',
-            'application/ArweavePublicationMaterialUploader.js',
+            'application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js',
+            'application/arweave/ArweavePublicationMaterialUploader.js',
             'arweave/ArweaveInjectedProviderSigner.js'
         ];
         for (const file of arweaveGatewayFiles) {
@@ -103,10 +103,10 @@ async function run() {
 
         // A4. Arweave GraphQL — a SEPARATE endpoint, one file only, never
         // shared with the gateway constant above.
-        const arweaveGraphqlSource = await rawSource('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const arweaveGraphqlSource = await rawSource('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         assert(arweaveGraphqlSource.includes("const DEFAULT_GRAPHQL_URL = 'https://arweave.net/graphql'"),
             'A4. ArweaveGraphqlDiscoveryQueryService declares its own DEFAULT_GRAPHQL_URL');
-        inventory.arweaveGraphql = { file: 'application/ArweaveGraphqlDiscoveryQueryService.js', value: 'https://arweave.net/graphql', duplication: 1 };
+        inventory.arweaveGraphql = { file: 'application/arweave/ArweaveGraphqlDiscoveryQueryService.js', value: 'https://arweave.net/graphql', duplication: 1 };
 
         // A5. IPFS Gateway (remote, resolve-only) vs IPFS local API (Kubo,
         // put+get) — two independent files, two independent constants.
@@ -120,12 +120,12 @@ async function run() {
         // A6. Nostr relay — duplicated independently across SIX files, the
         // widest duplication of any candidate in this inventory.
         const nostrRelayFiles = [
-            'application/NostrDiscoveryQueryService.js',
-            'application/NostrSnapshotDiscoveryQueryService.js',
-            'application/NostrPublicationDiscoveryPublisher.js',
-            'application/NostrSnapshotDiscoveryPublisher.js',
-            'application/NostrPlaceNamingDiscoveryPublisher.js',
-            'application/NostrPlaceNamingDiscoverySource.js'
+            'application/nostr/NostrDiscoveryQueryService.js',
+            'application/nostr/NostrSnapshotDiscoveryQueryService.js',
+            'application/nostr/NostrPublicationDiscoveryPublisher.js',
+            'application/nostr/NostrSnapshotDiscoveryPublisher.js',
+            'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js',
+            'application/placeNaming/NostrPlaceNamingDiscoverySource.js'
         ];
         for (const file of nostrRelayFiles) {
             const source = await rawSource(file);
@@ -186,8 +186,8 @@ async function run() {
             { file: 'content/IpfsContentStore.js', marker: 'this._fetch(' },
             { file: 'base/BaseJsonRpcClient.js', marker: 'this._fetch(' },
             { file: 'anchoring/BitcoinEsploraTransactionBroadcaster.js', marker: 'this._fetch(' },
-            { file: 'application/NostrDiscoveryQueryService.js', marker: '_relayUrl' },
-            { file: 'application/ArweaveGraphqlDiscoveryQueryService.js', marker: 'this._fetch(' },
+            { file: 'application/nostr/NostrDiscoveryQueryService.js', marker: '_relayUrl' },
+            { file: 'application/arweave/ArweaveGraphqlDiscoveryQueryService.js', marker: 'this._fetch(' },
             { file: 'peer/IceServerConfig.js', marker: 'fetchImpl(' }
         ];
         for (const { file, marker } of functionalChecks) {
@@ -212,8 +212,8 @@ async function run() {
             { file: 'content/IpfsContentStore.js', pattern: /apiUrl = DEFAULT_API_URL/ },
             { file: 'base/BaseJsonRpcClient.js', pattern: /rpcUrl = DEFAULT_RPC_URL/ },
             { file: 'anchoring/BitcoinEsploraTransactionBroadcaster.js', pattern: /apiUrl = DEFAULT_API_URL/ },
-            { file: 'application/NostrDiscoveryQueryService.js', pattern: /relayUrl = DEFAULT_RELAY_URL/ },
-            { file: 'application/ArweaveGraphqlDiscoveryQueryService.js', pattern: /graphqlUrl = DEFAULT_GRAPHQL_URL/ }
+            { file: 'application/nostr/NostrDiscoveryQueryService.js', pattern: /relayUrl = DEFAULT_RELAY_URL/ },
+            { file: 'application/arweave/ArweaveGraphqlDiscoveryQueryService.js', pattern: /graphqlUrl = DEFAULT_GRAPHQL_URL/ }
         ];
         for (const { file, pattern } of injectionChecks) {
             const source = await rawSource(file);
@@ -222,7 +222,7 @@ async function run() {
 
         // C2. Live proof, not just a pattern match: constructing one of
         // these classes with an explicit override actually takes effect.
-        const { ArweaveGraphqlDiscoveryQueryService } = await import('../application/ArweaveGraphqlDiscoveryQueryService.js');
+        const { ArweaveGraphqlDiscoveryQueryService } = await import('../application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         const overridden = new ArweaveGraphqlDiscoveryQueryService({ graphqlUrl: 'https://my-own-gateway.example/graphql' });
         assert(overridden._graphqlUrl === 'https://my-own-gateway.example/graphql', 'C2. a caller-supplied graphqlUrl genuinely overrides the class-level default');
 
@@ -276,7 +276,7 @@ async function run() {
         // they forward `rpcUrl`/`apiUrl` only if a caller supplies one —
         // ui/main.js is that caller, and Section C3 already showed it
         // supplies nothing.
-        const createBaseSource = await rawSource('application/CreateBaseJsonRpcClientUseCase.js');
+        const createBaseSource = await rawSource('application/anchoring/base/CreateBaseJsonRpcClientUseCase.js');
         assert(createBaseSource.includes('...(rpcUrl !== undefined ? { rpcUrl } : {})'), 'C4. CreateBaseJsonRpcClientUseCase only forwards rpcUrl when a caller actually supplies one');
 
         // C5. Zero live wiring anywhere in ui/ (outside the one
@@ -359,7 +359,7 @@ async function run() {
         // other — it is one class legitimately consuming two distinct
         // Arweave capabilities (discovery-query and raw-content-fetch) it
         // did not need before.
-        const graphqlSource = await rawSource('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const graphqlSource = await rawSource('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         assert(graphqlSource.includes('DEFAULT_GRAPHQL_URL') && graphqlSource.includes('DEFAULT_GATEWAY_URL'), 'D3. ArweaveGraphqlDiscoveryQueryService declares its own independent DEFAULT_GRAPHQL_URL (discovery) and DEFAULT_GATEWAY_URL (envelope retrieval, 0.9.494) — two distinct endpoints, two distinct constants');
         const arweaveContentSource = await rawSource('content/ArweaveContentStore.js');
         assert(!arweaveContentSource.includes('DEFAULT_GRAPHQL_URL'), 'D3. ArweaveContentStore never declares a DEFAULT_GRAPHQL_URL — it is gatewayUrl only');
@@ -376,14 +376,14 @@ async function run() {
         // directories, separate chains, zero cross-imports.
         const esploraSource = await rawSource('anchoring/BitcoinEsploraTransactionBroadcaster.js');
         const baseSource = await rawSource('base/BaseJsonRpcClient.js');
-        assert(!esploraSource.includes("from '../base/") && !baseSource.includes("from '../anchoring/"),
+        assert(!esploraSource.includes("from '../../../base/") && !baseSource.includes("from '../anchoring/"),
             'D5. anchoring/ (Bitcoin) and base/ (Base) share no import between their JSON-RPC/Esplora clients');
 
         // D6. Nostr relay is a single URL per instance today (no list, no
         // multi-relay semantics anywhere in the six consuming files) —
         // confirming the brief's own restraint against assuming
         // multi-relay semantics prematurely.
-        const nostrSource = await rawSource('application/NostrDiscoveryQueryService.js');
+        const nostrSource = await rawSource('application/nostr/NostrDiscoveryQueryService.js');
         assert(/relayUrl = DEFAULT_RELAY_URL,/.test(nostrSource) && !/relayUrls\s*=/.test(nostrSource),
             'D6. NostrDiscoveryQueryService takes one relayUrl, never a relayUrls list — single-relay semantics only, today');
 
@@ -473,7 +473,7 @@ async function run() {
         // (still true today) documents ui/main.js supplying `{}`, i.e.
         // nothing real. So even the ONE existing seam closest to "user
         // restores capability by supplying an endpoint" is unpopulated.
-        const runtimeConfigSource = await rawSource('application/PublicationDistributionRuntimeConfiguration.js');
+        const runtimeConfigSource = await rawSource('application/publication/distribution/PublicationDistributionRuntimeConfiguration.js');
         assert(runtimeConfigSource.includes('gatewayUrl'), 'F3. the runtime configuration seam already names gatewayUrl as an accepted field');
         const mainSource = await rawSource('ui/main.js');
         assert(mainSource.includes('resolvePublicationDistributionRuntimeConfiguration'), 'F3. ui/main.js actually calls the runtime configuration resolver');
@@ -575,8 +575,8 @@ async function run() {
             'content/IpfsContentStore.js',
             'base/BaseJsonRpcClient.js',
             'anchoring/BitcoinEsploraTransactionBroadcaster.js',
-            'application/NostrDiscoveryQueryService.js',
-            'application/ArweaveGraphqlDiscoveryQueryService.js',
+            'application/nostr/NostrDiscoveryQueryService.js',
+            'application/arweave/ArweaveGraphqlDiscoveryQueryService.js',
             'peer/RendezvousConfig.js'
         ];
         for (const file of credentialFreeChecks) {

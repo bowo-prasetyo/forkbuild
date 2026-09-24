@@ -1,4 +1,4 @@
-import { PreviewService } from '../application/PreviewService.js';
+import { PreviewService } from '../application/editor/PreviewService.js';
 import { PreviewType } from '../core/DocumentPreview.js';
 
 // 0.2.32 — PreviewService's queue/cache/cancellation logic, tested

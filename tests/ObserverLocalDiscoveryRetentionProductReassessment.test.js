@@ -1,21 +1,21 @@
 import { readFile } from 'node:fs/promises';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
 import { describeObserverLocalPublicationEncounter } from '../core/ObserverLocalPublicationEncounter.js';
-import { materializedSnapshotWorldOrigin } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+import { materializedSnapshotWorldOrigin } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Publication } from '../publisher/Publication.js';
@@ -167,7 +167,7 @@ function makeNostrNetwork() {
 // against it. This is deliberate: it is the harness's own stand-in for
 // storage/LocalStorageProvider.js (`window.localStorage`-backed, confirmed
 // by reading that file directly) — the REAL backend
-// application/CreatePublicationResolverUseCase.js wires
+// application/publication/CreatePublicationResolverUseCase.js wires
 // content/LocalContentStore.js onto in the running app, which survives a
 // reload precisely because `window.localStorage` does. Reusing one `host`
 // across several simulated "sessions" (fresh cascade + fresh store, same
@@ -391,7 +391,7 @@ async function runTests() {
         ctx.dismissObserverLocalEncounterInspection();
         ctx.selectObserverLocalEncounter({ publicationId: 'walkaway-pub', contentHash: referenceX.hash });
         await flush();
-        assert(ctx.observerLocalEncounterInspection.loading.status === 'AVAILABLE' && ctx.observerLocalEncounterInspection !== firstInspection, 'B5. Re-inspecting produces a fresh, independent result object each time — not a cached UI artifact, a genuine re-run of the same orchestration boundary (application/WorldEncounterMaterialInspection.js), which itself reads already-local bytes (no network fetch — see Section D for why this stays cheap).');
+        assert(ctx.observerLocalEncounterInspection.loading.status === 'AVAILABLE' && ctx.observerLocalEncounterInspection !== firstInspection, 'B5. Re-inspecting produces a fresh, independent result object each time — not a cached UI artifact, a genuine re-run of the same orchestration boundary (application/worldEncounter/WorldEncounterMaterialInspection.js), which itself reads already-local bytes (no network fetch — see Section D for why this stays cheap).');
         assert(session.store.list().length === 1, 'B6. Re-selecting/re-inspecting never calls store.record() itself — selection is transient UI state, never a second, competing write path into the store (the store\'s only writer remains ui/views/WorldView.js\'s own cascade callback, confirmed in Section C below).');
         assert(!(host.resolveCallCount() > 1), `B7. No second network-shaped resolution occurred merely from re-inspecting; the observer-local inspection path reads materialSources.local, never host.resolveSelectedSnapshotCommand() again (resolve call count: ${host.resolveCallCount()}).`);
 
@@ -557,7 +557,7 @@ async function runTests() {
         // retention purposes (there is no retention mechanism to check —
         // this guard exists so a future implementation milestone inherits
         // the same discipline this reassessment confirms holds today).
-        const storeSource = codeOnlyLines(await rawSource('application/ObserverLocalEncounterStore.js'));
+        const storeSource = codeOnlyLines(await rawSource('application/worldEncounter/ObserverLocalEncounterStore.js'));
         assert(storeSource.includes('${encounter.publicationId}:${encounter.contentHash}'), 'E6. The store\'s own key is still publicationId+contentHash TOGETHER — reconfirmed against live source, not merely inherited by assumption.');
 
         console.log('✓ E — identity semantics survive retention scrutiny unchanged: same publicationId+contentHash is one Publication observed twice; different publicationId+same contentHash remains two Publications, always. No content-hash-based identity shortcut exists anywhere in this feature.');
@@ -687,7 +687,7 @@ async function runTests() {
         }
         assert(registry.listSources().length === 0, 'H1. Four separate "returning-Wanderer" visits, each fully inspecting the SAME Publication, NEVER register a WorldDiscoverySource for it — repeated inspection is not gradual placement.');
 
-        for (const file of ['core/ObserverLocalPublicationEncounter.js', 'application/ObserverLocalEncounterStore.js', 'application/AutomaticSnapshotEncounterCascade.js']) {
+        for (const file of ['core/ObserverLocalPublicationEncounter.js', 'application/worldEncounter/ObserverLocalEncounterStore.js', 'application/snapshot/AutomaticSnapshotEncounterCascade.js']) {
             const source = codeOnlyLines(await rawSource(file));
             assert(!/PlacementRecord|PlacementRegistry/.test(source), `H2. ${file} never constructs, imports, or references a PlacementRecord/PlacementRegistry — reconfirmed against live source.`);
         }
@@ -759,13 +759,13 @@ async function runTests() {
         // plus the material-persistence contrast the milestone brief's own
         // Section J did not ask for but this reassessment's own evidence
         // (see makeHost()'s own header) makes directly checkable.
-        const resolverSource = await rawSource('application/CreatePublicationResolverUseCase.js');
+        const resolverSource = await rawSource('application/publication/CreatePublicationResolverUseCase.js');
         assert(resolverSource.includes("new LocalStorageProvider()") && resolverSource.includes('new LocalContentStore(storageProvider)'), 'J1. The REAL app\'s own materialized-content backend is storage/LocalStorageProvider.js (window.localStorage-backed) — confirmed against live composition-root source.');
         const localStorageProviderSource = await rawSource('storage/LocalStorageProvider.js');
-        assert(/window\.localStorage/.test(localStorageProviderSource), 'J2. ...which really is backed by window.localStorage, and therefore genuinely survives a reload — unlike application/ObserverLocalEncounterStore.js, which holds no StorageProvider of any kind (confirmed in Section C). A reload loses the ENCOUNTER (the marker, the position, the session-local record) but not the already-verified MATERIAL underneath it.');
+        assert(/window\.localStorage/.test(localStorageProviderSource), 'J2. ...which really is backed by window.localStorage, and therefore genuinely survives a reload — unlike application/worldEncounter/ObserverLocalEncounterStore.js, which holds no StorageProvider of any kind (confirmed in Section C). A reload loses the ENCOUNTER (the marker, the position, the session-local record) but not the already-verified MATERIAL underneath it.');
 
         // J3-J5 — interruption: an in-flight cascade run is never cancelled
-        // by an unmount (application/AutomaticSnapshotEncounterCascade.js's
+        // by an unmount (application/snapshot/AutomaticSnapshotEncounterCascade.js's
         // own already-documented "the cascade itself is never cancelled").
         // What happens to an encounter it produces AFTER its owning
         // WorldView (and therefore its own store) has already been "left
@@ -811,7 +811,7 @@ async function runTests() {
         const worldViewSource = codeOnlyLines((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(worldViewSource.indexOf('observerLocalEncounterStore') < worldViewSource.indexOf('onBeforeUnmount(') || !worldViewSource.includes('observerLocalEncounterStore ='), 'J5. Confirmed structurally: onBeforeUnmount() never reassigns or clears observerLocalEncounterStore itself — the variable, and therefore any in-flight write into it, simply stops being reachable through normal Vue lifecycle, rather than being defensively guarded.');
 
-        console.log('✓ J — a reload loses the encounter but not the underlying verified material (J1-J2), and an interrupted session lets its own in-flight cascade run complete harmlessly into a store nothing will ever read again (J3-J5) — consistent with, not a new instance of, this codebase\'s existing "acquisition is never rolled back, only presentation is session-sensitive" posture (application/AutomaticSnapshotEncounterCascade.js\'s own 0.9.193 header). Neither case violates an expectation the product has actually set — see Section K.');
+        console.log('✓ J — a reload loses the encounter but not the underlying verified material (J1-J2), and an interrupted session lets its own in-flight cascade run complete harmlessly into a store nothing will ever read again (J3-J5) — consistent with, not a new instance of, this codebase\'s existing "acquisition is never rolled back, only presentation is session-sensitive" posture (application/snapshot/AutomaticSnapshotEncounterCascade.js\'s own 0.9.193 header). Neither case violates an expectation the product has actually set — see Section K.');
     }
 
     // ===============================================================
@@ -872,8 +872,8 @@ async function runTests() {
         const excludedVocabulary = /reputation|trust\s*scor|spatial\s*voting|community\s*moderation|bookmark|favorite\b|persistentObserverLocal|StorageProvider.*ObserverLocalEncounter|ObserverLocalEncounter.*StorageProvider/i;
         const productionFilesThisReassessmentDependsOn = [
             'core/ObserverLocalPublicationEncounter.js',
-            'application/ObserverLocalEncounterStore.js',
-            'application/AutomaticSnapshotEncounterCascade.js',
+            'application/worldEncounter/ObserverLocalEncounterStore.js',
+            'application/snapshot/AutomaticSnapshotEncounterCascade.js',
             'ui/views/WorldView.js',
             'ui/components/WorldEncounterCanvas.js'
         ];

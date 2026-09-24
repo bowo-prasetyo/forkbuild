@@ -2,11 +2,11 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
-import { ChatUseCase } from '../application/ChatUseCase.js';
-import { VoiceUseCase } from '../application/VoiceUseCase.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
+import { ChatUseCase } from '../application/chat/ChatUseCase.js';
+import { VoiceUseCase } from '../application/chat/VoiceUseCase.js';
 import { VoiceSessionState } from '../core/VoiceSessionState.js';
 import { VoiceCallEndReason } from '../core/VoiceCallEndReason.js';
 
@@ -19,7 +19,7 @@ import { VoiceCallEndReason } from '../core/VoiceCallEndReason.js';
 // explicit REJECT, BUSY concurrency with a call already in progress, a
 // local microphone failure that never looks like the peer rejecting, an
 // SDP renegotiation failure that never looks like a dead connection (the
-// underlying peer/PeerConnection.js and application/ChatUseCase.js both
+// underlying peer/PeerConnection.js and application/chat/ChatUseCase.js both
 // stay completely unaffected in every failure scenario below), and a
 // disconnect that neither leaves a stale call behind nor resurrects one on
 // reconnect. Every scenario runs over REAL RTCPeerConnection/RTCDataChannel
@@ -152,7 +152,7 @@ class SyntheticAudioTrackProvider {
     }
 }
 
-// application/LocalAudioTrackProvider.js's own header documents exactly
+// application/chat/LocalAudioTrackProvider.js's own header documents exactly
 // this failure mode — "no microphone access ... Throws (never silently
 // returns null)" — a permission-denied/no-hardware environment. Never a
 // mock of WebRTC itself, only of the ONE boundary 0.2.73 already
@@ -199,10 +199,10 @@ async function connectPair(aliceIdentityProvider, bobIdentityProvider) {
 
 // 0.2.74 — reconnects the SAME two devices over a BRAND NEW transport,
 // but through the SAME already-injected `aliceConnect`/`bobConnect`
-// (and therefore the same application/ConnectedPeerRegistry.js) as an
+// (and therefore the same application/peer/ConnectedPeerRegistry.js) as an
 // earlier connectPair() — exactly what a real reconnect after a dropped
 // connection looks like, and the ONLY way to prove a pre-existing
-// application/VoiceUseCase.js (already subscribed to that SAME registry's
+// application/chat/VoiceUseCase.js (already subscribed to that SAME registry's
 // onChange()) picks up the new connection on its own rather than needing
 // to be told about it.
 async function reconnectPair(aliceConnect, bobConnect) {
@@ -299,7 +299,7 @@ async function runTests() {
     assert(aliceVoice.getActiveCall().state === VoiceSessionState.CALLING, "alice's call starts CALLING");
     // Armed immediately, BEFORE awaiting anything else — alice's own
     // ringing timer is already running the instant startCall() returns
-    // (see application/VoiceUseCase.js#_createCallRecord()), so this MUST
+    // (see application/chat/VoiceUseCase.js#_createCallRecord()), so this MUST
     // subscribe before any other await gives it a chance to fire unheard.
     const aliceEndedPromise = waitForCallEnded(aliceVoice, callId, 5000);
     const { callId: bobCallId } = await incoming;
@@ -432,7 +432,7 @@ async function runTests() {
     assert(aliceConnectedPeer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED, "a local microphone failure never touches the underlying peer connection");
     assert(bobConnectedPeer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED, 'true on both sides');
 
-    // Proves the DataChannel/application/ChatUseCase.js itself was never
+    // Proves the DataChannel/application/chat/ChatUseCase.js itself was never
     // affected by the failed voice negotiation — the SAME already-
     // authenticated connection still carries chat perfectly normally
     // afterward.
@@ -451,7 +451,7 @@ async function runTests() {
 //    peer/WebRtcPeerConnection.js#role fixes WHICHEVER side ever calls
 //    renegotiate() forever, at the original DataChannel handshake,
 //    completely independent of who places THIS particular voice call —
-//    see application/VoiceUseCase.js's own header, "No Glare, By
+//    see application/chat/VoiceUseCase.js's own header, "No Glare, By
 //    Construction." connectPair() always makes Alice's own connection
 //    the offerer, so her own renegotiate() is what this test breaks.
 // ---------------------------------------------------------------------

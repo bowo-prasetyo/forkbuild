@@ -20,11 +20,11 @@
 //                      simply echoes back on every subsequent signal.
 //   type            — VoiceCallSignalType: INVITE/ACCEPT/REJECT/END/BUSY
 //   callerIdentity  — who is placing (or placed) the call. Never trusted
-//                      on its own — application/VoiceUseCase.js requires
+//                      on its own — application/chat/VoiceUseCase.js requires
 //                      this to match the sending connection's own
 //                      already-proven remoteIdentity, the identical
 //                      "claimed sender must match the proven connection"
-//                      rule application/ChatUseCase.js#_handleIncoming()
+//                      rule application/chat/ChatUseCase.js#_handleIncoming()
 //                      already applies to core/ChatMessage.js#senderIdentity.
 //   calleeIdentity  — who the call is FOR. Re-derived and compared by
 //                      the receiver against its own signing identity —
@@ -40,7 +40,7 @@ export const VoiceCallSignalType = Object.freeze({
     INVITE: 'INVITE',
     // Callee -> caller: "yes" — the callee is now expected to add its own
     // local audio track and wait for the caller's renegotiation offer;
-    // see application/VoiceUseCase.js's own header on why the caller,
+    // see application/chat/VoiceUseCase.js's own header on why the caller,
     // never the callee, always drives renegotiation.
     ACCEPT: 'ACCEPT',
     // Callee -> caller: "no."
@@ -48,12 +48,12 @@ export const VoiceCallSignalType = Object.freeze({
     // Either party, at any later point: "hang up." The one signal this
     // vocabulary re-uses for both "the callee declined an active second
     // call" (BUSY is a distinct, narrower signal — see below) and a
-    // normal hangup — see application/VoiceUseCase.js#_handleIncomingCall().
+    // normal hangup — see application/chat/VoiceUseCase.js#_handleIncomingCall().
     END: 'END',
     // Callee -> caller: "I already have a call in progress." A distinct
     // value from REJECT — REJECT is a deliberate "no"; BUSY is "I
     // structurally cannot accept a second one right now" — see
-    // application/VoiceUseCase.js's own header, "One Call At A Time, Per
+    // application/chat/VoiceUseCase.js's own header, "One Call At A Time, Per
     // Peer."
     BUSY: 'BUSY'
 });

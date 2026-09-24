@@ -1,18 +1,18 @@
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/IpfsPublicationRecord.js';
-import { CreateIpfsPublicationContentVerifierUseCase } from '../application/CreateIpfsPublicationContentVerifierUseCase.js';
-import { IpfsPublicationContentVerificationCoordinator } from '../application/IpfsPublicationContentVerificationCoordinator.js';
-import { CreateIpfsPublicationContentVerificationCoordinatorUseCase } from '../application/CreateIpfsPublicationContentVerificationCoordinatorUseCase.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
+import { CreateIpfsPublicationContentVerifierUseCase } from '../application/ipfs/CreateIpfsPublicationContentVerifierUseCase.js';
+import { IpfsPublicationContentVerificationCoordinator } from '../application/ipfs/IpfsPublicationContentVerificationCoordinator.js';
+import { CreateIpfsPublicationContentVerificationCoordinatorUseCase } from '../application/ipfs/CreateIpfsPublicationContentVerificationCoordinatorUseCase.js';
 import {
     IpfsPublicationContentVerificationCoordinatorState,
     isValidIpfsPublicationContentVerificationCoordinatorState
-} from '../application/IpfsPublicationContentVerificationCoordinatorState.js';
+} from '../application/ipfs/IpfsPublicationContentVerificationCoordinatorState.js';
 import {
     describeIpfsPublicationContentVerification,
     describeIpfsPublicationContentVerificationStateLabel
-} from '../application/IpfsPublicationContentVerificationView.js';
-import { IpfsPublicationContentVerificationState } from '../application/IpfsPublicationContentVerificationState.js';
+} from '../application/ipfs/IpfsPublicationContentVerificationView.js';
+import { IpfsPublicationContentVerificationState } from '../application/ipfs/IpfsPublicationContentVerificationState.js';
 
 // 0.8.70 — IPFS Publication & Content Verification UI.
 //
@@ -39,7 +39,7 @@ import { IpfsPublicationContentVerificationState } from '../application/IpfsPubl
 //   Section D: the coordinator's constructor requires a real verifier.
 //   Section E: IpfsPublicationContentVerificationCoordinatorState reuses
 //              HASH_MATCH/HASH_MISMATCH/UNAVAILABLE verbatim from
-//              application/IpfsPublicationContentVerificationState.js,
+//              application/ipfs/IpfsPublicationContentVerificationState.js,
 //              and adds exactly IDLE/VERIFYING/FAILED.
 //   Section F: the view is a pure, stateless projection; IDLE by
 //              default; every state has a factual, non-verdict label.

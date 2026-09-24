@@ -22,7 +22,7 @@ import { PeerInvitation } from './PeerInvitation.js';
 //
 // 0.2.64 adds two things this provider needed before "search by identity"
 // could mean anything: expired records are pruned lazily, on every read
-// (never on a timer — the same discipline application/ChatOutbox.js#list()
+// (never on a timer — the same discipline application/chat/ChatOutbox.js#list()
 // already established for core/ChatOutboxEntry.js's own TTL), and
 // re-importing the SAME candidate (same candidateEndpoint + identityHint,
 // while the existing record is still fresh) refreshes that one record

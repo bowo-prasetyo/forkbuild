@@ -6,9 +6,9 @@ import { AVATAR_COLLISION_HEIGHT } from './AvatarCollision.js';
 // still walkable, and if so, how much should it slow the avatar down."
 // Same split as everywhere else in this codebase — this file knows only
 // plain numbers (a depth, a limit), never a seed, a coordinate, or what
-// SURFACE_CATEGORY.WATER even is; application/AvatarWaterConstraint.js
+// SURFACE_CATEGORY.WATER even is; application/avatar/AvatarWaterConstraint.js
 // is the one place that supplies real world data to it, exactly the way
-// application/AvatarTerrainConstraint.js supplies real terrain heights
+// application/avatar/AvatarTerrainConstraint.js supplies real terrain heights
 // to core/TerrainWalkability.js.
 //
 // tests/AvatarShallowWaterTraversalBoundaryAudit.test.js (0.9.633)

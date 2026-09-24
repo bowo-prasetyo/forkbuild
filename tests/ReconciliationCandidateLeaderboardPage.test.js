@@ -7,7 +7,7 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage
 } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.179 — Archive-Backed Reconciliation Candidate Leaderboard Page.
 //

@@ -194,7 +194,7 @@ export function resolveAvatarTreeMovement({ currentPosition, requestedPosition, 
 // Deliberately not yet: a region-level "which trees does this avatar need
 // to be tested against" spatial query (0.9.62's own job — see
 // docs/Roadmap.md, 0.9.61); wiring this file into
-// application/AvatarMovementConstraint.js, application/
+// application/avatar/AvatarMovementConstraint.js, application/
 // AvatarTerrainConstraint.js, or the World View avatar update loop in any
 // way (a separate integration seam, deliberately left for a later
 // milestone so the geometric machinery here stays testable without the

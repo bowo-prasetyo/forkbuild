@@ -3,37 +3,37 @@ import { readFile } from 'node:fs/promises';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License, LicenseId } from '../core/License.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
-import { PublicationPeerConnectionSync } from '../application/PublicationPeerConnectionSync.js';
-import { CreatePublicationPeerExchangeUseCase } from '../application/CreatePublicationPeerExchangeUseCase.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
+import { PublicationPeerConnectionSync } from '../application/publication/PublicationPeerConnectionSync.js';
+import { CreatePublicationPeerExchangeUseCase } from '../application/publication/CreatePublicationPeerExchangeUseCase.js';
 
 // 0.9.342 — Automatic Peer Publication Connection Sync.
 //
 // 0.9.341's own boundary audit (test-only, no production change) proved
-// a seam built entirely from application/PublicationPeerExchange.js#
-// announce(), application/LocalPublicationCatalog.js#list(), and
-// application/ConnectedPeerRegistry.js#onChange() closes a real, live-
+// a seam built entirely from application/publication/PublicationPeerExchange.js#
+// announce(), application/publication/LocalPublicationCatalog.js#list(), and
+// application/peer/ConnectedPeerRegistry.js#onChange() closes a real, live-
 // reproduced product gap: a peer who connects AFTER a Publication was
 // already cataloged never received it. This file exercises the
-// PRODUCTION seam — application/PublicationPeerConnectionSync.js,
-// composed alongside application/PublicationPeerExchange.js by
-// application/CreatePublicationPeerExchangeUseCase.js — against real,
+// PRODUCTION seam — application/publication/PublicationPeerConnectionSync.js,
+// composed alongside application/publication/PublicationPeerExchange.js by
+// application/publication/CreatePublicationPeerExchangeUseCase.js — against real,
 // live, authenticated peer connections throughout.
 //
 // Sections (A-J), matching this milestone's own brief:
@@ -263,7 +263,7 @@ async function run() {
     // path, never a second message mechanism).
     // ===============================================================
     {
-        const connectionSyncSource = await readSource('application/PublicationPeerConnectionSync.js');
+        const connectionSyncSource = await readSource('application/publication/PublicationPeerConnectionSync.js');
         assert(!/this\._bus\b|peerMessageBus\.send|new PeerMessageBus/.test(connectionSyncSource),
             '1. PublicationPeerConnectionSync never touches a PeerMessageBus directly — it has no transport of its own.');
         assert(connectionSyncSource.includes('this._peerExchange.announce('),
@@ -305,7 +305,7 @@ async function run() {
     // Section E — No content transfer.
     // ===============================================================
     {
-        const connectionSyncSource = await readSource('application/PublicationPeerConnectionSync.js');
+        const connectionSyncSource = await readSource('application/publication/PublicationPeerConnectionSync.js');
         assert(!/import .*PublicationResolver/.test(connectionSyncSource), '1. no import of PublicationResolver.js.');
         assert(!/import .*ContentStore/.test(connectionSyncSource), '2. no import of any ContentStore.');
         assert(!/import .*PeerContentExchange/.test(connectionSyncSource), '3. no import of PeerContentExchange.js.');
@@ -543,7 +543,7 @@ async function run() {
         // A second, unrelated listener on the SAME registry, registered
         // AFTER aliceSync — proves a throw inside aliceSync's own
         // onChange callback never cancels a sibling listener queued
-        // behind it (see application/ConnectedPeerRegistry.js#
+        // behind it (see application/peer/ConnectedPeerRegistry.js#
         // _publishChange()'s own plain synchronous for-loop).
         let siblingListenerFired = 0;
         session.aliceConnect.registry.onChange(() => { siblingListenerFired += 1; });

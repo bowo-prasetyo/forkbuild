@@ -1,27 +1,27 @@
 import { readFile } from 'node:fs/promises';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/AutomaticSnapshotEncounterCascadeOutcome.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotCandidateMaterializationOutcome } from '../application/SnapshotCandidateMaterializationOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/snapshot/AutomaticSnapshotEncounterCascadeOutcome.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotCandidateMaterializationOutcome } from '../application/snapshot/materialization/SnapshotCandidateMaterializationOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource,
     materializedSnapshotWorldOrigin
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { resolveSnapshotWorldPlacement } from '../application/SnapshotWorldPlacement.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { assembleWorldDiscoveryInputs } from '../core/WorldDiscoverySourceAssembly.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
@@ -37,7 +37,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //
 // 0.9.187 composed the already-proven resolve -> verify -> materialize ->
 // place -> register chain into one background-triggered orchestration seam,
-// `application/AutomaticSnapshotEncounterCascade.js`. Its own test file
+// `application/snapshot/AutomaticSnapshotEncounterCascade.js`. Its own test file
 // (`tests/WorldSnapshotAutomaticEncounterCascade.test.js`) proved every
 // SECTION of that chain works in isolation — one candidate, one cascade
 // instance, one scenario at a time. This file asks the harder question the
@@ -1025,7 +1025,7 @@ async function runTests() {
         assert(encounter.position.x === 10 && encounter.position.y === 20 && encounter.position.z === 30,
             '2. the resulting World object appears EXACTLY at the authoritative placement (10,20,30) — the hostile claimedPosition (999999,999999,999999) never influenced it in any way');
 
-        const source = await codeOnlySource('application/AutomaticSnapshotEncounterCascade.js');
+        const source = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
         assert(!source.includes('claimedPosition'), '3. structural confirmation: the cascade\'s own source never references claimedPosition at all — this is not merely a value that lost a comparison, the field is never read');
 
         console.log('✓ Section L: an adversarial claimedPosition of (999999,999999,999999) has zero effect — the resulting World object appears exactly at the authoritative (10,20,30) placement');
@@ -1227,7 +1227,7 @@ async function runTests() {
         const sources = registry.listSources();
         assert(sources.length === 3, '3. all three sources — the two unrelated registrations plus the cascade\'s own — coexist; nothing was evicted by the churn or by the cascade\'s own completion');
 
-        const registrySource = await codeOnlySource('application/AutomaticSnapshotEncounterCascade.js');
+        const registrySource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
         assert(!/\.subscribe\(/.test(registrySource), '4. structural confirmation: the cascade never subscribes to the registry at all — it has no way to even OBSERVE unrelated churn, let alone react to it');
 
         console.log('✓ Section P: unrelated LOCAL/PEER registrations and an unrelated Snapshot removal, all occurring while a cascade run is in-flight, never trigger, block, or duplicate that unrelated run');
@@ -1238,16 +1238,16 @@ async function runTests() {
     // vocabulary has crept into the audited files since 0.9.187.
     // ---------------------------------------------------------------
     {
-        const cascadeSource = await codeOnlySource('application/AutomaticSnapshotEncounterCascade.js');
+        const cascadeSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
         assert(!/\bretry\b|backoff|setTimeout|setInterval/i.test(cascadeSource), '1. no retry/backoff/polling vocabulary in the cascade');
         assert(!/localStorage|IndexedDB|StorageProvider|persist/i.test(cascadeSource), '2. no persistence vocabulary — `_results` remains purely in-memory, per-instance');
         assert(!/rank|score|trust|preference|nearest/i.test(cascadeSource), '3. no ranking/trust/provider-scoring vocabulary');
         assert(!/\bexpir\w*\b|\bttl\b|\bstale\b/i.test(cascadeSource), '4. no expiration/TTL vocabulary');
 
-        const monitorSource = await codeOnlySource('application/WorldSnapshotDiscoveryMonitor.js');
+        const monitorSource = await codeOnlySource('application/snapshot/WorldSnapshotDiscoveryMonitor.js');
         assert(!/\bretry\b|backoff/i.test(monitorSource), '5. no retry/backoff vocabulary in the discovery monitor either');
 
-        const bridgeSource = await codeOnlySource('application/MaterializedSnapshotWorldDiscoveryBridge.js');
+        const bridgeSource = await codeOnlySource('application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js');
         assert(!/distance|viewport|proximity/i.test(bridgeSource), '6. no distance-based/viewport-based removal vocabulary in the World registration bridge');
 
         const outcomeKeys = Object.keys(AutomaticSnapshotEncounterCascadeOutcome);

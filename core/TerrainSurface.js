@@ -210,7 +210,7 @@ export function surfaceColorAt(seed, x, z) {
 // (today's SURFACE_PALETTE and thresholds are the one shared look every
 // document's terrain uses, the same posture core/TerrainHeightField.js's
 // own DEFAULT_WORLD_SEED already established); consulting this file from
-// core/TerrainWalkability.js or application/AvatarTerrainConstraint.js
+// core/TerrainWalkability.js or application/avatar/AvatarTerrainConstraint.js
 // (walkability stays exactly the slope-only decision 0.2.77 established
 // — SOIL/ROCK are not "this ground is unwalkable," they are only "this
 // ground looks like exposed dirt/stone"); and any per-vertex texture

@@ -1,16 +1,17 @@
 import { readFile } from 'node:fs/promises';
+import { applicationPath } from './support/ApplicationFiles.js';
 import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License } from '../core/License.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { createPublicationContentKind } from '../application/PublicationContentKind.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { createPublicationContentKind } from '../application/publication/PublicationContentKind.js';
 import { DiscoveryProvider } from '../discovery/DiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -42,7 +43,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 // Section A corrects this against source before anything else, the same
 // "vocabulary corrected against source rather than accepted as given"
 // discipline 0.9.330's own Section A applied to the brief's "Snapshot"
-// vocabulary one milestone earlier: `application/LocalPublicationCatalog.js`
+// vocabulary one milestone earlier: `application/publication/LocalPublicationCatalog.js`
 // never appears anywhere in Repository's own call chain. Every later
 // section reasons about the REAL chain, traced fresh from source.
 //
@@ -161,28 +162,28 @@ async function run() {
     // "publication catalogs" exist, and they are not the same thing.
     // ===============================================================
     {
-        // A1. application/LocalPublicationCatalog.js is real — but it
+        // A1. application/publication/LocalPublicationCatalog.js is real — but it
         // indexes core/DecentralizedPublication.js ENVELOPES (any
         // contentKind), never publisher/Publication.js instances, and its
         // own header says so directly.
-        const localPublicationCatalog = await readSource('application/LocalPublicationCatalog.js');
-        assert(localPublicationCatalog.includes("import { DecentralizedPublication } from '../core/DecentralizedPublication.js';"),
-            '1. application/LocalPublicationCatalog.js is built on core/DecentralizedPublication.js, never publisher/Publication.js.');
+        const localPublicationCatalog = await readSource('application/publication/LocalPublicationCatalog.js');
+        assert(localPublicationCatalog.includes("import { DecentralizedPublication } from '../../core/DecentralizedPublication.js';"),
+            '1. application/publication/LocalPublicationCatalog.js is built on core/DecentralizedPublication.js, never publisher/Publication.js.');
         assert(!/publisher\/Publication\.js/.test(localPublicationCatalog),
-            '2. confirmed structurally: application/LocalPublicationCatalog.js never imports publisher/Publication.js at all.');
+            '2. confirmed structurally: application/publication/LocalPublicationCatalog.js never imports publisher/Publication.js at all.');
         assert(proseIncludes(localPublicationCatalog, 'A core/DecentralizedPublication.js instance already IS the slim, signed locator record'),
             "3. its own header states directly what it stores — a DecentralizedPublication locator, never Repository's own Publication.");
 
         // A2. Repository's REAL search contract never imports or
-        // references application/LocalPublicationCatalog.js at all — the
+        // references application/publication/LocalPublicationCatalog.js at all — the
         // originating brief's own diagram does not survive contact with
         // source.
-        const searchPublicationsUseCase = await readSource('application/SearchPublicationsUseCase.js');
+        const searchPublicationsUseCase = await readSource('application/publication/SearchPublicationsUseCase.js');
         assert(!/LocalPublicationCatalog/.test(searchPublicationsUseCase),
-            '4. application/SearchPublicationsUseCase.js never mentions LocalPublicationCatalog — the brief\'s own diagram link does not exist in source.');
-        const createDiscoveryUseCase = await readSource('application/CreateDiscoveryUseCase.js');
+            '4. application/publication/SearchPublicationsUseCase.js never mentions LocalPublicationCatalog — the brief\'s own diagram link does not exist in source.');
+        const createDiscoveryUseCase = await readSource('application/discovery/CreateDiscoveryUseCase.js');
         assert(!/LocalPublicationCatalog/.test(createDiscoveryUseCase),
-            '5. application/CreateDiscoveryUseCase.js — the composition root that actually builds SearchPublicationsUseCase\'s collaborator — never references LocalPublicationCatalog either.');
+            '5. application/discovery/CreateDiscoveryUseCase.js — the composition root that actually builds SearchPublicationsUseCase\'s collaborator — never references LocalPublicationCatalog either.');
 
         // A3. Repository's REAL local store has no "Catalog" class at
         // all: discovery/LocalDiscoveryProvider.js reads a plain
@@ -192,7 +193,7 @@ async function run() {
         assert(localDiscoveryProvider.includes("const PUBLICATIONS_KEY = 'forkbuild-publications';"),
             '6. discovery/LocalDiscoveryProvider.js reads storage key "forkbuild-publications" directly — no catalog class wraps it.');
         assert(localPublicationCatalog.includes("const STORAGE_KEY = 'publication-catalog:entries';"),
-            "7. application/LocalPublicationCatalog.js reads a DIFFERENT storage key entirely — the two are not two names for one store.");
+            "7. application/publication/LocalPublicationCatalog.js reads a DIFFERENT storage key entirely — the two are not two names for one store.");
 
         // A4. And the one class that DOES bridge LocalPublicationCatalog
         // to a DiscoveryProvider-shaped interface is wired to neither
@@ -201,7 +202,7 @@ async function run() {
         assert(await sourceExists('discovery/PublicationCatalogDiscoveryProvider.js'),
             '8. the one existing DiscoveryProvider subclass over LocalPublicationCatalog, discovery/PublicationCatalogDiscoveryProvider.js, is real — Section C traces what it actually does.');
     }
-    console.log('✓ Section A: the originating brief\'s own diagram ("SearchPublicationsUseCase -> LocalPublicationCatalog -> Publication") is corrected against source. application/LocalPublicationCatalog.js is real, but it indexes core/DecentralizedPublication.js envelopes (any contentKind) for the Publications Center — never publisher/Publication.js, and never referenced anywhere in Repository\'s own SearchPublicationsUseCase.js or its composition root, CreateDiscoveryUseCase.js. Repository\'s real local store has no catalog CLASS at all: discovery/LocalDiscoveryProvider.js scans a plain array under its own, differently-named storage key. Every later section reasons about the REAL chain, not the brief\'s own.');
+    console.log('✓ Section A: the originating brief\'s own diagram ("SearchPublicationsUseCase -> LocalPublicationCatalog -> Publication") is corrected against source. application/publication/LocalPublicationCatalog.js is real, but it indexes core/DecentralizedPublication.js envelopes (any contentKind) for the Publications Center — never publisher/Publication.js, and never referenced anywhere in Repository\'s own SearchPublicationsUseCase.js or its composition root, CreateDiscoveryUseCase.js. Repository\'s real local store has no catalog CLASS at all: discovery/LocalDiscoveryProvider.js scans a plain array under its own, differently-named storage key. Every later section reasons about the REAL chain, not the brief\'s own.');
 
     // ===============================================================
     // Section B — Question A: what Repository's search contract
@@ -212,7 +213,7 @@ async function run() {
         // injected discoveryProvider, called synchronously, once, for
         // the WHOLE candidate set — never LocalPublicationCatalog, never
         // an async source.
-        const searchPublicationsUseCase = await readSource('application/SearchPublicationsUseCase.js');
+        const searchPublicationsUseCase = await readSource('application/publication/SearchPublicationsUseCase.js');
         assert(searchPublicationsUseCase.includes('constructor(discoveryProvider, loadPublicationDocumentUseCase = null)'),
             '1. SearchPublicationsUseCase\'s own constructor takes a discoveryProvider as its primary, required collaborator.');
         assert(searchPublicationsUseCase.includes('let candidates = this._discoveryProvider.list();'),
@@ -249,11 +250,11 @@ async function run() {
         // second discoveryProvider now reaches SearchPublicationsUseCase
         // in production whenever a caller supplies one (every real UI
         // caller now does — see tests/DecentralizedPublicationRepositoryMerge.test.js).
-        const createDiscoveryUseCase = await readSource('application/CreateDiscoveryUseCase.js');
+        const createDiscoveryUseCase = await readSource('application/discovery/CreateDiscoveryUseCase.js');
         assert(createDiscoveryUseCase.includes('const localDiscoveryProvider = new LocalDiscoveryProvider(storageProvider);') &&
             createDiscoveryUseCase.includes('new CompositeDiscoveryProvider([localDiscoveryProvider, decentralizedDiscoveryProvider])') &&
             createDiscoveryUseCase.includes('new SearchPublicationsUseCase(discoveryProvider, loadPublicationDocumentUseCase)'),
-            '6. UPDATED (0.9.339): application/CreateDiscoveryUseCase.js still unconditionally constructs LocalDiscoveryProvider, and now optionally composes it with an injected decentralizedDiscoveryProvider via discovery/CompositeDiscoveryProvider.js — LocalDiscoveryProvider alone is no longer the ONLY discoveryProvider Repository search can be given in production.');
+            '6. UPDATED (0.9.339): application/discovery/CreateDiscoveryUseCase.js still unconditionally constructs LocalDiscoveryProvider, and now optionally composes it with an injected decentralizedDiscoveryProvider via discovery/CompositeDiscoveryProvider.js — LocalDiscoveryProvider alone is no longer the ONLY discoveryProvider Repository search can be given in production.');
         // 0.9.335 added the third: discovery/DecentralizedPublicationDiscoveryProvider.js,
         // exactly the accumulator this audit's own Section F named as
         // missing. Widened here explicitly, the same way 0.9.333 widened
@@ -305,13 +306,13 @@ async function run() {
         // placement creation (0.8.18/0.8.25) — never Repository.
         assert(proseIncludes(bridgeProvider, 'so the 0.8.18 creation pipeline can finally be wired against the SAME catalog'),
             '5. its own header names its real caller directly: the Snapshot placement creation pipeline, not Repository search.');
-        const searchPublicationsUseCase = await readSource('application/SearchPublicationsUseCase.js');
+        const searchPublicationsUseCase = await readSource('application/publication/SearchPublicationsUseCase.js');
         const publicationCatalogUi = await readSource('ui/components/PublicationCatalog.js');
-        const createDiscoveryUseCase = await readSource('application/CreateDiscoveryUseCase.js');
+        const createDiscoveryUseCase = await readSource('application/discovery/CreateDiscoveryUseCase.js');
         for (const [name, src] of [
-            ['application/SearchPublicationsUseCase.js', searchPublicationsUseCase],
+            ['application/publication/SearchPublicationsUseCase.js', searchPublicationsUseCase],
             ['ui/components/PublicationCatalog.js', publicationCatalogUi],
-            ['application/CreateDiscoveryUseCase.js', createDiscoveryUseCase]
+            ['application/discovery/CreateDiscoveryUseCase.js', createDiscoveryUseCase]
         ]) {
             assert(!/PublicationCatalogDiscoveryProvider/.test(src),
                 `6. ${name} never references discovery/PublicationCatalogDiscoveryProvider.js — confirmed directly, not merely inferred from its header.`);
@@ -353,7 +354,7 @@ async function run() {
         // D2. SearchPublicationsUseCase's own filtering/sorting operates
         // directly on Publication's own real fields — proof by usage,
         // not merely by absence of a wrapper class.
-        const searchPublicationsUseCase = await readSource('application/SearchPublicationsUseCase.js');
+        const searchPublicationsUseCase = await readSource('application/publication/SearchPublicationsUseCase.js');
         assert(searchPublicationsUseCase.includes('p.author === query.author') &&
             searchPublicationsUseCase.includes("(publication.title || '').toLowerCase()") &&
             searchPublicationsUseCase.includes('publication.documentId'),
@@ -415,7 +416,7 @@ async function run() {
         const decentralizedOriginProvider = new SingleCandidateDiscoveryProvider([liveResolvedPublication]);
 
         // E3. The REAL, unmodified SearchPublicationsUseCase, imported
-        // from application/SearchPublicationsUseCase.js exactly as
+        // from application/publication/SearchPublicationsUseCase.js exactly as
         // Repository's own composition root imports it — never a stub,
         // never a rewritten copy.
         const searchUseCase = new SearchPublicationsUseCase(decentralizedOriginProvider);
@@ -445,9 +446,9 @@ async function run() {
         // Publication. In production, nothing plays that role: no
         // caller of createPublicationContentKind() ever gets a `store`
         // option, by design.
-        const publicationContentKind = await readSource('application/PublicationContentKind.js');
+        const publicationContentKind = await readSource('application/publication/PublicationContentKind.js');
         assert(proseIncludes(publicationContentKind, 'Deliberately NO `store` option, unlike the other two kind plugins'),
-            "1. application/PublicationContentKind.js's own header states this restraint directly.");
+            "1. application/publication/PublicationContentKind.js's own header states this restraint directly.");
         assert(!/store:/.test(publicationContentKind.split('createPublicationContentKind')[1] || ''),
             '2. confirmed structurally: the returned kindPlugin object literal never includes a `store` key.');
 
@@ -456,8 +457,8 @@ async function run() {
         // persistent — the resolved object Section E worked with is,
         // in production, returned to a caller and then discarded.
         const resolutionCallSites = grepFiles('createPublicationContentKind\\(', ['application', 'ui'])
-            .filter((f) => !f.includes('.test.js') && f !== 'application/PublicationContentKind.js');
-        assert(resolutionCallSites.length === 1 && resolutionCallSites[0] === 'application/CreatePublicationDisplayKindRegistryUseCase.js',
+            .filter((f) => !f.includes('.test.js') && f !== 'application/publication/PublicationContentKind.js');
+        assert(resolutionCallSites.length === 1 && resolutionCallSites[0] === 'application/publication/CreatePublicationDisplayKindRegistryUseCase.js',
             `3. the ONLY production call site for createPublicationContentKind() is the Publications Center's own display registry (found: ${resolutionCallSites.join(', ') || 'none'}) — a resolved Publication is used for display, not persisted anywhere list()-able.`);
 
         // F3. Reconfirmed fresh: no new Repository-owned store has been
@@ -466,11 +467,11 @@ async function run() {
         const suspiciousStoreNames = ['RepositoryFederationStore', 'RepositorySnapshotStore', 'RepositoryDecentralizedStore',
             'RepositoryPublicationSource', 'FederatedPublicationCatalog', 'DecentralizedRepositoryDiscoveryProvider'];
         for (const name of suspiciousStoreNames) {
-            assert(!(await sourceExists(`application/${name}.js`)) && !(await sourceExists(`discovery/${name}.js`)),
+            assert(applicationPath(name) === null && !(await sourceExists(`discovery/${name}.js`)),
                 `4. ${name}.js does not exist in application/ or discovery/ — no second Repository-owned source of truth has been introduced.`);
         }
     }
-    console.log('✓ Section F: Section E\'s own proof is honest about what it required — a test-built, in-memory array standing in for a producer/accumulator that does not exist in production. application/PublicationContentKind.js deliberately ships with no `store` option (confirmed structurally, not just quoted), and its one production caller (the Publications Center\'s own display registry) never persists a resolved Publication anywhere list()-able. No new Repository-owned store has been introduced since 0.9.330\'s own guard — reconfirmed fresh. This is the concrete, mechanical shape of a DISCOVERY GAP: the CONTRACT already accepts the right type (Section E); nothing in production yet produces or holds a candidate for it to receive.');
+    console.log('✓ Section F: Section E\'s own proof is honest about what it required — a test-built, in-memory array standing in for a producer/accumulator that does not exist in production. application/publication/PublicationContentKind.js deliberately ships with no `store` option (confirmed structurally, not just quoted), and its one production caller (the Publications Center\'s own display registry) never persists a resolved Publication anywhere list()-able. No new Repository-owned store has been introduced since 0.9.330\'s own guard — reconfirmed fresh. This is the concrete, mechanical shape of a DISCOVERY GAP: the CONTRACT already accepts the right type (Section E); nothing in production yet produces or holds a candidate for it to receive.');
 
     // ===============================================================
     // Section G — Question D: peer infrastructure, reconfirmed fresh.
@@ -489,8 +490,8 @@ async function run() {
         // it is ALREADY authenticated with — never a "does anyone know
         // about a publication I haven't seen" broadcast query, and
         // never a call into PublicationResolver.
-        const publicationPeerExchange = await readSource('application/PublicationPeerExchange.js');
-        assert(proseIncludes(publicationPeerExchange, 'it NEVER calls application/PublicationResolver.js, and never inspects the wrapped content or the locator\'s reachability'),
+        const publicationPeerExchange = await readSource('application/publication/PublicationPeerExchange.js');
+        assert(proseIncludes(publicationPeerExchange, 'it NEVER calls application/publication/PublicationResolver.js, and never inspects the wrapped content or the locator\'s reachability'),
             '3. its own header states directly: this class never resolves, only relays already-signed envelopes.');
         assert(publicationPeerExchange.includes('const authenticatedPeers = this._registry.list().filter((peer) => peer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED);'),
             '4. announce() only ever reaches peers ALREADY authenticated on this replica\'s own ConnectedPeerRegistry — never a stranger with no prior connection.');
@@ -504,7 +505,7 @@ async function run() {
         assert(proseIncludes(publicationPeerExchange, 'a publication a caller can export is, by construction, already a real DecentralizedPublication instance the caller obtained some other way'),
             '6. reconfirmed: this class only ever moves a publication the CALLER already possesses — it is not, and cannot become, a stranger-catalog browse mechanism by itself.');
     }
-    console.log('✓ Section G: reconfirmed fresh, unchanged since 0.9.330. peer/PeerDiscoveryProvider.js still only answers a connectivity question ("what endpoints are worth attempting?"), never a content one, and still never mentions Publication at all. application/PublicationPeerExchange.js DOES carry a live, real gossip transport for DecentralizedPublication envelopes — but it only ANNOUNCES an envelope a replica already holds to peers it is already authenticated with, never calls PublicationResolver, and carries no browse/query vocabulary. Peer infrastructure discovers ENDPOINTS and relays ALREADY-KNOWN envelopes among ALREADY-CONNECTED peers — it does not, and does not claim to, constitute a stranger-publication discovery catalog.');
+    console.log('✓ Section G: reconfirmed fresh, unchanged since 0.9.330. peer/PeerDiscoveryProvider.js still only answers a connectivity question ("what endpoints are worth attempting?"), never a content one, and still never mentions Publication at all. application/publication/PublicationPeerExchange.js DOES carry a live, real gossip transport for DecentralizedPublication envelopes — but it only ANNOUNCES an envelope a replica already holds to peers it is already authenticated with, never calls PublicationResolver, and carries no browse/query vocabulary. Peer infrastructure discovers ENDPOINTS and relays ALREADY-KNOWN envelopes among ALREADY-CONNECTED peers — it does not, and does not claim to, constitute a stranger-publication discovery catalog.');
 
     // ===============================================================
     // Section H — Question E: decentralized discovery, reconfirmed
@@ -523,30 +524,30 @@ async function run() {
         assert(proseIncludes(discoveryEnvelope, 'a small, JSON, substrate-neutral envelope a publisher can attach to whatever payload field THEIR substrate already offers'),
             '1. core/DecentralizedDiscoveryEnvelope.js\'s own header names its own purpose directly: a location envelope, not a content-kind envelope.');
         assert(!/DecentralizedPublication\.js|PublicationResolver|forkbuild\.publication/.test(discoveryEnvelope),
-            '2. confirmed structurally: it never imports core/DecentralizedPublication.js, application/PublicationResolver.js, or references forkbuild.publication at all.');
+            '2. confirmed structurally: it never imports core/DecentralizedPublication.js, application/publication/PublicationResolver.js, or references forkbuild.publication at all.');
 
-        const nostrPublisher = await readSource('application/NostrPublicationDiscoveryPublisher.js');
+        const nostrPublisher = await readSource('application/nostr/NostrPublicationDiscoveryPublisher.js');
         assert(proseIncludes(nostrPublisher, 'It never imports `publisher/Publication.js`, signs anything belonging to a Publication, or reads a Publication\'s own `signature` field'),
-            '3. application/NostrPublicationDiscoveryPublisher.js\'s own header confirms it never touches Publication or its signature at all.');
+            '3. application/nostr/NostrPublicationDiscoveryPublisher.js\'s own header confirms it never touches Publication or its signature at all.');
         assert(!/DecentralizedPublication\b/.test(nostrPublisher),
             '4. confirmed structurally: it never references core/DecentralizedPublication.js — it publishes a location envelope, never a forkbuild.publication one.');
 
-        const nostrQueryService = await readSource('application/NostrDiscoveryQueryService.js');
+        const nostrQueryService = await readSource('application/nostr/NostrDiscoveryQueryService.js');
         assert(!/DecentralizedPublication\b|PublicationResolver|createPublicationContentKind/.test(nostrQueryService),
-            '5. application/NostrDiscoveryQueryService.js never references DecentralizedPublication, PublicationResolver, or the Publication content-kind plugin — it cannot produce a resolvable forkbuild.publication candidate today.');
+            '5. application/nostr/NostrDiscoveryQueryService.js never references DecentralizedPublication, PublicationResolver, or the Publication content-kind plugin — it cannot produce a resolvable forkbuild.publication candidate today.');
 
         // H2. The other decentralized "browse the unknown by tag"
         // pattern in this codebase (Nostr Snapshot discovery) is real,
         // but 0.9.330 Section A/B5 already proved Snapshot is a
         // structurally disjoint domain object from Publication — this
         // is reconfirmed here, fresh, rather than merely cited.
-        const nostrSnapshotDiscovery = await readSource('application/NostrSnapshotDiscoveryQueryService.js');
+        const nostrSnapshotDiscovery = await readSource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         assert(!/publisher\/Publication\.js|DecentralizedPublication\b|SearchPublicationsUseCase/.test(nostrSnapshotDiscovery),
-            '6. application/NostrSnapshotDiscoveryQueryService.js still never imports Publication, DecentralizedPublication, or SearchPublicationsUseCase — its browsing pattern remains wired to Snapshot, a different domain object.');
+            '6. application/nostr/NostrSnapshotDiscoveryQueryService.js still never imports Publication, DecentralizedPublication, or SearchPublicationsUseCase — its browsing pattern remains wired to Snapshot, a different domain object.');
 
         // H3. So: no existing decentralized discovery service — Nostr or
         // otherwise — currently emits a candidate a caller could hand to
-        // application/PublicationResolver.js with createPublicationContentKind()
+        // application/publication/PublicationResolver.js with createPublicationContentKind()
         // and expect RESOLVED. Confirmed by direct search across every
         // production caller of the resolver with that specific plugin
         // (Section F1 already found exactly one: the display registry,
@@ -595,7 +596,7 @@ async function run() {
         // (a peer connection id) are two further, currently-unwired
         // fields — confirmed structurally never to feed into either
         // Publication.id or DecentralizedPublication.id anywhere.
-        const nostrPublisher = await readSource('application/NostrPublicationDiscoveryPublisher.js');
+        const nostrPublisher = await readSource('application/nostr/NostrPublicationDiscoveryPublisher.js');
         assert(proseIncludes(nostrPublisher, 'a Nostr event\'s own id is a hash of its signed fields'),
             "7. a Nostr event id is its own, independent identity space — this file's own header names it directly.");
         const peerConnection = await readSource('peer/PeerConnection.js');
@@ -613,7 +614,7 @@ async function run() {
         // J1. LocalPublicationCatalog's own dedup key is the envelope's
         // id, never a content hash — findByContentHash finds SIBLINGS,
         // it does not collapse them.
-        const localPublicationCatalog = await readSource('application/LocalPublicationCatalog.js');
+        const localPublicationCatalog = await readSource('application/publication/LocalPublicationCatalog.js');
         assert(proseIncludes(localPublicationCatalog, 'Deduplicates by the envelope\'s own `id`, never by content hash'),
             "1. LocalPublicationCatalog's own header states its real dedup key directly.");
         assert(proseIncludes(localPublicationCatalog, 'Every cataloged publication whose OWN contentReference.hash equals'),
@@ -624,10 +625,10 @@ async function run() {
         // J2. "same contentHash = same Repository record" is not an
         // existing semantic anywhere in Repository's own search/catalog
         // stack — confirmed by direct search, never assumed refuted.
-        const searchPublicationsUseCase = await readSource('application/SearchPublicationsUseCase.js');
+        const searchPublicationsUseCase = await readSource('application/publication/SearchPublicationsUseCase.js');
         const localDiscoveryProvider = await readSource('discovery/LocalDiscoveryProvider.js');
         for (const [name, src] of [
-            ['application/SearchPublicationsUseCase.js', searchPublicationsUseCase],
+            ['application/publication/SearchPublicationsUseCase.js', searchPublicationsUseCase],
             ['discovery/LocalDiscoveryProvider.js', localDiscoveryProvider]
         ]) {
             assert(!/contentHash|contentReference/.test(src),
@@ -691,8 +692,8 @@ async function run() {
             "2. publisher/Publication.js's own id/documentId getters are unchanged — this audit invents no new Repository identity.");
 
         // L3. LocalPublicationCatalog itself is untouched/unreplaced.
-        assert(await sourceExists('application/LocalPublicationCatalog.js'),
-            '3. application/LocalPublicationCatalog.js still exists, unreplaced.');
+        assert(await sourceExists('application/publication/LocalPublicationCatalog.js'),
+            '3. application/publication/LocalPublicationCatalog.js still exists, unreplaced.');
 
         // L4. The production-change guard: no file outside tests/,
         // tests.html, and docs/Roadmap.md is modified by this milestone.
@@ -708,7 +709,7 @@ async function run() {
         // the same reason). Amended to exclude exactly 0.9.597's own,
         // already-accounted-for files, while still catching any OTHER,
         // unexpected production drift.
-        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js']);
+        const expectedLaterMilestoneFiles = new Set(['application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js']);
         const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
             .filter((f) => !expectedLaterMilestoneFiles.has(f));
         assert(unexpectedNonTestFiles.length === 0, `4. AMENDED BY 0.9.597 — no UNEXPECTED production file is modified by this milestone (0.9.597's own, separately-justified files excepted) — found: ${unexpectedNonTestFiles.join(', ') || 'none'}.`);
@@ -733,7 +734,7 @@ async function run() {
 '\n' +
 'OUTCOME: DISCOVERY_GAP.\n' +
 '\n' +
-"WHY. Section A corrected the originating brief's own diagram against source: application/LocalPublicationCatalog.js\n" +
+"WHY. Section A corrected the originating brief's own diagram against source: application/publication/LocalPublicationCatalog.js\n" +
 'indexes core/DecentralizedPublication.js envelopes for the Publications Center and is never referenced anywhere in\n' +
 "Repository's own SearchPublicationsUseCase.js or its composition root. Section B traced Repository's REAL contract:\n" +
 'discoveryProvider.list() -> Publication[], through discovery/DiscoveryProvider.js, an ALREADY substrate-neutral\n' +

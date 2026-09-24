@@ -1,13 +1,13 @@
 import { ref, reactive } from 'vue';
 import {
     CreatePublicationReferenceRecordUseCase
-} from '../../../application/CreatePublicationReferenceRecordUseCase.js';
+} from '../../../application/publication/CreatePublicationReferenceRecordUseCase.js';
 import { sortOptionsByLabel } from '../../../utils/sortOptionsByLabel.js';
 import { shortId } from './presentation.js';
 import {
     describePublicationReferenceRecordHistory
-} from '../../../application/PublicationReferenceRecordHistoryView.js';
-import { reconstructPublicationReferenceGraph } from '../../../application/PublicationReferenceGraphView.js';
+} from '../../../application/publication/PublicationReferenceRecordHistoryView.js';
+import { reconstructPublicationReferenceGraph } from '../../../application/publication/PublicationReferenceGraphView.js';
 
 // Publication references: recording that one known publication references
 // another (into the archive), and browsing the resulting reference graph.

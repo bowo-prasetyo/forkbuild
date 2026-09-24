@@ -13,12 +13,12 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.129 — Vehicle Steering Control & State Audit.
 //
@@ -26,7 +26,7 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 // pipeline: a physical key's own down/up transition, threaded through a
 // caller-owned held bit (core/VehicleSteeringInputAdapter.js), into a
 // per-tick VehicleSteeringIntent that decays to NONE the instant it is
-// consumed (application/WorldNavigationSession.js's own frame loop). Every
+// consumed (application/world/WorldNavigationSession.js's own frame loop). Every
 // prior steering milestone (0.9.125/0.9.126/0.9.127) was either stateless
 // or driven entirely by direct, programmatic calls — this is the first one
 // with real TEMPORAL state: held-vs-repeated keys, a hold bit that outlives
@@ -748,7 +748,7 @@ async function runTests() {
         assert(adapterCode.includes('import') && adapterCode.split('import').length - 1 === 1,
             '71. sanity: exactly one import (VehicleSteeringDirection) — the adapter reaches neither the controller nor VehicleMovementHeading.js at all');
 
-        const rawSessionSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
+        const rawSessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
         const methodMatch = rawSessionSource.match(/_processVehicleSteeringInput\(key, type\)\s*\{([\s\S]*?)\n {4}\}/);
         assert(methodMatch !== null, '72. sanity: _processVehicleSteeringInput() still exists and is extractable as a single method body');
         const methodBody = methodMatch[1];
@@ -756,9 +756,9 @@ async function runTests() {
             assert(!methodBody.includes(term), `73. _processVehicleSteeringInput() still never references "${term}" — a thin translation, never a decision layer with its own heading or physics math`);
         }
 
-        const controllerCode = await sourceOf('../application/AvatarVehicleMovementController.js');
+        const controllerCode = await sourceOf('../application/avatar/AvatarVehicleMovementController.js');
         assert(!controllerCode.includes('Arrow') && !controllerCode.includes('VehicleSteeringInputAdapter'),
-            '74. application/AvatarVehicleMovementController.js still never learns a key exists — steering reaches it only as an already-resolved VehicleSteeringIntent parameter');
+            '74. application/avatar/AvatarVehicleMovementController.js still never learns a key exists — steering reaches it only as an already-resolved VehicleSteeringIntent parameter');
         assert(!controllerCode.includes('this._steeringIntent') && !controllerCode.includes('this._steering'),
             '75. the controller still holds no PERSISTENT steering-intent field of its own — steeringIntent is a fresh, per-tick parameter, exactly like movementIntent');
 
@@ -771,7 +771,7 @@ async function runTests() {
 
         const sessionCodeOnly = rawSessionSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!sessionCodeOnly.includes('resolveVehicleMovementDirectionFromSteering') && !sessionCodeOnly.includes('resolveVehicleHeadingFromMovement'),
-            '78. application/WorldNavigationSession.js itself still never calls either heading or steering math directly — only ever threads a VehicleSteeringIntent value through to the controller');
+            '78. application/world/WorldNavigationSession.js itself still never calls either heading or steering math directly — only ever threads a VehicleSteeringIntent value through to the controller');
     }
     {
         // The architectural claim, checked directly: the adapter's own

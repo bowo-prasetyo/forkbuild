@@ -1,11 +1,11 @@
-import { PublicationObservationArchive } from '../../PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../../publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.167 — Durable Revalidation Observation History Archive Integration:
 // the ONE reconstruction seam.
 //
 // 0.8.163 built `PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistory`
 // as a plain, in-memory array of 0.8.162's own observation records,
-// deliberately never touching `application/PublicationObservationArchive.js`
+// deliberately never touching `application/publication/observationArchive/PublicationObservationArchive.js`
 // at all (see that file's own header, "Architectural boundary — no imports
 // at all"). 0.8.167 gave the archive itself a durable home for exactly that
 // array — `revalidationObservationRecords`. This file is the single seam
@@ -40,7 +40,7 @@ import { PublicationObservationArchive } from '../../PublicationObservationArchi
 // returns a byte-identical result.
 //
 // ARCHITECTURAL BOUNDARY — EXACTLY ONE IMPORT,
-// `application/PublicationObservationArchive.js` ITSELF. This file imports
+// `application/publication/observationArchive/PublicationObservationArchive.js` ITSELF. This file imports
 // nothing from `application/
 // application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js`,
 // `application/

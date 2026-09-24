@@ -46,8 +46,8 @@ import { Signature, SignatureType } from './Signature.js';
 // proves only that the named `placerIdentity` really did sign exactly
 // this publicationId/contentHash/storage/locator tuple. Whether the
 // locator actually still serves those bytes right now is a SEPARATE,
-// later question — application/SnapshotPlacementResolver.js's own job,
-// exactly the same split application/ExternalAnchorVerifier.js already
+// later question — application/snapshot/placement/SnapshotPlacementResolver.js's own job,
+// exactly the same split application/anchoring/ExternalAnchorVerifier.js already
 // holds between a `PublicationAnchor`'s signature and its `proof`.
 //
 // PLACEMENT IS NOT ANCHORING. A `core/PublicationAnchor.js` (0.8.0)

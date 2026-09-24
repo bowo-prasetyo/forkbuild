@@ -4,9 +4,9 @@ import { execSync } from 'node:child_process';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { DocumentManifest } from '../application/DocumentManifest.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { DocumentManifest } from '../application/document/DocumentManifest.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Document } from '../core/Document.js';
@@ -122,15 +122,15 @@ async function run() {
     // Section A — the complete, real Save call chain.
     // ===============================================================
     {
-        const useCaseSource = codeOnly(await rawSource('application/SaveDocumentUseCase.js'));
+        const useCaseSource = codeOnly(await rawSource('application/document/SaveDocumentUseCase.js'));
         assert(!/try\s*\{/.test(useCaseSource),
-            n('A1. application/SaveDocumentUseCase.js contains no try/catch anywhere — reconfirms 0.9.650 G2a structurally against current source.'));
+            n('A1. application/document/SaveDocumentUseCase.js contains no try/catch anywhere — reconfirms 0.9.650 G2a structurally against current source.'));
         assert(/this\._storageProvider\.save\(id, json\);/.test(useCaseSource),
             n('A2. execute() calls storageProvider.save() for the document blob unwrapped.'));
 
-        const manifestSource = codeOnly(await rawSource('application/DocumentManifest.js'));
+        const manifestSource = codeOnly(await rawSource('application/document/DocumentManifest.js'));
         const manifestSaveCalls = (manifestSource.match(/this\._storageProvider\.save\(/g) || []).length;
-        assert(manifestSaveCalls === 2, n(`A3. application/DocumentManifest.js itself calls storageProvider.save() twice more (upsert, remove) — found ${manifestSaveCalls}. THE STRUCTURAL FACT SECTION B5 IS BUILT ON: one explicit Save performs up to three separate StorageProvider.save() calls (document, manifest, [recovery-store remove is a StorageProvider.remove(), not save()]) plus two load()-driven reads, any one of which can fail independently, not one atomic operation.`));
+        assert(manifestSaveCalls === 2, n(`A3. application/document/DocumentManifest.js itself calls storageProvider.save() twice more (upsert, remove) — found ${manifestSaveCalls}. THE STRUCTURAL FACT SECTION B5 IS BUILT ON: one explicit Save performs up to three separate StorageProvider.save() calls (document, manifest, [recovery-store remove is a StorageProvider.remove(), not save()]) plus two load()-driven reads, any one of which can fail independently, not one atomic operation.`));
 
         // Both real production call sites. AMENDED BY 0.9.653: each now
         // wraps SaveDocumentUseCase.execute() in a try/catch that reports
@@ -400,12 +400,12 @@ async function run() {
         // exactly once before, for a different journey (post-publish
         // distribution) — the shape a Save fix should mirror, not
         // reinvent.
-        const sanitizerSource = await rawSource('application/DistributionErrorMessageSanitizer.js');
+        const sanitizerSource = await rawSource('application/publication/distribution/DistributionErrorMessageSanitizer.js');
         assert(sanitizerSource.includes('export function sanitizeDistributionErrorMessage'),
-            n('E5. application/DistributionErrorMessageSanitizer.js already establishes exactly this pattern for a different journey — strips hostnames/paths/stack traces/tokens from a raw error and returns null (never invents wording) when nothing safe is left, letting the caller fall back to its own generic notice.'));
-        const loadFailureReasonSource = await rawSource('application/LoadFailureReason.js');
-        assert(loadFailureReasonSource.includes('error.reason ='.replace(' =', '')) || /\.reason\s*=/.test(await rawSource('application/LoadDocumentUseCase.js')),
-            n('E6. ...and application/LoadFailureReason.js + LoadDocumentUseCase.js already establish a second, complementary pattern: a typed `.reason` attached to the thrown Error, so a caller can branch structurally instead of string-matching `.message` — the same shape application/ForkFailureReason.js uses for Fork.'));
+            n('E5. application/publication/distribution/DistributionErrorMessageSanitizer.js already establishes exactly this pattern for a different journey — strips hostnames/paths/stack traces/tokens from a raw error and returns null (never invents wording) when nothing safe is left, letting the caller fall back to its own generic notice.'));
+        const loadFailureReasonSource = await rawSource('application/document/LoadFailureReason.js');
+        assert(loadFailureReasonSource.includes('error.reason ='.replace(' =', '')) || /\.reason\s*=/.test(await rawSource('application/document/LoadDocumentUseCase.js')),
+            n('E6. ...and application/document/LoadFailureReason.js + LoadDocumentUseCase.js already establish a second, complementary pattern: a typed `.reason` attached to the thrown Error, so a caller can branch structurally instead of string-matching `.message` — the same shape application/document/ForkFailureReason.js uses for Fork.'));
 
         console.log('✓ E: the smallest correct boundary is already wired and already in active use for Save\'s own SUCCESS case — Toolbar.js\'s report()/feedback.show() — one line away from where the failure needs to be caught. StorageProvider correctly knows nothing about any of this. Two existing, unrelated-journey precedents (DistributionErrorMessageSanitizer.js\'s text-sanitizing filter, LoadFailureReason.js\'s typed .reason) already show the two shapes a Save fix could mirror rather than invent from scratch.');
     }
@@ -452,7 +452,7 @@ async function run() {
         assert(!recoveryStore.exists(world.id), n('F10. the pending recovery checkpoint seeded above was correctly cleared — an explicit Save still supersedes autosave, unchanged.'));
 
         // Subsequent Load reconstructs identical document identity.
-        const { LoadDocumentUseCase } = await import('../application/LoadDocumentUseCase.js');
+        const { LoadDocumentUseCase } = await import('../application/document/LoadDocumentUseCase.js');
         const loadUseCase = new LoadDocumentUseCase(storage, serializer);
         const reloadedManager = new DocumentManager();
         const reloaded = loadUseCase.execute(reloadedManager, world.id);
@@ -508,7 +508,7 @@ async function run() {
         // own per-case assertions) that markSaved() — the one call that
         // could ever produce a false "saved" state — never ran in ANY
         // corpus case. DocumentState is immutable and only ever replaced
-        // by markDirty()/markSaved() (application/DocumentManager.js's
+        // by markDirty()/markSaved() (application/document/DocumentManager.js's
         // own _setState() convention), so if execute() throws before
         // reaching markSaved(), documentManager.state stays the EXACT
         // SAME object reference it was before execute() was even called

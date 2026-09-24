@@ -3,8 +3,8 @@ import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
@@ -17,25 +17,25 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
 import {
     inspectWorldEncounterMaterial
-} from '../application/WorldEncounterMaterialInspection.js';
+} from '../application/worldEncounter/WorldEncounterMaterialInspection.js';
 import {
     WorldEncounterMaterialVerificationStatus,
     WorldEncounterMaterialVerifier
-} from '../application/WorldEncounterMaterialVerification.js';
+} from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import {
     PublicationMaterialProvenanceOrigin,
     describePublicationMaterialProvenanceFromInspection
-} from '../application/PublicationMaterialProvenance.js';
+} from '../application/publication/distribution/PublicationMaterialProvenance.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 
 // 0.9.534 — Repository Publication Lifecycle Product Reassessment.
 //
@@ -139,7 +139,7 @@ function makeSession(discoveryProvider) {
 }
 
 // The exact real composition ui/components/PublicationCatalog.js itself
-// builds via application/CreateDiscoveryUseCase.js#execute() — Local
+// builds via application/discovery/CreateDiscoveryUseCase.js#execute() — Local
 // storage merged with the one application-lifetime decentralized
 // accumulator, through CompositeDiscoveryProvider — never a
 // test-only stand-in shape.
@@ -185,7 +185,7 @@ async function main() {
         // Author catalog's own query — never references `.add(` at all.
         // It reads discoveryProvider.list() and nothing else; it cannot
         // admit anything even by accident.
-        const searchSrc = await readSource('application/SearchPublicationsUseCase.js');
+        const searchSrc = await readSource('application/publication/SearchPublicationsUseCase.js');
         assert(!/\.add\(/.test(searchSrc),
             '2. SearchPublicationsUseCase.js never calls .add() on anything — a Repository search is structurally incapable of becoming an admission mechanism.');
 
@@ -454,7 +454,7 @@ async function main() {
         // E2. LIVE: "temporarily disconnected from a peer" — a peer
         // material source that currently has nothing (a real, expected
         // outcome of a peer being offline right now, distinct from a
-        // crash — see application/WorldEncounterMaterialLoading.js's
+        // crash — see application/worldEncounter/WorldEncounterMaterialLoading.js's
         // own "material === null" degrade-to-UNAVAILABLE path) degrades
         // inspection to UNVERIFIABLE, never throws, and the Repository
         // catalog — a completely separate collaborator this inspection
@@ -545,7 +545,7 @@ async function main() {
         // focusDocument() references a storage-mutating method — World
         // navigation cannot itself rewrite what a later Repository read
         // would find, under either catalog shape.
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
         // AMENDED BY 0.9.597 — Publication Action Provider Continuity Fix.
         // findPublicationById() now delegates to `_publicationActionDiscoveryProvider`
         // (a separate, optional capability falling back to `discoveryProvider`
@@ -707,7 +707,7 @@ async function main() {
                 verifier: new (class extends WorldEncounterMaterialVerifier { verifyIdentity() { return Promise.resolve(true); } })()
             });
         } catch (e) { aInspectionThrew = true; }
-        assert(aInspectionThrew, '1. LIVE: A\'s own loading failure genuinely propagates (this file\'s own loading boundary performs no try/catch of its own — see application/WorldEncounterMaterialLoading.js).');
+        assert(aInspectionThrew, '1. LIVE: A\'s own loading failure genuinely propagates (this file\'s own loading boundary performs no try/catch of its own — see application/worldEncounter/WorldEncounterMaterialLoading.js).');
         const bAfterAFailure = discoveryProvider.findById(pubB.id);
         assert(bAfterAFailure === pubB && bAfterAFailure.contentHash === 'sha256:i-b',
             '2. LIVE: after A\'s own loading failure, B\'s catalog record is the exact same object, completely untouched.');
@@ -808,7 +808,7 @@ async function main() {
         // CompositeDiscoveryProvider#findById() checks providers in
         // construction order (discovery/CompositeDiscoveryProvider.js's
         // own header) and Local was given first — matching
-        // application/CreateDiscoveryUseCase.js's own real ordering —
+        // application/discovery/CreateDiscoveryUseCase.js's own real ordering —
         // so World resolves the Local, storage-reconstructed VALUE
         // object here, not the decentralized accumulator's reference.
         // Exactly Section F's own established distinction: reference

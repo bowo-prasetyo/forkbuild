@@ -8,10 +8,10 @@ import { Command } from './Command.js';
 // was removed for undo() correctness, the same pattern every Remove*
 // command in this directory already follows.
 //
-// THE ONE REAL COUNTERPART: application/WorldNavigationSession.js#
+// THE ONE REAL COUNTERPART: application/world/WorldNavigationSession.js#
 // undecorateNearestAnimalDecorationHere() is the only real caller, and
 // it does more than just run this command — after this command commits,
-// it hands the removed animal BACK to application/AnimalRuntimeInstances.js
+// it hands the removed animal BACK to application/world/AnimalRuntimeInstances.js
 // as a live, session-local, catchable AnimalPresence again (a fresh id —
 // see that method's own header for why). This command itself has no
 // opinion about that; it only ever removes World content, exactly the

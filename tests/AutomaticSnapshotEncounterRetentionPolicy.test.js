@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import {
     shouldRetainAutomaticSnapshotEncounter,
     DEFAULT_AUTOMATIC_SNAPSHOT_RETENTION_RADIUS
-} from '../application/AutomaticSnapshotEncounterRetentionPolicy.js';
+} from '../application/snapshot/AutomaticSnapshotEncounterRetentionPolicy.js';
 
 // 0.9.189 — Automatic Snapshot Encounter Retention Policy.
 //
@@ -270,7 +270,7 @@ async function runTests() {
         const resultAgain = shouldRetainAutomaticSnapshotEncounter(input);
         assert(resultAgain === result, '27. calling the function twice with the identical (frozen) input yields the identical result — no hidden internal state');
 
-        const source = await codeOnlySource('application/AutomaticSnapshotEncounterRetentionPolicy.js');
+        const source = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterRetentionPolicy.js');
         const forbidden = [
             'WorldDiscoverySourceRegistry', 'registerMaterializedSnapshotWorldSource',
             'unregisterMaterializedSnapshotWorldSource', 'new WebSocket', 'window.nostr',
@@ -353,7 +353,7 @@ async function runTests() {
         }) === false, '39. an OMITTED retentionRadius uses the documented default, and is NOT treated as malformed — this one genuinely removes, since 1000 is well beyond the default radius');
 
         assert(DEFAULT_AUTOMATIC_SNAPSHOT_RETENTION_RADIUS === 100,
-            '40. the documented default retention radius is 100, matching the same streamingRadius-derived order of magnitude application/ShouldRefreshSnapshotDiscovery.js already established');
+            '40. the documented default retention radius is 100, matching the same streamingRadius-derived order of magnitude application/snapshot/ShouldRefreshSnapshotDiscovery.js already established');
 
         console.log('✓ Section G: boundary behavior — missing/malformed positions and invalid radii all gracefully retain, never removing under uncertainty');
     }

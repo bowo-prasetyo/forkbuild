@@ -246,23 +246,23 @@ async function run() {
         assert(await sourceExists('core/NostrRelayConfiguration.js'), n('B3. Nostr relay — core/NostrRelayConfiguration.js exists'));
         assert(await sourceExists('nostr/NostrRelayQueryClient.js'), n('B3. Nostr relay — nostr/NostrRelayQueryClient.js (read transport) exists'));
         assert(await sourceExists('nostr/NostrInjectedProviderPublisher.js'), n('B3. Nostr relay — nostr/NostrInjectedProviderPublisher.js (write transport) exists'));
-        inventory.nostrRead = { file: 'application/NostrDiscoveryQueryService.js + siblings', role: 'read/discovery' };
-        inventory.nostrWrite = { file: 'application/NostrPublicationDiscoveryPublisher.js + siblings', role: 'write/publish' };
+        inventory.nostrRead = { file: 'application/nostr/NostrDiscoveryQueryService.js + siblings', role: 'read/discovery' };
+        inventory.nostrWrite = { file: 'application/nostr/NostrPublicationDiscoveryPublisher.js + siblings', role: 'write/publish' };
 
         assert(await sourceExists('core/ArweaveGatewayConfiguration.js'), n('B4. Arweave gateway — core/ArweaveGatewayConfiguration.js exists'));
         const arweaveConsumers = [
             'content/ArweaveContentStore.js',
-            'application/ArweaveWorldEncounterMaterialResolver.js',
-            'application/ArweaveAnnouncementPublisher.js',
-            'application/ArweavePublicationMaterialUploader.js',
-            'application/ArweaveGraphqlDiscoveryQueryService.js'
+            'application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js',
+            'application/arweave/ArweaveAnnouncementPublisher.js',
+            'application/arweave/ArweavePublicationMaterialUploader.js',
+            'application/arweave/ArweaveGraphqlDiscoveryQueryService.js'
         ];
         for (const file of arweaveConsumers) {
             assert(await sourceExists(file), n(`B4. Arweave — ${file} exists and is a real, independent gatewayUrl consumer`));
         }
-        inventory.arweaveRead = { files: ['content/ArweaveContentStore.js (GET)', 'application/ArweaveWorldEncounterMaterialResolver.js (GET)'], role: 'read/retrieval' };
-        inventory.arweaveWrite = { files: ['application/ArweaveAnnouncementPublisher.js (POST)', 'application/ArweavePublicationMaterialUploader.js (POST)', 'content/ArweaveContentStore.js (POST, snapshot put)'], role: 'write/distribution' };
-        inventory.arweaveGraphql = { file: 'application/ArweaveGraphqlDiscoveryQueryService.js', role: 'discovery query (own graphqlUrl field, NOT gatewayUrl)' };
+        inventory.arweaveRead = { files: ['content/ArweaveContentStore.js (GET)', 'application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js (GET)'], role: 'read/retrieval' };
+        inventory.arweaveWrite = { files: ['application/arweave/ArweaveAnnouncementPublisher.js (POST)', 'application/arweave/ArweavePublicationMaterialUploader.js (POST)', 'content/ArweaveContentStore.js (POST, snapshot put)'], role: 'write/distribution' };
+        inventory.arweaveGraphql = { file: 'application/arweave/ArweaveGraphqlDiscoveryQueryService.js', role: 'discovery query (own graphqlUrl field, NOT gatewayUrl)' };
 
         // B5. The GraphQL discovery service is real, independently
         // configurable (its own `graphqlUrl`, never `gatewayUrl`), but —
@@ -271,7 +271,7 @@ async function run() {
         // endpoint a user could currently switch."
         const mainSource = await source('ui/main.js');
         assert(!mainSource.includes('ArweaveGraphqlDiscoveryQueryService'),
-            n('B5. application/ArweaveGraphqlDiscoveryQueryService.js is never constructed in ui/main.js today — a real, fourth, independent Arweave endpoint field that is not part of the live composition root, and therefore out of scope for a "which endpoint should gain multiplicity" decision until a separate milestone composes it at all'));
+            n('B5. application/arweave/ArweaveGraphqlDiscoveryQueryService.js is never constructed in ui/main.js today — a real, fourth, independent Arweave endpoint field that is not part of the live composition root, and therefore out of scope for a "which endpoint should gain multiplicity" decision until a separate milestone composes it at all'));
 
         console.log('\n=== SECTION B: ENDPOINT INVENTORY ===');
         for (const [key, value] of Object.entries(inventory)) console.log(`${key}: ${JSON.stringify(value)}`);
@@ -529,7 +529,7 @@ async function run() {
         // Selectable. Snapshot DISTRIBUTION's composeSnapshotDistributionRuntime()
         // call no longer builds an arweaveContentStoreOptions of its own AT
         // ALL — Content is now resolved from snapshotPlacementStoreRegistry
-        // instead (application/SnapshotDistributionContentBackendSelection.js).
+        // instead (application/snapshot/SnapshotDistributionContentBackendSelection.js).
         // This section's own real claim survives in an even stronger form:
         // the write path exposes no `gatewayUrl`/`gatewayUrls` of its own
         // whatsoever, live-confirmed at the exact call site.
@@ -623,9 +623,9 @@ async function run() {
         // separate event ids, N separate success/failure outcomes) —
         // never a transparent resilience patch the way a read retry
         // would be.
-        const nostrPublisherSource = await source('application/NostrPublicationDiscoveryPublisher.js');
+        const nostrPublisherSource = await source('application/nostr/NostrPublicationDiscoveryPublisher.js');
         assert(nostrPublisherSource.includes('relayUrl` is supplied at construction, exactly as'),
-            n('H2. application/NostrPublicationDiscoveryPublisher.js\'s own header already commits relayUrl to a one-per-instance construction-time value — extending this to several relays is adding a NEW capability (N event ids, N outcomes), not a transparent failover patch behind the existing publish(envelope) contract'));
+            n('H2. application/nostr/NostrPublicationDiscoveryPublisher.js\'s own header already commits relayUrl to a one-per-instance construction-time value — extending this to several relays is adding a NEW capability (N event ids, N outcomes), not a transparent failover patch behind the existing publish(envelope) contract'));
         semantics.nostrWrite = 'FAN-OUT is the natural real-world shape if built (publish the SAME event to every configured relay for redundancy/censorship-resistance, matching ordinary Nostr client practice and this codebase\'s own Rendezvous precedent) — never MINIMAL_FAILOVER_SEAM, and never a drop-in change to the existing single-{published,relayUrl,id} result shape';
 
         // H3. Arweave READ (content/material retrieval) — a single

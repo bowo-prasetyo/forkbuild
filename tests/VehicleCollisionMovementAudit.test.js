@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementConstraint } from '../application/AvatarMovementConstraint.js';
-import { AvatarVehicleMovementController, isMovableVehicleType } from '../application/AvatarVehicleMovementController.js';
+import { AvatarMovementConstraint } from '../application/avatar/AvatarMovementConstraint.js';
+import { AvatarVehicleMovementController, isMovableVehicleType } from '../application/avatar/AvatarVehicleMovementController.js';
 import { VehicleInstance } from '../core/VehicleInstance.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
@@ -14,12 +14,12 @@ import { createAvatarVehicleMount } from '../core/AvatarVehicleMount.js';
 import { BICYCLE_DISMOUNT_OFFSET_X } from '../core/AvatarVehicleDismountPosition.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.120 — Vehicle Collision & Movement Audit.
 //
@@ -161,7 +161,7 @@ function buildSingleBrickConstraint(center) {
 
 // Sits a 'core:cube' brick right on real terrain at (x, z) — its own
 // bottom face at ground level, so a vehicle whose Y already follows
-// terrainHeightAt() (see application/AvatarVehicleMovementController.js's
+// terrainHeightAt() (see application/avatar/AvatarVehicleMovementController.js's
 // own 0.9.116 header) always has real vertical overlap with it, exactly
 // as it would with any real placed building.
 function groundedBrickCenter(x, z) {
@@ -172,7 +172,7 @@ function groundedBrickCenter(x, z) {
 // offset (below) IS `worldCenter` — together they resolve to the exact
 // same absolute world AABB a brick placed directly at `worldCenter`
 // would have, while keeping the broad-phase distance check in
-// application/AvatarMovementConstraint.js (which measures distance from
+// application/avatar/AvatarMovementConstraint.js (which measures distance from
 // the avatar/vehicle's OWN position to the DOCUMENT's own world offset,
 // never to the brick itself) genuinely small — exactly as it would be
 // for any real, nearby building, even when `worldCenter` itself sits far
@@ -227,7 +227,7 @@ async function runTests() {
                 `1. core/AvatarMovementSimulation.js never mentions "${term}" — the pure kinematics stay entirely collision-blind, exactly as before this milestone`);
         }
 
-        const controllerCode = await sourceOf('../application/AvatarVehicleMovementController.js');
+        const controllerCode = await sourceOf('../application/avatar/AvatarVehicleMovementController.js');
         const nonImportLines = controllerCode.split('\n').filter((line) => !line.trim().startsWith('import '));
         const bodyOnly = nonImportLines.join('\n');
         const simulateCallCount = (bodyOnly.match(/\bsimulateAvatarMovement\(/g) || []).length;
@@ -384,7 +384,7 @@ async function runTests() {
         for (let i = 0; i < 150; i++) {
             // Y is sampled from raw terrain height at the vehicle's own
             // position BEFORE this tick's step (see
-            // application/AvatarVehicleMovementController.js's own
+            // application/avatar/AvatarVehicleMovementController.js's own
             // 0.9.116 header, "sampled at the vehicle's CURRENT
             // position, before this tick's own step") — never from
             // wherever horizontal collision happens to leave X/Z
@@ -451,7 +451,7 @@ async function runTests() {
     // type left to exercise the "type gate blocks movement regardless
     // of collision outcome" scenario this section once tested with
     // DRONE. The gate itself (MOVABLE_VEHICLE_TYPES,
-    // application/AvatarVehicleMovementController.js) remains in place
+    // application/avatar/AvatarVehicleMovementController.js) remains in place
     // for a future, not-yet-movable vehicle type.
 
     // -------------------------------------------------------------
@@ -577,8 +577,8 @@ async function runTests() {
             'momentum', 'Momentum', 'friction', 'Friction', 'suspension', 'Suspension'
         ];
         for (const path of [
-            '../application/AvatarVehicleMovementController.js',
-            '../application/AvatarMovementConstraint.js',
+            '../application/avatar/AvatarVehicleMovementController.js',
+            '../application/avatar/AvatarMovementConstraint.js',
             '../core/AvatarCollision.js',
             '../core/AvatarMovementSimulation.js'
         ]) {

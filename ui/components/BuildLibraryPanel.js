@@ -64,7 +64,7 @@ export function buildCategoryOptions(...groupsLists) {
 // BOTH (StructureRegistry#groupByCategory() is new in 0.2.84 for
 // exactly this; BrickRegistry's own has existed since 0.2.80), a
 // same-tab text search, and a small rendered preview per entry (via
-// application/LibraryPreviewService.js, reusing the exact mesh
+// application/editor/LibraryPreviewService.js, reusing the exact mesh
 // pipeline every brick/structure already renders with — never a
 // second, hand-drawn icon set).
 //
@@ -110,18 +110,18 @@ export function buildCategoryOptions(...groupsLists) {
 // card's menu. What crosses the emit boundary here is deliberately raw
 // file TEXT, not a parsed/validated package or a Structure — this panel
 // finds and asks for things, same as every other emit in this file; it
-// is application/BlueprintImportValidator.js and
-// application/ImportBlueprintUseCase.js (via
-// application/EditorSession.js#importBlueprint(), called from
+// is application/blueprint/BlueprintImportValidator.js and
+// application/blueprint/ImportBlueprintUseCase.js (via
+// application/editor/EditorSession.js#importBlueprint(), called from
 // ui/views/EditorView.js) that actually parse, validate, and construct.
 //
 // 0.6.3 — Blueprint Authoring & Versioning UX. Every card's "⋮" menu
 // gains an "Info" entry (opens ui/components/StructureInfoPanel.js,
 // read-only, both built-in and personal). A built-in card's menu also
-// gains "Fork to My Structures" (application/ForkStructureToLibraryUseCase.js
+// gains "Fork to My Structures" (application/editor/ForkStructureToLibraryUseCase.js
 // — a Structure fork, never a Document fork; see that class's own
 // header on the distinction from Fork As New Document above) and
-// "Export Blueprint" (application/ExportBlueprintUseCase.js is generic
+// "Export Blueprint" (application/blueprint/ExportBlueprintUseCase.js is generic
 // over any Structure, so a built-in one can leave the device as a
 // portable file exactly like a personal one already could). Nothing
 // about a personal Structure's own menu changes.
@@ -148,7 +148,7 @@ export function buildCategoryOptions(...groupsLists) {
 //     Structure's id/serialized form never changes based on how the
 //     library happens to be sorted right now.
 //   - A "Recent" section, resolved by the caller (ui/views/EditorView.js)
-//     from application/LibraryUsageHistoryStore.js's own local usage
+//     from application/editor/LibraryUsageHistoryStore.js's own local usage
 //     history — never a field on Structure, never part of a blueprint
 //     export.
 //
@@ -175,7 +175,7 @@ export default {
             required: true
         },
         // Same shape as structureGroups, sourced from
-        // application/LocalStructureLibraryStore.js#groupByCategory()
+        // application/editor/LocalStructureLibraryStore.js#groupByCategory()
         // instead of the built-in StructureRegistry — unlike
         // structureGroups, this DOES change at runtime (saving, renaming,
         // or removing a personal Structure), so the caller re-supplies a
@@ -200,7 +200,7 @@ export default {
             default: null
         },
         // 0.6.4 — { [structureId]: savedAt } for personal Structures
-        // only (application/LocalStructureLibraryStore.js#getSavedAtById()),
+        // only (application/editor/LocalStructureLibraryStore.js#getSavedAtById()),
         // consulted solely by the 'recent' sort key. A built-in
         // Structure never appears in this map — see
         // core/sortStructures.js's own header on why that's correct.
@@ -213,7 +213,7 @@ export default {
         // already knows how to tell a built-in Structure from a
         // personal one — see ui/views/EditorView.js#inspectStructure()).
         // This panel never reaches into
-        // application/LibraryUsageHistoryStore.js itself, and never
+        // application/editor/LibraryUsageHistoryStore.js itself, and never
         // decides what counts as "used" — see that store's own header.
         recentStructures: {
             type: Array,
@@ -237,7 +237,7 @@ export default {
         // ui/components/StructureInfoPanel.js) and 'fork-to-library' (a
         // BUILT-IN card only — "Village Hall" -> a brand-new, independent
         // personal Structure, never a Document; see
-        // application/ForkStructureToLibraryUseCase.js's own header on how
+        // application/editor/ForkStructureToLibraryUseCase.js's own header on how
         // this differs from 'fork'/"Fork As New Document" above) both
         // carry exactly one Structure, same shape as every other per-item
         // emit in this file.
@@ -463,7 +463,7 @@ export default {
         // 0.6.3 — Blueprint Authoring & Versioning UX. Built-in cards
         // only (see ui/components/StructureLibraryCard.js) — "Village
         // Hall" becomes an independent entry in My Structures, with no
-        // Document involved. See application/ForkStructureToLibraryUseCase.js's
+        // Document involved. See application/editor/ForkStructureToLibraryUseCase.js's
         // own header on how this differs from Fork As New Document.
         function forkToLibrary(structure) {
             emit('fork-to-library', structure);

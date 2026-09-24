@@ -1,5 +1,5 @@
 import { Command } from '../application/commands/Command.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CommandRegistry } from '../application/commands/CommandRegistry.js';
 import { CompositeCommand } from '../application/commands/CompositeCommand.js';
 

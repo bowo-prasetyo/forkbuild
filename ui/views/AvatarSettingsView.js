@@ -1,7 +1,7 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount, inject } from 'vue';
-import { CreateAvatarProfileUseCase } from '../../application/CreateAvatarProfileUseCase.js';
-import { CreatePresenceVisibilityUseCase } from '../../application/CreatePresenceVisibilityUseCase.js';
-import { CreateAvatarProfileVisibilityUseCase } from '../../application/CreateAvatarProfileVisibilityUseCase.js';
+import { CreateAvatarProfileUseCase } from '../../application/avatar/CreateAvatarProfileUseCase.js';
+import { CreatePresenceVisibilityUseCase } from '../../application/presence/CreatePresenceVisibilityUseCase.js';
+import { CreateAvatarProfileVisibilityUseCase } from '../../application/avatar/CreateAvatarProfileVisibilityUseCase.js';
 import { sortOptionsByLabel, sortLabels } from '../../utils/sortOptionsByLabel.js';
 import VisibilityPolicyForm from '../components/VisibilityPolicyForm.js';
 

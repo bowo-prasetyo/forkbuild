@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { SnapshotPublicationAttributionOutcome } from '../application/SnapshotPublicationAttributionOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../application/SnapshotOutcomeInspectionView.js';
-import { describeWorldEncounterMaterialVerificationStatusLabel } from '../application/WorldEncounterMaterialInspectionView.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
-import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/ShouldRefreshSnapshotDiscovery.js';
-import { materializedSnapshotWorldOrigin } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../application/snapshot/SnapshotOutcomeInspectionView.js';
+import { describeWorldEncounterMaterialVerificationStatusLabel } from '../application/worldEncounter/WorldEncounterMaterialInspectionView.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/snapshot/ShouldRefreshSnapshotDiscovery.js';
+import { materializedSnapshotWorldOrigin } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.528 — Snapshot Encounter & Placement Product Experience
@@ -49,7 +49,7 @@ import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileG
 //   J. Deliberately excluded scope, and the production-change guard.
 //
 // THE ONE PRODUCTION CHANGE THIS MILESTONE MAKES (Section C): a new,
-// small, pure view file — application/SnapshotOutcomeInspectionView.js —
+// small, pure view file — application/snapshot/SnapshotOutcomeInspectionView.js —
 // and six existing template call sites (four in ui/components/
 // OwnPublicationPanel.js, two in ui/components/WorldEncounterCanvas.js)
 // routed through it. Nothing else changes: no new outcome value, no new
@@ -99,7 +99,7 @@ async function run() {
         // treats every source the same way, a restraint this file's own
         // header documents at length and this audit re-confirms is still
         // the only such projection this component reads.
-        check(canvasSource.includes("import { describeWorldFromDiscoveryRegistry } from '../../application/WorldDiscoveryRegistryProjection.js';"),
+        check(canvasSource.includes("import { describeWorldFromDiscoveryRegistry } from '../../application/discovery/WorldDiscoveryRegistryProjection.js';"),
             'A3. exactly one, source-blind projection function decides which encounters exist — no per-substrate branch in this component\'s own encounter derivation');
 
         console.log('✓ Section A: PRODUCT_COMPLETE — local/peer/Nostr/Arweave candidates all resolve through the same plain-English origin labels and the same source-blind encounter projection; a Wanderer never needs to know which discovery substrate supplied a candidate to understand what they are looking at.');
@@ -181,7 +181,7 @@ async function run() {
             'C4. a genuine NO_MATCH reads "Does not match this Publication" — never the bare word "no-match"');
 
         // Attribution's own pass-through resolution failures (see
-        // application/SnapshotPublicationAttribution.js's own header, "a
+        // application/snapshot/SnapshotPublicationAttribution.js's own header, "a
         // resolution failure is never reported as NO_MATCH") resolve to
         // the IDENTICAL sentence describeSnapshotResolutionOutcomeLabel()
         // already produces for that same value — one label table, one
@@ -214,9 +214,9 @@ async function run() {
         const panelSource = await source('ui/components/OwnPublicationPanel.js');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
 
-        check(panelSource.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/SnapshotOutcomeInspectionView.js';"),
+        check(panelSource.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../application/snapshot/SnapshotOutcomeInspectionView.js';"),
             'C9. OwnPublicationPanel.js imports the new view');
-        check(canvasSource.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../../application/SnapshotOutcomeInspectionView.js';"),
+        check(canvasSource.includes("import { describeSnapshotResolutionOutcomeLabel, describeSnapshotAttributionOutcomeLabel } from '../../../application/snapshot/SnapshotOutcomeInspectionView.js';"),
             'C10. WorldEncounterCanvas.js imports the new view');
 
         const rawOutcomeInterpolations = [
@@ -307,7 +307,7 @@ async function run() {
     // Section E — Walking trigger comprehension.
     // ===============================================================
     {
-        const refreshSource = await source('application/ShouldRefreshSnapshotDiscovery.js');
+        const refreshSource = await source('application/snapshot/ShouldRefreshSnapshotDiscovery.js');
 
         check(refreshSource.includes('export const DEFAULT_DISCOVERY_REFRESH_RADIUS = 100;'),
             'E1. the refresh threshold is a DISTANCE (world units), not a duration');
@@ -335,7 +335,7 @@ async function run() {
     // Section F — Multi-source convergence.
     // ===============================================================
     {
-        const bridgeSource = await source('application/MaterializedSnapshotWorldDiscoveryBridge.js');
+        const bridgeSource = await source('application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js');
 
         check(bridgeSource.includes('WHY BOTH, NOT `contentHash` ALONE'),
             'F1. this milestone re-confirms the existing, deliberate rationale for a COMPOUND identity key is still in place');
@@ -408,7 +408,7 @@ async function run() {
     // Section I — Trust-language review.
     // ===============================================================
     {
-        const newViewSource = await source('application/SnapshotOutcomeInspectionView.js');
+        const newViewSource = await source('application/snapshot/SnapshotOutcomeInspectionView.js');
         const panelSource = await source('ui/components/OwnPublicationPanel.js');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n');
 
@@ -492,7 +492,7 @@ async function run() {
         const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
         const productionDirs = ['core', 'application', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'publisher', 'storage', 'peer', 'content', 'presence', 'ui', 'css', 'server', 'replication', 'serializer', 'world', 'world-layout', 'spatial', 'base', 'arweave', 'nostr', 'placement'];
         const touchedProduction = changed.filter((f) => productionDirs.some((dir) => f.startsWith(`${dir}/`)));
-        const expectedTouched = ['application/SnapshotOutcomeInspectionView.js', 'ui/components/OwnPublicationPanel.js', 'ui/components/WorldEncounterCanvas.js'];
+        const expectedTouched = ['application/snapshot/SnapshotOutcomeInspectionView.js', 'ui/components/OwnPublicationPanel.js', 'ui/components/WorldEncounterCanvas.js'];
         check(touchedProduction.every((f) => expectedTouched.includes(f)),
             `J4. every touched/added production file this milestone is responsible for is exactly the expected set (found: ${JSON.stringify(touchedProduction)})`);
 
@@ -516,7 +516,7 @@ async function run() {
     console.log('Section I (Trust-language review): the same Section C gap; every other term already restrained, technical-surface-confined, or unused in this scope.');
     console.log('Section J: twelve-item exclusion list honored; one named, deliberate, unchanged asymmetry (Diagnostic Tools\' own remaining raw, no-claim-word tokens).');
     console.log('');
-    console.log('VERDICT: PRODUCT_GAP found and fixed — a single, minimal, presentation-only production change (a new application/SnapshotOutcomeInspectionView.js, and six existing call sites in ui/components/OwnPublicationPanel.js and ui/components/WorldEncounterCanvas.js). Every other question this milestone\'s own brief asked — discovery-to-encounter comprehension, the candidate/material/placement distinction, placement comprehension, the walking trigger, multi-source convergence, failure comprehension, and Repository/World continuity — resolves PRODUCT_COMPLETE, re-confirmed against real, live-exercised production source. STOP the Snapshot Encounter/Placement product arc.');
+    console.log('VERDICT: PRODUCT_GAP found and fixed — a single, minimal, presentation-only production change (a new application/snapshot/SnapshotOutcomeInspectionView.js, and six existing call sites in ui/components/OwnPublicationPanel.js and ui/components/WorldEncounterCanvas.js). Every other question this milestone\'s own brief asked — discovery-to-encounter comprehension, the candidate/material/placement distinction, placement comprehension, the walking trigger, multi-source convergence, failure comprehension, and Repository/World continuity — resolves PRODUCT_COMPLETE, re-confirmed against real, live-exercised production source. STOP the Snapshot Encounter/Placement product arc.');
 }
 
 run().catch((error) => {

@@ -96,7 +96,7 @@ import { AvatarVehicleInteractionIntent } from './AvatarVehicleInteractionIntent
 //
 // 0.9.118 UPDATE — ALSO ACCEPTS A VehicleInstance, THE SAME WIDENED-INPUT
 // FIX core/AvatarVehicleDismountPosition.js ALREADY APPLIED IN 0.9.117.
-// Through 0.9.117, `application/AvatarVehicleInteractionController.js`'s
+// Through 0.9.117, `application/avatar/AvatarVehicleInteractionController.js`'s
 // own mount-target candidate list (`_nearbyVehicles()`) could only ever
 // be a fresh `vehiclePresenceInRegion()` result — vehicles found by their
 // FIXED deterministic spawn point falling near the avatar. That was
@@ -108,9 +108,9 @@ import { AvatarVehicleInteractionIntent } from './AvatarVehicleInteractionIntent
 // position could never mount it, because the deterministic query that
 // finds MOUNT candidates only ever looks for a spawn point nearby, and a
 // moved vehicle's spawn point is wherever it USED to be, not where it now
-// is. `application/AvatarVehicleInteractionController.js`'s own 0.9.118
+// is. `application/avatar/AvatarVehicleInteractionController.js`'s own 0.9.118
 // update is the call-site half of this fix — merging
-// `application/VehicleRuntimeInstances.js`'s own tracked, CURRENT-position
+// `application/world/VehicleRuntimeInstances.js`'s own tracked, CURRENT-position
 // candidates into the list this function is handed. This function's own
 // half is, again, the smallest change that could possibly work: this
 // function has only ever read `vehicle.id`/`vehicle.position` from each

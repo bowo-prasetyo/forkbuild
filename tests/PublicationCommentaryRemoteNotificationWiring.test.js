@@ -12,16 +12,16 @@ import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStor
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { Publication } from '../publisher/Publication.js';
 
-import { PublicationCommentaryDistributionExchange } from '../application/PublicationCommentaryDistributionExchange.js';
-import { PublicationCommentaryDistributionPeerExchange } from '../application/PublicationCommentaryDistributionPeerExchange.js';
-import { CreatePublicationCommentaryUseCase } from '../application/CreatePublicationCommentaryUseCase.js';
-import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
-import { PublicationCommentaryRemoteNotificationBridge } from '../application/PublicationCommentaryRemoteNotificationBridge.js';
-import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/PublicationCommentaryNotificationProducer.js';
+import { PublicationCommentaryDistributionExchange } from '../application/publication/commentary/PublicationCommentaryDistributionExchange.js';
+import { PublicationCommentaryDistributionPeerExchange } from '../application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js';
+import { CreatePublicationCommentaryUseCase } from '../application/publication/commentary/CreatePublicationCommentaryUseCase.js';
+import { CreatePublicationCommentaryDistributionPeerExchangeUseCase } from '../application/publication/commentary/CreatePublicationCommentaryDistributionPeerExchangeUseCase.js';
+import { PublicationCommentaryRemoteNotificationBridge } from '../application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js';
+import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.9.623 — Wire Remote Commentary Arrival into Local Notifications.
@@ -29,7 +29,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 // TYPE: production wiring. Closes exactly the gap 0.9.622's own Section E
 // flagship finding measured: application/
 // PublicationCommentaryDistributionPeerExchange.js#onCommentaryReceived()
-// (0.9.618) and application/PublicationCommentaryNotificationProducer.js
+// (0.9.618) and application/publication/commentary/PublicationCommentaryNotificationProducer.js
 // (0.9.275) both already existed, correct and unmodified, but nothing in
 // ui/main.js — the one composition root that constructs the peer exchange
 // at all — ever subscribed the one to feed the other. Local Commentary
@@ -38,7 +38,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //
 // WHAT THIS MILESTONE ADDS, AND ONLY THIS:
 //
-//   1. application/PublicationCommentaryRemoteNotificationBridge.js — a
+//   1. application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js — a
 //      new, small adapter: `onCommentaryReceived()`'s own `{ commentary,
 //      isNew }` fact in, a `publication.commented` NotificationEvent out
 //      (gated on isNew and on this replica's own identity being the
@@ -47,7 +47,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //      PublicationCommentaryNotificationProducer.js — never a second
 //      notification vocabulary, and never a second `new
 //      NotificationEvent(...)` construction site.
-//   2. application/PublicationCommentaryNotificationProducer.js — its own
+//   2. application/publication/commentary/PublicationCommentaryNotificationProducer.js — its own
 //      `execute()` construction of a `publication.commented`
 //      NotificationEvent is extracted, UNCHANGED IN BEHAVIOR, into a
 //      plain, side-effect-free exported function
@@ -63,10 +63,10 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //      addPublicationCommentaryCommand already uses around announce().
 //
 // NEITHER core/NotificationEvent.js, storage/NotificationEventStore.js,
-// application/PublicationCommentaryDistributionPeerExchange.js,
-// application/PublicationCommentaryDistributionExchange.js, nor
-// application/CreatePublicationCommentaryUseCase.js is modified by this
-// milestone. application/PublicationCommentaryNotificationProducer.js IS
+// application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js,
+// application/publication/commentary/PublicationCommentaryDistributionExchange.js, nor
+// application/publication/commentary/CreatePublicationCommentaryUseCase.js is modified by this
+// milestone. application/publication/commentary/PublicationCommentaryNotificationProducer.js IS
 // modified (item 2, above) — a pure extraction, zero behavior change,
 // reconfirmed unchanged by tests/PublicationCommentaryNotificationProducer.test.js's
 // own full, unmodified suite (re-run live in Section A).
@@ -277,7 +277,7 @@ async function run() {
     // ===============================================================
     {
         const mainSource = codeOnly(await rawSource('ui/main.js'));
-        assert(mainSource.includes("import { PublicationCommentaryRemoteNotificationBridge } from '../application/PublicationCommentaryRemoteNotificationBridge.js';"),
+        assert(mainSource.includes("import { PublicationCommentaryRemoteNotificationBridge } from '../application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js';"),
             n('ui/main.js imports the new bridge'));
         assert(mainSource.includes("import { NotificationEventStore } from '../storage/NotificationEventStore.js';"),
             n('ui/main.js imports NotificationEventStore, needed to construct the bridge\'s own notificationSink'));
@@ -298,7 +298,7 @@ async function run() {
     // Section C — bridge construction guard.
     // ===============================================================
     {
-        const bridgeSource = codeOnly(await rawSource('application/PublicationCommentaryRemoteNotificationBridge.js'));
+        const bridgeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js'));
         assert(!/NotificationInbox|NotificationDelivery|NotificationCenter|CommentaryNotificationSyncService/.test(bridgeSource),
             n('no new notification-infrastructure abstraction appears anywhere in the new bridge\'s own source'));
 
@@ -417,7 +417,7 @@ async function run() {
         // confirms it still fires exactly once, never twice (once from
         // local creation, and again from this milestone's own new
         // subscription, which never observes local creation at all — see
-        // application/PublicationCommentaryDistributionPeerExchange.js's
+        // application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js's
         // own onCommentaryReceived() contract: it fires only for INCOMING
         // ANNOUNCE messages, never for announce() calls this same replica
         // itself makes).
@@ -617,9 +617,9 @@ async function run() {
     // Section J — NotificationEvent itself never travels the network.
     // ===============================================================
     {
-        const peerExchangeSource = codeOnly(await rawSource('application/PublicationCommentaryDistributionPeerExchange.js'));
-        const exchangeSource = codeOnly(await rawSource('application/PublicationCommentaryDistributionExchange.js'));
-        const bridgeSource = codeOnly(await rawSource('application/PublicationCommentaryRemoteNotificationBridge.js'));
+        const peerExchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js'));
+        const exchangeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryDistributionExchange.js'));
+        const bridgeSource = codeOnly(await rawSource('application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js'));
         assert(!/NotificationEvent/.test(peerExchangeSource) && !/NotificationEvent/.test(exchangeSource),
             n('neither the peer transport layer nor the signing/verification layer imports or mentions NotificationEvent at all — unchanged by this milestone'));
         assert(!/PeerMessageBus|\.send\(|\.attach\(|\.subscribe\(/.test(bridgeSource),
@@ -641,8 +641,8 @@ async function run() {
         ).toString().trim();
         const changedFiles = changedNonTestFiles ? changedNonTestFiles.split('\n') : [];
         const allowed = new Set([
-            'application/PublicationCommentaryRemoteNotificationBridge.js',
-            'application/PublicationCommentaryNotificationProducer.js',
+            'application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js',
+            'application/publication/commentary/PublicationCommentaryNotificationProducer.js',
             'ui/main.js'
         ]);
         const unexpected = changedFiles.filter((f) => !allowed.has(f));
@@ -656,7 +656,7 @@ async function run() {
     // ===============================================================
     {
         console.log(
-            '\n0.9.623 verdict: CONCRETE_PRODUCT_GAP (0.9.622, Section E) -> CLOSED. application/PublicationCommentaryRemoteNotificationBridge.js '
+            '\n0.9.623 verdict: CONCRETE_PRODUCT_GAP (0.9.622, Section E) -> CLOSED. application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js '
             + 'connects the already-built onCommentaryReceived() (0.9.618) to the already-built publication.commented NotificationEvent shape '
             + '(0.9.275), gated on isNew and on this replica\'s own identity being the resolved Publication\'s own publisher (Sections C, D, F); '
             + 'ui/main.js subscribes it alongside the existing distribution wiring (Section B); a real, live, cross-device delivery now produces '

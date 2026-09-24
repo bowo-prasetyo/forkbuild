@@ -2,17 +2,17 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
-import { ChatUseCase } from '../application/ChatUseCase.js';
-import { ChatOutbox } from '../application/ChatOutbox.js';
-import { ConversationStore } from '../application/ConversationStore.js';
-import { ConversationReadTracker } from '../application/ConversationReadTracker.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { PeerReconnectionUseCase } from '../application/peer/PeerReconnectionUseCase.js';
+import { ChatUseCase } from '../application/chat/ChatUseCase.js';
+import { ChatOutbox } from '../application/chat/ChatOutbox.js';
+import { ConversationStore } from '../application/chat/ConversationStore.js';
+import { ConversationReadTracker } from '../application/chat/ConversationReadTracker.js';
 import { ConversationReadMarker } from '../core/ConversationReadMarker.js';
-import { PeerPresenceUseCase } from '../application/PeerPresenceUseCase.js';
+import { PeerPresenceUseCase } from '../application/presence/PeerPresenceUseCase.js';
 import { toChatMessage, deriveConversationId } from '../core/ChatMessage.js';
 import { FriendshipState } from '../core/FriendshipState.js';
 
@@ -24,7 +24,7 @@ import { FriendshipState } from '../core/FriendshipState.js';
 // proves the two new pieces 0.2.70 adds — `application/
 // ConversationReadTracker.js` (a THIRD durable per-owner store,
 // answering "what have I seen," never folded into the outbox or the
-// history store) and `application/PeerPresenceUseCase.js` (a computed
+// history store) and `application/presence/PeerPresenceUseCase.js` (a computed
 // reconciliation across FIVE independent sources, never a new store of
 // its own) — and, in the flagship scenarios, that OFFLINE never implies
 // any of the other four facts (identity, relationship, friendship,
@@ -163,7 +163,7 @@ async function runTests() {
 }
 
 // ---------------------------------------------------------------------
-// 2. application/ConversationReadTracker.js — markRead/getLastReadSequence,
+// 2. application/chat/ConversationReadTracker.js — markRead/getLastReadSequence,
 //    monotonic, per-owner scoped, durable.
 // ---------------------------------------------------------------------
 {
@@ -194,11 +194,11 @@ async function runTests() {
     // Durability across a fresh instance over the same storage.
     const reloaded = new ConversationReadTracker(storage, identityProvider);
     assert(reloaded.getLastReadSequence('bob') === 7, 'a brand-new ConversationReadTracker over the same storage restores the durable high-water mark');
-    console.log('✓ application/ConversationReadTracker.js: monotonic, per-owner, durable across a simulated reload');
+    console.log('✓ application/chat/ConversationReadTracker.js: monotonic, per-owner, durable across a simulated reload');
 }
 
 // ---------------------------------------------------------------------
-// 3. application/PeerPresenceUseCase.js — composition correctness over
+// 3. application/presence/PeerPresenceUseCase.js — composition correctness over
 //    minimal, honestly-labeled fakes for the connection registry and
 //    friendship predicate (the same "fake only the protocol-shaped
 //    collaborator, use the real store for everything else" posture
@@ -275,16 +275,16 @@ async function runTests() {
     presence.markRead('bob');
     summary = presence.getSummary('bob');
     assert(summary.conversation.unreadCount === 0, 'markRead() advances the read marker past every currently-stored incoming message');
-    assert(readTracker.getLastReadSequence('bob') === 2, 'markRead() durably advances application/ConversationReadTracker.js to the highest incoming sequence actually seen');
+    assert(readTracker.getLastReadSequence('bob') === 2, 'markRead() durably advances application/chat/ConversationReadTracker.js to the highest incoming sequence actually seen');
 
     const list = presence.list();
     assert(list.length === 1 && list[0].identityId === 'bob', 'list() unions relationships/friendships/conversation history, deduplicated — here, only "bob" has any signal at all');
 
-    console.log('✓ application/PeerPresenceUseCase.js: getSummary()/markRead()/list() correctly compose relationship, friendship, connection, and conversation facts');
+    console.log('✓ application/presence/PeerPresenceUseCase.js: getSummary()/markRead()/list() correctly compose relationship, friendship, connection, and conversation facts');
 }
 
 // ---------------------------------------------------------------------
-// 3b. application/PeerPresenceUseCase.js — list() reads each whole store
+// 3b. application/presence/PeerPresenceUseCase.js — list() reads each whole store
 //     once, not once per identity, and still agrees exactly with
 //     getSummary(); onChange() hands subscribers nothing to build.
 // ---------------------------------------------------------------------
@@ -368,7 +368,7 @@ async function runTests() {
         'onChange() notifies with no arguments — each subscriber reads only what it needs');
     assert(listCalls === 0, 'onChange() never builds a list() a subscriber did not ask for');
 
-    console.log('✓ application/PeerPresenceUseCase.js: list() reads each store once regardless of identity count, matches getSummary() row for row, and onChange() builds nothing on a subscriber\'s behalf');
+    console.log('✓ application/presence/PeerPresenceUseCase.js: list() reads each store once regardless of identity count, matches getSummary() row for row, and onChange() builds nothing on a subscriber\'s behalf');
 }
 
 // ---------------------------------------------------------------------
@@ -411,7 +411,7 @@ async function runTests() {
 
     // --- B. Bob goes offline; presence updates on BOTH sides
     //        independently, and Alice's relationship/friendship survive
-    //        it untouched — see application/PeerPresenceUseCase.js's own
+    //        it untouched — see application/presence/PeerPresenceUseCase.js's own
     //        header, "OFFLINE ≠ conversation/relationship/friendship
     //        unavailable." -------------------------------------------
     Bob.connect.registry.list().forEach((p) => p.close());

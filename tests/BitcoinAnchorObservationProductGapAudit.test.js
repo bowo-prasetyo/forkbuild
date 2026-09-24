@@ -1,19 +1,19 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
-import { BaseAnchorPublicationRecord } from '../application/BaseAnchorPublicationRecord.js';
-import { describeBaseAnchorPublicationObservations } from '../application/BaseAnchorPublicationObservation.js';
-import { describeBaseAnchorPublicationObservationProjection } from '../application/BaseAnchorPublicationObservationView.js';
+import { BaseAnchorPublicationRecord } from '../application/anchoring/base/BaseAnchorPublicationRecord.js';
+import { describeBaseAnchorPublicationObservations } from '../application/anchoring/base/BaseAnchorPublicationObservation.js';
+import { describeBaseAnchorPublicationObservationProjection } from '../application/anchoring/base/BaseAnchorPublicationObservationView.js';
 import {
     BaseAnchorPublicationLifecycleTimelineEntryKind,
     describeBaseAnchorPublicationLifecycleTimeline,
     reconstructBaseAnchorPublicationLifecycleTimeline
-} from '../application/BaseAnchorPublicationLifecycleTimelineView.js';
-import { reconstructBitcoinAnchorPublicationLifecycleTimeline } from '../application/BitcoinAnchorPublicationLifecycleTimelineView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { BaseTransactionInclusionObservationState } from '../application/BaseTransactionInclusionObservationState.js';
+} from '../application/anchoring/base/BaseAnchorPublicationLifecycleTimelineView.js';
+import { reconstructBitcoinAnchorPublicationLifecycleTimeline } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationLifecycleTimelineView.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { BaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import { publicationsViewSourceWithTemplate } from './support/SourceFileGroups.js';
 
 // 0.9.327 — Bitcoin Anchor Observation Product Gap Audit.
@@ -22,7 +22,7 @@ import { publicationsViewSourceWithTemplate } from './support/SourceFileGroups.j
 //
 // 0.9.326's own fresh orphan sweep (Section D) surfaced one genuinely new
 // singleton finding beyond its own already-classified families:
-// `application/BaseAnchorPublicationObservationView.js`, which it
+// `application/anchoring/base/BaseAnchorPublicationObservationView.js`, which it
 // described in its own commit message as "a real, tested, zero-UI-consumer
 // presentation view from the 0.8.100-era Bitcoin Anchor observation
 // family." This milestone's own brief asked whether that finding is a
@@ -148,10 +148,10 @@ async function run() {
     // Section A — Exact capability reconstruction.
     // ===============================================================
     {
-        assert(await sourceExists('application/BaseAnchorPublicationObservationView.js'),
+        assert(await sourceExists('application/anchoring/base/BaseAnchorPublicationObservationView.js'),
             '1. the singleton finding still exists, unchanged, exactly where 0.9.326 found it.');
 
-        const viewSource = await readFile(new URL('application/BaseAnchorPublicationObservationView.js', SOURCE_ROOT), 'utf8');
+        const viewSource = await readFile(new URL('application/anchoring/base/BaseAnchorPublicationObservationView.js', SOURCE_ROOT), 'utf8');
         assert(viewSource.includes('describeBaseAnchorPublicationObservationProjection'),
             '2. the file exports the one function 0.9.326 described.');
         assert(!/\bBitcoin\b/.test(viewSource),
@@ -177,9 +177,9 @@ async function run() {
         // B1. The orphaned view's own function is never imported outside
         // itself, its own flagship test, and documentation.
         const consumers = grepFiles('BaseAnchorPublicationObservationView', ['application', 'ui', 'core', 'base', 'identity', 'storage'])
-            .filter((f) => f !== 'application/BaseAnchorPublicationObservationView.js');
+            .filter((f) => f !== 'application/anchoring/base/BaseAnchorPublicationObservationView.js');
         assert(consumers.length === 0,
-            `1. zero production files outside itself import application/BaseAnchorPublicationObservationView.js — found: ${consumers.join(', ') || 'none'}.`);
+            `1. zero production files outside itself import application/anchoring/base/BaseAnchorPublicationObservationView.js — found: ${consumers.join(', ') || 'none'}.`);
 
         const uiConsumers = grepFiles('BaseAnchorPublicationObservationView', ['ui']);
         assert(uiConsumers.length === 0, '2. no ui/ file references the orphaned view at all, by name.');
@@ -206,7 +206,7 @@ async function run() {
         assert(grepCount('BitcoinWalletConnectionState', ['ui']) > 0,
             '8. Bitcoin wallet connection — the entry point to actually producing a Bitcoin anchor — is wired into the shipped UI, not merely implemented in application/.');
     }
-    console.log('✓ Section B: application/BaseAnchorPublicationObservationView.js has zero production callers anywhere, including ui/main.js\'s own composition root — while the underlying Base AND Bitcoin anchor capabilities it would observe are each independently, currently reachable through real, shipped UI surfaces.');
+    console.log('✓ Section B: application/anchoring/base/BaseAnchorPublicationObservationView.js has zero production callers anywhere, including ui/main.js\'s own composition root — while the underlying Base AND Bitcoin anchor capabilities it would observe are each independently, currently reachable through real, shipped UI surfaces.');
 
     // ===============================================================
     // Section C — User journey.
@@ -437,12 +437,12 @@ async function run() {
         // the same reason). Amended to exclude exactly 0.9.597's own,
         // already-accounted-for files, while still catching any OTHER,
         // unexpected production drift.
-        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js']);
+        const expectedLaterMilestoneFiles = new Set(['application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js']);
         const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
             .filter((f) => !expectedLaterMilestoneFiles.has(f));
         assert(unexpectedNonTestFiles.length === 0, `2. AMENDED BY 0.9.597 — no UNEXPECTED production file is modified by this milestone (0.9.597's own, separately-justified files excepted) — found: ${unexpectedNonTestFiles.join(', ') || 'none'}.`);
     }
-    console.log('✓ Section J: per this milestone\'s own guard, since the verdict is not READY, no production change is warranted. application/BaseAnchorPublicationObservationView.js is left exactly as it was — a correct, tested, superseded intermediate step, now explicitly classified rather than left for a future sweep to rediscover.');
+    console.log('✓ Section J: per this milestone\'s own guard, since the verdict is not READY, no production change is warranted. application/anchoring/base/BaseAnchorPublicationObservationView.js is left exactly as it was — a correct, tested, superseded intermediate step, now explicitly classified rather than left for a future sweep to rediscover.');
 
     console.log('\nAll BitcoinAnchorObservationProductGapAudit tests passed.');
     console.log('\nVerdict: DUPLICATIVE — STOP. No production change warranted.');

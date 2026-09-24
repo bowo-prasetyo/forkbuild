@@ -1,19 +1,19 @@
 import { ref, reactive } from 'vue';
-import { describeBitcoinAnchorObservationArchive } from '../../../application/BitcoinAnchorObservationArchiveView.js';
-import { reconstructBitcoinAnchorDurableEvidence } from '../../../application/BitcoinAnchorDurableEvidenceView.js';
+import { describeBitcoinAnchorObservationArchive } from '../../../application/anchoring/bitcoin/BitcoinAnchorObservationArchiveView.js';
+import { reconstructBitcoinAnchorDurableEvidence } from '../../../application/anchoring/bitcoin/BitcoinAnchorDurableEvidenceView.js';
 import {
     describeBitcoinAnchorPublicationRecordHistory
-} from '../../../application/BitcoinAnchorPublicationRecordHistoryView.js';
-import { inspectBitcoinAnchorPublication } from '../../../application/BitcoinAnchorPublicationInspectionView.js';
+} from '../../../application/anchoring/bitcoin/BitcoinAnchorPublicationRecordHistoryView.js';
+import { inspectBitcoinAnchorPublication } from '../../../application/anchoring/bitcoin/BitcoinAnchorPublicationInspectionView.js';
 import {
     reconstructBitcoinAnchorPublicationLifecycleTimeline, BitcoinAnchorPublicationLifecycleTimelineEntryKind
-} from '../../../application/BitcoinAnchorPublicationLifecycleTimelineView.js';
+} from '../../../application/anchoring/bitcoin/BitcoinAnchorPublicationLifecycleTimelineView.js';
 import {
     describeBaseAnchorPublicationRecordHistory
-} from '../../../application/BaseAnchorPublicationRecordHistoryView.js';
+} from '../../../application/anchoring/base/BaseAnchorPublicationRecordHistoryView.js';
 import {
     reconstructBaseAnchorPublicationLifecycleTimeline, BaseAnchorPublicationLifecycleTimelineEntryKind
-} from '../../../application/BaseAnchorPublicationLifecycleTimelineView.js';
+} from '../../../application/anchoring/base/BaseAnchorPublicationLifecycleTimelineView.js';
 
 // Read-only views over anchors recorded in the publication observation archive:
 // historical Bitcoin anchors, and Bitcoin/Base anchor publication records with
@@ -119,7 +119,7 @@ export function useArchivedAnchorPublications({
     }
 
     // Keyed by txid. Base's timeline has no BROADCAST stage (see
-    // application/BaseAnchorPublicationLifecycleTimelineView.js).
+    // application/anchoring/base/BaseAnchorPublicationLifecycleTimelineView.js).
     const baseAnchorPublicationLifecycleExpanded = reactive({});
 
     function toggleBaseAnchorPublicationLifecycle(txid) {

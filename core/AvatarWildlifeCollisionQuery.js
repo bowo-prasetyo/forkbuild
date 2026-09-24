@@ -55,7 +55,7 @@ export const CANDIDATE_QUERY_MARGIN = AVATAR_COLLISION_RADIUS + MAX_ANIMAL_COLLI
 // before calling core/AvatarTreeMovement.js#resolveAvatarTreeMovement({
 // currentPosition, requestedPosition, trees, avatarRadius }), reused here
 // unchanged (that function is generic over any `{ center, radius }` circle
-// — see this file's own sibling, application/AvatarWildlifeConstraint.js,
+// — see this file's own sibling, application/avatar/AvatarWildlifeConstraint.js,
 // for where the two compose):
 //
 //   const animals = wildlifeCollisionCandidatesForMovement({ seed, currentPosition, requestedPosition, avatarRadius });

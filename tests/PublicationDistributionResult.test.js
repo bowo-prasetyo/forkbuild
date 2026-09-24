@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
-import { describePublicationDistributionResult } from '../application/PublicationDistributionResult.js';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
+import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -230,7 +230,7 @@ async function run() {
     // Section F — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/PublicationDistributionResult.js', import.meta.url);
+        const sourceUrl = new URL('../application/publication/distribution/PublicationDistributionResult.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -249,16 +249,16 @@ async function run() {
             assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `44. code must never use "${term}" — no status/success/trust/execution vocabulary at this boundary`);
         }
 
-        const descriptorSource = await readFile(new URL('../application/PublicationDistributionDescriptor.js', import.meta.url), 'utf8');
+        const descriptorSource = await readFile(new URL('../application/publication/distribution/PublicationDistributionDescriptor.js', import.meta.url), 'utf8');
         assert(!descriptorSource.includes('PublicationDistributionResult'), '45. the 0.9.44 descriptor itself is never modified to know about this result file');
 
-        const uploaderSource = await readFile(new URL('../application/ArweavePublicationMaterialUploader.js', import.meta.url), 'utf8');
+        const uploaderSource = await readFile(new URL('../application/arweave/ArweavePublicationMaterialUploader.js', import.meta.url), 'utf8');
         assert(!uploaderSource.includes('PublicationDistributionResult'), '46. the 0.9.45 uploader itself is never modified to know about this result file');
 
-        const publisherSource = await readFile(new URL('../application/NostrPublicationDiscoveryPublisher.js', import.meta.url), 'utf8');
+        const publisherSource = await readFile(new URL('../application/nostr/NostrPublicationDiscoveryPublisher.js', import.meta.url), 'utf8');
         assert(!publisherSource.includes('PublicationDistributionResult'), '47. the 0.9.46 publisher itself is never modified to know about this result file');
 
-        const compositionSource = await readFile(new URL('../application/PublicationDistributionRuntimeComposition.js', import.meta.url), 'utf8');
+        const compositionSource = await readFile(new URL('../application/publication/distribution/PublicationDistributionRuntimeComposition.js', import.meta.url), 'utf8');
         assert(!compositionSource.includes('PublicationDistributionResult'), '48. the 0.9.47 composition itself is never modified to know about this result file');
 
         console.log('✓ Architectural regression: no I/O, no second envelope shape, no status/success vocabulary, no re-verification, no existing file modified');

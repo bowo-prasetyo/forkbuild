@@ -5,16 +5,16 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
-import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQueryService.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/ArweaveWorldEncounterMaterialResolver.js';
-import { DecentralizedWorldEncounterMaterialSource } from '../application/DecentralizedWorldEncounterMaterialSource.js';
-import { composeDecentralizedWorldEncounterMaterialDiscoveryRuntime } from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
-import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
-import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
+import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
+import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
+import { DecentralizedWorldEncounterMaterialSource } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js';
+import { composeDecentralizedWorldEncounterMaterialDiscoveryRuntime } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 
 // 0.9.493 — Arweave Discovery URI Identity Boundary Audit.
 //
@@ -38,7 +38,7 @@ import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/
 // LETTERED SECTIONS (mirroring the requesting brief's own lettering):
 //   A. Discovery contract — what a candidate's own `uri` must mean, traced
 //      through `core/DecentralizedWorldDiscoveryLead.js` and
-//      `application/DecentralizedWorldEncounterMaterialSource.js`: the
+//      `application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js`: the
 //      announced MATERIAL's own retrieval location, never the announcement
 //      transaction that carried the claim.
 //   B. Nostr precedent — exactly how `NostrDiscoveryQueryService.js`
@@ -70,7 +70,7 @@ import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/
 //      confined to the discovery-interpretation layer alone.
 //
 // DELIBERATELY EXCLUDED — NOT THIS MILESTONE.
-// - **Modifying `application/ArweaveGraphqlDiscoveryQueryService.js` or any
+// - **Modifying `application/arweave/ArweaveGraphqlDiscoveryQueryService.js` or any
 //   other production file.** Section G's fix lives entirely in this test
 //   file, as a throwaway prototype class, never exported, never shipped —
 //   the same method 0.9.427's own audit already used before 0.9.428 built
@@ -206,9 +206,9 @@ async function run() {
         check(/describeDecentralizedWorldDiscoveryLead/.test(leadSource) && !/announcementId|txId|transactionId/.test(codeOnlyOf(leadSource)),
             'A1. core/DecentralizedWorldDiscoveryLead.js carries exactly one location field, `uri` — no separate "announcement id" vocabulary exists at this layer');
 
-        const sourceMaterialSource = codeOnlyOf(await source('application/DecentralizedWorldEncounterMaterialSource.js'));
+        const sourceMaterialSource = codeOnlyOf(await source('application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js'));
         check(/this\._retrieveByUri\(resolvedLead\.uri\)/.test(sourceMaterialSource),
-            'A2. application/DecentralizedWorldEncounterMaterialSource.js#load() calls retrieveByUri() with resolvedLead.uri DIRECTLY — no envelope-unwrapping step of its own, no Arweave/Nostr-specific branch');
+            'A2. application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js#load() calls retrieveByUri() with resolvedLead.uri DIRECTLY — no envelope-unwrapping step of its own, no Arweave/Nostr-specific branch');
         check(!/envelope|unwrap|announcement/i.test(sourceMaterialSource),
             'A3. ...and its own code contains no envelope/unwrap/announcement vocabulary at all — confirming it is generic, substrate-agnostic material retrieval, never a second interpretation layer');
 
@@ -230,7 +230,7 @@ async function run() {
     // unwraps its own envelope to satisfy Section A's contract.
     // ===============================================================
     {
-        const nostrSource = codeOnlyOf(await source('application/NostrDiscoveryQueryService.js'));
+        const nostrSource = codeOnlyOf(await source('application/nostr/NostrDiscoveryQueryService.js'));
         check(/parseDecentralizedDiscoveryEnvelope\(event(?:\s*&&\s*event)?\.content\)/.test(nostrSource),
             'B1. NostrDiscoveryQueryService.js parses event.content — the Nostr-specific payload field — through the substrate-neutral parseDecentralizedDiscoveryEnvelope(), never event.id or any Nostr-protocol tag');
         check(/candidates\.push\(\{\s*uri:\s*envelope\.uri/.test(nostrSource),
@@ -244,7 +244,7 @@ async function run() {
         const nostrService = new NostrDiscoveryQueryService({ queryImpl });
         const candidates = await nostrService.search('campaign-b');
         check(candidates.length === 1 && candidates[0].uri === 'ar://real-material-tx', 'B3. LIVE: the real, unmodified NostrDiscoveryQueryService reports the envelope\'s own uri, never the wrapping event\'s own id');
-        check(candidates[0].storage === 'ar', 'B4. ...and storage is read off that same envelope uri\'s own scheme, exactly as application/NostrDiscoveryQueryService.js\'s own header documents');
+        check(candidates[0].storage === 'ar', 'B4. ...and storage is read off that same envelope uri\'s own scheme, exactly as application/nostr/NostrDiscoveryQueryService.js\'s own header documents');
 
         console.log('✓ Section B: the Nostr precedent is exact and already proven live — read the substrate-specific payload field, parse it as a forkbuild envelope, report the ENVELOPE\'s own uri. This is the shape Section A\'s contract requires and Arweave\'s own reader does not yet follow.');
     }
@@ -290,7 +290,7 @@ async function run() {
         check(recoveredEnvelope !== null && recoveredEnvelope.uri === 'ar://TX-MATERIAL-C',
             'C3. THE DATA EXISTS, ONE HOP AWAY: a plain GET against the announcement transaction\'s own id — the SAME wire primitive ArweaveWorldEncounterMaterialResolver.js already ships for retrieving CONTENT — returns the exact envelope this transaction was tagged with, and its own claimed uri is recoverable from it. No new Arweave primitive is required; only a second fetch call, already proven correct elsewhere in this codebase');
 
-        const resolverSource = codeOnlyOf(await source('application/ArweaveWorldEncounterMaterialResolver.js'));
+        const resolverSource = codeOnlyOf(await source('application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js'));
         check(/\$\{this\._gatewayUrl\}\/\$\{transactionId\}/.test(resolverSource),
             'C4. ...confirmed by source: the exact GET <gatewayUrl>/<transaction-id> call this section just used live is already a real, shipped, unit-tested production code path — a fix reuses this shape, never invents a new one');
 
@@ -331,9 +331,9 @@ async function run() {
         // field survives being handed to the exact validation the real
         // orchestration layer already runs, completely ignored, never
         // rejected).
-        const queryAdapterSource = codeOnlyOf(await source('application/DecentralizedWorldDiscoveryQuery.js'));
+        const queryAdapterSource = codeOnlyOf(await source('application/discovery/DecentralizedWorldDiscoveryQuery.js'));
         check(/uri:\s*candidate\s*&&\s*candidate\.uri/.test(queryAdapterSource) && /storage:\s*candidate\s*&&\s*candidate\.storage/.test(queryAdapterSource),
-            'D2. application/DecentralizedWorldDiscoveryQuery.js reads exactly two fields off a raw candidate — .uri and .storage — nothing else, by source');
+            'D2. application/discovery/DecentralizedWorldDiscoveryQuery.js reads exactly two fields off a raw candidate — .uri and .storage — nothing else, by source');
         const leadWithExtraField = describeDecentralizedWorldDiscoveryLead({
             origin: 'dweb:arweave-graphql:test', discoveryTag: 'campaign-d', uri: 'ar://TX-MATERIAL-D', storage: 'ar', announcementId: announced.id
         });
@@ -360,8 +360,8 @@ async function run() {
         check(loaded !== null && loaded.id === 'pub-e' && loaded.body === 'the real publication material',
             'E1. LIVE: the real, completely unmodified ArweaveWorldEncounterMaterialResolver + DecentralizedWorldEncounterMaterialSource pair already retrieves the CORRECT material, end to end, the instant a lead\'s own uri names the material\'s own transaction — no Arweave-specific resolver, no envelope-awareness, no change of any kind needed on this side of the boundary');
 
-        const resolverSource = codeOnlyOf(await source('application/ArweaveWorldEncounterMaterialResolver.js'));
-        const materialSourceSource = codeOnlyOf(await source('application/DecentralizedWorldEncounterMaterialSource.js'));
+        const resolverSource = codeOnlyOf(await source('application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js'));
+        const materialSourceSource = codeOnlyOf(await source('application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js'));
         check(!/forkbuild|envelope|discoveryTag|Announcement/i.test(resolverSource), 'E2. ArweaveWorldEncounterMaterialResolver.js carries no envelope/announcement/discoveryTag vocabulary of its own by source — it is, and must remain, a pure uri-to-bytes retriever');
         check(!/forkbuild|envelope|discoveryTag|Announcement/i.test(materialSourceSource), 'E3. ...neither does DecentralizedWorldEncounterMaterialSource.js — confirming Section A\'s own finding that this is the terminal step, never a second interpretation layer, from the resolver family\'s own side too');
 
@@ -374,7 +374,7 @@ async function run() {
     //
     // AMENDED BY 0.9.494: this section originally reproduced the round-
     // trip FAILURE this whole audit exists to name (GAP 2). The real fix
-    // (application/ArweaveGraphqlDiscoveryQueryService.js, 0.9.494) has
+    // (application/arweave/ArweaveGraphqlDiscoveryQueryService.js, 0.9.494) has
     // since closed it — re-running this exact scenario against CURRENT
     // source now converges instead, so this section is updated in place
     // to confirm that, rather than left asserting a now-false failure.
@@ -409,7 +409,7 @@ async function run() {
         check(result.inspection !== null && result.inspection.loading.status === WorldEncounterMaterialLoadStatus.AVAILABLE && result.inspection.verification.status === WorldEncounterMaterialVerificationStatus.VERIFIED,
             'F4. ...and with a real association, the real material loads and verifies end to end: AVAILABLE, then VERIFIED');
 
-        console.log('✓ Section F: the round trip now converges, fresh, against current source — confirming Gap 2 is closed by application/ArweaveGraphqlDiscoveryQueryService.js\'s own 0.9.494 fix, not merely masked by anything else.');
+        console.log('✓ Section F: the round trip now converges, fresh, against current source — confirming Gap 2 is closed by application/arweave/ArweaveGraphqlDiscoveryQueryService.js\'s own 0.9.494 fix, not merely masked by anything else.');
     }
 
     // ===============================================================
@@ -418,7 +418,7 @@ async function run() {
     // This section originally built a throwaway, test-only prototype
     // class to prove the fix Section C's own diagnosis pointed to would
     // converge BEFORE any production file changed. That fix has since
-    // landed for real in application/ArweaveGraphqlDiscoveryQueryService.js
+    // landed for real in application/arweave/ArweaveGraphqlDiscoveryQueryService.js
     // (0.9.494) — Section F above now demonstrates the identical
     // convergence through the REAL class directly, so the prototype is no
     // longer needed and is not reconstructed here. `tests/
@@ -426,11 +426,11 @@ async function run() {
     // focused, dedicated test suite for the real fix itself.
     // ===============================================================
     {
-        const fixedSource = codeOnlyOf(await source('application/ArweaveGraphqlDiscoveryQueryService.js'));
+        const fixedSource = codeOnlyOf(await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js'));
         check(/parseDecentralizedDiscoveryEnvelope/.test(fixedSource), 'G1. CONFIRMED: the real production fix reuses the existing, unmodified parseDecentralizedDiscoveryEnvelope() — exactly the prototype\'s own step two, now real');
         check(/announcementId/.test(fixedSource), 'G2. CONFIRMED: the real fix preserves the announcement transaction id alongside the reported uri — exactly Section D\'s own invariant, now real');
 
-        console.log('✓ Section G: the prototype this section used to build is superseded — the real fix in application/ArweaveGraphqlDiscoveryQueryService.js (0.9.494) does exactly what it proved, for real, confirmed live by Section F above.');
+        console.log('✓ Section G: the prototype this section used to build is superseded — the real fix in application/arweave/ArweaveGraphqlDiscoveryQueryService.js (0.9.494) does exactly what it proved, for real, confirmed live by Section F above.');
     }
 
     // ===============================================================
@@ -443,16 +443,16 @@ async function run() {
         // announcement publisher, the tagged-upload adapter, a signer, a
         // content store, Nostr, a new URI type, or an attribution/signature
         // primitive.
-        const fixedSourceForImports = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const fixedSourceForImports = await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         const fixedImportLines = fixedSourceForImports.split('\n').filter((line) => line.trim().startsWith('import'));
         check(fixedImportLines.length === 2 && /DecentralizedDiscoveryQueryService/.test(fixedImportLines[0]) && /parseDecentralizedDiscoveryEnvelope/.test(fixedImportLines[1]),
             'H1. the real fix\'s own import list is exactly two lines: the base contract it implements, and the envelope parser it reuses — nothing else');
 
-        const publisherSource = await source('application/ArweaveAnnouncementPublisher.js');
-        const uploadSource = await source('application/ArweaveTaggedTransactionUpload.js');
+        const publisherSource = await source('application/arweave/ArweaveAnnouncementPublisher.js');
+        const uploadSource = await source('application/arweave/ArweaveTaggedTransactionUpload.js');
         const signerSource = await source('arweave/ArweaveInjectedProviderSigner.js');
-        const uploaderSource = await source('application/ArweavePublicationMaterialUploader.js');
-        const nostrSource = await source('application/NostrDiscoveryQueryService.js');
+        const uploaderSource = await source('application/arweave/ArweavePublicationMaterialUploader.js');
+        const nostrSource = await source('application/nostr/NostrDiscoveryQueryService.js');
         const leadSource = await source('core/DecentralizedWorldDiscoveryLead.js');
 
         // AMENDED BY 0.9.494: re-verified against the REAL fix rather than
@@ -467,9 +467,9 @@ async function run() {
 
         const fixedCandidateUri = 'ar://TX-MATERIAL';
         check(/^ar:\/\/[A-Za-z0-9_-]+$/.test(fixedCandidateUri),
-            'H8. the fix introduces no new uri scheme — the material uri Section F actually reported is exactly the same `ar://<transaction-id>` shape this codebase already produces (application/ArweavePublicationMaterialUploader.js) and resolves (application/ArweaveWorldEncounterMaterialResolver.js) everywhere else');
+            'H8. the fix introduces no new uri scheme — the material uri Section F actually reported is exactly the same `ar://<transaction-id>` shape this codebase already produces (application/arweave/ArweavePublicationMaterialUploader.js) and resolves (application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js) everywhere else');
 
-        console.log('✓ Section H: SCOPE GUARD CONFIRMED, AGAINST THE REAL FIX. Closing Gap 2 required touching only application/ArweaveGraphqlDiscoveryQueryService.js — never the announcement publisher, the tagged-upload adapter, transaction signing, content storage, Nostr, core/DecentralizedWorldDiscoveryLead.js\'s own schema, or attribution/signature semantics of any kind.');
+        console.log('✓ Section H: SCOPE GUARD CONFIRMED, AGAINST THE REAL FIX. Closing Gap 2 required touching only application/arweave/ArweaveGraphqlDiscoveryQueryService.js — never the announcement publisher, the tagged-upload adapter, transaction signing, content storage, Nostr, core/DecentralizedWorldDiscoveryLead.js\'s own schema, or attribution/signature semantics of any kind.');
     }
 
     // ===============================================================
@@ -501,7 +501,7 @@ async function run() {
         console.log('  THE INVARIANT: a discovery candidate\'s own `uri` must already be the');
         console.log('  announced MATERIAL\'s own retrieval location — never the announcement');
         console.log('  transaction, event, or record that carried the claim. Nothing downstream');
-        console.log('  of application/DecentralizedWorldDiscoveryQuery.js ever unwraps a second');
+        console.log('  of application/discovery/DecentralizedWorldDiscoveryQuery.js ever unwraps a second');
         console.log('  envelope out of a lead\'s own uri; it is used as the terminal retrieval key,');
         console.log('  verbatim (Section A/E). NostrDiscoveryQueryService already satisfies this');
         console.log('  invariant (Section B); pre-0.9.494 ArweaveGraphqlDiscoveryQueryService did');
@@ -510,7 +510,7 @@ async function run() {
         console.log('');
         console.log('  AMENDED BY 0.9.494 — THE FIX HAS LANDED, FOR REAL, CONFIRMED LIVE (Section');
         console.log('  F/G/H): for each transaction id the existing GraphQL query already finds,');
-        console.log('  application/ArweaveGraphqlDiscoveryQueryService.js now fetches its raw data');
+        console.log('  application/arweave/ArweaveGraphqlDiscoveryQueryService.js now fetches its raw data');
         console.log('  from the gateway (the same primitive ArweaveWorldEncounterMaterialResolver');
         console.log('  already ships), parses it with the existing parseDecentralizedDiscoveryEnvelope(),');
         console.log('  and reports { uri: envelope.uri, storage, announcementId } — skipping, never');
@@ -519,7 +519,7 @@ async function run() {
         console.log('  it (Section D) as announcementId, exactly the invariant this audit named.');
         console.log('');
         console.log('  RECOMMENDATION: DONE — 0.9.494 implemented exactly this section\'s own');
-        console.log('  diagnosis inside application/ArweaveGraphqlDiscoveryQueryService.js itself,');
+        console.log('  diagnosis inside application/arweave/ArweaveGraphqlDiscoveryQueryService.js itself,');
         console.log('  touching no other file this audit reconfirmed correct (Section H). See');
         console.log('  tests/ArweaveEnvelopeAwareDiscoveryQueryService.test.js for the focused,');
         console.log('  dedicated coverage of the real fix. 0.9.495 should now re-run a full');

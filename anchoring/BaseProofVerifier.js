@@ -1,5 +1,5 @@
 import { ProofVerifier } from './ProofVerifier.js';
-import { decodeBasePublicationCommitment } from '../application/BasePublicationCommitmentEncoding.js';
+import { decodeBasePublicationCommitment } from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
 
 const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 
@@ -62,7 +62,7 @@ const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 // its own transport, mirroring exactly how base/
 // BasePublicationTransactionPlanner.js's own constructor already takes an
 // injected `rpcSource` rather than reaching for the network itself.
-// application/CreateBaseAnchorProofVerifierUseCase.js is the one place a
+// application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js is the one place a
 // concrete `BaseJsonRpcClient` and this class are wired together, the
 // identical composition-root split every other real-network adapter in
 // this codebase already holds.

@@ -1,17 +1,17 @@
-import { PublicationReferenceRecord } from '../application/PublicationReferenceRecord.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreatePublicationReferenceRecordUseCase } from '../application/CreatePublicationReferenceRecordUseCase.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { BlockchainKind } from '../application/BlockchainKind.js';
-import { BlockchainPublicationIdentity } from '../application/BlockchainPublicationIdentity.js';
+import { PublicationReferenceRecord } from '../application/publication/PublicationReferenceRecord.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
+import { BlockchainPublicationIdentity } from '../application/anchoring/BlockchainPublicationIdentity.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import {
     describePublicationReferenceGraph,
     reconstructPublicationReferenceGraph,
     findPublicationReferenceGraphNode
-} from '../application/PublicationReferenceGraphView.js';
+} from '../application/publication/PublicationReferenceGraphView.js';
 
 // 0.8.105 — Publication Reference Graph Projection.
 //

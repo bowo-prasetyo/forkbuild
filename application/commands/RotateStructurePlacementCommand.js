@@ -14,7 +14,7 @@ import { Command } from './Command.js';
 // time). Rotating never needs a collision check: core/SpatialBounds.js's
 // own V1 simplification computes a placement's AABB translate-only,
 // never rotated, so a placement's bounding box is identical at every
-// rotation — see application/StructurePlacementValidator.js's own header.
+// rotation — see application/editor/StructurePlacementValidator.js's own header.
 export class RotateStructurePlacementCommand extends Command {
     constructor({ worldId, placementId, deltaRotation, id, timestamp } = {}) {
         super({ id, timestamp });

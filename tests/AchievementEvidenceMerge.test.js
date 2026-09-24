@@ -1,25 +1,25 @@
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/IpfsPublicationRecord.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { CreatePublicationReferenceRecordUseCase } from '../application/CreatePublicationReferenceRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { reconstructAchievementEvents } from '../application/AchievementEvent.js';
-import { reconstructPublisherAchievementStatistics } from '../application/PublisherAchievementStatisticsView.js';
-import { reconstructPublisherRanking } from '../application/PublisherRankingPolicy.js';
-import { reconstructPublisherLeaderboard } from '../application/PublisherLeaderboardView.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { reconstructAchievementEvents } from '../application/achievement/AchievementEvent.js';
+import { reconstructPublisherAchievementStatistics } from '../application/achievement/PublisherAchievementStatisticsView.js';
+import { reconstructPublisherRanking } from '../application/leaderboard/PublisherRankingPolicy.js';
+import { reconstructPublisherLeaderboard } from '../application/leaderboard/PublisherLeaderboardView.js';
 import {
     AchievementEvidenceImportOutcome,
     exportAchievementEvidence,
     importAchievementEvidence
-} from '../application/AchievementEvidenceExport.js';
+} from '../application/achievement/AchievementEvidenceExport.js';
 import {
     AchievementEvidenceMergeOutcome,
     describeAchievementEvidenceMerge,
     mergeAchievementEvidence
-} from '../application/AchievementEvidenceMerge.js';
+} from '../application/achievement/AchievementEvidenceMerge.js';
 
 // 0.8.115 — Explicit Achievement Evidence Merge.
 //

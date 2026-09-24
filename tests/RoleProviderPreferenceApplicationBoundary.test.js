@@ -4,19 +4,19 @@ import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
-import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/RoleAwareProviderResolver.js';
-import { ResolvePreferredRoleProviderUseCase } from '../application/ResolvePreferredRoleProviderUseCase.js';
+import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
+import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';
 
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { ExternalProofVerifierRegistry } from '../application/ExternalProofVerifierRegistry.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { ExternalProofVerifierRegistry } from '../application/anchoring/ExternalProofVerifierRegistry.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
-import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
 
 // 0.9.297 — Role Provider Preference Application Boundary.
 // See docs/Roadmap.md, "0.9.297 — Role Provider Preference Application
-// Boundary," and application/ResolvePreferredRoleProviderUseCase.js's own
+// Boundary," and application/settings/ResolvePreferredRoleProviderUseCase.js's own
 // header for the full model this milestone builds on (0.9.294's
 // RoleProviderPreferenceStore, 0.9.295's RoleAwareProviderResolver,
 // 0.9.296's audit finding that no production seam is ready to consume
@@ -208,7 +208,7 @@ async function run() {
         assert(resolveArgs[0] === RoleProviderRole.CONTENT, 'B2. the resolver is asked to resolve exactly the role execute() was called with');
         assert(decision.status === RESOLVED && decision.provider instanceof LocalContentStore, 'B3. the decision\'s own capability IS the resolver\'s own outcome, never a second, independently-computed answer');
 
-        const useCaseSource = await source('application/ResolvePreferredRoleProviderUseCase.js');
+        const useCaseSource = await source('application/settings/ResolvePreferredRoleProviderUseCase.js');
         assert(!/\.get\(\s*(preference\.providerKey|providerKey)\s*\)/.test(useCaseSource), 'B4. this class never calls .get(providerKey) itself — it never re-implements a registry lookup of its own');
         assert(useCaseSource.split('\n').filter((l) => /^import\b/.test(l)).length === 3, 'B5. exactly three imports — RoleProviderRole, RoleProviderPreferenceStore, and RoleAwareProviderResolver — no registry class is imported to duplicate lookup logic with');
         console.log('✓ Section B: provider selection is delegated to RoleAwareProviderResolver.resolve(), exactly once per call, with no registry logic of this class\'s own');
@@ -284,7 +284,7 @@ async function run() {
         assert(!('provider' in decision), 'F2. no provider of any kind is handed back');
         assert(contentRegistry.has('local'), 'F3. sanity: "local" really is registered and would have been available to silently fall back to');
 
-        const useCaseSource = await source('application/ResolvePreferredRoleProviderUseCase.js');
+        const useCaseSource = await source('application/settings/ResolvePreferredRoleProviderUseCase.js');
         assert(!/PROVIDER_NOT_FOUND[\s\S]{0,120}(provider\s*=|\.provider\s*=)/.test(useCaseSource), 'F4. this class\'s own source never assigns a provider on the PROVIDER_NOT_FOUND path — there is no branch that could substitute one');
         console.log('✓ Section F: an unavailable preferred provider never triggers a silent fallback to a different, available one');
     }
@@ -379,7 +379,7 @@ async function run() {
     // anchoring/, discovery/, nostr/, arweave/, base/, or ui/.
     // ===============================================================
     {
-        const useCaseSource = await source('application/ResolvePreferredRoleProviderUseCase.js');
+        const useCaseSource = await source('application/settings/ResolvePreferredRoleProviderUseCase.js');
         assert(!/\bnew\s+(Nostr|Arweave|Ipfs|Bitcoin|Base)\w*\(/.test(useCaseSource), 'J1. this class never constructs a concrete provider itself');
         const forbiddenImportPattern = /^import\b[^\n]*from\s*['"][^'"]*(nostr|arweave|ipfs|bitcoin|anchoring|content\/|discovery\/|base\/|ui\/)[^'"]*['"]/im;
         assert(!forbiddenImportPattern.test(useCaseSource), 'J2. no provider implementation, no content/anchoring/discovery module, and no ui/ module is ever imported');
@@ -399,15 +399,15 @@ async function run() {
     {
         const allProductionFiles = await repoWideProductionFiles();
         // UPDATED by 0.9.302 — Content Provider Preference Settings Entry
-        // Point. application/SetRoleProviderPreferenceUseCase.js's own
+        // Point. application/settings/SetRoleProviderPreferenceUseCase.js's own
         // header names this class in prose only (drawing the
         // read-use-case/write-use-case symmetry) — it never imports or
         // constructs it.
         const KNOWN_FILES = new Set([
-            'application/ResolvePreferredRoleProviderUseCase.js',
-            'application/PreferredSnapshotPlacementCreationCoordinator.js',
-            'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
-            'application/SetRoleProviderPreferenceUseCase.js'
+            'application/settings/ResolvePreferredRoleProviderUseCase.js',
+            'application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js',
+            'application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
+            'application/settings/SetRoleProviderPreferenceUseCase.js'
         ]);
         let hits = 0;
         const hitFiles = [];

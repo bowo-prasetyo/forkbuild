@@ -12,7 +12,7 @@ import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalida
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/claimSnapshotReconciliation/revalidationObservation/History.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceDetail } from '../application/claimSnapshotReconciliation/candidate/EvidenceDetailView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.182 — Reconciliation Candidate Evidence Detail View (UI layer).
 //

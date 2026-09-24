@@ -3,8 +3,8 @@ import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { Publication } from '../publisher/Publication.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 import { worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // UX-level distribution unification.
@@ -19,7 +19,7 @@ import { worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFile
 // This is a UX change ONLY. The Signed Claim and Snapshot families stay
 // two separate protocols underneath — see application/
 // SnapshotDistributionCommand.js's own header, "no coupling to Signed
-// Claim distribution," and application/PublicationSnapshotPlacementValidator.js's
+// Claim distribution," and application/snapshot/placement/PublicationSnapshotPlacementValidator.js's
 // own header on why a Snapshot-side identity is never conflated with
 // Publication authorship. The combined action never merges their
 // results, never introduces an aggregate status, and never changes what

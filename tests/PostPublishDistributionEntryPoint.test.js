@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
+import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature } from '../core/Signature.js';
@@ -220,12 +220,12 @@ async function runTests() {
     {
         const code = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         const forbiddenConstruction = [
-            "from '../../application/ArweavePublicationMaterialUploader.js'",
-            "from '../../application/NostrPublicationDiscoveryPublisher.js'",
-            "from '../../application/PublicationDistributionExecutor.js'",
-            "from '../../application/PublicationDistributionOrchestrator.js'",
-            "from '../../application/PublicationDistributionRuntimeComposition.js'",
-            "from '../../application/PublicationDistributionCommand.js'",
+            "from '../../application/arweave/ArweavePublicationMaterialUploader.js'",
+            "from '../../application/nostr/NostrPublicationDiscoveryPublisher.js'",
+            "from '../../application/publication/distribution/PublicationDistributionExecutor.js'",
+            "from '../../application/publication/distribution/PublicationDistributionOrchestrator.js'",
+            "from '../../application/publication/distribution/PublicationDistributionRuntimeComposition.js'",
+            "from '../../application/publication/distribution/PublicationDistributionCommand.js'",
             'new ArweavePublicationMaterialUploader(', 'new NostrPublicationDiscoveryPublisher(',
             'executePublicationDistribution(', 'executePublicationDistributionCommand(', 'orchestratePublicationDistribution(',
             'window.arweaveWallet', 'window.nostr', 'WebSocket'
@@ -292,7 +292,7 @@ async function runTests() {
 
         assert(ctx.publicationDistributionExecuting === false, '14. execution returns to idle after a rejection');
         assert(ctx.publicationDistributionError === 'no wallet available',
-            '15. a genuine rejection now surfaces the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js');
+            '15. a genuine rejection now surfaces the sanitized underlying cause — see application/publication/distribution/DistributionErrorMessageSanitizer.js');
         assert(ctx.publicationDistributionResult === null, '16. a failed call never fabricates a partial result');
         assert(lifecycleStore.get(publication.id) === null,
             '17. a rejected call never corrupts or writes into the lifecycle store this panel does not even hold a reference to');
@@ -440,8 +440,8 @@ async function runTests() {
             assert(!viewCode.includes(term), `37. WorldView.js never references '${term}' either`);
         }
 
-        const publishUseCaseCode = await codeOnlySource('application/PublishDocumentUseCase.js');
-        const unpublishUseCaseCode = await codeOnlySource('application/UnpublishDocumentUseCase.js');
+        const publishUseCaseCode = await codeOnlySource('application/publication/PublishDocumentUseCase.js');
+        const unpublishUseCaseCode = await codeOnlySource('application/publication/UnpublishDocumentUseCase.js');
         assert(!/Arweave|Nostr|Ipfs|Bitcoin|distribut/i.test(publishUseCaseCode),
             '38. PublishDocumentUseCase.js remains untouched by this milestone — the local-first invariant holds by construction, not convention');
         assert(!/Arweave|Nostr|Ipfs|Bitcoin|distribut/i.test(unpublishUseCaseCode),

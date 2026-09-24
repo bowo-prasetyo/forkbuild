@@ -12,7 +12,7 @@ import { BitcoinAnchorPsbtSerializer } from './BitcoinAnchorPsbtSerializer.js';
 // next. Both lines exist for the same reason — a fact about availability
 // is not consent.
 //
-//   application/BitcoinAnchorTransactionReviewView.js
+//   application/anchoring/bitcoin/BitcoinAnchorTransactionReviewView.js
 //     describeBitcoinAnchorTransactionReview(description)
 //           │
 //           ▼
@@ -68,7 +68,7 @@ import { BitcoinAnchorPsbtSerializer } from './BitcoinAnchorPsbtSerializer.js';
 //
 // `reviewedUnsignedPsbtHex` IS A REQUIRED, EXPLICIT ARGUMENT — NEVER
 // INFERRED. This class does not remember a previous review, does not read
-// application/BitcoinAnchorTransactionReviewView.js itself, and does not
+// application/anchoring/bitcoin/BitcoinAnchorTransactionReviewView.js itself, and does not
 // accept a `description` with no `reviewedUnsignedPsbtHex` at all (a caller
 // omitting it is a contract violation and throws, exactly like
 // anchoring/BitcoinAnchorWalletSigner.js#requestSignature() throwing on a
@@ -108,7 +108,7 @@ export class BitcoinAnchorReviewedPsbtSigner {
     // consulted.
     async requestSignature({ description, reviewedUnsignedPsbtHex } = {}) {
         if (typeof reviewedUnsignedPsbtHex !== 'string' || !reviewedUnsignedPsbtHex) {
-            throw new Error('BitcoinAnchorReviewedPsbtSigner: reviewedUnsignedPsbtHex is required — describe the transaction with application/BitcoinAnchorTransactionReviewView.js before ever requesting a signature');
+            throw new Error('BitcoinAnchorReviewedPsbtSigner: reviewedUnsignedPsbtHex is required — describe the transaction with application/anchoring/bitcoin/BitcoinAnchorTransactionReviewView.js before ever requesting a signature');
         }
 
         const { hex: currentUnsignedPsbtHex } = this._serializer.serialize(description);

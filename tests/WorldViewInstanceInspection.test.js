@@ -6,24 +6,24 @@ import { Position } from '../core/Position.js';
 import { StructurePlacement } from '../core/StructurePlacement.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { StructureDocumentResolver } from '../application/StructureDocumentResolver.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { StructureDocumentResolver } from '../application/editor/StructureDocumentResolver.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
-import { SpatialInspectionService } from '../application/SpatialInspectionService.js';
+import { SpatialInspectionService } from '../application/editor/SpatialInspectionService.js';
 import { WorldRenderer } from '../renderer/WorldRenderer.js';
 import { PlacementMeshRegistry } from '../renderer/PlacementMeshRegistry.js';
 import { SpatialSelectionRenderer } from '../renderer/SpatialSelectionRenderer.js';
-import { TransformMath } from '../application/TransformMath.js';
+import { TransformMath } from '../application/editor/TransformMath.js';
 import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 
 // 0.2.93 — World View Instance Inspection.
@@ -40,12 +40,12 @@ import { terrainHeightAt, DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.
 //   Section B: renderer/SpatialSelectionRenderer.js — a placement
 //              highlights as ONE whole instance, mutually exclusive
 //              with a brick highlight.
-//   Section C: application/SpatialInspectionService.js#_inspectPlacement()
+//   Section C: application/editor/SpatialInspectionService.js#_inspectPlacement()
 //              — resolves a placement selection into the exact plain
 //              data the inspection panel needs, including the
 //              CONTAINING-document-offset groundY convention
 //              renderer/WorldRenderer.js's own render path uses.
-//   Section D: application/WorldNavigationSession.js#pick() — routes a
+//   Section D: application/world/WorldNavigationSession.js#pick() — routes a
 //              placement hit through the read-only inspection path,
 //              never the brick/ground editing one; 0.5.9 went further
 //              still and retired moveSelection/rotateSelection/

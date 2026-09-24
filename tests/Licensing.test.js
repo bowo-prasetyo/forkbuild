@@ -4,7 +4,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Publication } from '../publisher/Publication.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 

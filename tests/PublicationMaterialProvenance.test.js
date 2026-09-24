@@ -4,7 +4,7 @@ import {
     isValidPublicationMaterialProvenanceOrigin,
     describePublicationMaterialProvenance,
     describePublicationMaterialProvenanceFromInspection
-} from '../application/PublicationMaterialProvenance.js';
+} from '../application/publication/distribution/PublicationMaterialProvenance.js';
 
 // 0.9.112 — Publication Provenance in World View.
 // See docs/Roadmap.md, "0.9.112 — Publication Provenance in World View."
@@ -172,7 +172,7 @@ async function run() {
     //    carries trust/rank/preference/persistence vocabulary of any kind.
     // ---------------------------------------------------------------------
     {
-        const source = await readFile(new URL('../application/PublicationMaterialProvenance.js', import.meta.url), 'utf8');
+        const source = await readFile(new URL('../application/publication/distribution/PublicationMaterialProvenance.js', import.meta.url), 'utf8');
         const importLines = source.split('\n').filter((line) => line.trim().startsWith('import '));
         assert(importLines.length === 0, '29. PublicationMaterialProvenance.js imports nothing — a pure, leaf fact');
 

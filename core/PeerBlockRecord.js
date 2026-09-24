@@ -20,15 +20,15 @@ import * as Ed25519 from '../identity/Ed25519.js';
 // for remembering, one for refusing. See docs/Principles.md,
 // "Friendship Is Mutual Relationship State; Blocking Is A Unilateral
 // Local Decision" (0.2.60): blocking and friendship are independent
-// axes, not two values of one enum — `application/FriendRelationshipUseCase.js`
-// and `application/PeerBlockUseCase.js` are two entirely separate
+// axes, not two values of one enum — `application/identity/FriendRelationshipUseCase.js`
+// and `application/peer/PeerBlockUseCase.js` are two entirely separate
 // stores, so `FRIEND + BLOCKED` is a perfectly ordinary, simultaneously
 // true combination ("we were friends, but I no longer want to hear
 // from this identity"), never a contradiction either store has to
 // reconcile.
 //
 // A PeerBlockRecord's `identityId`/`publicKey` never need a FRESH,
-// live-handshake proof the way `application/PeerRelationshipUseCase.js#rememberPeer()`
+// live-handshake proof the way `application/peer/PeerRelationshipUseCase.js#rememberPeer()`
 // requires of a `peer/PeerIdentity.js` — see `fromIdentity()` below.
 // Blocking is available from any identity this device has EVER
 // authenticated a key for (a currently-connected peer, a Known Peer, a
@@ -80,11 +80,11 @@ export class PeerBlockRecord {
     }
 
     // The one way a brand-new PeerBlockRecord is meant to come into
-    // existence outside of fromJSON() — see application/PeerBlockUseCase.js#block(),
+    // existence outside of fromJSON() — see application/peer/PeerBlockUseCase.js#block(),
     // the sole caller. Deliberately a plain, DUCK-TYPED shape check
     // only (identityId/publicKey strings, verified self-consistent by
     // the constructor above) — never an `instanceof PeerIdentity`
-    // requirement the way `application/PeerRelationshipUseCase.js#rememberPeer()`
+    // requirement the way `application/peer/PeerRelationshipUseCase.js#rememberPeer()`
     // insists on. `identity` here is commonly a live, just-authenticated
     // `peer/PeerIdentity.js`, but is JUST AS OFTEN an already-persisted
     // `core/PeerRelationship.js`/`core/FriendshipRecord.js`'s own

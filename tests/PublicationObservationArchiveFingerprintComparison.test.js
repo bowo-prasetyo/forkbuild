@@ -1,13 +1,13 @@
 import { computeContentHash } from '../serializer/contentHash.js';
-import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/IpfsPublicationRecord.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
-import { fingerprintPublicationObservationArchive } from '../application/PublicationObservationArchiveFingerprint.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
+import { fingerprintPublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveFingerprint.js';
 import {
     PublicationObservationArchiveFingerprintComparisonResult,
     comparePublicationObservationArchiveFingerprint
-} from '../application/PublicationObservationArchiveFingerprintComparison.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
+} from '../application/publication/observationArchive/PublicationObservationArchiveFingerprintComparison.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 
 // 0.8.85 — Explicit Publication Archive Fingerprint Comparison.
 //
@@ -229,7 +229,7 @@ async function run() {
         // checked (never the prose comments, which name these same
         // capabilities to explain their absence).
         const fileText = await (await import('node:fs/promises')).readFile(
-            new URL('../application/PublicationObservationArchiveFingerprintComparison.js', import.meta.url), 'utf8'
+            new URL('../application/publication/observationArchive/PublicationObservationArchiveFingerprintComparison.js', import.meta.url), 'utf8'
         );
         const importLines = fileText.split('\n').filter((line) => line.trim().startsWith('import ')).join('\n').toLowerCase();
         const FORBIDDEN_IMPORT_SUBSTRINGS = ['wallet', 'signer', 'ipfs', 'pinning', 'bitcoinrpc', 'fetch', 'xmlhttprequest', 'websocket'];

@@ -4,18 +4,18 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 
-import { SpatialCameraController } from '../application/SpatialCameraController.js';
+import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
 import { CameraState } from '../renderer/CameraState.js';
 import { WorldPosition } from '../core/WorldPosition.js';
 
 import { AvatarProfile } from '../core/AvatarProfile.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
 import { describeObserverLocalPublicationEncounter } from '../core/ObserverLocalPublicationEncounter.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { worldViewFiles, worldNavigationSessionFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.584 — World Navigation & Return Journey Product Reassessment.
@@ -32,7 +32,7 @@ import { worldViewFiles, worldNavigationSessionFiles, worldEncounterCanvasFiles 
 // carrying World-specific state across that boundary?
 //
 // THE SAME STRUCTURAL CONSTRAINT AS EVERY "World"-CLASS MILESTONE SINCE
-// 0.9.556/0.9.574: application/WorldNavigationSession.js transitively
+// 0.9.556/0.9.574: application/world/WorldNavigationSession.js transitively
 // imports renderer/RenderWorldViewUseCase.js -> renderer/Renderer.js ->
 // `three`; ui/views/WorldView.js imports WorldNavigationSession.js;
 // ui/router/index.js imports `vue-router`. None of the three packages
@@ -47,9 +47,9 @@ import { worldViewFiles, worldNavigationSessionFiles, worldEncounterCanvasFiles 
 // real, unmodified file, the same discipline 0.9.556/0.9.582/0.9.583
 // already established, so that (unlike the two files named above) this
 // one actually runs standalone under plain `node`. Every other collaborator
-// below — application/SpatialCameraController.js, application/
-// AvatarPresenceSession.js, application/ObserverLocalEncounterStore.js,
-// application/LoadPublicationDocumentUseCase.js, discovery/
+// below — application/world/SpatialCameraController.js, application/
+// AvatarPresenceSession.js, application/worldEncounter/ObserverLocalEncounterStore.js,
+// application/publication/LoadPublicationDocumentUseCase.js, discovery/
 // LocalDiscoveryProvider.js, publisher/Publication.js, core/
 // ObserverLocalPublicationEncounter.js, ui/components/
 // WorldEncounterCanvas.js — was confirmed, live, to import cleanly under
@@ -197,7 +197,7 @@ function buildEncounterProjectionCtx({ registry = null, view, observerLocalEncou
 }
 
 // A minimal render-session double satisfying exactly the two methods
-// application/SpatialCameraController.js's own _applyToRenderer()/
+// application/world/SpatialCameraController.js's own _applyToRenderer()/
 // getSpatialCameraState() call — never a mock of camera MATH, which stays
 // entirely inside the real, unmodified SpatialCameraController itself.
 function makeRenderSessionDouble(initialZoom = 1) {
@@ -275,7 +275,7 @@ async function main() {
         const discoveryProvider = seedDiscoveryProvider([pubA1, pubA2, pubB]);
 
         // B1. findById() (the real collaborator findPublicationById()
-        // wraps, per application/WorldNavigationSession.js:5006-5009,
+        // wraps, per application/world/WorldNavigationSession.js:5006-5009,
         // `this._discoveryProvider.findById(publicationId) || null`) keys
         // on the PUBLICATION's own `id`, never `documentId` — resolving
         // pub-A-v1's id never returns pub-A-v2, even though they share a
@@ -362,7 +362,7 @@ async function main() {
             'C3. Zoom is preserved verbatim across every hop — the one piece of camera state this controller deliberately does not recompute.');
 
         // C4. Source-cited: the DEFAULT contract above (no memory of a
-        // prior visit) is exactly what application/WorldNavigationSession.js's
+        // prior visit) is exactly what application/world/WorldNavigationSession.js's
         // own focusDocument() reaches when called with no LocalWorldExperience
         // store wired — a purely additive, OPT-IN return-framing
         // convenience (saveWorldExperience()/restoreWorldExperience(),
@@ -388,7 +388,7 @@ async function main() {
         // independent of which document is active — live-confirmed with
         // the real AvatarPresenceSession: its own `sequence` starts at 0
         // and advances on every update(), the exact counter
-        // application/WorldNavigationSession.js's own _spawnAvatarNear()
+        // application/world/WorldNavigationSession.js's own _spawnAvatarNear()
         // guards on (`if (... this._avatarPresenceSession.current.sequence
         // !== 0) return;`) to spawn exactly once, ever, per session.
         const profile = new AvatarProfile({ ownerIdentity: 'wanderer-1', displayName: 'Wanderer' });
@@ -484,7 +484,7 @@ async function main() {
 
         // E5. A genuinely fresh WorldView mount (a fresh store instance,
         // matching production's own one-instance-per-mount construction,
-        // application/WorldNavigationSession.js's neighbor
+        // application/world/WorldNavigationSession.js's neighbor
         // ui/views/WorldView.js:722) starts empty — the only "reset"
         // this contract ever performs.
         const freshStore = new ObserverLocalEncounterStore();
@@ -500,7 +500,7 @@ async function main() {
         // CITED, not re-derived: tests/WandererPresenceSessionContinuityProductReassessment.test.js
         // (0.9.582) Section F and Section N already live-proved, over real
         // authenticated peer connections, that World-keyed presence
-        // (application/WorldPresenceUseCase.js, application/
+        // (application/presence/WorldPresenceUseCase.js, application/
         // WorldSpatialPresenceUseCase.js) never leaks a participant from a
         // left World into an entered one, and never lingers in the one
         // left. This section adds only the ONE fact that milestone did not
@@ -538,7 +538,7 @@ async function main() {
         // contain NO Promise machinery at all — focusDocument()/
         // navigateToDocument()/setActiveDocument() are fully synchronous.
         assert(!/await /.test(navigationSessionSource) && !/async /.test(navigationSessionSource) && !/\.then\(/.test(navigationSessionSource) && !/new Promise/.test(navigationSessionSource),
-            'G1. application/WorldNavigationSession.js contains zero await/async/.then()/Promise anywhere — the entire navigation path is synchronous, so a classic "stale async result from a left World" race, as commonly imagined (two overlapping in-flight promises), structurally cannot occur inside this class.');
+            'G1. application/world/WorldNavigationSession.js contains zero await/async/.then()/Promise anywhere — the entire navigation path is synchronous, so a classic "stale async result from a left World" race, as commonly imagined (two overlapping in-flight promises), structurally cannot occur inside this class.');
         assert(/navigateToDocument\(documentId\) \{\s*return this\.focusDocument\(documentId\);\s*\}/.test(navigationSessionSource),
             'G1b. navigateToDocument() is a synchronous alias for focusDocument() — confirming there is no async wrapper hiding a race one layer up either.');
 
@@ -646,7 +646,7 @@ async function main() {
 
         // I1. Whichever snapshot a Notification names (payload.publicationId
         // -> findPublicationById(), source-confirmed at
-        // application/WorldNavigationSession.js:5006-5009 to be exactly
+        // application/world/WorldNavigationSession.js:5006-5009 to be exactly
         // `this._discoveryProvider.findById(publicationId) || null`), the
         // resolved Publication's own documentId — the ONLY field
         // focusWorld() ever receives, per Section B3 — points at the same

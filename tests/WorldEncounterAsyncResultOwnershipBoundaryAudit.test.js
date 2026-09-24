@@ -1,14 +1,14 @@
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
-import { WorldEncounterMaterialSource } from '../application/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialSource } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import {
     WorldEncounterMaterialVerifier,
     WorldEncounterMaterialVerificationStatus
-} from '../application/WorldEncounterMaterialVerification.js';
+} from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 
 // 0.9.537 — World Encounter Async Result Ownership Boundary Audit.
 //

@@ -5,18 +5,18 @@ import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { IpfsGatewayContentStore } from '../content/IpfsGatewayContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
-import { resolveSnapshotDistributionContentStore } from '../application/SnapshotDistributionContentBackendSelection.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
+import { resolveSnapshotDistributionContentStore } from '../application/snapshot/SnapshotDistributionContentBackendSelection.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { ArweaveSnapshotDiscoveryPublisher } from '../application/ArweaveSnapshotDiscoveryPublisher.js';
-import { ArweaveSnapshotDiscoveryQueryService } from '../application/ArweaveSnapshotDiscoveryQueryService.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { ArweaveSnapshotDiscoveryPublisher } from '../application/arweave/ArweaveSnapshotDiscoveryPublisher.js';
+import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
 
 // 0.9.508 — Snapshot Resolution Content Backend Registry Integration.
 //
@@ -25,7 +25,7 @@ import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSel
 // `discoverSnapshotCommand`/`resolveSelectedSnapshotCommand` (ui/main.js)
 // resolved every discovered candidate through a single, fixed
 // ArweaveContentStore, never the shared `storeRegistry` those same command
-// boundaries (application/DiscoverSnapshotCommand.js, application/
+// boundaries (application/snapshot/DiscoverSnapshotCommand.js, application/
 // ResolveSelectedSnapshotCommand.js) already accept and already forward
 // to `DecentralizedSnapshotResolver`, unmodified, since 0.9.134/0.9.152.
 // An IPFS-distributed Snapshot's own discovered candidate was permanently
@@ -37,8 +37,8 @@ import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSel
 // coordinator already built and already shares the one production
 // ArweaveContentStore instance with (0.9.505) — instead of a fixed
 // contentStore. ZERO application-layer file changed: application/
-// DecentralizedSnapshotResolver.js, application/DiscoverSnapshotCommand.js,
-// application/ResolveSelectedSnapshotCommand.js, application/
+// DecentralizedSnapshotResolver.js, application/snapshot/DiscoverSnapshotCommand.js,
+// application/snapshot/ResolveSelectedSnapshotCommand.js, application/
 // SnapshotPlacementStoreRegistry.js, and every ContentStore implementation
 // are all untouched — the fix 0.9.507 named ("pass storeRegistry") already
 // existed in the architecture; only composition-root wiring changed.
@@ -304,7 +304,7 @@ async function run() {
             'A. that one shared ArweaveContentStore instance is still registered into both the creation and resolution registries (0.9.505, unmodified by this milestone)');
 
         // The resolver itself is unaffected — it is built from queryService
-        // alone, exactly as application/DiscoverSnapshotRuntimeComposition.js's
+        // alone, exactly as application/snapshot/DiscoverSnapshotRuntimeComposition.js's
         // own header already documents ("resolver depends only on a usable
         // queryImpl").
         check(mainSource.includes('const { resolver: snapshotResolver, queryService: snapshotDiscoveryQueryService } = composeDiscoverSnapshotRuntime({'),
@@ -647,22 +647,22 @@ async function run() {
     // changes; the fix is confined to composition-root wiring.
     // ===============================================================
     {
-        const resolverSource = await readFile(new URL('../application/DecentralizedSnapshotResolver.js', import.meta.url), 'utf8');
+        const resolverSource = await readFile(new URL('../application/snapshot/DecentralizedSnapshotResolver.js', import.meta.url), 'utf8');
         check(!resolverSource.includes('publicationSnapshotPlacementResolutionStoreRegistry'),
-            'K. application/DecentralizedSnapshotResolver.js has no idea ui/main.js\'s own named registry variable exists — it stays a generic storeRegistry consumer');
+            'K. application/snapshot/DecentralizedSnapshotResolver.js has no idea ui/main.js\'s own named registry variable exists — it stays a generic storeRegistry consumer');
         check(resolverSource.includes('contentStore || (storeRegistry ? storeRegistry.get(candidate.storage) : null)'),
             'K. the resolution rule itself (explicit contentStore wins, else storeRegistry.get(storage)) is byte-for-byte unchanged from before this milestone');
 
-        const discoverCommandSource = await readFile(new URL('../application/DiscoverSnapshotCommand.js', import.meta.url), 'utf8');
-        const selectedCommandSource = await readFile(new URL('../application/ResolveSelectedSnapshotCommand.js', import.meta.url), 'utf8');
+        const discoverCommandSource = await readFile(new URL('../application/snapshot/DiscoverSnapshotCommand.js', import.meta.url), 'utf8');
+        const selectedCommandSource = await readFile(new URL('../application/snapshot/ResolveSelectedSnapshotCommand.js', import.meta.url), 'utf8');
         check(discoverCommandSource.includes('resolver.resolve(discoveryTag, contentHash, { contentStore, storeRegistry })'),
-            'K. application/DiscoverSnapshotCommand.js still forwards contentStore/storeRegistry verbatim — no new logic of its own');
+            'K. application/snapshot/DiscoverSnapshotCommand.js still forwards contentStore/storeRegistry verbatim — no new logic of its own');
         check(selectedCommandSource.includes('resolver.resolveCandidate(candidate, { contentStore, storeRegistry })'),
-            'K. application/ResolveSelectedSnapshotCommand.js still forwards contentStore/storeRegistry verbatim — no new logic of its own');
+            'K. application/snapshot/ResolveSelectedSnapshotCommand.js still forwards contentStore/storeRegistry verbatim — no new logic of its own');
 
-        const registrySource = await readFile(new URL('../application/SnapshotPlacementStoreRegistry.js', import.meta.url), 'utf8');
+        const registrySource = await readFile(new URL('../application/snapshot/placement/SnapshotPlacementStoreRegistry.js', import.meta.url), 'utf8');
         check(registrySource.includes('return this._stores.get(storage) || null;'),
-            'K. application/SnapshotPlacementStoreRegistry.js#get() is still the identical, unmodified one-line lookup — no ranking, retry, or fallback loop was added to it');
+            'K. application/snapshot/placement/SnapshotPlacementStoreRegistry.js#get() is still the identical, unmodified one-line lookup — no ranking, retry, or fallback loop was added to it');
 
         console.log('✓ K. every resolution class and ContentStore implementation is untouched — this milestone\'s entire fix lives in ui/main.js\'s own composition-root wiring.');
     }

@@ -1,7 +1,7 @@
 import { computed, inject } from 'vue';
 import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPreferenceForm.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
-import { describeRoleProviderPreferenceSettings } from '../../application/RoleProviderPreferenceSettingsView.js';
+import { describeRoleProviderPreferenceSettings } from '../../application/settings/RoleProviderPreferenceSettingsView.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 
 // Proof & Anchoring Provider Preference Settings Entry Point.
@@ -9,7 +9,7 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 // Mirrors ui/views/ContentProviderSettingsView.js's own shape, one role
 // over — the same small, dedicated settings page, the same
 // RoleProviderPreferenceStore/SetRoleProviderPreferenceUseCase pair
-// (application/RoleProviderPreferenceSettingsView.js's own
+// (application/settings/RoleProviderPreferenceSettingsView.js's own
 // describeRoleProviderPreferenceSettings() is already role-agnostic; this
 // view is the first caller to pass it RoleProviderRole.PROOF_AND_ANCHORING).
 //
@@ -25,7 +25,7 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 // PreferredPublicationAnchorCreationCoordinator.js) the Publication Center's
 // own "Use Preferred Provider" anchor trigger already consumes — its
 // `availableAnchorTypes()` is a pass-through to the real, currently-
-// registered application/ExternalAnchorPublisherRegistry.js, the identical
+// registered application/anchoring/ExternalAnchorPublisherRegistry.js, the identical
 // seam that already keeps that page from ever offering an anchorType nobody
 // can actually anchor onto. Base never appears here today for exactly that
 // reason: ui/main.js deliberately never registers `baseAnchorPublisher`

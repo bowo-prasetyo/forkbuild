@@ -27,7 +27,7 @@ import { AvatarInventory, InventoryEntryKind, withEntryRemoved } from './AvatarI
 // therefore never release, a carried VEHICLE — see that file's own
 // header, "A shared inventory, not two parallel ones." No cycle-
 // selection keys exist for animals yet (see
-// application/AvatarAnimalInteractionController.js's own header for
+// application/avatar/AvatarAnimalInteractionController.js's own header for
 // why), so `selectedEntryId` is always `null` from every real caller
 // today; the parameter exists so this file's own contract already
 // matches core/AvatarVehicleDeployTransition.js's shape, ready for that
@@ -37,7 +37,7 @@ import { AvatarInventory, InventoryEntryKind, withEntryRemoved } from './AvatarI
 // core/AvatarVehicleDeployTransition.js's own header explains for
 // itself: constructing a real, visible animal back in the world (an id,
 // a position) is an application-layer EFFECT
-// (application/AvatarAnimalInteractionController.js's own job), never
+// (application/avatar/AvatarAnimalInteractionController.js's own job), never
 // this pure function's.
 export function deriveAvatarAnimalReleaseTransition({
     currentInventory,

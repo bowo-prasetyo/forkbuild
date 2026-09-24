@@ -32,11 +32,11 @@ import { isNonEmptyString } from '../utils/typeGuards.js';
 //        describeDecentralizedPublicationLocationClaim()
 //                    │
 //                    ▼
-//   application/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js
+//   application/worldEncounter/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js
 //        (THIS milestone, other half — matches a claim's own `uri`
 //         against currently-known decentralized discovery leads to
 //         produce the `associations` array
-//         application/DecentralizedWorldEncounterLeadResolution.js
+//         application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js
 //         (0.9.28, unmodified) already knows how to consume)
 //
 // A CLAIM, NEVER A VERIFICATION. This file reads `publication.signature`

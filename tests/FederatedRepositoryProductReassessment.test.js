@@ -3,13 +3,13 @@ import { readFile } from 'node:fs/promises';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License, LicenseId } from '../core/License.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { CreateDiscoveryUseCase } from '../application/CreateDiscoveryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscoveryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -17,12 +17,12 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { worldViewFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.340 — Federated Repository Product Reassessment.
@@ -95,7 +95,7 @@ function wait(ms = 20) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// application/CreateDiscoveryUseCase.js constructs a real
+// application/discovery/CreateDiscoveryUseCase.js constructs a real
 // storage/LocalStorageProvider.js, which reads window.localStorage — a
 // minimal in-memory shim, installed ONLY when no window already exists
 // (a real browser test run never hits this branch). Same posture as
@@ -192,14 +192,14 @@ async function run() {
     // ===============================================================
     {
         // 1. Decentralized Publication content kind (0.9.331).
-        const contentValidatorSource = await readSource('application/PublicationContentValidator.js');
+        const contentValidatorSource = await readSource('application/publication/PublicationContentValidator.js');
         assert(contentValidatorSource.includes("export const PUBLICATION_CONTENT_KIND = 'forkbuild.publication';"),
             "1. a decentralized content kind for Publication exists (PUBLICATION_CONTENT_KIND).");
 
         // 2. Decentralized transport (0.7.2/0.9.332) — the real gossip
         // exchange a resolved Publication travels over a live,
         // authenticated peer connection.
-        const peerExchangeSource = await readSource('application/PublicationPeerExchange.js');
+        const peerExchangeSource = await readSource('application/publication/PublicationPeerExchange.js');
         assert(peerExchangeSource.includes('class PublicationPeerExchange'),
             '2. a real decentralized transport (PublicationPeerExchange) exists.');
 
@@ -228,10 +228,10 @@ async function run() {
             '6. discovery/CompositeDiscoveryProvider.js exists.');
 
         // 7. Repository search (0.9.339 merge into the composition root).
-        const createDiscoverySource = await readSource('application/CreateDiscoveryUseCase.js');
+        const createDiscoverySource = await readSource('application/discovery/CreateDiscoveryUseCase.js');
         assert(createDiscoverySource.includes('decentralizedDiscoveryProvider') &&
             createDiscoverySource.includes('CompositeDiscoveryProvider'),
-            '7. application/CreateDiscoveryUseCase.js composes the decentralized provider into Repository search.');
+            '7. application/discovery/CreateDiscoveryUseCase.js composes the decentralized provider into Repository search.');
 
         // 8. Explore — PublicationCatalog.js's own viewWorld() routes by
         // documentId, a field every resolved decentralized Publication
@@ -256,7 +256,7 @@ async function run() {
     // ===============================================================
     // Section B — FLAGSHIP: peer -> resolve -> admit -> Repository ->
     // search -> select -> Explore/Fork, over the real, unmodified
-    // production composition (application/CreateDiscoveryUseCase.js /
+    // production composition (application/discovery/CreateDiscoveryUseCase.js /
     // discovery/CompositeDiscoveryProvider.js), exactly as
     // ui/components/PublicationCatalog.js runs it.
     // ===============================================================
@@ -451,7 +451,7 @@ async function run() {
     // functionally (search returns synchronously, never a Promise).
     // ===============================================================
     {
-        const searchSource = await readSource('application/SearchPublicationsUseCase.js');
+        const searchSource = await readSource('application/publication/SearchPublicationsUseCase.js');
         const discoveryProviderSource = await readSource('discovery/DiscoveryProvider.js');
         const compositeSource = await readSource('discovery/CompositeDiscoveryProvider.js');
         const localDiscoverySource = await readSource('discovery/LocalDiscoveryProvider.js');
@@ -463,7 +463,7 @@ async function run() {
         // prose, precisely to disclaim doing any of it; a keyword sweep
         // would misfire on that disclaimer itself.
         for (const [name, source] of [
-            ['application/SearchPublicationsUseCase.js', searchSource],
+            ['application/publication/SearchPublicationsUseCase.js', searchSource],
             ['discovery/DiscoveryProvider.js', discoveryProviderSource],
             ['discovery/CompositeDiscoveryProvider.js', compositeSource],
             ['discovery/LocalDiscoveryProvider.js', localDiscoverySource],
@@ -662,7 +662,7 @@ async function run() {
         // assertion originally confirmed; see
         // tests/PublicationActionProviderContinuityFix.test.js for the
         // dedicated proof of the narrower capability.
-        const createWorldViewSource = await readSource('application/CreateWorldViewUseCase.js');
+        const createWorldViewSource = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(createWorldViewSource.includes('new LocalDiscoveryProvider(storageProvider)') &&
             /publicationActionDiscoveryProvider = decentralizedPublicationDiscoveryProvider/.test(createWorldViewSource),
             '3. AMENDED BY 0.9.597 — World Search\'s own, separate composition root (`discoveryProvider`) remains local-only and untouched; the decentralized provider is only ever composed into a SEPARATE `publicationActionDiscoveryProvider`.');

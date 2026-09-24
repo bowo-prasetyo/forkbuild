@@ -4,9 +4,9 @@ import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL, isValidArweav
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/ArweaveWorldEncounterMaterialResolver.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { composeWorldEncounterMaterialSources } from '../application/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
+import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { composeWorldEncounterMaterialSources } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialRuntimeComposition.js';
 
 // 0.9.364 — User-Configurable Arweave Gateway Retrieval Integration.
 // See docs/Roadmap.md, "0.9.364 — User-Configurable Arweave Gateway."
@@ -68,7 +68,7 @@ async function run() {
         });
         assert(contentStore instanceof ArweaveContentStore, 'A1. a usable signer still produces a real ArweaveContentStore');
         assert(contentStore.gatewayUrl === 'https://my-snapshot-gateway.example', 'A2. the configured gatewayUrl reaches the constructed ArweaveContentStore verbatim, through the unmodified composition function');
-        console.log('✓ Section A: a configured gatewayUrl reaches content/ArweaveContentStore.js through application/DiscoverSnapshotRuntimeComposition.js unmodified');
+        console.log('✓ Section A: a configured gatewayUrl reaches content/ArweaveContentStore.js through application/snapshot/DiscoverSnapshotRuntimeComposition.js unmodified');
     }
 
     // ===============================================================
@@ -91,7 +91,7 @@ async function run() {
         // is not just an accident of this one call.
         const resolver = new ArweaveWorldEncounterMaterialResolver({ gatewayUrl: 'https://my-material-gateway.example' });
         assert(resolver.gatewayUrl === 'https://my-material-gateway.example', 'B2. ArweaveWorldEncounterMaterialResolver itself accepts and exposes the configured gatewayUrl');
-        console.log('✓ Section B: a configured gatewayUrl reaches application/ArweaveWorldEncounterMaterialResolver.js through the real, unmodified composition chain');
+        console.log('✓ Section B: a configured gatewayUrl reaches application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js through the real, unmodified composition chain');
     }
 
     // ===============================================================

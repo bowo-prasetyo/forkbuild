@@ -1,15 +1,15 @@
 import { BasePublicationTransactionPlanner } from '../base/BasePublicationTransactionPlanner.js';
-import { BasePublicationTransactionPlanCoordinator } from '../application/BasePublicationTransactionPlanCoordinator.js';
-import { BasePublicationTransactionPlanState } from '../application/BasePublicationTransactionPlanState.js';
-import { BaseNetworkObservationState } from '../application/BaseNetworkObservationState.js';
-import { BaseAccountObservation } from '../application/BaseAccountObservation.js';
-import { describeBasePublicationTransactionReview } from '../application/BasePublicationTransactionReview.js';
+import { BasePublicationTransactionPlanCoordinator } from '../application/anchoring/base/BasePublicationTransactionPlanCoordinator.js';
+import { BasePublicationTransactionPlanState } from '../application/anchoring/base/BasePublicationTransactionPlanState.js';
+import { BaseNetworkObservationState } from '../application/anchoring/base/BaseNetworkObservationState.js';
+import { BaseAccountObservation } from '../application/anchoring/base/BaseAccountObservation.js';
+import { describeBasePublicationTransactionReview } from '../application/anchoring/base/BasePublicationTransactionReview.js';
 import { BaseTransactionSigner } from '../base/BaseTransactionSigner.js';
 import { BaseReviewedTransactionSigner } from '../base/BaseReviewedTransactionSigner.js';
 import { BaseInjectedProviderWalletTransactionSigner } from '../base/BaseInjectedProviderWalletTransactionSigner.js';
-import { BaseReviewedSigningCoordinator } from '../application/BaseReviewedSigningCoordinator.js';
-import { BaseReviewedSigningState, isValidBaseReviewedSigningState } from '../application/BaseReviewedSigningState.js';
-import { describeBaseReviewedSigning, describeBaseReviewedSigningStateLabel } from '../application/BaseReviewedSigningView.js';
+import { BaseReviewedSigningCoordinator } from '../application/anchoring/base/BaseReviewedSigningCoordinator.js';
+import { BaseReviewedSigningState, isValidBaseReviewedSigningState } from '../application/anchoring/base/BaseReviewedSigningState.js';
+import { describeBaseReviewedSigning, describeBaseReviewedSigningStateLabel } from '../application/anchoring/base/BaseReviewedSigningView.js';
 
 // 0.8.93 — Explicit Base Reviewed Transaction Signing.
 //

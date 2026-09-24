@@ -9,16 +9,16 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import {
     WorldCommandPropagationUseCase,
     WorldOperationRejectionReason
-} from '../application/WorldCommandPropagationUseCase.js';
+} from '../application/document/WorldCommandPropagationUseCase.js';
 import {
     toWorldOperationEnvelope,
     isValidWorldOperationEnvelope
@@ -37,7 +37,7 @@ import {
 //
 //   Section A: core/WorldOperationEnvelope.js — the closed wire shape in
 //              isolation.
-//   Section B: application/WorldCommandPropagationUseCase.js's own
+//   Section B: application/document/WorldCommandPropagationUseCase.js's own
 //              constructor — every collaborator is required, exactly like
 //              every other protocol use case in this codebase.
 //   Section C: FLAGSHIP — Alice and Bob both hold independent replicas of

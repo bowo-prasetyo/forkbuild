@@ -6,7 +6,7 @@ import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEnt
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/claimSnapshotReconciliation/revalidationObservation/History.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.183 — Reconciliation Candidate Leaderboard Comparison State.
 //

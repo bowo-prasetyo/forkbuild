@@ -12,16 +12,16 @@ import { LocalContentResolver } from '../discovery/LocalContentResolver.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { AddPublicationSnapshotPlacementUseCase } from '../application/AddPublicationSnapshotPlacementUseCase.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
-import { SnapshotPlacementLifecycleState } from '../application/SnapshotPlacementLifecycleState.js';
-import { createResolutionObservation } from '../application/SnapshotPlacementResolutionObservation.js';
+import { AddPublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
+import { SnapshotPlacementLifecycleState } from '../application/snapshot/placement/SnapshotPlacementLifecycleState.js';
+import { createResolutionObservation } from '../application/snapshot/placement/SnapshotPlacementResolutionObservation.js';
 import {
     deriveSnapshotPlacementLifecycle, describeSnapshotPlacementLifecycleNote
-} from '../application/SnapshotPlacementLifecycleView.js';
-import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
+} from '../application/snapshot/placement/SnapshotPlacementLifecycleView.js';
+import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
 
 // 0.8.26 — Snapshot Placement Lifecycle & Stale Availability Semantics.
 //
@@ -55,10 +55,10 @@ import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/Creat
 //              resolve the SAME placement under DIFFERENT external
 //              conditions and reach different, non-shared results;
 //              neither touches the placement or a shared catalog.
-//   Section F: application/SnapshotPlacementLifecycleView.js and
-//              application/SnapshotPlacementResolutionObservation.js
+//   Section F: application/snapshot/placement/SnapshotPlacementLifecycleView.js and
+//              application/snapshot/placement/SnapshotPlacementResolutionObservation.js
 //              exercised directly as pure functions, covering every
-//              application/SnapshotPlacementResolutionOutcome.js value.
+//              application/snapshot/placement/SnapshotPlacementResolutionOutcome.js value.
 //
 // See docs/Principles.md, "A Resolution Result Describes Whether Bytes
 // Can Be Retrieved Now; It Does Not Rewrite The Placement Claim
@@ -481,7 +481,7 @@ async function run() {
         assert(observation.observedAt instanceof Date, '50. observedAt defaults to a real Date when omitted');
         assert(Object.isFrozen(observation), '51. a resolution observation is immutable once created');
     }
-    console.log('✓ Section F: application/SnapshotPlacementLifecycleView.js and application/SnapshotPlacementResolutionObservation.js exercised directly as pure functions, covering every SnapshotPlacementResolutionOutcome value');
+    console.log('✓ Section F: application/snapshot/placement/SnapshotPlacementLifecycleView.js and application/snapshot/placement/SnapshotPlacementResolutionObservation.js exercised directly as pure functions, covering every SnapshotPlacementResolutionOutcome value');
 
     console.log('\nAll Snapshot Placement Lifecycle & Stale Availability Semantics tests passed.');
 }

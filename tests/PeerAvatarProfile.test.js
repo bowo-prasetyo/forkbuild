@@ -1,15 +1,15 @@
 import { AvatarProfileVisibilityPolicy } from '../core/AvatarProfileVisibilityPolicy.js';
 import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarProfileSyncService } from '../application/AvatarProfileSyncService.js';
-import { RemoteAvatarAppearanceRegistry } from '../application/RemoteAvatarAppearanceRegistry.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarProfileSyncService } from '../application/avatar/AvatarProfileSyncService.js';
+import { RemoteAvatarAppearanceRegistry } from '../application/avatar/RemoteAvatarAppearanceRegistry.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { toAvatarProfileAdvertisement } from '../core/AvatarProfileAdvertisement.js';
-import { signAvatarProfileAdvertisement } from '../application/AvatarProfileSigning.js';
+import { signAvatarProfileAdvertisement } from '../application/avatar/AvatarProfileSigning.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -17,11 +17,11 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -29,7 +29,7 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { License, LicenseId } from '../core/License.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
@@ -42,8 +42,8 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 // proved here for profile: core/AvatarProfile.js, core/
 // AvatarProfileAdvertisement.js, core/AvatarProfileIngestion.js,
 // core/AvatarProfileEquivocation.js, application/
-// AvatarProfileTrustBoundary.js, application/AvatarProfileSigning.js,
-// application/LocalAvatarProfileStore.js, and application/
+// AvatarProfileTrustBoundary.js, application/avatar/AvatarProfileSigning.js,
+// application/avatar/LocalAvatarProfileStore.js, and application/
 // RemoteAvatarAppearanceRegistry.js are every one of them completely
 // untouched by this milestone — never re-tested here, already proven
 // (unmodified) in tests/AvatarAppearanceSync.test.js over

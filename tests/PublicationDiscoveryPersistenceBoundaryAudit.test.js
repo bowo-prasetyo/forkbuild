@@ -4,19 +4,19 @@ import { execSync } from 'node:child_process';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -142,9 +142,9 @@ function makePublication({ id, documentId, title, author = 'alice', contentHash 
     return publication;
 }
 
-// Publishes a Publication through the REAL application/PublicationResolver.js
+// Publishes a Publication through the REAL application/publication/PublicationResolver.js
 // pipeline (envelope signed + content bytes stored) and catalogs the
-// resulting envelope into the REAL application/LocalPublicationCatalog.js —
+// resulting envelope into the REAL application/publication/LocalPublicationCatalog.js —
 // exactly the two durable writes that happen, in this order, before
 // ui/views/DecentralizedPublicationsView.js's own resolveEntry() /
 // admitToRepositoryDiscovery() ever runs. Returns the original Publication
@@ -160,16 +160,16 @@ async function publishAndCatalog(resolver, catalog, fixture, identityProvider) {
 
 // THE SEAM THIS AUDIT IDENTIFIES: a fresh discovery index rebuilt purely
 // from durable storage, using ONLY existing, unmodified production
-// classes — application/LocalPublicationCatalog.js (durable envelopes),
+// classes — application/publication/LocalPublicationCatalog.js (durable envelopes),
 // content/LocalContentStore.js (durable bytes), application/
-// PublicationResolver.js + application/PublicationResolutionCoordinator.js
+// PublicationResolver.js + application/publication/PublicationResolutionCoordinator.js
 // (the same ten-step verification pipeline every existing admission call
-// site already runs), and application/PublicationResolutionView.js's own
+// site already runs), and application/publication/PublicationResolutionView.js's own
 // resolvePublicationView() — the exact function
 // ui/views/DecentralizedPublicationsView.js#resolveEntry() already calls.
 // `peerContentExchange` is deliberately never constructed here (see
 // Section K): reconstruction never asks a peer for anything, exactly the
-// restraint application/PublicationResolutionCoordinator.js's own header
+// restraint application/publication/PublicationResolutionCoordinator.js's own header
 // already documents as this class's central restraint applied to peer
 // retrieval generally.
 async function reconstructDiscoveryProvider(storage, kindPlugins) {
@@ -243,7 +243,7 @@ async function run() {
         // durable material FROM WHICH provider2 could still be rebuilt?
         const catalog2 = new LocalPublicationCatalog(storage);
         assert(catalog2.get(view1.publication.id) !== null,
-            '5. YES — application/LocalPublicationCatalog.js, read fresh against the SAME storage, still holds the envelope this Publication was admitted through. The gap is a missing INDEX, not a missing FACT.');
+            '5. YES — application/publication/LocalPublicationCatalog.js, read fresh against the SAME storage, still holds the envelope this Publication was admitted through. The gap is a missing INDEX, not a missing FACT.');
 
         console.log('✓ Section A: 0.9.606\'s own session-boundary failure reproduces identically through the real admission pipeline (never merely a hand-seeded Publication) — and the durable catalog entry the Publication came from is confirmed to survive the same boundary that erases the discovery index.');
     }
@@ -264,7 +264,7 @@ async function run() {
         assert(/entry\.view = await resolvePublicationView\(entry\.publication, \{ coordinator, kindPlugins \}\);/.test(siblingSource),
             '2. ui/views/DecentralizedPublicationsView.js\'s own resolveEntry() resolves FROM entry.publication — a catalog entry, never a value it invented itself.');
         assert(/const current = catalog\.list\(\);/.test(siblingSource),
-            '3. ...and entry.publication itself comes from catalog.list() — application/LocalPublicationCatalog.js, a durable, storageProvider-backed class.');
+            '3. ...and entry.publication itself comes from catalog.list() — application/publication/LocalPublicationCatalog.js, a durable, storageProvider-backed class.');
 
         // B3. Live proof, not merely structural: destroy every in-memory
         // object from a first "session" and confirm the catalog entry
@@ -282,7 +282,7 @@ async function run() {
         assert(revived !== null && revived.contentReference.hash === envelope.contentReference.hash,
             '4. a freshly constructed LocalPublicationCatalog, with no reference to any object from "session 1," still returns the identical envelope by id — durable, not merely resident in the object that first created it.');
 
-        console.log('✓ Section B: admitToRepositoryDiscovery() persists nothing itself, but what it is handed already traces to application/LocalPublicationCatalog.js — durable, storageProvider-backed, and independently re-readable with no access to any "session 1" object.');
+        console.log('✓ Section B: admitToRepositoryDiscovery() persists nothing itself, but what it is handed already traces to application/publication/LocalPublicationCatalog.js — durable, storageProvider-backed, and independently re-readable with no access to any "session 1" object.');
     }
 
     // ===============================================================
@@ -361,7 +361,7 @@ async function run() {
         // catalog entry, applied to every entry at once.
         const { provider } = await reconstructDiscoveryProvider(storage, kindPlugins);
         assert(provider.list().length === 1 && provider.findById('d-pub') !== null,
-            '2. reconstructDiscoveryProvider() — built from nothing but application/LocalPublicationCatalog.js, content/LocalContentStore.js, application/PublicationResolver.js, application/PublicationResolutionCoordinator.js, and application/PublicationResolutionView.js#resolvePublicationView() — repopulates the index from durable storage alone.');
+            '2. reconstructDiscoveryProvider() — built from nothing but application/publication/LocalPublicationCatalog.js, content/LocalContentStore.js, application/publication/PublicationResolver.js, application/publication/PublicationResolutionCoordinator.js, and application/publication/PublicationResolutionView.js#resolvePublicationView() — repopulates the index from durable storage alone.');
 
         console.log('✓ Section D: durable admission and the ephemeral discovery index are two separable facts. Rebuilding the index needs no new persistence and no new class — only re-running, for every catalog entry, the exact resolution call ui/views/DecentralizedPublicationsView.js#resolveEntry() already makes for one entry at a time.');
     }
@@ -473,7 +473,7 @@ async function run() {
         const tamperedView = views.find((v) => v.publication && v.publication.id === tamperedEnvelopeSource.id);
         assert(tamperedView && tamperedView.outcome === PublicationResolutionOutcome.INVALID_PUBLICATION_SIGNATURE, '8. the tampered-envelope case reports INVALID_PUBLICATION_SIGNATURE, not a silent pass.');
 
-        console.log('✓ Section F: reconstruction runs the FULL, unmodified application/PublicationResolver.js ten-step discipline for every catalog entry — missing material, corrupted/malformed bytes, an incomplete record, and a tampered envelope signature are each independently refused, with a specific reason, never silently trusted because the entry happened to be persisted.');
+        console.log('✓ Section F: reconstruction runs the FULL, unmodified application/publication/PublicationResolver.js ten-step discipline for every catalog entry — missing material, corrupted/malformed bytes, an incomplete record, and a tampered envelope signature are each independently refused, with a specific reason, never silently trusted because the entry happened to be persisted.');
     }
 
     // ===============================================================
@@ -547,7 +547,7 @@ async function run() {
         const { envelope: p4Envelope } = await publishAndCatalog(resolver, catalog, { id: 'h-p4', documentId: 'h-p4-doc', title: 'Rejected' }, heidi);
         // P4: corrupt its bytes after cataloging — the realistic
         // "arrived via peer exchange (envelope verified), but content
-        // integrity fails" case application/PublicationPeerExchange.js's
+        // integrity fails" case application/publication/PublicationPeerExchange.js's
         // own "validate -> construct -> verify -> catalog" discipline
         // does NOT already rule out, since it verifies only the
         // ENVELOPE's signature, never the wrapped content's own hash.
@@ -711,7 +711,7 @@ async function run() {
         const constructionIndex = mainSource.indexOf('const decentralizedPublicationDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();');
         const nearbyWindow = mainSource.slice(constructionIndex, constructionIndex + 2000);
         assert(/new ReconstructPublicationDiscoveryUseCase\(\s*publicationCatalog, publicationResolutionCoordinator, publicationDisplayKindPlugins, decentralizedPublicationDiscoveryProvider\s*\)\.execute\(\);/.test(nearbyWindow),
-            '3. a reconstruction call now exists immediately at this construction site — application/ReconstructPublicationDiscoveryUseCase.js, wired by 0.9.608, populating this SAME provider instance from the SAME publicationCatalog/publicationResolutionCoordinator/publicationDisplayKindPlugins this file already composed. The seam this Section identified is no longer merely identified — it is wired.');
+            '3. a reconstruction call now exists immediately at this construction site — application/publication/ReconstructPublicationDiscoveryUseCase.js, wired by 0.9.608, populating this SAME provider instance from the SAME publicationCatalog/publicationResolutionCoordinator/publicationDisplayKindPlugins this file already composed. The seam this Section identified is no longer merely identified — it is wired.');
 
         // J3. The ownership-semantics argument for WHERE reconstruction
         // belongs: 0.9.337's own "one instance, threaded everywhere"
@@ -744,7 +744,7 @@ async function run() {
         assert(/new PublicationResolutionCoordinator\(resolver, null\)/.test(reconstructBody),
             '1. reconstruction constructs its PublicationResolutionCoordinator with peerContentExchange explicitly null.');
         assert(!/peer:|peers:/.test(reconstructBody),
-            '2. resolvePublicationView() is called with no `peer`/`peers` option anywhere in reconstruction — per application/PublicationResolutionCoordinator.js\'s own header, omitting both means peer retrieval never runs at all, for any candidate.');
+            '2. resolvePublicationView() is called with no `peer`/`peers` option anywhere in reconstruction — per application/publication/PublicationResolutionCoordinator.js\'s own header, omitting both means peer retrieval never runs at all, for any candidate.');
 
         // K2. Live proof: a catalog entry whose bytes live ONLY on a
         // backend this replica's own local ContentStore never received
@@ -797,9 +797,9 @@ async function run() {
         // — recorded, not silently folded into the same verdict.
         const localSource = await readSource('discovery/LocalDiscoveryProvider.js');
         assert(/return this\._storageProvider\.load\(PUBLICATIONS_KEY\) \|\| \[\];/.test(localSource),
-            '2. a LOCALLY-published Publication (ui/components/WorldEncounterCanvas.js\'s own "local"-origin World Encounter admission, via application/LocalWorldEncounterMaterialSource.js) resolves through discovery/LocalDiscoveryProvider.js, which re-reads durable storage FRESH on every construction — never affected by 0.9.606\'s own gap in the first place; NOT a reconstruction problem, because no ephemeral index sits in front of it to begin with.');
+            '2. a LOCALLY-published Publication (ui/components/WorldEncounterCanvas.js\'s own "local"-origin World Encounter admission, via application/worldEncounter/LocalWorldEncounterMaterialSource.js) resolves through discovery/LocalDiscoveryProvider.js, which re-reads durable storage FRESH on every construction — never affected by 0.9.606\'s own gap in the first place; NOT a reconstruction problem, because no ephemeral index sits in front of it to begin with.');
 
-        const peerSource = await readSource('application/PeerWorldEncounterMaterialSource.js');
+        const peerSource = await readSource('application/worldEncounter/PeerWorldEncounterMaterialSource.js');
         assert(/never persists what it retrieves|A RESOLVED SELECTION NAMES A PEER/.test(peerSource) || peerSource.includes('this class only ever'),
             '3. a PEER-origin World Encounter admission is backed by no durable catalog or content store at all, by an existing, deliberate, already-documented "peer material sources never persist what they retrieve" family rule (0.9.329/0.9.473 lineage) — this is NETWORK_REDISCOVERY_BOUNDARY territory for that one specific sub-path: recovering it after a restart would require re-asking the peer, a genuinely different capability this audit does not recommend building, consistent with "no network fan-out or automatic rediscovery" in the Deliberately Excluded list.');
 
@@ -816,12 +816,12 @@ async function run() {
         assert(changedFiles.length === 0,
             `4. this audit touches NO production file (found: ${JSON.stringify(changedFiles)}) — it only reads existing source and constructs real, unmodified production classes to prove reconstruction is possible without changing anything.`);
     }
-    console.log('✓ Section L: ALREADY_PERSISTED_RECONSTRUCTION_GAP for the decentralized-envelope admission path that produced 0.9.606\'s own finding — every fact needed to reconstruct already survives, durably, in application/LocalPublicationCatalog.js and content/LocalContentStore.js. The locally-published admission path was never affected (discovery/LocalDiscoveryProvider.js already re-reads storage fresh). The peer-origin World Encounter admission path is a separate, deliberate, pre-existing NETWORK_REDISCOVERY_BOUNDARY, explicitly not recommended for this milestone. No production file was touched.');
+    console.log('✓ Section L: ALREADY_PERSISTED_RECONSTRUCTION_GAP for the decentralized-envelope admission path that produced 0.9.606\'s own finding — every fact needed to reconstruct already survives, durably, in application/publication/LocalPublicationCatalog.js and content/LocalContentStore.js. The locally-published admission path was never affected (discovery/LocalDiscoveryProvider.js already re-reads storage fresh). The peer-origin World Encounter admission path is a separate, deliberate, pre-existing NETWORK_REDISCOVERY_BOUNDARY, explicitly not recommended for this milestone. No production file was touched.');
 
     console.log('\nAll Publication Discovery Persistence Boundary Audit tests passed.');
     console.log('\n=== 0.9.607 VERDICT ===');
     console.log('ALREADY_PERSISTED_RECONSTRUCTION_GAP. A Repository-admitted Publication\'s durable identity already survives');
-    console.log('every session boundary, unconditionally, in application/LocalPublicationCatalog.js (the signed envelope) and');
+    console.log('every session boundary, unconditionally, in application/publication/LocalPublicationCatalog.js (the signed envelope) and');
     console.log('content/LocalContentStore.js (the wrapped bytes) — the exact same durable storage PlacementRecord already uses.');
     console.log('The gap 0.9.606 found is a missing INDEX, not a missing FACT: discovery/DecentralizedPublicationDiscoveryProvider.js');
     console.log('is never repopulated from that durable source when a fresh instance is constructed. Reconstruction is possible');

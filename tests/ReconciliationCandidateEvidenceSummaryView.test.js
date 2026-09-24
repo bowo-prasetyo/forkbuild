@@ -5,7 +5,7 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceSummary,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceSummary
 } from '../application/claimSnapshotReconciliation/candidate/EvidenceSummaryView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.175 — Reconciliation Candidate Evidence Summary Projection.
 //

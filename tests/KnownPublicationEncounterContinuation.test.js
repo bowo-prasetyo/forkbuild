@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 

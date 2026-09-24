@@ -1,10 +1,10 @@
-import { BaseAnchorPublicationRecord } from '../application/BaseAnchorPublicationRecord.js';
-import { describeBaseAnchorPublicationObservations } from '../application/BaseAnchorPublicationObservation.js';
-import { describeBaseAnchorPublicationObservationProjection } from '../application/BaseAnchorPublicationObservationView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { BaseTransactionInclusionObservationState } from '../application/BaseTransactionInclusionObservationState.js';
+import { BaseAnchorPublicationRecord } from '../application/anchoring/base/BaseAnchorPublicationRecord.js';
+import { describeBaseAnchorPublicationObservations } from '../application/anchoring/base/BaseAnchorPublicationObservation.js';
+import { describeBaseAnchorPublicationObservationProjection } from '../application/anchoring/base/BaseAnchorPublicationObservationView.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { BaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 
 // 0.8.100 — Publication Identity–Scoped Observation Correlation.
 //
@@ -286,7 +286,7 @@ async function run() {
 
         assert(described.publication.contentHash === CONTENT_HASH && described.publication.txid === TX_A, '29. the described publication carries the identity fields unchanged');
         assert(described.observations.count === 1, '30. the described observations section carries the correct count');
-        assert(described.observations.observations[0].stateLabel === 'Transaction included', '31. the described observation reuses application/BaseTransactionInclusionObservationView.js\'s own, already-established labels — no new vocabulary');
+        assert(described.observations.observations[0].stateLabel === 'Transaction included', '31. the described observation reuses application/anchoring/base/BaseTransactionInclusionObservationView.js\'s own, already-established labels — no new vocabulary');
 
         assert(describeBaseAnchorPublicationObservationProjection(null) === null, '32. a null projection describes as null, never throwing');
     }

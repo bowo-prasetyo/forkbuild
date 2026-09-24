@@ -8,7 +8,7 @@ import { isValidAnimalSpecies } from './AnimalPresence.js';
 // itself rather than derived or session-local. Where a WorldLandmark
 // names a point of interest, an AnimalDecoration names "this species,
 // sitting right here" — the durable, publishable record of a released
-// animal (application/AnimalRuntimeInstances.js's own ephemeral,
+// animal (application/world/AnimalRuntimeInstances.js's own ephemeral,
 // session-local AnimalPresence) that a player has chosen to make part
 // of a World's own content, the way a brick or a StructurePlacement
 // already is.
@@ -29,13 +29,13 @@ import { isValidAnimalSpecies } from './AnimalPresence.js';
 // DECORATIVE ONLY, v1. An AnimalDecoration is inert World content, not
 // a live, catchable creature — nothing resolves it as a catch target
 // (core/AvatarAnimalCatchTarget.js only ever sees deterministic
-// wildlife and application/AnimalRuntimeInstances.js's own live,
+// wildlife and application/world/AnimalRuntimeInstances.js's own live,
 // session-local released animals, never a World's own decorations). A
 // real shared, catchable "world creature" — synced catch state across
 // every peer who loads this World, conflict resolution if two people
 // grab it at once — is a substantially bigger, separate feature this
 // milestone deliberately does not attempt; see
-// application/WorldNavigationSession.js#decorateNearestReleasedAnimalHere()'s
+// application/world/WorldNavigationSession.js#decorateNearestReleasedAnimalHere()'s
 // own header for where that line was drawn.
 //
 // species reuses core/AnimalPresence.js's own ANIMAL_SPECIES vocabulary

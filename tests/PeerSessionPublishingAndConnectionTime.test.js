@@ -4,17 +4,17 @@ import { PeerConnectionState } from '../peer/PeerConnectionState.js';
 import { LocalRendezvousNetwork } from '../peer/LocalRendezvousNetwork.js';
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { PeerSessionManager } from '../application/PeerSessionManager.js';
-import { FindPeerUseCase } from '../application/FindPeerUseCase.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
+import { FindPeerUseCase } from '../application/peer/FindPeerUseCase.js';
 
 // Two pieces of state ui/views/PeerConnectionsView.js used to keep on its
 // own, and lose on every remount, now read from app-wide objects instead:
 //
-//   - "connected for …" — application/ConnectedPeerRegistry.js#connectedSince
+//   - "connected for …" — application/peer/ConnectedPeerRegistry.js#connectedSince
 //     records when each connection attempt was added, and forgets it with
 //     the connection itself.
-//   - "Be Discoverable" — application/PeerSessionManager.js#isPublishing is
+//   - "Be Discoverable" — application/peer/PeerSessionManager.js#isPublishing is
 //     derived from the published offer's own connection: true only while
 //     that offer is still waiting for an answer and unexpired, false once
 //     one inbound connection consumes it (one publication answers at most

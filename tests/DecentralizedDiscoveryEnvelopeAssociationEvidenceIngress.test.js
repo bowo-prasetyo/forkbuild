@@ -2,14 +2,14 @@ import { readFile } from 'node:fs/promises';
 import {
     deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopes,
     deriveDecentralizedWorldEncounterLeadAssociationEvidenceFromEnvelopesFromRegistry
-} from '../application/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js';
+} from '../application/discovery/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
-import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 import {
     resolveDecentralizedWorldEncounterLead,
     DecentralizedWorldEncounterLeadResolutionStatus
-} from '../application/DecentralizedWorldEncounterLeadResolution.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 
 // 0.9.32 — Decentralized Discovery Envelope Association Evidence.
 //
@@ -226,7 +226,7 @@ function leadOf(overrides = {}) {
 // 7. Architectural regression.
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../application/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js', import.meta.url);
+    const sourceUrl = new URL('../application/discovery/DecentralizedDiscoveryEnvelopeAssociationEvidenceIngress.js', import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource
         .split('\n')

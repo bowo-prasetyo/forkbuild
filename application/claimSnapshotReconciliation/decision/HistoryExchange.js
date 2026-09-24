@@ -48,7 +48,7 @@ import { isPlainObject } from '../../../utils/typeGuards.js';
 // validated, never as re-derived.
 //
 // UNLIKE A SIGNED CLAIM, A DECISION CARRIES NO SIGNATURE — TRANSPORT NEVER
-// PRETENDS OTHERWISE. `application/PublisherLeaderboardSnapshotClaimExchange.js`'s
+// PRETENDS OTHERWISE. `application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js`'s
 // own import runs a structural signature check because a claim carries one;
 // a 0.8.145 decision record carries none — it is an explicit, unsigned,
 // local historical fact from the moment it was first recorded (0.8.145's own
@@ -90,7 +90,7 @@ import { isPlainObject } from '../../../utils/typeGuards.js';
 // retained. Only a decision that is EXACTLY identical in all three fields
 // to one already on file is recognized as "the same decision received
 // twice" and contributes no second copy on `applyXxx()` — the identical
-// receipt-identity discipline `application/PublisherLeaderboardClaimHistoryExchange.js`'s
+// receipt-identity discipline `application/leaderboard/PublisherLeaderboardClaimHistoryExchange.js`'s
 // own header already establishes one layer down, over transported claim
 // receipts instead of transported decisions. This is a DELIBERATE, narrow
 // departure from 0.8.146's own "never deduplicated" LOCAL append rule —
@@ -113,12 +113,12 @@ import { isPlainObject } from '../../../utils/typeGuards.js';
 // `'OBSERVE'` or `'DEFER'`, and that `decidedAt` is a genuine, parseable
 // timestamp string. It never asks whether the candidate genuinely exists in
 // any replica's own current plan, never touches
-// `application/PublicationObservationArchive.js` or any other durable
+// `application/publication/observationArchive/PublicationObservationArchive.js` or any other durable
 // store, and never reads a claim history, a snapshot sequence, or a
 // verifier of any kind. A structurally malformed entry is an explicit,
 // per-entry outcome — reported by index and reason in `rejections` — never
 // fatal to the rest of an otherwise genuine payload, mirroring
-// `application/PublisherLeaderboardClaimHistoryExchange.js`'s own tolerance
+// `application/leaderboard/PublisherLeaderboardClaimHistoryExchange.js`'s own tolerance
 // for one malformed claim receipt deep inside an otherwise genuine history.
 // Only the top-level envelope itself (`protocolVersion`/`decisions` shape)
 // is atomic — a malformed envelope rejects the WHOLE payload
@@ -132,7 +132,7 @@ import { isPlainObject } from '../../../utils/typeGuards.js';
 // (0.8.146, UNCHANGED) — never a hand-rolled `[...history, decision]` of its
 // own. It never hands anything back to the sender; two replicas wanting to
 // fully converge run the identical exchange in both directions, exactly as
-// `application/PublisherLeaderboardClaimHistoryExchange.js`'s own header
+// `application/leaderboard/PublisherLeaderboardClaimHistoryExchange.js`'s own header
 // already documents one layer down.
 //
 // A VALID IMPORT DOES NOT MEAN THE DECISION IS CORRECT — ONLY THAT IT IS
@@ -156,7 +156,7 @@ import { isPlainObject } from '../../../utils/typeGuards.js';
 // `application/claimSnapshotReconciliation/ReconciliationCandidate.js`,
 // `application/claimSnapshotReconciliation/PlanView.js`,
 // `application/claimSnapshotReconciliation/decision/HistoryDifference.js`,
-// or `application/PublicationObservationArchive.js` — it trusts nothing
+// or `application/publication/observationArchive/PublicationObservationArchive.js` — it trusts nothing
 // about how a decision record was produced beyond its own documented shape,
 // and never calls 0.8.144, 0.8.145, or 0.8.149 to re-derive, re-select, or
 // double-check anything.
@@ -168,7 +168,7 @@ import { isPlainObject } from '../../../utils/typeGuards.js';
 //   0.8.149's own difference projection and this file's own exchange —
 //   never duplicated here.
 // - **Any archive integration.** Neither function here reads or writes
-//   `application/PublicationObservationArchive.js` — a caller who keeps its
+//   `application/publication/observationArchive/PublicationObservationArchive.js` — a caller who keeps its
 //   decision history durably via 0.8.150 owns reading it out and writing
 //   the merged result back in as its own, separate steps.
 // - **Verification, authorization, or approval of any kind.** See "Unlike

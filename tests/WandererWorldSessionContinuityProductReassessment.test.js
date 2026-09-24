@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
@@ -17,23 +17,23 @@ import { DecentralizedPublicationDiscoveryProvider } from '../discovery/Decentra
 import { WorldFocusKind } from '../core/WorldFocusContext.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
 import {
     registerMaterializedSnapshotWorldSource
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { WorldEncounterMaterialSource } from '../application/WorldEncounterMaterialLoading.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { WorldEncounterMaterialSource } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import {
     WorldEncounterMaterialVerifier,
     WorldEncounterMaterialVerificationStatus
-} from '../application/WorldEncounterMaterialVerification.js';
-import { inspectWorldEncounterMaterial } from '../application/WorldEncounterMaterialInspection.js';
+} from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { inspectWorldEncounterMaterial } from '../application/worldEncounter/WorldEncounterMaterialInspection.js';
 import {
     PublicationMaterialProvenanceOrigin,
     describePublicationMaterialProvenanceFromInspection
-} from '../application/PublicationMaterialProvenance.js';
+} from '../application/publication/distribution/PublicationMaterialProvenance.js';
 import { worldNavigationSessionFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.535 — Wanderer World Session Continuity Product Reassessment.
@@ -55,7 +55,7 @@ import { worldNavigationSessionFiles, worldEncounterCanvasFiles } from './suppor
 // inspection" chain describes TWO structurally independent mechanisms this
 // codebase already keeps apart, never one:
 //
-//   application/WorldNavigationSession.js         ui/components/WorldEncounterCanvas.js
+//   application/world/WorldNavigationSession.js         ui/components/WorldEncounterCanvas.js
 //     "which Publication's World            "which placed object, if any,
 //      am I in" (focusDocument()/            is currently selected inside
 //      navigateToDocument(), the real         THIS World" (selectEncounter(),
@@ -300,7 +300,7 @@ async function main() {
         // than assumed to still hold.
         const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(!/WorldEncounter|selectedEncounter|resolvedEncounterSelection/.test(sessionSource),
-            '1. application/WorldNavigationSession.js names no World Encounter concept anywhere in its own source — session/camera state and encounter-selection state are two files, not two facets of one.');
+            '1. application/world/WorldNavigationSession.js names no World Encounter concept anywhere in its own source — session/camera state and encounter-selection state are two files, not two facets of one.');
 
         // A2. `core/WorldFocusContext.js`'s own "Info panel" focus
         // vocabulary is a THIRD, disjoint concept — it names no
@@ -453,9 +453,9 @@ async function main() {
         // C1. Structural correction: the movement layer never touches
         // Publication/encounter state, and the encounter layer never
         // gates on distance.
-        const movementSource = await readSource('application/AvatarMovementController.js');
+        const movementSource = await readSource('application/avatar/AvatarMovementController.js');
         assert(!/Publication|Encounter/.test(movementSource),
-            '1. application/AvatarMovementController.js names no Publication/Encounter concept anywhere — movement is physics/input only.');
+            '1. application/avatar/AvatarMovementController.js names no Publication/Encounter concept anywhere — movement is physics/input only.');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const canvasMethodsAndComputed = canvasSource.slice(canvasSource.indexOf('    computed: {'), canvasSource.indexOf('    template: `'));
         const codeOnlyMethods = canvasMethodsAndComputed.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -746,7 +746,7 @@ async function main() {
         canvas.selectEncounter({ kind: WorldEncounterKind.PUBLICATION, objectId: 'pub-g535-b' });
         await flush();
         assert(canvas.materialInspection.loading.status === 'UNAVAILABLE' && canvas.materialInspection.verification.status === WorldEncounterMaterialVerificationStatus.UNVERIFIABLE,
-            '2. B is temporarily unavailable — UNAVAILABLE loading collapses to UNVERIFIABLE, never REJECTED, exactly as application/WorldEncounterMaterialInspection.js already establishes.');
+            '2. B is temporarily unavailable — UNAVAILABLE loading collapses to UNVERIFIABLE, never REJECTED, exactly as application/worldEncounter/WorldEncounterMaterialInspection.js already establishes.');
 
         canvas.selectEncounter({ kind: WorldEncounterKind.PUBLICATION, objectId: pubA.id });
         await flush();

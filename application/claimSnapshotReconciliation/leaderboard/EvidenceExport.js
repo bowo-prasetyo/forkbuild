@@ -101,7 +101,7 @@ import {
 // A PURE, SELF-DESCRIBING, PORTABLE DOCUMENT — NO ENVELOPE BEYOND WHAT A
 // READER NEEDS TO INTERPRET IT LATER. Deliberately excluded from that
 // envelope: a timestamp for the act of exporting itself (see
-// `application/PublicationObservationArchiveExport.js`'s own identical
+// `application/publication/observationArchive/PublicationObservationArchiveExport.js`'s own identical
 // restraint, "no `exportedAt`" — exporting a copy of a fact is not a new
 // observation of it), a signature or hash of any kind, and any field this
 // file would have to invent rather than forward from an already-computed

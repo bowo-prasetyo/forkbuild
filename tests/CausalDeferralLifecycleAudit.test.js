@@ -10,32 +10,32 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateEditorContextUseCase } from '../application/CreateEditorContextUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CommandHistoryEvent } from '../application/events/CommandHistoryEvent.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { RenameGroupCommand } from '../application/commands/RenameGroupCommand.js';
 import {
     DocumentCommandPropagationUseCase,
     DocumentOperationRejectionReason
-} from '../application/DocumentCommandPropagationUseCase.js';
+} from '../application/document/DocumentCommandPropagationUseCase.js';
 import { DocumentOperationCausalGapDetector } from '../core/DocumentOperationCausalGapDetector.js';
-import { DocumentOperationCausalGapObservationUseCase } from '../application/DocumentOperationCausalGapObservationUseCase.js';
-import { DocumentOperationRecoveryUseCase } from '../application/DocumentOperationRecoveryUseCase.js';
-import { RecoveredOperationReplayUseCase } from '../application/RecoveredOperationReplayUseCase.js';
+import { DocumentOperationCausalGapObservationUseCase } from '../application/document/DocumentOperationCausalGapObservationUseCase.js';
+import { DocumentOperationRecoveryUseCase } from '../application/document/DocumentOperationRecoveryUseCase.js';
+import { RecoveredOperationReplayUseCase } from '../application/document/RecoveredOperationReplayUseCase.js';
 import {
     DocumentOperationDeferralUseCase,
     DocumentOperationDeferralOutcome
-} from '../application/DocumentOperationDeferralUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
+} from '../application/document/DocumentOperationDeferralUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
 import { DocumentOperationApplicationEligibility } from '../core/DocumentOperationApplicationEligibility.js';
 import {
     DocumentOperationApplicationReadiness,
@@ -151,7 +151,7 @@ function makeDeferralHarness(worldId, { groupName = 'Original' } = {}) {
     return { document, commandHistory, causalGapDetector, deferral, target, unattach };
 }
 
-// Mirrors production ordering exactly (application/EditorSession.js's own
+// Mirrors production ordering exactly (application/editor/EditorSession.js's own
 // 0.9.229 comment on receive ordering): a causal-gap OBSERVATION step
 // records an arriving operation's own causal identity (Q2) BEFORE
 // readiness (Q3/Q4) is ever evaluated for anything naming it as a
@@ -163,7 +163,7 @@ function receiveOperation(harness, { documentId, command, authorIdentityId = 'al
 }
 
 // A full, real, peer-authenticated propagation + recovery + replay stack,
-// wired exactly the way application/EditorSession.js wires them — the
+// wired exactly the way application/editor/EditorSession.js wires them — the
 // same helper shape tests/DocumentOperationDeferralUseCase.test.js's own
 // makeFullStack() and tests/CollaborationConsistencyPolicyCausalReadinessAudit.test.js's
 // own makeFullStack() already establish.

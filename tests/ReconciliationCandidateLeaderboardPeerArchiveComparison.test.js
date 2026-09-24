@@ -2,12 +2,12 @@ import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEnt
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservation } from '../application/claimSnapshotReconciliation/revalidationObservation/RevalidationObservation.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryEntry } from '../application/claimSnapshotReconciliation/revalidationObservation/History.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import {
     exportPublicationObservationArchive,
     importPublicationObservationArchive,
     PublicationObservationArchiveImportOutcome
-} from '../application/PublicationObservationArchiveExport.js';
+} from '../application/publication/observationArchive/PublicationObservationArchiveExport.js';
 
 // 0.8.181 — Explicit Peer Archive Leaderboard Comparison.
 //
@@ -93,7 +93,7 @@ const OBS_T3 = new Date('2026-08-31T12:10:00Z');
 const OBS_T4 = new Date('2026-08-31T12:15:00Z');
 
 // `selected: true` is part of 0.8.144's own genuine candidate shape (see
-// application/PublicationObservationArchive.js's own
+// application/publication/observationArchive/PublicationObservationArchive.js's own
 // `validateReconciliationDecisionCandidate()`) — required here, unlike in
 // 0.8.179's/0.8.180's own flagship consts, because Section B below sends
 // these candidates through a real `fromJSON()` round trip, which validates
@@ -279,7 +279,7 @@ async function run() {
         );
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("from '../../application/PublicationObservationArchiveExport.js'"), '23. the view imports 0.8.82\'s own archive export/import module');
+        assert(codeOnly.includes("from '../../application/publication/observationArchive/PublicationObservationArchiveExport.js'"), '23. the view imports 0.8.82\'s own archive export/import module');
         assert(/\bimportPublicationObservationArchive\b/.test(codeOnly), '24. the view uses 0.8.82\'s own importPublicationObservationArchive() — no second import/validation algorithm of its own');
         assert(codeOnly.includes('function usePeerArchive'), '25. the view defines its own explicit usePeerArchive() action');
         assert(codeOnly.includes('function clearPeerArchive'), '26. the view defines its own explicit clearPeerArchive() action, separate from usePeerArchive()');

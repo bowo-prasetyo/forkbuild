@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 
-import { resolveSnapshotWorldPositionClaim } from '../application/SnapshotWorldPositionClaim.js';
-import { SnapshotWorldPositionClaimOutcome } from '../application/SnapshotWorldPositionClaimOutcome.js';
+import { resolveSnapshotWorldPositionClaim } from '../application/snapshot/placement/SnapshotWorldPositionClaim.js';
+import { SnapshotWorldPositionClaimOutcome } from '../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
 import { describeSnapshotDiscoveryEnvelope } from '../core/SnapshotDiscoveryEnvelope.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { ArweaveSnapshotDiscoveryPublisher } from '../application/ArweaveSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { ArweaveSnapshotDiscoveryPublisher } from '../application/arweave/ArweaveSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.565 — Decentralized Publication Position Claim Distribution Boundary
@@ -20,11 +20,11 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // `core/SnapshotDiscoveryEnvelope.js` and both Snapshot discovery
 // publishers to carry an OPTIONAL `publicationId`/`claimedPosition` pair,
 // and 0.9.172 built a fully production-wired consumer
-// (`application/SnapshotWorldPositionClaim.js`,
+// (`application/snapshot/placement/SnapshotWorldPositionClaim.js`,
 // `ui/components/OwnPublicationPanel.js#useClaimedSnapshotPosition()`) —
 // but the one production call site that actually PUBLISHES a Snapshot
 // distribution (`ui/views/WorldView.js#distributeWorldEncounterSnapshot()`,
-// through `application/SnapshotDistributionCommand.js`) never supplies
+// through `application/snapshot/SnapshotDistributionCommand.js`) never supplies
 // either field. This audit traces that boundary exactly: which file drops
 // the claim, what the wire already supports, and whether the gap is a
 // missing product wire (small) or a missing architectural capability
@@ -58,7 +58,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //       (`ui/main.js`) never supplies one, because `executeSnapshotDistributionCommand()`
 //       has no parameter to carry it through.
 //   E — Arweave path, structural. The Arweave discovery-ANNOUNCEMENT
-//       publisher (`application/ArweaveSnapshotDiscoveryPublisher.js`)
+//       publisher (`application/arweave/ArweaveSnapshotDiscoveryPublisher.js`)
 //       supports the identical claim fields, but production
 //       (`ui/main.js`) never even constructs one for Snapshot
 //       distribution — only `ArweaveContentStore` (placement) and
@@ -102,17 +102,17 @@ async function run() {
     // Section A — Authoritative position source already exists.
     // =======================================================================
     {
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
         assert(/getPlacementInfoForPublication\(publicationId\)\s*\{/.test(sessionSource),
-            '1. application/WorldNavigationSession.js exposes getPlacementInfoForPublication(publicationId) — a publisher-side lookup keyed by the exact Publication identity a distribution claim would need to be bound to.');
+            '1. application/world/WorldNavigationSession.js exposes getPlacementInfoForPublication(publicationId) — a publisher-side lookup keyed by the exact Publication identity a distribution claim would need to be bound to.');
         assert(/getPlacementInfo\(documentId\)\s*\{/.test(sessionSource),
             '2. the sibling getPlacementInfo(documentId) also exists, confirming this file already computes a `{ placementId, publicationId, position }`-shaped record as an ordinary, everyday capability — never something this audit invents.');
 
-        const placementSource = await readSource('application/SnapshotWorldPlacement.js');
+        const placementSource = await readSource('application/snapshot/placement/SnapshotWorldPlacement.js');
         assert(/placementInfo`\s*IS DUCK-TYPED TO WorldNavigationSession#getPlacementInfo\(\)/i.test(placementSource),
-            '3. application/SnapshotWorldPlacement.js already documents this exact shape as its own placementInfo contract — the SAME shape a publisher-side claim would carry, confirming no new position-computation mechanism is needed.');
+            '3. application/snapshot/placement/SnapshotWorldPlacement.js already documents this exact shape as its own placementInfo contract — the SAME shape a publisher-side claim would carry, confirming no new position-computation mechanism is needed.');
     }
-    console.log('✓ Section A: the authoritative, already-shipped position computation this milestone traces is application/WorldNavigationSession.js#getPlacementInfoForPublication(publicationId) — no new spatial computation is missing.');
+    console.log('✓ Section A: the authoritative, already-shipped position computation this milestone traces is application/world/WorldNavigationSession.js#getPlacementInfoForPublication(publicationId) — no new spatial computation is missing.');
 
     // =======================================================================
     // Section B — The exact production boundary where the claim is dropped.
@@ -127,9 +127,9 @@ async function run() {
     // the fields this audit found dropped are now genuinely forwarded.
     // =======================================================================
     {
-        const commandSource = await readSource('application/SnapshotDistributionCommand.js');
+        const commandSource = await readSource('application/snapshot/SnapshotDistributionCommand.js');
         const runFnMatch = commandSource.match(/async function runSnapshotDistribution\([\s\S]*?\n\}/);
-        assert(runFnMatch, '1. application/SnapshotDistributionCommand.js#runSnapshotDistribution() exists as an isolable function.');
+        assert(runFnMatch, '1. application/snapshot/SnapshotDistributionCommand.js#runSnapshotDistribution() exists as an isolable function.');
         const runFnBody = runFnMatch[0];
         assert(/discoveryPublisher\.publish\(\{\s*contentHash:\s*contentReference\.hash,\s*locator:\s*contentReference\.uri,\s*storage:\s*contentReference\.storage,\s*publicationId,\s*claimedPosition\s*\}\)/.test(runFnBody),
             '2. (0.9.566) its own discoveryPublisher.publish() call site now supplies publicationId/claimedPosition alongside contentHash/locator/storage, forwarded unmodified from this function\'s own parameters.');
@@ -151,7 +151,7 @@ async function run() {
             && /placementInfo \? placementInfo\.position : undefined/.test(distributeFnBody),
             '8. (0.9.566) it now forwards placementInfo.publicationId/placementInfo.position into snapshotDistributionCommand() — both `undefined` (never a fabricated fallback) when this Publication has no placementInfo at all.');
     }
-    console.log('✓ Section B (FLAGSHIP, AMENDED BY 0.9.566): the claim is no longer dropped at either stacked point on the one real production path — application/SnapshotDistributionCommand.js now accepts and forwards publicationId/claimedPosition, and its only production caller, ui/views/WorldView.js#distributeWorldEncounterSnapshot(), now reads publication.id through session.getPlacementInfoForPublication() and forwards the result unmodified.');
+    console.log('✓ Section B (FLAGSHIP, AMENDED BY 0.9.566): the claim is no longer dropped at either stacked point on the one real production path — application/snapshot/SnapshotDistributionCommand.js now accepts and forwards publicationId/claimedPosition, and its only production caller, ui/views/WorldView.js#distributeWorldEncounterSnapshot(), now reads publication.id through session.getPlacementInfoForPublication() and forwards the result unmodified.');
 
     // =======================================================================
     // Section C — Announcement contracts already support the claim, live.
@@ -231,7 +231,7 @@ async function run() {
 
         // The CURRENT production shape: executeSnapshotDistributionCommand()
         // calling discoveryPublisher.publish() with only three fields,
-        // exactly as application/SnapshotDistributionCommand.js does today.
+        // exactly as application/snapshot/SnapshotDistributionCommand.js does today.
         const contentStore = { put: async () => ({ hash: 'hash-noclaim', uri: 'ar://tx-noclaim', storage: 'ar' }) };
         const { announcement } = await executeSnapshotDistributionCommand({
             bytes: 'irrelevant', contentStore, discoveryPublisher: publisher
@@ -255,7 +255,7 @@ async function run() {
         assert(!/new ArweaveSnapshotDiscoveryPublisher\(/.test(mainSource),
             '2. ui/main.js never constructs an ArweaveSnapshotDiscoveryPublisher — the WRITE side (announcing a Snapshot discovery envelope to Arweave, claim or no claim) is entirely unwired in production.');
 
-        const compositionSource = await readSource('application/SnapshotDistributionRuntimeComposition.js');
+        const compositionSource = await readSource('application/snapshot/SnapshotDistributionRuntimeComposition.js');
         assert(/import \{ NostrSnapshotDiscoveryPublisher \}/.test(compositionSource),
             '3. composeSnapshotDistributionRuntime() imports only the Nostr discovery publisher...');
         assert(!/ArweaveSnapshotDiscoveryPublisher/.test(compositionSource),
@@ -307,18 +307,18 @@ async function run() {
     // Section G — Authority boundary intact: no automatic placement anywhere.
     // =======================================================================
     {
-        const commandSource = await readSource('application/SnapshotDistributionCommand.js');
+        const commandSource = await readSource('application/snapshot/SnapshotDistributionCommand.js');
         assert(!/PlacementRecord|LocalPlacementRegistry|WorldPlacement/.test(commandSource),
-            '1. application/SnapshotDistributionCommand.js references no PlacementRecord, LocalPlacementRegistry, or WorldPlacement — distributing (or a future claim-carrying distribution) never places anything by itself.');
+            '1. application/snapshot/SnapshotDistributionCommand.js references no PlacementRecord, LocalPlacementRegistry, or WorldPlacement — distributing (or a future claim-carrying distribution) never places anything by itself.');
 
-        const nostrPublisherSource = await readSource('application/NostrSnapshotDiscoveryPublisher.js');
-        const arweavePublisherSource = await readSource('application/ArweaveSnapshotDiscoveryPublisher.js');
+        const nostrPublisherSource = await readSource('application/nostr/NostrSnapshotDiscoveryPublisher.js');
+        const arweavePublisherSource = await readSource('application/arweave/ArweaveSnapshotDiscoveryPublisher.js');
         for (const [name, source] of [['Nostr', nostrPublisherSource], ['Arweave', arweavePublisherSource]]) {
             assert(!/PlacementRecord|LocalPlacementRegistry/.test(source),
                 `2. the ${name} discovery publisher references no PlacementRecord/LocalPlacementRegistry either — announcing a claim is never itself a placement.`);
         }
 
-        const claimSource = await readSource('application/SnapshotWorldPositionClaim.js');
+        const claimSource = await readSource('application/snapshot/placement/SnapshotWorldPositionClaim.js');
         assert(/A PURE FUNCTION.*NO I\/O/i.test(claimSource) || /NO I\/O, NO CRYPTOGRAPHIC RE-VERIFICATION/i.test(claimSource),
             '3. resolveSnapshotWorldPositionClaim() documents itself as a pure, no-I/O decision function.');
         assert(!/PlacementRecord|LocalPlacementRegistry/.test(claimSource),
@@ -337,7 +337,7 @@ async function run() {
     // =======================================================================
     {
         const panelSource = await readSource('ui/components/OwnPublicationPanel.js');
-        assert(/import \{ resolveSnapshotWorldPositionClaim \} from '\.\.\/\.\.\/application\/SnapshotWorldPositionClaim\.js'/.test(panelSource),
+        assert(/import \{ resolveSnapshotWorldPositionClaim \} from '\.\.\/\.\.\/application\/snapshot\/placement\/SnapshotWorldPositionClaim\.js'/.test(panelSource),
             '1. ui/components/OwnPublicationPanel.js — a real, shipped production UI component — already imports the consumer function directly.');
         assert(/this\.selectedSnapshotWorldPositionClaimResult = resolveSnapshotWorldPositionClaim\(candidate, publication\.id\)/.test(panelSource),
             '2. ...and already calls it with a real selected discovery candidate and the real target Publication\'s own id — the exact call shape a genuinely-claim-bearing candidate would need.');
@@ -357,15 +357,15 @@ async function run() {
         '  CLASSIFICATION (AS OF 0.9.565): PRODUCT_GAP, not ARCHITECTURAL_GAP.\n\n' +
         '  Every primitive this feature needs already exists, is already tested, and (on the consumer side) is already\n' +
         '  shipped in production UI:\n' +
-        '    - the position source            (application/WorldNavigationSession.js#getPlacementInfoForPublication)\n' +
+        '    - the position source            (application/world/WorldNavigationSession.js#getPlacementInfoForPublication)\n' +
         '    - the wire contract              (core/SnapshotDiscoveryEnvelope.js, 0.9.171/0.9.498)\n' +
         '    - both discovery publishers      (Nostr 0.9.171, Arweave 0.9.498 — both proven live, Section C)\n' +
         '    - both discovery query services  (Nostr, Arweave — both already forward the claim, unmodified)\n' +
-        '    - the identity-safe consumer     (application/SnapshotWorldPositionClaim.js, 0.9.172)\n' +
+        '    - the identity-safe consumer     (application/snapshot/placement/SnapshotWorldPositionClaim.js, 0.9.172)\n' +
         '    - the production UI consumer     (ui/components/OwnPublicationPanel.js#useClaimedSnapshotPosition, Section H)\n\n' +
         '  What is missing is exactly two wiring points, both named exactly in Section B, plus one independent,\n' +
         '  narrower gap named in Section E:\n\n' +
-        '  1. application/SnapshotDistributionCommand.js does not accept or forward publicationId/claimedPosition to\n' +
+        '  1. application/snapshot/SnapshotDistributionCommand.js does not accept or forward publicationId/claimedPosition to\n' +
         '     discoveryPublisher.publish() — a small, optional-parameter addition, mirroring exactly how the two\n' +
         '     publishers themselves already added the identical pair as optional arguments in 0.9.171/0.9.498.\n' +
         '  2. ui/views/WorldView.js#distributeWorldEncounterSnapshot() does not read publication.id or call\n' +
@@ -380,7 +380,7 @@ async function run() {
         '  through an existing Nostr call, and bundling them risks widening a small, safe seam into a larger one.\n' +
         '  Consistent with 0.9.171\'s own original restraint, any such follow-up should remain a pure "carry an\n' +
         '  already-computed value one seam further" change — no new position algorithm, no automatic placement, no\n' +
-        '  change to application/SnapshotWorldPositionClaim.js, core/SnapshotDiscoveryEnvelope.js, or either\n' +
+        '  change to application/snapshot/placement/SnapshotWorldPositionClaim.js, core/SnapshotDiscoveryEnvelope.js, or either\n' +
         '  publisher, and no weakening of the explicit, person-initiated consumption gate proven intact in Section G.'
     );
 }

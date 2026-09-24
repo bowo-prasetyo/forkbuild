@@ -6,15 +6,15 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { CreateEditorContextUseCase } from '../application/CreateEditorContextUseCase.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { RegionKind } from '../core/RegionKind.js';
 import { WorldFocusKind, WorldFocusAction, deriveWorldFocusContext } from '../core/WorldFocusContext.js';
 import {
@@ -101,7 +101,7 @@ function makeIdentityProvider({ identityId = null, username = null } = {}) {
 }
 
 // Builds a small standalone Document (one Building, one Brick) — the
-// same shape application/ForkStructureUseCase.js's own fork produces:
+// same shape application/editor/ForkStructureUseCase.js's own fork produces:
 // a placed structure's OWN content document contains exactly its
 // bricks, nothing else.
 function makeStructureDocument(title, brickPosition) {
@@ -259,7 +259,7 @@ async function run() {
         assert(editorContext.selection.items[0].brickId === forkedBrickId, '23. ...and it\'s the FORK\'s own (freshly-minted) brick id, not the source\'s');
 
         // Camera framing — position + the same diagonal offset
-        // application/WorldNavigationSession.js#focusLocation() uses,
+        // application/world/WorldNavigationSession.js#focusLocation() uses,
         // target = the focused position itself.
         const cameraState = editorSession._session.getCameraState();
         assert(cameraState.target.x === 40 && cameraState.target.z === -15, '24. the camera target is the Barn\'s own position');

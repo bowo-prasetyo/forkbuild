@@ -7,7 +7,7 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { License, LicenseId } from '../core/License.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -15,18 +15,18 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
-import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
-import { DiscoverWorldsUseCase } from '../application/DiscoverWorldsUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
+import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
+import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.198 — Publication Unpublish/Retract UI Action.
@@ -34,7 +34,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // 0.9.197 closed the World-placement half of 0.9.196's own Section C gap
 // ("can a Wanderer or Publisher take a material BACK OUT of the World,
 // once it is out there?"); this milestone closes the other half.
-// `application/UnpublishDocumentUseCase.js` already existed, was already
+// `application/publication/UnpublishDocumentUseCase.js` already existed, was already
 // correct (tests/PublicationLifecycle.test.js's own invariants 5/6 and
 // flagship already prove it), and was reachable from precisely nowhere a
 // Publisher could click. This milestone's ONLY production change is
@@ -330,7 +330,7 @@ async function runTests() {
         // own Section B and 0.9.197's own structural sweep already
         // apply) — so this checks the CODE only, never the comments that
         // explain the boundary.
-        const unpublishUseCaseSource = await rawSource('application/UnpublishDocumentUseCase.js');
+        const unpublishUseCaseSource = await rawSource('application/publication/UnpublishDocumentUseCase.js');
         const unpublishUseCaseCode = codeOnlyLines(unpublishUseCaseSource).join('\n');
         assert(!/Snapshot|Nostr|Arweave|Bitcoin|Anchor|Distribution|Placement/i.test(unpublishUseCaseCode),
             '3. UnpublishDocumentUseCase.js\'s own CODE carries no Snapshot/Nostr/Arweave/Anchor/Distribution/Placement vocabulary at all — it cannot withdraw decentralized content or touch a placement because it has no path to reach either');
@@ -357,7 +357,7 @@ async function runTests() {
         // file's own header does exactly that, in prose, to explain the
         // restraint) — same "prose vs. code" distinction Section E's own
         // sweep already applies, so this checks the CODE only.
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
         assert(!/isUnpublished|publicationRemoved/i.test(codeOnlyLines(sessionSource).join('\n')),
             '3. WorldNavigationSession.js introduces no isUnpublished/publicationRemoved vocabulary in code — the existing getPublicationForDocument()/getPlacementInfo() read models remain the sole source of truth');
         const panelSource = await rawSource('ui/components/OwnPublicationPanel.js');
@@ -394,7 +394,7 @@ async function runTests() {
         assert(removed === true, '1. a session authenticated as a DIFFERENT identity (bob) can still retract alice\'s Publication — session.unpublishDocument() enforces no ownership check UnpublishDocumentUseCase itself does not already skip');
         assert(discoveryProvider.findById(pub.id) === null, '2. the retraction genuinely took effect');
 
-        const sessionSource = await rawSource('application/WorldNavigationSession.js');
+        const sessionSource = await rawSource('application/world/WorldNavigationSession.js');
         const unpublishBody = sessionSource.match(/unpublishDocument\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/);
         assert(unpublishBody, '3. unpublishDocument() method body is found');
         assert(!/owner|ownedByCurrentUser|currentUser/i.test(unpublishBody[1]),
@@ -426,7 +426,7 @@ async function runTests() {
         assert(/session\.unpublishDocument\(/.test(handlerMatch[1]),
             '5. unpublishOwnPublication() calls session.unpublishDocument() — the UI requests retraction, WorldNavigationSession/UnpublishDocumentUseCase remain the sole authority that performs it');
 
-        const unpublishBodySource = await rawSource('application/WorldNavigationSession.js');
+        const unpublishBodySource = await rawSource('application/world/WorldNavigationSession.js');
         const unpublishBody = unpublishBodySource.match(/unpublishDocument\(documentId[^)]*\)\s*\{([\s\S]*?)\n {4}\}/)[1];
         assert(!/Snapshot|Nostr|Arweave|spatialIndexProvider|placementRegistry|removeWorldPlacementUseCase/i.test(unpublishBody),
             '6. unpublishDocument()\'s own body touches only publication resolution and UnpublishDocumentUseCase — no Snapshot/Nostr/Arweave/spatial/placement call sites, confirming it never removes a placement itself');

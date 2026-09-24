@@ -9,7 +9,7 @@
 //
 // "Move" has no button here — dragging the instance in the viewport (or
 // the existing arrow-key/PgUp/PgDn nudge actions, which already work for
-// a placement selection via application/EditorSession.js#moveSelection())
+// a placement selection via application/editor/EditorSession.js#moveSelection())
 // IS the move gesture; a button that nudges by a fixed amount would just
 // duplicate what the sidebar's Transform section already offers. Rotate/
 // Duplicate/Delete are real one-shot actions, so they get buttons.
@@ -17,7 +17,7 @@
 // Deliberately does NOT offer "Edit Bricks" as an instance mutation —
 // only "Edit Source Document," which opens the referenced Document
 // through the ordinary Load path
-// (application/EditorSession.js#editStructurePlacementSource()). This is
+// (application/editor/EditorSession.js#editStructurePlacementSource()). This is
 // the one UX distinction the design conversation called out by name:
 // editing a placed structure's content always happens by editing its
 // Document, never by touching the instance.

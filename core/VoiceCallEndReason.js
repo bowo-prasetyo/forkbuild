@@ -20,7 +20,7 @@
 // This vocabulary is deliberately LOCAL-ONLY — it is never serialized onto
 // core/VoiceCallSignal.js or any other wire message, and a receiver never
 // learns the SENDER's own reason for an incoming END (see
-// application/VoiceUseCase.js's own header, "Reasons Are Local Judgments,
+// application/chat/VoiceUseCase.js's own header, "Reasons Are Local Judgments,
 // Never Transmitted Facts" (0.2.74)). Each device decides, independently
 // and from its own evidence, why ITS OWN call just ended.
 //
@@ -30,11 +30,11 @@
 //                          structurally could not accept a second call, not
 //                          that they declined this one.
 //   TIMEOUT             — THIS device's own ringing timer
-//                          (application/VoiceUseCase.js#_armRingingTimeout())
+//                          (application/chat/VoiceUseCase.js#_armRingingTimeout())
 //                          expired before an ACCEPT/REJECT/BUSY ever
 //                          arrived. Never learned from the network — see
 //                          this file's own header above.
-//   MEDIA_FAILED         — application/LocalAudioTrackProvider.js#getLocalAudioTrack()
+//   MEDIA_FAILED         — application/chat/LocalAudioTrackProvider.js#getLocalAudioTrack()
 //                          itself threw (no microphone, permission denied,
 //                          no track returned) — BEFORE any SDP was
 //                          exchanged. The peer, if any, did nothing wrong.
@@ -49,10 +49,10 @@
 //                          PeerLifecycleState.AUTHENTICATED mid-call — a
 //                          CONSEQUENCE of the connection dying, never
 //                          something voice itself decided.
-//   BLOCKED               — application/PeerBlockUseCase.js reported this
+//   BLOCKED               — application/peer/PeerBlockUseCase.js reported this
 //                          peer newly blocked while a call with them was
 //                          in progress.
-//   UNFRIENDED             — application/FriendRelationshipUseCase.js
+//   UNFRIENDED             — application/identity/FriendRelationshipUseCase.js
 //                          reported the friendship with this peer ended
 //                          while a call with them was in progress.
 //   LOCAL_HANGUP          — THIS device's own endCall() gesture.

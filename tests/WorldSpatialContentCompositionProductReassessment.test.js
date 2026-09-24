@@ -1,19 +1,19 @@
 import { readFile } from 'node:fs/promises';
 
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
 import { describeObserverLocalPublicationEncounter } from '../core/ObserverLocalPublicationEncounter.js';
-import { resolveSnapshotWorldPlacement } from '../application/SnapshotWorldPlacement.js';
+import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
 import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
-import { resolveSnapshotWorldPositionClaim } from '../application/SnapshotWorldPositionClaim.js';
-import { SnapshotWorldPositionClaimOutcome } from '../application/SnapshotWorldPositionClaimOutcome.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
+import { resolveSnapshotWorldPositionClaim } from '../application/snapshot/placement/SnapshotWorldPositionClaim.js';
+import { SnapshotWorldPositionClaimOutcome } from '../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -48,7 +48,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //   ObserverLocalEncounter      = a Wanderer's own session-scoped,
 //                                 ephemeral discovery (core/
 //                                 ObserverLocalPublicationEncounter.js +
-//                                 application/ObserverLocalEncounterStore.js)
+//                                 application/worldEncounter/ObserverLocalEncounterStore.js)
 //
 // — and every prior milestone in this lineage (0.9.565 through 0.9.571)
 // tested each mechanism ALONE, or two at a time. None ever put all three
@@ -62,7 +62,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // PlacementRecord or an ObserverLocalEncounter. That assumption is FALSE,
 // and demonstrably so — `ui/components/WorldEncounterCanvas.js` (the only
 // surface a walking Wanderer's own World View renders through) neither
-// imports `application/SnapshotWorldPositionClaim.js` nor reads
+// imports `application/snapshot/placement/SnapshotWorldPositionClaim.js` nor reads
 // `claimedPosition` anywhere (already proven structurally by 0.9.571
 // Section B5, reconfirmed here); a claim lives ENTIRELY inside
 // `ui/components/OwnPublicationPanel.js`'s own component-instance state,

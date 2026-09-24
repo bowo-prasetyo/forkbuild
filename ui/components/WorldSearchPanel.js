@@ -1,6 +1,6 @@
 // 0.2.26 — World View search, over the same decentralized discovery
 // machinery every other surface already reads from (see
-// application/SearchWorldUseCase.js / WorldNavigationSession.searchWorld).
+// application/world/SearchWorldUseCase.js / WorldNavigationSession.searchWorld).
 // Pure presentation: the host supplies `results` (already resolved by
 // the session) and `catalogEmpty` (whether anything has been published
 // at all, so the empty state can say something more useful than "no

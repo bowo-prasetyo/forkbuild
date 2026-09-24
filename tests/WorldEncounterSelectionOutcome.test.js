@@ -3,10 +3,10 @@ import {
     describeWorldEncounterSelectionOutcome,
     describeWorldEncounterSelectionOutcomeFromRegistry,
     WorldEncounterSelectionOutcomeStatus
-} from '../application/WorldEncounterSelectionOutcome.js';
+} from '../application/worldEncounter/WorldEncounterSelectionOutcome.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
-import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 
 function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
@@ -172,7 +172,7 @@ function peerSourceOf(origin, { publications = [], placements = [], avatarProfil
 // 6. Architectural regression: forbidden imports and vocabulary.
 // ---------------------------------------------------------------------
 {
-    const path = '../application/WorldEncounterSelectionOutcome.js';
+    const path = '../application/worldEncounter/WorldEncounterSelectionOutcome.js';
     const sourceUrl = new URL(path, import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -182,7 +182,7 @@ function peerSourceOf(origin, { publications = [], placements = [], avatarProfil
     assert(!/fetch\(/.test(codeOnly), '24. never calls fetch(...)');
     assert(!codeOnly.includes('WebSocket'), '25. never references WebSocket');
     assert(!/\blocalStorage\b/.test(codeOnly), '26. never references localStorage');
-    assert(!codeOnly.includes("from '../core/"), '27. never imports a core/ module directly');
+    assert(!codeOnly.includes("from '../../core/"), '27. never imports a core/ module directly');
 
     const forbiddenTerms = [
         'trusted', 'trust(', 'reputation', 'verified', 'verify(', 'authority', 'priority',

@@ -1,16 +1,16 @@
-import { BitcoinAnchorPublicationRecord } from '../application/BitcoinAnchorPublicationRecord.js';
-import { BaseAnchorPublicationRecord } from '../application/BaseAnchorPublicationRecord.js';
-import { BlockchainKind } from '../application/BlockchainKind.js';
-import { BlockchainPublicationIdentity } from '../application/BlockchainPublicationIdentity.js';
-import { PublicationReferenceRecord } from '../application/PublicationReferenceRecord.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { BitcoinAnchorPublicationRecord } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js';
+import { BaseAnchorPublicationRecord } from '../application/anchoring/base/BaseAnchorPublicationRecord.js';
+import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
+import { BlockchainPublicationIdentity } from '../application/anchoring/BlockchainPublicationIdentity.js';
+import { PublicationReferenceRecord } from '../application/publication/PublicationReferenceRecord.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
-import { AchievementKind, describeAchievementEvents } from '../application/AchievementEvent.js';
+import { AchievementKind, describeAchievementEvents } from '../application/achievement/AchievementEvent.js';
 import {
     describeAchievementProfile,
     reconstructAchievementProfile
-} from '../application/AchievementProfileView.js';
+} from '../application/achievement/AchievementProfileView.js';
 
 // 0.8.107 — Achievement Profile Projection.
 //

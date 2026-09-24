@@ -5,12 +5,12 @@ import { namingView as deriveNamingView } from '../core/PlaceNamingView.js';
 import {
     buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope
 } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION, buildPlaceNamingClaimPublication } from '../application/PlaceNamingClaimPublication.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStore.js';
+import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION, buildPlaceNamingClaimPublication } from '../application/placeNaming/PlaceNamingClaimPublication.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -32,7 +32,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // Every live proof below drives the REAL `PlaceNamingClaimExchange#
 // importClaim()` (the exact boundary `WorldNavigationSession#
 // importPlaceNamingClaim()` forwards to, verbatim, with nothing in
-// between — see application/WorldNavigationSession.js's own one-line
+// between — see application/world/WorldNavigationSession.js's own one-line
 // body) and the REAL `PlaceNamingClaimUseCase` — never a `WorldNavigationSession`
 // or `World`/`WorldRegion` instance, which this file has no need to
 // construct: none of this milestone's own questions (semantic boundary,
@@ -171,7 +171,7 @@ function rowFromEnvelope(envelopeClaim, position = { x: 1, z: 1 }) {
 // Reproduces EXACTLY ui/views/WorldView.js#adoptNearbyPlaceNamingClaim()'s
 // own one substantive call — `session.importPlaceNamingClaim(pkg)` is
 // itself a one-line forward to `PlaceNamingClaimExchange#importClaim(pkg)`
-// (see application/WorldNavigationSession.js's own body, reconfirmed
+// (see application/world/WorldNavigationSession.js's own body, reconfirmed
 // statically in Section A below), so calling the exchange directly here
 // loses no fidelity versus going through a WorldNavigationSession.
 function adoptNearbyPlaceNamingClaim(replica, row) {
@@ -213,7 +213,7 @@ async function runTests() {
         assert(/adoptNearbyPlaceNamingClaim/.test(nearbyBlock) && />\s*Adopt\s*</i.test(nearbyBlock),
             'A3. The Nearby Place Names row still carries a real, wired Adopt button.');
 
-        const exchangeSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimExchange.js'));
+        const exchangeSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js'));
         const validateIdx = exchangeSource.indexOf('validatePlaceNamingClaimPublication(pkg)');
         const constructIdx = exchangeSource.indexOf('PlaceNamingClaim.fromJSON(pkg.claim)');
         const verifyIdx = exchangeSource.indexOf('this._verifier.verifyPlaceNamingClaim(');
@@ -226,7 +226,7 @@ async function runTests() {
         // entire file, below, tests the exchange directly rather than
         // constructing a full WorldNavigationSession/World for every
         // section.
-        const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
         const importBody = sessionSource.slice(sessionSource.indexOf('importPlaceNamingClaim(pkg)'), sessionSource.indexOf('importPlaceNamingClaim(pkg)') + 260);
         assert(importBody.includes('return this._placeNamingClaimExchange.importClaim(pkg);'),
             'A5. WorldNavigationSession#importPlaceNamingClaim() still does nothing but forward to PlaceNamingClaimExchange#importClaim(pkg) — testing the exchange directly is testing the real adoption boundary, not a simplification of it.');
@@ -269,9 +269,9 @@ async function runTests() {
         // and exchange layers: none of "official"/"authoritative"/
         // "trusted" exists anywhere a stronger meaning could attach to.
         const claimSource = codeOnlyLines(await rawSource('core/PlaceNamingClaim.js'));
-        const exchangeSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimExchange.js'));
+        const exchangeSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js'));
         assert(!/\bofficial\b|\bauthoritative\b|\btrusted\b/i.test(claimSource) && !/\bofficial\b|\bauthoritative\b|\btrusted\b/i.test(exchangeSource),
-            'B1. Neither core/PlaceNamingClaim.js nor application/PlaceNamingClaimExchange.js carries "official"/"authoritative"/"trusted" vocabulary anywhere.');
+            'B1. Neither core/PlaceNamingClaim.js nor application/placeNaming/PlaceNamingClaimExchange.js carries "official"/"authoritative"/"trusted" vocabulary anywhere.');
 
         // B2. THE ONE VOCABULARY THAT DOES EXIST: "preferred name" — but
         // it PRE-DATES adoption entirely (0.5.2, three milestones before
@@ -279,14 +279,14 @@ async function runTests() {
         // separate concept: personal, unsigned, keyed by (owner, worldId,
         // regionId) — never by claimId, and never touched by
         // importPlaceNamingClaim() at all.
-        assert(await sourceExists('application/LocalNamePreferenceStore.js'),
-            'B2a. application/LocalNamePreferenceStore.js exists — "preferred name" is real, existing vocabulary in this codebase.');
-        const preferenceSource = codeOnlyLines(await rawSource('application/LocalNamePreferenceStore.js'));
+        assert(await sourceExists('application/identity/LocalNamePreferenceStore.js'),
+            'B2a. application/identity/LocalNamePreferenceStore.js exists — "preferred name" is real, existing vocabulary in this codebase.');
+        const preferenceSource = codeOnlyLines(await rawSource('application/identity/LocalNamePreferenceStore.js'));
         assert(/setPreferredName\(worldId, regionId, name\)/.test(preferenceSource) && !/claimId/.test(preferenceSource),
             'B2b. LocalNamePreferenceStore#setPreferredName() is keyed by (worldId, regionId, name) — a raw string, never a claimId — confirming it cannot represent "which claim I adopted," only "which name I like."');
         const importBody = exchangeSource.slice(exchangeSource.indexOf('importClaim(pkg)'), exchangeSource.indexOf('importClaim(pkg)') + 700);
         assert(!importBody.includes('PreferenceStore') && !exchangeSource.includes('NamePreferenceStore'),
-            'B2c. Neither importClaim() nor application/PlaceNamingClaimExchange.js as a whole references LocalNamePreferenceStore in any way — adopting a claim never sets, clears, or reads a preference; the two remain structurally independent, exactly like export-before-adopt (0.9.262 Section F).');
+            'B2c. Neither importClaim() nor application/placeNaming/PlaceNamingClaimExchange.js as a whole references LocalNamePreferenceStore in any way — adopting a claim never sets, clears, or reads a preference; the two remain structurally independent, exactly like export-before-adopt (0.9.262 Section F).');
 
         // B3. No "adopted"/"imported" flag exists anywhere on the claim
         // shape itself or the row the UI renders — reconfirms
@@ -326,10 +326,10 @@ async function runTests() {
         // listForRegion() are bulk, and the one inline by-id filter
         // (exportPlaceNamingClaim()'s own `.find((c) => c.id === claimId)`)
         // has never been extracted into a reusable, named method.
-        const storeSource = codeOnlyLines(await rawSource('application/LocalPlaceNamingClaimStore.js'));
+        const storeSource = codeOnlyLines(await rawSource('application/placeNaming/LocalPlaceNamingClaimStore.js'));
         assert(!/getById|findById|getClaim\(/.test(storeSource),
-            'C1a. application/LocalPlaceNamingClaimStore.js exposes no getById()/findById()/getClaim() — single-claim lookup by id is not a named capability at the storage layer at all (unlike storage/PublicationCommentaryStore.js#getById(), which exists but is REACHABLE_BUT_INTERNAL).');
-        const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));
+            'C1a. application/placeNaming/LocalPlaceNamingClaimStore.js exposes no getById()/findById()/getClaim() — single-claim lookup by id is not a named capability at the storage layer at all (unlike storage/PublicationCommentaryStore.js#getById(), which exists but is REACHABLE_BUT_INTERNAL).');
+        const sessionSource = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
         const exportBody = sessionSource.slice(sessionSource.indexOf('exportPlaceNamingClaim(regionId, claimId)'), sessionSource.indexOf('exportPlaceNamingClaim(regionId, claimId)') + 560);
         assert(exportBody.includes('.find((c) => c.id === claimId)'),
             'C1b. The only by-id claim lookup anywhere in this layer is this private, inline filter inside exportPlaceNamingClaim() — never its own named method, never reused elsewhere.');
@@ -424,7 +424,7 @@ async function runTests() {
         // not only ones reached via Adopt.
         assert(/alreadySaved/.test(nearbyBlock) && /Already saved/i.test(nearbyBlock),
             'D2a. UPDATED at 0.9.269 — BUILT: the Nearby row template now renders a passive "Already saved" status in place of Adopt once claim.alreadySaved is true.');
-        const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
         assert(sessionSource.includes('hasPlaceNamingClaim(worldId, claimId) {'),
             'D2b. UPDATED at 0.9.269 — BUILT: WorldNavigationSession now exposes hasPlaceNamingClaim(worldId, claimId), a thin pass-through onto PlaceNamingClaimUseCase#hasClaim() -> the exact, unmodified LocalPlaceNamingClaimStore#has(worldId, claimId) this section\'s own D3 below already proved correct — no new domain concept, exactly the precisely-scoped seam this reassessment named.');
 
@@ -461,7 +461,7 @@ async function runTests() {
         // for an adopted claim (Section A's live adoption, Section C2-C4)
         // — this section's own job is retract/removal, the one stage not
         // yet examined.
-        const useCaseSource = await rawSource('application/PlaceNamingClaimUseCase.js');
+        const useCaseSource = await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js');
         const useCaseCode = codeOnlyLines(useCaseSource);
         assert(useCaseCode.includes('existing.authorIdentityId !== authorIdentityId') && useCaseCode.includes('return false'),
             'E1. PlaceNamingClaimUseCase#retract() still gates removal on authorship — "is this identity the claim\'s OWN author," per its own header, never a moderation or "remove what I imported" tool.');
@@ -550,15 +550,15 @@ async function runTests() {
         // G1. The one Nostr integration this codebase has is READ-ONLY —
         // it queries a relay; it never publishes, signs-and-sends, or
         // broadcasts anything.
-        const nostrSource = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoverySource.js'));
+        const nostrSource = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoverySource.js'));
         assert(!/publishEvent|sendEvent|broadcast|\.publish\(/i.test(nostrSource),
-            'G1. application/NostrPlaceNamingDiscoverySource.js contains no publish/send/broadcast call of any kind — this codebase\'s only Nostr integration for Place Naming is query-only.');
+            'G1. application/placeNaming/NostrPlaceNamingDiscoverySource.js contains no publish/send/broadcast call of any kind — this codebase\'s only Nostr integration for Place Naming is query-only.');
 
         // G2. importClaim() itself never re-publishes, gossips, or
         // otherwise propagates what it just persisted — confirmed
         // directly, extending 0.9.262 Section F's narrower
         // export-specific check to EVERY outward-reaching call shape.
-        const exchangeSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimExchange.js'));
+        const exchangeSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js'));
         const importClaimBody = exchangeSource.slice(exchangeSource.indexOf('importClaim(pkg)'), exchangeSource.indexOf('importClaim(pkg)') + 700);
         assert(!/publish|broadcast|gossip|relay|nostr/i.test(importClaimBody),
             'G2. importClaim()\'s own body contains no publish/broadcast/gossip/relay reference of any kind — adopting a claim never propagates it anywhere; it only ever reaches THIS replica\'s own store.');
@@ -570,7 +570,7 @@ async function runTests() {
         // (0.9.253+, itself read-only) move a claim between replicas at
         // all. Adoption did not create this asymmetry — it is the
         // pre-existing shape of the entire feature.
-        const useCaseSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimUseCase.js'));
+        const useCaseSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js'));
         assert(!/publish\(.*relay|nostr|broadcast/i.test(useCaseSource),
             'G3. PlaceNamingClaimUseCase#publish() (the SELF-authoring path) has the identical absence of any relay/broadcast call — "adoption is local-only" is not a gap adoption introduces; self-publishing a name has always been exactly as local.');
 

@@ -7,7 +7,7 @@ import { fromCssHex } from '../../core/ColorHex.js';
 // this is the compact card that makes that true for an ordinary BRICK
 // selection, the same job ui/components/StructureInstancePanel.js has
 // done for a StructurePlacement selection since 0.2.91. The two stay
-// deliberately separate components (see application/EditorSession.js#
+// deliberately separate components (see application/editor/EditorSession.js#
 // getSelectionSummary()'s own header on why their data shapes don't
 // merge) — EditorView renders whichever one applies, never both.
 //
@@ -51,7 +51,7 @@ export default {
     props: {
         registry: { type: Object, required: true },
         getContext: { type: Function, required: true },
-        // application/EditorSession.js#getSelectionSummary()'s return
+        // application/editor/EditorSession.js#getSelectionSummary()'s return
         // value — { count, bounds } — or null (empty selection, or a
         // StructurePlacement selection, which this component never
         // renders for; EditorView gates that case out already).

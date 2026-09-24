@@ -6,18 +6,18 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { CopySelectionUseCase } from '../application/CopySelectionUseCase.js';
-import { PasteClipboardUseCase } from '../application/PasteClipboardUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { EditorContext } from '../application/EditorContext.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
-import { EditorActionContext } from '../application/EditorActionContext.js';
+import { CopySelectionUseCase } from '../application/editor/CopySelectionUseCase.js';
+import { PasteClipboardUseCase } from '../application/editor/PasteClipboardUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { EditorContext } from '../application/editor/EditorContext.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { EditorActionContext } from '../application/editor/EditorActionContext.js';
 
 // 0.9.213 — Editor Undo/Redo Label Mirrors.
 //
@@ -372,9 +372,9 @@ async function run() {
             return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         }
 
-        const registrySource = codeOnlyLines(await rawSource('application/EditorActionRegistry.js'));
+        const registrySource = codeOnlyLines(await rawSource('application/editor/EditorActionRegistry.js'));
         const paletteSource = codeOnlyLines(await rawSource('ui/components/CommandPalette.js'));
-        const contextSource = codeOnlyLines(await rawSource('application/EditorActionContext.js'));
+        const contextSource = codeOnlyLines(await rawSource('application/editor/EditorActionContext.js'));
 
         // No CommandHistory duplication in the Editor action layer.
         assert(!/from ['"].*\/CommandHistory\.js['"]/.test(registrySource), '1. EditorActionRegistry.js still does not import CommandHistory');
@@ -412,7 +412,7 @@ async function run() {
         // EditorSession.js itself needed no change — getUndoLabel()/
         // getRedoLabel() are still the exact pre-existing one-line
         // delegations to this._commandHistory.
-        const sessionSource = codeOnlyLines(await rawSource('application/EditorSession.js'));
+        const sessionSource = codeOnlyLines(await rawSource('application/editor/EditorSession.js'));
         assert(/getUndoLabel\(\)\s*\{\s*return this\._commandHistory \? this\._commandHistory\.getUndoLabel\(\) : null;\s*\}/.test(sessionSource),
             '12. EditorSession.getUndoLabel() is still the unchanged one-line CommandHistory delegation');
         assert(/getRedoLabel\(\)\s*\{\s*return this\._commandHistory \? this\._commandHistory\.getRedoLabel\(\) : null;\s*\}/.test(sessionSource),

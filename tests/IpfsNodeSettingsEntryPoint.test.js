@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { IpfsNodeConfiguration, isValidIpfsNodeApiUrl } from '../core/IpfsNodeConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { IpfsNodeConfigurationStore } from '../storage/IpfsNodeConfigurationStore.js';
-import { SetIpfsNodeConfigurationUseCase } from '../application/SetIpfsNodeConfigurationUseCase.js';
+import { SetIpfsNodeConfigurationUseCase } from '../application/settings/SetIpfsNodeConfigurationUseCase.js';
 
 // User-Configurable IPFS Node API URL Settings UI.
 //
@@ -46,7 +46,7 @@ async function run() {
         const mainSource = await source('ui/main.js');
         assert(mainSource.includes("import { IpfsNodeConfigurationStore } from '../storage/IpfsNodeConfigurationStore.js';"),
             '1. ui/main.js imports the new store');
-        assert(mainSource.includes("import { SetIpfsNodeConfigurationUseCase } from '../application/SetIpfsNodeConfigurationUseCase.js';"),
+        assert(mainSource.includes("import { SetIpfsNodeConfigurationUseCase } from '../application/settings/SetIpfsNodeConfigurationUseCase.js';"),
             '2. ui/main.js imports the new write use case');
         const storeConstructions = (mainSource.match(/new IpfsNodeConfigurationStore\(/g) || []).length;
         assert(storeConstructions === 1, `3. ui/main.js constructs exactly one IpfsNodeConfigurationStore instance — found ${storeConstructions}`);
@@ -152,7 +152,7 @@ async function run() {
         assert(!/IpfsGatewayConfiguration/.test(nodeConfigExecutable),
             '25. core/IpfsNodeConfiguration.js never imports or references the separate, read-path gateway configuration class in executable code');
 
-        const remotePublishingExecutable = (await source('application/IpfsRemotePublishingConfiguration.js')).replace(/\/\/.*$/gm, '');
+        const remotePublishingExecutable = (await source('application/ipfs/IpfsRemotePublishingConfiguration.js')).replace(/\/\/.*$/gm, '');
         assert(!/IpfsNodeConfiguration|IpfsNodeConfigurationStore/.test(remotePublishingExecutable),
             '26. the ephemeral remote-publishing configuration is completely unaffected — it still never persists anything');
 
@@ -166,7 +166,7 @@ async function run() {
     // Section F — architecture sweep of the new use case file.
     // ===============================================================
     {
-        const useCaseSource = await source('application/SetIpfsNodeConfigurationUseCase.js');
+        const useCaseSource = await source('application/settings/SetIpfsNodeConfigurationUseCase.js');
         const executable = useCaseSource.replace(/\/\/.*$/gm, '');
         assert(!/\bfetch\s*\(/.test(executable), '28. no network call of any kind');
         assert(!/localStorage/.test(executable), '29. no direct localStorage access — persistence stays behind the injected store');

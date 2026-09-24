@@ -6,22 +6,22 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { PublicationSnapshotPlacementPeerExchange } from '../application/PublicationSnapshotPlacementPeerExchange.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { SnapshotCandidateDiscoveryQueryService } from '../application/SnapshotCandidateDiscoveryQueryService.js';
-import { composeSnapshotCandidateDiscoveryRuntime } from '../application/SnapshotCandidateDiscoveryRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/ShouldRefreshSnapshotDiscovery.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { SnapshotCandidateDiscoveryQueryService } from '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
+import { composeSnapshotCandidateDiscoveryRuntime } from '../application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/snapshot/ShouldRefreshSnapshotDiscovery.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 
 // 0.9.486 — Wire Snapshot Candidate Discovery Query Service into
 // Walking-Triggered Discovery.
@@ -32,8 +32,8 @@ import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
 // place of the Nostr-only `snapshotDiscoveryQueryService` it called
 // before — moving that composition earlier in the file so it exists
 // before the command that now depends on it. Neither
-// `application/DiscoverSnapshotCandidatesCommand.js` nor
-// `application/WorldSnapshotDiscoveryMonitor.js` is touched; both keep
+// `application/snapshot/DiscoverSnapshotCandidatesCommand.js` nor
+// `application/snapshot/WorldSnapshotDiscoveryMonitor.js` is touched; both keep
 // the exact contract they already had.
 //
 // ORIGINATING QUESTION. 0.9.485's own closing paragraph named this
@@ -388,7 +388,7 @@ async function run() {
         await monitor.observe(ctx(pos(DEFAULT_DISCOVERY_REFRESH_RADIUS + 5, 0, 0)));
         assert(searchCalls === 2, '3. crossing the pre-existing movement threshold does trigger a fresh query — the gate still works in the positive direction too.');
 
-        console.log('✓ Section H: the movement-threshold gate application/ShouldRefreshSnapshotDiscovery.js already owns is untouched — no new time-based polling throttle was added merely because the query can now contact multiple sources.');
+        console.log('✓ Section H: the movement-threshold gate application/snapshot/ShouldRefreshSnapshotDiscovery.js already owns is untouched — no new time-based polling throttle was added merely because the query can now contact multiple sources.');
     }
 
     // ===============================================================
@@ -455,7 +455,7 @@ async function run() {
         assert(discoveredCandidate.bytes === undefined && discoveredCandidate.verified === undefined,
             '2. the discovered candidate remains an unresolved locator claim — no bytes, no verification — straight out of the walking pipeline.');
 
-        // The EXISTING resolver — application/DecentralizedSnapshotResolver.js,
+        // The EXISTING resolver — application/snapshot/DecentralizedSnapshotResolver.js,
         // unmodified by this milestone — resolves that exact candidate to
         // hash-verified bytes.
         const fakeContentStore = { get: async (reference) => bytesText };
@@ -482,26 +482,26 @@ async function run() {
         // discovered candidate reaches for is the existing
         // ResolveSelectedSnapshotCommand → DecentralizedSnapshotResolver
         // pair — this milestone introduces no second one.
-        const resolveSelectedSource = stripLineComments(readSource('application/ResolveSelectedSnapshotCommand.js'));
+        const resolveSelectedSource = stripLineComments(readSource('application/snapshot/ResolveSelectedSnapshotCommand.js'));
         assert(!/WorldSnapshotDiscoveryMonitor|SnapshotCandidateDiscoveryQueryService|composeSnapshotCandidateDiscoveryRuntime/.test(resolveSelectedSource),
             '1. the existing selected-candidate resolution command has no knowledge of the walking monitor or the new composite — it is reached the identical way regardless of which discovery path produced the candidate.');
 
-        const decentralizedResolverSource = stripLineComments(readSource('application/DecentralizedSnapshotResolver.js'));
+        const decentralizedResolverSource = stripLineComments(readSource('application/snapshot/DecentralizedSnapshotResolver.js'));
         assert(!/WorldSnapshotDiscoveryMonitor|SnapshotCandidateDiscoveryQueryService/.test(decentralizedResolverSource),
-            '2. application/DecentralizedSnapshotResolver.js — the existing resolver every discovered candidate already resolves through — is untouched by, and has no knowledge of, this milestone\'s walking wiring.');
+            '2. application/snapshot/DecentralizedSnapshotResolver.js — the existing resolver every discovered candidate already resolves through — is untouched by, and has no knowledge of, this milestone\'s walking wiring.');
 
         // ui/main.js never constructs DecentralizedSnapshotResolver
-        // directly — application/DiscoverSnapshotRuntimeComposition.js
+        // directly — application/snapshot/DiscoverSnapshotRuntimeComposition.js
         // does, exactly once, inside composeDiscoverSnapshotRuntime().
         const mainSource = stripLineComments(readSource('ui/main.js'));
         assert((mainSource.match(/composeDiscoverSnapshotRuntime\(/g) || []).length === 1,
             '3. ui/main.js still calls composeDiscoverSnapshotRuntime() exactly once — this milestone adds no second resolution pipeline of its own.');
         const resolverConstructionSites = execSync('grep -rlE "new DecentralizedSnapshotResolver\\(" application ui --include="*.js" || true', { cwd: SOURCE_ROOT.pathname })
             .toString().trim().split('\n').filter(Boolean);
-        assert(resolverConstructionSites.length === 1 && resolverConstructionSites[0] === 'application/DiscoverSnapshotRuntimeComposition.js',
+        assert(resolverConstructionSites.length === 1 && resolverConstructionSites[0] === 'application/snapshot/DiscoverSnapshotRuntimeComposition.js',
             `3b. exactly one production file constructs a DecentralizedSnapshotResolver (found: ${JSON.stringify(resolverConstructionSites)}).`);
 
-        const monitorSource = stripLineComments(readSource('application/WorldSnapshotDiscoveryMonitor.js'));
+        const monitorSource = stripLineComments(readSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js'));
         assert(!/resolveCandidate|resolveSelectedSnapshot|materialize|SnapshotPlacementResolver|DecentralizedSnapshotResolver/i.test(monitorSource),
             '4. the walking-triggered monitor itself still contains no domain resolution/materialization vocabulary of any kind (Promise.resolve() aside) — a discovered candidate reaches the World only through the existing, separate, explicit machinery this milestone does not touch.');
 
@@ -513,15 +513,15 @@ async function run() {
     // ===============================================================
     {
         const mainSource = stripLineComments(readSource('ui/main.js'));
-        const monitorSource = stripLineComments(readSource('application/WorldSnapshotDiscoveryMonitor.js'));
-        const commandSource = stripLineComments(readSource('application/DiscoverSnapshotCandidatesCommand.js'));
+        const monitorSource = stripLineComments(readSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js'));
+        const commandSource = stripLineComments(readSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js'));
 
         assert(!/WorldEncounter/.test(monitorSource) && !/WorldEncounter/.test(commandSource),
             '1. neither the walking monitor nor the candidate command references World Encounter peer material discovery.');
         assert(!/VerifyPublicationUseCase|SnapshotPublicationAttribution|DecentralizedWorldDiscovery/.test(monitorSource + commandSource),
             '2. neither file references Publication verification, attribution, or decentralized-lead/world-discovery machinery.');
 
-        const peerProtocolSource = stripLineComments(readSource('application/PublicationSnapshotPlacementPeerProtocol.js'));
+        const peerProtocolSource = stripLineComments(readSource('application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js'));
         assert(!/WorldSnapshotDiscoveryMonitor|SnapshotCandidateDiscoveryQueryService/.test(peerProtocolSource),
             '3. the peer protocol file is untouched by, and has no knowledge of, the walking monitor or the composite query service — the separation holds in both directions.');
 
@@ -580,14 +580,14 @@ async function run() {
         assert(unexpectedProductionChanges.length === 0,
             `1. this milestone's own working-tree changes are scoped to ui/main.js, tests/, and tests.html only — found unexpected: ${JSON.stringify(unexpectedProductionChanges)}.`);
 
-        // application/DiscoverSnapshotCandidatesCommand.js and
-        // application/WorldSnapshotDiscoveryMonitor.js themselves are
+        // application/snapshot/DiscoverSnapshotCandidatesCommand.js and
+        // application/snapshot/WorldSnapshotDiscoveryMonitor.js themselves are
         // untouched — their own contracts, unmodified, are exactly what
         // made this milestone "wiring only."
-        assert(!changedFiles.includes('application/DiscoverSnapshotCandidatesCommand.js'),
-            '2. application/DiscoverSnapshotCandidatesCommand.js is untouched — the command itself was never redesigned.');
-        assert(!changedFiles.includes('application/WorldSnapshotDiscoveryMonitor.js'),
-            '3. application/WorldSnapshotDiscoveryMonitor.js is untouched — the monitor itself was never redesigned.');
+        assert(!changedFiles.includes('application/snapshot/DiscoverSnapshotCandidatesCommand.js'),
+            '2. application/snapshot/DiscoverSnapshotCandidatesCommand.js is untouched — the command itself was never redesigned.');
+        assert(!changedFiles.includes('application/snapshot/WorldSnapshotDiscoveryMonitor.js'),
+            '3. application/snapshot/WorldSnapshotDiscoveryMonitor.js is untouched — the monitor itself was never redesigned.');
 
         console.log('✓ Section N: this milestone\'s own diff is scoped to exactly what it claims — the minimum wiring necessary, and nothing else.');
     }

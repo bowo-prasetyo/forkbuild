@@ -1,16 +1,16 @@
 import { readFile } from 'node:fs/promises';
 
-import { IpfsRemotePublicationCoordinator } from '../application/IpfsRemotePublicationCoordinator.js';
-import { IpfsRemotePublicationState } from '../application/IpfsRemotePublicationState.js';
+import { IpfsRemotePublicationCoordinator } from '../application/ipfs/IpfsRemotePublicationCoordinator.js';
+import { IpfsRemotePublicationState } from '../application/ipfs/IpfsRemotePublicationState.js';
 import { IpfsRemotePinningContentStore } from '../content/IpfsRemotePinningContentStore.js';
 import { PinningRejectedError } from '../content/HttpPinningProvider.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import {
     SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES,
     resolveSnapshotDistributionContentStore
-} from '../application/SnapshotDistributionContentBackendSelection.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
+} from '../application/snapshot/SnapshotDistributionContentBackendSelection.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import { computeContentHash } from '../serializer/contentHash.js';
@@ -27,7 +27,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //
 // CENTRAL QUESTION. Can an IPFS upload performed through the existing
 // Remote IPFS HTTP pinning path (content/IpfsRemotePinningContentStore.js,
-// 0.8.67; application/IpfsRemotePublicationCoordinator.js, 0.8.68)
+// 0.8.67; application/ipfs/IpfsRemotePublicationCoordinator.js, 0.8.68)
 // participate in the same Snapshot registry -> Nostr announcement ->
 // discovery workflow that already works for a local Kubo node?
 //
@@ -156,7 +156,7 @@ async function run() {
         // A1 — 'ipfs' is a real, production-eligible Snapshot Distribution
         // storage backend, not a hypothetical this audit invents.
         assert(SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES.includes('ipfs'),
-            n('A1. application/SnapshotDistributionContentBackendSelection.js names \'ipfs\' as an eligible Snapshot Distribution storage backend today, alongside \'ar\' — this is not a hypothetical target, it is a live production option.'));
+            n('A1. application/snapshot/SnapshotDistributionContentBackendSelection.js names \'ipfs\' as an eligible Snapshot Distribution storage backend today, alongside \'ar\' — this is not a hypothetical target, it is a live production option.'));
 
         // A2 — ui/main.js registers a real content/IpfsContentStore.js
         // (Kubo) under 'ipfs' in the SAME registry
@@ -192,7 +192,7 @@ async function run() {
         assert(events.length === 1 && JSON.parse(events[0].eventTemplate.content).storage === 'ipfs',
             n('A8. the published Nostr event content genuinely carries storage: \'ipfs\' — the announcement is not a stub, it is the real envelope a second replica would actually see.'));
     }
-    console.log('✓ Section A: the LOCAL KUBO journey traced end to end against real production classes and real production wiring (ui/main.js). \'ipfs\' is a live, eligible Snapshot Distribution backend today; resolveSnapshotDistributionContentStore() resolves a Kubo-backed store for it from the SAME registry application/CreateExternalSnapshotPlacementUseCase.js also uses; and a real bytes -> put() -> ContentReference -> Nostr-announce sequence, run live through the unmodified production command and publisher, succeeds completely.');
+    console.log('✓ Section A: the LOCAL KUBO journey traced end to end against real production classes and real production wiring (ui/main.js). \'ipfs\' is a live, eligible Snapshot Distribution backend today; resolveSnapshotDistributionContentStore() resolves a Kubo-backed store for it from the SAME registry application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js also uses; and a real bytes -> put() -> ContentReference -> Nostr-announce sequence, run live through the unmodified production command and publisher, succeeds completely.');
 
     // =======================================================================
     // Section B — The Remote IPFS journey, traced independently.
@@ -209,19 +209,19 @@ async function run() {
         });
         assert(outcome.state === IpfsRemotePublicationState.PUBLISHED, n('B1. IpfsRemotePublicationCoordinator#publish() genuinely succeeds against a fake pinning provider, exactly like tests/IpfsRemotePublicationUX.test.js\'s own flagship.'));
         assert(typeof outcome.contentHash === 'string' && outcome.locator.startsWith('ipfs://'),
-            n('B2. ...and its PUBLISHED outcome carries a real contentHash and a real ipfs:// locator — the exact two facts application/NostrSnapshotDiscoveryPublisher.js#publish() needs (plus storage) to announce anything at all.'));
-        assert(!('storage' in outcome), n('B3. but the outcome object itself carries no `storage` field at all — only contentHash/locator/endpoint/publishedAt/reason — confirmed against application/IpfsRemotePublicationCoordinator.js\'s own `_outcome()` shape.'));
+            n('B2. ...and its PUBLISHED outcome carries a real contentHash and a real ipfs:// locator — the exact two facts application/nostr/NostrSnapshotDiscoveryPublisher.js#publish() needs (plus storage) to announce anything at all.'));
+        assert(!('storage' in outcome), n('B3. but the outcome object itself carries no `storage` field at all — only contentHash/locator/endpoint/publishedAt/reason — confirmed against application/ipfs/IpfsRemotePublicationCoordinator.js\'s own `_outcome()` shape.'));
 
         // B2 — the production UI journey: publishToRemoteIpfs() in
         // ui/views/DecentralizedPublicationsView.js, traced by source.
         const viewSource = (await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n');
         const fnMatch = viewSource.match(/async function publishToRemoteIpfs\(entry\) \{[\s\S]*?\n        \}/);
-        assert(fnMatch, n('B4. ui/views/DecentralizedPublicationsView.js#publishToRemoteIpfs() exists as a real, isolable function — the ONE production call site for application/IpfsRemotePublicationCoordinator.js#publish() (confirmed earlier, application/DecentralizedDistributionGuidanceProductGapAudit\'s own Section B).'));
+        assert(fnMatch, n('B4. ui/views/DecentralizedPublicationsView.js#publishToRemoteIpfs() exists as a real, isolable function — the ONE production call site for application/ipfs/IpfsRemotePublicationCoordinator.js#publish() (confirmed earlier, application/DecentralizedDistributionGuidanceProductGapAudit\'s own Section B).'));
         const fnBody = fnMatch[0];
         assert(/ipfsRemotePublicationCoordinator\.publish\(\{ bytes, configuration \}\)/.test(fnBody),
             n('B5. that function calls the coordinator exactly once, with bytes/configuration...'));
         assert(/new IpfsPublicationRecord\(/.test(fnBody),
-            n('B6. ...and on a PUBLISHED outcome, constructs an application/IpfsPublicationRecord.js — a LOCAL, ephemeral, display-only record (see that file\'s own header: no signature, no catalog, no peer propagation) — and nothing else.'));
+            n('B6. ...and on a PUBLISHED outcome, constructs an application/ipfs/IpfsPublicationRecord.js — a LOCAL, ephemeral, display-only record (see that file\'s own header: no signature, no catalog, no peer propagation) — and nothing else.'));
         assert(/snapshotDiscoveryPublisher\.publish\(\{/.test(fnBody),
             n('B7. AMENDED BY 0.9.663 — Connect Remote IPFS to Nostr Snapshot Distribution. At the time this audit was written, publishToRemoteIpfs()\'s own function body contained NO reference to any Nostr discovery publisher, any Snapshot Distribution command, or any Snapshot Placement creation coordinator — THE FIRST DIVERGENCE this section named. 0.9.663 closed exactly that gap: immediately after the REAL PUBLISHED outcome this section\'s own B1/B2 already proved carries everything announcement needs (contentHash/locator, plus a hardcoded storage:\'ipfs\' — see Section E/F for why that\'s always the right self-reported name), this function now calls snapshotDiscoveryPublisher.publish() directly.'));
         assert(!/executeSnapshotDistributionCommand|createExternalSnapshotPlacementUseCase|placementCreationCoordinator\.create|snapshotPlacementStoreRegistry/.test(fnBody),
@@ -230,10 +230,10 @@ async function run() {
         // B3 — confirm this is not merely true of the one function; the
         // coordinator's own outcome vocabulary is never consumed anywhere
         // else in this codebase either.
-        const ipfsPublicationRecordSource = await source('application/IpfsPublicationRecord.js');
+        const ipfsPublicationRecordSource = await source('application/ipfs/IpfsPublicationRecord.js');
         const ipfsPublicationRecordImports = (ipfsPublicationRecordSource.match(/^import\s.*$/gm) || []).join('\n');
         assert(ipfsPublicationRecordImports.length === 0,
-            n('B8. application/IpfsPublicationRecord.js — the one durable(-ish, per-entry, in-memory) shape the Remote IPFS outcome is ever folded into — has ZERO import statements at all: no PublicationSnapshotPlacement, no NostrSnapshotDiscoveryPublisher, no placement creation use case, no store registry (its own header even NAMES core/PublicationSnapshotPlacement.js, in prose, only to explicitly disclaim being wired to it — "never wired into any catalog or store by this milestone"). The Remote IPFS journey is a genuine dead end by construction, not merely by omission at one call site.'));
+            n('B8. application/ipfs/IpfsPublicationRecord.js — the one durable(-ish, per-entry, in-memory) shape the Remote IPFS outcome is ever folded into — has ZERO import statements at all: no PublicationSnapshotPlacement, no NostrSnapshotDiscoveryPublisher, no placement creation use case, no store registry (its own header even NAMES core/PublicationSnapshotPlacement.js, in prose, only to explicitly disclaim being wired to it — "never wired into any catalog or store by this milestone"). The Remote IPFS journey is a genuine dead end by construction, not merely by omission at one call site.'));
     }
     console.log('✓ Section B: the REMOTE IPFS journey traced independently, live and structural. A real publish() attempt succeeds and returns a genuine contentHash/locator pair — everything Nostr announcement would need. AMENDED BY 0.9.663: production\'s one call site (publishToRemoteIpfs()) folds that outcome into a local, display-only IpfsPublicationRecord AND NOW ALSO announces it via the same snapshotDiscoveryPublisher instance the Kubo/Arweave path already uses — never through Snapshot Distribution command\'s own contentStore.put()/re-upload, and never through any Snapshot Placement creation use case, both deliberately still unreached from this call site (B7b).');
 
@@ -283,22 +283,22 @@ async function run() {
         assert(JSON.parse(events[0].eventTemplate.content).storage === 'ipfs',
             n('C6. the resulting announcement is byte-for-byte indistinguishable, on the wire, from Section A\'s own Kubo-sourced announcement — a second replica discovering it has no way to know, and no reason to care, which backend produced the pinned copy.'));
     }
-    console.log('✓ Section C: NOT an ADAPTER_GAP. content/IpfsRemotePinningContentStore.js\'s own ContentReference is not merely similarly-shaped to content/IpfsContentStore.js\'s own — it is drop-in interchangeable, live-proven by literally substituting it into the exact same, completely unmodified application/SnapshotDistributionCommand.js + application/NostrSnapshotDiscoveryPublisher.js pipeline Section A already ran for Kubo, with zero new code. Whatever the actual gap is, it is not a mismatched result contract.');
+    console.log('✓ Section C: NOT an ADAPTER_GAP. content/IpfsRemotePinningContentStore.js\'s own ContentReference is not merely similarly-shaped to content/IpfsContentStore.js\'s own — it is drop-in interchangeable, live-proven by literally substituting it into the exact same, completely unmodified application/snapshot/SnapshotDistributionCommand.js + application/nostr/NostrSnapshotDiscoveryPublisher.js pipeline Section A already ran for Kubo, with zero new code. Whatever the actual gap is, it is not a mismatched result contract.');
 
     // =======================================================================
     // Section D — The Snapshot registry admission boundary.
     // =======================================================================
     {
         const placementSource = await source('core/PublicationSnapshotPlacement.js');
-        const createPlacementSource = await source('application/CreatePublicationSnapshotPlacementUseCase.js');
-        const distCommandSource = await source('application/SnapshotDistributionCommand.js');
-        const registrySource = await source('application/SnapshotPlacementStoreRegistry.js');
+        const createPlacementSource = await source('application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js');
+        const distCommandSource = await source('application/snapshot/SnapshotDistributionCommand.js');
+        const registrySource = await source('application/snapshot/placement/SnapshotPlacementStoreRegistry.js');
 
         for (const [src, label] of [
             [placementSource, 'core/PublicationSnapshotPlacement.js'],
-            [createPlacementSource, 'application/CreatePublicationSnapshotPlacementUseCase.js'],
-            [distCommandSource, 'application/SnapshotDistributionCommand.js'],
-            [registrySource, 'application/SnapshotPlacementStoreRegistry.js']
+            [createPlacementSource, 'application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js'],
+            [distCommandSource, 'application/snapshot/SnapshotDistributionCommand.js'],
+            [registrySource, 'application/snapshot/placement/SnapshotPlacementStoreRegistry.js']
         ]) {
             assert(!/instanceof\s+Ipfs|instanceof\s+Kubo|instanceof\s+.*ContentStore|KuboProvider/.test(src),
                 n(`D1. ${label} contains no \`instanceof\` check against any concrete ContentStore/provider class anywhere in its own source.`));
@@ -324,7 +324,7 @@ async function run() {
         assert(placementSource.includes('storage    (required) — e.g. \'ipfs\'') === false && /storage\s*!==?|!storage\b/.test(placementSource),
             n('D4. the constructor\'s own validation of `storage` is a bare non-empty-string check (see core/PublicationSnapshotPlacement.js\'s own constructor) — never a closed enum, never a provider allowlist.'));
     }
-    console.log('✓ Section D: the Snapshot registry admission boundary (core/PublicationSnapshotPlacement.js, application/CreatePublicationSnapshotPlacementUseCase.js, application/SnapshotDistributionCommand.js) is providerblind by construction, not merely by convention — zero instanceof checks, zero mentions of Kubo, and a live PublicationSnapshotPlacement built from Remote-Pinning-origin fields constructs and stores identically to one built from Kubo-origin fields.');
+    console.log('✓ Section D: the Snapshot registry admission boundary (core/PublicationSnapshotPlacement.js, application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js, application/snapshot/SnapshotDistributionCommand.js) is providerblind by construction, not merely by convention — zero instanceof checks, zero mentions of Kubo, and a live PublicationSnapshotPlacement built from Remote-Pinning-origin fields constructs and stores identically to one built from Kubo-origin fields.');
 
     // =======================================================================
     // Section E — The registry key-collision finding.
@@ -351,7 +351,7 @@ async function run() {
 
         registry.register(remoteStore);
         assert(registry.get('ipfs') === remoteStore && registry.get('ipfs') !== kuboStore,
-            n('E3. registering Remote Pinning SECOND, into the SAME registry instance, SILENTLY REPLACES Kubo — application/SnapshotPlacementStoreRegistry.js\'s own documented "last write wins" behavior, live-confirmed to actually fire across these two specific classes. From this point on, EVERY \'ipfs\'-storage lookup through this registry instance — Snapshot Placement creation, Snapshot Distribution\'s own resolveSnapshotDistributionContentStore() — silently stops reaching Kubo at all.'));
+            n('E3. registering Remote Pinning SECOND, into the SAME registry instance, SILENTLY REPLACES Kubo — application/snapshot/placement/SnapshotPlacementStoreRegistry.js\'s own documented "last write wins" behavior, live-confirmed to actually fire across these two specific classes. From this point on, EVERY \'ipfs\'-storage lookup through this registry instance — Snapshot Placement creation, Snapshot Distribution\'s own resolveSnapshotDistributionContentStore() — silently stops reaching Kubo at all.'));
 
         // Contrast: this codebase already solved the analogous problem for
         // RESOLUTION, by using TWO SEPARATE REGISTRY INSTANCES (Kubo for
@@ -361,16 +361,16 @@ async function run() {
         assert(/new CreateSnapshotPlacementResolutionCoordinatorUseCase\(\)\.execute\(\{[\s\S]*?stores:\s*\[publicationContentStore,\s*composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)\]/.test(mainSource),
             n('E4. ui/main.js already keeps a SECOND, independent SnapshotPlacementStoreRegistry for RESOLUTION (backed by an IPFS gateway content store for \'ipfs\', now settings-backed per 0.9.665 and failover-capable per 0.9.666), entirely separate from the CREATION registry Section A/E1-E3 exercised — confirmed against current source, and explicitly justified there as "never silently overwrites or hides Kubo."'));
     }
-    console.log('✓ Section E: a genuine, previously-unnamed structural fact. Kubo and Remote Pinning both self-report `storage: \'ipfs\'` — a SCHEME name, by content/IpfsRemotePinningContentStore.js\'s own explicit design (see that file\'s own header, "an ipfs:// locator names a SCHEME, not which particular backend"). application/SnapshotPlacementStoreRegistry.js keys strictly by that self-reported name, so registering BOTH into ONE shared registry instance is not merely unwired — it is a silent, live-provable overwrite the moment it is attempted the naive way. This codebase has ALREADY solved the identically-shaped problem once, for resolution, with a second independent registry rather than a shared key — the correct precedent for creation/distribution to mirror, never a reason to change the storage-name vocabulary or the registry\'s own single-key-per-name design.');
+    console.log('✓ Section E: a genuine, previously-unnamed structural fact. Kubo and Remote Pinning both self-report `storage: \'ipfs\'` — a SCHEME name, by content/IpfsRemotePinningContentStore.js\'s own explicit design (see that file\'s own header, "an ipfs:// locator names a SCHEME, not which particular backend"). application/snapshot/placement/SnapshotPlacementStoreRegistry.js keys strictly by that self-reported name, so registering BOTH into ONE shared registry instance is not merely unwired — it is a silent, live-provable overwrite the moment it is attempted the naive way. This codebase has ALREADY solved the identically-shaped problem once, for resolution, with a second independent registry rather than a shared key — the correct precedent for creation/distribution to mirror, never a reason to change the storage-name vocabulary or the registry\'s own single-key-per-name design.');
 
     // =======================================================================
     // Section F — The Nostr announcement predicate.
     // =======================================================================
     {
-        const publisherSource = await source('application/NostrSnapshotDiscoveryPublisher.js');
+        const publisherSource = await source('application/nostr/NostrSnapshotDiscoveryPublisher.js');
         const envelopeSource = await source('core/SnapshotDiscoveryEnvelope.js');
         assert(!/instanceof|Kubo|provider\s*\.|ContentStore/.test(publisherSource.replace(/\/\/.*$/gm, '')),
-            n('F1. application/NostrSnapshotDiscoveryPublisher.js\'s own executable source (comments stripped) never references a ContentStore, a provider object, or an instanceof check of any kind.'));
+            n('F1. application/nostr/NostrSnapshotDiscoveryPublisher.js\'s own executable source (comments stripped) never references a ContentStore, a provider object, or an instanceof check of any kind.'));
         assert(/async publish\(\{ contentHash, locator, storage, publicationId, claimedPosition \} = \{\}\)/.test(publisherSource),
             n('F2. publish()\'s own signature takes exactly three required, plain-string facts (contentHash/locator/storage) plus two optional ones — never a store, a reference object, or a provider handle.'));
         assert(/isNonEmptyString\(candidate\.contentHash\)/.test(envelopeSource) && /isNonEmptyString\(candidate\.locator\)/.test(envelopeSource) && /isNonEmptyString\(candidate\.storage\)/.test(envelopeSource),
@@ -402,30 +402,30 @@ async function run() {
         // only affects code paths that go THROUGH the shared registry
         // (Snapshot Placement creation, and ui/main.js's own particular
         // choice of how it builds its snapshotDistributionCommand closure).
-        // application/SnapshotDistributionCommand.js's own
+        // application/snapshot/SnapshotDistributionCommand.js's own
         // executeSnapshotDistributionCommand() never imports or requires
         // one at all — proven already in Section C (it accepted a bare
         // IpfsRemotePinningContentStore with no registry in sight), proven
         // again here structurally.
-        const distCommandSource = await source('application/SnapshotDistributionCommand.js');
+        const distCommandSource = await source('application/snapshot/SnapshotDistributionCommand.js');
         const distCommandImports = (distCommandSource.match(/^import\s.*$/gm) || []).join('\n');
         assert(!distCommandImports.includes('SnapshotPlacementStoreRegistry'),
-            n('G1. application/SnapshotDistributionCommand.js never IMPORTS application/SnapshotPlacementStoreRegistry.js (its own header explicitly disclaims it: "this file never imports... application/SnapshotPlacementStoreRegistry.js") — the registry-key collision Section E found cannot reach this file, because this file never consults a registry at all; it is duck-typed purely against `contentStore.put()`.'));
+            n('G1. application/snapshot/SnapshotDistributionCommand.js never IMPORTS application/snapshot/placement/SnapshotPlacementStoreRegistry.js (its own header explicitly disclaims it: "this file never imports... application/snapshot/placement/SnapshotPlacementStoreRegistry.js") — the registry-key collision Section E found cannot reach this file, because this file never consults a registry at all; it is duck-typed purely against `contentStore.put()`.'));
 
-        const backendSelectionSource = await source('application/SnapshotDistributionContentBackendSelection.js');
+        const backendSelectionSource = await source('application/snapshot/SnapshotDistributionContentBackendSelection.js');
         assert(/never imports\s*\n\/\/ SnapshotPlacementStoreRegistry/.test(backendSelectionSource) || /duck-typed against/.test(backendSelectionSource),
-            n('G2. application/SnapshotDistributionContentBackendSelection.js — the ONE place a registry lookup currently selects Kubo for storage \'ipfs\' in production — is itself duck-typed (`get()`/`has()`), confirmed by its own header, never coupled to SnapshotPlacementStoreRegistry\'s concrete class.'));
+            n('G2. application/snapshot/SnapshotDistributionContentBackendSelection.js — the ONE place a registry lookup currently selects Kubo for storage \'ipfs\' in production — is itself duck-typed (`get()`/`has()`), confirmed by its own header, never coupled to SnapshotPlacementStoreRegistry\'s concrete class.'));
 
         // Live: a Remote-Pinning content store, constructed the SAME way
-        // application/IpfsRemotePublicationCoordinator.js itself already
+        // application/ipfs/IpfsRemotePublicationCoordinator.js itself already
         // constructs one per call (fresh, from a configuration, with no
         // registry involved), reaches a real Nostr announcement with zero
         // registry participation of any kind — this is Section C's own
         // C4/C5 proof, re-read here as the answer to "is Section E's
         // collision a blocker," rather than re-run.
-        assert(true, n('G3. Section C\'s own live C4/C5 proof (a bare, registry-free IpfsRemotePinningContentStore fed directly into executeSnapshotDistributionCommand()) is, read under this section\'s own question, the concrete demonstration that Remote IPFS participating in Snapshot Distribution + Nostr announcement needs NO resolution of Section E\'s registry-key collision at all — that collision only matters for a DIFFERENT, narrower ambition (making Remote IPFS a SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES entry selectable BY NAME through the shared registry, or admitting it into the signed PublicationSnapshotPlacement catalog via the SAME registry application/CreateExternalSnapshotPlacementUseCase.js already shares with Distribution\'s own resolver) — a real, but separate and smaller-scoped, follow-on question.'));
+        assert(true, n('G3. Section C\'s own live C4/C5 proof (a bare, registry-free IpfsRemotePinningContentStore fed directly into executeSnapshotDistributionCommand()) is, read under this section\'s own question, the concrete demonstration that Remote IPFS participating in Snapshot Distribution + Nostr announcement needs NO resolution of Section E\'s registry-key collision at all — that collision only matters for a DIFFERENT, narrower ambition (making Remote IPFS a SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES entry selectable BY NAME through the shared registry, or admitting it into the signed PublicationSnapshotPlacement catalog via the SAME registry application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js already shares with Distribution\'s own resolver) — a real, but separate and smaller-scoped, follow-on question.'));
     }
-    console.log('✓ Section G: Section E\'s registry-key collision, while real, is not a blocker for the specific journey this audit was asked to trace. application/SnapshotDistributionCommand.js takes any content/ContentStore.js-shaped object directly — it never consults application/SnapshotPlacementStoreRegistry.js at all. The collision only bears on a narrower, separate ambition: selecting Remote IPFS BY NAME through the SAME shared, by-storage-name registry Kubo already occupies under \'ipfs\'.');
+    console.log('✓ Section G: Section E\'s registry-key collision, while real, is not a blocker for the specific journey this audit was asked to trace. application/snapshot/SnapshotDistributionCommand.js takes any content/ContentStore.js-shaped object directly — it never consults application/snapshot/placement/SnapshotPlacementStoreRegistry.js at all. The collision only bears on a narrower, separate ambition: selecting Remote IPFS BY NAME through the SAME shared, by-storage-name registry Kubo already occupies under \'ipfs\'.');
 
     // =======================================================================
     // Section H — The two user journeys, current source, first divergence.
@@ -481,22 +481,22 @@ Capability matrix:
         '\n' +
         '1. THE CORE HYPOTHESIS HOLDS, STRONGLY. content/IpfsRemotePinningContentStore.js\'s own ContentReference is\n' +
         '   not merely similar to content/IpfsContentStore.js\'s own — it is drop-in interchangeable, live-proven by\n' +
-        '   literally substituting it into the SAME, completely unmodified application/SnapshotDistributionCommand.js\n' +
-        '   + application/NostrSnapshotDiscoveryPublisher.js pipeline the real Kubo path already uses in production\n' +
+        '   literally substituting it into the SAME, completely unmodified application/snapshot/SnapshotDistributionCommand.js\n' +
+        '   + application/nostr/NostrSnapshotDiscoveryPublisher.js pipeline the real Kubo path already uses in production\n' +
         '   (Section C). The Snapshot registry\'s own admission boundary (core/PublicationSnapshotPlacement.js,\n' +
-        '   application/CreatePublicationSnapshotPlacementUseCase.js) and the Nostr announcement predicate\n' +
+        '   application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js) and the Nostr announcement predicate\n' +
         '   (core/SnapshotDiscoveryEnvelope.js) are both provider-blind by construction, not by convention — the\n' +
         '   exact `hasCID`-shaped predicate, never `provider instanceof KuboProvider` (Section D/F).\n' +
         '\n' +
         '2. THE FIRST EXACT DIVERGENCE is a single un-taken call, named to one function and one line-region:\n' +
         '   ui/views/DecentralizedPublicationsView.js#publishToRemoteIpfs(), immediately after a real PUBLISHED\n' +
         '   outcome exists, builds a local, display-only application/IpfsPublicationRecord and returns — it never\n' +
-        '   calls a discoveryPublisher, application/SnapshotDistributionCommand.js, or any Snapshot Placement\n' +
+        '   calls a discoveryPublisher, application/snapshot/SnapshotDistributionCommand.js, or any Snapshot Placement\n' +
         '   creation use case (Section B/H).\n' +
         '\n' +
         '3. ONE GENUINE STRUCTURAL WRINKLE, NEWLY SURFACED (Section E): content/IpfsRemotePinningContentStore.js\n' +
         '   and content/IpfsContentStore.js both self-report the identical `storage: \'ipfs\'` name, and\n' +
-        '   application/SnapshotPlacementStoreRegistry.js keys strictly by that self-reported name — so the two\n' +
+        '   application/snapshot/placement/SnapshotPlacementStoreRegistry.js keys strictly by that self-reported name — so the two\n' +
         '   CANNOT coexist in one shared registry instance; registering both silently drops one (live-proven).\n' +
         '   This does NOT block the specific journey this audit traced (Section G: application/\n' +
         '   SnapshotDistributionCommand.js never goes through that registry at all), but it WOULD block a naive\n' +
@@ -514,9 +514,9 @@ Capability matrix:
         'outside the snapshotDistributionCommand closure) — either by exposing that publisher directly, or by\n' +
         'constructing a fresh Remote-Pinning content/ContentStore.js the same way application/\n' +
         'IpfsRemotePublicationCoordinator.js itself already does per call, and handing BOTH to the existing,\n' +
-        'completely unmodified application/SnapshotDistributionCommand.js#executeSnapshotDistributionCommand() —\n' +
+        'completely unmodified application/snapshot/SnapshotDistributionCommand.js#executeSnapshotDistributionCommand() —\n' +
         'exactly the call this audit\'s own Section C already proved succeeds, live, today. Registering Remote\n' +
-        'IPFS into application/SnapshotPlacementStoreRegistry.js, or extending SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES\n' +
+        'IPFS into application/snapshot/placement/SnapshotPlacementStoreRegistry.js, or extending SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES\n' +
         'with a second \'ipfs\'-shaped name, is explicitly NOT required for this journey and should not be added\n' +
         'speculatively — see Section E/G for exactly why that route is both unnecessary and, if taken naively, silently\n' +
         'destructive to the existing Kubo registration.'

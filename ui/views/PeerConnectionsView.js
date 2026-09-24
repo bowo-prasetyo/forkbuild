@@ -6,14 +6,14 @@ import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 // 0.2.60 — Friendship Revocation, Blocking & Privacy Withdrawal adds:
 //   - Reject/Cancel on a pending request (the terminal counterparts to
 //     Send/Accept, both still on an AUTHENTICATED "My Peers" card only
-//     — see application/FriendRelationshipUseCase.js's own header on
+//     — see application/identity/FriendRelationshipUseCase.js's own header on
 //     why every friendship gesture requires a live, proven connection
 //     to actually deliver its signed advertisement).
 //   - Unfriend, on a FRIEND — available from "My Peers" when connected,
 //     and from the "Friends" list itself when that friend happens to
 //     be connected right now (cross-referenced the same way
 //     "Connected now" already is).
-//   - Block/Unblock, backed entirely by application/PeerBlockUseCase.js
+//   - Block/Unblock, backed entirely by application/peer/PeerBlockUseCase.js
 //     — a FOURTH, independent list ("Blocked"), never requiring a live
 //     connection at all (see core/PeerBlockRecord.js's own header):
 //     available on any card this device already holds identityId/
@@ -23,16 +23,16 @@ import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 // everything 0.2.49 through 0.2.54 built underneath. Answers the one
 // question the app still had no answer for — "okay, I have an identity,
 // how do I actually connect to another person?" — through nothing but
-// application/PeerSessionManager.js, itself nothing but a thin composition
-// of application/ConnectToPeerUseCase.js and application/
+// application/peer/PeerSessionManager.js, itself nothing but a thin composition
+// of application/peer/ConnectToPeerUseCase.js and application/
 // DiscoverPeersUseCase.js. This view invents no new state machine: every
 // badge below is peer.getLifecycleState() (peer/PeerLifecycleState.js),
-// read straight off the SAME application/ConnectedPeer.js / peer/
+// read straight off the SAME application/peer/ConnectedPeer.js / peer/
 // PeerAuthenticationSession.js this codebase has had since 0.2.49/0.2.50.
 //
 // No chat (peer/PeerMessageBus.js is still not touched anywhere in this
 // file). An alias typed into a peer's CARD — the "Local alias" field
-// below — is exactly what application/ConnectedPeer.js already documents
+// below — is exactly what application/peer/ConnectedPeer.js already documents
 // it as: a local note, never sent, never surviving a reconnect.
 //
 // 0.2.56 adds the persistent counterpart 0.2.55 deliberately declined to
@@ -40,9 +40,9 @@ import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 // PeerRelationshipUseCase.js. The two lists on this page answer two
 // different questions and are never merged into one: "My Peers" is
 // exactly as ephemeral as it always was — every row disappears the
-// instant application/ConnectedPeerRegistry.js says the connection is
+// instant application/peer/ConnectedPeerRegistry.js says the connection is
 // gone — while "Known Peers" is exactly as durable as
-// application/PeerRelationshipUseCase.js's own storage, surviving a
+// application/peer/PeerRelationshipUseCase.js's own storage, surviving a
 // disconnect, a reload, and the app restarting. A peer only ever crosses
 // from the first list into the second by an explicit "Remember" click —
 // see docs/Principles.md, "Remembering A Peer Is A Deliberate Act, Never
@@ -60,7 +60,7 @@ import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 //
 // 0.2.64 adds "Find a Peer": an identity search over candidates this
 // device has discovered (imported invitations it hasn't necessarily
-// connected to yet — see application/FindPeerUseCase.js), entirely
+// connected to yet — see application/peer/FindPeerUseCase.js), entirely
 // distinct from "My Peers"/"Known Peers" below. A candidate card is
 // always labeled "Discovered," never a name — this page never displays
 // an identity as an established fact before peer/
@@ -70,7 +70,7 @@ import { FriendshipAction } from '../../core/FriendshipAdvertisement.js';
 //
 // 0.2.62 adds Reconnect to a Known Peer card that isn't connected right
 // now. It is deliberately NOT a new transport or a remembered address —
-// application/PeerReconnectionUseCase.js walks the exact same
+// application/peer/PeerReconnectionUseCase.js walks the exact same
 // invitation dance "Invite Someone"/"Connect to Peer" already do, just
 // scoped to one remembered identityId so the fresh handshake's result
 // is VERIFIED against who this device expects, not merely accepted
@@ -171,7 +171,7 @@ export default {
         // SOMEWHERE, "be discoverable enough for someone else to actually
         // find you" had no working path through this UI at all: a person
         // could only ever hand out the shortened display string, which a
-        // real search() — application/DiscoverPeersUseCase.js's own exact
+        // real search() — application/peer/DiscoverPeersUseCase.js's own exact
         // string match — will never match.
         const myIdentityId = ref(null);
         // Reads the whole session, not only the lock: which identity is
@@ -206,7 +206,7 @@ export default {
         const relationshipsById = computed(() => new Map(relationships.value.map((r) => [r.identityId, r])));
         const friendshipsById = computed(() => new Map(friendships.value.map((f) => [f.identityId, f])));
         const blockedIds = computed(() => new Set(blocked.value.map((b) => b.identityId)));
-        // application/IdentityLifecyclePropagationUseCase.js publishes no
+        // application/identity/IdentityLifecyclePropagationUseCase.js publishes no
         // change event, so a newly received revocation/succession has
         // only ever appeared on the next one-second redraw. Kept that
         // way on purpose — `now` is read here so this re-reads storage
@@ -220,7 +220,7 @@ export default {
         }
 
         // Time since this connection attempt started on this device, read
-        // from the app-wide registry (application/ConnectedPeerRegistry.js
+        // from the app-wide registry (application/peer/ConnectedPeerRegistry.js
         // #connectedSince) — so it keeps counting across leaving and
         // returning to this page, rather than restarting at 0s.
         function connectedFor(peer) {
@@ -234,7 +234,7 @@ export default {
         }
 
         // A relationship is looked up ONLY by a peer's already-verified
-        // remoteIdentity — see application/PeerRelationshipUseCase.js's
+        // remoteIdentity — see application/peer/PeerRelationshipUseCase.js's
         // own header on why an invitation hint is never eligible here.
         function relationshipFor(peer) {
             return peer.remoteIdentity ? relationshipsById.value.get(peer.remoteIdentity.identityId) || null : null;
@@ -282,7 +282,7 @@ export default {
         // above) gets a Reconnect gesture — the exact same two-step
         // invitation dance "Invite Someone"/"Connect to Peer" already walk
         // a FIRST connection through, scoped to one remembered identity via
-        // application/PeerReconnectionUseCase.js so the fresh handshake is
+        // application/peer/PeerReconnectionUseCase.js so the fresh handshake is
         // verified against who this device actually expects, not merely
         // accepted because SOMEONE authenticated. Completing the offering
         // side's handshake (pasting the far end's reply) reuses the
@@ -418,7 +418,7 @@ export default {
 
         // 0.2.60 — ends a currently-FRIEND relationship. `peer` must be
         // a live, AUTHENTICATED ConnectedPeer — see
-        // application/FriendRelationshipUseCase.js#unfriend's own
+        // application/identity/FriendRelationshipUseCase.js#unfriend's own
         // header: the other side has to actually receive the signed
         // UNFRIEND for the relationship to end on both devices, not
         // just this one.
@@ -450,7 +450,7 @@ export default {
         // A friend never carries its own alias — see core/
         // FriendshipRecord.js's own header on why it stores only signed
         // evidence, never a local note. This cross-references the SAME
-        // application/PeerRelationshipUseCase.js alias "Known Peers"
+        // application/peer/PeerRelationshipUseCase.js alias "Known Peers"
         // already renders, falling back to a shortened identityId for a
         // friend this device never separately chose to "Remember."
         function friendDisplayName(identityId) {
@@ -597,14 +597,14 @@ export default {
 
         // --- Be Discoverable (0.2.66) ----------------------------------------
         // "Publish me to whatever rendezvous network is configured" — see
-        // application/FindPeerUseCase.js#publishSelf's own header. Never
+        // application/peer/FindPeerUseCase.js#publishSelf's own header. Never
         // available unless at least one real rendezvous node is actually
         // configured (ui/main.js) — with none configured, publishSelf()
         // has nothing to publish TO and this section explains that rather
         // than offering a button that would silently do nothing.
         const publishPending = ref(false);
         const publishError = ref('');
-        // Read from the app-wide application/FindPeerUseCase.js#isPublishing
+        // Read from the app-wide application/peer/FindPeerUseCase.js#isPublishing
         // — never a flag of this view's own, which reset on every remount
         // and never noticed an inbound connection consuming the offer.
         // Re-read whenever the peer list changes (an offer being answered
@@ -740,7 +740,7 @@ export default {
                 refreshLockState();
             });
             // Locking/unlocking never fires onSessionChanged — see
-            // application/IdentityUseCase.js's own header: being
+            // application/identity/IdentityUseCase.js's own header: being
             // authenticated and being unlocked are different questions,
             // deliberately signaled separately. This is what keeps
             // isIdentityLocked current if the user unlocks (or a vault
@@ -749,9 +749,9 @@ export default {
             unsubscribeVaultLock = identityUseCase.onVaultLockChanged(() => refreshLockState());
             // 0.2.62 — a reconnect that authenticates as someone other
             // than the identity this device expected is never silently
-            // dropped: application/ConnectToPeerUseCase.js has already
+            // dropped: application/peer/ConnectToPeerUseCase.js has already
             // closed the connection by the time this fires (see
-            // application/PeerReconnectionUseCase.js's own header), so
+            // application/peer/PeerReconnectionUseCase.js's own header), so
             // this is purely explaining what happened, never a chance to
             // still accept it.
             unsubscribeReconnectRejected = peerReconnectionUseCase.onReconnectRejected(({ relationship }) => {
@@ -761,8 +761,8 @@ export default {
             // 0.2.64 — a "Find a Peer" connect() that authenticates as
             // someone other than the identity Alice searched for is
             // never silently dropped either: the connection is already
-            // closed by application/ConnectToPeerUseCase.js by the time
-            // this fires (see application/FindPeerUseCase.js's own
+            // closed by application/peer/ConnectToPeerUseCase.js by the time
+            // this fires (see application/peer/FindPeerUseCase.js's own
             // header) — this only explains what happened.
             unsubscribeFindRejected = findPeerUseCase.onCandidateRejected(({ expectedIdentityId }) => {
                 findRejectedError.value = `Connection rejected: whoever answered at that candidate's endpoint was not ${shortId(expectedIdentityId)} — the connection has been closed.`;

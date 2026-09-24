@@ -48,7 +48,7 @@
 //
 // IDENTITY IS `publicationId` + `contentHash`, EXACTLY LIKE THE CASCADE'S
 // OWN PROCESSING IDENTITY — NEVER A `documentId`, A `locator`, OR
-// `claimedPosition` ITSELF. See application/AutomaticSnapshotEncounterCascade.js's
+// `claimedPosition` ITSELF. See application/snapshot/AutomaticSnapshotEncounterCascade.js's
 // own header, "processing identity: publicationId + contentHash." This
 // file reuses that same identity verbatim rather than inventing a third
 // name for the same two facts.
@@ -69,7 +69,7 @@
 // - **Persistence of any kind.** Nothing here is ever passed to a
 //   `StorageProvider`; a caller holding a described encounter is the
 //   entire lifetime of that encounter as far as this file is concerned —
-//   see application/ObserverLocalEncounterStore.js for the one place a
+//   see application/worldEncounter/ObserverLocalEncounterStore.js for the one place a
 //   caller may choose to hold onto one for longer than a single call.
 // - **Cross-Wanderer sharing, gossip, or synchronization.** This file
 //   never reads or writes a registry of any kind — see this file's own
@@ -95,7 +95,7 @@ function finitePosition(position) {
 //   encounterPosition }) -> frozen encounter | null
 //
 // `publicationId`/`contentHash` — required, non-empty strings; the SAME
-//   processing identity a caller (application/AutomaticSnapshotEncounterCascade.js)
+//   processing identity a caller (application/snapshot/AutomaticSnapshotEncounterCascade.js)
 //   already reached VERIFIED + MATERIALIZED for.
 // `encounterPosition` — required, an `{x,y,z}` with three finite
 //   components — the OBSERVER's own World position, never a publisher's

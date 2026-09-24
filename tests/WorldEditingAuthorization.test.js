@@ -6,21 +6,21 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { SpatialEditingService } from '../application/SpatialEditingService.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { SpatialEditingService } from '../application/editor/SpatialEditingService.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldAuthorizationService } from '../application/WorldAuthorizationService.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldAuthorizationService } from '../application/identity/WorldAuthorizationService.js';
 import { WorldAccessLevel, worldAccessAtLeast, isValidWorldAccessLevel } from '../core/WorldAccessLevel.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
 
 // 0.2.95 — World Editing Authorization Foundation.
 //
@@ -33,7 +33,7 @@ import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 //
 //   Section A: core/WorldAccessLevel.js — the closed NONE/READ/EDIT
 //              vocabulary and its total order.
-//   Section B: application/WorldAuthorizationService.js in isolation —
+//   Section B: application/identity/WorldAuthorizationService.js in isolation —
 //              ownership by cryptographic identity, legacy label
 //              fallback, blocking overrides ownership, graceful
 //              defaults for an absent document/viewer.
@@ -43,13 +43,13 @@ import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
 //   Section D: identity/resolveSigningIdentityId.js — tolerant of a
 //              provider with no crypto surface, a provider that throws
 //              because nobody is authenticated, and a real identity.
-//   Section E: application/SpatialEditingService.js — the ONE seam:
+//   Section E: application/editor/SpatialEditingService.js — the ONE seam:
 //              a `canEditDocument` predicate gates getEditingContext()
 //              AND every real mutation chokepoint directly, so a caller
 //              that skips getEditingContext() entirely still gets
 //              refused. The pre-0.2.95 default (no predicate passed)
 //              is untouched.
-//   Section F: application/ForkDocumentUseCase.js — forking stamps the
+//   Section F: application/document/ForkDocumentUseCase.js — forking stamps the
 //              FORKER's own identity as the new document's owner.
 //   Section G: FLAGSHIP — Alice owns a World; Bob can read it but not
 //              edit it; Charlie is blocked and can do neither; Alice's
@@ -142,7 +142,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section B: application/WorldAuthorizationService.js in isolation
+    // Section B: application/identity/WorldAuthorizationService.js in isolation
     // -------------------------------------------------------------
     {
         const ownedDoc = new Document({
@@ -249,7 +249,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section E: application/SpatialEditingService.js — the one seam
+    // Section E: application/editor/SpatialEditingService.js — the one seam
     // -------------------------------------------------------------
     {
         const world = buildOneBrickWorld();
@@ -291,7 +291,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section F: application/ForkDocumentUseCase.js stamps the FORKER
+    // Section F: application/document/ForkDocumentUseCase.js stamps the FORKER
     // -------------------------------------------------------------
     {
         const storage = new InMemoryStorageProvider();
@@ -455,7 +455,7 @@ async function run() {
             // Phone: a DIFFERENT physical key (did:key:alice-phone), but
             // resolveSocialIdentity reports it as a currently-authorized
             // DEVICE of Alice's own parent identity — the exact shape
-            // application/DeviceAuthorizationPropagationUseCase.js#
+            // application/identity/DeviceAuthorizationPropagationUseCase.js#
             // resolveOwnSocialIdentity() returns for an authorized device.
             const phoneAuthAuthorized = new WorldAuthorizationService({
                 identityProvider: makeIdentityProvider({ identityId: 'did:key:alice-phone', username: 'alice' }),
@@ -489,11 +489,11 @@ async function run() {
     }
 
     console.log('✓ Section A: core/WorldAccessLevel.js — closed NONE/READ/EDIT vocabulary and total order');
-    console.log('✓ Section B: application/WorldAuthorizationService.js — ownership, blocking, legacy fallback, graceful defaults');
+    console.log('✓ Section B: application/identity/WorldAuthorizationService.js — ownership, blocking, legacy fallback, graceful defaults');
     console.log('✓ Section C: core/DocumentMetadata.js#authorIdentityId — construction, round-trip, tolerant degrade');
     console.log('✓ Section D: identity/resolveSigningIdentityId.js — tolerant of every absence, correct when present');
-    console.log('✓ Section E: application/SpatialEditingService.js — one predicate gates every real mutation chokepoint');
-    console.log('✓ Section F: application/ForkDocumentUseCase.js — the forker becomes the new owner, cryptographically');
+    console.log('✓ Section E: application/editor/SpatialEditingService.js — one predicate gates every real mutation chokepoint');
+    console.log('✓ Section F: application/document/ForkDocumentUseCase.js — the forker becomes the new owner, cryptographically');
     console.log('✓ Section G: FLAGSHIP — Alice/Bob/Charlie + multi-device authority, including a UI-bypassing direct call');
 
     console.log('\nAll World editing authorization tests passed.');

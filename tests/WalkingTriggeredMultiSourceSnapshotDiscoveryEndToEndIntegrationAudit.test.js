@@ -6,35 +6,35 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { PublicationSnapshotPlacementPeerExchange } from '../application/PublicationSnapshotPlacementPeerExchange.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { SnapshotCandidateDiscoveryQueryService } from '../application/SnapshotCandidateDiscoveryQueryService.js';
-import { composeSnapshotCandidateDiscoveryRuntime } from '../application/SnapshotCandidateDiscoveryRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { SnapshotCandidateDiscoveryQueryService } from '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
+import { composeSnapshotCandidateDiscoveryRuntime } from '../application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { assembleWorldDiscoveryInputs } from '../core/WorldDiscoverySourceAssembly.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/ShouldRefreshSnapshotDiscovery.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/snapshot/ShouldRefreshSnapshotDiscovery.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 
 // 0.9.487 — Walking-Triggered Multi-Source Snapshot Discovery End-to-End
 // Integration Audit.
@@ -68,7 +68,7 @@ import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
 //      Section J deliberately stops at RESOLVE/VERIFY. This file drives
 //      a walking-discovered, PEER-DERIVED candidate all the way through
 //      RESOLVE -> VERIFY -> MATERIALIZE -> PLACE -> REGISTER
-//      (application/AutomaticSnapshotEncounterCascade.js, 0.9.187,
+//      (application/snapshot/AutomaticSnapshotEncounterCascade.js, 0.9.187,
 //      unmodified) into a real WorldDiscoverySourceRegistry, and then
 //      confirms the ordinary, unmodified World Encounter pipeline
 //      (core/WorldEncounter.js) actually renders it — proving "resolved
@@ -264,7 +264,7 @@ async function run() {
     // Section A — Production topology.
     // ===============================================================
     {
-        const compositeSource = stripLineComments(readSource('application/SnapshotCandidateDiscoveryRuntimeComposition.js'));
+        const compositeSource = stripLineComments(readSource('application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js'));
         assert((compositeSource.match(/new SnapshotCandidateDiscoveryQueryService\(/g) || []).length === 1,
             '1. exactly one production construction site exists anywhere for SnapshotCandidateDiscoveryQueryService.');
         assert((compositeSource.match(/new LocalSnapshotCandidateDiscoveryQueryService\(/g) || []).length === 1,
@@ -289,7 +289,7 @@ async function run() {
             'grep -rlE "new LocalPublicationSnapshotPlacementCatalog\\(" application ui --include="*.js" || true',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim().split('\n').filter(Boolean);
-        assert(catalogConstructionSites.includes('application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js'),
+        assert(catalogConstructionSites.includes('application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js'),
             '7. the one catalog-constructing file production actually reaches is present on disk.');
 
         // The SAME `publicationSnapshotPlacementCatalog` identifier — never
@@ -309,7 +309,7 @@ async function run() {
             'grep -rlE "new NostrSnapshotDiscoveryQueryService\\(" application ui --include="*.js" || true',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim().split('\n').filter(Boolean);
-        assert(nostrConstructionSites.length === 1 && nostrConstructionSites[0] === 'application/DiscoverSnapshotRuntimeComposition.js',
+        assert(nostrConstructionSites.length === 1 && nostrConstructionSites[0] === 'application/snapshot/DiscoverSnapshotRuntimeComposition.js',
             `11. exactly one production construction site for NostrSnapshotDiscoveryQueryService (found: ${JSON.stringify(nostrConstructionSites)}).`);
         assert(/nostrSnapshotDiscoveryQueryService:\s*snapshotDiscoveryQueryService/.test(mainSource),
             '12. the walking composite is handed the SAME, already-constructed Nostr instance — never a second Nostr construction.');
@@ -565,7 +565,7 @@ async function run() {
         await noPeerMonitor.observe(ctx(pos(0, 0, 0)));
         assert(noPeerMonitor.lastError === null && noPeerMonitor.lastResult.length === 1 && noPeerMonitor.lastResult[0].contentHash === 'hash-i-no-peer',
             '5. with zero peer connections of any kind, Local candidate querying is entirely unaffected.');
-        const localAdapterSource = stripLineComments(readSource('application/LocalSnapshotCandidateDiscoveryQueryService.js'));
+        const localAdapterSource = stripLineComments(readSource('application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js'));
         assert(!/PeerLifecycleState|ConnectedPeerRegistry|getLifecycleState/.test(localAdapterSource),
             '6. the Local candidate adapter itself contains no peer-connectivity vocabulary of any kind — it cannot be affected by peer connection state because it never reads it.');
 
@@ -643,8 +643,8 @@ async function run() {
             '4. still just a claim at this point — no bytes, no verification, no World presence yet.');
 
         // RESOLVE + VERIFY — the EXISTING, unmodified resolver, exactly
-        // as production composes it (application/ResolveSelectedSnapshotCommand.js
-        // wrapping application/DecentralizedSnapshotResolver.js).
+        // as production composes it (application/snapshot/ResolveSelectedSnapshotCommand.js
+        // wrapping application/snapshot/DecentralizedSnapshotResolver.js).
         const fakeContentStore = { get: async () => bytesText };
         const resolver = new DecentralizedSnapshotResolver(bobQueryService);
         const resolveSelectedSnapshotCommand = (candidate) => executeResolveSelectedSnapshotCommand({ candidate, resolver, contentStore: fakeContentStore });
@@ -696,7 +696,7 @@ async function run() {
         // No second Snapshot-loading/rendering subsystem: the cascade
         // itself still contains no rendering or World-registry-reading
         // vocabulary of its own (it only ever WRITES into the registry).
-        const cascadeSource = stripLineComments(readSource('application/AutomaticSnapshotEncounterCascade.js'));
+        const cascadeSource = stripLineComments(readSource('application/snapshot/AutomaticSnapshotEncounterCascade.js'));
         assert(!/render|WorldEncounterCanvas|scene|mesh/i.test(cascadeSource),
             '9. the orchestration seam itself contains no rendering vocabulary — rendering remains entirely core/WorldEncounter.js\'s own, pre-existing concern.');
 
@@ -709,16 +709,16 @@ async function run() {
     // ===============================================================
     {
         const mainSource = stripLineComments(readSource('ui/main.js'));
-        const monitorSource = stripLineComments(readSource('application/WorldSnapshotDiscoveryMonitor.js'));
-        const commandSource = stripLineComments(readSource('application/DiscoverSnapshotCandidatesCommand.js'));
-        const cascadeSource = stripLineComments(readSource('application/AutomaticSnapshotEncounterCascade.js'));
+        const monitorSource = stripLineComments(readSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js'));
+        const commandSource = stripLineComments(readSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js'));
+        const cascadeSource = stripLineComments(readSource('application/snapshot/AutomaticSnapshotEncounterCascade.js'));
 
         assert(!/WorldEncounter/.test(monitorSource) && !/WorldEncounter/.test(commandSource),
             '1. neither the walking monitor nor the candidate command references World Encounter peer material discovery.');
         assert(!/VerifyPublicationUseCase|SnapshotPublicationAttribution|DecentralizedWorldDiscovery/.test(monitorSource + commandSource),
             '2. neither references Publication verification, attribution, or decentralized-world-discovery machinery.');
 
-        const peerProtocolSource = stripLineComments(readSource('application/PublicationSnapshotPlacementPeerProtocol.js'));
+        const peerProtocolSource = stripLineComments(readSource('application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js'));
         assert(!/WorldSnapshotDiscoveryMonitor|SnapshotCandidateDiscoveryQueryService|AutomaticSnapshotEncounterCascade/.test(peerProtocolSource),
             '3. the peer protocol file is untouched by, and has no knowledge of, the walking monitor, the composite query service, OR the cascade — the separation holds for the newly-exercised third file too.');
 
@@ -813,8 +813,8 @@ async function run() {
         // exist and are mechanically sound (0.8.19's own coverage) — the
         // guarantee here is narrower and precise: no production caller
         // ever invokes them FROM a connection lifecycle event.
-        const connectUseCaseSource = stripLineComments(readSource('application/ConnectToPeerUseCase.js'));
-        const reconnectionUseCaseSource = stripLineComments(readSource('application/PeerReconnectionUseCase.js'));
+        const connectUseCaseSource = stripLineComments(readSource('application/peer/ConnectToPeerUseCase.js'));
+        const reconnectionUseCaseSource = stripLineComments(readSource('application/peer/PeerReconnectionUseCase.js'));
         assert(!/requestPlacements|discoverFromPeers|PublicationSnapshotPlacementDiscoveryCoordinator/.test(connectUseCaseSource + reconnectionUseCaseSource),
             '10. neither ConnectToPeerUseCase.js nor PeerReconnectionUseCase.js references requestPlacements(), discoverFromPeers(), or the discovery coordinator at all — a connection or reconnection event triggers no placement backfill of any kind, by construction, not merely by observed behavior.');
 
@@ -856,13 +856,13 @@ async function run() {
     // ===============================================================
     {
         const arcFiles = [
-            'application/SnapshotCandidateDiscoveryQueryService.js',
-            'application/LocalSnapshotCandidateDiscoveryQueryService.js',
-            'application/SnapshotCandidateDiscoveryRuntimeComposition.js',
-            'application/DiscoverSnapshotCandidatesCommand.js',
-            'application/WorldSnapshotDiscoveryMonitor.js',
-            'application/PublicationSnapshotPlacementPeerExchange.js',
-            'application/AutomaticSnapshotEncounterCascade.js'
+            'application/snapshot/SnapshotCandidateDiscoveryQueryService.js',
+            'application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js',
+            'application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js',
+            'application/snapshot/DiscoverSnapshotCandidatesCommand.js',
+            'application/snapshot/WorldSnapshotDiscoveryMonitor.js',
+            'application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js',
+            'application/snapshot/AutomaticSnapshotEncounterCascade.js'
         ];
         const boundaryPattern = /\bscore\b|\bscoring\b|\branking\b|preferredPeer|trustScore|\bfallback\b|BROWSE_REQUEST|BROWSE_RESPONSE|setInterval\(|setTimeout\(|\.sort\(/i;
         for (const file of arcFiles) {
@@ -878,7 +878,7 @@ async function run() {
             'grep -rlE "new DecentralizedSnapshotResolver\\(" application ui --include="*.js" || true',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim().split('\n').filter(Boolean);
-        assert(resolverConstructionSites.length === 1 && resolverConstructionSites[0] === 'application/DiscoverSnapshotRuntimeComposition.js',
+        assert(resolverConstructionSites.length === 1 && resolverConstructionSites[0] === 'application/snapshot/DiscoverSnapshotRuntimeComposition.js',
             `2. exactly one production file constructs a DecentralizedSnapshotResolver (found: ${JSON.stringify(resolverConstructionSites)}).`);
         // Excludes the class's own file — its header comment documents its
         // own construction shape (`// new AutomaticSnapshotEncounterCascade({...`)
@@ -895,10 +895,10 @@ async function run() {
         // still carry no provenance field, and the cascade still reaches
         // Publication attribution only through the SAME pre-existing
         // resolve/materialize commands, never a second attribution path.
-        const compositeSource = stripLineComments(readSource('application/SnapshotCandidateDiscoveryQueryService.js'));
+        const compositeSource = stripLineComments(readSource('application/snapshot/SnapshotCandidateDiscoveryQueryService.js'));
         assert(!/provenance|attribution/i.test(compositeSource),
             '4. the composite query service carries no provenance/attribution field or vocabulary of its own.');
-        const monitorSource = stripLineComments(readSource('application/WorldSnapshotDiscoveryMonitor.js'));
+        const monitorSource = stripLineComments(readSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js'));
         assert(!/provenance|attribution/i.test(monitorSource),
             '5. the walking-triggered monitor carries no provenance/attribution vocabulary of its own.');
 

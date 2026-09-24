@@ -9,9 +9,9 @@ import { Position } from '../core/Position.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStore.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
 
 // 0.5.2 — Place Naming & Naming Claims.
 //
@@ -176,7 +176,7 @@ async function run() {
     console.log('✓ Section C: core/PlaceNamingView.js — distinct-author scoring, ranking, deterministic tie-break');
 
     // -------------------------------------------------------------
-    // Section D: application/LocalPlaceNamingClaimStore.js — persistence
+    // Section D: application/placeNaming/LocalPlaceNamingClaimStore.js — persistence
     // -------------------------------------------------------------
     {
         const storage = new InMemoryStorageProvider();
@@ -199,10 +199,10 @@ async function run() {
         assert(store.retract('w1', claim1.id) === false, 'retract() is idempotent-false for an already-removed claim');
         assert(store.retract('w1', 'never-existed') === false, 'retract() returns false for an unknown id');
     }
-    console.log('✓ Section D: application/LocalPlaceNamingClaimStore.js — per-World persistence, round-trip, retraction');
+    console.log('✓ Section D: application/placeNaming/LocalPlaceNamingClaimStore.js — per-World persistence, round-trip, retraction');
 
     // -------------------------------------------------------------
-    // Section E: application/PlaceNamingClaimUseCase.js — publish/retract authority
+    // Section E: application/placeNaming/PlaceNamingClaimUseCase.js — publish/retract authority
     // -------------------------------------------------------------
     {
         const storage = new InMemoryStorageProvider();
@@ -241,10 +241,10 @@ async function run() {
         const view = aliceUseCase.namingView('w1', 'r2');
         assert(view.length === 1 && view[0].score === 2, `namingView() should merge Alice+Carol's agreement into one score-2 entry, got ${JSON.stringify(view)}`);
     }
-    console.log('✓ Section E: application/PlaceNamingClaimUseCase.js — required signing, author-only retraction, namingView delegation');
+    console.log('✓ Section E: application/placeNaming/PlaceNamingClaimUseCase.js — required signing, author-only retraction, namingView delegation');
 
     // -------------------------------------------------------------
-    // Section F: application/LocalNamePreferenceStore.js — local-only, per-identity
+    // Section F: application/identity/LocalNamePreferenceStore.js — local-only, per-identity
     // -------------------------------------------------------------
     {
         const storage = new InMemoryStorageProvider();
@@ -269,7 +269,7 @@ async function run() {
         assert(signedOutPrefs.getPreferredName('w1', 'r1') === null, 'no identityProvider degrades to null, never throws');
         assert(signedOutPrefs.setPreferredName('w1', 'r1', 'X') === false, 'setPreferredName without a signed-in identity fails safely');
     }
-    console.log('✓ Section F: application/LocalNamePreferenceStore.js — per-identity isolation, safe degradation when signed out');
+    console.log('✓ Section F: application/identity/LocalNamePreferenceStore.js — per-identity isolation, safe degradation when signed out');
 
     // -------------------------------------------------------------
     // Section G: WorldRegion.name stays completely untouched (0.5.0 regression)

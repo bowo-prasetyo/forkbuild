@@ -2,13 +2,13 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { composePublicationDistributionRuntime } from '../application/PublicationDistributionRuntimeComposition.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.431 — Multi-Substrate Announcement/Discovery Product Reassessment.
@@ -215,7 +215,7 @@ async function run() {
     // G3/G4 explicitly deferred, never asserted here.
     // ===============================================================
     {
-        const runtimeCompositionSource = await source('application/PublicationDistributionRuntimeComposition.js');
+        const runtimeCompositionSource = await source('application/publication/distribution/PublicationDistributionRuntimeComposition.js');
         assert(/SELECTION, NEVER FAN-OUT/.test(runtimeCompositionSource), n('B1. G1/G2: PublicationDistributionRuntimeComposition.js itself documents that discoveryProvider is a SELECTION among substrates, never a set — confirming G1 (a decentralized substrate is choosable) and G2 (more than one exists to choose among)'));
 
         const net = makeFakeArweaveSubstrate();
@@ -348,7 +348,7 @@ async function run() {
         // The mechanism is a pre-existing, explicit, documented design
         // decision (0.9.52) — never a defect this milestone discovers by
         // accident, and never something this milestone changes.
-        const storeSource = await source('application/PublicationDistributionLifecycleStore.js');
+        const storeSource = await source('application/publication/distribution/PublicationDistributionLifecycleStore.js');
         assert(/REPLACEMENT, NEVER MERGE/.test(storeSource), n('C16. the collapse traces to an already-existing, explicitly documented design decision (PublicationDistributionLifecycleStore.js\'s own "Replacement, never merge" header) — newly EXERCISABLE with two genuine substrates only since 0.9.430, never newly introduced by this milestone'));
 
         console.log('✓ Section C: composing two single-provider actions for the SAME publication is achievable, correctly attributed, and non-corrupting at the RESULT level — but silently collapses this application\'s own LOCAL record of "which substrates has this publication been announced on" to a single slot, the one channel Section D/E\'s own evidence shows the real UI actually relies on');
@@ -422,9 +422,9 @@ async function run() {
     // anywhere in the lifecycle triple.
     // ===============================================================
     {
-        const lifecycleSource = codeOnly(await source('application/PublicationDistributionLifecycle.js'));
-        const transitionSource = codeOnly(await source('application/PublicationDistributionLifecycleTransition.js'));
-        const storeSource = codeOnly(await source('application/PublicationDistributionLifecycleStore.js'));
+        const lifecycleSource = codeOnly(await source('application/publication/distribution/PublicationDistributionLifecycle.js'));
+        const transitionSource = codeOnly(await source('application/publication/distribution/PublicationDistributionLifecycleTransition.js'));
+        const storeSource = codeOnly(await source('application/publication/distribution/PublicationDistributionLifecycleStore.js'));
 
         for (const [name, code] of [
             ['PublicationDistributionLifecycle.js', lifecycleSource],
@@ -432,7 +432,7 @@ async function run() {
         ]) {
             assert(!/Array\.isArray\(.*discovery/.test(code) && !/discoveries/i.test(code), n(`F1[${name}]. discovery is read/produced as a single plain object per lifecycle, never a list — no structural room for more than one concurrent discovery fact per publication`));
         }
-        assert(/KEYED BY `publication\.id` — NEVER BY A DISTRIBUTION-DIMENSION IDENTITY/.test(await source('application/PublicationDistributionLifecycleStore.js')), n('F2. PublicationDistributionLifecycleStore.js\'s own header confirms the key space is publication identity alone — never (publicationId, provider), which is the one change that would let two substrates coexist in this store'));
+        assert(/KEYED BY `publication\.id` — NEVER BY A DISTRIBUTION-DIMENSION IDENTITY/.test(await source('application/publication/distribution/PublicationDistributionLifecycleStore.js')), n('F2. PublicationDistributionLifecycleStore.js\'s own header confirms the key space is publication identity alone — never (publicationId, provider), which is the one change that would let two substrates coexist in this store'));
 
         // Contrast, deliberately: `core/PublicationSnapshotPlacement.js`'s
         // own CONTENT catalog is genuinely additive/many-per-publication —
@@ -450,7 +450,7 @@ async function run() {
         // material uris distinct, publicationId shared on purpose); this
         // section confirms the SAME restraint is stated, explicitly, in
         // the pure boundary that produces those facts in the first place.
-        assert(/THREE IDENTITIES, NEVER CONFLATED/.test(await source('application/PublicationDistributionResult.js')), n('F4. PublicationDistributionResult.js\'s own header independently states the "three identities, never conflated" restraint Section C\'s own results already demonstrate live'));
+        assert(/THREE IDENTITIES, NEVER CONFLATED/.test(await source('application/publication/distribution/PublicationDistributionResult.js')), n('F4. PublicationDistributionResult.js\'s own header independently states the "three identities, never conflated" restraint Section C\'s own results already demonstrate live'));
 
         console.log('✓ Section F: Section C\'s collapse is fully explained structurally — the lifecycle triple has genuinely no per-substrate key or list anywhere, unlike Content\'s own already-additive placement catalog. A single publication\'s per-call RESULT can and does keep two substrates\' facts distinct (Section C); this application\'s own durable, subscribed-to RECORD of that publication cannot, today');
     }
@@ -563,13 +563,13 @@ async function run() {
         // of the things it deliberately excluded — a pure documentation
         // check, guarding this file's own restraint.
         for (const file of [
-            'application/PublicationDistributionLifecycle.js',
-            'application/PublicationDistributionLifecycleTransition.js',
-            'application/PublicationDistributionLifecycleStore.js',
-            'application/PublicationDistributionRuntimeComposition.js',
-            'application/PublicationDistributionOrchestrator.js',
-            'application/PublicationDistributionCommand.js',
-            'application/PublicationDistributionCommandComposition.js',
+            'application/publication/distribution/PublicationDistributionLifecycle.js',
+            'application/publication/distribution/PublicationDistributionLifecycleTransition.js',
+            'application/publication/distribution/PublicationDistributionLifecycleStore.js',
+            'application/publication/distribution/PublicationDistributionRuntimeComposition.js',
+            'application/publication/distribution/PublicationDistributionOrchestrator.js',
+            'application/publication/distribution/PublicationDistributionCommand.js',
+            'application/publication/distribution/PublicationDistributionCommandComposition.js',
             'ui/components/WorldEncounterCanvas.js',
             'ui/views/WorldView.js'
         ]) {

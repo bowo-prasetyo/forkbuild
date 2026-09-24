@@ -6,7 +6,7 @@ import { createId } from './createId.js';
 // left unchosen and named this one first: commentary/annotation on a
 // Publication, ahead of notifications, precisely because it has a
 // concrete shipped architectural analog
-// (application/PublicationObservationArchive.js — a local, append-only
+// (application/publication/observationArchive/PublicationObservationArchive.js — a local, append-only
 // record attached to an immutable Publication) and carries no
 // delivery-guarantee question the just-closed collaboration arc spent
 // 0.9.222-0.9.240 being careful never to assume. This milestone is the

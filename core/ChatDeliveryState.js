@@ -10,11 +10,11 @@
 // ever transitions to has no business existing here just because a
 // richer design doc imagined it.
 //
-//   QUEUED     — application/ChatOutbox.js holds this message,
+//   QUEUED     — application/chat/ChatOutbox.js holds this message,
 //                addressed to a peer identity, not yet handed to
 //                peer/PeerMessageBus.js#send(). The peer may be
 //                offline, or may simply not have been checked yet —
-//                see application/ChatUseCase.js#sendOrQueue().
+//                see application/chat/ChatUseCase.js#sendOrQueue().
 //   SENT       — handed to the wire over a live, AUTHENTICATED
 //                connection. Deliberately NOT "delivered" — see
 //                core/ChatDeliveryAck.js's own header on why "the
@@ -28,7 +28,7 @@
 //                recipient's own, already-trusted ingestion. The
 //                outbox's job for this one message is over the
 //                instant this is reached — see
-//                application/ChatOutbox.js#acknowledge().
+//                application/chat/ChatOutbox.js#acknowledge().
 //   EXPIRED    — this device gave up: the message's TTL elapsed
 //                while it was still QUEUED (or still SENT, waiting on
 //                an ack that never came) — see
@@ -41,7 +41,7 @@
 //                the recipient was proactively withdrawn — Alice
 //                blocked Bob, or unfriended him — while the message
 //                still sat QUEUED, never SENT. See
-//                application/ChatOutbox.js#cancel()'s own header:
+//                application/chat/ChatOutbox.js#cancel()'s own header:
 //                never lazy, never waiting for a reconnect attempt
 //                that a peer who never comes back online would make
 //                impossible to ever reach. A fact about a
@@ -59,7 +59,7 @@
 // Never confuse SENT with DELIVERED, and never confuse EXPIRED (this
 // device gave up on TIME) or CANCELLED (this device gave up on
 // AUTHORIZATION) with a peer-side rejection (the wrong identity on
-// reconnect — see application/ChatUseCase.js#_attemptFlush()) — that
+// reconnect — see application/chat/ChatUseCase.js#_attemptFlush()) — that
 // case never produces an outbox entry in the first place; there is
 // nothing here to expire or cancel.
 export const ChatDeliveryState = Object.freeze({

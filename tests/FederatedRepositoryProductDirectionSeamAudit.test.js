@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { applicationPath } from './support/ApplicationFiles.js';
 import { execSync } from 'node:child_process';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
@@ -23,8 +24,8 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // destination object. Section A corrects this against source, exactly the
 // way 0.9.327 corrected a misnamed "Bitcoin" finding to "Base" one
 // milestone later: in this codebase, "Snapshot" is a World-placement
-// concept (application/DiscoverSnapshotCandidatesCommand.js,
-// application/MaterializeSnapshotFromPlacementUseCase.js) structurally
+// concept (application/snapshot/DiscoverSnapshotCandidatesCommand.js,
+// application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js) structurally
 // disjoint from "Publication" (publisher/Publication.js), the actual
 // object Repository searches, lists, and forks. Every section below
 // substitutes "Publication" for the brief's own "Snapshot" wherever the
@@ -105,13 +106,13 @@ async function run() {
         // not the originating brief's own "Snapshot" vocabulary.
         assert(await sourceExists('publisher/Publication.js'), '1. Repository\'s real domain object, publisher/Publication.js, exists.');
         const publicationCatalogSource = await readSource('ui/components/PublicationCatalog.js');
-        assert(publicationCatalogSource.includes("import { CreateDiscoveryUseCase } from '../../application/CreateDiscoveryUseCase.js';"),
+        assert(publicationCatalogSource.includes("import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';"),
             '2. Repository\'s own shipped UI (PublicationCatalog.js) is built on CreateDiscoveryUseCase/Publication, confirmed directly.');
 
         // A2. Structural check: none of Repository's own search/catalog
         // files ever mention "Snapshot" at all — this is not a close call.
         const repositoryFacingFiles = [
-            'application/SearchPublicationsUseCase.js',
+            'application/publication/SearchPublicationsUseCase.js',
             'ui/components/PublicationCatalog.js',
             'discovery/DiscoveryProvider.js',
             'discovery/LocalDiscoveryProvider.js'
@@ -124,8 +125,8 @@ async function run() {
         // A3. "Snapshot" is real, but it is a DIFFERENT, structurally
         // disjoint pipeline (World placement/materialization) — never
         // Repository's own object, confirmed by checking what it imports.
-        const discoverSnapshot = await readSource('application/DiscoverSnapshotCandidatesCommand.js');
-        const materializeSnapshot = await readSource('application/MaterializeSnapshotFromPlacementUseCase.js');
+        const discoverSnapshot = await readSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js');
+        const materializeSnapshot = await readSource('application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js');
         assert(!/publisher\/Publication\.js|discovery\/DiscoveryProvider\.js/.test(discoverSnapshot + materializeSnapshot),
             '4. neither Snapshot-pipeline file imports publisher/Publication.js or discovery/DiscoveryProvider.js — Snapshot and Publication are two separate concepts, not two names for one.');
         assert(discoverSnapshot.includes('{ discoveryTag }') && discoverSnapshot.includes('discoveryQueryService.search(discoveryTag)'),
@@ -146,7 +147,7 @@ async function run() {
         assert(typeof PRODUCT_DIRECTION === 'string' && PRODUCT_DIRECTION.includes('Publication') && !PRODUCT_DIRECTION.includes('Snapshot'),
             '7. the recorded product direction uses this codebase\'s own vocabulary (Publication), not the originating brief\'s (Snapshot).');
     }
-    console.log('✓ Section A: the product direction itself is recorded as a stated decision, not derived or contested here. But its own destination vocabulary is corrected against source first: this codebase\'s "Snapshot" (application/DiscoverSnapshotCandidatesCommand.js, application/MaterializeSnapshotFromPlacementUseCase.js — a discoveryTag-keyed World-placement pipeline) is a structurally disjoint concept from "Publication" (publisher/Publication.js), the object Repository actually searches, lists, and forks — confirmed in both directions, by import and by UI reference. Every later section reasons about Publication federation, not Snapshot federation.');
+    console.log('✓ Section A: the product direction itself is recorded as a stated decision, not derived or contested here. But its own destination vocabulary is corrected against source first: this codebase\'s "Snapshot" (application/snapshot/DiscoverSnapshotCandidatesCommand.js, application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js — a discoveryTag-keyed World-placement pipeline) is a structurally disjoint concept from "Publication" (publisher/Publication.js), the object Repository actually searches, lists, and forks — confirmed in both directions, by import and by UI reference. Every later section reasons about Publication federation, not Snapshot federation.');
 
     // ===============================================================
     // Section B — Source capability matrix, built from real code.
@@ -169,9 +170,9 @@ async function run() {
         // B3. Peer DOES carry a live gossip transport for
         // DecentralizedPublication envelopes — a genuinely separate fact
         // from peer discovery itself, checked directly.
-        const publicationPeerExchange = await readSource('application/PublicationPeerExchange.js');
+        const publicationPeerExchange = await readSource('application/publication/PublicationPeerExchange.js');
         assert(proseIncludes(publicationPeerExchange, 'wires application/ PublicationExchange.js to a LIVE, already-authenticated peer connection'),
-            '4. application/PublicationPeerExchange.js (0.7.3) is a real, live gossip transport for DecentralizedPublication envelopes over an authenticated peer connection — Peer\'s own Retrieve/Exchange capability for THIS envelope type is real, not merely theoretical (Section C narrows what it actually carries today).');
+            '4. application/publication/PublicationPeerExchange.js (0.7.3) is a real, live gossip transport for DecentralizedPublication envelopes over an authenticated peer connection — Peer\'s own Retrieve/Exchange capability for THIS envelope type is real, not merely theoretical (Section C narrows what it actually carries today).');
 
         // B4. Decentralized — identity-scoped lookup only, no free-text
         // browse, reconfirmed directly (0.9.329's own B8 finding, checked
@@ -184,9 +185,9 @@ async function run() {
         // in this codebase — Snapshot candidate discovery via a
         // discoveryTag — is real, but Section A already proved it belongs
         // to a different domain object entirely.
-        const nostrSnapshotDiscovery = await readSource('application/NostrSnapshotDiscoveryQueryService.js');
+        const nostrSnapshotDiscovery = await readSource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         assert(!/DiscoveryProvider|SearchPublicationsUseCase/.test(nostrSnapshotDiscovery),
-            '6. application/NostrSnapshotDiscoveryQueryService.js never imports discovery/DiscoveryProvider.js or calls SearchPublicationsUseCase — its browsing pattern is real and proven (0.9.149/0.9.150) but wired to Snapshot, not to Repository.');
+            '6. application/nostr/NostrSnapshotDiscoveryQueryService.js never imports discovery/DiscoveryProvider.js or calls SearchPublicationsUseCase — its browsing pattern is real and proven (0.9.149/0.9.150) but wired to Snapshot, not to Repository.');
     }
     console.log('✓ Section B: the matrix, built from real code rather than assumed symmetry — Local: Discover ✓ / Search ✓ / Retrieve ✓ (LocalDiscoveryProvider, shipped). Peer: Discover ✗ for publications (PeerDiscoveryProvider\'s own header names its question "a candidate endpoint for a peer," never a publication, and never mentions Publication at all) / Retrieve-via-gossip ✓ but only for whatever content DecentralizedPublication envelopes actually carry (Section C narrows this). Decentralized: Discover ✗ as free-text browsing (identity-scoped lookup only, reconfirmed fresh) / a real "browse the unknown by tag" pattern DOES exist in this codebase (Nostr Snapshot candidate discovery) but is wired to a different domain object than Repository\'s own, confirmed structurally. The naive matrix the originating brief sketched (uniform ✓/? across all three sources) does not survive contact with source.');
 
@@ -228,7 +229,7 @@ async function run() {
         // section originally found (0.9.330) exactly two
         // DecentralizedPublication content-kind plugins registered, ever,
         // neither of which was Repository's own Publication. 0.9.331 built
-        // a THIRD plugin (application/PublicationContentKind.js,
+        // a THIRD plugin (application/publication/PublicationContentKind.js,
         // forkbuild.publication) wrapping publisher/Publication.js itself
         // — but left it unregistered in the Publications Center's own
         // display-kind registry until 0.9.333, which wired it in exactly
@@ -236,14 +237,14 @@ async function run() {
         // change (0.9.333's own scope explicitly excludes Repository,
         // Search, and federated discovery), but as the Publications
         // Center's own generic dispatch table gaining a third entry. See
-        // application/PublicationContentKind.js's own header on why this
+        // application/publication/PublicationContentKind.js's own header on why this
         // was always framed as "a SECOND, PARALLEL way for a Publication
         // to travel," never a Repository-facing one.
-        const displayKindRegistry = await readSource('application/CreatePublicationDisplayKindRegistryUseCase.js');
+        const displayKindRegistry = await readSource('application/publication/CreatePublicationDisplayKindRegistryUseCase.js');
         assert(displayKindRegistry.includes('createBlueprintAttributionPublicationKind') && displayKindRegistry.includes('createPlaceNamingClaimPublicationKind'),
-            '7. application/CreatePublicationDisplayKindRegistryUseCase.js still wires the original two kinds — Blueprint Attribution and Place Naming Claim — unchanged by 0.9.333\'s own addition.');
+            '7. application/publication/CreatePublicationDisplayKindRegistryUseCase.js still wires the original two kinds — Blueprint Attribution and Place Naming Claim — unchanged by 0.9.333\'s own addition.');
         assert(/forkbuild\.publication|createPublicationContentKind/.test(displayKindRegistry),
-            '8. as of 0.9.333, the registry ALSO wires a third kind — forkbuild.publication, Repository\'s own publisher/Publication.js, transported through application/PublicationContentKind.js (0.9.331) — reconfirmed directly rather than assumed stale from 0.9.330\'s own snapshot.');
+            '8. as of 0.9.333, the registry ALSO wires a third kind — forkbuild.publication, Repository\'s own publisher/Publication.js, transported through application/publication/PublicationContentKind.js (0.9.331) — reconfirmed directly rather than assumed stale from 0.9.330\'s own snapshot.');
 
         // C5. What this does NOT do: it does not give Repository's own
         // search/catalog/discovery stack (SearchPublicationsUseCase.js,
@@ -251,7 +252,7 @@ async function run() {
         // CreatePublicationCatalogUseCase.js, discovery/*) any new
         // dependency at all — the Publications Center's own display-kind
         // registry is a SEPARATE composition from Repository's, per
-        // application/CreatePublicationDisplayKindRegistryUseCase.js's own
+        // application/publication/CreatePublicationDisplayKindRegistryUseCase.js's own
         // header, and 0.9.332's own Section G already confirmed zero
         // Repository coupling for forkbuild.publication in either
         // direction. Reconfirmed fresh here: a decentralized-origin
@@ -259,10 +260,10 @@ async function run() {
         // still cannot be found, searched, or forked through Repository —
         // that overlap remains exactly zero, unchanged by 0.9.333.
         const repositoryFacingFiles = [
-            'application/SearchPublicationsUseCase.js',
+            'application/publication/SearchPublicationsUseCase.js',
             'ui/components/PublicationCatalog.js',
             'ui/components/PublicationCard.js',
-            'application/CreatePublicationCatalogUseCase.js'
+            'application/publication/CreatePublicationCatalogUseCase.js'
         ];
         for (const file of repositoryFacingFiles) {
             const src = await readSource(file);
@@ -270,8 +271,8 @@ async function run() {
                 `9. ${file} still makes no reference to forkbuild.publication or the Publications Center's own display-kind registry — Repository's own catalog/search stack is untouched by 0.9.333.`);
         }
         const grepNewDecentralizedPublicationSites = grepFiles('new DecentralizedPublication\\(', ['application']);
-        assert(grepNewDecentralizedPublicationSites.length === 1 && grepNewDecentralizedPublicationSites[0] === 'application/PublicationResolver.js',
-            `10. the only production site constructing a DecentralizedPublication remains application/PublicationResolver.js#publish() (found construction sites: ${grepNewDecentralizedPublicationSites.join(', ') || 'none'}) — 0.9.333 registered a display kindPlugin, it did not add a second construction site.`);
+        assert(grepNewDecentralizedPublicationSites.length === 1 && grepNewDecentralizedPublicationSites[0] === 'application/publication/PublicationResolver.js',
+            `10. the only production site constructing a DecentralizedPublication remains application/publication/PublicationResolver.js#publish() (found construction sites: ${grepNewDecentralizedPublicationSites.join(', ') || 'none'}) — 0.9.333 registered a display kindPlugin, it did not add a second construction site.`);
     }
     console.log('✓ Section C: 0.9.329\'s own finding (no shared documentId) still holds, reconfirmed fresh — but it was not the whole picture. Publication and DecentralizedPublication share a REAL substrate: the identical core/ContentReference.js class, and Publication\'s own constructor already accepts contentReference/publisherIdentity/signature, explicitly documented since 0.2.16 as forward-looking, optional fields. That substrate is completely dormant in production — publisher/LocalPublisherProvider.js, the one live construction path, never populates any of the three. Checked fresh, directly rather than assumed stale: as of 0.9.333 the Publications Center\'s own display-kind registry now wires THREE content kinds, the third being forkbuild.publication — Repository\'s own Publication, transportable and now VIEWABLE through the decentralized pipeline. But Repository\'s own search/catalog/discovery stack still has zero reference to any of it — content overlap between Repository\'s catalog and anything Peer/Decentralized can carry remains exactly zero; what changed is that a decentralized-origin Publication can now be SEEN outside Repository, not found THROUGH it.');
 
@@ -334,9 +335,9 @@ async function run() {
     // architecture, never invented for this milestone's own convenience.
     // ===============================================================
     {
-        const localPublicationCatalog = await readSource('application/LocalPublicationCatalog.js');
+        const localPublicationCatalog = await readSource('application/publication/LocalPublicationCatalog.js');
         assert(localPublicationCatalog.includes('No ranking, trust score, "canonical," or "preferred" field exists'),
-            '1. application/LocalPublicationCatalog.js\'s own header states this restraint directly, reconfirmed fresh (0.9.329 Section D).');
+            '1. application/publication/LocalPublicationCatalog.js\'s own header states this restraint directly, reconfirmed fresh (0.9.329 Section D).');
 
         const principles = await readSource('docs/Principles.md');
         assert(principles.includes('### Acquisition Provenance Is Not Evidence Rank (0.8.17)'),
@@ -354,7 +355,7 @@ async function run() {
         // G1. Guard: no such store has been silently introduced already.
         const suspiciousNames = ['RepositoryFederationStore', 'RepositorySnapshotStore', 'RepositorySnapshotIdentity', 'RepositorySnapshotRegistry', 'RepositoryProvider'];
         for (const name of suspiciousNames) {
-            assert(!(await sourceExists(`application/${name}.js`)), `1. application/${name}.js does not exist — no second Repository-owned source of truth has been introduced.`);
+            assert(applicationPath(name) === null, `1. application/${name}.js does not exist — no second Repository-owned source of truth has been introduced.`);
         }
 
         // G2. The constraint, derived from Section C/E rather than
@@ -369,11 +370,11 @@ async function run() {
         // existing store (LocalPublicationCatalog, extended with a real
         // content-kind plugin — Section H) actually holds Repository
         // content at all.
-        const localPublicationCatalog = await readSource('application/LocalPublicationCatalog.js');
+        const localPublicationCatalog = await readSource('application/publication/LocalPublicationCatalog.js');
         assert(localPublicationCatalog.includes('list()'),
-            '2. application/LocalPublicationCatalog.js already exposes list() — the one existing store shape a Repository-content-kind plugin (Section H) would extend, rather than a new store this milestone would have to invent.');
+            '2. application/publication/LocalPublicationCatalog.js already exposes list() — the one existing store shape a Repository-content-kind plugin (Section H) would extend, rather than a new store this milestone would have to invent.');
     }
-    console.log('✓ Section G: no second Repository-owned source of truth exists today (checked directly). The real constraint a future implementation must hold to: Local composition is already possible without any new store (LocalDiscoveryProvider reads Repository\'s own existing storage). Peer/Decentralized composition without a new store is NOT yet possible — not because the constraint is hard to satisfy, but because, per Section C/E, no existing store currently holds any Repository-shaped content from either source. The right target is not a new RepositoryFederationStore; it is teaching the ALREADY-EXISTING application/LocalPublicationCatalog.js to hold Repository content too, the same way it already holds Blueprint/PlaceNaming content — Section H names the concrete seam.');
+    console.log('✓ Section G: no second Repository-owned source of truth exists today (checked directly). The real constraint a future implementation must hold to: Local composition is already possible without any new store (LocalDiscoveryProvider reads Repository\'s own existing storage). Peer/Decentralized composition without a new store is NOT yet possible — not because the constraint is hard to satisfy, but because, per Section C/E, no existing store currently holds any Repository-shaped content from either source. The right target is not a new RepositoryFederationStore; it is teaching the ALREADY-EXISTING application/publication/LocalPublicationCatalog.js to hold Repository content too, the same way it already holds Blueprint/PlaceNaming content — Section H names the concrete seam.');
 
     // ===============================================================
     // Section H — Smallest first implementation seam, identified from an
@@ -384,10 +385,10 @@ async function run() {
         // H1. The exact, reusable template: two existing content-kind
         // plugins, both built to the SAME four-function shape
         // PublicationResolver itself already requires.
-        const publicationResolver = await readSource('application/PublicationResolver.js');
+        const publicationResolver = await readSource('application/publication/PublicationResolver.js');
         assert(proseIncludes(publicationResolver, 'a kindPlugin with contentKind/validate/fromJSON/verify is required'),
-            '1. application/PublicationResolver.js\'s own error message names the exact plugin shape directly.');
-        assert(await sourceExists('application/BlueprintAttributionPublicationKind.js') && await sourceExists('application/PlaceNamingClaimPublicationKind.js'),
+            '1. application/publication/PublicationResolver.js\'s own error message names the exact plugin shape directly.');
+        assert(await sourceExists('application/blueprint/BlueprintAttributionPublicationKind.js') && await sourceExists('application/placeNaming/PlaceNamingClaimPublicationKind.js'),
             '2. both existing templates for "teach the decentralized protocol a new content type" are real, shipped files.');
 
         // H2. The seam this milestone identifies — NOT preselected before
@@ -466,7 +467,7 @@ async function run() {
         // no distribution class, catalog, or discovery provider is
         // touched by that change.
         const expectedLaterMilestoneFiles = new Set([
-            'application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js',
+            'application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js',
             'ui/components/PublicationCard.js', 'ui/components/PublicationList.js'
         ]);
         const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
@@ -505,7 +506,7 @@ async function run() {
 'a no-second-source-of-truth constraint, and one concretely named, minimally-scoped, template-following seam. No\n' +
 'production code is touched here — this remains, per its own Type, a test-only decision milestone. A future 0.9.331\n' +
 'is not pre-committed by this file, but is, for the first time in this sequence, pointed at something specific:\n' +
-'application/PublicationContentKind.js (or an equivalent name), built to the exact BlueprintAttributionPublicationKind.js/\n' +
+'application/publication/PublicationContentKind.js (or an equivalent name), built to the exact BlueprintAttributionPublicationKind.js/\n' +
 'PlaceNamingClaimPublicationKind.js template, as the smallest real step toward the product direction Section A\n' +
 'recorded.\n');
 

@@ -9,7 +9,7 @@
 // Everything here operates on a plain axis-aligned bounding box shape
 // — `{ min: {x,y,z}, max: {x,y,z} }` — and plain `{x,y,z}` positions.
 // Nothing here knows what a Document, a WorldPlacement, or a
-// BrickRegistry is; application/AvatarMovementConstraint.js is the
+// BrickRegistry is; application/avatar/AvatarMovementConstraint.js is the
 // layer that turns "the world geometry currently available to this
 // replica" into the obstacle list this file consumes. Same "core
 // deals with geometry/math, application supplies the data" split
@@ -46,7 +46,7 @@ export function avatarAabbAt(position) {
 // added a WorldPlacement offset. Deliberately axis-aligned regardless
 // of `Brick.rotation` — a small, honestly documented simplification
 // for this first collision milestone, exactly the same one
-// application/SelectionBoundsService.js already makes for gizmo
+// application/editor/SelectionBoundsService.js already makes for gizmo
 // bounds (see its own header) — reused here as the same idea, not the
 // same code, since that class lives in application/ and is bound to a
 // BrickRegistry instance, while this stays a pure function over

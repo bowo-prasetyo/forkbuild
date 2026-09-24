@@ -7,10 +7,10 @@ import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -150,9 +150,9 @@ function makeBackend({ notificationSink } = {}) {
 
 // TWO independently constructed sets of PublicationCommentaryStore/
 // NotificationEventStore/use-case objects — rootA mirrors
-// application/CreatePublicationCommentaryUseCase.js's own composition
+// application/publication/commentary/CreatePublicationCommentaryUseCase.js's own composition
 // (PublicationCard.js/PublicationList.js's real path); rootB mirrors
-// application/CreateWorldViewUseCase.js's own composition
+// application/world/CreateWorldViewUseCase.js's own composition
 // (OwnPublicationPanel.js/WorldEncounterCanvas.js's real path) — sharing
 // ONE backing Map, the honest analog of both proxying the same
 // `window.localStorage` in the real app.

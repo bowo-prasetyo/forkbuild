@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { describeWorldEncounterReadModel } from '../application/WorldEncounterReadModel.js';
+import { describeWorldEncounterReadModel } from '../application/worldEncounter/WorldEncounterReadModel.js';
 import { deriveWorldEncounters } from '../core/WorldEncounter.js';
 
 // 0.9.1 — World Encounter Read Model.
@@ -193,7 +193,7 @@ async function run() {
             assert(!resultText.includes(term), `33. the result never carries evaluative/spatial-navigation vocabulary ('${term}')`);
         }
 
-        const moduleSource = await readFile(new URL('../application/WorldEncounterReadModel.js', import.meta.url), 'utf8');
+        const moduleSource = await readFile(new URL('../application/worldEncounter/WorldEncounterReadModel.js', import.meta.url), 'utf8');
         const codeOnly = moduleSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n').toLowerCase();
         const forbiddenInCode = [
             'score', 'rank', 'winner', 'trust', 'reputation', 'verified', 'confidence',

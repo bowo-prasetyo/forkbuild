@@ -9,17 +9,17 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { DocumentCommandPropagationUseCase } from '../application/DocumentCommandPropagationUseCase.js';
+import { DocumentCommandPropagationUseCase } from '../application/document/DocumentCommandPropagationUseCase.js';
 import {
     RemoteDocumentOperationApplicationUseCase,
     DocumentOperationApplicationOutcome
-} from '../application/RemoteDocumentOperationApplicationUseCase.js';
+} from '../application/document/RemoteDocumentOperationApplicationUseCase.js';
 import {
     CausalGapStatus,
     DocumentOperationCausalGapDetector
@@ -331,7 +331,7 @@ async function runTests() {
     assert(observations[0].gap === CausalGapStatus.NO_GAP, '27. the FIRST operation (no predecessors) has no gap');
     assert(observations[1].gap === CausalGapStatus.NO_GAP, '28. the SECOND operation names the FIRST as its predecessor, and the first was already recorded by the time the second arrived — no gap');
     assert(target.commandHistory.getExecutedCommands().length === 2, '29. both remote operations were actually applied to Bob\'s own command history');
-    assert(target.commandHistory.getExecutedCommands()[0].id === first.id, '30. applied in arrival order — application/CommandHistory.js is untouched, still ARRIVAL_ORDER (0.9.226)');
+    assert(target.commandHistory.getExecutedCommands()[0].id === first.id, '30. applied in arrival order — application/editor/CommandHistory.js is untouched, still ARRIVAL_ORDER (0.9.226)');
     assert(target.commandHistory.getExecutedCommands()[1].id === second.id, '31. the second applied operation is genuinely the second command');
 
     // Now prove the inverse: a genuinely gapped operation still applies.

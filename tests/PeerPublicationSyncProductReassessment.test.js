@@ -3,29 +3,29 @@ import { readFile } from 'node:fs/promises';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License, LicenseId } from '../core/License.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { CreateDiscoveryUseCase } from '../application/CreateDiscoveryUseCase.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscoveryUseCase.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
-import { PublicationPeerConnectionSync } from '../application/PublicationPeerConnectionSync.js';
-import { PeerContentExchange } from '../application/PeerContentExchange.js';
-import { CreatePublicationPeerExchangeUseCase } from '../application/CreatePublicationPeerExchangeUseCase.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
+import { PublicationPeerConnectionSync } from '../application/publication/PublicationPeerConnectionSync.js';
+import { PeerContentExchange } from '../application/peer/PeerContentExchange.js';
+import { CreatePublicationPeerExchangeUseCase } from '../application/publication/CreatePublicationPeerExchangeUseCase.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.343 — Peer Publication Synchronization Product Reassessment.
@@ -48,7 +48,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // production code, never by re-reading 0.9.342's own header.
 //
 // THE ONE FACT THIS AUDIT SURFACES THAT NO PRIOR MILESTONE'S TEST FILE
-// EXERCISED END TO END: application/PublicationResolver.js#resolve() step 4
+// EXERCISED END TO END: application/publication/PublicationResolver.js#resolve() step 4
 // reads ONLY this replica's own, local content/ContentStore.js — never the
 // network (see that file's own header). An envelope PublicationPeerConnectionSync
 // delivers therefore resolves CONTENT_UNAVAILABLE the instant it arrives,
@@ -62,7 +62,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // still requires the one thing that has ALWAYS required it since 0.9.337:
 // a successful content resolution, which for a peer-only publication means
 // the existing, unmodified, explicitly-triggered peer content retrieval
-// (application/PeerContentExchange.js, 0.7.4; application/
+// (application/peer/PeerContentExchange.js, 0.7.4; application/
 // PublicationResolutionCoordinator.js, 0.7.5/0.7.6) — never anything new
 // built by this milestone, and never anything 0.9.342 changed. This is not
 // a bug this reassessment found; it is the metadata/content boundary
@@ -353,9 +353,9 @@ async function run() {
         const viewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
         assert(!/connectionSync|PublicationPeerConnectionSync/.test(viewSource),
             '5. ui/views/DecentralizedPublicationsView.js itself has no knowledge of PublicationPeerConnectionSync at all — one admission gate, reached by every source, never a second one keyed on how a Publication was acquired.');
-        const discoverySource = await readSource('application/CreateDiscoveryUseCase.js');
+        const discoverySource = await readSource('application/discovery/CreateDiscoveryUseCase.js');
         assert(!/[Pp]eer|[Cc]onnection[Ss]ync/.test(discoverySource),
-            '6. application/CreateDiscoveryUseCase.js itself has no peer or connection-sync-specific code — Repository search remains one composition, regardless of temporal path.');
+            '6. application/discovery/CreateDiscoveryUseCase.js itself has no peer or connection-sync-specific code — Repository search remains one composition, regardless of temporal path.');
 
         alice.dispose(); bob.dispose(); session.dispose();
     }
@@ -554,11 +554,11 @@ async function run() {
     // ===============================================================
     {
         clearLocalPublications();
-        const connectionSyncSource = await readSource('application/PublicationPeerConnectionSync.js');
+        const connectionSyncSource = await readSource('application/publication/PublicationPeerConnectionSync.js');
         assert(!/import .*PublicationResolver/.test(connectionSyncSource), '1. no PublicationResolver import.');
         assert(!/import .*ContentStore/.test(connectionSyncSource), '2. no ContentStore import.');
         assert(!/import .*PeerContentExchange/.test(connectionSyncSource), '3. no PeerContentExchange import.');
-        const useCaseSource = await readSource('application/CreatePublicationPeerExchangeUseCase.js');
+        const useCaseSource = await readSource('application/publication/CreatePublicationPeerExchangeUseCase.js');
         assert(!/PeerContentExchange/.test(useCaseSource), '4. the composition root that builds connectionSync never wires it to any content-transfer collaborator either.');
 
         const verifier = new LocalAuthorizationVerifier();
@@ -674,7 +674,7 @@ async function run() {
 
         const restartedCatalog = new LocalPublicationCatalog(bobCatalogStorage);
         assert(restartedCatalog.list().length === 2 && restartedCatalog.has(retrievedEnvelope.id) && restartedCatalog.has(neverRetrievedEnvelope.id),
-            '3. the peer-catalog INDEX (which envelopes this replica has seen) survives restart — application/LocalPublicationCatalog.js already persists to its own StorageProvider, unchanged since 0.7.2, entirely independent of this milestone.');
+            '3. the peer-catalog INDEX (which envelopes this replica has seen) survives restart — application/publication/LocalPublicationCatalog.js already persists to its own StorageProvider, unchanged since 0.7.2, entirely independent of this milestone.');
 
         const freshDiscoveryProvider = new DecentralizedPublicationDiscoveryProvider();
         assert(freshDiscoveryProvider.list().length === 0,
@@ -704,7 +704,7 @@ async function run() {
 
         session.dispose = () => {};
     }
-    console.log('✓ Section H: classified, not assumed. The peer-catalog INDEX (which envelopes this replica has seen) is durable — application/LocalPublicationCatalog.js already persists it, unrelated to this milestone. Repository\'s own accumulator is NOT durable (0.9.340 Section G, reconfirmed) and is never repopulated automatically at application boot. But it is not permanently lost either: any publication already fully RETRIEVED before restart re-resolves purely locally and re-admits automatically the next time the person visits the page that already runs this resolution — restart affects WHEN Repository visibility is re-established for already-available content, never WHETHER a never-retrieved publication becomes visible (it still needs the identical Retrieve action, before or after any restart). No on-file evidence names a user requiring full automatic persistent federated cataloging; this stays an open, characterized question — exactly 0.9.340 Section G\'s own precedent — never an assumed defect this milestone must fix.');
+    console.log('✓ Section H: classified, not assumed. The peer-catalog INDEX (which envelopes this replica has seen) is durable — application/publication/LocalPublicationCatalog.js already persists it, unrelated to this milestone. Repository\'s own accumulator is NOT durable (0.9.340 Section G, reconfirmed) and is never repopulated automatically at application boot. But it is not permanently lost either: any publication already fully RETRIEVED before restart re-resolves purely locally and re-admits automatically the next time the person visits the page that already runs this resolution — restart affects WHEN Repository visibility is re-established for already-available content, never WHETHER a never-retrieved publication becomes visible (it still needs the identical Retrieve action, before or after any restart). No on-file evidence names a user requiring full automatic persistent federated cataloging; this stays an open, characterized question — exactly 0.9.340 Section G\'s own precedent — never an assumed defect this milestone must fix.');
 
     // ===============================================================
     // Section I — Offline peer boundary: unchanged by 0.9.342's production
@@ -725,9 +725,9 @@ async function run() {
         // No peer, no message, nothing for a Bob who never connects to
         // ever receive — structurally confirmed once more: no relay,
         // Nostr, or global-index concept anywhere in the production seam.
-        const connectionSyncSource = await readSource('application/PublicationPeerConnectionSync.js');
+        const connectionSyncSource = await readSource('application/publication/PublicationPeerConnectionSync.js');
         assert(!/[Nn]ostr|relay|globalIndex|GlobalIndex/.test(connectionSyncSource),
-            '1. no Nostr/relay/global-index concept anywhere in application/PublicationPeerConnectionSync.js — connection-time sync only ever acts on peers THIS replica is directly, currently, authenticated to.');
+            '1. no Nostr/relay/global-index concept anywhere in application/publication/PublicationPeerConnectionSync.js — connection-time sync only ever acts on peers THIS replica is directly, currently, authenticated to.');
         assert(alice.catalog.list().length === 1, '2. Alice\'s own catalog holds her publication, exactly as expected, with no one to send it to.');
 
         alice.dispose();

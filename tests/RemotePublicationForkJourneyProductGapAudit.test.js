@@ -3,14 +3,14 @@ import { readFile } from 'node:fs/promises';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License, LicenseId } from '../core/License.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { CreateDiscoveryUseCase } from '../application/CreateDiscoveryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscoveryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { Document } from '../core/Document.js';
 import { World } from '../core/World.js';
@@ -23,12 +23,12 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { resolveSigningIdentityId } from '../identity/resolveSigningIdentityId.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { worldViewFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.352 — Remote Publication Fork Journey Product Gap Audit.
@@ -350,9 +350,9 @@ async function run() {
     // ===============================================================
     {
         for (const file of [
-            'application/ForkDocumentUseCase.js',
-            'application/LoadPublicationDocumentUseCase.js',
-            'application/DocumentCloneService.js'
+            'application/document/ForkDocumentUseCase.js',
+            'application/publication/LoadPublicationDocumentUseCase.js',
+            'application/document/DocumentCloneService.js'
         ]) {
             const source = await readSource(file);
             assert(!/decentralized|peer-sourced|isPeer|isDecentralized/i.test(source),
@@ -479,14 +479,14 @@ async function run() {
         // distinct outcomes (including CONTENT_UNAVAILABLE, explicitly
         // documented as "never a verdict about the publication's own
         // validity"); the FORK layer has no equivalent vocabulary at all.
-        const outcomeSource = await readSource('application/PublicationResolutionOutcome.js');
+        const outcomeSource = await readSource('application/publication/PublicationResolutionOutcome.js');
         const namedOutcomes = (outcomeSource.match(/^\s+[A-Z_]+:\s*'[a-z-]+'/gm) || []).length;
         assert(namedOutcomes >= 7,
             `4. the resolution layer names ${namedOutcomes} distinct, documented outcomes for "why didn't this resolve" — a rich, structured vocabulary.`);
 
-        const forkUseCaseSource = await readSource('application/ForkDocumentUseCase.js');
+        const forkUseCaseSource = await readSource('application/document/ForkDocumentUseCase.js');
         assert(!/class\s+\w*Error|Object\.freeze\(\{[\s\S]*?:\s*'/.test(forkUseCaseSource),
-            '5. ForkDocumentUseCase.js defines no equivalent outcome enum/error-class of its own — every failure is a bare `new Error(string)`, still true post-0.9.353 (the reason CODES it now attaches live in the separate application/ForkFailureReason.js, never inlined here).');
+            '5. ForkDocumentUseCase.js defines no equivalent outcome enum/error-class of its own — every failure is a bare `new Error(string)`, still true post-0.9.353 (the reason CODES it now attaches live in the separate application/document/ForkFailureReason.js, never inlined here).');
         // 0.9.353 note: this milestone's own recommendation (Section J)
         // has since been implemented — ForkDocumentUseCase's two throw
         // sites now attach a `.reason` (see application/

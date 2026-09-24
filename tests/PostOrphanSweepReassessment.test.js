@@ -1,7 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 import {
     reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage
@@ -183,8 +183,8 @@ async function run() {
         // A2. The one bucket 0.9.327 actually investigated: fold in its
         // verdict directly, don't merely re-assert 0.9.326's own
         // provisional "ORPHANED" label.
-        assert((byBucket.get('BASE_ANCHOR_OBSERVATION_VIEW') || []).includes('application/BaseAnchorPublicationObservationView.js'),
-            'A2a. The sweep still finds application/BaseAnchorPublicationObservationView.js (sanity).');
+        assert((byBucket.get('BASE_ANCHOR_OBSERVATION_VIEW') || []).includes('application/anchoring/base/BaseAnchorPublicationObservationView.js'),
+            'A2a. The sweep still finds application/anchoring/base/BaseAnchorPublicationObservationView.js (sanity).');
         assert(grepCount('BaseAnchorPublicationObservationView', ['tests']) >= 1 &&
             (await rawSource('tests/BitcoinAnchorObservationProductGapAudit.test.js')).includes("const verdict = 'DUPLICATIVE';"),
             'A2b. 0.9.327\'s own investigation of this file is on file and its recorded verdict is DUPLICATIVE — read directly from its own test file, never re-derived here.');
@@ -198,7 +198,7 @@ async function run() {
             assert((await rawSource(f)).length <= 1, `A3b. ${f} is still empty (not a real, unreachable implementation).`);
         }
         assert((byBucket.get('DELEGATION_FAMILY') || []).length >= 3, 'A3c. The Delegation family bucket is still populated.');
-        assert(grepFiles('new CreateDelegationUseCase(', ['application', 'ui']).filter((f) => f !== 'application/CreateDelegationUseCase.js').length === 0,
+        assert(grepFiles('new CreateDelegationUseCase(', ['application', 'ui']).filter((f) => f !== 'application/identity/CreateDelegationUseCase.js').length === 0,
             'A3d. Delegation still has zero production construction sites outside its own file.');
         assert((byBucket.get('HISTORICAL_REPLICATION_FAMILY') || []).length >= 1, 'A3e. The historical replication bucket is still populated.');
         assert((byBucket.get('RECONCILIATION_DECISION_FAMILY') || []).length > 0, 'A3f. The Reconciliation Decision family bucket is still populated.');
@@ -240,26 +240,26 @@ async function run() {
 
         const reachable = [
             ['Editor', 'ui/views/EditorView.js', 'export default'],
-            ['Publish', 'application/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase'],
-            ['Distribution', 'application/NostrPublicationDistributionRuntimeAdapter.js', 'export function createNostrPublicationDistributionRuntimeAdapter'],
+            ['Publish', 'application/publication/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase'],
+            ['Distribution', 'application/nostr/NostrPublicationDistributionRuntimeAdapter.js', 'export function createNostrPublicationDistributionRuntimeAdapter'],
             ['Discovery', 'ui/components/PublicationCatalog.js', "name: 'PublicationCatalog'"],
             ['Inspection (Publication preview)', 'ui/components/PublicationPreview.js', 'export default'],
             ['Commentary', 'core/PublicationCommentary.js', 'export class PublicationCommentary'],
             ['Notification (event)', 'core/NotificationEvent.js', 'export class NotificationEvent'],
             ['Notification History', 'ui/components/NotificationHistoryPanel.js', "name: 'NotificationHistoryPanel'"],
-            ['Placement (Publish -> World)', 'application/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
-            ['Snapshot discovery', 'application/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
-            ['Snapshot materialization', 'application/MaterializeSnapshotFromPlacementUseCase.js', 'export class MaterializeSnapshotFromPlacementUseCase'],
+            ['Placement (Publish -> World)', 'application/placement/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
+            ['Snapshot discovery', 'application/snapshot/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
+            ['Snapshot materialization', 'application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js', 'export class MaterializeSnapshotFromPlacementUseCase'],
             ['World View', 'ui/views/WorldView.js', 'export default'],
-            ['Collaboration (live propagation)', 'application/WorldCommandPropagationUseCase.js', 'export class WorldCommandPropagationUseCase'],
+            ['Collaboration (live propagation)', 'application/document/WorldCommandPropagationUseCase.js', 'export class WorldCommandPropagationUseCase'],
             ['Place Naming (claim/persist)', 'core/PlaceNamingClaim.js', 'export class PlaceNamingClaim'],
-            ['Place Naming (explicit publication)', 'application/NostrPlaceNamingDiscoveryPublisher.js', 'export class NostrPlaceNamingDiscoveryPublisher'],
+            ['Place Naming (explicit publication)', 'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js', 'export class NostrPlaceNamingDiscoveryPublisher'],
             ['Provider preferences', 'ui/views/ContentProviderSettingsView.js', 'export default'],
             ['Authentication/identity', 'identity/LocalIdentityProvider.js', 'export class LocalIdentityProvider'],
-            ['Automatic Snapshot encounter cascade', 'application/AutomaticSnapshotEncounterCascade.js', 'export class AutomaticSnapshotEncounterCascade'],
+            ['Automatic Snapshot encounter cascade', 'application/snapshot/AutomaticSnapshotEncounterCascade.js', 'export class AutomaticSnapshotEncounterCascade'],
             ['Manual Snapshot recovery (Diagnostic Tools popup)', 'ui/components/OwnPublicationPanel.js', 'diagnosticToolsOpen'],
-            ['Bitcoin anchor lifecycle', 'application/BitcoinAnchorPublicationLifecycleTimelineView.js', 'reconstructBitcoinAnchorPublicationLifecycleTimeline'],
-            ['Base anchor lifecycle', 'application/BaseAnchorPublicationLifecycleTimelineView.js', 'reconstructBaseAnchorPublicationLifecycleTimeline'],
+            ['Bitcoin anchor lifecycle', 'application/anchoring/bitcoin/BitcoinAnchorPublicationLifecycleTimelineView.js', 'reconstructBitcoinAnchorPublicationLifecycleTimeline'],
+            ['Base anchor lifecycle', 'application/anchoring/base/BaseAnchorPublicationLifecycleTimelineView.js', 'reconstructBaseAnchorPublicationLifecycleTimeline'],
             ['Reconciliation Candidate Leaderboard', 'ui/views/ReconciliationCandidateLeaderboardView.js', "name: 'ReconciliationCandidateLeaderboardView'"]
         ];
         for (const [name, path, marker] of reachable) {
@@ -287,12 +287,12 @@ async function run() {
     {
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publishDocumentUseCase/.test(editorViewSource), 'C1. Publication -> Placement -> Discovery -> Inspection: EditorView.js still composes the publish use case.');
-        assert(await sourceExists('application/PlacePublicationUseCase.js') && await sourceExists('ui/components/PublicationCatalog.js') && (await rawSource('ui/components/PublicationPreview.js')).length > 0,
+        assert(await sourceExists('application/placement/PlacePublicationUseCase.js') && await sourceExists('ui/components/PublicationCatalog.js') && (await rawSource('ui/components/PublicationPreview.js')).length > 0,
             'C1. Every hop in journey 1 still exists.');
 
-        assert((await rawSource('application/DiscoverSnapshotCandidatesCommand.js')).includes('export function executeDiscoverSnapshotCandidatesCommand'),
+        assert((await rawSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js')).includes('export function executeDiscoverSnapshotCandidatesCommand'),
             'C2. Snapshot -> Discovery -> Resolution -> Materialization -> World: discovery stage still exists.');
-        const materializeSource = await rawSource('application/MaterializeSnapshotFromPlacementUseCase.js');
+        const materializeSource = await rawSource('application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js');
         assert(materializeSource.includes('storeSnapshotContentUseCase') && materializeSource.includes('contentHash'), 'C2. Resolution-then-store pipeline still intact.');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
         assert(canvasSource.includes('registerMaterializedSnapshotWorldSource') || canvasSource.includes('unregisterSelectedSnapshot'), 'C2. Materialization -> World hop still intact.');
@@ -300,17 +300,17 @@ async function run() {
         assert(await sourceExists('ui/components/PlaceNamingPanel.js'), 'C3. Place Naming -> Publish -> Stranger Discovery -> Adoption: claim/persist hop still exists.');
         const mainSource = await rawSource('ui/main.js');
         assert(mainSource.includes('NostrPlaceNamingDiscoveryPublisher') || mainSource.includes('placeNamingPublicationRuntime'), 'C3. Publication runtime still composed.');
-        assert(await sourceExists('application/PlaceNamingDiscoveryMonitor.js'), 'C3. Publish -> stranger discovery hop still exists.');
-        assert((await rawSource('application/PlaceNamingClaimExchange.js')).includes('importClaim'), 'C3. Stranger discovery -> adoption hop still exists.');
+        assert(await sourceExists('application/placeNaming/PlaceNamingDiscoveryMonitor.js'), 'C3. Publish -> stranger discovery hop still exists.');
+        assert((await rawSource('application/placeNaming/PlaceNamingClaimExchange.js')).includes('importClaim'), 'C3. Stranger discovery -> adoption hop still exists.');
 
         assert(canvasSource.includes('encounterCommentaryPublicationId'), 'C4. Commentary -> Notification -> Recipient History: commentary gate still intact.');
-        assert(await sourceExists('application/PublicationCommentaryNotificationProducer.js'), 'C4. Commentary -> Notification hop still exists.');
+        assert(await sourceExists('application/publication/commentary/PublicationCommentaryNotificationProducer.js'), 'C4. Commentary -> Notification hop still exists.');
         assert((await rawSource('ui/components/NotificationHistoryPanel.js')).includes("name: 'NotificationHistoryPanel'"), 'C4. Notification -> Recipient History hop still exists.');
 
-        const editorSessionSource = await rawSource('application/EditorSession.js');
+        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
         assert(editorSessionSource.includes('new RemoteDocumentOperationApplicationUseCase()'), 'C5. Collaboration -> Remote Operation -> Causal Readiness -> Application: still live-constructed.');
         assert(await sourceExists('core/DocumentOperationApplicationReadiness.js') && await sourceExists('core/DocumentOperationApplicationEligibility.js'), 'C5. Causal-readiness primitives still exist.');
-        assert(await sourceExists('application/DocumentOperationRecoveryUseCase.js') && await sourceExists('application/RecoveredOperationReplayUseCase.js'), 'C5. Recovery/replay still exists.');
+        assert(await sourceExists('application/document/DocumentOperationRecoveryUseCase.js') && await sourceExists('application/document/RecoveredOperationReplayUseCase.js'), 'C5. Recovery/replay still exists.');
 
         const settingsSource = await rawSource('ui/views/ContentProviderSettingsView.js');
         assert(settingsSource.includes('setRoleProviderPreferenceUseCase'), 'C6. Provider preference -> Setting -> Preferred Placement: settings still save through the real write use case.');

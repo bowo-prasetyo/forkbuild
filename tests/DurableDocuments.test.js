@@ -11,8 +11,8 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { RotateBrickCommand } from '../application/commands/RotateBrickCommand.js';
@@ -22,10 +22,10 @@ import { CreateGroupCommand } from '../application/commands/CreateGroupCommand.j
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { Publication } from '../publisher/Publication.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { LocalContentStore } from '../content/LocalContentStore.js'; // Add import at top
-import { LoadPublishedSnapshotUseCase } from '../application/LoadPublishedSnapshotUseCase.js';
+import { LoadPublishedSnapshotUseCase } from '../application/snapshot/LoadPublishedSnapshotUseCase.js';
 
 // ---------------------------------------------------------------------
 // Helpers

@@ -21,7 +21,7 @@
 // ACTIVE: a remote audio track has actually arrived (peer/
 // WebRtcPeerConnection.js#onRemoteTrack) — audio is flowing in at least
 // one direction.
-// ENDED: a terminal, transient value — application/VoiceUseCase.js
+// ENDED: a terminal, transient value — application/chat/VoiceUseCase.js
 // immediately resets to IDLE after publishing it once, exactly like
 // peer/PeerAuthenticationState.js's own FAILED is terminal for ONE
 // connection rather than a state anything lingers in. Unlike a peer

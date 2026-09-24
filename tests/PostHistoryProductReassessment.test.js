@@ -7,9 +7,9 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
 import { worldViewFiles, worldNavigationSessionFiles, editorViewFiles } from './support/SourceFileGroups.js';
@@ -198,8 +198,8 @@ async function runTests() {
         const vehicleTypeCode = codeOnlyLines(vehicleTypeSource).join('\n');
         assert(!/passenger|capacity|multi-?rider|\bfuel\b|\brange\b/i.test(vehicleTypeCode), 'B2. VehicleType.js\'s own CODE still declares no capacity/passenger/fuel vocabulary');
         const repoWideVehicleFiles = [
-            'application/AvatarVehicleInteractionController.js',
-            'application/AvatarVehicleMovementController.js',
+            'application/avatar/AvatarVehicleInteractionController.js',
+            'application/avatar/AvatarVehicleMovementController.js',
             'core/VehicleInstance.js',
             'core/VehiclePresence.js'
         ];
@@ -254,7 +254,7 @@ async function runTests() {
         // its dependencies — a direct regression check on the object
         // literal itself, not merely "the identifier appears somewhere
         // in the file" (0.9.206's own C3a-c).
-        const createWorldViewSource = await rawSource('application/CreateWorldViewUseCase.js');
+        const createWorldViewSource = await rawSource('application/world/CreateWorldViewUseCase.js');
         assert(/new ReplayDocumentUseCase\(/.test(createWorldViewSource), 'C3a. CreateWorldViewUseCase.js still composes ReplayDocumentUseCase');
         assert(/new RestoreHistoryStateUseCase\(/.test(createWorldViewSource), 'C3b. CreateWorldViewUseCase.js still composes RestoreHistoryStateUseCase');
         const sessionConstructionMatch = createWorldViewSource.match(/new WorldNavigationSession\(\{([\s\S]*?)\n\s{16}\}\)/);
@@ -295,15 +295,15 @@ async function runTests() {
 
         // D3 — the three stated separations still hold, checked directly
         // against the actual use case source rather than by name only.
-        const removePlacementSource = await rawSource('application/RemoveWorldPlacementUseCase.js');
+        const removePlacementSource = await rawSource('application/placement/RemoveWorldPlacementUseCase.js');
         assert(!/Publish|Unpublish/.test(removePlacementSource), 'D3a. Unpublish ≠ Remove placement: RemoveWorldPlacementUseCase.js still carries no Publish/Unpublish reference');
-        const unpublishSource = await rawSource('application/UnpublishDocumentUseCase.js');
+        const unpublishSource = await rawSource('application/publication/UnpublishDocumentUseCase.js');
         assert(!/Placement/.test(unpublishSource), 'D3b. Unpublish ≠ Remove placement: UnpublishDocumentUseCase.js still carries no Placement reference');
 
         // D4 — Recovery stays scoped to the open, unpublished editing
         // session; History (0.9.207/0.9.208) stays scoped to World View's
         // own session — neither reaches into Publication/Placement code.
-        for (const file of ['application/PublishDocumentUseCase.js', 'application/UnpublishDocumentUseCase.js', 'application/RemoveWorldPlacementUseCase.js']) {
+        for (const file of ['application/publication/PublishDocumentUseCase.js', 'application/publication/UnpublishDocumentUseCase.js', 'application/placement/RemoveWorldPlacementUseCase.js']) {
             const source = await rawSource(file);
             assert(!/RecoveryStore|AutosaveScheduler|RecoveryObserver|CheckRecoveryUseCase/.test(source), `D4a. ${file} still carries no recovery-subsystem coupling`);
             assert(!/ReplayDocumentUseCase|RestoreHistoryStateUseCase|HistoryTimelinePanel/.test(source), `D4b. ${file} still carries no history/replay-subsystem coupling`);
@@ -334,7 +334,7 @@ async function runTests() {
             assert(countReferences(editorViewSource, varName) >= 2, `E1b. ${varName} is referenced beyond its own construction`);
         }
 
-        const editorSessionSource = await rawSource('application/EditorSession.js');
+        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
         // ForkStructureUseCase/CopyStructureIntoDocumentUseCase are
         // EditorSession's own constructor defaults (EditorView no longer
         // builds duplicate instances to pass in).
@@ -354,7 +354,7 @@ async function runTests() {
         // capability shape (canUndo/canRedo + undo()/redo() on top of a
         // CommandHistory) is a first-class, keyboard-reachable action
         // everywhere else CommandHistory exists in this product.
-        const actionRegistrySource = await rawSource('application/EditorActionRegistry.js');
+        const actionRegistrySource = await rawSource('application/editor/EditorActionRegistry.js');
         assert(/keys:\s*\[\{\s*key:\s*'z',\s*ctrl:\s*true\s*\}\]/.test(actionRegistrySource), 'E3a. EditorActionRegistry.js still binds Ctrl+Z to undo');
         assert(/ctx\.canUndo/.test(actionRegistrySource), 'E3b. ...gated on ctx.canUndo, with its own disabledReason');
         assert(/key:\s*'z',\s*ctrl:\s*true,\s*shift:\s*true/.test(actionRegistrySource), 'E3c. EditorActionRegistry.js still binds Ctrl+Shift+Z to redo');
@@ -373,18 +373,18 @@ async function runTests() {
         // F1 — History restore feeds the SAME ordinary dirty/save path
         // every other mutation uses, not a special recovery-shaped path.
         // Reconfirms 0.9.208's own Section H directly.
-        const commandHistorySource = await rawSource('application/CommandHistory.js');
+        const commandHistorySource = await rawSource('application/editor/CommandHistory.js');
         assert(!/Recovery|Autosave/.test(commandHistorySource), 'F1a. CommandHistory.js still carries no Recovery/Autosave reference — history/restore and autosave/recovery remain independent mechanisms');
-        const restoreSource = await rawSource('application/RestoreHistoryStateUseCase.js');
+        const restoreSource = await rawSource('application/document/RestoreHistoryStateUseCase.js');
         assert(!/Recovery|Autosave/.test(restoreSource), 'F1b. RestoreHistoryStateUseCase.js still carries no Recovery/Autosave reference');
-        const recoverySource = await rawSource('application/RecoveryObserver.js');
+        const recoverySource = await rawSource('application/document/RecoveryObserver.js');
         assert(!/ReplayDocumentUseCase|RestoreHistoryStateUseCase|CommandHistory/.test(recoverySource), 'F1c. RecoveryObserver.js still carries no History/replay reference — the reverse direction holds too');
 
         // F2 — Unpublish ≠ Remove placement ≠ Retract distribution,
         // reconfirmed as three genuinely separate use cases (0.9.199's
         // own convergence audit), not merely three separate names for
         // one code path.
-        for (const file of ['application/UnpublishDocumentUseCase.js', 'application/RemoveWorldPlacementUseCase.js']) {
+        for (const file of ['application/publication/UnpublishDocumentUseCase.js', 'application/placement/RemoveWorldPlacementUseCase.js']) {
             const source = await rawSource(file);
             assert(!/Distribut/.test(source), `F2a. ${file} still carries no Distribution reference`);
         }
@@ -394,7 +394,7 @@ async function runTests() {
         // Snapshot into the local World is a distribution-side concern,
         // never touching the editing-session recovery stack or the
         // World View history/replay stack.
-        const materializeSource = await rawSource('application/MaterializeSnapshotFromPlacementUseCase.js');
+        const materializeSource = await rawSource('application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js');
         assert(!/Recovery|Autosave|ReplayDocumentUseCase|RestoreHistoryStateUseCase/.test(materializeSource), 'F3. MaterializeSnapshotFromPlacementUseCase.js still carries no Recovery/Autosave/History reference');
 
         // F4 — WorldNavigationSession itself hosts BOTH the history/

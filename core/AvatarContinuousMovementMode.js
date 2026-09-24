@@ -3,7 +3,7 @@
 // 0.9.64–0.9.66 established persistent DIRECTION — does the avatar keep
 // walking FORWARD or BACKWARD after Alt + W/S is released. That
 // answers only one of the two questions continuous running needs
-// answered: `application/AvatarMovementController.js` already has an
+// answered: `application/avatar/AvatarMovementController.js` already has an
 // existing, ordinary concept of running (`AvatarMovementState.running`,
 // driven by Shift — see core/AvatarMovementState.js), completely
 // orthogonal to direction. This milestone is the SECOND, independent
@@ -93,7 +93,7 @@
 // any keyboard/Alt/Shift event handling (that translation is
 // 0.9.68's own job, the direct mode-vocabulary counterpart to 0.9.65),
 // any change to core/AvatarContinuousMovementIntent.js,
-// application/AvatarMovementController.js, or core/AvatarMovementState.js
+// application/avatar/AvatarMovementController.js, or core/AvatarMovementState.js
 // (wiring this mode into the movement pipeline is 0.9.69's job, the
 // counterpart to 0.9.66), actual avatar movement, speed values of any
 // kind, timers, collision, camera, UI, persistence. This file answers

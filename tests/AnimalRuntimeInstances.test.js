@@ -1,10 +1,10 @@
-import { AnimalRuntimeInstances } from '../application/AnimalRuntimeInstances.js';
+import { AnimalRuntimeInstances } from '../application/world/AnimalRuntimeInstances.js';
 import { AnimalPresence } from '../core/AnimalPresence.js';
 import { Position } from '../core/Position.js';
 import { animalPresenceInRegion } from '../core/AnimalPlacement.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 
-// 0.9.700 — Animal Runtime Instances, application/AnimalRuntimeInstances.js.
+// 0.9.700 — Animal Runtime Instances, application/world/AnimalRuntimeInstances.js.
 //
 //   Section A: sync() discovers real, deterministic animals
 //   Section B: discard() excludes an animal permanently — it never

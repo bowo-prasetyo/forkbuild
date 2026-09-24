@@ -1,17 +1,17 @@
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
-import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
-import { SnapshotPlacementCreationCoordinator } from '../application/SnapshotPlacementCreationCoordinator.js';
-import { SnapshotPlacementCreationOutcome } from '../application/SnapshotPlacementCreationOutcome.js';
-import { SnapshotPlacementCreationUiState } from '../application/SnapshotPlacementCreationUiState.js';
-import { describeCreationAttempt, describeCreationButtonLabel } from '../application/SnapshotPlacementCreationView.js';
-import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
+import { SnapshotPlacementCreationCoordinator } from '../application/snapshot/placement/SnapshotPlacementCreationCoordinator.js';
+import { SnapshotPlacementCreationOutcome } from '../application/snapshot/placement/SnapshotPlacementCreationOutcome.js';
+import { SnapshotPlacementCreationUiState } from '../application/snapshot/placement/SnapshotPlacementCreationUiState.js';
+import { describeCreationAttempt, describeCreationButtonLabel } from '../application/snapshot/placement/SnapshotPlacementCreationView.js';
+import { CreateSnapshotPlacementResolutionCoordinatorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementResolutionCoordinatorUseCase.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -39,7 +39,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //              precondition failure (nobody signed in), each get their
 //              own distinct, honest UI state/label/message. There is no
 //              REJECTED state on the placement side at all — see
-//              application/SnapshotPlacementCreationUiState.js's own
+//              application/snapshot/placement/SnapshotPlacementCreationUiState.js's own
 //              header.
 //   Section C: separation — listing available storage types and
 //              discovering placements never create anything; creating a
@@ -159,7 +159,7 @@ async function publishLocally(publicationResolver, publicationCatalog, identityP
 
 // Mirrors ui/views/DecentralizedPublicationsView.js#createPlacement()
 // exactly — a caller-supplied try/catch around the coordinator, since
-// application/SnapshotPlacementCreationCoordinator.js never catches a
+// application/snapshot/placement/SnapshotPlacementCreationCoordinator.js never catches a
 // signing failure itself (see that class's own header).
 async function clickCreate(creationCoordinator, publicationId, storage) {
     try {
@@ -217,7 +217,7 @@ async function run() {
         // the SAME fake IPFS network Alice's own store just wrote to.
         const bobIpfs = new IpfsContentStore({ apiUrl: 'http://bob-node.test:5001', fetchImpl: net.fetchImpl });
         const bobVerifier = new LocalAuthorizationVerifier();
-        const { SnapshotPlacementResolver } = await import('../application/SnapshotPlacementResolver.js');
+        const { SnapshotPlacementResolver } = await import('../application/snapshot/placement/SnapshotPlacementResolver.js');
         const bobResolver = new SnapshotPlacementResolver(bobVerifier);
         const placementJson = attempt.placement.toJSON();
         const bobResult = await bobResolver.resolve(placementJson, { contentStore: bobIpfs });
@@ -425,7 +425,7 @@ async function run() {
 
         const contentResolver = new PublicationCatalogContentResolver(publicationCatalog, publicationContentStore);
         assert(JSON.stringify(contentResolver.resolve(publication.id)) === JSON.stringify({ doc: 'bridge' }),
-            '40. PublicationCatalogContentResolver#resolve() returns the SAME bytes application/PublicationResolver.js#publish() stored, read back through the SAME content store');
+            '40. PublicationCatalogContentResolver#resolve() returns the SAME bytes application/publication/PublicationResolver.js#publish() stored, read back through the SAME content store');
         assert(contentResolver.verify(publication.id, publication.contentReference.hash) === true,
             '41. PublicationCatalogContentResolver#verify() confirms the stored bytes still match the publication\'s own contentReference.hash');
         assert(contentResolver.verify(publication.id, 'wrong-hash') === false,

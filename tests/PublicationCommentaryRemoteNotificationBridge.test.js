@@ -4,15 +4,15 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import {
     PublicationCommentaryRemoteNotificationBridge
-} from '../application/PublicationCommentaryRemoteNotificationBridge.js';
-import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/PublicationCommentaryNotificationProducer.js';
+} from '../application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js';
+import { PUBLICATION_COMMENTED_EVENT_TYPE } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { readFile } from 'node:fs/promises';
 
 // 0.9.623 — Wire Remote Commentary Arrival into Local Notifications.
 //
-// Unit coverage for application/PublicationCommentaryRemoteNotificationBridge.js
+// Unit coverage for application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js
 // in isolation — the small adapter that turns
 // PublicationCommentaryDistributionPeerExchange#onCommentaryReceived()'s
 // own `{ commentary, isNew }` fact into the IDENTICAL `publication.commented`
@@ -343,11 +343,11 @@ async function runTests() {
     // vocabulary, no notification persistence dependency of its own.
     // -------------------------------------------------------------
     {
-        const bridgeSource = codeOnlyLines(await rawSource('application/PublicationCommentaryRemoteNotificationBridge.js'));
+        const bridgeSource = codeOnlyLines(await rawSource('application/publication/commentary/PublicationCommentaryRemoteNotificationBridge.js'));
         assert(bridgeSource.includes("import { buildPublicationCommentedNotificationEvent } from './PublicationCommentaryNotificationProducer.js';"),
             'L1. the bridge reuses the local producer\'s own already-exported construction function, verbatim');
         assert(!/new NotificationEvent\(/.test(bridgeSource),
-            'L1b. this file never constructs a NotificationEvent directly — application/PublicationCommentaryNotificationProducer.js#buildPublicationCommentedNotificationEvent() remains the only construction site');
+            'L1b. this file never constructs a NotificationEvent directly — application/publication/commentary/PublicationCommentaryNotificationProducer.js#buildPublicationCommentedNotificationEvent() remains the only construction site');
         assert(!/PUBLICATION_COMMENTARY_RECEIVED|'commentary.received'|"commentary.received"/.test(bridgeSource),
             'L2. no second, remote-specific event-type vocabulary is introduced');
         assert(!/PeerMessageBus|announce\(|importCommentaryEnvelope|exportCommentary/.test(bridgeSource),
@@ -357,11 +357,11 @@ async function runTests() {
         assert(!/\bretry\b|\bretries\b|\bqueue\b/i.test(bridgeSource),
             'L5. no retry/queue vocabulary appears anywhere in this file\'s own code');
 
-        const producerSource = codeOnlyLines(await rawSource('application/PublicationCommentaryNotificationProducer.js'));
+        const producerSource = codeOnlyLines(await rawSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js'));
         assert(producerSource.includes('export function buildPublicationCommentedNotificationEvent('),
-            'L6. application/PublicationCommentaryNotificationProducer.js exports the construction function this bridge imports');
+            'L6. application/publication/commentary/PublicationCommentaryNotificationProducer.js exports the construction function this bridge imports');
         assert((producerSource.match(/new NotificationEvent\(/g) || []).length === 1,
-            'L7. application/PublicationCommentaryNotificationProducer.js itself still contains exactly one NotificationEvent construction site, used by both local execute() and this bridge');
+            'L7. application/publication/commentary/PublicationCommentaryNotificationProducer.js itself still contains exactly one NotificationEvent construction site, used by both local execute() and this bridge');
 
         console.log('✓ L: structural boundaries hold — one shared construction function, no second notification vocabulary, no transport/persistence coupling.');
     }

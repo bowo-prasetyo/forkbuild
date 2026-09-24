@@ -7,7 +7,7 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { VehicleType } from '../core/VehicleType.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { CreateWorldLandmarkCommand } from '../application/commands/CreateWorldLandmarkCommand.js';
 import { worldViewFiles, worldNavigationSessionFiles, publicationsPageFiles, worldEncounterCanvasFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
@@ -183,7 +183,7 @@ async function runTests() {
             && typeof VehicleType.DRONE === 'string', 'B1. VehicleType still carries exactly its five original values');
         const vehicleTypeCode = codeOnlyLines(await rawSource('core/VehicleType.js')).join('\n');
         assert(!/passenger|capacity|multi-?rider|\bfuel\b|\brange\b/i.test(vehicleTypeCode), 'B2. VehicleType.js\'s own CODE still declares no capacity/passenger/fuel vocabulary');
-        for (const file of ['application/AvatarVehicleInteractionController.js', 'application/AvatarVehicleMovementController.js', 'core/VehicleInstance.js', 'core/VehiclePresence.js']) {
+        for (const file of ['application/avatar/AvatarVehicleInteractionController.js', 'application/avatar/AvatarVehicleMovementController.js', 'core/VehicleInstance.js', 'core/VehiclePresence.js']) {
             const source = await rawSource(file);
             assert(!/passenger|multi-?rider/i.test(codeOnlyLines(source).join('\n')), `B3. ${file} still carries no passenger/multi-rider vocabulary in code`);
         }
@@ -237,9 +237,9 @@ async function runTests() {
         assert([...clickHandlers].some((h) => /^unpublish|^retract/i.test(h)), 'D2. an unpublish/retract-shaped handler remains wired');
         assert(clickHandlers.has('discoverOwnSnapshot') && clickHandlers.has('discoverSnapshotCandidates') && clickHandlers.has('distributeOwnSnapshot'), 'D3. OwnPublicationPanel.js still wires Snapshot discovery/distribution actions alongside Publication');
 
-        const removePlacementSource = await rawSource('application/RemoveWorldPlacementUseCase.js');
+        const removePlacementSource = await rawSource('application/placement/RemoveWorldPlacementUseCase.js');
         assert(!/Publish|Unpublish/.test(removePlacementSource), 'D4a. Unpublish ≠ Remove placement: RemoveWorldPlacementUseCase.js still carries no Publish/Unpublish reference');
-        const unpublishSource = await rawSource('application/UnpublishDocumentUseCase.js');
+        const unpublishSource = await rawSource('application/publication/UnpublishDocumentUseCase.js');
         assert(!/Placement/.test(unpublishSource), 'D4b. Unpublish ≠ Remove placement: UnpublishDocumentUseCase.js still carries no Placement reference');
 
         console.log(`✓ Section D: Publication workflow — COMPLETE, reconfirmed. ${clickHandlers.size} wired actions cover publish/unpublish/anchor/distribute/Snapshot. Unpublish ≠ Remove placement holds in both directions.`);
@@ -270,7 +270,7 @@ async function runTests() {
         console.log('✓ Section E1: Snapshot discovery/resolution/materialization/World-participation — COMPLETE. Manual (button) and automatic (timer-driven) discovery both feed real materialization, and a materialized Snapshot is visible, viewable, and removable in World View — not a dead end.');
 
         // E2 — CLOSED by 0.9.215 (Snapshot Export Capability Integration).
-        // application/BuildPublicationSnapshotTransferPackageUseCase.js is
+        // application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js is
         // the export-side counterpart of application/
         // ImportPublicationSnapshotTransferPackageUseCase.js — by its own
         // header's own words — fully implemented, throws the correct
@@ -282,22 +282,22 @@ async function runTests() {
         // OwnPublicationPanel.js carries a real "Export Snapshot" action
         // — see tests/SnapshotExportUIIntegration.test.js for the full
         // E2E audit of that new path.
-        const buildUseCaseSource = await rawSource('application/BuildPublicationSnapshotTransferPackageUseCase.js');
+        const buildUseCaseSource = await rawSource('application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js');
         assert(/export-side counterpart/i.test(buildUseCaseSource), 'E2a. BuildPublicationSnapshotTransferPackageUseCase.js still documents itself as the export-side counterpart of the Import use case');
         assert(/class BuildPublicationSnapshotTransferPackageUseCase/.test(buildUseCaseSource), 'E2b. BuildPublicationSnapshotTransferPackageUseCase still exists, fully implemented');
         const mainSource = await rawSource('ui/main.js');
         assert(/new ImportPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'E2c. ui/main.js still composes ImportPublicationSnapshotTransferPackageUseCase (the wired half)');
         assert(/new BuildPublicationSnapshotTransferPackageUseCase\(/.test(mainSource), 'E2d. ui/main.js now also composes BuildPublicationSnapshotTransferPackageUseCase — 0.9.215 closes the ACTUAL_GAP this section originally found');
-        const coordinatorSource = await rawSource('application/SnapshotContentMaterializationCoordinator.js');
+        const coordinatorSource = await rawSource('application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js');
         assert(/async import\(pkg\)/.test(coordinatorSource), 'E2e. SnapshotContentMaterializationCoordinator still has an import(pkg) method');
         assert(/async export\(publicationId\)/.test(coordinatorSource), 'E2f. ...and now also has a matching export(publicationId) method, forwarding to the Build use case');
         const ownPublicationPanelSourceForExport = await rawSource('ui/components/OwnPublicationPanel.js');
         assert(/[Ee]xport [Ss]napshot/.test(ownPublicationPanelSourceForExport), 'E2g. OwnPublicationPanel.js now carries "Export Snapshot" UI text — the asymmetry E2 originally found is closed at the UI layer too');
-        console.log('✓ Section E2: CLOSED by 0.9.215 — application/BuildPublicationSnapshotTransferPackageUseCase.js, already correct and fully tested, is now composed in ui/main.js, reachable through SnapshotContentMaterializationCoordinator\'s own new export() method, and has a real "Export Snapshot" action on OwnPublicationPanel.js. Import and Export are symmetric.');
+        console.log('✓ Section E2: CLOSED by 0.9.215 — application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js, already correct and fully tested, is now composed in ui/main.js, reachable through SnapshotContentMaterializationCoordinator\'s own new export() method, and has a real "Export Snapshot" action on OwnPublicationPanel.js. Import and Export are symmetric.');
 
-        // E3 — OBSOLETE. application/CreatePublicationSnapshotPlacementCatalogUseCase.js
+        // E3 — OBSOLETE. application/snapshot/placement/CreatePublicationSnapshotPlacementCatalogUseCase.js
         // (0.8.18) is a real, complete composition-root class — but its own
-        // sibling, application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
+        // sibling, application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
         // (0.8.19), explicitly documents (in its own header) that it builds
         // an equivalent catalog itself rather than reusing this one, and
         // that use case's `catalog` is the one ui/main.js actually threads
@@ -305,13 +305,13 @@ async function runTests() {
         // in the application layer rather than the UI layer — the same
         // "superseded in place, never deleted" shape ui/components/
         // GroupsPanel.js already has, one layer down.
-        const catalogUseCaseSource = await rawSource('application/CreatePublicationSnapshotPlacementCatalogUseCase.js');
+        const catalogUseCaseSource = await rawSource('application/snapshot/placement/CreatePublicationSnapshotPlacementCatalogUseCase.js');
         assert(/class CreatePublicationSnapshotPlacementCatalogUseCase/.test(catalogUseCaseSource), 'E3a. CreatePublicationSnapshotPlacementCatalogUseCase.js still exists, fully implemented');
         assert(!/CreatePublicationSnapshotPlacementCatalogUseCase/.test(mainSource), 'E3b. ui/main.js still never composes CreatePublicationSnapshotPlacementCatalogUseCase');
-        const peerExchangeUseCaseSource = await rawSource('application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js');
+        const peerExchangeUseCaseSource = await rawSource('application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js');
         assert(/rather than reusing application\/[\s\S]{0,40}CreatePublicationSnapshotPlacementCatalogUseCase/.test(peerExchangeUseCaseSource), 'E3c. CreatePublicationSnapshotPlacementPeerExchangeUseCase.js still documents, in its own header, that it deliberately does not reuse the catalog use case');
         assert(/new CreatePublicationSnapshotPlacementPeerExchangeUseCase\(/.test(mainSource), 'E3d. ui/main.js composes the superseding use case instead');
-        console.log('✓ Section E3: OBSOLETE — application/CreatePublicationSnapshotPlacementCatalogUseCase.js is a real, complete, but superseded-in-place composition root, unused by ui/main.js and explicitly bypassed by its own sibling\'s design record. Identified here, not deleted.');
+        console.log('✓ Section E3: OBSOLETE — application/snapshot/placement/CreatePublicationSnapshotPlacementCatalogUseCase.js is a real, complete, but superseded-in-place composition root, unused by ui/main.js and explicitly bypassed by its own sibling\'s design record. Identified here, not deleted.');
     }
 
     // ---------------------------------------------------------------
@@ -325,10 +325,10 @@ async function runTests() {
         assert(new Set(commandHistoryImports.map((m) => m[1].split('/').pop())).size === 1, 'F1a. WorldNavigationSession.js and its method modules import exactly one CommandHistory-shaped class');
         assert(/avoids maintaining a second/.test(navigationSessionSource) || !/_undoStack|_redoStack/.test(navigationSessionSource), 'F1b. WorldNavigationSession.js still maintains no second undo/redo stack of its own');
 
-        const editorSessionSource = await rawSource('application/EditorSession.js');
+        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
         assert(!/_undoStack|_redoStack/.test(editorSessionSource), 'F2. EditorSession.js also maintains no second undo/redo stack — CommandHistory stays the sole authority for the Editor too');
 
-        const commandHistorySource = await rawSource('application/CommandHistory.js');
+        const commandHistorySource = await rawSource('application/editor/CommandHistory.js');
         assert(/undo\(/.test(commandHistorySource) && /redo\(/.test(commandHistorySource), 'F3a. CommandHistory.js still defines undo()/redo()');
 
         // F4 — HistoryTimelinePanel (browse/preview/restore) and the
@@ -363,14 +363,14 @@ async function runTests() {
         // editorSession.onPointerDown()/onPointerMove()/onPointerUp() and
         // discard the return value outright — never captured into
         // reactive state, never rendered.
-        const spatialEditingServiceSource = await rawSource('application/SpatialEditingService.js');
+        const spatialEditingServiceSource = await rawSource('application/editor/SpatialEditingService.js');
         assert(/getGestureFeedback\(\)\s*\{\s*return this\._gestureFeedback;\s*\}/.test(spatialEditingServiceSource), 'G1a. SpatialEditingService still exposes getGestureFeedback(), correctly maintained');
 
         const gizmoControllerSource = await rawSource('renderer/TransformGizmoController.js');
         assert(/_readGestureFeedback\(\)\s*\{/.test(gizmoControllerSource), 'G1b. TransformGizmoController still reads gesture feedback from the service');
         assert(/feedback:\s*this\._readGestureFeedback\(\)/.test(gizmoControllerSource), 'G1c. ...and still returns it as `feedback` on its pointer-event results');
 
-        const editorSessionSource = await rawSource('application/EditorSession.js');
+        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
         const onPointerMoveMethod = editorSessionSource.slice(editorSessionSource.indexOf('    onPointerMove(event) {'), editorSessionSource.indexOf('    onPointerUp(event) {'));
         assert(/const result = this\._session\.gizmoPointerMove\(/.test(onPointerMoveMethod), 'G1d. EditorSession.onPointerMove() still reads the gizmo\'s result...');
         assert(/if \(result && result\.consumed\) {\s*return result;/.test(onPointerMoveMethod), 'G1e. ...and still forwards the WHOLE result (including feedback) to its own caller when the gizmo consumed the event');
@@ -432,12 +432,12 @@ async function runTests() {
         const editorSessionMethods = editorSessionSource;
         assert(/getUndoLabel\(\)\s*\{/.test(editorSessionMethods) && /getRedoLabel\(\)\s*\{/.test(editorSessionMethods), 'G2a. EditorSession still declares getUndoLabel()/getRedoLabel()');
 
-        const actionContextSource = await rawSource('application/EditorActionContext.js');
+        const actionContextSource = await rawSource('application/editor/EditorActionContext.js');
         assert(/historyCall\(/.test(actionContextSource), 'G2b. EditorActionContext.capture() still uses its own historyCall() helper');
         assert(/undoLabel:\s*historyCall\('getUndoLabel',\s*null\)/.test(actionContextSource), 'G2c. ...and still calls getUndoLabel() through it, assigning ctx.undoLabel');
         assert(/redoLabel:\s*historyCall\('getRedoLabel',\s*null\)/.test(actionContextSource), 'G2d. ...same for ctx.redoLabel');
 
-        const actionRegistrySource = await rawSource('application/EditorActionRegistry.js');
+        const actionRegistrySource = await rawSource('application/editor/EditorActionRegistry.js');
         const undoActionMatch = actionRegistrySource.match(/id:\s*'history\.undo',[\s\S]{0,1000}?execute:/);
         assert(undoActionMatch, 'G2e. EditorActionRegistry still declares the history.undo action in the expected shape');
         assert(/label:\s*'Undo'/.test(undoActionMatch[0]), 'G2f. ...with the static label: \'Undo\' still present (unchanged — search/KeyboardShortcutsOverlay still need it)...');
@@ -466,9 +466,9 @@ async function runTests() {
         // history/replay/restore, placement, publication/distribution,
         // Snapshot) remain separate authorities, reconfirmed unchanged
         // since 0.9.209's own Section F.
-        const commandHistorySource = await rawSource('application/CommandHistory.js');
+        const commandHistorySource = await rawSource('application/editor/CommandHistory.js');
         assert(!/Recovery|Autosave/.test(commandHistorySource), 'H1a. CommandHistory.js still carries no Recovery/Autosave reference');
-        const materializeSource = await rawSource('application/MaterializeSnapshotFromPlacementUseCase.js');
+        const materializeSource = await rawSource('application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js');
         assert(!/RecoveryStore|AutosaveScheduler|RestoreHistoryStateUseCase/.test(materializeSource), 'H1b. Snapshot materialization still carries no Recovery/History reference');
 
         // H2 — every finding in Sections E/G above fits the SAME shape:
@@ -640,7 +640,7 @@ by scope, smallest first:
 
   3. Snapshot export (Section E2) — a separate, larger candidate in a
      different area (Publication/Snapshot, not Editor):
-     - existing capability?         yes — application/BuildPublicationSnapshotTransferPackageUseCase.js,
+     - existing capability?         yes — application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js,
                                      tested by seven separate test files
      - composed?                    no — absent from ui/main.js entirely
      - UI reachable?                no — no "Export Snapshot" action anywhere, unlike its "Import

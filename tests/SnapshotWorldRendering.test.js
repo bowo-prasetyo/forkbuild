@@ -2,19 +2,19 @@ import { readFile } from 'node:fs/promises';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import WorldEncounterMarker from '../ui/components/WorldEncounterMarker.js';
-import { registerMaterializedSnapshotWorldSource } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
+import { registerMaterializedSnapshotWorldSource } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
@@ -66,7 +66,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // `<WorldEncounterCanvas :registry="...">` — the exact wiring this file's
 // own Section B below reproduces by hand. `WorldEncounterCanvas.js` has
 // subscribed to its own `registry` prop since 0.9.13, and
-// `application/WorldDiscoverySourceRegistry.js#setSource()` has notified
+// `application/discovery/WorldDiscoverySourceRegistry.js#setSource()` has notified
 // every subscriber synchronously, on every successful mutation, since
 // 0.9.12 — both entirely unmodified since. So the answer to this
 // milestone's own second question is also yes: the moment a real
@@ -616,7 +616,7 @@ async function run() {
     // exists anywhere as a result of it.
     // ---------------------------------------------------------------
     {
-        const bridgeSource = await readFile(new URL('../application/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
+        const bridgeSource = await readFile(new URL('../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
         const bridgeCodeOnly = bridgeSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         assert(!/WorldEncounterCanvas|WorldEncounterMarker|viewBox|projectToCanvas/i.test(bridgeCodeOnly),
             '1. the registration bridge still imports and references nothing rendering-shaped — no canvas, no marker, no projection formula of its own');

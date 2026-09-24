@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 // docs/Architecture.md's own description of core/ — was OBSERVED_ONLY,
 // never ENFORCED. Its own Section F trial 1 proved this live: a real,
 // syntactically legal, semantically inert upward import from
-// core/CausalStamp.js into application/TransformMath.js went uncaught by
+// core/CausalStamp.js into application/editor/TransformMath.js went uncaught by
 // every one of the seven test files that directly exercise that module.
 // Its own Section G/J named 0.9.396 as the follow-up that should add
 // exactly this guard, "mirroring 0.9.393's own precedent for a
@@ -132,7 +132,7 @@ async function run() {
             n('A1. a file importing only from within core/ (including a path that happens to spell out "core/library" mid-specifier) resolves zero violations'));
 
         const dirtyFile = 'core/Example.js';
-        const dirtySourceUp = "import { TransformMath } from '../application/TransformMath.js';\n";
+        const dirtySourceUp = "import { TransformMath } from '../application/editor/TransformMath.js';\n";
         const upViolations = findForbiddenImports(dirtyFile, dirtySourceUp);
         assert(upViolations.length === 1 && upViolations[0].resolvedRelative.startsWith('application/'),
             n('A2. a synthetic upward import into application/ is caught, and resolves to the correct target path — proven against a constructed case before any real file is swept'));
@@ -231,12 +231,12 @@ async function run() {
     {
         const targetFile = 'core/CausalStamp.js';
         const originalText = await readSource(targetFile);
-        assert(!originalText.includes("from '../application/TransformMath.js'"),
+        assert(!originalText.includes("from '../application/editor/TransformMath.js'"),
             n('E1. core/CausalStamp.js starts clean — no upward import present before this trial begins'));
 
         const mutatedText = originalText.replace(
             "import { createId } from './createId.js';",
-            "import { createId } from './createId.js';\nimport { TransformMath } from '../application/TransformMath.js';"
+            "import { createId } from './createId.js';\nimport { TransformMath } from '../application/editor/TransformMath.js';"
         );
         assert(mutatedText !== originalText, n('E2. the mutation was actually applied to the in-memory copy before being written'));
 

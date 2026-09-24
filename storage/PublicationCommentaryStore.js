@@ -73,7 +73,7 @@ const COMMENTARY_STORE_KEY = 'publication-commentary:entries';
 // write performed). SAME ID + A DIFFERENT RECORD -> REJECTED, by throwing
 // `PublicationCommentaryConflictError`, never by silently overwriting the
 // original — this is a deliberate departure from
-// application/LocalPublicationAnchorStore.js's own simpler
+// application/anchoring/LocalPublicationAnchorStore.js's own simpler
 // "first-seen-wins" rule (0.8.15), because that store's own header notes
 // its conflict case "can't arise from two honestly generated packages,"
 // whereas a `commentaryId` collision here has no such structural

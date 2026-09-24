@@ -5,17 +5,17 @@ import { BitcoinAnchorSignedPsbtFinalizer } from '../anchoring/BitcoinAnchorSign
 import { BitcoinAnchorTransactionBroadcaster } from '../anchoring/BitcoinAnchorTransactionBroadcaster.js';
 import { BitcoinWalletConnection } from '../anchoring/BitcoinWalletConnection.js';
 import { BitcoinInjectedProviderWalletAdapter } from '../anchoring/BitcoinInjectedProviderWalletAdapter.js';
-import { BitcoinAnchorFundingObservationState } from '../application/BitcoinAnchorFundingObservationState.js';
-import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/BitcoinAnchorTransactionConstructionCoordinator.js';
-import { BitcoinAnchorTransactionConstructionState } from '../application/BitcoinAnchorTransactionConstructionState.js';
-import { BitcoinAnchorTransactionReviewCoordinator } from '../application/BitcoinAnchorTransactionReviewCoordinator.js';
-import { BitcoinAnchorReviewedSigningCoordinator } from '../application/BitcoinAnchorReviewedSigningCoordinator.js';
-import { BitcoinAnchorReviewedSigningState } from '../application/BitcoinAnchorReviewedSigningState.js';
-import { BitcoinAnchorSignedPsbtFinalizationCoordinator } from '../application/BitcoinAnchorSignedPsbtFinalizationCoordinator.js';
-import { BitcoinAnchorSignedPsbtFinalizationState } from '../application/BitcoinAnchorSignedPsbtFinalizationState.js';
-import { BitcoinAnchorBroadcastCoordinator } from '../application/BitcoinAnchorBroadcastCoordinator.js';
-import { BitcoinAnchorBroadcastState, isValidBitcoinAnchorBroadcastState } from '../application/BitcoinAnchorBroadcastState.js';
-import { describeBitcoinAnchorBroadcast } from '../application/BitcoinAnchorBroadcastView.js';
+import { BitcoinAnchorFundingObservationState } from '../application/anchoring/bitcoin/BitcoinAnchorFundingObservationState.js';
+import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionCoordinator.js';
+import { BitcoinAnchorTransactionConstructionState } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js';
+import { BitcoinAnchorTransactionReviewCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionReviewCoordinator.js';
+import { BitcoinAnchorReviewedSigningCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningCoordinator.js';
+import { BitcoinAnchorReviewedSigningState } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningState.js';
+import { BitcoinAnchorSignedPsbtFinalizationCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationCoordinator.js';
+import { BitcoinAnchorSignedPsbtFinalizationState } from '../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationState.js';
+import { BitcoinAnchorBroadcastCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastCoordinator.js';
+import { BitcoinAnchorBroadcastState, isValidBitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { describeBitcoinAnchorBroadcast } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastView.js';
 
 // 0.8.64 — Explicit Bitcoin Anchor Broadcast UI.
 //

@@ -1,16 +1,16 @@
 import { readFile } from 'node:fs/promises';
 
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
 import { describeObserverLocalPublicationEncounter } from '../core/ObserverLocalPublicationEncounter.js';
-import { resolveSnapshotWorldPlacement } from '../application/SnapshotWorldPlacement.js';
-import { registerMaterializedSnapshotWorldSource } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
-import { resolveSnapshotWorldPositionClaim } from '../application/SnapshotWorldPositionClaim.js';
-import { SnapshotWorldPositionClaimOutcome } from '../application/SnapshotWorldPositionClaimOutcome.js';
+import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
+import { registerMaterializedSnapshotWorldSource } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
+import { resolveSnapshotWorldPositionClaim } from '../application/snapshot/placement/SnapshotWorldPositionClaim.js';
+import { SnapshotWorldPositionClaimOutcome } from '../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -43,7 +43,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // journey through real distribution/discovery machinery. This file does not
 // repeat any of that — it cites it. What it adds is the one genuinely
 // untested angle: whether the DISTINCT, entirely decentralized
-// `claimedPosition` mechanism (application/SnapshotWorldPositionClaim.js)
+// `claimedPosition` mechanism (application/snapshot/placement/SnapshotWorldPositionClaim.js)
 // can, in fact, ever influence suppression — proven BEHAVIORALLY here
 // (Section B), not merely by the source-text grep 0.9.570 Section J4 already
 // ran — plus one closure-grade round-trip journey (Section C) and a verdict
@@ -293,7 +293,7 @@ async function run() {
         // interacting.
         const canvasSource = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n'));
         assert(!canvasSource.includes('SnapshotWorldPositionClaim') && !canvasSource.includes('claimedPosition'),
-            'B5. ui/components/WorldEncounterCanvas.js neither imports application/SnapshotWorldPositionClaim.js nor reads claimedPosition anywhere in its own source — the independence B1-B4 exercised behaviorally is also structural, not incidental.');
+            'B5. ui/components/WorldEncounterCanvas.js neither imports application/snapshot/placement/SnapshotWorldPositionClaim.js nor reads claimedPosition anywhere in its own source — the independence B1-B4 exercised behaviorally is also structural, not incidental.');
 
         console.log('✓ B: across all four combinations of {claimedPosition present/absent} x {authoritative PlacementRecord present/absent}, exercised against a REAL resolveSnapshotWorldPositionClaim() call, only the PlacementRecord axis ever moves the observer-local projection — proven behaviorally, and confirmed structurally impossible to violate.');
     }

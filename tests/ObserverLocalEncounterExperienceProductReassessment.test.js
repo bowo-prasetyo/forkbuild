@@ -1,23 +1,23 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/AutomaticSnapshotEncounterCascadeOutcome.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/snapshot/AutomaticSnapshotEncounterCascadeOutcome.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
 import { describeObserverLocalPublicationEncounter } from '../core/ObserverLocalPublicationEncounter.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { WorldEncounterSelectionOutcomeStatus } from '../application/WorldEncounterSelectionOutcome.js';
+import { WorldEncounterSelectionOutcomeStatus } from '../application/worldEncounter/WorldEncounterSelectionOutcome.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
@@ -26,7 +26,7 @@ import { Position } from '../core/Position.js';
 import { Publication } from '../publisher/Publication.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { materializedSnapshotWorldOrigin } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { materializedSnapshotWorldOrigin } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.553 — Observer-Local Encounter Experience Product Reassessment.
@@ -364,7 +364,7 @@ async function runTests() {
 
         // B2. Continues walking — a later observation tick re-feeds the SAME
         // already-discovered candidate (this pipeline's own idempotency, see
-        // application/AutomaticSnapshotEncounterCascade.js's own header,
+        // application/snapshot/AutomaticSnapshotEncounterCascade.js's own header,
         // "idempotent and concurrency-safe by construction").
         const secondResult = await cascade.processCandidate(candidate);
         store.record(secondResult.encounter);
@@ -539,7 +539,7 @@ async function runTests() {
         const secondResult = await cascade.processCandidate(candidate);
         assert(secondResult.encounter !== null, 'E2. Sanity: re-processing still yields an encounter.');
         assert(secondResult.encounter.position.x === p1.x && secondResult.encounter.position.z === p1.z,
-            `E3. The encounter REMAINS associated with P1, never silently relocating to P2 — mechanically enforced by the cascade's own per-subject idempotency memoization (application/AutomaticSnapshotEncounterCascade.js's own "idempotent and concurrency-safe by construction"), not merely a convention (got position ${secondResult.encounter.position.x},${secondResult.encounter.position.z}).`);
+            `E3. The encounter REMAINS associated with P1, never silently relocating to P2 — mechanically enforced by the cascade's own per-subject idempotency memoization (application/snapshot/AutomaticSnapshotEncounterCascade.js's own "idempotent and concurrency-safe by construction"), not merely a convention (got position ${secondResult.encounter.position.x},${secondResult.encounter.position.z}).`);
 
         // E4 — a narrow architectural note: application/
         // ObserverLocalEncounterStore.js's own `record()` replaces by key
@@ -868,8 +868,8 @@ async function runTests() {
         const excludedVocabulary = /reputation|trust\s*scor|spatial\s*voting|community\s*moderation|crowdsourc|new\s*placement\s*type|automatic\s*repository\s*promotion|consensus\s*protocol/i;
         const productionFilesThisReassessmentDependsOn = [
             'core/ObserverLocalPublicationEncounter.js',
-            'application/ObserverLocalEncounterStore.js',
-            'application/AutomaticSnapshotEncounterCascade.js',
+            'application/worldEncounter/ObserverLocalEncounterStore.js',
+            'application/snapshot/AutomaticSnapshotEncounterCascade.js',
             'ui/views/WorldView.js',
             'ui/components/WorldEncounterCanvas.js'
         ];

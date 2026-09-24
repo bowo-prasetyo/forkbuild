@@ -1,24 +1,24 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { LocalPublicationAnchorStore } from '../application/LocalPublicationAnchorStore.js';
-import { RestorePublicationAnchorCatalogUseCase } from '../application/RestorePublicationAnchorCatalogUseCase.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { PublicationAnchorPeerExchange } from '../application/PublicationAnchorPeerExchange.js';
-import { PublicationAnchorDiscoveryCoordinator } from '../application/PublicationAnchorDiscoveryCoordinator.js';
-import { PublicationEvidenceDiscoveryCoordinator } from '../application/PublicationEvidenceDiscoveryCoordinator.js';
-import { describeEvidenceDiscoveryAttempt, describeDiscoveryButtonLabel } from '../application/PublicationEvidenceDiscoveryView.js';
-import { PublicationEvidenceDiscoveryUiState } from '../application/PublicationEvidenceDiscoveryUiState.js';
-import { ExternalAnchorVerifier } from '../application/ExternalAnchorVerifier.js';
-import { createVerificationObservation } from '../application/PublicationAnchorVerificationObservation.js';
-import { deriveAnchorVerificationLifecycle } from '../application/PublicationAnchorVerificationLifecycleView.js';
-import { AnchorVerificationLifecycleState } from '../application/AnchorVerificationLifecycleState.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { LocalPublicationAnchorStore } from '../application/anchoring/LocalPublicationAnchorStore.js';
+import { RestorePublicationAnchorCatalogUseCase } from '../application/anchoring/RestorePublicationAnchorCatalogUseCase.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { PublicationAnchorPeerExchange } from '../application/anchoring/PublicationAnchorPeerExchange.js';
+import { PublicationAnchorDiscoveryCoordinator } from '../application/anchoring/PublicationAnchorDiscoveryCoordinator.js';
+import { PublicationEvidenceDiscoveryCoordinator } from '../application/publication/evidence/PublicationEvidenceDiscoveryCoordinator.js';
+import { describeEvidenceDiscoveryAttempt, describeDiscoveryButtonLabel } from '../application/publication/evidence/PublicationEvidenceDiscoveryView.js';
+import { PublicationEvidenceDiscoveryUiState } from '../application/publication/evidence/PublicationEvidenceDiscoveryUiState.js';
+import { ExternalAnchorVerifier } from '../application/anchoring/ExternalAnchorVerifier.js';
+import { createVerificationObservation } from '../application/anchoring/PublicationAnchorVerificationObservation.js';
+import { deriveAnchorVerificationLifecycle } from '../application/anchoring/PublicationAnchorVerificationLifecycleView.js';
+import { AnchorVerificationLifecycleState } from '../application/anchoring/AnchorVerificationLifecycleState.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.8.16 — Evidence Synchronization UX & Explicit Historical Discovery.
@@ -102,7 +102,7 @@ function signAnchor(identityProvider, fields) {
     return anchor;
 }
 
-// A minimal stand-in for application/ConnectedPeerRegistry.js — exposes
+// A minimal stand-in for application/peer/ConnectedPeerRegistry.js — exposes
 // only list(), the one method PublicationEvidenceDiscoveryCoordinator
 // actually calls.
 class FakeRegistry {

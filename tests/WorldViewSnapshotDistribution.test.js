@@ -1,16 +1,16 @@
 import { readFile } from 'node:fs/promises';
 
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 // 0.9.138 — World View Snapshot Distribution Action.
@@ -43,7 +43,7 @@ import { worldViewFiles, worldEncounterCanvasFiles } from './support/SourceFileG
 //     relying on a live subscription the way the Signed Claim family does.
 //   - Section F tests a legitimate PARTIAL success (placement without
 //     announcement) rather than only a genuine rejection, because
-//     application/SnapshotDistributionCommand.js's own contract makes that
+//     application/snapshot/SnapshotDistributionCommand.js's own contract makes that
 //     outcome a first-class, non-error case.
 //
 // Section A: action contract — the action reads this replica's own already-
@@ -265,9 +265,9 @@ async function runTests() {
         const code = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         const forbiddenConstruction = [
             "from '../../content/ArweaveContentStore.js'",
-            "from '../../application/NostrSnapshotDiscoveryPublisher.js'",
-            "from '../../application/SnapshotDistributionCommand.js'",
-            "from '../../application/SnapshotDistributionRuntimeComposition.js'",
+            "from '../../application/nostr/NostrSnapshotDiscoveryPublisher.js'",
+            "from '../../application/snapshot/SnapshotDistributionCommand.js'",
+            "from '../../application/snapshot/SnapshotDistributionRuntimeComposition.js'",
             'new ArweaveContentStore(', 'new NostrSnapshotDiscoveryPublisher(',
             'executeSnapshotDistributionCommand(', 'composeSnapshotDistributionRuntime('
         ];
@@ -393,7 +393,7 @@ async function runTests() {
 
         assert(publishCalls === 0, '18. an Arweave placement failure means discoveryPublisher.publish() is never even attempted');
         assert(ctx.snapshotDistributionError === 'ArweaveContentStore: Arweave gateway',
-            '19. a genuine placement rejection now surfaces the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js');
+            '19. a genuine placement rejection now surfaces the sanitized underlying cause — see application/publication/distribution/DistributionErrorMessageSanitizer.js');
         assert(ctx.snapshotDistributionResult === null, '20. a failed call never fabricates a partial result');
 
         console.log('✓ Section E: a placement failure prevents any announcement attempt and leaves no fabricated result');

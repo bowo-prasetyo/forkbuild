@@ -16,10 +16,10 @@ import { ConflictResolver, ConflictRelation } from '../replication/ConflictResol
 import { ConflictPolicy } from '../replication/ConflictPolicy.js';
 import { ReplicaMergeService, MergeResult } from '../replication/ReplicaMergeService.js';
 import { LocalReplicationStore } from '../replication/LocalReplicationStore.js';
-import { ReplicatePlacementUseCase } from '../application/ReplicatePlacementUseCase.js';
-import { SynchronizeReplicaUseCase } from '../application/SynchronizeReplicaUseCase.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
+import { ReplicatePlacementUseCase } from '../application/placement/ReplicatePlacementUseCase.js';
+import { SynchronizeReplicaUseCase } from '../application/placement/SynchronizeReplicaUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
 // ---------------------------------------------------------------------

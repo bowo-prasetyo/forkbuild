@@ -15,14 +15,14 @@ import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { DocumentManifest } from '../application/DocumentManifest.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { ExportDocumentUseCase } from '../application/ExportDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { DocumentManifest } from '../application/document/DocumentManifest.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { ExportDocumentUseCase } from '../application/document/ExportDocumentUseCase.js';
 import { editorViewFiles } from './support/SourceFileGroups.js';
 
-// Deliberately does NOT import application/EditorSession.js: that class
+// Deliberately does NOT import application/editor/EditorSession.js: that class
 // pulls in the renderer stack (ultimately `three`), which this repo only
 // ever resolves through tests.html's browser import map, not plain
 // `node`. EditorSession.exportDocument() is instead verified the same
@@ -35,7 +35,7 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 //
 // Implements the recommendation tests/EditorDocumentPortabilityBoundaryAudit
 // .test.js (0.9.640) reached: Export is a thin, focused action —
-// application/ExportDocumentUseCase.js — that reuses the existing
+// application/document/ExportDocumentUseCase.js — that reuses the existing
 // DocumentSerializer.serialize() seam and nothing else. It is purely
 // observational: no persistence, no manifest write, no Publication, no
 // distribution, no change to Editor state. Import (fresh documentId,
@@ -144,16 +144,16 @@ async function run() {
         // Structural proof, from real source: ExportDocumentUseCase has no
         // serialization logic of its own — it only ever calls the
         // serializer it was given.
-        const useCaseSource = codeOnly(await rawSource('application/ExportDocumentUseCase.js'));
+        const useCaseSource = codeOnly(await rawSource('application/document/ExportDocumentUseCase.js'));
         assert(/this\._documentSerializer\.serialize\(document\)/.test(useCaseSource),
             '12. ExportDocumentUseCase\'s own source calls documentSerializer.serialize() — the real seam, not a re-derived shortcut');
         assert(!/\.toJSON\(\)/.test(useCaseSource),
             '13. ExportDocumentUseCase never calls document.toJSON() directly — it always goes through the injected serializer');
-        assert(/new DocumentSerializer\(\)/.test(codeOnly(await rawSource('application/ExportDocumentUseCase.js'))),
+        assert(/new DocumentSerializer\(\)/.test(codeOnly(await rawSource('application/document/ExportDocumentUseCase.js'))),
             '14. ExportDocumentUseCase defaults to the REAL, production DocumentSerializer, not a stub');
 
         // EditorSession.exportDocument() delegates rather than reimplementing.
-        const editorSessionSource = codeOnly(await rawSource('application/EditorSession.js'));
+        const editorSessionSource = codeOnly(await rawSource('application/editor/EditorSession.js'));
         assert(/exportDocument\(\)\s*\{[\s\S]*?this\._exportDocumentUseCase\.execute\(this\._documentManager\.document\)/.test(editorSessionSource),
             '15. EditorSession.exportDocument() delegates straight to this._exportDocumentUseCase.execute() — it does not serialize anything itself');
 
@@ -216,7 +216,7 @@ async function run() {
         // mechanism Import will need (DocumentCloneService, per the
         // 0.9.640 audit's own Section D) — that decision is explicitly
         // deferred to a future Import milestone, not made here.
-        const useCaseSource = codeOnly(await rawSource('application/ExportDocumentUseCase.js'));
+        const useCaseSource = codeOnly(await rawSource('application/document/ExportDocumentUseCase.js'));
         assert(!/DocumentCloneService/.test(useCaseSource),
             '28. ExportDocumentUseCase never references DocumentCloneService — minting a fresh identity is Import\'s decision, not Export\'s');
 
@@ -254,7 +254,7 @@ async function run() {
         // distribution transport — the same "structurally impossible,"
         // not merely "well-behaved," standard the 0.9.640 audit already
         // applied to the wider Export/Import composition.
-        const useCaseSource = codeOnly(await rawSource('application/ExportDocumentUseCase.js'));
+        const useCaseSource = codeOnly(await rawSource('application/document/ExportDocumentUseCase.js'));
         assert(!/storageProvider|StorageProvider|DocumentManifest/.test(useCaseSource),
             '35. ExportDocumentUseCase has no reference to any StorageProvider or DocumentManifest anywhere in its own source');
         assert(!/from ['"].*publisher\//.test(useCaseSource) && !/from ['"].*\bdiscovery\//.test(useCaseSource)

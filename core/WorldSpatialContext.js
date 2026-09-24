@@ -19,7 +19,7 @@
 //   - core/TerrainEcology.js: "What kind of natural environment is this?"
 //   - core/Hydrology.js: "Where does water actually collect and flow?"
 //   - core/CompassHeading.js: "Which way am I facing?"
-//   - application/WorldLocationDirectory.js: "Where can I navigate to?"
+//   - application/world/WorldLocationDirectory.js: "Where can I navigate to?"
 import { terrainHeightAt } from './TerrainHeightField.js';
 import { surfaceCategoryAt, SURFACE_CATEGORY } from './TerrainSurface.js';
 import { ecologyZoneAt, ECOLOGY_ZONE } from './TerrainEcology.js';

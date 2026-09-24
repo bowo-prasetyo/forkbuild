@@ -8,8 +8,8 @@ import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
 // one: "Replace BroadcastChannel as the primary remote-presence
 // transport with authenticated peer messaging, while preserving the
 // entire 0.2.38 presence trust model." Nothing above this file's
-// interface changed to make that true — application/PresenceSyncService.js,
-// application/LocalPresenceStore.js, application/PresenceTrustBoundary.js,
+// interface changed to make that true — application/presence/PresenceSyncService.js,
+// application/presence/LocalPresenceStore.js, application/presence/PresenceTrustBoundary.js,
 // core/PresenceIngestion.js, core/PresenceAuthority.js,
 // core/PresenceReplayWindow.js, core/PresenceEquivocation.js, and
 // core/PresenceFreshness.js are every one of them completely
@@ -17,7 +17,7 @@ import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
 // substitution, not a redesign" contract 0.2.37 already established
 // when BroadcastChannel itself was introduced.
 //
-// Sits on peer/PeerMessageBus.js and application/ConnectedPeerRegistry.js
+// Sits on peer/PeerMessageBus.js and application/peer/ConnectedPeerRegistry.js
 // — nothing lower. Never imports peer/PeerConnection.js,
 // peer/WebRtcPeerConnection.js, or peer/LocalPeerConnectionProvider.js
 // directly, exactly like every other PeerMessageBus consumer (see
@@ -46,7 +46,7 @@ import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
 // decided there is something to send.
 export class PeerAvatarPresenceBroadcastProvider extends AvatarPresenceBroadcastProvider {
     // peerMessageBus / connectedPeerRegistry: this replica's OWN
-    // peer/PeerMessageBus.js and application/ConnectedPeerRegistry.js
+    // peer/PeerMessageBus.js and application/peer/ConnectedPeerRegistry.js
     // — shared, injected collaborators this class never owns and never
     // disposes (see dispose() below), because a future Peer-Based
     // Avatar Profile/Interaction transport (0.2.54/0.2.55, proposed)
@@ -78,7 +78,7 @@ export class PeerAvatarPresenceBroadcastProvider extends AvatarPresenceBroadcast
     // for every candidate peer, never cached, mirroring
     // getVisibilityPolicy's own "always current, never stale" contract.
     // This transport never imports core/FriendshipRecord.js,
-    // core/FriendshipState.js, or application/FriendRelationshipUseCase.js
+    // core/FriendshipState.js, or application/identity/FriendRelationshipUseCase.js
     // itself — it only knows how to ask the injected predicate and pass
     // its answer straight through as `shouldAdvertiseToPeer`'s
     // `{ isFriend }` context, keeping the actual friendship STORE
@@ -142,7 +142,7 @@ export class PeerAvatarPresenceBroadcastProvider extends AvatarPresenceBroadcast
         });
     }
 
-    // ADVERTISE (see application/PresenceSyncService.js's own header):
+    // ADVERTISE (see application/presence/PresenceSyncService.js's own header):
     // fans ONE local advertisement out to zero or more of this
     // replica's currently-AUTHENTICATED peer connections. Discovery is
     // never performed here and no connection is ever opened as a side

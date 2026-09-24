@@ -17,10 +17,10 @@ import { Position } from '../../core/Position.js';
 //
 // Deliberately ignorant of collision: exactly like MoveBrickCommand and
 // PlaceStructureCommand before it, validating the destination
-// (application/StructurePlacementValidator.js, with excludePlacementId
+// (application/editor/StructurePlacementValidator.js, with excludePlacementId
 // set to this placement's own id so it never collides with itself) is
 // the caller's job — application/tools/SelectionTool.js and
-// application/EditorSession.js#moveSelection() both ask before
+// application/editor/EditorSession.js#moveSelection() both ask before
 // executing this command, never after.
 export class MoveStructurePlacementCommand extends Command {
     constructor({ worldId, placementId, delta, id, timestamp } = {}) {

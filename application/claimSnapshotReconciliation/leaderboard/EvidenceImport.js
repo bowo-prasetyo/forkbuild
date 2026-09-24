@@ -73,7 +73,7 @@ import { isPlainObject } from '../../../utils/typeGuards.js';
 //
 // A WRONG `protocolVersion` OR ANY OTHER STRUCTURAL DEFECT REJECTS THE
 // WHOLE DOCUMENT — NEVER A PARTIAL IMPORT. `importXxx()` mirrors
-// `application/PublicationObservationArchiveExport.js`'s own
+// `application/publication/observationArchive/PublicationObservationArchiveExport.js`'s own
 // `importPublicationObservationArchive()` exactly: `payload` may be a raw
 // string (parsed here) or an already-parsed value; a payload that is not
 // valid JSON, is not a plain object, carries an unrecognized

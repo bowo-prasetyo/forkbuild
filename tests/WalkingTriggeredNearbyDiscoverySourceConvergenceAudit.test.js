@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/ShouldRefreshSnapshotDiscovery.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { shouldRefreshSnapshotDiscovery, DEFAULT_DISCOVERY_REFRESH_RADIUS } from '../application/snapshot/ShouldRefreshSnapshotDiscovery.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
@@ -28,7 +28,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //
 //   Section A — Locating the real system, and a first correction: the
 //               "walking-triggered nearby discovery monitor" is
-//               `application/WorldSnapshotDiscoveryMonitor.js` (0.9.186),
+//               `application/snapshot/WorldSnapshotDiscoveryMonitor.js` (0.9.186),
 //               and `discovery/CompositeDiscoveryProvider.js` is
 //               structurally incapable of serving it — a different
 //               discovery subsystem entirely, proven by introspection,
@@ -117,9 +117,9 @@ async function run() {
         // referenced from anywhere in the Snapshot-candidate-discovery
         // family the monitor actually calls into.
         const compositeReferences = grepFiles('CompositeDiscoveryProvider',
-            ['application/WorldSnapshotDiscoveryMonitor.js', 'application/ShouldRefreshSnapshotDiscovery.js',
-             'application/DiscoverSnapshotCandidatesCommand.js', 'application/DiscoverSnapshotRuntimeComposition.js',
-             'application/NostrSnapshotDiscoveryQueryService.js']);
+            ['application/snapshot/WorldSnapshotDiscoveryMonitor.js', 'application/snapshot/ShouldRefreshSnapshotDiscovery.js',
+             'application/snapshot/DiscoverSnapshotCandidatesCommand.js', 'application/snapshot/DiscoverSnapshotRuntimeComposition.js',
+             'application/nostr/NostrSnapshotDiscoveryQueryService.js']);
         assert(compositeReferences.length === 0,
             '3. none of the five files that make up the walking-triggered discovery chain (monitor, threshold, command, runtime composition, or its one current source) reference CompositeDiscoveryProvider at all.');
 
@@ -240,8 +240,8 @@ async function run() {
         // C1. Structural: neither the monitor nor the command imports
         // anything Nostr-specific — both are duck-typed against
         // `search(discoveryTag) -> Promise<Array>` alone.
-        const monitorSource = await readSource('application/WorldSnapshotDiscoveryMonitor.js');
-        const commandSource = await readSource('application/DiscoverSnapshotCandidatesCommand.js');
+        const monitorSource = await readSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js');
+        const commandSource = await readSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js');
         const monitorImports = monitorSource.match(/^import .*/gm) || [];
         const commandImports = commandSource.match(/^import .*/gm) || [];
         assert(![...monitorImports, ...commandImports].some((line) => /nostr/i.test(line)),
@@ -292,7 +292,7 @@ async function run() {
             .filter((file) => !file.includes('.test.'));
         const nonNostrEnvelopeReferences = envelopeReferences.filter((file) => !/nostr/i.test(file) && !file.includes('core/SnapshotDiscoveryEnvelope.js'));
         assert(nonNostrEnvelopeReferences.length === 0,
-            `1. every production file referencing core/SnapshotDiscoveryEnvelope.js is either that envelope's own definition or a Nostr file (application/NostrSnapshotDiscoveryPublisher.js, application/NostrSnapshotDiscoveryQueryService.js) — no local store, cache, or catalog of announced Snapshot candidates exists (found instead: ${nonNostrEnvelopeReferences.join(', ') || 'none'}).`);
+            `1. every production file referencing core/SnapshotDiscoveryEnvelope.js is either that envelope's own definition or a Nostr file (application/nostr/NostrSnapshotDiscoveryPublisher.js, application/nostr/NostrSnapshotDiscoveryQueryService.js) — no local store, cache, or catalog of announced Snapshot candidates exists (found instead: ${nonNostrEnvelopeReferences.join(', ') || 'none'}).`);
 
         // D2. discovery/LocalDiscoveryProvider.js — the obvious first
         // guess for "the local source" — is proven, structurally, to be
@@ -317,7 +317,7 @@ async function run() {
         // exclusively resolution-of-an-already-selected object — its own
         // header says so, repeatedly and explicitly. Re-confirmed live
         // against current source, never merely cited from memory.
-        const peerSourceText = await readSource('application/PeerWorldEncounterMaterialSource.js');
+        const peerSourceText = await readSource('application/worldEncounter/PeerWorldEncounterMaterialSource.js');
         const peerSourceNormalized = peerSourceText.replace(/\r?\n\/\/ ?/g, ' ').replace(/\s+/g, ' ');
         assert(/never asks a peer "what do you have," never re-runs discovery, never enumerates a peer's own catalog/.test(peerSourceNormalized),
             "1. PeerWorldEncounterMaterialSource.js's own header still, today, explicitly disclaims exactly the capability a search()-shaped source would need: asking a peer what it has.");
@@ -327,7 +327,7 @@ async function run() {
         // E2. The wire protocol itself has no room for a browse/list
         // request — only two message kinds exist, both scoped to one
         // already-known objectId.
-        const protocolText = await readSource('application/PeerWorldEncounterMaterialProtocol.js');
+        const protocolText = await readSource('application/worldEncounter/PeerWorldEncounterMaterialProtocol.js');
         assert(/REQUEST:\s*'REQUEST',\s*RESPONSE:\s*'RESPONSE'/.test(protocolText.replace(/\s+/g, ' ')),
             '3. PeerWorldEncounterMaterialMessageKind carries exactly two kinds, REQUEST and RESPONSE — no LIST/QUERY/BROWSE kind exists to ask a peer "what candidates do you have for this discoveryTag."');
         assert(/isValidWorldEncounterObjectId/.test(protocolText) && /objectId/.test(protocolText),
@@ -355,7 +355,7 @@ async function run() {
         // Promise.allSettled and deduplicating by a domain-specific key
         // — never CompositeDiscoveryProvider's own sync, Publication-
         // catalog shape.
-        const placeNamingSource = await readSource('application/PlaceNamingDiscoveryQueryService.js');
+        const placeNamingSource = await readSource('application/placeNaming/PlaceNamingDiscoveryQueryService.js');
         assert(/Promise\.allSettled/.test(placeNamingSource),
             '1. PlaceNamingDiscoveryQueryService.js really does isolate its own sources via Promise.allSettled — the exact mechanism a Snapshot-candidate composite would need, already proven in production for a sibling family.');
         assert(typeof PlaceNamingDiscoveryQueryService.prototype.search === 'function',

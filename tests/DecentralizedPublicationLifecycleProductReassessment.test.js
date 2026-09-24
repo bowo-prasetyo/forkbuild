@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 
-import { describeRoleProviderPreferenceSettings } from '../application/RoleProviderPreferenceSettingsView.js';
+import { describeRoleProviderPreferenceSettings } from '../application/settings/RoleProviderPreferenceSettingsView.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.517 — Decentralized Publication Lifecycle Product Reassessment.
@@ -50,7 +50,7 @@ import { worldEncounterCanvasFiles, publicationsPageFiles, editorViewFiles } fro
 //   L. Verdict.
 //
 // THE ONE PRODUCTION CHANGE THIS MILESTONE MAKES (Sections B/I):
-// `application/RoleProviderPreferenceSettingsView.js`'s own
+// `application/settings/RoleProviderPreferenceSettingsView.js`'s own
 // `PROVIDER_OPTION_LABELS` now includes `ar: 'Arweave'`. Nothing else
 // changes: no new backend, no new discovery source, no new lifecycle
 // state, no ranking, no fallback, no unified transaction abstraction —
@@ -119,7 +119,7 @@ async function run() {
     // milestone's own sweep of the FULL lifecycle (per its own brief,
     // "Prepare Publication -> Content Backend") found a SECOND,
     // structurally independent surface with the identical defect:
-    // application/RoleProviderPreferenceSettingsView.js's own
+    // application/settings/RoleProviderPreferenceSettingsView.js's own
     // PROVIDER_OPTION_LABELS — the label map behind
     // ui/views/ContentProviderSettingsView.js's own "Content Provider"
     // settings page (reachable from Settings, and the one ordinary
@@ -194,7 +194,7 @@ async function run() {
         // signature carries no storage/discoveryProvider parameter at
         // all, exactly the shape 0.9.515 Section C's own audit already
         // found and this milestone re-reads directly.
-        const anchorUseCaseSource = codeOnly(await source('application/CreateExternalPublicationAnchorUseCase.js'));
+        const anchorUseCaseSource = codeOnly(await source('application/anchoring/CreateExternalPublicationAnchorUseCase.js'));
         const executeSignatureMatch = anchorUseCaseSource.match(/async execute\(([^)]*)\)/) || anchorUseCaseSource.match(/execute\(([^)]*)\)/);
         check(Boolean(executeSignatureMatch), 'D1a. CreateExternalPublicationAnchorUseCase.js still exposes a single execute() entry point');
         check(!/storage|discoveryProvider/.test(executeSignatureMatch[1]),
@@ -377,7 +377,7 @@ async function run() {
     // without widening its own scope.
     // ===============================================================
     {
-        const fixedSource = await source('application/RoleProviderPreferenceSettingsView.js');
+        const fixedSource = await source('application/settings/RoleProviderPreferenceSettingsView.js');
         check(!/\b(rank|ranking|trust|trusted|best|score|winner|fallback|automatic)\b/i.test(codeOnly(fixedSource)),
             'J1. this milestone\'s own fix introduces no rank/trust/fallback/automatic-selection vocabulary');
         check(!fixedSource.includes('arweave:') , 'J2. the fix adds exactly the one real key (`ar`) this milestone\'s own live wiring proved — never a second, speculative key (e.g. a hypothetical "arweave" alias) nothing in production actually uses');
@@ -389,7 +389,7 @@ async function run() {
         // applied, so none is caused by, or fixable-without-scope-creep
         // from within, this milestone's own narrow brief.
         const preExisting = [
-            ['tests/ContentProviderPreferenceLifecycleAudit.test.js', 'observation', 'its own closed 14-file reference-set assertion (48) has been missing application/PublicationDistributionRuntimeComposition.js, application/SnapshotDistributionContentBackendSelection.js, and ui/views/DecentralizedPublicationsView.js — later, unrelated milestones\' own legitimate references to the preference vocabulary'],
+            ['tests/ContentProviderPreferenceLifecycleAudit.test.js', 'observation', 'its own closed 14-file reference-set assertion (48) has been missing application/publication/distribution/PublicationDistributionRuntimeComposition.js, application/snapshot/SnapshotDistributionContentBackendSelection.js, and ui/views/DecentralizedPublicationsView.js — later, unrelated milestones\' own legitimate references to the preference vocabulary'],
             ['tests/DecentralizedRoleProviderPreferenceBoundary.test.js', 'RoleProviderPreference', 'its own closed-file-set assertion (M1) is similarly stale by the SAME three files'],
             ['tests/PostContentPreferenceProductEvolutionReassessment.test.js', 'ProofVerifier', 'its own "exactly one class extends ProofVerifier" assertion (14) predates 0.9.424/0.9.425\'s own Base/Arweave ProofVerifier implementations (now three classes total)'],
             ['tests/DecentralizedSubstrateCapabilityMatrixAudit.test.js', 'ProofVerifier', 'the SAME ProofVerifier-count staleness, its own assertion B10']
@@ -460,7 +460,7 @@ async function run() {
     console.log('Section I (The fix): closed this same milestone, live-exercised.');
     console.log('Section J: four unrelated, pre-existing regression-guard staleness findings NAMED, not fixed (out of scope).');
     console.log('');
-    console.log('VERDICT: PRODUCT_GAP found and fixed — a single, minimal, presentation-only production change (application/RoleProviderPreferenceSettingsView.js\'s own PROVIDER_OPTION_LABELS, one new entry: ar -> Arweave). Every other question this milestone\'s own brief asked — Editor/Publication continuity, Discovery substrate comprehension, the independent choice model, result comprehension, failure comprehension, and cross-surface identity continuity — resolves PRODUCT_COMPLETE, re-confirmed against real, live-exercised production source rather than assumed from prior milestones\' own prose. No second, separate reassessment file is warranted. STOP.');
+    console.log('VERDICT: PRODUCT_GAP found and fixed — a single, minimal, presentation-only production change (application/settings/RoleProviderPreferenceSettingsView.js\'s own PROVIDER_OPTION_LABELS, one new entry: ar -> Arweave). Every other question this milestone\'s own brief asked — Editor/Publication continuity, Discovery substrate comprehension, the independent choice model, result comprehension, failure comprehension, and cross-surface identity continuity — resolves PRODUCT_COMPLETE, re-confirmed against real, live-exercised production source rather than assumed from prior milestones\' own prose. No second, separate reassessment file is warranted. STOP.');
 }
 
 run().catch((error) => {

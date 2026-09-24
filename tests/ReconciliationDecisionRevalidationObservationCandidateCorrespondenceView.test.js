@@ -4,7 +4,7 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondence,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationCandidateCorrespondence
 } from '../application/claimSnapshotReconciliation/revalidationObservation/CandidateCorrespondenceView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.171 — Revalidation Observation Candidate Correspondence Projection.
 //

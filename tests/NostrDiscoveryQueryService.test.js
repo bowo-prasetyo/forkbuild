@@ -1,5 +1,5 @@
-import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQueryService.js';
-import { DecentralizedDiscoveryQueryService } from '../application/DecentralizedWorldDiscoveryQuery.js';
+import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
+import { DecentralizedDiscoveryQueryService } from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
 
 // 0.9.31 — Nostr Decentralized Discovery Adapter.
 //

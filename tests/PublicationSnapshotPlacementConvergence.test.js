@@ -2,23 +2,23 @@ import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlaceme
 import { Structure } from '../core/Structure.js';
 import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
-import { derivePublicationSnapshotPlacementConvergence } from '../application/PublicationSnapshotPlacementConvergence.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { PublicationSnapshotPlacementPeerExchange } from '../application/PublicationSnapshotPlacementPeerExchange.js';
-import { PublicationSnapshotPlacementDiscoveryCoordinator } from '../application/PublicationSnapshotPlacementDiscoveryCoordinator.js';
-import { AddPublicationSnapshotPlacementUseCase } from '../application/AddPublicationSnapshotPlacementUseCase.js';
-import { ImportPackageSnapshotPlacementsUseCase } from '../application/ImportPackageSnapshotPlacementsUseCase.js';
-import { buildBlueprintPackage } from '../application/BlueprintPackage.js';
-import { validateBlueprintPackage } from '../application/BlueprintImportValidator.js';
-import { createResolutionObservation } from '../application/SnapshotPlacementResolutionObservation.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
+import { derivePublicationSnapshotPlacementConvergence } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergence.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';
+import { PublicationSnapshotPlacementDiscoveryCoordinator } from '../application/snapshot/placement/PublicationSnapshotPlacementDiscoveryCoordinator.js';
+import { AddPublicationSnapshotPlacementUseCase } from '../application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js';
+import { ImportPackageSnapshotPlacementsUseCase } from '../application/snapshot/placement/ImportPackageSnapshotPlacementsUseCase.js';
+import { buildBlueprintPackage } from '../application/blueprint/BlueprintPackage.js';
+import { validateBlueprintPackage } from '../application/blueprint/BlueprintImportValidator.js';
+import { createResolutionObservation } from '../application/snapshot/placement/SnapshotPlacementResolutionObservation.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.8.23 — Multi-Placement Convergence & Relationship UX.

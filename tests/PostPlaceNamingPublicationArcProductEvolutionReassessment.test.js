@@ -5,8 +5,8 @@ import { Delegation, DelegationAction } from '../core/Delegation.js';
 import { SigningIdentity } from '../core/SigningIdentity.js';
 import { LocalDelegationResolver } from '../identity/LocalDelegationResolver.js';
 import { AuthorizationVerifier } from '../identity/AuthorizationVerifier.js';
-import { CreateDelegationUseCase } from '../application/CreateDelegationUseCase.js';
-import { VerifyDelegationUseCase } from '../application/VerifyDelegationUseCase.js';
+import { CreateDelegationUseCase } from '../application/identity/CreateDelegationUseCase.js';
+import { VerifyDelegationUseCase } from '../application/identity/VerifyDelegationUseCase.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { Position } from '../core/Position.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -137,21 +137,21 @@ async function runTests() {
     {
         const reachable = [
             ['Editor', 'ui/views/EditorView.js', 'export default'],
-            ['Publish', 'application/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase'],
-            ['Distribution', 'application/NostrPublicationDistributionRuntimeAdapter.js', 'export function createNostrPublicationDistributionRuntimeAdapter'],
+            ['Publish', 'application/publication/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase'],
+            ['Distribution', 'application/nostr/NostrPublicationDistributionRuntimeAdapter.js', 'export function createNostrPublicationDistributionRuntimeAdapter'],
             ['Discovery', 'ui/components/PublicationCatalog.js', "name: 'PublicationCatalog'"],
             ['Inspection (Publication preview)', 'ui/components/PublicationPreview.js', 'export default'],
             ['Commentary', 'core/PublicationCommentary.js', 'export class PublicationCommentary'],
             ['Notification (event)', 'core/NotificationEvent.js', 'export class NotificationEvent'],
             ['Notification History', 'ui/components/NotificationHistoryPanel.js', "name: 'NotificationHistoryPanel'"],
-            ['Placement (Publish -> World)', 'application/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
-            ['Snapshot discovery', 'application/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
-            ['Snapshot materialization', 'application/MaterializeSnapshotFromPlacementUseCase.js', 'export class MaterializeSnapshotFromPlacementUseCase'],
+            ['Placement (Publish -> World)', 'application/placement/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
+            ['Snapshot discovery', 'application/snapshot/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
+            ['Snapshot materialization', 'application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js', 'export class MaterializeSnapshotFromPlacementUseCase'],
             ['World View', 'ui/views/WorldView.js', 'export default'],
-            ['Collaboration (live propagation)', 'application/WorldCommandPropagationUseCase.js', 'export class WorldCommandPropagationUseCase'],
-            ['Collaboration (Editor document readiness/recovery)', 'application/RemoteDocumentOperationApplicationUseCase.js', 'export class RemoteDocumentOperationApplicationUseCase'],
+            ['Collaboration (live propagation)', 'application/document/WorldCommandPropagationUseCase.js', 'export class WorldCommandPropagationUseCase'],
+            ['Collaboration (Editor document readiness/recovery)', 'application/document/RemoteDocumentOperationApplicationUseCase.js', 'export class RemoteDocumentOperationApplicationUseCase'],
             ['Place Naming (claim/persist)', 'core/PlaceNamingClaim.js', 'export class PlaceNamingClaim'],
-            ['Place Naming (explicit publication)', 'application/NostrPlaceNamingDiscoveryPublisher.js', 'export class NostrPlaceNamingDiscoveryPublisher'],
+            ['Place Naming (explicit publication)', 'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js', 'export class NostrPlaceNamingDiscoveryPublisher'],
             ['Provider preferences (settings entry point)', 'ui/views/ContentProviderSettingsView.js', 'export default'],
             ['Authentication/identity', 'identity/LocalIdentityProvider.js', 'export class LocalIdentityProvider']
         ];
@@ -209,8 +209,8 @@ async function runTests() {
         // HISTORICAL — the 0.9.312 family, reconfirmed present.
         const historicalFamily = [
             'replication/ConflictResolver.js', 'replication/ReplicaMergeService.js',
-            'replication/LocalReplicationStore.js', 'application/ReplicatePlacementUseCase.js',
-            'application/SynchronizeReplicaUseCase.js', 'application/CreateReplicationUseCase.js'
+            'replication/LocalReplicationStore.js', 'application/placement/ReplicatePlacementUseCase.js',
+            'application/placement/SynchronizeReplicaUseCase.js', 'application/placement/CreateReplicationUseCase.js'
         ];
         for (const path of historicalFamily) {
             assert(await sourceExists(path), `A. HISTORICAL family member ${path} still exists (0.9.312's own inventory).`);
@@ -246,15 +246,15 @@ async function runTests() {
         // B1. Publication -> Placement -> Discovery -> Inspection.
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
         assert(/publishDocumentUseCase/.test(editorViewSource), 'B1a. EditorView.js still composes the publish use case.');
-        assert(await sourceExists('application/PlacePublicationUseCase.js'), 'B1b. PlacePublicationUseCase.js still exists — Publication -> Placement.');
+        assert(await sourceExists('application/placement/PlacePublicationUseCase.js'), 'B1b. PlacePublicationUseCase.js still exists — Publication -> Placement.');
         assert(await sourceExists('ui/components/PublicationCatalog.js'), 'B1c. PublicationCatalog.js still exists — Placement -> Discovery.');
         const previewSource = await rawSource('ui/components/PublicationPreview.js');
         assert(previewSource.length > 0, 'B1d. PublicationPreview.js still exists — Discovery -> Inspection, the journey\'s own terminus.');
 
         // B2. Snapshot -> Discovery -> Resolution -> Materialization -> World.
-        assert((await rawSource('application/DiscoverSnapshotCandidatesCommand.js')).includes('export function executeDiscoverSnapshotCandidatesCommand'),
+        assert((await rawSource('application/snapshot/DiscoverSnapshotCandidatesCommand.js')).includes('export function executeDiscoverSnapshotCandidatesCommand'),
             'B2a. DiscoverSnapshotCandidatesCommand.js still exists — Snapshot -> Discovery.');
-        const materializeSource = await rawSource('application/MaterializeSnapshotFromPlacementUseCase.js');
+        const materializeSource = await rawSource('application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js');
         assert(materializeSource.includes('storeSnapshotContentUseCase') && materializeSource.includes('contentHash'),
             'B2b. MaterializeSnapshotFromPlacementUseCase.js still runs a hash-verify (resolution) then-store (materialization) pipeline — not a skipped stage.');
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
@@ -270,14 +270,14 @@ async function runTests() {
         const mainSource = await rawSource('ui/main.js');
         assert(mainSource.includes('NostrPlaceNamingDiscoveryPublisher') || mainSource.includes('placeNamingPublicationRuntime'),
             'B3b. ui/main.js still composes the Place Naming publication runtime — persist -> explicit publish.');
-        assert(await sourceExists('application/PlaceNamingDiscoveryMonitor.js'), 'B3c. PlaceNamingDiscoveryMonitor.js still exists — publish -> stranger discovery.');
-        const exchangeSource = await rawSource('application/PlaceNamingClaimExchange.js');
+        assert(await sourceExists('application/placeNaming/PlaceNamingDiscoveryMonitor.js'), 'B3c. PlaceNamingDiscoveryMonitor.js still exists — publish -> stranger discovery.');
+        const exchangeSource = await rawSource('application/placeNaming/PlaceNamingClaimExchange.js');
         assert(exchangeSource.includes('importClaim'), 'B3d. PlaceNamingClaimExchange.js still exposes importClaim() — stranger discovery -> adoption, the journey\'s own terminus (0.9.322\'s own live-proved chain, unchanged).');
 
         // B4. Commentary -> Notification -> Recipient History.
         assert(canvasSource.includes('encounterCommentaryPublicationId'),
             'B4a. WorldEncounterCanvas.js still gates its commentary panel on the selected encounter — Encounter -> Commentary.');
-        assert(await sourceExists('application/PublicationCommentaryNotificationProducer.js'),
+        assert(await sourceExists('application/publication/commentary/PublicationCommentaryNotificationProducer.js'),
             'B4b. PublicationCommentaryNotificationProducer.js still exists — Commentary -> Notification.');
         assert((await rawSource('ui/components/NotificationHistoryPanel.js')).includes("name: 'NotificationHistoryPanel'"),
             'B4c. NotificationHistoryPanel.js still exists — Notification -> Recipient History, the journey\'s own terminus.');
@@ -286,13 +286,13 @@ async function runTests() {
         // Application. The Editor-document collaboration protocol
         // (0.9.223-0.9.240-era), distinct from the World's own
         // Command-propagation protocol B6 below exercises live.
-        const editorSessionSource = await rawSource('application/EditorSession.js');
-        assert(editorSessionSource.includes("import { RemoteDocumentOperationApplicationUseCase } from './RemoteDocumentOperationApplicationUseCase.js'")
+        const editorSessionSource = await rawSource('application/editor/EditorSession.js');
+        assert(editorSessionSource.includes("import { RemoteDocumentOperationApplicationUseCase } from '../document/RemoteDocumentOperationApplicationUseCase.js'")
             && editorSessionSource.includes('new RemoteDocumentOperationApplicationUseCase()'),
-            'B5a. application/EditorSession.js — the real Editor composition — still constructs a live RemoteDocumentOperationApplicationUseCase directly, not through a bypassed root.');
+            'B5a. application/editor/EditorSession.js — the real Editor composition — still constructs a live RemoteDocumentOperationApplicationUseCase directly, not through a bypassed root.');
         assert(await sourceExists('core/DocumentOperationApplicationReadiness.js') && await sourceExists('core/DocumentOperationApplicationEligibility.js'),
             'B5b. The causal-readiness primitives (DocumentOperationApplicationReadiness/Eligibility) still exist.');
-        assert(await sourceExists('application/DocumentOperationRecoveryUseCase.js') && await sourceExists('application/RecoveredOperationReplayUseCase.js'),
+        assert(await sourceExists('application/document/DocumentOperationRecoveryUseCase.js') && await sourceExists('application/document/RecoveredOperationReplayUseCase.js'),
             'B5c. Recovery/replay for operations that arrive before they are causally ready still exist — Remote Operation -> Causal Readiness -> Application does not dead-end on a gap; it recovers and replays, the journey\'s own terminus.');
 
         // B6. Provider preference -> Setting -> Preferred Placement.
@@ -367,8 +367,8 @@ async function runTests() {
         // the two names this milestone's own research surfaced.
         const DELEGATION_FAMILY_FILES = new Set([
             'core/Delegation.js', 'identity/DelegationVerifier.js', 'identity/DelegationResolver.js',
-            'identity/LocalDelegationResolver.js', 'application/CreateDelegationUseCase.js',
-            'application/VerifyDelegationUseCase.js', 'identity/AuthorizationVerifier.js',
+            'identity/LocalDelegationResolver.js', 'application/identity/CreateDelegationUseCase.js',
+            'application/identity/VerifyDelegationUseCase.js', 'identity/AuthorizationVerifier.js',
             // The one KNOWN, EXPECTED exception: PlacementRecord itself carries the
             // matching `authorizedBy`/`delegationId` record-shape fields (0.2.17's
             // own design) — real code, checked explicitly in F2e, never asserted
@@ -435,8 +435,8 @@ async function runTests() {
         // infrastructure reuse, never a product-level seam.
         assert(await sourceExists('nostr/NostrRelayQueryClient.js') && await sourceExists('nostr/NostrInjectedProviderPublisher.js'),
             'E1a. The shared, low-level Nostr transport primitives still exist as their own files, independent of any one product feature.');
-        const snapshotPublisherSource = await rawSource('application/NostrSnapshotDiscoveryPublisher.js');
-        const placeNamingPublisherSource = await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js');
+        const snapshotPublisherSource = await rawSource('application/nostr/NostrSnapshotDiscoveryPublisher.js');
+        const placeNamingPublisherSource = await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js');
         assert(snapshotPublisherSource.length > 0 && placeNamingPublisherSource.length > 0,
             'E1b. Both Snapshot distribution and Place Naming publication still have their OWN, separate publisher classes — reusing the shared transport, never sharing a product-level publication class.');
         assert(!snapshotPublisherSource.includes('PlaceNamingClaim') && !placeNamingPublisherSource.includes('SnapshotDiscoveryEnvelope'),
@@ -445,7 +445,7 @@ async function runTests() {
         // E2. Arweave (Publication distribution's own second substrate)
         // stays confined to Publication; neither Snapshot nor Place
         // Naming references it.
-        const arweaveHits = await grepCount('arweave/', ['application/PlaceNamingClaimPublication.js', 'application/DiscoverSnapshotCandidatesCommand.js'].filter((f) => f));
+        const arweaveHits = await grepCount('arweave/', ['application/placeNaming/PlaceNamingClaimPublication.js', 'application/snapshot/DiscoverSnapshotCandidatesCommand.js'].filter((f) => f));
         assert(arweaveHits === 0, 'E2. Neither Place Naming publication nor Snapshot discovery references the Arweave substrate — it remains Publication distribution\'s own, undisturbed.');
 
         // E3. No generic publication/substrate framework exists anywhere
@@ -466,8 +466,8 @@ async function runTests() {
         // F1. The 0.9.312 guard, reconfirmed fresh.
         const HISTORICAL_FAMILY_FILES = new Set([
             'replication/ConflictResolver.js', 'replication/ReplicaMergeService.js',
-            'replication/LocalReplicationStore.js', 'application/ReplicatePlacementUseCase.js',
-            'application/SynchronizeReplicaUseCase.js', 'application/CreateReplicationUseCase.js'
+            'replication/LocalReplicationStore.js', 'application/placement/ReplicatePlacementUseCase.js',
+            'application/placement/SynchronizeReplicaUseCase.js', 'application/placement/CreateReplicationUseCase.js'
         ]);
         function outsideFamily(files) {
             return files.filter((f) => !HISTORICAL_FAMILY_FILES.has(f) && !f.startsWith('tests/'));
@@ -524,8 +524,8 @@ async function runTests() {
                 'F2c. The full delegated-authorization path — issue, sign, verify, and a delegate genuinely authorized to act for the owner — is REAL and CORRECT, proven live, not merely present in source.');
 
             // Structurally: zero production callers, on BOTH sides.
-            const creationSiteHits = grepFiles('new CreateDelegationUseCase(', ['application', 'ui']).filter((f) => f !== 'application/CreateDelegationUseCase.js');
-            const verificationSiteHits = grepFiles('new VerifyDelegationUseCase(', ['application', 'ui']).filter((f) => f !== 'application/VerifyDelegationUseCase.js');
+            const creationSiteHits = grepFiles('new CreateDelegationUseCase(', ['application', 'ui']).filter((f) => f !== 'application/identity/CreateDelegationUseCase.js');
+            const verificationSiteHits = grepFiles('new VerifyDelegationUseCase(', ['application', 'ui']).filter((f) => f !== 'application/identity/VerifyDelegationUseCase.js');
             assert(creationSiteHits.length === 0 && verificationSiteHits.length === 0,
                 `F2d. Zero production callers construct CreateDelegationUseCase or VerifyDelegationUseCase outside their own files (creation: ${creationSiteHits.join(', ') || 'none'}; verification: ${verificationSiteHits.join(', ') || 'none'}) — nothing in the live product can even ISSUE a delegation today.`);
 
@@ -581,13 +581,13 @@ async function runTests() {
         const claimSource = await rawSource('core/PlaceNamingClaim.js');
         assert(codeOnlyLines(claimSource).includes('id = createId()'),
             'G1a. PlaceNamingClaim still derives its own `id` from createId() — never from a Nostr event id.');
-        const nostrPublisherSource = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoveryPublisher.js'));
+        const nostrPublisherSource = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js'));
         assert(!/this\._claim\._id\s*=|claim\.id\s*=\s*event/.test(nostrPublisherSource),
             'G1b. NostrPlaceNamingDiscoveryPublisher.js never overwrites a claim\'s own id with a Nostr event id — publishing never renames the claim\'s identity.');
 
         // G2. Publication != Discovery, for the Place Naming pathway
         // specifically (0.9.322's own boundary, reconfirmed fresh).
-        const claimUseCaseSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimUseCase.js'));
+        const claimUseCaseSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js'));
         assert(!/NostrPlaceNamingDiscoveryPublisher|nostrPlaceNamingDiscoveryPublisher/.test(claimUseCaseSource),
             'G2. PlaceNamingClaimUseCase.js — the class create() actually calls — still never references the publisher; creating (persisting) a claim and publishing it remain two distinct actions the caller must invoke separately.');
 

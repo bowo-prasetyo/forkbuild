@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { IceServerConfiguration, isValidStunUrl } from '../core/IceServerConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
-import { SetIceServerConfigurationUseCase } from '../application/SetIceServerConfigurationUseCase.js';
+import { SetIceServerConfigurationUseCase } from '../application/settings/SetIceServerConfigurationUseCase.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
 import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
@@ -59,7 +59,7 @@ import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 //               untouched, and this milestone's classes never import it.
 //
 // See core/IceServerConfiguration.js, storage/IceServerConfigurationStore.js,
-// application/SetIceServerConfigurationUseCase.js, and
+// application/settings/SetIceServerConfigurationUseCase.js, and
 // ui/views/StunSettingsView.js for the full design rationale this
 // milestone carries out.
 
@@ -147,7 +147,7 @@ async function run() {
         const mainSource = await source('ui/main.js');
         assert(mainSource.includes("import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';"),
             '1. ui/main.js imports the new store');
-        assert(mainSource.includes("import { SetIceServerConfigurationUseCase } from '../application/SetIceServerConfigurationUseCase.js';"),
+        assert(mainSource.includes("import { SetIceServerConfigurationUseCase } from '../application/settings/SetIceServerConfigurationUseCase.js';"),
             '2. ui/main.js imports the new write use case');
         assert(/new IceServerConfigurationStore\(new LocalStorageProvider\(\)\)/.test(mainSource),
             '3. ui/main.js constructs a real IceServerConfigurationStore over LocalStorageProvider');

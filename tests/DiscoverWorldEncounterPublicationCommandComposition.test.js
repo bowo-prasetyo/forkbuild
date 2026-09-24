@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
-import { composeDiscoverWorldEncounterPublicationCommand } from '../application/DiscoverWorldEncounterPublicationCommandComposition.js';
+import { composeDiscoverWorldEncounterPublicationCommand } from '../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
     composeDecentralizedWorldEncounterMaterialDiscoveryRuntime
-} from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
-import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
-import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
@@ -236,7 +236,7 @@ async function runTests() {
     // Section E — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/DiscoverWorldEncounterPublicationCommandComposition.js', import.meta.url);
+        const sourceUrl = new URL('../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

@@ -11,24 +11,24 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { CreateDocumentManagerUseCase } from '../application/CreateDocumentManagerUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { LoadFailureReason } from '../application/LoadFailureReason.js';
-import { AutosaveScheduler } from '../application/AutosaveScheduler.js';
-import { AutosaveDocumentUseCase } from '../application/AutosaveDocumentUseCase.js';
-import { CheckRecoveryUseCase } from '../application/CheckRecoveryUseCase.js';
-import { RecoverDocumentUseCase } from '../application/RecoverDocumentUseCase.js';
-import { DiscardRecoveryUseCase } from '../application/DiscardRecoveryUseCase.js';
-import { RecoveryObserver } from '../application/RecoveryObserver.js';
-import { DocumentManifest } from '../application/DocumentManifest.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { CreateDocumentManagerUseCase } from '../application/document/CreateDocumentManagerUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { LoadFailureReason } from '../application/document/LoadFailureReason.js';
+import { AutosaveScheduler } from '../application/document/AutosaveScheduler.js';
+import { AutosaveDocumentUseCase } from '../application/document/AutosaveDocumentUseCase.js';
+import { CheckRecoveryUseCase } from '../application/document/CheckRecoveryUseCase.js';
+import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentUseCase.js';
+import { DiscardRecoveryUseCase } from '../application/document/DiscardRecoveryUseCase.js';
+import { RecoveryObserver } from '../application/document/RecoveryObserver.js';
+import { DocumentManifest } from '../application/document/DocumentManifest.js';
 import { DocumentRevision } from '../core/DocumentRevision.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { ForkPublishedWorldUseCase } from '../application/ForkPublishedWorldUseCase.js';
-import { LifecycleStatus, computeLifecycleStatus, describeLifecycleStatus } from '../application/DocumentLifecycleStatus.js';
+import { ForkPublishedWorldUseCase } from '../application/publication/ForkPublishedWorldUseCase.js';
+import { LifecycleStatus, computeLifecycleStatus, describeLifecycleStatus } from '../application/document/DocumentLifecycleStatus.js';
 import { worldNavigationSessionFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.579 — World Editing & Unsaved-State Product Reassessment.
@@ -43,7 +43,7 @@ import { worldNavigationSessionFiles, editorViewFiles } from './support/SourceFi
 // which of these states they are looking at?
 //
 // Same structural constraint as 0.9.576/0.9.577/0.9.578: ui/views/
-// EditorView.js imports 'vue' and application/EditorSession.js
+// EditorView.js imports 'vue' and application/editor/EditorSession.js
 // transitively imports 'three' (via RenderWorldUseCase.js -> Renderer.js)
 // — neither resolves under plain `node tests/*.test.js` in this
 // checkout (reconfirmed directly for this milestone; every other
@@ -52,7 +52,7 @@ import { worldNavigationSessionFiles, editorViewFiles } from './support/SourceFi
 // .test.js's own header). Every claim about EditorView.js/EditorSession.js
 // THEMSELVES is therefore proven by direct source citation (readSource()
 // + exact line/regex quotes), never by live import. Everywhere else —
-// application/DocumentManager.js, SaveDocumentUseCase.js,
+// application/document/DocumentManager.js, SaveDocumentUseCase.js,
 // LoadDocumentUseCase.js, AutosaveScheduler.js, AutosaveDocumentUseCase.js,
 // CheckRecoveryUseCase.js, RecoverDocumentUseCase.js, DiscardRecoveryUseCase.js,
 // RecoveryObserver.js, PublishDocumentUseCase.js, DocumentLifecycleStatus.js,
@@ -344,7 +344,7 @@ async function main() {
         // checkpoint, then stop() BEFORE its delay elapses, then wait
         // past that delay — no checkpoint is ever written for that
         // last burst of edits.
-        const unmountSource = await readSource('application/AutosaveScheduler.js');
+        const unmountSource = await readSource('application/document/AutosaveScheduler.js');
         assert(/stop\(\) \{\s*this\._cancel\(\)/.test(unmountSource) === false, 'sanity: stop() is not named _cancel (guards the next assertion\'s regex).');
         assert(/stop\(\) \{\s*this\.cancel\(\);/.test(unmountSource),
             'C3a. AutosaveScheduler.stop()\'s own real body starts with this.cancel() — never a flush/execute call first — quoted verbatim from the real source.');
@@ -584,7 +584,7 @@ async function main() {
         // `node --input-type=module -e "import('./application/
         // EditorSession.js')"` fails with "Cannot find package 'three'
         // imported from .../renderer/Renderer.js").
-        const editorSessionSource = await readSource('application/EditorSession.js');
+        const editorSessionSource = await readSource('application/editor/EditorSession.js');
         assert(/loadDocument\(id\) \{\s*this\._rebuild\(\(eventBus\) => \{/.test(editorSessionSource),
             'H2a. loadDocument() really does route through _rebuild() — the same rebuild path openDocument()/newDocument() also use, quoted verbatim.');
         const rebuildMatch = editorSessionSource.match(/_rebuild\(populateWorldFn\) \{[\s\S]*?const world = populateWorldFn\(eventBus\);/);
@@ -598,7 +598,7 @@ async function main() {
         // and-freshly-rebuilt, but never-populated, render session,
         // while documentManager/state correctly retain the PREVIOUS
         // document, live-proven below.
-        const renderWorldUseCaseSource = await readSource('application/RenderWorldUseCase.js');
+        const renderWorldUseCaseSource = await readSource('application/world/RenderWorldUseCase.js');
         assert(/execute\(container, eventBus, registry, editorEventBus, \{ gestureService = null, structureResolver = null \} = \{\}\) \{/.test(renderWorldUseCaseSource),
             'H3a. RenderWorldUseCase.execute() takes no `world` argument at all — quoted verbatim from its real signature.');
         assert(/worldRenderer\.subscribe\(eventBus\);/.test(renderWorldUseCaseSource),
@@ -933,7 +933,7 @@ async function main() {
         // Deliberate exclusions, confirmed absent by direct inspection.
         const documentStateSource = await readSource('application/editor-state/DocumentState.js');
         assert(!/undo|redo/i.test(documentStateSource), 'N1. No undo/redo concept was added to DocumentState.');
-        const autosaveSchedulerSource = await readSource('application/AutosaveScheduler.js');
+        const autosaveSchedulerSource = await readSource('application/document/AutosaveScheduler.js');
         assert(!/branch|conflict/i.test(autosaveSchedulerSource), 'N2. No draft-branch or conflict-resolution concept exists in AutosaveScheduler.js.');
         const publisherSource = await readSource('publisher/LocalPublisherProvider.js');
         assert(!/autoRepublish|automaticRepublish/i.test(publisherSource), 'N3. No automatic republishing mechanism exists.');

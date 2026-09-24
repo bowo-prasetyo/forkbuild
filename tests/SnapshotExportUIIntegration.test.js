@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
 
-import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/BuildPublicationSnapshotTransferPackageUseCase.js';
-import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
-import { SnapshotContentMaterializationCoordinator } from '../application/SnapshotContentMaterializationCoordinator.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { SnapshotContentTransferOutcome } from '../application/SnapshotContentTransferOutcome.js';
-import { validatePublicationSnapshotTransferPackage } from '../application/PublicationSnapshotTransferPackageValidator.js';
+import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js';
+import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js';
+import { SnapshotContentMaterializationCoordinator } from '../application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { SnapshotContentTransferOutcome } from '../application/snapshot/materialization/SnapshotContentTransferOutcome.js';
+import { validatePublicationSnapshotTransferPackage } from '../application/snapshot/PublicationSnapshotTransferPackageValidator.js';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -305,18 +305,18 @@ async function runTests() {
         // discovery/comparison/retention machinery ever references
         // export, the build use case, or the export command.
         const neverExportingFiles = [
-            'application/AutomaticSnapshotEncounterCascade.js',
-            'application/AutomaticSnapshotEncounterRetentionPolicy.js',
-            'application/AutomaticSnapshotEncounterRetentionReconciliation.js',
-            'application/WorldSnapshotDiscoveryMonitor.js',
-            'application/WorldSnapshotComparison.js',
-            'application/ShouldRefreshSnapshotDiscovery.js',
-            'application/DiscoverSnapshotCommand.js',
-            'application/DiscoverSnapshotCandidatesCommand.js',
-            'application/MaterializeSnapshotFromPlacementUseCase.js',
-            'application/MaterializeSnapshotFromPeerUseCase.js',
-            'application/MaterializeSnapshotFromSelectedCandidateUseCase.js',
-            'application/MaterializedSnapshotWorldDiscoveryBridge.js'
+            'application/snapshot/AutomaticSnapshotEncounterCascade.js',
+            'application/snapshot/AutomaticSnapshotEncounterRetentionPolicy.js',
+            'application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js',
+            'application/snapshot/WorldSnapshotDiscoveryMonitor.js',
+            'application/snapshot/WorldSnapshotComparison.js',
+            'application/snapshot/ShouldRefreshSnapshotDiscovery.js',
+            'application/snapshot/DiscoverSnapshotCommand.js',
+            'application/snapshot/DiscoverSnapshotCandidatesCommand.js',
+            'application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js',
+            'application/snapshot/materialization/MaterializeSnapshotFromPeerUseCase.js',
+            'application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js',
+            'application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js'
         ];
         for (const path of neverExportingFiles) {
             const source = codeOnly(await rawSource(path));
@@ -377,7 +377,7 @@ async function runTests() {
         });
         ctx.exportOwnSnapshot();
         await flushMicrotasks();
-        assert(ctx.snapshotExportError === 'boom', 'D4a. a real export failure now surfaces the sanitized underlying cause — see application/DistributionErrorMessageSanitizer.js');
+        assert(ctx.snapshotExportError === 'boom', 'D4a. a real export failure now surfaces the sanitized underlying cause — see application/publication/distribution/DistributionErrorMessageSanitizer.js');
         assert(ctx.snapshotExportResult === null, 'D4b. no result is recorded for a failed attempt');
         assert(ctx.snapshotExportExecuting === false, 'D4c. the in-flight flag clears even on failure');
         assert(ctx.snapshotDistributionResult && ctx.snapshotDistributionResult.untouched === true, 'D4d. a failed export never touches snapshotDistributionResult');
@@ -402,7 +402,7 @@ async function runTests() {
         // E2 — the coordinator itself adds no dedup/memoization of its
         // own: its source never references a cache, a Set, or a Map
         // keyed on publicationId for export().
-        const coordinatorSource = codeOnly(await rawSource('application/SnapshotContentMaterializationCoordinator.js'));
+        const coordinatorSource = codeOnly(await rawSource('application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js'));
         const exportMethodBody = coordinatorSource.match(/async export\(publicationId\)\s*\{([\s\S]*?)\n\s{4}\}/);
         assert(exportMethodBody, 'E2a. export(publicationId) exists on the coordinator');
         assert(!/cache|Map\(|Set\(|already exported|idempot/i.test(exportMethodBody[1]), 'E2b. export() invents no idempotency/dedup machinery of its own — a bare pass-through, exactly like import()');
@@ -447,10 +447,10 @@ async function runTests() {
 
         // F3 — structural: the use case and coordinator reference none of
         // the systems export must stay independent from.
-        const buildUseCaseSource = codeOnly(await rawSource('application/BuildPublicationSnapshotTransferPackageUseCase.js'));
+        const buildUseCaseSource = codeOnly(await rawSource('application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js'));
         const forbidden = /Publish|Unpublish|PlacementRegistry|WorldDiscoverySourceRegistry|Nostr|Arweave|VerifyPublication|VerifyDelegation/;
         assert(!forbidden.test(buildUseCaseSource), 'F3a. BuildPublicationSnapshotTransferPackageUseCase.js references none of Publish/Unpublish/Placement/World/Nostr/Arweave/verification');
-        const coordinatorSource = codeOnly(await rawSource('application/SnapshotContentMaterializationCoordinator.js'));
+        const coordinatorSource = codeOnly(await rawSource('application/snapshot/materialization/SnapshotContentMaterializationCoordinator.js'));
         assert(!forbidden.test(coordinatorSource), 'F3b. SnapshotContentMaterializationCoordinator.js references none of them either');
 
         console.log('✓ Section F: Snapshot/Publication independence — exporting reads catalog and content-store state without ever mutating it, and touches no Publish/Unpublish/Placement/World/Nostr/Arweave machinery.');

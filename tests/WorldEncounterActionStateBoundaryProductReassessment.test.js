@@ -1,14 +1,14 @@
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
-import { WorldEncounterMaterialSource } from '../application/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialSource } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import {
     WorldEncounterMaterialVerifier,
     WorldEncounterMaterialVerificationStatus
-} from '../application/WorldEncounterMaterialVerification.js';
+} from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 
 // 0.9.536 — World Encounter Action-State Boundary Product Reassessment.
 //
@@ -34,7 +34,7 @@ import {
 // own genuine-change branch. A registry mutation alone — a second source
 // starting (or stopping) to offer the SAME still-selected encounter,
 // reclassifying it between `RESOLVED` and `AMBIGUOUS`
-// (application/WorldEncounterSelectionOutcome.js, 0.9.20, unmodified) —
+// (application/worldEncounter/WorldEncounterSelectionOutcome.js, 0.9.20, unmodified) —
 // reaches that branch with NO `selectEncounter()` call anywhere on its own
 // path. Section I below reproduces exactly that: a Distribute/Snapshot
 // action already in flight against the OLD resolution, still guarded by an
@@ -224,7 +224,7 @@ async function main() {
 
         // A1. A NON-genuine notification (re-`setSource` of the exact same
         // origin/objectId — a field-for-field identical local source,
-        // which application/WorldDiscoverySourceRegistry.js's own header
+        // which application/discovery/WorldDiscoverySourceRegistry.js's own header
         // documents as still notifying subscribers — with no candidate-set
         // change at all) must leave EVERYTHING untouched, including the
         // state 0.9.536 newly resets in the genuine branch. This is the

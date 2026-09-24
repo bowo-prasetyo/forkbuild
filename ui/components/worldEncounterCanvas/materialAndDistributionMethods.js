@@ -1,8 +1,8 @@
-import { inspectWorldEncounterMaterial } from '../../../application/WorldEncounterMaterialInspection.js';
-import { sanitizeDistributionErrorMessage } from '../../../application/DistributionErrorMessageSanitizer.js';
+import { inspectWorldEncounterMaterial } from '../../../application/worldEncounter/WorldEncounterMaterialInspection.js';
+import { sanitizeDistributionErrorMessage } from '../../../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 import { Publication } from '../../../publisher/Publication.js';
-import { resolveSnapshotPublicationAttribution } from '../../../application/SnapshotPublicationAttribution.js';
-import { unregisterMaterializedSnapshotWorldSource } from '../../../application/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { resolveSnapshotPublicationAttribution } from '../../../application/snapshot/SnapshotPublicationAttribution.js';
+import { unregisterMaterializedSnapshotWorldSource } from '../../../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
 
 // WorldEncounterCanvas methods: material inspection, repository admission and distribution.
 // Spread into the component's `methods`, so `this` is the component instance.
@@ -13,7 +13,7 @@ export const materialAndDistributionMethods = {
     // `publisher/Publication.js` instance (so never an avatar or a decentralized
     // envelope, which is never hydrated: no `Publication.fromJSON()`) AND whose
     // verification is VERIFIED. AVAILABLE alone only means retrieval succeeded
-    // (see application/DecentralizedWorldEncounterMaterialSource.js); VERIFIED
+    // (see application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js); VERIFIED
     // means the composed WorldEncounterMaterialIdentityVerifier and
     // WorldEncounterMaterialSignatureVerifier both confirmed it, matching the
     // sibling's `view.resolved` gate. REJECTED and UNVERIFIABLE are excluded (see

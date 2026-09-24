@@ -45,7 +45,7 @@ import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 // `describeWorldDiscoverySource({ origin: 'local', ... })`'s own
 // local-storage batch without either side having to know the other
 // exists. `connectedPeer.remoteIdentity` is read here exactly as a
-// plain, already-established fact — application/ConnectedPeer.js's own
+// plain, already-established fact — application/peer/ConnectedPeer.js's own
 // `remoteIdentity` getter is null until peer/
 // PeerAuthenticationSession.js's handshake reaches AUTHENTICATED, and
 // this file trusts nothing beyond reading that already-completed result.

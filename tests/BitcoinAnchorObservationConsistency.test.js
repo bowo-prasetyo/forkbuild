@@ -1,18 +1,18 @@
-import { BitcoinAnchorConfirmationState } from '../application/BitcoinAnchorConfirmationState.js';
+import { BitcoinAnchorConfirmationState } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationState.js';
 import {
     BitcoinAnchorObservationConsistencyState,
     BitcoinAnchorObservationConsistencyFindingKind,
     isValidBitcoinAnchorObservationConsistencyState,
     isValidBitcoinAnchorObservationConsistencyFindingKind,
     compareBitcoinAnchorObservationConsistency
-} from '../application/BitcoinAnchorObservationConsistencyState.js';
-import { analyzeBitcoinAnchorObservationConsistency } from '../application/BitcoinAnchorObservationConsistencyAnalyzer.js';
+} from '../application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyState.js';
+import { analyzeBitcoinAnchorObservationConsistency } from '../application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyAnalyzer.js';
 import {
     describeBitcoinAnchorObservationConsistencyLabel,
     describeBitcoinAnchorObservationConsistency
-} from '../application/BitcoinAnchorObservationConsistencyView.js';
-import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/BitcoinAnchorConfirmationObservationHistory.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+} from '../application/anchoring/bitcoin/BitcoinAnchorObservationConsistencyView.js';
+import { appendBitcoinAnchorConfirmationObservationHistoryEntry } from '../application/anchoring/bitcoin/BitcoinAnchorConfirmationObservationHistory.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.77 — Bitcoin Anchor Observation Consistency Analysis.
 //
@@ -35,7 +35,7 @@ import { PublicationObservationArchive } from '../application/PublicationObserva
 // Section H: immutability — neither the history nor its observations, nor
 //            any observation named on a finding, are ever mutated
 // Section I: persistence round trip — analyzing a history restored from
-//            application/PublicationObservationArchive.js's own
+//            application/publication/observationArchive/PublicationObservationArchive.js's own
 //            toJSON()/fromJSON() produces byte-identical findings to
 //            analyzing the live archive's own array
 // Section J: no verdict/cause vocabulary anywhere in this milestone's

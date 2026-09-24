@@ -1,30 +1,30 @@
 import { readFile } from 'node:fs/promises';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/AutomaticSnapshotEncounterCascadeOutcome.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotWorldPositionClaimOutcome } from '../application/SnapshotWorldPositionClaimOutcome.js';
-import { resolveSnapshotWorldPlacement } from '../application/SnapshotWorldPlacement.js';
-import { registerMaterializedSnapshotWorldSource, materializedSnapshotWorldOrigin } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeWorldFromDiscoveryRegistry } from '../application/WorldDiscoveryRegistryProjection.js';
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/snapshot/AutomaticSnapshotEncounterCascadeOutcome.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotWorldPositionClaimOutcome } from '../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
+import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
+import { registerMaterializedSnapshotWorldSource, materializedSnapshotWorldOrigin } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
 import { describeObserverLocalPublicationEncounter } from '../core/ObserverLocalPublicationEncounter.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { WorldEncounterSelectionOutcomeStatus } from '../application/WorldEncounterSelectionOutcome.js';
+import { WorldEncounterSelectionOutcomeStatus } from '../application/worldEncounter/WorldEncounterSelectionOutcome.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
@@ -61,7 +61,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 //                            LocalPlacementRegistry.js)
 //   claimedPosition        — a publisher's own self-reported, distributed
 //                            claim, CONSUMED only by an explicit person
-//                            action (application/SnapshotWorldPositionClaim.js,
+//                            action (application/snapshot/placement/SnapshotWorldPositionClaim.js,
 //                            0.9.172), never automatically
 //   Observer-local encounter — an ephemeral, session-scoped record of what
 //                            THIS Wanderer's own walking materialized,
@@ -82,7 +82,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // `WorldEncounterCanvas.js` component driven directly through its own
 // `data`/`computed`/`methods`/`mounted`/`beforeUnmount` (0.9.553's own
 // established "call X.call(ctx)" discipline). `ui/views/WorldView.js`/
-// `application/WorldNavigationSession.js` remain unimportable under this
+// `application/world/WorldNavigationSession.js` remain unimportable under this
 // project's plain `node` test runner (THREE.js/Vue-dependent renderer
 // stack) and are instead verified structurally, by reading their own
 // unmodified source — the same documented constraint every milestone in
@@ -275,7 +275,7 @@ function placeReal(placementRegistry, publicationId, position, owner = 'alice') 
     return record;
 }
 
-// Mirrors application/WorldNavigationSession.js's own real
+// Mirrors application/world/WorldNavigationSession.js's own real
 // getPlacementInfoForPublication(publicationId) exactly — reproduced
 // rather than imported (Vue/three.js-dependent, unresolvable under this
 // project's plain `node` test runner). Verified structurally against the
@@ -502,9 +502,9 @@ async function run() {
         assert(typeof record.contentHash === 'string' || record.contentHash === null || record.computeContentHash, 'A1b. sanity — PlacementRecord carries its own identity machinery, never borrowed from another concept.');
 
         // 2. claimedPosition — a distributed claim, resolved via
-        // application/SnapshotWorldPositionClaim.js, never a PlacementRecord.
+        // application/snapshot/placement/SnapshotWorldPositionClaim.js, never a PlacementRecord.
         const candidateWithClaim = { contentHash: 'h', locator: 'l', storage: 's', publicationId: publication.id, claimedPosition: { x: 9, y: 0, z: 9 } };
-        const { resolveSnapshotWorldPositionClaim } = await import('../application/SnapshotWorldPositionClaim.js');
+        const { resolveSnapshotWorldPositionClaim } = await import('../application/snapshot/placement/SnapshotWorldPositionClaim.js');
         const claim = resolveSnapshotWorldPositionClaim(candidateWithClaim, publication.id);
         assert(claim.outcome === SnapshotWorldPositionClaimOutcome.CLAIMED, 'A2. A claim resolves to CLAIMED.');
         assert(!(claim instanceof PlacementRecord) && !('placementId' in claim), 'A3. A resolved claim is never, and never resembles, a PlacementRecord — no placementId, no PlacementRecord prototype.');
@@ -519,7 +519,7 @@ async function run() {
         // No file in this codebase merges these three concepts into one
         // class or store.
         const placementCode = codeOnlyLines(await readSource('core/PlacementRecord.js'));
-        const claimCode = codeOnlyLines(await readSource('application/SnapshotWorldPositionClaim.js'));
+        const claimCode = codeOnlyLines(await readSource('application/snapshot/placement/SnapshotWorldPositionClaim.js'));
         const encounterCode = codeOnlyLines(await readSource('core/ObserverLocalPublicationEncounter.js'));
         assert(!claimCode.includes('PlacementRecord') && !encounterCode.includes('PlacementRecord') && !encounterCode.includes('claimedPosition'),
             'A6. In actual CODE (comments excluded — both files\' own headers discuss these names at length precisely to explain excluding them) neither the claim-resolution file nor the observer-local-encounter file imports or references PlacementRecord; the encounter file never reads claimedPosition either — confirmed against live source.');
@@ -538,7 +538,7 @@ async function run() {
         const placementRegistry = new LocalPlacementRegistry(storageProvider);
         placeReal(placementRegistry, publication.id, new Position(5, 0, 5));
         const session = makeRealSession(placementRegistry);
-        const { resolveSnapshotWorldPositionClaim } = await import('../application/SnapshotWorldPositionClaim.js');
+        const { resolveSnapshotWorldPositionClaim } = await import('../application/snapshot/placement/SnapshotWorldPositionClaim.js');
 
         // B1 — coordinates equal: an honest candidate whose claimedPosition
         // was itself derived FROM the same PlacementRecord (the honest
@@ -548,7 +548,7 @@ async function run() {
         const honestClaim = resolveSnapshotWorldPositionClaim(honestCandidate, publication.id);
         assert(honestClaim.position.x === placementInfo.position.x && honestClaim.position.z === placementInfo.position.z,
             'B1. Coordinates equal by construction — yet the claim result and the PlacementRecord-derived placementInfo remain two independent objects.');
-        assert(honestClaim.position !== placementInfo.position, 'B1b. The claim never reuses the placementInfo object reference — a fresh, independently-frozen structure every time, per application/SnapshotWorldPositionClaim.js\'s own "never a domain object" restraint.');
+        assert(honestClaim.position !== placementInfo.position, 'B1b. The claim never reuses the placementInfo object reference — a fresh, independently-frozen structure every time, per application/snapshot/placement/SnapshotWorldPositionClaim.js\'s own "never a domain object" restraint.');
 
         // B2 — coordinates differ: a forged/adversarial claim naming a
         // wildly different position for the SAME publicationId. The claim
@@ -666,7 +666,7 @@ async function run() {
         // One shared registry and one shared observer-local store — EXACTLY
         // the objects a single real ui/main.js composition root hands to
         // BOTH WorldEncounterCanvas AND OwnPublicationPanel for the SAME
-        // WorldView mount (application/WorldDiscoveryRuntimeBootstrap.js:
+        // WorldView mount (application/discovery/WorldDiscoveryRuntimeBootstrap.js:
         // "the ONE piece of mutable runtime state ui/main.js constructs
         // once at startup"; ui/views/WorldView.js: "a fresh
         // ObserverLocalEncounterStore accompanies each fresh session").
@@ -827,7 +827,7 @@ async function run() {
         // The identical proof through the OBSERVER-LOCAL channel: two
         // independent candidates, sharing one contentHash, each carrying
         // its OWN claim, each independently consumed.
-        const { resolveSnapshotWorldPositionClaim } = await import('../application/SnapshotWorldPositionClaim.js');
+        const { resolveSnapshotWorldPositionClaim } = await import('../application/snapshot/placement/SnapshotWorldPositionClaim.js');
         const candidateP1 = { contentHash: sharedContentHash, locator: 'l', storage: 's', publicationId: p1.id, claimedPosition: { x: 11, y: 0, z: 11 } };
         const candidateP2 = { contentHash: sharedContentHash, locator: 'l', storage: 's', publicationId: p2.id, claimedPosition: { x: 22, y: 0, z: 22 } };
         const claimP1AgainstP1 = resolveSnapshotWorldPositionClaim(candidateP1, p1.id);
@@ -994,9 +994,9 @@ async function run() {
         const mainSource = await readSource('ui/main.js');
         assert(/const worldDiscoveryRuntime\s*=\s*bootstrapWorldDiscoveryRuntime/.test(mainSource) || mainSource.includes('bootstrapWorldDiscoveryRuntime'),
             'I2. sanity — ui/main.js genuinely constructs the World discovery runtime (registry included) once, at startup — confirmed against live source.');
-        const bridgeSource = await readSource('application/MaterializedSnapshotWorldDiscoveryBridge.js');
+        const bridgeSource = await readSource('application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js');
         assert(bridgeSource.includes('mutable runtime state'),
-            'I3. application/MaterializedSnapshotWorldDiscoveryBridge.js\'s own header confirms the registry is "the ONE piece of mutable runtime state ui/main.js constructs once at startup" — constructed fresh, in memory, every time, never loaded from a StorageProvider.');
+            'I3. application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js\'s own header confirms the registry is "the ONE piece of mutable runtime state ui/main.js constructs once at startup" — constructed fresh, in memory, every time, never loaded from a StorageProvider.');
         const registry = new WorldDiscoverySourceRegistry();
         assert(typeof registry.constructor === 'function' && registry.listSources().length === 0,
             'I4. A freshly-constructed WorldDiscoverySourceRegistry (the SAME shape a reload produces) starts genuinely empty — a REGISTERED claim from a prior session does not survive; only rediscovering and re-consuming the still-announced claim from the network would restore it, which is a fresh act, not a resumed one.');
@@ -1008,7 +1008,7 @@ async function run() {
         const store = new ObserverLocalEncounterStore();
         assert(typeof store.save === 'undefined' && typeof store.load === 'undefined' && typeof store.persist === 'undefined',
             'I5. ObserverLocalEncounterStore exposes no save/load/persist method of any kind — a fresh instance (the SAME shape a reload, or a new WorldView mount, produces) starts genuinely empty, with no mechanism by which it ever could not.');
-        const encounterSource = await readSource('application/ObserverLocalEncounterStore.js');
+        const encounterSource = await readSource('application/worldEncounter/ObserverLocalEncounterStore.js');
         assert(encounterSource.includes('No `StorageProvider`, no survival across a'), 'I5b. Confirmed against the file\'s own explicit header.');
 
         console.log('✓ I — derived from real behavior, not assumption: PlacementRecord survives leave/rediscover/reload/new session (ordinary StorageProvider persistence); a distributed claimedPosition survives on the network indefinitely but a LOCAL registration of it never outlives the runtime registry that held it — a reload requires rediscovering and re-consuming it, a genuinely fresh act; an observer-local encounter survives only "walk away and return" within the SAME session, and never a reload or a new session — confirming the table this milestone\'s own brief proposed as a hypothesis is, in fact, what the real code does.');
@@ -1207,7 +1207,7 @@ async function run() {
         // explicit claim path (the Wanderer chooses to trust and use each
         // publisher's own claim) — never a content-hash shortcut that
         // collapses P1/P2.
-        const { resolveSnapshotWorldPositionClaim } = await import('../application/SnapshotWorldPositionClaim.js');
+        const { resolveSnapshotWorldPositionClaim } = await import('../application/snapshot/placement/SnapshotWorldPositionClaim.js');
         const claimP1 = resolveSnapshotWorldPositionClaim(candidateP1, p1.id);
         const claimP2 = resolveSnapshotWorldPositionClaim(candidateP2, p2.id);
         assert(claimP1.outcome === SnapshotWorldPositionClaimOutcome.CLAIMED && claimP1.position.x === 10 && claimP1.position.z === 10, 'L4. P1 -> correct claim (10, _, 10).');

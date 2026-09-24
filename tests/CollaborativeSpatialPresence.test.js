@@ -9,13 +9,13 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { WorldMembershipUseCase } from '../application/WorldMembershipUseCase.js';
-import { WorldAuthorizationService } from '../application/WorldAuthorizationService.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { WorldMembershipUseCase } from '../application/identity/WorldMembershipUseCase.js';
+import { WorldAuthorizationService } from '../application/identity/WorldAuthorizationService.js';
 import { WorldAccessLevel } from '../core/WorldAccessLevel.js';
-import { WorldSpatialPresenceUseCase } from '../application/WorldSpatialPresenceUseCase.js';
+import { WorldSpatialPresenceUseCase } from '../application/presence/WorldSpatialPresenceUseCase.js';
 import { WorldSpatialSelection } from '../core/WorldSpatialSelection.js';
 import { WorldSpatialActivity, isValidWorldSpatialActivity, deriveWorldSpatialActivity } from '../core/WorldSpatialActivity.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
@@ -111,7 +111,7 @@ async function connectAndAuthenticate(network, addressA, deviceA, addressB, devi
 }
 
 // One replica's own stack: device authorization, World membership, and
-// spatial presence — the same shape application/CreateWorldViewUseCase.js
+// spatial presence — the same shape application/world/CreateWorldViewUseCase.js
 // wires in a real deployment. `now` is injectable so Section C can
 // control throttling deterministically instead of racing a real clock.
 function makeStack(device, { now = () => Date.now() } = {}) {
@@ -365,7 +365,7 @@ async function runTests() {
     // A structural assertion, not a behavioral one: the shape
     // getSpatialRoster() hands back is built entirely from
     // WorldSpatialSelection/plain data — never a SpatialSelectionState,
-    // never a Command, never anything application/SpatialEditingService.js
+    // never a Command, never anything application/editor/SpatialEditingService.js
     // or application/commands/CommandRegistry.js would recognize as an
     // editing target. There is, by construction, no code path from a
     // remote selection to a mutation: nothing in this file, or in

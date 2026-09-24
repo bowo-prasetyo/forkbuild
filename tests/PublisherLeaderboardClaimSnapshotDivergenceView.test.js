@@ -1,9 +1,9 @@
-import { describePublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/LeaderboardClaimRecord.js';
-import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerification } from '../application/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js';
-import { describePublisherLeaderboardClaimSnapshotDivergence } from '../application/PublisherLeaderboardClaimSnapshotDivergenceView.js';
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
+import { describePublisherLeaderboardClaimSnapshotCorrespondenceVerification } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js';
+import { describePublisherLeaderboardClaimSnapshotDivergence } from '../application/leaderboard/PublisherLeaderboardClaimSnapshotDivergenceView.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -245,7 +245,7 @@ async function run() {
     // vocabulary, network access.
     // ---------------------------------------------------------------
     {
-        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/PublisherLeaderboardClaimSnapshotDivergenceView.js', import.meta.url), 'utf8');
+        const moduleSource = await (await import('node:fs/promises')).readFile(new URL('../application/leaderboard/PublisherLeaderboardClaimSnapshotDivergenceView.js', import.meta.url), 'utf8');
         const importLines = moduleSource.split('\n').filter((line) => line.startsWith('import '));
         assert(importLines.length === 1, '31. this file has exactly one import');
         assert(importLines.some((line) => line.includes("from './PublisherLeaderboardClaimSnapshotCorrespondenceVerificationView.js'")), '32. imports 0.8.140\'s own correspondence verification view');

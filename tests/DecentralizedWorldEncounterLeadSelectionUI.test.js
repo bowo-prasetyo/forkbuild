@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { WorldEncounterMaterialLoadStatus, WorldEncounterMaterialSource } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus, WorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerification.js';
-import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { WorldEncounterMaterialLoadStatus, WorldEncounterMaterialSource } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus, WorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
@@ -20,7 +20,7 @@ import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 // Integration." This file exercises that wiring directly, the same
 // `Component.methods.x.call(ctx)`/`Component.computed.y.call(ctx)`
 // discipline every other UI test file in this chain already uses.
-// `application/DecentralizedWorldEncounterLeadSelection.js`'s own seam logic
+// `application/worldEncounter/DecentralizedWorldEncounterLeadSelection.js`'s own seam logic
 // is covered separately, in
 // tests/DecentralizedWorldEncounterLeadSelection.test.js; this file stays
 // focused on how the canvas itself decides WHEN to resolve a lead and what

@@ -4,17 +4,17 @@ import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
-import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/RoleAwareProviderResolver.js';
+import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { ExternalProofVerifierRegistry } from '../application/ExternalProofVerifierRegistry.js';
-import { ExternalAnchorPublisherRegistry } from '../application/ExternalAnchorPublisherRegistry.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { ExternalProofVerifierRegistry } from '../application/anchoring/ExternalProofVerifierRegistry.js';
+import { ExternalAnchorPublisherRegistry } from '../application/anchoring/ExternalAnchorPublisherRegistry.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 import { BitcoinAnchorPublisher } from '../anchoring/BitcoinAnchorPublisher.js';
-import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeDecentralizedWorldEncounterMaterialDiscoveryServices } from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
 import { publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.296 — Role Provider Resolution Integration Readiness Audit.
@@ -22,7 +22,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // Test-only. Zero production changes. 0.9.293/0.9.294/0.9.295 built a
 // complete, real, independently-tested preference → persistence →
 // resolution boundary (`core/RoleProviderPreference.js`, `storage/
-// RoleProviderPreferenceStore.js`, `application/RoleAwareProviderResolver.js`)
+// RoleProviderPreferenceStore.js`, `application/settings/RoleAwareProviderResolver.js`)
 // — and none of the three is consumed by anything operational yet (see
 // each file's own header, and `tests/RoleAwareProviderResolution.test.js`
 // Section M). 0.9.295's own "What comes after" named the question this
@@ -76,7 +76,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // `instanceof`/construction check, or a real registry round-trip. Where a
 // production file's own header already states a restraint in its own
 // words (e.g. "never narrowed to a preferred or default one" —
-// `application/SnapshotPlacementCreationCoordinator.js`), this file reads
+// `application/snapshot/placement/SnapshotPlacementCreationCoordinator.js`), this file reads
 // and quotes that restraint from the file itself, never restates it from
 // memory.
 //
@@ -169,13 +169,13 @@ async function run() {
         // --- A1: RESOLUTION seams (Content, Proof) — keyed by a record's
         // own already-persisted field, never a caller- or preference-
         // supplied one. ---
-        const resolverSource = await source('application/SnapshotPlacementResolver.js');
+        const resolverSource = await source('application/snapshot/placement/SnapshotPlacementResolver.js');
         assert(/storeRegistry\s*\?\s*storeRegistry\.get\(placement\.storage\)/.test(resolverSource), 'A1a. SnapshotPlacementResolver looks stores up by the PLACEMENT\'s own storage field, never a caller-supplied key');
-        selectionPoints.push({ role: 'CONTENT', seam: 'application/SnapshotPlacementResolver.js (resolution)', kind: 'registry lookup, keyed by the record\'s own historical field' });
+        selectionPoints.push({ role: 'CONTENT', seam: 'application/snapshot/placement/SnapshotPlacementResolver.js (resolution)', kind: 'registry lookup, keyed by the record\'s own historical field' });
 
-        const verifierSource = await source('application/ExternalAnchorVerifier.js');
+        const verifierSource = await source('application/anchoring/ExternalAnchorVerifier.js');
         assert(/proofVerifierRegistry\s*\?\s*proofVerifierRegistry\.get\(anchor\.anchorType\)/.test(verifierSource), 'A1b. ExternalAnchorVerifier looks proofVerifiers up by the ANCHOR\'s own anchorType field, never a caller-supplied key');
-        selectionPoints.push({ role: 'PROOF', seam: 'application/ExternalAnchorVerifier.js (verification)', kind: 'registry lookup, keyed by the record\'s own historical field' });
+        selectionPoints.push({ role: 'PROOF', seam: 'application/anchoring/ExternalAnchorVerifier.js (verification)', kind: 'registry lookup, keyed by the record\'s own historical field' });
 
         // --- A2: CREATION seams (Content, Proof) — explicit, caller-
         // supplied, per action; the coordinating classes themselves
@@ -183,13 +183,13 @@ async function run() {
         // offered set to a preferred/default one. ---
         const normalizeComment = (text) => text.replace(/^\s*\/\/\s?/gm, '').replace(/\s+/g, ' ');
         const neverPreferredOrDefaultPattern = /never ranked, never narrowed to a\s*"preferred" or "default" one/;
-        const placementCreationSource = await source('application/SnapshotPlacementCreationCoordinator.js');
+        const placementCreationSource = await source('application/snapshot/placement/SnapshotPlacementCreationCoordinator.js');
         assert(neverPreferredOrDefaultPattern.test(normalizeComment(placementCreationSource)), 'A2a. SnapshotPlacementCreationCoordinator\'s own header states, in its own words, that availableStorageTypes() is never narrowed to a preferred/default entry');
-        selectionPoints.push({ role: 'CONTENT', seam: 'application/CreateExternalSnapshotPlacementUseCase.js + SnapshotPlacementCreationCoordinator.js (creation)', kind: 'explicit, per-action, caller-supplied — no preferred/default concept exists here today, by explicit design' });
+        selectionPoints.push({ role: 'CONTENT', seam: 'application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js + SnapshotPlacementCreationCoordinator.js (creation)', kind: 'explicit, per-action, caller-supplied — no preferred/default concept exists here today, by explicit design' });
 
-        const anchorCreationSource = await source('application/PublicationAnchorCreationCoordinator.js');
+        const anchorCreationSource = await source('application/anchoring/PublicationAnchorCreationCoordinator.js');
         assert(neverPreferredOrDefaultPattern.test(normalizeComment(anchorCreationSource)), 'A2b. PublicationAnchorCreationCoordinator\'s own header states the identical restraint for availableAnchorTypes()');
-        selectionPoints.push({ role: 'PROOF', seam: 'application/CreateExternalPublicationAnchorUseCase.js + PublicationAnchorCreationCoordinator.js (creation)', kind: 'explicit, per-action, caller-supplied — no preferred/default concept exists here today, by explicit design' });
+        selectionPoints.push({ role: 'PROOF', seam: 'application/anchoring/CreateExternalPublicationAnchorUseCase.js + PublicationAnchorCreationCoordinator.js (creation)', kind: 'explicit, per-action, caller-supplied — no preferred/default concept exists here today, by explicit design' });
 
         // --- A3: DISTRIBUTION/DISCOVERY write-and-read composition roots
         // — exactly ONE Content collaborator and exactly ONE Discovery
@@ -197,9 +197,9 @@ async function run() {
         // between alternatives, for each of the three real composition
         // roots that actually exist. ---
         const compositionRoots = [
-            'application/PublicationDistributionRuntimeComposition.js',
-            'application/SnapshotDistributionRuntimeComposition.js',
-            'application/DiscoverSnapshotRuntimeComposition.js'
+            'application/publication/distribution/PublicationDistributionRuntimeComposition.js',
+            'application/snapshot/SnapshotDistributionRuntimeComposition.js',
+            'application/snapshot/DiscoverSnapshotRuntimeComposition.js'
         ];
         for (const file of compositionRoots) {
             const text = await source(file);
@@ -216,11 +216,11 @@ async function run() {
         // queries MORE THAN ONE provider at once — World Encounter
         // Publication discovery. Neither one is ever "selected"; BOTH are
         // constructed and BOTH are queried, unconditionally. ---
-        const discoveryCompositionSource = await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
+        const discoveryCompositionSource = await source('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         assert(discoveryCompositionSource.includes('new NostrDiscoveryQueryService') && discoveryCompositionSource.includes('new ArweaveGraphqlDiscoveryQueryService'), 'A4a. both Nostr and Arweave Discovery services are constructed by the same composition function');
         const services = composeDecentralizedWorldEncounterMaterialDiscoveryServices({ nostrQueryImpl: neverCalled, arweaveFetchImpl: neverCalled });
         assert(services.nostr !== null && services.arweave !== null, 'A4b. both are genuinely constructed, side by side, from one call — confirmed at the object level, not just from source text');
-        selectionPoints.push({ role: 'DISCOVERY', seam: 'application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js (Publication discovery, read path)', kind: 'implicit — every configured provider is queried; none is ever "selected" over another today' });
+        selectionPoints.push({ role: 'DISCOVERY', seam: 'application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js (Publication discovery, read path)', kind: 'implicit — every configured provider is queried; none is ever "selected" over another today' });
 
         // --- A5: the local/catalog Discovery shape is not a substrate
         // choice at all — there is exactly one local index this replica
@@ -246,8 +246,8 @@ async function run() {
         const matrix = {
             [RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY]: {
                 consumers: [
-                    'application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js (Publication discovery, wired at ui/main.js 0.9.110/0.9.111 — real runtime consumer)',
-                    'application/DiscoverSnapshotRuntimeComposition.js (Snapshot discovery, wired at ui/main.js 0.9.142 — real runtime consumer)',
+                    'application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js (Publication discovery, wired at ui/main.js 0.9.110/0.9.111 — real runtime consumer)',
+                    'application/snapshot/DiscoverSnapshotRuntimeComposition.js (Snapshot discovery, wired at ui/main.js 0.9.142 — real runtime consumer)',
                     'discovery/DiscoveryProvider.js (local/catalog listing — real runtime consumer, not a substrate role)'
                 ],
                 seam: 'THREE non-interchangeable shapes (0.9.292 Section A); only the first is multi-provider today',
@@ -255,17 +255,17 @@ async function run() {
             },
             [RoleProviderRole.CONTENT]: {
                 consumers: [
-                    'application/SnapshotPlacementResolver.js (resolution — real runtime consumer, dispatches on the placement\'s own storage field)',
-                    'application/CreateExternalSnapshotPlacementUseCase.js (creation — real runtime consumer, explicit per-action)',
-                    'application/PublicationDistributionRuntimeComposition.js / SnapshotDistributionRuntimeComposition.js (distribution write path — real runtime consumers, single hardcoded Arweave collaborator)'
+                    'application/snapshot/placement/SnapshotPlacementResolver.js (resolution — real runtime consumer, dispatches on the placement\'s own storage field)',
+                    'application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js (creation — real runtime consumer, explicit per-action)',
+                    'application/publication/distribution/PublicationDistributionRuntimeComposition.js / SnapshotDistributionRuntimeComposition.js (distribution write path — real runtime consumers, single hardcoded Arweave collaborator)'
                 ],
                 seam: 'content/ContentStore.js — ONE real base class, but the registry-backed shape (SnapshotPlacementStoreRegistry) coexists with two separately-hardcoded single-provider write paths',
                 resolverReach: 'reaches SnapshotPlacementStoreRegistry directly (0.9.295 tests, Section C) — but that registry backs RESOLUTION, a seam this audit\'s Section C below finds the resolver has no legitimate business entering'
             },
             [RoleProviderRole.PROOF_AND_ANCHORING]: {
                 consumers: [
-                    'application/ExternalAnchorVerifier.js (verification — real runtime consumer, dispatches on the anchor\'s own anchorType field)',
-                    'application/CreateExternalPublicationAnchorUseCase.js (creation — real runtime consumer, explicit per-action)'
+                    'application/anchoring/ExternalAnchorVerifier.js (verification — real runtime consumer, dispatches on the anchor\'s own anchorType field)',
+                    'application/anchoring/CreateExternalPublicationAnchorUseCase.js (creation — real runtime consumer, explicit per-action)'
                 ],
                 seam: 'anchoring/ProofVerifier.js — ONE real base class, ONE real subclass (Bitcoin) registered in production today',
                 resolverReach: 'reaches ExternalProofVerifierRegistry directly (0.9.295 tests, Section D) — same "resolution, not this resolver\'s business" caveat as Content, above'
@@ -347,7 +347,7 @@ async function run() {
         // Protocol-specific logic: real examples that use `anchorType`/
         // `storage` for PRESENTATION, never for choosing a provider to
         // construct.
-        const uiDetailFiles = ['application/PublicationAnchorDetailView.js', 'application/PublicationSnapshotPlacementDetailView.js'];
+        const uiDetailFiles = ['application/anchoring/PublicationAnchorDetailView.js', 'application/snapshot/placement/PublicationSnapshotPlacementDetailView.js'];
         for (const file of uiDetailFiles) {
             const text = await source(file);
             const codeOnly = text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -431,7 +431,7 @@ async function run() {
         // before, this preference/resolution family, and it never falls
         // back to a DIFFERENT verifier either — it reports an honest "not
         // verified," never "verified by a substitute."
-        const verifierSource = await source('application/ExternalAnchorVerifier.js');
+        const verifierSource = await source('application/anchoring/ExternalAnchorVerifier.js');
         assert(/VALID_PROOF_UNVERIFIED,\s*anchor,\s*reason:\s*'no proof verifier available for this anchorType'/.test(verifierSource), 'F4. ExternalAnchorVerifier\'s own already-shipped "no verifier registered" outcome is an honest, explicit status — never a silent substitution of a different registered verifier');
         const proofRegistry = new ExternalProofVerifierRegistry();
         proofRegistry.register(new BitcoinOpReturnProofVerifier({ fetchImpl: neverCalled }));
@@ -465,7 +465,7 @@ async function run() {
         // provider each in production today — a registry would have
         // nothing to disambiguate between, so its absence cannot be
         // blocking them either.
-        const discoverSnapshotSource = await source('application/DiscoverSnapshotRuntimeComposition.js');
+        const discoverSnapshotSource = await source('application/snapshot/DiscoverSnapshotRuntimeComposition.js');
         const discoveryCollaboratorImports = discoverSnapshotSource.split('\n').filter((l) => /^import\b/.test(l) && /Nostr|Arweave/.test(l));
         // 0.9.440 — three imports now, not two: content/
         // ArweaveGatewayFailoverContentStore.js was added alongside content/

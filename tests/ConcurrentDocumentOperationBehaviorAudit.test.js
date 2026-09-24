@@ -10,18 +10,18 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import { RenameGroupCommand } from '../application/commands/RenameGroupCommand.js';
 import {
     DocumentCommandPropagationUseCase,
     DocumentOperationRejectionReason
-} from '../application/DocumentCommandPropagationUseCase.js';
-import { RemoteDocumentOperationApplicationUseCase } from '../application/RemoteDocumentOperationApplicationUseCase.js';
+} from '../application/document/DocumentCommandPropagationUseCase.js';
+import { RemoteDocumentOperationApplicationUseCase } from '../application/document/RemoteDocumentOperationApplicationUseCase.js';
 
 // 0.9.225 — Concurrent Document Operation Behavior Audit.
 //
@@ -237,7 +237,7 @@ charlie.connectedPeerRegistry.add(charlieFromPhone);
 // the grant must reach Charlie over the ONE connection Charlie actually
 // has: Alice-Phone's own. `broadcastAuthorization()` trusts the
 // record's OWN signature, never who relayed it (see
-// application/DeviceAuthorizationPropagationUseCase.js's own header) —
+// application/identity/DeviceAuthorizationPropagationUseCase.js's own header) —
 // a device broadcasting the grant that names itself is exactly as valid
 // as the parent identity broadcasting it, so this is real production
 // behavior, not a test shortcut.

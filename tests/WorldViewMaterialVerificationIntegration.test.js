@@ -3,12 +3,12 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
-import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
-import { inspectWorldEncounterMaterial } from '../application/WorldEncounterMaterialInspection.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
+import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
+import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
+import { inspectWorldEncounterMaterial } from '../application/worldEncounter/WorldEncounterMaterialInspection.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 
 // 0.9.99 — Decentralized Material Verification World View Integration.
 //
@@ -221,9 +221,9 @@ async function runTests() {
         const mainSource = await readFile(mainSourceUrl, 'utf8');
         const mainCodeOnly = mainSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(mainCodeOnly.includes("import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';"),
+        assert(mainCodeOnly.includes("import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';"),
             '9. ui/main.js imports the existing, unmodified LocalWorldEncounterMaterialSource — never a second local loader');
-        assert(mainCodeOnly.includes("import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';"),
+        assert(mainCodeOnly.includes("import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';"),
             '10. ui/main.js imports the existing, unmodified composeWorldEncounterMaterialVerifier() composition root');
         assert(mainCodeOnly.includes('new LocalWorldEncounterMaterialSource(') && mainCodeOnly.includes('composeWorldEncounterMaterialVerifier('),
             '11. ui/main.js actually calls both — not merely importing them unused');

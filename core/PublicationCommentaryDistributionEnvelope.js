@@ -26,12 +26,12 @@ import { Signature, SignatureType } from './Signature.js';
 //   PublicationCommentaryDistributionEnvelope   (THIS FILE)
 //        │  commentary.toJSON() fields + signature
 //        ▼
-//   application/PublicationCommentaryDistributionExchange.js
+//   application/publication/commentary/PublicationCommentaryDistributionExchange.js
 //        (sign on export / verify + reconstruct on import)
 //        ▼
-//   application/PublicationCommentaryDistributionPeerExchange.js
+//   application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js
 //        (announce over the existing peer transport —
-//         peer/PeerMessageBus.js + application/ConnectedPeerRegistry.js,
+//         peer/PeerMessageBus.js + application/peer/ConnectedPeerRegistry.js,
 //         never a new one)
 //        ▼
 //   storage/PublicationCommentaryStore.js   (0.9.243, unmodified — the
@@ -160,7 +160,7 @@ export class PublicationCommentaryDistributionEnvelope {
 
     // Builds an UNSIGNED envelope from a real, already-in-hand
     // PublicationCommentary instance — the starting point for
-    // application/PublicationCommentaryDistributionExchange.js#
+    // application/publication/commentary/PublicationCommentaryDistributionExchange.js#
     // exportCommentary(), which signs it next.
     static fromCommentary(commentary) {
         return new PublicationCommentaryDistributionEnvelope({ commentary });

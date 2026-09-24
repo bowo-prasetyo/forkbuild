@@ -3,11 +3,11 @@ import { readFile } from 'node:fs/promises';
 import { ArweaveGatewayConfiguration, DEFAULT_ARWEAVE_GATEWAY_URL, isValidArweaveGatewayUrl } from '../core/ArweaveGatewayConfiguration.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfigurationStore.js';
-import { SetArweaveGatewayConfigurationUseCase } from '../application/SetArweaveGatewayConfigurationUseCase.js';
+import { SetArweaveGatewayConfigurationUseCase } from '../application/settings/SetArweaveGatewayConfigurationUseCase.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/ArweaveWorldEncounterMaterialResolver.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
+import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
 import { ContentReference } from '../core/ContentReference.js';
 
 // 0.9.366 — Arweave Gateway Settings UI.
@@ -49,7 +49,7 @@ import { ContentReference } from '../core/ContentReference.js';
 //               deliberately-excluded feature list.
 //   Section J — architecture sweep of the new use case file.
 //
-// See application/SetArweaveGatewayConfigurationUseCase.js and
+// See application/settings/SetArweaveGatewayConfigurationUseCase.js and
 // ui/views/ArweaveGatewaySettingsView.js for the full design rationale
 // this milestone carries out.
 
@@ -110,7 +110,7 @@ async function run() {
     // ===============================================================
     {
         const mainSource = await source('ui/main.js');
-        assert(mainSource.includes("import { SetArweaveGatewayConfigurationUseCase } from '../application/SetArweaveGatewayConfigurationUseCase.js';"),
+        assert(mainSource.includes("import { SetArweaveGatewayConfigurationUseCase } from '../application/settings/SetArweaveGatewayConfigurationUseCase.js';"),
             '1. ui/main.js imports the new write use case');
         assert(/new SetArweaveGatewayConfigurationUseCase\(\{\s*arweaveGatewayConfigurationStore\s*\}\)/.test(mainSource),
             '2. ui/main.js wires SetArweaveGatewayConfigurationUseCase against the SAME shared arweaveGatewayConfigurationStore the 0.9.364 retrieval composition already resolves through, never a second disconnected store');
@@ -433,7 +433,7 @@ async function run() {
     // Section J — architecture sweep of the new use case file.
     // ===============================================================
     {
-        const useCaseSource = await source('application/SetArweaveGatewayConfigurationUseCase.js');
+        const useCaseSource = await source('application/settings/SetArweaveGatewayConfigurationUseCase.js');
         const executable = useCaseSource.replace(/\/\/.*$/gm, '');
         assert(!/\bfetch\s*\(/.test(executable), '61. no network call of any kind');
         assert(!/localStorage/.test(executable), '62. no direct localStorage access — persistence stays behind the injected store');

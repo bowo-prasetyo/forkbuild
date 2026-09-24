@@ -102,7 +102,7 @@
 // instantaneous key-driven rotation; DRONE only inertly, because
 // `supported: false` already blocks movement, steering included, before
 // this field is ever consulted (see
-// `application/AvatarMovementController.js`'s own 0.9.85 `tick()` guard) —
+// `application/avatar/AvatarMovementController.js`'s own 0.9.85 `tick()` guard) —
 // the identical reason its own `movementSpeed`/`collisionRadius`/
 // `movementDirections`/`acceleration`/`braking` are already inert.
 //

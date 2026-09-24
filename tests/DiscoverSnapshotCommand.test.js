@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 
 // 0.9.142 — World View Snapshot Discovery Command.
 // See docs/Roadmap.md, "0.9.142 — World View Snapshot Discovery Command,"
@@ -129,7 +129,7 @@ async function runTests() {
     // Section D — architectural regression.
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/DiscoverSnapshotCommand.js', import.meta.url);
+        const sourceUrl = new URL('../application/snapshot/DiscoverSnapshotCommand.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 

@@ -4,10 +4,10 @@ import { Position } from '../core/Position.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { sortStructures, STRUCTURE_SORT_OPTIONS } from '../core/sortStructures.js';
 import { buildCategoryOptions, matches, normalize } from '../ui/components/BuildLibraryPanel.js';
-import { LibraryUsageHistoryStore } from '../application/LibraryUsageHistoryStore.js';
-import { LocalStructureLibraryStore } from '../application/LocalStructureLibraryStore.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
+import { LibraryUsageHistoryStore } from '../application/editor/LibraryUsageHistoryStore.js';
+import { LocalStructureLibraryStore } from '../application/editor/LocalStructureLibraryStore.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
 
 // 0.6.4 — Blueprint Discovery, Search & Library Organization.
 //
@@ -15,7 +15,7 @@ import { CreateStructureRegistryUseCase } from '../application/CreateStructureRe
 // left unaddressed is what happens once a library holds dozens of
 // them. Nothing here adds a new domain concept — `core/Structure.js`
 // gains no fields, `core/StructureRegistry.js` and
-// `application/LocalStructureLibraryStore.js`'s existing methods are
+// `application/editor/LocalStructureLibraryStore.js`'s existing methods are
 // untouched — this milestone is entirely new, pure PRESENTATION logic
 // over data those two already expose, plus one small new local store
 // for "what did I recently use."
@@ -27,10 +27,10 @@ import { CreateStructureRegistryUseCase } from '../application/CreateStructureRe
 //              — counts and first-seen order derived from whatever
 //              category groups are handed in, across more than one
 //              source
-//   Section C: application/LibraryUsageHistoryStore.js — recording a
+//   Section C: application/editor/LibraryUsageHistoryStore.js — recording a
 //              use, most-recent-first ordering, re-use moves to front
 //              without duplicating, limit, clear()
-//   Section D: application/LocalStructureLibraryStore.js#getSavedAtById()
+//   Section D: application/editor/LocalStructureLibraryStore.js#getSavedAtById()
 //              — survives a metadata-only rename, absent for anything
 //              never saved
 //   Section E: CAPSTONE — search (now including description) + a
@@ -157,7 +157,7 @@ async function run() {
     }
 
     // ---------------------------------------------------------------
-    // Section C: application/LibraryUsageHistoryStore.js
+    // Section C: application/editor/LibraryUsageHistoryStore.js
     // ---------------------------------------------------------------
     {
         const store = new LibraryUsageHistoryStore({ storageProvider: new InMemoryStorageProvider() });

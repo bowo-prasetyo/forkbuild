@@ -8,16 +8,16 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { MoveWorldPlacementUseCase } from '../application/MoveWorldPlacementUseCase.js';
-import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { MoveWorldPlacementUseCase } from '../application/placement/MoveWorldPlacementUseCase.js';
+import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Publication } from '../publisher/Publication.js';
 import { WorldPlacement } from '../core/WorldPlacement.js';
@@ -133,7 +133,7 @@ function makeSerializedDocumentJson(documentId, title = 'D') {
 }
 
 // Builds a WorldNavigationSession wired EXACTLY the way
-// application/CreateWorldViewUseCase.js wires production today (as of
+// application/world/CreateWorldViewUseCase.js wires production today (as of
 // 0.9.600's own fix) — the same replication convention 0.9.598-0.9.601's
 // own harnesses each already established: never the real factory itself
 // (avatar-presence/collaboration/renderer-mount machinery has no clean
@@ -304,7 +304,7 @@ async function run() {
         assert(p2VisibleAfterSwap.includes(p2DocId), 'C3. Swapping ONLY worldLayoutProvider\'s own discoveryProvider argument to the already-composed publicationActionDiscoveryProvider (the exact widening this section isolates) is enough to make P2\'s VISIBILITY/POSITION resolve correctly — confirming the seam is precisely, and only, that one constructor argument (reconfirmed exhaustively in Section D\'s own matrix, including why this alone is not yet the full story).');
         assert(p1VisibleAfterSwap.includes(p1.documentId), 'C4. The same swap changes nothing about P1 — a locally-published Publication was already resolvable through the narrow discoveryProvider alone, so widening it is additive, never disruptive, for the existing case.');
 
-        console.log('✓ C — P1 (locally published) and P2 (Repository-admitted-only) diverge at exactly ONE seam: worldLayoutProvider\'s own discoveryProvider argument (application/CreateWorldViewUseCase.js). Both share identical PlacementRecord/spatial-index truth once placed (Section A); only the RESOLUTION step downstream of the spatial index differs.');
+        console.log('✓ C — P1 (locally published) and P2 (Repository-admitted-only) diverge at exactly ONE seam: worldLayoutProvider\'s own discoveryProvider argument (application/world/CreateWorldViewUseCase.js). Both share identical PlacementRecord/spatial-index truth once placed (Section A); only the RESOLUTION step downstream of the spatial index differs.');
     }
 
     // ===============================================================
@@ -425,12 +425,12 @@ and materially larger piece of work.
         assert(!/forkPolicy|isKnownPublication|license|authoriz/i.test(worldLayoutSrc),
             'E1. world-layout/LocalWorldLayoutProvider.js itself contains no fork-policy, licensing, or authorization logic of any kind — structurally reconfirmed here, not merely assumed. Widening its OWN discoveryProvider argument therefore cannot, by construction, touch fork-policy at all.');
 
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
         const findPublicationsBody = sessionSrc.match(/_findPublications\(documentId\) \{[\s\S]*?\n {4}\}/);
         assert(findPublicationsBody !== null && /this\._discoveryProvider/.test(findPublicationsBody[0]) && !/this\._publicationActionDiscoveryProvider/.test(findPublicationsBody[0]),
-            'E2. RECONFIRMED (0.9.601 Section F2): _findPublications() — fork-policy\'s own choke point (_isKnownPublication()/_checkForkPolicy()) — still reads ONLY the narrow discoveryProvider. A worldLayoutProvider widening (Section D3/D4\'s own hypothetical) is a COMPLETELY SEPARATE constructor argument in application/CreateWorldViewUseCase.js from the one _findPublications() reads — the two have never been the same object since 0.9.597, and this audit changes nothing about that.');
+            'E2. RECONFIRMED (0.9.601 Section F2): _findPublications() — fork-policy\'s own choke point (_isKnownPublication()/_checkForkPolicy()) — still reads ONLY the narrow discoveryProvider. A worldLayoutProvider widening (Section D3/D4\'s own hypothetical) is a COMPLETELY SEPARATE constructor argument in application/world/CreateWorldViewUseCase.js from the one _findPublications() reads — the two have never been the same object since 0.9.597, and this audit changes nothing about that.');
 
-        const composition = await readSource('application/CreateWorldViewUseCase.js');
+        const composition = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(composition),
             'E3. UPDATED BY 0.9.605 (Wire Publication Discovery into World Rendering): production now builds worldLayoutProvider from publicationActionDiscoveryProvider — this audit\'s own Section D matrix was, at the time it was written, a controlled, isolated hypothetical over an untouched composition root; 0.9.605 performed exactly the widening this section (E) found structurally safe.');
 
@@ -441,10 +441,10 @@ and materially larger piece of work.
     // Section F — Material availability vs. Publication availability.
     // ===============================================================
     {
-        const loadDocSrc = await readSource('application/LoadPublicationDocumentUseCase.js');
+        const loadDocSrc = await readSource('application/publication/LoadPublicationDocumentUseCase.js');
         assert(/this\._storageProvider\.load\(documentId\)/.test(loadDocSrc),
             'F1. LoadPublicationDocumentUseCase — what WorldNavigationSession#_loadWorld() actually calls to stream a document in (see F2) — reads storage[documentId] DIRECTLY. No discoveryProvider, no contentStore, no contentHash anywhere in this class.');
-        const sessionSrc = await readSource('application/WorldNavigationSession.js');
+        const sessionSrc = await readSource('application/world/WorldNavigationSession.js');
         assert(/this\._loadPublicationDocumentUseCase\.execute\(documentId, this\._eventBus\)/.test(sessionSrc),
             'F2. _loadWorld(documentId) — the real method updateSpatialView() calls for every document entering the streamed/visible set — calls exactly that use case, with the streamed documentId, and nothing else.');
 
@@ -453,7 +453,7 @@ and materially larger piece of work.
             'F3. The ONE place in this codebase that populates storage[documentId] for a Publication\'s own World content is LocalPublisherProvider.publish() — LOCAL AUTHORSHIP ONLY (publisher/LocalPublisherProvider.js, lines 54-55). This is exactly why P1 (Section C) renders and P2 does not: P1 went through this method; P2 never did and never could (P2 was never authored by this replica).');
         const contentStoreSrc = await readSource('content/LocalContentStore.js');
         assert(/CONTENT_KEY_PREFIX = 'content:'/.test(contentStoreSrc) && /this\._storageProvider\.save\(CONTENT_KEY_PREFIX \+ hash, text\)/.test(contentStoreSrc),
-            'F4. The real DISCOVER/RESOLVE/VERIFY/materialize pipeline (StoreSnapshotContentUseCase, application/StoreSnapshotContentUseCase.js) stores a discovered Publication\'s bytes into a COMPLETELY DIFFERENT storage namespace: content-hash-addressed (`content:<hash>`), via LocalContentStore — never storage[documentId]. This is confirmed here at the storage-key level, not merely inferred from the classes involved.');
+            'F4. The real DISCOVER/RESOLVE/VERIFY/materialize pipeline (StoreSnapshotContentUseCase, application/snapshot/materialization/StoreSnapshotContentUseCase.js) stores a discovered Publication\'s bytes into a COMPLETELY DIFFERENT storage namespace: content-hash-addressed (`content:<hash>`), via LocalContentStore — never storage[documentId]. This is confirmed here at the storage-key level, not merely inferred from the classes involved.');
 
         // Live-confirm: nothing bridges the two namespaces today.
         {
@@ -472,12 +472,12 @@ and materially larger piece of work.
         // The codebase DOES already have a precedent for content-hash-based
         // Document resolution — confirm it is real, tested, production
         // code, not a hypothetical this audit is inventing.
-        const resolveSrc = await readSource('application/ResolvePublicationUseCase.js');
+        const resolveSrc = await readSource('application/publication/ResolvePublicationUseCase.js');
         assert(/this\._contentResolver\.resolve\(publication\.id\)/.test(resolveSrc) || /contentResolver/.test(resolveSrc),
-            'F7. application/ResolvePublicationUseCase.js is a REAL, existing production class that resolves a Publication into a Document via a contentResolver collaborator — never via storage[documentId].');
-        const loadPublishedSrc = await readSource('application/LoadPublishedWorldSessionUseCase.js');
+            'F7. application/publication/ResolvePublicationUseCase.js is a REAL, existing production class that resolves a Publication into a Document via a contentResolver collaborator — never via storage[documentId].');
+        const loadPublishedSrc = await readSource('application/publication/LoadPublishedWorldSessionUseCase.js');
         assert(/this\._contentStore\.get\(publication\.contentReference\)/.test(loadPublishedSrc),
-            'F8. application/LoadPublishedWorldSessionUseCase.js likewise resolves a Document directly from a Publication\'s own contentReference via a contentStore — exactly the content-hash-addressed shape F4-F6 showed the live streaming path lacks. This pattern is not hypothetical; it already exists and is exercised by tests/PublishedWorld.test.js, tests/DecentralizedContent.test.js, and others.');
+            'F8. application/publication/LoadPublishedWorldSessionUseCase.js likewise resolves a Document directly from a Publication\'s own contentReference via a contentStore — exactly the content-hash-addressed shape F4-F6 showed the live streaming path lacks. This pattern is not hypothetical; it already exists and is exercised by tests/PublishedWorld.test.js, tests/DecentralizedContent.test.js, and others.');
 
         // UPDATED BY 0.9.605 (Wire Publication Discovery into World
         // Rendering): at the time this audit was written, this
@@ -490,16 +490,16 @@ and materially larger piece of work.
         // (F1/F2, above) is still tried FIRST, unconditionally, exactly
         // as before.
         assert(/this\._loadPublishedWorldSessionUseCase\.execute\(publication, this\._eventBus\)\.getDocument\(\)/.test(sessionSrc),
-            'F9. application/WorldNavigationSession.js — the class whose _loadWorld()/updateSpatialView() actually drives live World View streaming — now DOES consult LoadPublishedWorldSessionUseCase, as a fallback, exactly the seam this section (F) originally identified as the one remaining piece of real integration work.');
+            'F9. application/world/WorldNavigationSession.js — the class whose _loadWorld()/updateSpatialView() actually drives live World View streaming — now DOES consult LoadPublishedWorldSessionUseCase, as a fallback, exactly the seam this section (F) originally identified as the one remaining piece of real integration work.');
         const mainSrc = await readSource('ui/main.js');
         assert(/CreateWorldViewUseCase/.test(mainSrc) && !/CreateWorldViewStreamingUseCase/.test(mainSrc),
-            'F10. ui/main.js — the app\'s own real composition root — wires CreateWorldViewUseCase.js (the narrow-discoveryProvider, storage[documentId]-based World View this whole arc has been examining) and never wires application/CreateWorldViewStreamingUseCase.js, a SEPARATE, parallel World View streaming subsystem (world/WorldViewStreamingSession.js) that DOES use ResolvePublicationUseCase\'s content-hash-based resolution. That second subsystem exists in this codebase but is orphaned — never reachable from the actual running app.');
+            'F10. ui/main.js — the app\'s own real composition root — wires CreateWorldViewUseCase.js (the narrow-discoveryProvider, storage[documentId]-based World View this whole arc has been examining) and never wires application/world/CreateWorldViewStreamingUseCase.js, a SEPARATE, parallel World View streaming subsystem (world/WorldViewStreamingSession.js) that DOES use ResolvePublicationUseCase\'s content-hash-based resolution. That second subsystem exists in this codebase but is orphaned — never reachable from the actual running app.');
 
         // And confirm that orphaned subsystem would not even help here: its
         // OWN content resolver is itself local-storage-only.
         const contentResolverSrc = await readSource('discovery/LocalContentResolver.js');
         assert(/this\._publisherProvider\.loadSnapshot\(publicationId\)/.test(contentResolverSrc),
-            'F11. Even application/CreateWorldViewStreamingUseCase.js\'s OWN contentResolver (discovery/LocalContentResolver.js) reads publisherProvider.loadSnapshot(publicationId) — which reads storage["snapshot:" + publicationId], populated ONLY by LocalPublisherProvider.publish() (the same local-authorship-only write as F3). This orphaned subsystem would NOT resolve a genuinely decentralized-discovered Publication\'s content either — it has the identical local-only limitation as the live path, just expressed through a different key.');
+            'F11. Even application/world/CreateWorldViewStreamingUseCase.js\'s OWN contentResolver (discovery/LocalContentResolver.js) reads publisherProvider.loadSnapshot(publicationId) — which reads storage["snapshot:" + publicationId], populated ONLY by LocalPublisherProvider.publish() (the same local-authorship-only write as F3). This orphaned subsystem would NOT resolve a genuinely decentralized-discovered Publication\'s content either — it has the identical local-only limitation as the live path, just expressed through a different key.');
 
         console.log(`
 ✓ F — MATERIAL AVAILABILITY vs. PUBLICATION AVAILABILITY, PRECISELY
@@ -614,10 +614,10 @@ and materially larger piece of work.
     // Section J — Regression / no production changes.
     // ===============================================================
     {
-        const composition = await readSource('application/CreateWorldViewUseCase.js');
+        const composition = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(/const worldLayoutProvider = new LocalWorldLayoutProvider\(\s*spatialIndexProvider,\s*publicationActionDiscoveryProvider\s*\);/.test(composition),
             'J1. UPDATED BY 0.9.605: production composition is no longer the pre-0.9.605 snapshot this audit examined — reconfirmed here the same way Section E already updated it.');
-        const placePublicationSrc = await readSource('application/PlacePublicationUseCase.js');
+        const placePublicationSrc = await readSource('application/placement/PlacePublicationUseCase.js');
         assert(!/publication\.author/.test(placePublicationSrc),
             'J2. RECONFIRMED (0.9.601 Section B7): PlacePublicationUseCase.js still never reads publication.author — placement-authoring logic itself is untouched by anything in this file; see 0.9.601 Section B/C/G/H for that arc\'s own exhaustive regression coverage.');
         const uiFiles = await readdir(new URL('../ui/components/', import.meta.url));
@@ -666,7 +666,7 @@ alone, is this audit's own primary product of value:
 
   (i) A narrow, low-risk CAPABILITY_GAP in DISCOVERY SCOPE
       (worldLayoutProvider's own discoveryProvider argument,
-      application/CreateWorldViewUseCase.js) — the same shape of fix
+      application/world/CreateWorldViewUseCase.js) — the same shape of fix
       0.9.597/0.9.599/0.9.600 already used and validated for Publication-
       fact and placement-action resolution, structurally safe here too
       (Section E: LocalWorldLayoutProvider has zero fork-policy coupling

@@ -1,17 +1,17 @@
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { ContentBindingRelationship } from '../application/ContentBindingRelationship.js';
-import { derivePublicationEvidenceConvergence } from '../application/PublicationEvidenceConvergence.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { PublicationAnchorPeerExchange } from '../application/PublicationAnchorPeerExchange.js';
-import { PublicationAnchorDiscoveryCoordinator } from '../application/PublicationAnchorDiscoveryCoordinator.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { ContentBindingRelationship } from '../application/publication/evidence/ContentBindingRelationship.js';
+import { derivePublicationEvidenceConvergence } from '../application/publication/evidence/PublicationEvidenceConvergence.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { PublicationAnchorPeerExchange } from '../application/anchoring/PublicationAnchorPeerExchange.js';
+import { PublicationAnchorDiscoveryCoordinator } from '../application/anchoring/PublicationAnchorDiscoveryCoordinator.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.8.6 — Multi-Evidence Convergence & Evidence Relationship Derivation.
@@ -29,7 +29,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //              flagship with a FOURTH anchor whose contentHash
 //              contradicts the other three. Alice, Bob, and Carol
 //              synchronize over real live authenticated connections
-//              (application/PublicationAnchorDiscoveryCoordinator.js,
+//              (application/anchoring/PublicationAnchorDiscoveryCoordinator.js,
 //              unchanged) and converge on the identical evidence SET —
 //              network convergence — while each replica's own derived
 //              view reports the content-binding conflict WITHOUT any of

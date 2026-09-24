@@ -1,17 +1,17 @@
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { BlockchainKind } from '../application/BlockchainKind.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { reconstructPublisherAchievementStatistics } from '../application/PublisherAchievementStatisticsView.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { reconstructPublisherAchievementStatistics } from '../application/achievement/PublisherAchievementStatisticsView.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import {
     describePublisherRankingPolicy,
     describePublisherRanking,
     reconstructPublisherRanking
-} from '../application/PublisherRankingPolicy.js';
+} from '../application/leaderboard/PublisherRankingPolicy.js';
 
 // 0.8.112 — Explicit Publisher Ranking Policy.
 //

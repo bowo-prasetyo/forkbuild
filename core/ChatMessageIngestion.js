@@ -6,7 +6,7 @@
 // Deliberately compares against a bare highwater NUMBER
 // (core/ChatReplayWindow.js's own bookkeeping), never a reconstructed
 // "expected next sequence" — see this file's own callers' header
-// (application/ChatUseCase.js) on why chat deliberately does NOT
+// (application/chat/ChatUseCase.js) on why chat deliberately does NOT
 // assume sequence numbers form one contiguous stream: a gap is simply
 // never filled in, only ever tolerated. What IS enforced: a message
 // whose sequence is not strictly greater than the highest one already

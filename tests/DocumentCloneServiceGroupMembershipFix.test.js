@@ -10,12 +10,12 @@ import { Group } from '../core/Group.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 
-import { DocumentCloneService } from '../application/DocumentCloneService.js';
-import { ExportDocumentUseCase } from '../application/ExportDocumentUseCase.js';
-import { ImportDocumentUseCase } from '../application/ImportDocumentUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
+import { DocumentCloneService } from '../application/document/DocumentCloneService.js';
+import { ExportDocumentUseCase } from '../application/document/ExportDocumentUseCase.js';
+import { ImportDocumentUseCase } from '../application/document/ImportDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
 // 0.9.644 — Fix DocumentCloneService Group Membership Identity Remapping.

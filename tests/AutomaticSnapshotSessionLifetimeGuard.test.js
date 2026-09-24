@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 
-import { AutomaticSnapshotEncounterCascade } from '../application/AutomaticSnapshotEncounterCascade.js';
-import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/AutomaticSnapshotEncounterCascadeOutcome.js';
-import { AutomaticSnapshotEncounterRetentionReconciliation } from '../application/AutomaticSnapshotEncounterRetentionReconciliation.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { registerMaterializedSnapshotWorldSource } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
+import { AutomaticSnapshotEncounterCascade } from '../application/snapshot/AutomaticSnapshotEncounterCascade.js';
+import { AutomaticSnapshotEncounterCascadeOutcome } from '../application/snapshot/AutomaticSnapshotEncounterCascadeOutcome.js';
+import { AutomaticSnapshotEncounterRetentionReconciliation } from '../application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { registerMaterializedSnapshotWorldSource } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.193 — Automatic Snapshot Session-Lifetime Guard.
@@ -19,7 +19,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 // `WorldDiscoverySourceRegistry` — work belonging to a dead session mutating
 // the running World after that session has disappeared. This milestone adds
 // exactly one narrow guard, entirely inside
-// `application/AutomaticSnapshotEncounterCascade.js`: an optional,
+// `application/snapshot/AutomaticSnapshotEncounterCascade.js`: an optional,
 // synchronous, constructor-injected `isSessionActive()` predicate, consulted
 // once per cascade run, at the single instant this cascade would otherwise
 // call `registerMaterializedSnapshotWorldSource()`. Resolution,
@@ -491,7 +491,7 @@ async function runTests() {
         assert(registration.outcome === SnapshotWorldRegistrationOutcome.REGISTERED, '1. manual registration reaches REGISTERED exactly as before — this guard belongs ONLY to the automatic cascade');
         assert(hasOrigin(registry, originFor(contentHash, publicationId)), '2. the manual registration genuinely landed');
 
-        const bridgeSource = await codeOnlySource('application/MaterializedSnapshotWorldDiscoveryBridge.js');
+        const bridgeSource = await codeOnlySource('application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js');
         assert(!/isSessionActive/.test(bridgeSource), '3. structural: MaterializedSnapshotWorldDiscoveryBridge.js itself has no isSessionActive concept at all — the guard lives entirely inside the cascade, one layer up, never in the shared registration primitive manual buttons also call');
 
         console.log('✓ Section H: manual Register (and the shared registration primitive it and the cascade both call) remains completely untouched — the session-lifetime guard belongs exclusively to the automatic cascade composition');
@@ -561,7 +561,7 @@ async function runTests() {
     // synchronous stretch of code.
     // ---------------------------------------------------------------
     {
-        const cascadeSource = await codeOnlySource('application/AutomaticSnapshotEncounterCascade.js');
+        const cascadeSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
         assert(!/setTimeout|setInterval/.test(cascadeSource), '1. no new timer of any kind was introduced');
         assert(!/AbortController|AbortSignal|CancellationToken/i.test(cascadeSource), '2. no cancellation-token machinery was introduced — the cascade itself is never cancelled');
         for (const lifecycleMethod of ['destroy(', 'dispose(', 'cancel(', 'abort(']) {
@@ -588,12 +588,12 @@ async function runTests() {
         assert(outcomeKeys.length === 2 && outcomeKeys.includes('INELIGIBLE') && outcomeKeys.includes('SUPPRESSED'),
             `1. AutomaticSnapshotEncounterCascadeOutcome carries exactly two values total — got ${JSON.stringify(outcomeKeys)}`);
 
-        const outcomeSource = await codeOnlySource('application/AutomaticSnapshotEncounterCascadeOutcome.js');
+        const outcomeSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterCascadeOutcome.js');
         for (const forbidden of ['CANCELLED', 'CANCELED', 'ABANDONED', 'EXPIRED', 'ORPHANED', 'DEAD', 'STALE']) {
             assert(!outcomeSource.includes(forbidden), `2. no "${forbidden}" lifecycle value exists`);
         }
 
-        const cascadeSource = await codeOnlySource('application/AutomaticSnapshotEncounterCascade.js');
+        const cascadeSource = await codeOnlySource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
         for (const forbidden of ['CANCELLED', 'CANCELED', 'ABANDONED', 'EXPIRED']) {
             assert(!cascadeSource.includes(forbidden), `3. no "${forbidden}" vocabulary was introduced in the cascade itself`);
         }

@@ -9,16 +9,16 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import {
     DocumentCommandPropagationUseCase,
     DocumentOperationRejectionReason
-} from '../application/DocumentCommandPropagationUseCase.js';
+} from '../application/document/DocumentCommandPropagationUseCase.js';
 import {
     toDocumentOperationEnvelope,
     isValidDocumentOperationEnvelope
@@ -35,12 +35,12 @@ import {
 // Documents (ui/views/EditorView.js), which had no propagation protocol
 // of any kind. This file proves the boundary this milestone adds for
 // THAT surface, deliberately narrower than World's own answer — see
-// application/DocumentCommandPropagationUseCase.js's own header for the
+// application/document/DocumentCommandPropagationUseCase.js's own header for the
 // full "boundary, not convergence" argument:
 //
 //   Section A: core/DocumentOperationEnvelope.js — the closed wire shape
 //              in isolation.
-//   Section B: application/DocumentCommandPropagationUseCase.js's own
+//   Section B: application/document/DocumentCommandPropagationUseCase.js's own
 //              constructor — every collaborator required.
 //   Section C: FLAGSHIP — Alice and Bob each independently hold the same
 //              Structure Document (Alice owns it); an operation Alice's

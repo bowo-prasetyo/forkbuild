@@ -52,7 +52,7 @@ function sortMostRecentFirst(claims) {
 // in the wider claim graph, but detecting it would require walking every
 // fingerprint's own claims transitively — effectively a "list every
 // lineage claim this replica has ever seen," which no store in this
-// codebase provides (see application/LocalBlueprintLineageClaimStore.js's
+// codebase provides (see application/blueprint/LocalBlueprintLineageClaimStore.js's
 // own header on why it stays scoped to one fingerprint at a time, the
 // same restraint every local claim store here already keeps). This
 // check catches exactly the direct contradiction this milestone's own

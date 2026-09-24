@@ -1,6 +1,6 @@
 // 0.2.38 — the ONE meaningful policy knob for presence trust: is an
 // UNSIGNED claim tolerated at all? Everything else
-// `application/PresenceTrustBoundary.js` enforces — rejecting a
+// `application/presence/PresenceTrustBoundary.js` enforces — rejecting a
 // wrong-authority claim, a replayed claim, an equal-sequence-but-
 // different-content claim — is never a matter of policy; see
 // docs/Principles.md, "Presence Trust Has One Real Policy Axis."

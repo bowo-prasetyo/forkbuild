@@ -4,9 +4,9 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
 import { DeviceAuthority } from '../core/DeviceAuthority.js';
 import {
     toDeviceAuthorizationGrant,
@@ -80,7 +80,7 @@ function makeDevice(label) {
 // Drives one real, in-process peer/PeerAuthenticationSession.js
 // handshake to completion between two devices over a fresh
 // peer/LocalPeerConnectionProvider.js connection, then wraps both ends
-// as application/ConnectedPeer.js — exactly the "raw transport +
+// as application/peer/ConnectedPeer.js — exactly the "raw transport +
 // PeerAuthenticationSession, no PeerSessionManager/invitation layer"
 // pattern tests/PeerAuthentication.test.js's own flagship already uses.
 async function connectAndAuthenticate(network, addressA, deviceA, addressB, deviceB) {
@@ -398,7 +398,7 @@ async function runTests() {
 // ---------------------------------------------------------------------
 // 7. Relevance gate — a genuinely, validly signed device authorization
 //    about an identity this device has never known is dropped, exactly
-//    like application/IdentityLifecyclePropagationUseCase.js's own gate.
+//    like application/identity/IdentityLifecyclePropagationUseCase.js's own gate.
 // ---------------------------------------------------------------------
 {
     const network = new LocalPeerNetwork();
@@ -432,8 +432,8 @@ async function runTests() {
 
 console.log('\nAll multi-device identity semantics tests passed.');
 console.log('Note (deliberately not solved here, see docs/Roadmap.md 0.2.78): resolvePeerAuthority() is defined and');
-console.log('proven correct, but is not wired into application/ChatUseCase.js, application/VoiceUseCase.js,');
-console.log('application/PeerRelationshipUseCase.js, or any presence/profile sync — teaching those existing');
+console.log('proven correct, but is not wired into application/chat/ChatUseCase.js, application/chat/VoiceUseCase.js,');
+console.log('application/peer/PeerRelationshipUseCase.js, or any presence/profile sync — teaching those existing');
 console.log('features to actually consult it is real, substantial, deliberately deferred future work.');
 }
 

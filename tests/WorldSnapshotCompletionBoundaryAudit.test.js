@@ -1,36 +1,37 @@
 import { readFile } from 'node:fs/promises';
+import { applicationPath } from './support/ApplicationFiles.js';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { resolveSnapshotWorldPositionClaim } from '../application/SnapshotWorldPositionClaim.js';
-import { SnapshotWorldPositionClaimOutcome } from '../application/SnapshotWorldPositionClaimOutcome.js';
-import { resolveSnapshotWorldPlacement } from '../application/SnapshotWorldPlacement.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
+import { resolveSnapshotWorldPositionClaim } from '../application/snapshot/placement/SnapshotWorldPositionClaim.js';
+import { SnapshotWorldPositionClaimOutcome } from '../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
+import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import {
     registerMaterializedSnapshotWorldSource,
     unregisterMaterializedSnapshotWorldSource,
     materializedSnapshotWorldOrigin
-} from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { SnapshotCandidateMaterializationOutcome } from '../application/SnapshotCandidateMaterializationOutcome.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeWorldFromDiscoveryRegistry } from '../application/WorldDiscoveryRegistryProjection.js';
-import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+} from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { SnapshotCandidateMaterializationOutcome } from '../application/snapshot/materialization/SnapshotCandidateMaterializationOutcome.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
+import { describeLocalWorldDiscoverySource, LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { registerPeerWorldSource, unregisterPeerWorldSource } from '../peer/PeerWorldDiscoveryLifecycleBridge.js';
 import { derivePeerWorldOrigin } from '../peer/PeerWorldDataIngress.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterPresentationSourceFamily } from '../application/WorldEncounterPresentation.js';
-import { WorldEncounterSelectionOutcomeStatus } from '../application/WorldEncounterSelectionOutcome.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterPresentationSourceFamily } from '../application/worldEncounter/WorldEncounterPresentation.js';
+import { WorldEncounterSelectionOutcomeStatus } from '../application/worldEncounter/WorldEncounterSelectionOutcome.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
@@ -363,14 +364,14 @@ function assertNoOriginLeak(value, path = '$') {
 
 async function run() {
     const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-    const bridgeSource = await readFile(new URL('../application/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
-    const registrySource = await readFile(new URL('../application/WorldDiscoverySourceRegistry.js', import.meta.url), 'utf8');
+    const bridgeSource = await readFile(new URL('../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js', import.meta.url), 'utf8');
+    const registrySource = await readFile(new URL('../application/discovery/WorldDiscoverySourceRegistry.js', import.meta.url), 'utf8');
     const markerSource = await readFile(new URL('../ui/components/WorldEncounterMarker.js', import.meta.url), 'utf8');
-    const presentationSource = await readFile(new URL('../application/WorldEncounterPresentation.js', import.meta.url), 'utf8');
-    const inspectionSource = await readFile(new URL('../application/WorldSnapshotInspection.js', import.meta.url), 'utf8');
-    const materialLoadingSource = await readFile(new URL('../application/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
-    const claimSource = await readFile(new URL('../application/SnapshotWorldPositionClaim.js', import.meta.url), 'utf8');
-    const placementSource = await readFile(new URL('../application/SnapshotWorldPlacement.js', import.meta.url), 'utf8');
+    const presentationSource = await readFile(new URL('../application/worldEncounter/WorldEncounterPresentation.js', import.meta.url), 'utf8');
+    const inspectionSource = await readFile(new URL('../application/snapshot/WorldSnapshotInspection.js', import.meta.url), 'utf8');
+    const materialLoadingSource = await readFile(new URL('../application/worldEncounter/WorldEncounterMaterialLoading.js', import.meta.url), 'utf8');
+    const claimSource = await readFile(new URL('../application/snapshot/placement/SnapshotWorldPositionClaim.js', import.meta.url), 'utf8');
+    const placementSource = await readFile(new URL('../application/snapshot/placement/SnapshotWorldPlacement.js', import.meta.url), 'utf8');
 
     function stripComments(source) {
         return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
@@ -932,7 +933,7 @@ async function run() {
             'WorldDiscoverySourceRegistry.js'
         ];
         for (const fileName of pipelineFiles) {
-            const source = await readFile(new URL(`../application/${fileName}`, import.meta.url), 'utf8');
+            const source = await readFile(new URL(`../${applicationPath(fileName)}`, import.meta.url), 'utf8');
             assert(!/setInterval/.test(source), `1. ${fileName} contains no setInterval — no recurring poll of any kind`);
         }
         // WorldEncounterCanvas.js legitimately owns OTHER, unrelated
@@ -1121,7 +1122,7 @@ async function run() {
         // No duplicate material-loading path — the "snapshot:" origin
         // pattern routes to the SAME materialSources.local slot, never a
         // third slot of its own.
-        assert(!/materialSources\.snapshot\b/.test(materialLoadingCodeOnly), '6. application/WorldEncounterMaterialLoading.js never routes to a materialSources.snapshot slot — a registered Snapshot loads through the identical materialSources.local path an ordinary local Publication already uses');
+        assert(!/materialSources\.snapshot\b/.test(materialLoadingCodeOnly), '6. application/worldEncounter/WorldEncounterMaterialLoading.js never routes to a materialSources.snapshot slot — a registered Snapshot loads through the identical materialSources.local path an ordinary local Publication already uses');
 
         // No automatic fallback, ranking, deduplication, or trust
         // semantics across the whole set of files this milestone swept.
@@ -1140,7 +1141,7 @@ async function run() {
 
         // The registry itself was, once again, completely unmodified by
         // any milestone in this whole arc's own final closure.
-        assert(!/SnapshotLifecycle|unregisterSelectedSnapshot|WorldEncounterPresentation|WorldSnapshotInspection/.test(registryCodeOnly), '10. application/WorldDiscoverySourceRegistry.js carries no reference to any Snapshot-specific vocabulary or UI action of any kind — it remains the one, generic, family-blind membership authority every source, Snapshot included, shares');
+        assert(!/SnapshotLifecycle|unregisterSelectedSnapshot|WorldEncounterPresentation|WorldSnapshotInspection/.test(registryCodeOnly), '10. application/discovery/WorldDiscoverySourceRegistry.js carries no reference to any Snapshot-specific vocabulary or UI action of any kind — it remains the one, generic, family-blind membership authority every source, Snapshot included, shares');
 
         console.log('✓ Section J: no Nostr/Arweave import in World rendering, no hashing/crypto in the UI or presentation layer, no registry lookup inside a pure descriptor, no Snapshot-specific WorldEncounterKind or Encounter class, no duplicate material-loading path, no automatic fallback/ranking/deduplication/trust semantics, and no new lifecycle state machine — anywhere across the complete, closed Snapshot -> World pipeline');
     }

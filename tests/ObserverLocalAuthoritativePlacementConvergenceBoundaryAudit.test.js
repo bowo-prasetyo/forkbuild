@@ -1,15 +1,15 @@
 import { readFile } from 'node:fs/promises';
 
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeWorldFromDiscoveryRegistry } from '../application/WorldDiscoveryRegistryProjection.js';
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
 import { describeObserverLocalPublicationEncounter } from '../core/ObserverLocalPublicationEncounter.js';
-import { resolveSnapshotWorldPlacement } from '../application/SnapshotWorldPlacement.js';
-import { registerMaterializedSnapshotWorldSource } from '../application/MaterializedSnapshotWorldDiscoveryBridge.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
+import { registerMaterializedSnapshotWorldSource } from '../application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -363,7 +363,7 @@ async function run() {
     // Section C — observer-local lifecycle trace: no removal seam exists.
     // =======================================================================
     {
-        const storeSource = codeOnly(await readSource('application/ObserverLocalEncounterStore.js'));
+        const storeSource = codeOnly(await readSource('application/worldEncounter/ObserverLocalEncounterStore.js'));
         // Deliberately scoped to `_encounters`-affecting names only —
         // `_listeners.delete(id)` (subscription cleanup) is a real,
         // legitimate, and entirely unrelated method this same file already
@@ -407,7 +407,7 @@ async function run() {
         // never carries a `contentHash` field — confirming a convergence
         // filter has exactly one usable identity field to join against,
         // never a choice between two.
-        const readModelSource = codeOnly(await readSource('application/WorldEncounterReadModel.js'));
+        const readModelSource = codeOnly(await readSource('application/worldEncounter/WorldEncounterReadModel.js'));
         const readModelBody = methodBody(readModelSource, 'function describeWorldEncounterReadModel\\(encounters\\)', 0);
         const publicationRowShape = readModelBody.split('const publications = publicationEncounters.map((encounter) => Object.freeze({')[1].split('}));')[0];
         assert(!publicationRowShape.includes('contentHash'), 'D3. The publication row shape itself never carries a `contentHash` field — `objectId` (publicationId) is the ONLY identity field a convergence filter could join against from this side.');
@@ -675,7 +675,7 @@ async function run() {
     // Section J — smallest ownership boundary: a structural sweep.
     // =======================================================================
     {
-        const storeSource = codeOnly(await readSource('application/ObserverLocalEncounterStore.js'));
+        const storeSource = codeOnly(await readSource('application/worldEncounter/ObserverLocalEncounterStore.js'));
         for (const forbidden of ['WorldDiscoverySourceRegistry', 'PlacementRecord', 'LocalPlacementRegistry', 'publicationRows', 'effectiveView']) {
             assert(!storeSource.includes(forbidden), `J1. ObserverLocalEncounterStore.js never references '${forbidden}' — it has no way to know whether ANY publicationId it holds is authoritatively placed, and per its own header must stay "a genuinely new, session-scoped surface," never one that reaches back into the primary channel's own vocabulary. It is NOT the right owner for this filter.`);
         }

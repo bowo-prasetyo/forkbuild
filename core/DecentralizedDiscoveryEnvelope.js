@@ -73,7 +73,7 @@ import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 // all: "SOME signature is attached." An envelope this file describes
 // carries no such thing. It is JSON some search or index service handed
 // back, exactly as unauthenticated as the `uri`/`storage` candidates
-// `application/ArweaveGraphqlDiscoveryQueryService.js` already reports
+// `application/arweave/ArweaveGraphqlDiscoveryQueryService.js` already reports
 // today — anyone able to publish anything discoverable on a given
 // substrate can attach any envelope they like, naming any `objectId` they
 // like, truthfully or not. This file validates an envelope's own SHAPE —
@@ -175,9 +175,9 @@ import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 //   from an Arweave transaction, a Nostr event, an AT Protocol record, or
 //   a Hive `custom_json` and hands it to `parseDecentralizedDiscoveryEnvelope()`.**
 //   This file defines the envelope's own shape only; teaching
-//   `application/ArweaveGraphqlDiscoveryQueryService.js` to read its own
+//   `application/arweave/ArweaveGraphqlDiscoveryQueryService.js` to read its own
 //   transaction data field, or building a Nostr/AT-Protocol/Hive adapter
-//   of `application/DecentralizedWorldDiscoveryQuery.js`'s own
+//   of `application/discovery/DecentralizedWorldDiscoveryQuery.js`'s own
 //   `DecentralizedDiscoveryQueryService` shape, is unscheduled, later
 //   work, one adapter at a time.
 // - **Producing usable output for `WorldEncounterKind.AVATAR`.** `kind` is

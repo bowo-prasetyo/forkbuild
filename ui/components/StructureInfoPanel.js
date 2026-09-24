@@ -47,14 +47,14 @@ import { describeBlueprintSimilarity } from '../../core/BlueprintSimilarity.js';
 // Deliberately its own small link rather than folded into "Export
 // Blueprint" — a Blueprint Package and a BlueprintAttributionPublication
 // stay two independent portable things all the way out to the UI (see
-// application/BlueprintPackage.js's own 0.6.6 header), even though
+// application/blueprint/BlueprintPackage.js's own 0.6.6 header), even though
 // "Export Blueprint" ALSO bundles every known attribution alongside the
 // design by default (ui/views/EditorView.js#exportStructure()) — this
 // link exists for the narrower case of sharing just the one signed claim
 // on its own.
 //
 // 0.6.7 — Blueprint Attribution Resolution & Community Identity.
-// `attribution` is now application/BlueprintAttributionUseCase.js#
+// `attribution` is now application/blueprint/BlueprintAttributionUseCase.js#
 // communityView()'s own shape — `{ fingerprint, authors, authorCount,
 // claims, mine, receivedAt }` — rather than summarize()'s flat
 // `{ fingerprint, attributions, mine }`. The single "N known authors"
@@ -68,7 +68,7 @@ import { describeBlueprintSimilarity } from '../../core/BlueprintSimilarity.js';
 // proves who made the CLAIM, never who actually made the design.
 //
 // 0.6.8 — Blueprint Lineage & Revision Discovery. `lineage` is
-// application/BlueprintLineageUseCase.js#lineageView()'s own
+// application/blueprint/BlueprintLineageUseCase.js#lineageView()'s own
 // `{ fingerprint, derivedFrom, derivedDesigns, mine, hasCycleWarning }`,
 // and `similarityCandidates` is a SEPARATE, caller-computed, unsigned
 // evidence list (`{ structure, evidence }[]`, from core/
@@ -87,13 +87,13 @@ import { describeBlueprintSimilarity } from '../../core/BlueprintSimilarity.js';
 // currently-signed-in identity's own attribution, alongside
 // 'export-attribution' above. Export produces a file a person hands to
 // someone directly; this emits a request to publish the identical
-// attribution through application/PublicationResolver.js (0.7.0) instead
+// attribution through application/publication/PublicationResolver.js (0.7.0) instead
 // — content-addressed, cataloged, and announced to whichever peers are
 // connected right now, discoverable without a file ever changing hands.
 // Reachable under the exact same `attribution.mine` guard
 // 'export-attribution' already uses: there is nothing of this identity's
 // own to publish until they have claimed authorship at least once. This
-// panel never calls application/PublicationResolver.js itself — see this
+// panel never calls application/publication/PublicationResolver.js itself — see this
 // panel's own "Inspect ≠ edit" restraint above — EditorView owns the
 // actual publish call and its own feedback.
 export default {
@@ -102,10 +102,10 @@ export default {
         structure: { type: Object, required: true },
         registry: { type: Object, default: null },
         source: { type: String, default: 'built-in' }, // 'built-in' | 'personal'
-        // application/BlueprintAttributionUseCase.js#communityView()'s
+        // application/blueprint/BlueprintAttributionUseCase.js#communityView()'s
         // own shape, or null while nothing has been derived yet.
         attribution: { type: Object, default: null },
-        // application/BlueprintLineageUseCase.js#lineageView()'s own
+        // application/blueprint/BlueprintLineageUseCase.js#lineageView()'s own
         // shape, or null while nothing has been derived yet.
         lineage: { type: Object, default: null },
         // core/BlueprintSimilarity.js evidence, pre-filtered/sorted by
@@ -168,7 +168,7 @@ export default {
         },
         // Never offered without a fingerprint to attribute, and never a
         // second time once THIS identity already has an attribution on
-        // file for it — see application/BlueprintAttributionUseCase.js's
+        // file for it — see application/blueprint/BlueprintAttributionUseCase.js's
         // own header on why republishing is technically allowed but
         // never something this panel needs to invite.
         canClaimAuthorship() {
@@ -223,7 +223,7 @@ export default {
         // The one timing fact this panel is willing to show for a claim
         // that isn't the viewer's own: WHEN THIS REPLICA FIRST RECEIVED
         // IT, never the claim's own self-reported `createdAt` — see
-        // application/LocalBlueprintAttributionPublicationLog.js's own
+        // application/blueprint/LocalBlueprintAttributionPublicationLog.js's own
         // header on why a second, unsigned "publishedAt" would just be a
         // spoofable shadow of a timestamp the claimant chose themselves.
         // A claim THIS identity published directly (never "received" at

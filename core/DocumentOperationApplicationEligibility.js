@@ -28,7 +28,7 @@ import { CausalGapStatus, DocumentOperationCausalGapDetector } from './DocumentO
 // that policy has a seam to live in that is not `CausalGapStatus` itself
 // (which must keep meaning exactly what 0.9.228 defined: "is a named
 // predecessor absent," nothing about what to do about it) and is not
-// `application/CommandHistory.js` (untouched — see "Deliberately excluded"
+// `application/editor/CommandHistory.js` (untouched — see "Deliberately excluded"
 // below).
 //
 //   eligibility.ELIGIBLE     — every causal predecessor this operation
@@ -75,7 +75,7 @@ import { CausalGapStatus, DocumentOperationCausalGapDetector } from './DocumentO
 //
 // KNOWN is not applied, and applied is not retroactively unmade. Because
 // this function only ever reads causal knowledge, and never reads or
-// writes `application/CommandHistory.js`, an operation already applied
+// writes `application/editor/CommandHistory.js`, an operation already applied
 // under today's ARRIVAL_ORDER policy stays applied — evaluating its
 // eligibility later, after a once-missing predecessor becomes known,
 // changes the ANSWER this function gives, never the document's own
@@ -86,10 +86,10 @@ import { CausalGapStatus, DocumentOperationCausalGapDetector } from './DocumentO
 // queue, no buffering, no delayed execution, no automatic replay, no
 // causal reordering, no rollback, no history rewriting, no
 // retransmission, no retry, no CRDT, no OT, no conflict resolution, no
-// synchronized undo, no convergence guarantee. `application/CommandHistory.js`
+// synchronized undo, no convergence guarantee. `application/editor/CommandHistory.js`
 // is UNCHANGED by this milestone, and nothing here is wired to gate, delay,
 // or otherwise alter any existing call to
-// `application/RemoteDocumentOperationApplicationUseCase.js#apply()`.
+// `application/document/RemoteDocumentOperationApplicationUseCase.js#apply()`.
 export const DocumentOperationApplicationEligibility = Object.freeze({
     ELIGIBLE: 'ELIGIBLE',
     NOT_ELIGIBLE: 'NOT_ELIGIBLE'
@@ -120,7 +120,7 @@ export function isDocumentOperationApplicationEligibility(value) {
 // `missingCausalPredecessorIds` is `detect()`'s own field, threaded through
 // unchanged — never reshaped, never renamed to a second, possibly-drifting
 // name for the identical list, the same restraint
-// `application/DocumentOperationCausalGapObservationUseCase.js`'s own
+// `application/document/DocumentOperationCausalGapObservationUseCase.js`'s own
 // header already applies to its own `causalGap` field.
 //
 // `causalGapDetector` defaults to a fresh, private

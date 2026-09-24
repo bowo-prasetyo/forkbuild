@@ -6,17 +6,17 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { PlaceBrickCommand } from '../application/commands/PlaceBrickCommand.js';
-import { AutosaveScheduler } from '../application/AutosaveScheduler.js';
-import { RecoveryObserver } from '../application/RecoveryObserver.js';
+import { AutosaveScheduler } from '../application/document/AutosaveScheduler.js';
+import { RecoveryObserver } from '../application/document/RecoveryObserver.js';
 import { LocalRecoveryStore } from '../persistence/LocalRecoveryStore.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { AutosaveDocumentUseCase } from '../application/AutosaveDocumentUseCase.js';
-import { CheckRecoveryUseCase } from '../application/CheckRecoveryUseCase.js';
-import { RecoverDocumentUseCase } from '../application/RecoverDocumentUseCase.js';
-import { DiscardRecoveryUseCase } from '../application/DiscardRecoveryUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { AutosaveDocumentUseCase } from '../application/document/AutosaveDocumentUseCase.js';
+import { CheckRecoveryUseCase } from '../application/document/CheckRecoveryUseCase.js';
+import { RecoverDocumentUseCase } from '../application/document/RecoverDocumentUseCase.js';
+import { DiscardRecoveryUseCase } from '../application/document/DiscardRecoveryUseCase.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
 // 0.9.205 — Editor Autosave & Recovery Lifecycle Audit.
@@ -46,7 +46,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // operation happened to change the open document's identity — mount's
 // own openDocument()/loadDocument(), a fork, a Load — aborting it
 // midway, even though that operation had nothing to do with recovery.
-// Fixed in application/RecoveryObserver.js by isolating the probe in a
+// Fixed in application/document/RecoveryObserver.js by isolating the probe in a
 // try/catch that fails safe (offers nothing) rather than propagating.
 // EditorView.js's discardRecovery() had the matching gap (no try/catch,
 // unlike its own recoverDocument() immediately above it) and is fixed
@@ -765,7 +765,7 @@ async function run() {
         function codeOnlyLines(source) {
             return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         }
-        const observerSource = codeOnlyLines(await rawSource('application/RecoveryObserver.js'));
+        const observerSource = codeOnlyLines(await rawSource('application/document/RecoveryObserver.js'));
         assert(!observerSource.includes('import '),
             'I: RecoveryObserver.js still has zero imports after this milestone\'s failure-isolation fix');
         assert(!/from ['"].*\/(storage|persistence)\//.test(observerSource),

@@ -1,12 +1,12 @@
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 import {
@@ -16,17 +16,17 @@ import {
     toSnapshotContentRequestMessage,
     toSnapshotContentResponseMessage,
     isValidPeerSnapshotContentMessage
-} from '../application/PeerSnapshotContentProtocol.js';
-import { PublicationSnapshotContentPeerExchange } from '../application/PublicationSnapshotContentPeerExchange.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { PeerSnapshotMaterializationOutcome } from '../application/PeerSnapshotMaterializationOutcome.js';
-import { MaterializeSnapshotFromPeerUseCase } from '../application/MaterializeSnapshotFromPeerUseCase.js';
-import { SnapshotPeerMaterializationCoordinator } from '../application/SnapshotPeerMaterializationCoordinator.js';
-import { SnapshotPeerMaterializationUiState } from '../application/SnapshotPeerMaterializationUiState.js';
-import { describePeerMaterializationAttempt, describePeerMaterializationButtonLabel } from '../application/SnapshotPeerMaterializationView.js';
-import { SnapshotMaterializationSourceKind } from '../application/SnapshotMaterializationSourceKind.js';
-import { describeSnapshotMaterializationSourceLabel } from '../application/SnapshotMaterializationView.js';
+} from '../application/snapshot/materialization/PeerSnapshotContentProtocol.js';
+import { PublicationSnapshotContentPeerExchange } from '../application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
+import { MaterializeSnapshotFromPeerUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromPeerUseCase.js';
+import { SnapshotPeerMaterializationCoordinator } from '../application/snapshot/materialization/SnapshotPeerMaterializationCoordinator.js';
+import { SnapshotPeerMaterializationUiState } from '../application/snapshot/materialization/SnapshotPeerMaterializationUiState.js';
+import { describePeerMaterializationAttempt, describePeerMaterializationButtonLabel } from '../application/snapshot/materialization/SnapshotPeerMaterializationView.js';
+import { SnapshotMaterializationSourceKind } from '../application/snapshot/materialization/SnapshotMaterializationSourceKind.js';
+import { describeSnapshotMaterializationSourceLabel } from '../application/snapshot/materialization/SnapshotMaterializationView.js';
 
 // 0.8.37 — Explicit Peer Snapshot Content Transfer.
 //
@@ -37,7 +37,7 @@ import { describeSnapshotMaterializationSourceLabel } from '../application/Snaps
 //              against a stub PeerMessageBus + ConnectedPeerRegistry: the
 //              responding side answers strictly from its own local
 //              ContentStore, WITHOUT consulting a catalog at all (unlike
-//              application/PeerContentExchange.js, 0.7.4); a
+//              application/peer/PeerContentExchange.js, 0.7.4); a
 //              malformed/oversized RESPONSE is dropped; onContentReceived()
 //              fires UNVERIFIED, on purpose; dispose() stops both
 //              directions.
@@ -146,7 +146,7 @@ function stubPeer(connectionId, state) {
     return { connectionId, getLifecycleState: () => state };
 }
 
-// A minimal fake application/PublicationSnapshotContentPeerExchange.js for
+// A minimal fake application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js for
 // Section C, so MaterializeSnapshotFromPeerUseCase's own timing/mapping
 // logic can be tested deterministically without a real transport.
 class FakeExchange {
@@ -262,8 +262,8 @@ async function run() {
 
         // A RESPONSE carrying bytes that do NOT match the claimed hash
         // still fires — this class never verifies. Verification is
-        // application/MaterializeSnapshotFromPeerUseCase.js's own job,
-        // via application/StoreSnapshotContentUseCase.js, one layer up.
+        // application/snapshot/materialization/MaterializeSnapshotFromPeerUseCase.js's own job,
+        // via application/snapshot/materialization/StoreSnapshotContentUseCase.js, one layer up.
         bobBus.deliver(PublicationSnapshotContentPeerExchange.DEFAULT_PROTOCOL,
             toSnapshotContentResponseMessage('pub-1', 'cafef00d', 'these bytes do not hash to cafef00d'));
         assert(received.length === 1 && received[0].contentHash === 'cafef00d' && received[0].bytes === 'these bytes do not hash to cafef00d',

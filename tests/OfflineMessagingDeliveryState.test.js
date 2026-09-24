@@ -2,13 +2,13 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { FriendRelationshipUseCase } from '../application/FriendRelationshipUseCase.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
-import { ChatUseCase } from '../application/ChatUseCase.js';
-import { ChatOutbox } from '../application/ChatOutbox.js';
+import { FriendRelationshipUseCase } from '../application/identity/FriendRelationshipUseCase.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { PeerReconnectionUseCase } from '../application/peer/PeerReconnectionUseCase.js';
+import { ChatUseCase } from '../application/chat/ChatUseCase.js';
+import { ChatOutbox } from '../application/chat/ChatOutbox.js';
 import { toChatMessage, deriveConversationId } from '../core/ChatMessage.js';
 import { ChatOutboxEntry } from '../core/ChatOutboxEntry.js';
 import { ChatDeliveryState, isValidChatDeliveryState } from '../core/ChatDeliveryState.js';
@@ -23,7 +23,7 @@ import { toChatDeliveryAck, isValidChatDeliveryAck } from '../core/ChatDeliveryA
 // immediately for an offline peer (see Scenario A below, mirroring
 // tests/PeerChat.test.js's own Scenario G verbatim), while
 // `sendOrQueue()` writes a durable, identity-addressed
-// core/ChatOutboxEntry.js instead, and application/ChatUseCase.js's
+// core/ChatOutboxEntry.js instead, and application/chat/ChatUseCase.js's
 // own reconnect-triggered flush — riding the SAME
 // connectedPeerRegistry.onChange() subscription 0.2.61 already used to
 // attach() every peer — delivers it the instant the recipient's
@@ -111,7 +111,7 @@ async function becomeFriends(aFriends, aPeer, bFriends, bPeer) {
 // PeerSessionManager.js's own createInvitation()/acceptInvitation()
 // surface, identical to tests/PeerConnectionResilience.test.js's own
 // makeFakeSessionManager() — see that file's own header for why this
-// is enough to drive application/PeerReconnectionUseCase.js's own real
+// is enough to drive application/peer/PeerReconnectionUseCase.js's own real
 // logic against genuine authentication without needing real WebRTC.
 function makeFakeSessionManager(connect, targetAddress) {
     return {
@@ -184,7 +184,7 @@ async function runTests() {
 }
 
 // ---------------------------------------------------------------------
-// 4. application/ChatOutbox.js — enqueue/markSent/acknowledge/pruneExpired,
+// 4. application/chat/ChatOutbox.js — enqueue/markSent/acknowledge/pruneExpired,
 //    scoped per LOCAL owner, addressed by identity.
 // ---------------------------------------------------------------------
 {
@@ -224,7 +224,7 @@ async function runTests() {
     const pruned = outbox.pruneExpired('dora');
     assert(pruned.length === 1 && pruned[0].message.messageId === expiringMessage.messageId, 'pruneExpired() returns exactly the entries that just crossed their TTL');
     assert(outbox.list('dora').length === 0, 'an expired entry is removed from storage');
-    console.log('✓ application/ChatOutbox.js: enqueue/markSent/acknowledge/pruneExpired, scoped per owner, addressed by identity');
+    console.log('✓ application/chat/ChatOutbox.js: enqueue/markSent/acknowledge/pruneExpired, scoped per owner, addressed by identity');
 }
 
 // ---------------------------------------------------------------------
@@ -317,7 +317,7 @@ async function runTests() {
 // SECURITY FLAGSHIP — Alice queues mail for Bob; a "reconnect" attempt
 // actually authenticates as Charlie (0.2.62's own honest-mismatch
 // scenario). Bob's queued mail must never be sent to Charlie, and must
-// never be lost — see application/ChatUseCase.js's own header, "A
+// never be lost — see application/chat/ChatUseCase.js's own header, "A
 // Durable Outbox Is Addressed To An Identity, Never A Connection."
 // ---------------------------------------------------------------------
 {

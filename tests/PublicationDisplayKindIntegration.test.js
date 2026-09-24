@@ -5,19 +5,19 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License } from '../core/License.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
 
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
-import { buildPlaceNamingClaimPublication, PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION as NAMING_SCHEMA_VERSION } from '../application/PlaceNamingClaimPublication.js';
+import { buildPlaceNamingClaimPublication, PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION as NAMING_SCHEMA_VERSION } from '../application/placeNaming/PlaceNamingClaimPublication.js';
 
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -30,7 +30,7 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 // 0.9.331 built the third kindPlugin (forkbuild.publication). 0.9.332
 // proved it genuinely travels the existing decentralized transport
 // pipeline end to end. Both stopped short of the Publications Center
-// itself: application/CreatePublicationDisplayKindRegistryUseCase.js —
+// itself: application/publication/CreatePublicationDisplayKindRegistryUseCase.js —
 // the generic kindPlugin registry ui/views/DecentralizedPublicationsView.js
 // actually reads from — still wired only the two kinds that predate
 // 0.9.331 (0.9.332's own Section H, named as an honest, narrowly-scoped
@@ -183,7 +183,7 @@ async function run() {
     // PublicationExchange -> LocalPublicationCatalog), then is resolved
     // and fed into the real Publications Center path — application/
     // PublicationResolutionView.js#resolvePublicationView(), driven by
-    // application/CreatePublicationDisplayKindRegistryUseCase.js's own
+    // application/publication/CreatePublicationDisplayKindRegistryUseCase.js's own
     // real, unmodified-in-shape output — never a direct resolver call
     // standing in for the display path.
     // ===============================================================
@@ -232,7 +232,7 @@ async function run() {
         // Alice's own replica resolving a publication of her own — never
         // gossiped, never received over any wire, catalogued only in her
         // own in-memory storage as a bare DecentralizedPublication the
-        // way application/PublicationResolver.js#publish() itself already
+        // way application/publication/PublicationResolver.js#publish() itself already
         // returns one.
         const localOriginal = makePublication({}, flagshipAlice);
         const localEnvelope = await localResolver.publish({ content: localOriginal, contentKind: PUBLICATION_CONTENT_KIND, identityProvider: flagshipAlice });
@@ -329,7 +329,7 @@ async function run() {
         assert(summaries.size === 3, '4. all three content kinds render three genuinely distinct summaries');
 
         // D5. A fourth, deliberately UNREGISTERED contentKind still falls
-        // through to application/PublicationResolutionView.js's own
+        // through to application/publication/PublicationResolutionView.js's own
         // existing "this replica does not yet know how to display"
         // case — proving the new registration did not turn the generic
         // Publication renderer into a silent fallback/wildcard for
@@ -343,7 +343,7 @@ async function run() {
         assert(unknownView.resolved === false && unknownView.outcome === null,
             '5. an unregistered contentKind is never resolved, never silently handled by the Publication kindPlugin');
         assert(typeof unknownView.reason === 'string' && unknownView.reason.includes('forkbuild.some-future-kind'),
-            `6. the reason names the exact unsupported kind, exactly as application/PublicationResolutionView.js already does for every other unknown kind (${unknownView.reason})`);
+            `6. the reason names the exact unsupported kind, exactly as application/publication/PublicationResolutionView.js already does for every other unknown kind (${unknownView.reason})`);
     }
     console.log('✓ Section D: forkbuild.publication, forkbuild.blueprint-attribution, and forkbuild.place-naming-claim each dispatch to their own, distinct presentation — three real resolutions, three real, non-overlapping summaries. An unregistered fourth kind still falls through to the existing "unsupported kind" case, proving the generic Publication renderer never became an accidental fallback for every content kind.');
 
@@ -386,9 +386,9 @@ async function run() {
     // from a flag naming how it was acquired.
     // ===============================================================
     {
-        const viewSource = await readSource('application/PublicationResolutionView.js');
+        const viewSource = await readSource('application/publication/PublicationResolutionView.js');
         const decentralizedViewSource = (await Promise.all(publicationsPageFiles().map((file) => readSource(file)))).join('\n');
-        const registrySource = await readSource('application/CreatePublicationDisplayKindRegistryUseCase.js');
+        const registrySource = await readSource('application/publication/CreatePublicationDisplayKindRegistryUseCase.js');
         const combined = viewSource + decentralizedViewSource + registrySource;
 
         assert(!/source\s*===\s*['"]decentralized['"]/.test(combined) && !/origin\s*===\s*['"]decentralized['"]/.test(combined),
@@ -403,7 +403,7 @@ async function run() {
         assert(!knownKeys.some((k) => /source|origin/i.test(k)),
             `3. the resolved view's own fields (${knownKeys.join(', ')}) include nothing naming an acquisition source/origin — the UI has no such flag to branch on even if it wanted to`);
     }
-    console.log('✓ Section F: no file in the display path — application/PublicationResolutionView.js, ui/views/DecentralizedPublicationsView.js, or application/CreatePublicationDisplayKindRegistryUseCase.js — branches on how a publication was acquired, and the resolved view itself carries no such flag. The UI consumes the resolved Publication, never the path it took to get there.');
+    console.log('✓ Section F: no file in the display path — application/publication/PublicationResolutionView.js, ui/views/DecentralizedPublicationsView.js, or application/publication/CreatePublicationDisplayKindRegistryUseCase.js — branches on how a publication was acquired, and the resolved view itself carries no such flag. The UI consumes the resolved Publication, never the path it took to get there.');
 
     // ===============================================================
     // Section G — No Repository coupling, reconfirmed now that the
@@ -411,12 +411,12 @@ async function run() {
     // ===============================================================
     {
         const repositoryFacingFiles = [
-            'application/SearchPublicationsUseCase.js',
+            'application/publication/SearchPublicationsUseCase.js',
             'ui/components/PublicationCatalog.js',
             'ui/components/PublicationCard.js',
             'discovery/DiscoveryProvider.js',
             'discovery/LocalDiscoveryProvider.js',
-            'application/CreatePublicationCatalogUseCase.js'
+            'application/publication/CreatePublicationCatalogUseCase.js'
         ];
         for (const file of repositoryFacingFiles) {
             const src = await readSource(file);
@@ -427,26 +427,26 @@ async function run() {
         // The reverse: the registry itself imports nothing Repository-shaped.
         // Matched against the REPOSITORY-FACING files' own literal paths
         // (never a bare "PublicationCatalog.js" substring, which would
-        // also — falsely — match application/LocalPublicationCatalog.js,
+        // also — falsely — match application/publication/LocalPublicationCatalog.js,
         // an existing, legitimate, non-Repository reference this file
         // already carries).
-        const registrySource = await readSource('application/CreatePublicationDisplayKindRegistryUseCase.js');
+        const registrySource = await readSource('application/publication/CreatePublicationDisplayKindRegistryUseCase.js');
         assert(!/SearchPublicationsUseCase|DiscoveryProvider|ui\/components\/PublicationCatalog\.js|ui\/components\/PublicationCard\.js|CreatePublicationCatalogUseCase/.test(registrySource),
-            '2. application/CreatePublicationDisplayKindRegistryUseCase.js imports nothing Repository-shaped, even after gaining its third entry.');
+            '2. application/publication/CreatePublicationDisplayKindRegistryUseCase.js imports nothing Repository-shaped, even after gaining its third entry.');
 
         // The transport layer stays exactly as agnostic as 0.9.332 proved:
         // adding a DISPLAY entry required no change to any transport file.
-        const peerExchangeSource = await readSource('application/PublicationPeerExchange.js');
-        const exchangeSource = await readSource('application/PublicationExchange.js');
-        const catalogSource = await readSource('application/LocalPublicationCatalog.js');
+        const peerExchangeSource = await readSource('application/publication/PublicationPeerExchange.js');
+        const exchangeSource = await readSource('application/publication/PublicationExchange.js');
+        const catalogSource = await readSource('application/publication/LocalPublicationCatalog.js');
         assert(!/CreatePublicationDisplayKindRegistryUseCase/.test(peerExchangeSource + exchangeSource + catalogSource),
             '3. none of the transport classes reference the display-kind registry — display integration required zero transport changes, exactly as scoped.');
 
         // Only the registry file, tests, and this file's own describe()
         // reference the new PublicationContentKind symbols outside
-        // application/PublicationContentKind.js/PublicationContentValidator.js.
+        // application/publication/PublicationContentKind.js/PublicationContentValidator.js.
         const nonTestHits = grepFiles('PublicationContentKind|PUBLICATION_CONTENT_KIND', ['application', 'ui', 'discovery'])
-            .filter((f) => !f.startsWith('application/PublicationContentKind.js') && !f.startsWith('application/PublicationContentValidator.js') && !f.startsWith('application/CreatePublicationDisplayKindRegistryUseCase.js'));
+            .filter((f) => !f.startsWith('application/publication/PublicationContentKind.js') && !f.startsWith('application/publication/PublicationContentValidator.js') && !f.startsWith('application/publication/CreatePublicationDisplayKindRegistryUseCase.js'));
         assert(nonTestHits.length === 0, `4. no file under application/, ui/, or discovery/ other than PublicationContentKind.js/PublicationContentValidator.js/CreatePublicationDisplayKindRegistryUseCase.js references forkbuild.publication (found: ${nonTestHits.join(', ') || 'none'}).`);
     }
     console.log('✓ Section G: zero Repository coupling, reconfirmed with the registry now actually wired — Repository\'s own search/catalog/discovery files still never mention the display-kind registry or forkbuild.publication, the registry itself imports nothing Repository-shaped, and none of the transport classes needed to change at all to make display integration work.');
@@ -471,8 +471,8 @@ async function run() {
 'coupling, in both directions, with the registry now actually wired.\n' +
 '\n' +
 'WHAT THIS MEANS. The only production change this milestone makes is the one line of wiring 0.9.332\'s own Section H\n' +
-'named as the sole remaining gap: application/CreatePublicationDisplayKindRegistryUseCase.js now also composes\n' +
-'application/PublicationContentKind.js (0.9.331) with a describe(), exactly the way the other two kinds already are.\n' +
+'named as the sole remaining gap: application/publication/CreatePublicationDisplayKindRegistryUseCase.js now also composes\n' +
+'application/publication/PublicationContentKind.js (0.9.331) with a describe(), exactly the way the other two kinds already are.\n' +
 'No new renderer, no new registration mechanism, no Repository change, no Search change, no federated discovery —\n' +
 'all deliberately out of scope, per this milestone\'s own exclusion list. What comes after remains what 0.9.332\'s own\n' +
 '"What comes after" already named: a focused audit of what existing decentralized discovery capability could\n' +

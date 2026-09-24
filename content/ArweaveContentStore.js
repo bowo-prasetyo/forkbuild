@@ -26,7 +26,7 @@ const DEFAULT_MAX_RESPONSE_BYTES = 256 * 1024;
 // file was created. This is that concrete implementation: a real
 // content/ContentStore.js backed by Arweave, built the same way
 // content/IpfsContentStore.js already is, so it drops into
-// application/SnapshotPlacementStoreRegistry.js with zero code change
+// application/snapshot/placement/SnapshotPlacementStoreRegistry.js with zero code change
 // anywhere else.
 //
 //   Snapshot bytes (a caller already has these — see "bytes are
@@ -50,7 +50,7 @@ const DEFAULT_MAX_RESPONSE_BYTES = 256 * 1024;
 //                      storage: 'ar' }
 //        │
 //        ▼
-//   application/SnapshotPlacementStoreRegistry.js   (0.8.18, unmodified —
+//   application/snapshot/placement/SnapshotPlacementStoreRegistry.js   (0.8.18, unmodified —
 //        registered exactly like content/IpfsContentStore.js already is,
 //        keyed by this class's own `storage` getter)
 //
@@ -84,7 +84,7 @@ const DEFAULT_MAX_RESPONSE_BYTES = 256 * 1024;
 // requires — `{ sign(material) -> Promise<{ id, transaction }> }` — and
 // arweave/ArweaveInjectedProviderSigner.js (0.9.121) is already a real,
 // concrete producer of exactly that shape. This file never imports
-// EITHER of them: not application/ArweavePublicationMaterialUploader.js
+// EITHER of them: not application/arweave/ArweavePublicationMaterialUploader.js
 // (see "no coupling to Signed Claim distribution," below, and tests/
 // SnapshotDistributionBoundary.test.js's own point 3, which now checks
 // this file too), and not arweave/ArweaveInjectedProviderSigner.js
@@ -95,7 +95,7 @@ const DEFAULT_MAX_RESPONSE_BYTES = 256 * 1024;
 // transaction, and never knows what an Arweave transaction's own JSON
 // shape actually looks like — it treats `signer.sign()`'s own
 // `transaction` field as completely opaque, POSTing it unread, the exact
-// restraint application/ArweavePublicationMaterialUploader.js's own
+// restraint application/arweave/ArweavePublicationMaterialUploader.js's own
 // header already states for the identical reason.
 //
 // NO CROSS-IMPORT OF THE WRITE-SIDE CEILING. This file enforces no size
@@ -106,7 +106,7 @@ const DEFAULT_MAX_RESPONSE_BYTES = 256 * 1024;
 // held one layer earlier. DEFAULT_MAX_RESPONSE_BYTES, above, only bounds
 // what this file will ever read back on the RETRIEVAL side — a value
 // chosen to match that exact ceiling, not imported from it, for the
-// identical reason application/ArweavePublicationMaterialUploader.js's
+// identical reason application/arweave/ArweavePublicationMaterialUploader.js's
 // own `responseContentLength`/`byteLength` helpers are byte-identical to,
 // yet never imported from, application/
 // ArweaveWorldEncounterMaterialResolver.js's own private helpers of the
@@ -118,7 +118,7 @@ const DEFAULT_MAX_RESPONSE_BYTES = 256 * 1024;
 // is a deliberate DEPARTURE from application/
 // ArweavePublicationMaterialUploader.js's own `upload()`, which resolves
 // to `null` for an ordinary gateway failure — that file serves a
-// caller (application/PublicationDistributionExecutor.js) whose own
+// caller (application/publication/distribution/PublicationDistributionExecutor.js) whose own
 // result vocabulary already has room for "material: null, distribution
 // continues anyway." content/ContentStore.js's own `put()` contract has
 // no such room; every other concrete store in this codebase throws
@@ -131,7 +131,7 @@ const DEFAULT_MAX_RESPONSE_BYTES = 256 * 1024;
 // `signer.sign()` rejecting (no wallet available, a locked keystore, an
 // operator declining to sign) is not "this store is unavailable," it is
 // "could not even attempt to place this" — the identical distinction
-// application/ArweavePublicationMaterialUploader.js's own header already
+// application/arweave/ArweavePublicationMaterialUploader.js's own header already
 // draws, held here for the write side of THIS file. A signer that
 // resolves but violates its own `{ id, transaction }` contract throws a
 // plain Error instead — a bug in how this store was wired, never a fact
@@ -169,7 +169,7 @@ const DEFAULT_MAX_RESPONSE_BYTES = 256 * 1024;
 // `Document`/`World`/`Publication`. `put(bytes)` takes exactly the bytes
 // a caller already has (a string, or anything `TextDecoder` can decode),
 // the identical restraint content/IpfsContentStore.js's own `put()`
-// already holds, and application/ArweavePublicationMaterialUploader.js's
+// already holds, and application/arweave/ArweavePublicationMaterialUploader.js's
 // own header holds one layer over for a claim's own serialized material.
 //
 // NO CACHING, NO RETRY, NO DEDUPLICATION, NO FALLBACK BETWEEN GATEWAYS.
@@ -186,7 +186,7 @@ const DEFAULT_MAX_RESPONSE_BYTES = 256 * 1024;
 // retry policy, snapshot lifecycle states, automatic Signed Claim
 // generation/distribution, any change to IPFS/local storage behavior,
 // UI, new verification/trust semantics, and any composition wiring this
-// store into application/CreateSnapshotPlacementOrchestratorUseCase.js's
+// store into application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js's
 // own `stores` list — that remains a caller's own, later decision,
 // exactly as passing a real content/IpfsContentStore.js in already is.
 export class ArweaveContentStore extends ContentStore {

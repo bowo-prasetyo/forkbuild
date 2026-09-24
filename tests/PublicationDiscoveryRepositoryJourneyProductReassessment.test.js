@@ -2,11 +2,11 @@ import { readFile, readdir } from 'node:fs/promises';
 
 import { Publication } from '../publisher/Publication.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { ForkFailureReason } from '../application/ForkFailureReason.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
-import { LoadFailureReason } from '../application/LoadFailureReason.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { ForkFailureReason } from '../application/document/ForkFailureReason.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
+import { LoadFailureReason } from '../application/document/LoadFailureReason.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -19,37 +19,37 @@ import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
 
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { SnapshotCandidateMaterializationOutcome } from '../application/SnapshotCandidateMaterializationOutcome.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
-import { describeSnapshotResolutionOutcomeLabel } from '../application/SnapshotOutcomeInspectionView.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { SnapshotCandidateMaterializationOutcome } from '../application/snapshot/materialization/SnapshotCandidateMaterializationOutcome.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
+import { describeSnapshotResolutionOutcomeLabel } from '../application/snapshot/SnapshotOutcomeInspectionView.js';
 
-import { describeWorldEncounterSelectionOutcome, WorldEncounterSelectionOutcomeStatus } from '../application/WorldEncounterSelectionOutcome.js';
+import { describeWorldEncounterSelectionOutcome, WorldEncounterSelectionOutcomeStatus } from '../application/worldEncounter/WorldEncounterSelectionOutcome.js';
 import {
     verifyWorldEncounterMaterial,
     WorldEncounterMaterialVerificationStatus,
     WorldEncounterMaterialVerifier
-} from '../application/WorldEncounterMaterialVerification.js';
-import { describePublicationMaterialProvenanceFromInspection, PublicationMaterialProvenanceOrigin } from '../application/PublicationMaterialProvenance.js';
+} from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { describePublicationMaterialProvenanceFromInspection, PublicationMaterialProvenanceOrigin } from '../application/publication/distribution/PublicationMaterialProvenance.js';
 
 import { PublicationCommentary } from '../core/PublicationCommentary.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { GetPublicationCommentariesUseCase } from '../application/GetPublicationCommentariesUseCase.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { GetPublicationCommentariesUseCase } from '../application/publication/commentary/GetPublicationCommentariesUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../core/PublicationDateAmbiguity.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
 import { describeObserverLocalPublicationEncounter } from '../core/ObserverLocalPublicationEncounter.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 
@@ -86,8 +86,8 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 // exercise on the seam those milestones did not individually cover: the
 // FULL chain, and the two structural facts that only become visible when
 // several stages run together — that the DISCOVER -> SELECT -> RESOLVE ->
-// VERIFY -> MATERIALIZE pipeline (application/DiscoverSnapshotCandidatesCommand.js
-// through application/MaterializeSnapshotFromSelectedCandidateUseCase.js,
+// VERIFY -> MATERIALIZE pipeline (application/snapshot/DiscoverSnapshotCandidatesCommand.js
+// through application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js,
 // 0.9.150-0.9.158) and the Repository catalog pipeline
 // (discovery/LocalDiscoveryProvider.js, discovery/
 // DecentralizedPublicationDiscoveryProvider.js, discovery/
@@ -176,7 +176,7 @@ function publishMinimalDocument(storage, title = 'Atlas', author = 'alice') {
 }
 
 // The exact real composition ui/components/PublicationCatalog.js itself
-// builds via application/CreateDiscoveryUseCase.js.
+// builds via application/discovery/CreateDiscoveryUseCase.js.
 function makeRepositoryDiscoveryProvider(storage, decentralizedDiscoveryProvider) {
     const localDiscoveryProvider = new LocalDiscoveryProvider(storage);
     return decentralizedDiscoveryProvider
@@ -247,7 +247,7 @@ async function main() {
         // it answers "which peer endpoints are worth attempting," never
         // "which Publications exist." A peer connection is a TRANSPORT a
         // Publication candidate may later travel over (see
-        // application/SnapshotMaterializationSourceKind.js's own PEER
+        // application/snapshot/materialization/SnapshotMaterializationSourceKind.js's own PEER
         // value) — never itself a Publication source.
         const peerDiscoverySource = await readSource('peer/PeerDiscoveryProvider.js');
         assert(!/Publication|contentHash|documentId/.test(peerDiscoverySource),
@@ -328,7 +328,7 @@ async function main() {
             'B2. Repository search returns both candidates as two distinct entries — never merged into one because of their shared contentHash/documentId/author/publishedAt.');
 
         // B3. resolveCandidate() (the SELECTED-candidate resolution
-        // seam, application/DecentralizedSnapshotResolver.js, 0.9.152)
+        // seam, application/snapshot/DecentralizedSnapshotResolver.js, 0.9.152)
         // resolves EXACTLY the candidate object handed to it, live, even
         // when a second candidate shares its contentHash — never
         // re-deriving or substituting from a discoveryTag search of its
@@ -389,7 +389,7 @@ async function main() {
             'C3. No matching source at all produces UNAVAILABLE with an empty candidate list — a stale selection, not an error and not a guess.');
 
         // C4. The OTHER kind of multiplicity this journey exposes —
-        // application/DecentralizedSnapshotResolver.js#resolve()'s own
+        // application/snapshot/DecentralizedSnapshotResolver.js#resolve()'s own
         // documented "deterministic first-match" rule for an AUTOMATIC
         // (not explicitly candidate-selected) resolution — is a
         // DIFFERENT, narrower, already-honestly-labeled mechanism: it is
@@ -407,7 +407,7 @@ async function main() {
             'C4. Automatic resolve() picks the first-discovered candidate deterministically — a documented, narrow exception to "never guess," used only when no explicit selection exists at all.');
         assert(autoResult.candidates.length === 2, 'C4b. Even so, the FULL candidate set (both matches) is still reported on the result — the deterministic pick is never hidden as though only one candidate ever existed.');
 
-        console.log('✓ Section C: World Encounter selection multiplicity (application/WorldEncounterSelectionOutcome.js) never silently ranks or defaults among genuinely ambiguous candidates — AMBIGUOUS always carries a null resolvedSelection and the full candidate list. The one place this codebase DOES pick automatically (DecentralizedSnapshotResolver#resolve()\'s own deterministic first-match, reserved for when no explicit selection exists) is a separate, narrower, already-documented mechanism that still reports its full candidate set rather than hiding the multiplicity.');
+        console.log('✓ Section C: World Encounter selection multiplicity (application/worldEncounter/WorldEncounterSelectionOutcome.js) never silently ranks or defaults among genuinely ambiguous candidates — AMBIGUOUS always carries a null resolvedSelection and the full candidate list. The one place this codebase DOES pick automatically (DecentralizedSnapshotResolver#resolve()\'s own deterministic first-match, reserved for when no explicit selection exists) is a separate, narrower, already-documented mechanism that still reports its full candidate set rather than hiding the multiplicity.');
     }
 
     // ===============================================================
@@ -493,7 +493,7 @@ async function main() {
         assert(decentralizedProvider.findById(retrievedButUnverifiedPub.id) === null,
             'D7b. An actively REJECTED verification is likewise never admitted.');
 
-        console.log('✓ Section D: the DISCOVER -> LOCATE -> RETRIEVE -> VERIFY pipeline (application/DecentralizedSnapshotResolver.js) is live-proven to keep four genuinely separate facts across all five real outcomes (NOT_DISCOVERED/STORE_UNAVAILABLE/CONTENT_UNAVAILABLE/CONTENT_HASH_MISMATCH/RESOLVED) — discovery never implies retrieval, and retrieval never implies verification. MATERIALIZE (application/MaterializeSnapshotFromSelectedCandidateUseCase.js) consumes the already-computed resolution and reports a non-RESOLVED outcome verbatim, never re-verifying. Repository ADMISSION is live-reconfirmed to gate strictly on VERIFIED, never on AVAILABLE/retrieved alone.');
+        console.log('✓ Section D: the DISCOVER -> LOCATE -> RETRIEVE -> VERIFY pipeline (application/snapshot/DecentralizedSnapshotResolver.js) is live-proven to keep four genuinely separate facts across all five real outcomes (NOT_DISCOVERED/STORE_UNAVAILABLE/CONTENT_UNAVAILABLE/CONTENT_HASH_MISMATCH/RESOLVED) — discovery never implies retrieval, and retrieval never implies verification. MATERIALIZE (application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js) consumes the already-computed resolution and reports a non-RESOLVED outcome verbatim, never re-verifying. Repository ADMISSION is live-reconfirmed to gate strictly on VERIFIED, never on AVAILABLE/retrieved alone.');
     }
 
     // ===============================================================
@@ -543,14 +543,14 @@ async function main() {
         // World Encounter's own identity-correspondence verification —
         // UNVERIFIABLE ("never checked") is never conflated with
         // REJECTED ("actively found not to correspond").
-        const { describeWorldEncounterMaterialVerificationStatusLabel } = await import('../application/WorldEncounterMaterialInspectionView.js');
+        const { describeWorldEncounterMaterialVerificationStatusLabel } = await import('../application/worldEncounter/WorldEncounterMaterialInspectionView.js');
         const unverifiableLabel = describeWorldEncounterMaterialVerificationStatusLabel(WorldEncounterMaterialVerificationStatus.UNVERIFIABLE);
         const rejectedLabel = describeWorldEncounterMaterialVerificationStatusLabel(WorldEncounterMaterialVerificationStatus.REJECTED);
         const verifiedLabel = describeWorldEncounterMaterialVerificationStatusLabel(WorldEncounterMaterialVerificationStatus.VERIFIED);
         assert(unverifiableLabel !== rejectedLabel && rejectedLabel !== verifiedLabel && unverifiableLabel !== verifiedLabel,
             'E5. "Never checked" (UNVERIFIABLE), "actively rejected" (REJECTED), and "confirmed" (VERIFIED) remain three distinct, already-shipped sentences at the World Encounter verification boundary too.');
 
-        console.log('✓ Section E: the brief\'s own four-way distinction (not discovered / cannot resolve / cannot verify / resolved-and-verified) is live-confirmed against the real, already-shipped presentation layer (application/SnapshotOutcomeInspectionView.js, application/WorldEncounterMaterialInspectionView.js) — four genuinely different sentences, none of them the bare machine word, none overclaiming beyond the one fact each actually represents.');
+        console.log('✓ Section E: the brief\'s own four-way distinction (not discovered / cannot resolve / cannot verify / resolved-and-verified) is live-confirmed against the real, already-shipped presentation layer (application/snapshot/SnapshotOutcomeInspectionView.js, application/worldEncounter/WorldEncounterMaterialInspectionView.js) — four genuinely different sentences, none of them the bare machine word, none overclaiming beyond the one fact each actually represents.');
     }
 
     // ===============================================================
@@ -774,8 +774,8 @@ async function main() {
             'J3. Every Repository search result carries the identical field set regardless of discovery substrate — no per-substrate field leaks through to the merged result.');
 
         // J4. Proof/anchoring is a genuinely separate, later substrate:
-        // application/PublicationAnchorDiscoveryCoordinator.js and
-        // application/BitcoinAnchorPublicationCoordinator.js exist as
+        // application/anchoring/PublicationAnchorDiscoveryCoordinator.js and
+        // application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js exist as
         // their own, entirely separate collaborators — never imported by
         // publisher/Publication.js (J1) or by either discovery provider
         // this section exercised.
@@ -869,7 +869,7 @@ async function main() {
         // P2's own continued discoverability.
         const contentStore = new LocalContentStore(storage);
         const publisher = new LocalPublisherProvider(storage, contentStore);
-        const { UnpublishDocumentUseCase } = await import('../application/UnpublishDocumentUseCase.js');
+        const { UnpublishDocumentUseCase } = await import('../application/publication/UnpublishDocumentUseCase.js');
         new UnpublishDocumentUseCase(publisher).execute(p1.id);
         const discoveryProvider = new LocalDiscoveryProvider(storage);
         assert(discoveryProvider.findById(p1.id) === null, 'L5. Unpublishing P1 removes exactly P1.');
@@ -978,7 +978,7 @@ async function main() {
         const correctHash = computeContentHash(bytes);
         const candidateAlpha = { contentHash: correctHash, locator: 'ar://flagship-alpha', storage: 'ar' };
         const candidateBeta = { contentHash: correctHash, locator: 'ar://flagship-beta', storage: 'ar' };
-        const { executeDiscoverSnapshotCandidatesCommand } = await import('../application/DiscoverSnapshotCandidatesCommand.js');
+        const { executeDiscoverSnapshotCandidatesCommand } = await import('../application/snapshot/DiscoverSnapshotCandidatesCommand.js');
         const discoveredCandidates = await executeDiscoverSnapshotCandidatesCommand({
             discoveryTag: 'flagship-tag',
             discoveryQueryService: { search: async () => [candidateAlpha, candidateBeta] }
@@ -1037,7 +1037,7 @@ async function main() {
         // (same contentHash is possible; here genuinely identical
         // content), P2 != P1. Confirm NO step above would have silently
         // resolved to P2 instead.
-        const { PublishDocumentUseCase: PublishAgain } = await import('../application/PublishDocumentUseCase.js');
+        const { PublishDocumentUseCase: PublishAgain } = await import('../application/publication/PublishDocumentUseCase.js');
         const contentStore = new LocalContentStore(storage);
         const publisher = new LocalPublisherProvider(storage, contentStore);
         const publishAgainUseCase = new PublishAgain(publisher, null, null, null);

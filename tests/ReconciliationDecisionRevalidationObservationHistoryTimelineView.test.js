@@ -4,7 +4,7 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimeline
 } from '../application/claimSnapshotReconciliation/revalidationObservation/HistoryTimelineView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.165 — Revalidation Observation History Timeline Projection.
 //

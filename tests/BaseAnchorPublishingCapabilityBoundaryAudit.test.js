@@ -165,7 +165,7 @@ async function run() {
     {
         assert(!(await sourceExists('anchoring/AnchorPublisher.js')), n('B1. no anchoring/AnchorPublisher.js base class exists — unlike anchoring/ProofVerifier.js, this interface is purely structural/duck-typed'));
 
-        const registrySrc = await source('application/ExternalAnchorPublisherRegistry.js');
+        const registrySrc = await source('application/anchoring/ExternalAnchorPublisherRegistry.js');
         assert(/typeof publisher\.anchorType !== 'string'/.test(registrySrc), n('B2. the registry\'s own register() checks only a string anchorType getter'));
         assert(/typeof publisher\.publish !== 'function'/.test(registrySrc), n('B3. and only a publish() method — never an instanceof check against any base class'));
 
@@ -186,13 +186,13 @@ async function run() {
     // zero code change needed anywhere for a 'base' key.
     // ===============================================================
     {
-        const registrySrc = codeOnly(await source('application/ExternalAnchorPublisherRegistry.js'));
+        const registrySrc = codeOnly(await source('application/anchoring/ExternalAnchorPublisherRegistry.js'));
         assert(!/'bitcoin'|'arweave'|'base'/.test(registrySrc), n('C1. ExternalAnchorPublisherRegistry.js names no fixed anchorType anywhere in code — it is generic by construction, not merely by accident'));
 
-        const orchestratorSrc = codeOnly(await source('application/CreateExternalPublicationAnchorUseCase.js'));
+        const orchestratorSrc = codeOnly(await source('application/anchoring/CreateExternalPublicationAnchorUseCase.js'));
         assert(!/'bitcoin'|'arweave'|'base'/.test(orchestratorSrc), n('C2. CreateExternalPublicationAnchorUseCase.js names no fixed anchorType either'));
 
-        const coordinatorSrc = codeOnly(await source('application/PublicationAnchorCreationCoordinator.js'));
+        const coordinatorSrc = codeOnly(await source('application/anchoring/PublicationAnchorCreationCoordinator.js'));
         assert(!/'bitcoin'|'arweave'|'base'/.test(coordinatorSrc), n('C3. PublicationAnchorCreationCoordinator.js names no fixed anchorType — availableAnchorTypes() is a bare pass-through to the registry\'s own keys'));
 
         const viewSrc = codeOnly((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n'));
@@ -247,7 +247,7 @@ async function run() {
         // E6: the plan itself requires a prior, real, RPC-backed account
         // observation — there is no shortcut that skips straight from
         // "wallet connected" to "plan ready."
-        const observationSrc = await source('application/BaseAccountObservation.js');
+        const observationSrc = await source('application/anchoring/base/BaseAccountObservation.js');
         assert(/state === BaseNetworkObservationState\.OBSERVED/.test(observationSrc) && /nativeBalanceWei/.test(observationSrc), n('E6. a usable (OBSERVED) account fact requires network, chainId, AND a real RPC-read native balance — never derived from an address alone'));
 
         console.log('✓ Section E: neither of Base\'s two existing signing classes accepts anything resembling Arweave\'s signer.sign(material) or Bitcoin\'s broadcaster.broadcast(hex) shape. Both require an already-constructed, RPC-priced, (optionally) already-reviewed plan as a precondition, by explicit, tested design — not an oversight this audit could route around.');
@@ -288,7 +288,7 @@ async function run() {
     // vocabulary already covers every Base failure shape.
     // ===============================================================
     {
-        const outcomeSrc = await source('application/ExternalAnchorCreationOutcome.js');
+        const outcomeSrc = await source('application/anchoring/ExternalAnchorCreationOutcome.js');
         assert(/CREATED:\s*'created'/.test(outcomeSrc) && /PUBLISH_REJECTED/.test(outcomeSrc) && /PUBLISH_UNAVAILABLE/.test(outcomeSrc), n('G1. exactly three outcomes exist at the orchestration layer — no per-chain outcome of any kind'));
 
         // G2-G5: every real Base failure mode already has an honest home
@@ -298,7 +298,7 @@ async function run() {
         // uses for Bitcoin/Arweave.
         const rpcSrc = await source('base/BaseJsonRpcClient.js');
         assert(/rpcError\s*\?\s*\{\s*broadcasted:\s*false,\s*reason:\s*result\.reason\s*\}\s*:\s*\{\s*broadcasted:\s*false,\s*unavailable:\s*true/.test(rpcSrc), n('G2. broadcastRawTransaction() already distinguishes a definite RPC rejection from mere unavailability — this maps directly onto publish()\'s own {reason} vs {unavailable:true,reason}, no new vocabulary needed'));
-        const observationStateSrc = await source('application/BaseNetworkObservationState.js');
+        const observationStateSrc = await source('application/anchoring/base/BaseNetworkObservationState.js');
         assert(/CHAIN_MISMATCH/.test(observationStateSrc) && /UNAVAILABLE/.test(observationStateSrc), n('G3. a wrong-network wallet (CHAIN_MISMATCH) or an unreachable RPC (UNAVAILABLE) are both already-named, already-distinguished states — both map onto the unavailable/definite split cleanly (a wrong network is a definite refusal to proceed; an unreachable RPC is cannot-presently-tell)'));
         const walletSignerSrc = await source('base/BaseTransactionSigner.js');
         assert(/a DEFINITE no: the user declined, or the wallet refused/.test(walletSignerSrc) && /cannot presently obtain a signature; retrying later may/.test(walletSignerSrc), n('G4. a wallet\'s definite decline and its cannot-presently-sign outcome are already the identical two-bucket split'));

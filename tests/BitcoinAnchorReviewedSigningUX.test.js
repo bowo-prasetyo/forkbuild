@@ -4,13 +4,13 @@ import { BitcoinAnchorPsbtBuilder } from '../anchoring/BitcoinAnchorPsbtBuilder.
 import { BitcoinAnchorSignedPsbtFinalizer } from '../anchoring/BitcoinAnchorSignedPsbtFinalizer.js';
 import { BitcoinWalletConnection } from '../anchoring/BitcoinWalletConnection.js';
 import { BitcoinInjectedProviderWalletAdapter } from '../anchoring/BitcoinInjectedProviderWalletAdapter.js';
-import { BitcoinAnchorFundingObservationState } from '../application/BitcoinAnchorFundingObservationState.js';
-import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/BitcoinAnchorTransactionConstructionCoordinator.js';
-import { BitcoinAnchorTransactionConstructionState } from '../application/BitcoinAnchorTransactionConstructionState.js';
-import { BitcoinAnchorTransactionReviewCoordinator } from '../application/BitcoinAnchorTransactionReviewCoordinator.js';
-import { BitcoinAnchorReviewedSigningCoordinator } from '../application/BitcoinAnchorReviewedSigningCoordinator.js';
-import { BitcoinAnchorReviewedSigningState, isValidBitcoinAnchorReviewedSigningState } from '../application/BitcoinAnchorReviewedSigningState.js';
-import { describeBitcoinAnchorReviewedSigning } from '../application/BitcoinAnchorReviewedSigningView.js';
+import { BitcoinAnchorFundingObservationState } from '../application/anchoring/bitcoin/BitcoinAnchorFundingObservationState.js';
+import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionCoordinator.js';
+import { BitcoinAnchorTransactionConstructionState } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js';
+import { BitcoinAnchorTransactionReviewCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionReviewCoordinator.js';
+import { BitcoinAnchorReviewedSigningCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningCoordinator.js';
+import { BitcoinAnchorReviewedSigningState, isValidBitcoinAnchorReviewedSigningState } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningState.js';
+import { describeBitcoinAnchorReviewedSigning } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningView.js';
 
 // 0.8.62 — Explicit Reviewed Bitcoin Anchor Signing UI.
 //

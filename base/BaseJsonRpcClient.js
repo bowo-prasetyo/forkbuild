@@ -123,7 +123,7 @@ const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 // rejection.
 //
 // EVERY WEI-DENOMINATED QUANTITY IS ALWAYS A DECIMAL-DIGIT STRING, NEVER
-// A NUMBER. See application/BaseAccountObservation.js's own header, "WHY
+// A NUMBER. See application/anchoring/base/BaseAccountObservation.js's own header, "WHY
 // A STRING, NEVER A NUMBER" — `balanceWei`, `gasPriceWei`, and
 // `maxPriorityFeePerGasWei` are each decoded from the RPC's own `0x...`
 // hex quantity through `BigInt`, then rendered back out as base-10

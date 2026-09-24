@@ -2,9 +2,9 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { PeerReconnectionUseCase } from '../application/peer/PeerReconnectionUseCase.js';
 
 // 0.2.62 — Peer Connection Resilience & Reconnection.
 //
@@ -13,14 +13,14 @@ import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.
 // proves the two new pieces that make that true without ever weakening
 // 0.2.49's own authentication guarantee:
 //
-//   application/ConnectToPeerUseCase.js — an optional `expectedIdentityId`
+//   application/peer/ConnectToPeerUseCase.js — an optional `expectedIdentityId`
 //   on connect()/attach(), checked ONLY after a connection genuinely
 //   reaches AUTHENTICATED, that closes and reports (never silently
 //   accepts) a connection that proves the wrong identity.
 //
-//   application/PeerReconnectionUseCase.js — the UI-facing "Reconnect"
+//   application/peer/PeerReconnectionUseCase.js — the UI-facing "Reconnect"
 //   gesture on a Known Peer: a fresh invitation, a fresh WebRTC
-//   connection, a fresh handshake — application/PeerSessionManager.js
+//   connection, a fresh handshake — application/peer/PeerSessionManager.js
 //   unmodified — tagged with the remembered identity this attempt
 //   expects, and finally wiring 0.2.56's own long-dormant
 //   noteAuthenticated() to the moment it was actually built for.
@@ -28,13 +28,13 @@ import { PeerReconnectionUseCase } from '../application/PeerReconnectionUseCase.
 // Built over peer/LocalPeerConnectionProvider.js, the same real,
 // in-process, bidirectional transport tests/PeerChat.test.js and
 // tests/FriendshipRevocationAndBlocking.test.js already trust for this
-// purpose; application/PeerSessionManager.js's own real-WebRTC
+// purpose; application/peer/PeerSessionManager.js's own real-WebRTC
 // createInvitation()/acceptInvitation() plumbing is already proven end
 // to end by tests/PeerConnectionsUI.test.js and is untouched here beyond
 // threading `expectedIdentityId` straight through — this file instead
 // stands in a minimal, honestly-labeled fake PeerSessionManager over the
 // SAME real ConnectToPeerUseCase/LocalPeerConnectionProvider pair, so
-// application/PeerReconnectionUseCase.js's own real logic runs against
+// application/peer/PeerReconnectionUseCase.js's own real logic runs against
 // real authentication, not a mock pretending to authenticate.
 
 class InMemoryStorageProvider extends StorageProvider {
@@ -87,7 +87,7 @@ async function authenticate(a, b, options = {}) {
 // A minimal, honestly-labeled stand-in for application/
 // PeerSessionManager.js's own createInvitation()/acceptInvitation()
 // surface — the only two methods (plus onIdentityMismatch)
-// application/PeerReconnectionUseCase.js ever calls on it. Unlike real
+// application/peer/PeerReconnectionUseCase.js ever calls on it. Unlike real
 // WebRTC's asymmetric offer/answer handoff, peer/
 // LocalPeerConnectionProvider.js's connect() is a single, synchronous,
 // symmetric dial — so both fake methods below just dial the SAME
@@ -217,7 +217,7 @@ async function runTests() {
     reconnection.dispose();
     const { connectedPeer: secondAttempt } = await reconnection.reconnectAsInviter(Bob.id);
     await wait(30);
-    assert(secondAttempt.getLifecycleState() === PeerLifecycleState.CLOSED, 'the underlying application/ConnectToPeerUseCase.js gate keeps working even after PeerReconnectionUseCase.dispose()');
+    assert(secondAttempt.getLifecycleState() === PeerLifecycleState.CLOSED, 'the underlying application/peer/ConnectToPeerUseCase.js gate keeps working even after PeerReconnectionUseCase.dispose()');
     assert(rejected.length === 1, 'dispose() stops this PeerReconnectionUseCase from forwarding any further mismatch as its own onReconnectRejected event');
     console.log('✓ dispose() unsubscribes cleanly — no further onReconnectRejected after disposal');
 

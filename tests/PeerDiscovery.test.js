@@ -8,9 +8,9 @@ import { LocalPeerDiscoveryProvider } from '../peer/LocalPeerDiscoveryProvider.j
 import { PeerLifecycleState, derivePeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerConnectionState } from '../peer/PeerConnectionState.js';
 import { PeerAuthenticationState } from '../peer/PeerAuthenticationState.js';
-import { DiscoverPeersUseCase } from '../application/DiscoverPeersUseCase.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
+import { DiscoverPeersUseCase } from '../application/peer/DiscoverPeersUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
 
 // 0.2.50 — Peer Discovery & Rendezvous.
 //

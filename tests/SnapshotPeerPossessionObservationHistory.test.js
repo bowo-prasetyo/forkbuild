@@ -1,32 +1,32 @@
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { derivePublicationSnapshotPlacementConvergence } from '../application/PublicationSnapshotPlacementConvergence.js';
-import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/CheckLocalSnapshotContentAvailabilityUseCase.js';
-import { LocalSnapshotContentAvailabilityOutcome } from '../application/LocalSnapshotContentAvailabilityOutcome.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { derivePublicationSnapshotPlacementConvergence } from '../application/snapshot/placement/PublicationSnapshotPlacementConvergence.js';
+import { CheckLocalSnapshotContentAvailabilityUseCase } from '../application/snapshot/materialization/CheckLocalSnapshotContentAvailabilityUseCase.js';
+import { LocalSnapshotContentAvailabilityOutcome } from '../application/snapshot/materialization/LocalSnapshotContentAvailabilityOutcome.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
-import { SnapshotPeerPossessionState } from '../application/SnapshotPeerPossessionState.js';
-import { toSnapshotPeerPossessionObservation } from '../application/SnapshotPeerPossessionObservation.js';
-import { PublicationSnapshotPossessionPeerExchange } from '../application/PublicationSnapshotPossessionPeerExchange.js';
-import { ObservePeerSnapshotPossessionUseCase } from '../application/ObservePeerSnapshotPossessionUseCase.js';
-import { SnapshotPeerPossessionCoordinator } from '../application/SnapshotPeerPossessionCoordinator.js';
+import { SnapshotPeerPossessionState } from '../application/snapshot/possession/SnapshotPeerPossessionState.js';
+import { toSnapshotPeerPossessionObservation } from '../application/snapshot/possession/SnapshotPeerPossessionObservation.js';
+import { PublicationSnapshotPossessionPeerExchange } from '../application/snapshot/possession/PublicationSnapshotPossessionPeerExchange.js';
+import { ObservePeerSnapshotPossessionUseCase } from '../application/snapshot/possession/ObservePeerSnapshotPossessionUseCase.js';
+import { SnapshotPeerPossessionCoordinator } from '../application/snapshot/possession/SnapshotPeerPossessionCoordinator.js';
 import {
     appendSnapshotPeerPossessionObservationHistoryEntry,
     latestSnapshotPeerPossessionObservationsByPeer
-} from '../application/SnapshotPeerPossessionObservationHistory.js';
+} from '../application/snapshot/possession/SnapshotPeerPossessionObservationHistory.js';
 import {
     describeSnapshotPeerPossessionComparison,
     describeSnapshotPeerPossessionStateLabel,
     describeSnapshotPeerPossessionObservationHistory
-} from '../application/SnapshotPeerPossessionComparisonView.js';
+} from '../application/snapshot/possession/SnapshotPeerPossessionComparisonView.js';
 
 // 0.8.41 — Peer Snapshot Possession Comparison & Observation History.
 //
@@ -108,7 +108,7 @@ function observationAt(peerId, state, isoTime) {
     });
 }
 
-// A minimal fake application/PublicationSnapshotPossessionPeerExchange.js,
+// A minimal fake application/snapshot/possession/PublicationSnapshotPossessionPeerExchange.js,
 // mirroring tests/PublicationSnapshotPossessionExchange.test.js's own
 // FakeExchange exactly.
 class FakeExchange {

@@ -4,15 +4,15 @@ import {
     toAvatarInventoryTransferAcceptMessage,
     toAvatarInventoryTransferDeclineMessage,
     isValidAvatarInventoryTransferPeerMessage
-} from '../application/AvatarInventoryTransferPeerProtocol.js';
-import { AvatarInventoryTransferPeerExchange } from '../application/AvatarInventoryTransferPeerExchange.js';
-import { AvatarInventoryStore } from '../application/AvatarInventoryStore.js';
+} from '../application/avatar/AvatarInventoryTransferPeerProtocol.js';
+import { AvatarInventoryTransferPeerExchange } from '../application/avatar/AvatarInventoryTransferPeerExchange.js';
+import { AvatarInventoryStore } from '../application/avatar/AvatarInventoryStore.js';
 import { createAvatarInventoryEntry, InventoryEntryKind, withEntryAdded } from '../core/AvatarInventory.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { ANIMAL_SPECIES } from '../core/WildlifeField.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -36,7 +36,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //              silently.
 //   Section C: FLAGSHIP — Alice and Bob over real, live, authenticated
 //              connections (peer/LocalPeerConnectionProvider.js +
-//              application/ConnectToPeerUseCase.js, unmodified). Alice
+//              application/peer/ConnectToPeerUseCase.js, unmodified). Alice
 //              sends a carried vehicle to Bob and Bob accepts it — the
 //              entry actually moves, once, between two independent
 //              AvatarInventoryStore instances. A second entry is

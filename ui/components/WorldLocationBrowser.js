@@ -6,14 +6,14 @@ import { TrustStatus } from '../../core/TrustObservation.js';
 // status" row rendered `inspected.trust.status` — a raw
 // `core/TrustObservation.js` `TrustStatus` constant — straight to a
 // Wanderer, unhumanized. `TrustStatus.VALID` is literally the bare word
-// "VALID," and `inspectDocument()` (application/WorldNavigationSession.js)
+// "VALID," and `inspectDocument()` (application/world/WorldNavigationSession.js)
 // populates `trust` from exactly that enum (see this file's own `inspected`
 // prop comment, above/below: "the specific TrustObservation... recorded for
 // this document's placement").
 //
 // 0.9.520's own recommended follow-up assumed the fix was to route this
 // call site through `describeTrustStatus`
-// (application/AvatarPresenceLabels.js), an already-existing humanizer for
+// (application/avatar/AvatarPresenceLabels.js), an already-existing humanizer for
 // the identical `TrustStatus` enum. Investigating that assumption is this
 // milestone's own job before writing a label (per its own requesting
 // brief) — and it does NOT hold: `describeTrustStatus` maps
@@ -36,7 +36,7 @@ import { TrustStatus } from '../../core/TrustObservation.js';
 // whether that placement record's integrity/signature/authorization
 // checked out, is stale, conflicts with another observation, etc. The
 // labels below describe THAT — the same narrower, WHAT-WAS-CHECKED framing
-// `application/WorldEncounterMaterialInspectionView.js` (0.9.519) already
+// `application/worldEncounter/WorldEncounterMaterialInspectionView.js` (0.9.519) already
 // established for a different enum, continued here rather than reinvented.
 //
 // A LOCAL, NARROW FUNCTION — DELIBERATELY NOT A NEW SHARED "TrustView."

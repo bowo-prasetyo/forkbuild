@@ -4,10 +4,10 @@ import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
 import {
     buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope
 } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION } from '../application/PlaceNamingClaimPublication.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION } from '../application/placeNaming/PlaceNamingClaimPublication.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -175,9 +175,9 @@ async function runTests() {
         // later milestone, exactly as 0.9.261's own "what this milestone
         // deliberately excludes" asked. Section E below performs the
         // equivalent check for adoption's own storage layer.
-        const directory = codeOnlyLines(await rawSource('application/WorldLocationDirectory.js'));
+        const directory = codeOnlyLines(await rawSource('application/world/WorldLocationDirectory.js'));
         assert(/find\(locationId\)\s*\{/.test(directory) && !/find\(locationId,\s*worldId\)/.test(directory),
-            'A5. application/WorldLocationDirectory.js#find() still takes only locationId, no worldId parameter — the D2 boundary 0.9.261 recorded (never fixed, by its own explicit choice) remains exactly as documented, not silently patched since.');
+            'A5. application/world/WorldLocationDirectory.js#find() still takes only locationId, no worldId parameter — the D2 boundary 0.9.261 recorded (never fixed, by its own explicit choice) remains exactly as documented, not silently patched since.');
 
         console.log('✓ A: Navigation (0.9.260) and its lifecycle audit (0.9.261) remain in place, unchanged one milestone later — the worldId cross-check is still verbatim in place, "Navigation Is Not Adoption" still stands in docs/Principles.md, and the one narrow boundary 0.9.261 chose to record rather than fix (WorldLocationDirectory#find()\'s own plain-id lookup) is still honestly unpatched.');
     }
@@ -220,13 +220,13 @@ async function runTests() {
     // ---------------------------------------------------------------
     {
         // C1. The three-step discipline, in order, from real source.
-        const exchangeSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimExchange.js'));
+        const exchangeSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js'));
         const validateIdx = exchangeSource.indexOf('validatePlaceNamingClaimPublication(pkg)');
         const constructIdx = exchangeSource.indexOf('PlaceNamingClaim.fromJSON(pkg.claim)');
         const verifyIdx = exchangeSource.indexOf('this._verifier.verifyPlaceNamingClaim(');
         const saveIdx = exchangeSource.indexOf('this._store.save(claim)');
         assert(validateIdx > -1 && constructIdx > validateIdx && verifyIdx > constructIdx && saveIdx > verifyIdx,
-            'C1. application/PlaceNamingClaimExchange.js#importClaim() runs validate, THEN construct, THEN verify, THEN (only then) persist, in that exact order — real source, not header prose.');
+            'C1. application/placeNaming/PlaceNamingClaimExchange.js#importClaim() runs validate, THEN construct, THEN verify, THEN (only then) persist, in that exact order — real source, not header prose.');
 
         // C2. No "official"/"trusted"/"authoritative" vocabulary exists
         // anywhere in the claim's own shape or the exchange's own return
@@ -235,7 +235,7 @@ async function runTests() {
         // one.
         const claimSource = codeOnlyLines(await rawSource('core/PlaceNamingClaim.js'));
         assert(!/\bofficial\b|\bauthoritative\b|\btrusted\b/i.test(claimSource) && !/\bofficial\b|\bauthoritative\b|\btrusted\b/i.test(exchangeSource),
-            'C2. Neither core/PlaceNamingClaim.js nor application/PlaceNamingClaimExchange.js carries "official"/"authoritative"/"trusted" vocabulary anywhere — importClaim() has no field into which a stronger meaning than "verified and stored" could even be written.');
+            'C2. Neither core/PlaceNamingClaim.js nor application/placeNaming/PlaceNamingClaimExchange.js carries "official"/"authoritative"/"trusted" vocabulary anywhere — importClaim() has no field into which a stronger meaning than "verified and stored" could even be written.');
 
         // C3. LIVE PROOF: importing a claim (a) makes it appear in this
         // replica's own namingView() ranking for its region, (b) never
@@ -296,7 +296,7 @@ async function runTests() {
         assert(rowMapping.includes('claimId:') && rowMapping.includes('authorDisplayName:') && rowMapping.includes('regionId:') && rowMapping.includes('worldId:'),
             'D4a. sanity: nearbyPlaceNamingClaimRows still carries claimId/authorDisplayName/regionId/worldId, matching prior (0.9.260) source.');
         assert(rowMapping.includes('signature:') && rowMapping.includes('authorIdentityId:') && rowMapping.includes('createdAt:'),
-            'D4b. UPDATED BY 0.9.263 — nearbyPlaceNamingClaimRows now ALSO carries claim.signature, raw claim.authorIdentityId, and claim.createdAt — a publication package built from a row alone now satisfies application/PlaceNamingClaimPublicationValidator.js\'s own required-field check. The row, not a second underlying-entries lookup, is what Adopt actually reads from.');
+            'D4b. UPDATED BY 0.9.263 — nearbyPlaceNamingClaimRows now ALSO carries claim.signature, raw claim.authorIdentityId, and claim.createdAt — a publication package built from a row alone now satisfies application/placeNaming/PlaceNamingClaimPublicationValidator.js\'s own required-field check. The row, not a second underlying-entries lookup, is what Adopt actually reads from.');
 
         // D5. The full claim DOES already exist one level up, in
         // nearbyPlaceNamingClaims.value (the monitor's own lastResult,
@@ -347,9 +347,9 @@ async function runTests() {
         // every single method — never inferred from "whichever World is
         // currently loaded," unlike WorldLocationDirectory#find()'s own
         // plain-id lookup (Section A5).
-        const storeSource = codeOnlyLines(await rawSource('application/LocalPlaceNamingClaimStore.js'));
+        const storeSource = codeOnlyLines(await rawSource('application/placeNaming/LocalPlaceNamingClaimStore.js'));
         for (const method of ['save(claim)', 'list(worldId)', 'listForRegion(worldId, regionId)', 'has(worldId, claimId)', 'retract(worldId, claimId)']) {
-            assert(storeSource.includes(method), `E2. application/LocalPlaceNamingClaimStore.js#${method} still takes an explicit worldId (or derives its storage key from claim.worldId for save()) — never an ambient "current World."`);
+            assert(storeSource.includes(method), `E2. application/placeNaming/LocalPlaceNamingClaimStore.js#${method} still takes an explicit worldId (or derives its storage key from claim.worldId for save()) — never an ambient "current World."`);
         }
 
         // E3. importPlaceNamingClaim() at the session boundary is
@@ -409,7 +409,7 @@ async function runTests() {
         // two independent, single-direction operations on two different
         // replicas' own claims (export: a claim I already have; import: a
         // claim I don't yet have), not a required pair.
-        const exchangeSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimExchange.js'));
+        const exchangeSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js'));
         const importClaimBody = exchangeSource.slice(exchangeSource.indexOf('importClaim(pkg)'), exchangeSource.indexOf('importClaim(pkg)') + 700);
         assert(!importClaimBody.includes('exportClaim('), 'F1. importClaim()\'s own body never calls exportClaim() — adopting a discovered claim has no dependency on ever exporting it.');
 

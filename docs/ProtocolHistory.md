@@ -1532,7 +1532,7 @@ payload, exactly like a `SpatialIndexRoot` (0.2.19).
 is tolerated at all (`.permissive()`, the default — identical to
 0.2.37's own behavior) or rejected outright (`.hardened()`). This is
 the ONE genuine policy axis; every other rejection
-`application/PresenceTrustBoundary.js` can produce — wrong authority,
+`application/presence/PresenceTrustBoundary.js` can produce — wrong authority,
 replay, conflicting content — applies unconditionally, regardless of
 policy.
 
@@ -1576,7 +1576,7 @@ Adds NOTHING to the wire. Avatar targeting, inspection, and
 following are entirely local World View/session state
 (`application/spatial-state/AvatarInteractionState.js`) — no new
 message, no new field on `AvatarPresenceAdvertisement`, no change to
-`core/PresenceIngestion.js`/`application/PresenceTrustBoundary.js`.
+`core/PresenceIngestion.js`/`application/presence/PresenceTrustBoundary.js`.
 This milestone is worth a protocol note anyway, for what it makes
 newly VISIBLE rather than what it transmits:
 
@@ -1694,7 +1694,7 @@ mid-session, or missed the one edit, eventually catches up on a
 transport with no request/response "send me your current state"
 primitive.
 
-**Trust**: `application/AvatarProfileTrustBoundary.js` mirrors
+**Trust**: `application/avatar/AvatarProfileTrustBoundary.js` mirrors
 0.2.38's six-question structure exactly (structural validity →
 signature → authority → replay → equivocation → freshness), with
 identity binding again trust-on-first-use
@@ -1715,7 +1715,7 @@ instead of a `sequence`.
 non-empty string — an advertisement naming a template this replica's
 own registry has never heard of is still a perfectly valid, acceptable
 claim. What happens to an unrecognized `templateId` is entirely a
-render-time decision (`application/RemoteAvatarAppearanceRegistry.js`
+render-time decision (`application/avatar/RemoteAvatarAppearanceRegistry.js`
 degrades to a fixed placeholder) — see docs/Principles.md, "Validate
 Strictly On Write; Degrade Gracefully On Read." This protocol
 deliberately does not require, or even define, a mechanism for
@@ -1795,7 +1795,7 @@ Adds NOTHING to the wire. There is no "I am near you" message, no new
 field on `AvatarPresenceAdvertisement`, no new envelope type, and no
 protocol version bump. `core/AvatarProximity.js#computeNearbyAvatars()`
 is a pure, purely LOCAL computation over data already sitting in
-`application/LocalPresenceStore.js` — see docs/Principles.md,
+`application/presence/LocalPresenceStore.js` — see docs/Principles.md,
 "Proximity Is Derived, Never Announced." Two replicas independently
 computing "who is near me" are never required, and never expected, to
 agree: Alice's own notion of who is nearby is entirely a function of
@@ -1955,7 +1955,7 @@ something a later-joining replica should ever see arrive retroactively
 (see docs/Principles.md, same section as above — "you want her latest
 profile and presence, not ten minutes of old waves").
 
-**Trust**: `application/AvatarInteractionTrustBoundary.js` mirrors
+**Trust**: `application/avatar/AvatarInteractionTrustBoundary.js` mirrors
 0.2.38/0.2.41's structure — structural validity → signature/policy →
 authority → replay/staleness — but is deliberately SHORTER than either:
 no equivocation check exists (see docs/Principles.md, "An Event Stream
@@ -1990,7 +1990,7 @@ presentation decision this protocol says nothing about.
 
 **Explicitly not part of this protocol**: persistence of any kind — an
 accepted interaction event is rendered once and discarded;
-`application/AvatarInteractionSyncService.js` retains no per-avatarId
+`application/avatar/AvatarInteractionSyncService.js` retains no per-avatarId
 "current interaction," unlike `LocalPresenceStore`/
 `LocalAvatarProfileStore`, both of which do; per-recipient routing,
 encryption, or delivery guarantees (fire-and-forget, exactly like

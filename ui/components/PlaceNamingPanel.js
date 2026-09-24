@@ -51,7 +51,7 @@ export default {
             default: () => []
         },
         // This viewer's own local override, or null — see
-        // application/LocalNamePreferenceStore.js's own header.
+        // application/identity/LocalNamePreferenceStore.js's own header.
         preferredName: {
             type: String,
             default: null
@@ -122,7 +122,7 @@ export default {
         // NostrPlaceNamingDiscoveryPublisher#publish()'s own shape —
         // { published: true, relayUrl, id, discoveryTag } — rendered
         // verbatim, never reinterpreted by this component. See
-        // application/NostrPlaceNamingDiscoveryPublisher.js's own header,
+        // application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js's own header,
         // "a simple publication result, never trust, verification, or
         // delivery semantics."
         publishToNostrResult: {
@@ -166,7 +166,7 @@ export default {
             // claim list, import/export) behind one "More" disclosure.
             // Both default closed and are local, component-only UI
             // state — deliberately NOT threaded through
-            // application/WorldViewNavigationState.js's per-region
+            // application/world/WorldViewNavigationState.js's per-region
             // naming-disclosure tracking, since this panel is
             // recreated fresh (v-if) every time it opens; a future
             // milestone could wire that tracking through if

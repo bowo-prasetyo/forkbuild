@@ -8,8 +8,8 @@ import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { SnapshotPlacementStoreRegistry } from '../application/SnapshotPlacementStoreRegistry.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 
@@ -414,7 +414,7 @@ async function run() {
     // selection parameter, no IpfsContentStore import.
     // ===============================================================
     {
-        const compositionSource = await codeOnlySource('application/SnapshotDistributionRuntimeComposition.js');
+        const compositionSource = await codeOnlySource('application/snapshot/SnapshotDistributionRuntimeComposition.js');
 
         check(compositionSource.includes("new ArweaveContentStore(arweaveContentStoreOptions)"), 'G. SnapshotDistributionRuntimeComposition.js constructs a real ArweaveContentStore, unconditionally');
         check(!compositionSource.includes('IpfsContentStore'), 'G. SnapshotDistributionRuntimeComposition.js never imports or references content/IpfsContentStore.js at all');
@@ -427,7 +427,7 @@ async function run() {
         // Announcement/Discovery role (0.9.428) — proving this codebase
         // already knows how to build exactly this kind of seam, one role
         // over, and simply has not yet built it for Snapshot Content.
-        const publicationCompositionSource = await codeOnlySource('application/PublicationDistributionRuntimeComposition.js');
+        const publicationCompositionSource = await codeOnlySource('application/publication/distribution/PublicationDistributionRuntimeComposition.js');
         check(publicationCompositionSource.includes('discoveryProvider'), 'G. by contrast, PublicationDistributionRuntimeComposition.js already exposes a real discoveryProvider selection parameter for its own ANNOUNCEMENT_AND_DISCOVERY construction site');
 
         console.log('✓ G. the Distribution composition root hardcodes exactly one ContentStore (Arweave), with no selection parameter and no reference to IPFS/Local at all — a structurally narrow, single-call-site gap, not a redesign');
@@ -464,7 +464,7 @@ async function run() {
         check(ipfsPublisher.calls[0].contentHash === ipfsResult.contentReference.hash, 'H. the discovery publisher was handed the REAL contentHash the IPFS store itself computed, exactly as the Arweave path already does');
         check(ipfsPublisher.calls[0].locator === ipfsResult.contentReference.uri, 'H. ...and the REAL ipfs:// locator, never a placeholder');
 
-        console.log('✓ H. application/SnapshotDistributionCommand.js already sequences ANY ContentStore correctly, IPFS included, with zero code change — exactly what that file\'s own header already claims ("content/IpfsContentStore.js included"); the entire gap lives in Section G\'s one hardcoded construction call, never in this command');
+        console.log('✓ H. application/snapshot/SnapshotDistributionCommand.js already sequences ANY ContentStore correctly, IPFS included, with zero code change — exactly what that file\'s own header already claims ("content/IpfsContentStore.js included"); the entire gap lives in Section G\'s one hardcoded construction call, never in this command');
     }
 
     // ===============================================================
@@ -472,7 +472,7 @@ async function run() {
     // Announcement/Discovery selection, in either direction.
     // ===============================================================
     {
-        for (const file of ['content/ContentStore.js', 'content/LocalContentStore.js', 'content/IpfsContentStore.js', 'content/ArweaveContentStore.js', 'application/SnapshotPlacementStoreRegistry.js']) {
+        for (const file of ['content/ContentStore.js', 'content/LocalContentStore.js', 'content/IpfsContentStore.js', 'content/ArweaveContentStore.js', 'application/snapshot/placement/SnapshotPlacementStoreRegistry.js']) {
             const code = await codeOnlySource(file);
             check(!/nostr/i.test(code), `I. ${file} never references Nostr in any form`);
             check(!code.includes('DiscoveryPublisher'), `I. ${file} never references any DiscoveryPublisher`);
@@ -540,9 +540,9 @@ async function run() {
         const distributionSiteBody = distributionSiteMatch[1];
 
         check(distributionSiteBody.includes('resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage)'), 'J. as of 0.9.506, the Distribution command genuinely resolves its contentStore FROM snapshotPlacementStoreRegistry — the SAME registry Placement already builds — never a second, independent ArweaveContentStore instance');
-        check(!distributionSiteBody.includes('new ArweaveContentStore') && !distributionSiteBody.includes('new IpfsContentStore'), 'J. the Distribution command call site itself never constructs a concrete ContentStore — resolution is entirely application/SnapshotDistributionContentBackendSelection.js\'s own job');
+        check(!distributionSiteBody.includes('new ArweaveContentStore') && !distributionSiteBody.includes('new IpfsContentStore'), 'J. the Distribution command call site itself never constructs a concrete ContentStore — resolution is entirely application/snapshot/SnapshotDistributionContentBackendSelection.js\'s own job');
 
-        const eligibilitySource = await codeOnlySource('application/SnapshotDistributionContentBackendSelection.js');
+        const eligibilitySource = await codeOnlySource('application/snapshot/SnapshotDistributionContentBackendSelection.js');
         check(eligibilitySource.includes("['ipfs', 'ar']"), 'J. the closed Distribution-eligible storage list is exactly [\'ipfs\', \'ar\'] — \'local\' is a registry member but deliberately never an eligible Distribution target');
 
         console.log('✓ J. ui/main.js now genuinely shares ONE Snapshot Content storage-selection registry between Placement and Distribution — the "two independently maintained storage choices" risk this audit originally named has been closed by 0.9.506, exactly along this Section\'s own recommended line (reuse, never a second registry)');

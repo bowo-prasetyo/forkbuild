@@ -1,22 +1,22 @@
-import { SnapshotMaterializationSourceKind } from '../application/SnapshotMaterializationSourceKind.js';
-import { createSnapshotMaterializationSourceSelection } from '../application/SnapshotMaterializationSourceSelection.js';
-import { SnapshotMaterializationSelectionCoordinator } from '../application/SnapshotMaterializationSelectionCoordinator.js';
-import { PeerSnapshotMaterializationOutcome } from '../application/PeerSnapshotMaterializationOutcome.js';
-import { SnapshotPlacementMaterializationOutcome } from '../application/SnapshotPlacementMaterializationOutcome.js';
-import { SnapshotContentTransferOutcome } from '../application/SnapshotContentTransferOutcome.js';
-import { SnapshotPeerPossessionState } from '../application/SnapshotPeerPossessionState.js';
-import { toSnapshotPeerPossessionObservation } from '../application/SnapshotPeerPossessionObservation.js';
-import { describeSnapshotPeerPossessionComparison } from '../application/SnapshotPeerPossessionComparisonView.js';
+import { SnapshotMaterializationSourceKind } from '../application/snapshot/materialization/SnapshotMaterializationSourceKind.js';
+import { createSnapshotMaterializationSourceSelection } from '../application/snapshot/materialization/SnapshotMaterializationSourceSelection.js';
+import { SnapshotMaterializationSelectionCoordinator } from '../application/snapshot/materialization/SnapshotMaterializationSelectionCoordinator.js';
+import { PeerSnapshotMaterializationOutcome } from '../application/snapshot/materialization/PeerSnapshotMaterializationOutcome.js';
+import { SnapshotPlacementMaterializationOutcome } from '../application/snapshot/placement/SnapshotPlacementMaterializationOutcome.js';
+import { SnapshotContentTransferOutcome } from '../application/snapshot/materialization/SnapshotContentTransferOutcome.js';
+import { SnapshotPeerPossessionState } from '../application/snapshot/possession/SnapshotPeerPossessionState.js';
+import { toSnapshotPeerPossessionObservation } from '../application/snapshot/possession/SnapshotPeerPossessionObservation.js';
+import { describeSnapshotPeerPossessionComparison } from '../application/snapshot/possession/SnapshotPeerPossessionComparisonView.js';
 
 // 0.8.42 — Explicit Snapshot Source Selection & Materialization UX.
 //
-//   Section A: application/SnapshotMaterializationSourceSelection.js —
+//   Section A: application/snapshot/materialization/SnapshotMaterializationSourceSelection.js —
 //              createSnapshotMaterializationSourceSelection() builds
 //              exactly the right frozen shape for each of the three
 //              SnapshotMaterializationSourceKind values, and rejects a
 //              missing kind or a payload that does not match the kind
 //              chosen.
-//   Section B: application/SnapshotMaterializationSelectionCoordinator.js —
+//   Section B: application/snapshot/materialization/SnapshotMaterializationSelectionCoordinator.js —
 //              materialize() dispatches a selection to EXACTLY the one
 //              already-existing coordinator its own kind names, forwards
 //              its payload unchanged, returns the result unchanged, and

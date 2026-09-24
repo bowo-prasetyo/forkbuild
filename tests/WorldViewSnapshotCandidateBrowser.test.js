@@ -1,16 +1,16 @@
 import { readFile } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.151 — World View Snapshot Candidate Browser.
 //
-// 0.9.150 built `application/DiscoverSnapshotCandidatesCommand.js` —
+// 0.9.150 built `application/snapshot/DiscoverSnapshotCandidatesCommand.js` —
 // `discoveryTag -> candidate[]`, browsing-oriented and unranked — and
 // deliberately stopped short of any UI (see that file's own header, "a UI
 // candidate browser of any kind... a later, unscheduled UI milestone").
@@ -404,11 +404,11 @@ async function runTests() {
         const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         const forbiddenConstruction = [
             "from '../../content/ArweaveContentStore.js'",
-            "from '../../application/NostrSnapshotDiscoveryQueryService.js'",
-            "from '../../application/DecentralizedSnapshotResolver.js'",
-            "from '../../application/DiscoverSnapshotCommand.js'",
-            "from '../../application/DiscoverSnapshotCandidatesCommand.js'",
-            "from '../../application/DiscoverSnapshotRuntimeComposition.js'",
+            "from '../../application/nostr/NostrSnapshotDiscoveryQueryService.js'",
+            "from '../../application/snapshot/DecentralizedSnapshotResolver.js'",
+            "from '../../application/snapshot/DiscoverSnapshotCommand.js'",
+            "from '../../application/snapshot/DiscoverSnapshotCandidatesCommand.js'",
+            "from '../../application/snapshot/DiscoverSnapshotRuntimeComposition.js'",
             'new ArweaveContentStore(', 'new NostrSnapshotDiscoveryQueryService(', 'new DecentralizedSnapshotResolver(',
             'executeDiscoverSnapshotCommand(', 'executeDiscoverSnapshotCandidatesCommand(', 'composeDiscoverSnapshotRuntime(',
             'window.arweaveWallet', 'window.nostr', 'WebSocket', 'crypto.'

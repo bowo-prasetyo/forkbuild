@@ -3,25 +3,25 @@ import { readFile } from 'node:fs/promises';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { License, LicenseId } from '../core/License.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { CreateDiscoveryUseCase } from '../application/CreateDiscoveryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscoveryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
 import { publicationsPageFiles, editorViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.341 — Peer Publication Connection-Sync Boundary Audit.
@@ -52,7 +52,7 @@ import { publicationsPageFiles, editorViewFiles } from './support/SourceFileGrou
 //
 // Sections (A-J):
 //   A — Existing peer connection lifecycle: the exact connection-
-//       established seam application/PublicationPeerExchange.js already
+//       established seam application/publication/PublicationPeerExchange.js already
 //       subscribes to, and what it does — and does not — do with it today.
 //   B — Existing publication exchange capability: the live wire already
 //       carries a complete DecentralizedPublication envelope, unmodified,
@@ -87,7 +87,7 @@ function assert(condition, message) {
     if (!condition) throw new Error(`ASSERT FAILED: ${message}`);
 }
 
-// application/CreateDiscoveryUseCase.js constructs a real
+// application/discovery/CreateDiscoveryUseCase.js constructs a real
 // storage/LocalStorageProvider.js, which reads window.localStorage — a
 // minimal in-memory shim, installed ONLY when no window already exists (a
 // real browser test run never hits this branch). Same posture as
@@ -170,20 +170,20 @@ function admitToRepositoryDiscovery(view, discoveryProvider) {
 // change — it lives in this test file alone, and this milestone adds it
 // to no production file. It exists to answer Section D's own question
 // concretely: is there a seam small enough to close the late-joining-peer
-// gap using ONLY methods application/PublicationPeerExchange.js,
-// application/LocalPublicationCatalog.js, and application/
+// gap using ONLY methods application/publication/PublicationPeerExchange.js,
+// application/publication/LocalPublicationCatalog.js, and application/
 // ConnectedPeerRegistry.js already expose, with no wire-format change, no
 // new message kind, and no new class?
 //
 // Policy, deliberately the simplest one that needs no new primitive:
-// whenever application/ConnectedPeerRegistry.js's own onChange reports a
+// whenever application/peer/ConnectedPeerRegistry.js's own onChange reports a
 // peer reaching AUTHENTICATED for the first time, re-announce this
 // replica's ENTIRE catalog to every currently authenticated peer — the
-// exact same broadcast application/PublicationPeerExchange.js#announce()
+// exact same broadcast application/publication/PublicationPeerExchange.js#announce()
 // already performs for a freshly published Publication, called once per
 // already-cataloged entry instead of once for a new one. Re-announcing to
 // peers who already hold an entry is never a new concern this seam has to
-// solve: Section E below reconfirms application/LocalPublicationCatalog.js's
+// solve: Section E below reconfirms application/publication/LocalPublicationCatalog.js's
 // own add()/isNew idempotency already makes that free.
 //
 // `syncedConnectionIds` exists only so a peer whose lifecycle state
@@ -250,10 +250,10 @@ async function run() {
     // connection-established seam, and what it does today.
     // ===============================================================
     {
-        // 1. Structural: application/PublicationPeerExchange.js's own
+        // 1. Structural: application/publication/PublicationPeerExchange.js's own
         // constructor already subscribes to connectedPeerRegistry.onChange
         // — but only ever to attach the message bus, never to announce.
-        const peerExchangeSource = await readSource('application/PublicationPeerExchange.js');
+        const peerExchangeSource = await readSource('application/publication/PublicationPeerExchange.js');
         const onChangeCallback = peerExchangeSource.match(/this\._unsubscribeRegistry = this\._registry\.onChange\(\(peers\) => \{([\s\S]*?)\}\);/);
         assert(onChangeCallback, '1. PublicationPeerExchange subscribes to connectedPeerRegistry.onChange() — the connection-established seam already exists.');
         assert(onChangeCallback[1].includes('this._bus.attach(peer)'), '2. the onChange body attaches the bus to every peer it reports.');
@@ -291,7 +291,7 @@ async function run() {
         bobPeerExchange.dispose();
         session.dispose();
     }
-    console.log('✓ Section A: application/PublicationPeerExchange.js already subscribes to the connection-established seam (connectedPeerRegistry.onChange) — but today uses it ONLY to attach the message bus, never to announce. This is the smallest existing hook a connection-time sync would extend, live-reconfirmed against a real authenticated connection.');
+    console.log('✓ Section A: application/publication/PublicationPeerExchange.js already subscribes to the connection-established seam (connectedPeerRegistry.onChange) — but today uses it ONLY to attach the message bus, never to announce. This is the smallest existing hook a connection-time sync would extend, live-reconfirmed against a real authenticated connection.');
 
     // ===============================================================
     // Section B — Existing publication exchange capability: the wire
@@ -300,7 +300,7 @@ async function run() {
     {
         // 1. Structural: the ANNOUNCE wrapper never inspects or strips
         // any field of the envelope it carries.
-        const protocolSource = await readSource('application/PublicationPeerProtocol.js');
+        const protocolSource = await readSource('application/publication/PublicationPeerProtocol.js');
         assert(protocolSource.includes('return { kind: PublicationPeerMessageKind.ANNOUNCE, envelope };'),
             '1. toPublicationAnnounceMessage() wraps the envelope whole, unmodified — no field is added, removed, or renamed for the wire.');
 
@@ -341,7 +341,7 @@ async function run() {
         bobPeerExchange.dispose();
         session.dispose();
     }
-    console.log('✓ Section B: application/PublicationPeerExchange.js can already carry a complete DecentralizedPublication envelope end to end with zero wire-format change. A connection-time announce is a new CALLER of announce(), never a new protocol, message kind, or class.');
+    console.log('✓ Section B: application/publication/PublicationPeerExchange.js can already carry a complete DecentralizedPublication envelope end to end with zero wire-format change. A connection-time announce is a new CALLER of announce(), never a new protocol, message kind, or class.');
 
     // ===============================================================
     // Section C — Metadata-only boundary: connection-time sharing
@@ -350,8 +350,8 @@ async function run() {
     {
         // 1. Structural: neither the exchange nor the protocol file
         // imports anything content/resolution-shaped.
-        const peerExchangeSource = await readSource('application/PublicationPeerExchange.js');
-        const protocolSource = await readSource('application/PublicationPeerProtocol.js');
+        const peerExchangeSource = await readSource('application/publication/PublicationPeerExchange.js');
+        const protocolSource = await readSource('application/publication/PublicationPeerProtocol.js');
         for (const source of [peerExchangeSource, protocolSource]) {
             assert(!/import .*PublicationResolver/.test(source), '1. no import of PublicationResolver.js.');
             assert(!/import .*ContentStore/.test(source), '2. no import of any ContentStore.');
@@ -393,7 +393,7 @@ async function run() {
         bobPeerExchange.dispose();
         session.dispose();
     }
-    console.log('✓ Section C: connection-time publication metadata exchange has no content/material transfer component, structurally (no resolver/content-store import) and live (a received publication is CONTENT_UNAVAILABLE the instant it arrives). "Connection sync" cannot quietly become bulk replication — retrieving actual bytes stays application/PublicationResolver.js\'s and application/PeerContentExchange.js\'s own, entirely separate, explicit job.');
+    console.log('✓ Section C: connection-time publication metadata exchange has no content/material transfer component, structurally (no resolver/content-store import) and live (a received publication is CONTENT_UNAVAILABLE the instant it arrives). "Connection sync" cannot quietly become bulk replication — retrieving actual bytes stays application/publication/PublicationResolver.js\'s and application/peer/PeerContentExchange.js\'s own, entirely separate, explicit job.');
 
     // ===============================================================
     // Section D — FLAGSHIP: the late-joining peer journey.
@@ -502,7 +502,7 @@ async function run() {
         bobPeerExchange3.dispose();
         session3.dispose();
     }
-    console.log('✓ Section D: FLAGSHIP. The late-joining-peer gap is real, live-reproduced, and closes with a seam small enough to build entirely from application/PublicationPeerExchange.js#announce(), application/LocalPublicationCatalog.js#list(), and application/ConnectedPeerRegistry.js#onChange() — all already public, all unmodified. No new wire format, no new message kind, no new domain class is required. Publishing to an already-connected peer keeps working exactly as it does today.');
+    console.log('✓ Section D: FLAGSHIP. The late-joining-peer gap is real, live-reproduced, and closes with a seam small enough to build entirely from application/publication/PublicationPeerExchange.js#announce(), application/publication/LocalPublicationCatalog.js#list(), and application/peer/ConnectedPeerRegistry.js#onChange() — all already public, all unmodified. No new wire format, no new message kind, no new domain class is required. Publishing to an already-connected peer keeps working exactly as it does today.');
 
     // ===============================================================
     // Section E — Reconnection / repeated observation.
@@ -532,12 +532,12 @@ async function run() {
         assert(received.length === 1 && received[0].isNew === true, '1. first observation: isNew is true.');
 
         // Disconnect, then reconnect — a brand-new connectionId on both
-        // sides (application/ConnectedPeerRegistry.js's own header: a
+        // sides (application/peer/ConnectedPeerRegistry.js's own header: a
         // reconnect is an entirely new connection with no memory of the
         // old one), which re-triggers the connection-time sync seam.
         session.bobConnectedPeer.close();
         await wait(20);
-        assert(bobCatalog.has(envelope.id), '2. disconnecting never evicts an already-cataloged entry — the catalog outlives the connection that fed it, exactly as application/LocalPublicationCatalog.js\'s own header requires.');
+        assert(bobCatalog.has(envelope.id), '2. disconnecting never evicts an already-cataloged entry — the catalog outlives the connection that fed it, exactly as application/publication/LocalPublicationCatalog.js\'s own header requires.');
 
         const reconnectedPeer = session.bobConnect.connect({ candidateEndpoint: 'sect-e-alice' });
         await wait(20);
@@ -545,14 +545,14 @@ async function run() {
         assert(reconnectedPeer.connectionId !== session.bobConnectedPeer.connectionId, '4. the reconnect is a genuinely new connectionId, not the stale one.');
 
         assert(received.length === 2 && received[1].isNew === false,
-            '5. the SAME publication, re-announced on reconnect, fires onPublicationReceived a second time — but with isNew: false. application/LocalPublicationCatalog.js#add() already made repeated observation harmless; this seam invents no new deduplication policy of its own.');
+            '5. the SAME publication, re-announced on reconnect, fires onPublicationReceived a second time — but with isNew: false. application/publication/LocalPublicationCatalog.js#add() already made repeated observation harmless; this seam invents no new deduplication policy of its own.');
         assert(bobCatalog.list().length === 1, '6. the catalog still holds exactly one entry — reconnecting never duplicates it.');
 
         alicePeerExchange.dispose();
         bobPeerExchange.dispose();
         session.dispose();
     }
-    console.log('✓ Section E: reconnecting to the same peer re-triggers connection-time sync (a genuinely new connectionId), and re-observing an already-known publication is safe purely because application/LocalPublicationCatalog.js#add() already is — isNew: false, no duplicate entry, no new dedup policy required anywhere in this seam.');
+    console.log('✓ Section E: reconnecting to the same peer re-triggers connection-time sync (a genuinely new connectionId), and re-observing an already-known publication is safe purely because application/publication/LocalPublicationCatalog.js#add() already is — isNew: false, no duplicate entry, no new dedup policy required anywhere in this seam.');
 
     // ===============================================================
     // Section F — Multiple Publications.
@@ -676,7 +676,7 @@ async function run() {
         // 1. onPublicationReceived already fires with { publication,
         // isNew } — Section E already proved isNew IS the "new-to-this-
         // peer" distinguishing signal, unmodified since 0.7.3.
-        const peerExchangeSource = await readSource('application/PublicationPeerExchange.js');
+        const peerExchangeSource = await readSource('application/publication/PublicationPeerExchange.js');
         assert(peerExchangeSource.includes("this._eventBus.publish(PUBLICATION_RECEIVED_EVENT, result);"),
             '1. onPublicationReceived already fires an event carrying { publication, isNew } for every successfully cataloged announce — this is not a new fact this milestone has to invent.');
 
@@ -691,8 +691,8 @@ async function run() {
         // second identity: the only party who could ever be told is THIS
         // replica's own currently signed-in identity — the same identity
         // that is about to look at its own, local
-        // application/LocalPublicationCatalog.js a moment later anyway.
-        const commentaryProducerSource = await readSource('application/PublicationCommentaryNotificationProducer.js');
+        // application/publication/LocalPublicationCatalog.js a moment later anyway.
+        const commentaryProducerSource = await readSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js');
         assert(commentaryProducerSource.includes('publication.publisherIdentity.id'),
             '2. the one existing NotificationEvent producer in this codebase addresses a DIFFERENT identity (the Publication\'s publisher) than the identity that acted (the commentary\'s author) — a genuine cross-identity fact.');
         assert(!/recipientIdentityId:\s*.*(this\._identityProvider|localIdentity|self)/i.test(commentaryProducerSource),
@@ -728,7 +728,7 @@ async function run() {
         // recipient concept that does not yet exist for this candidate.
         console.log('    (H4) Classification: not yet a NotificationEvent candidate — no recipient identity distinct from the local replica\'s own current identity exists without inventing one. No producer is built by this milestone.');
     }
-    console.log('✓ Section H: application/PublicationPeerExchange.js#onPublicationReceived() already distinguishes "new to this peer" (isNew) from a repeat observation, unmodified since 0.7.3 — that mechanical question was never the gap. Applying this codebase\'s own NotificationEvent boundary criterion (0.9.274), "a publication arrived from a peer" has no recipient identity distinct from the local replica\'s own current identity without inventing one — it does not yet qualify as a NotificationEvent candidate. The existing local feedback/list-refresh mechanisms already cover this fact; no producer is built here, matching this milestone\'s own brief.');
+    console.log('✓ Section H: application/publication/PublicationPeerExchange.js#onPublicationReceived() already distinguishes "new to this peer" (isNew) from a repeat observation, unmodified since 0.7.3 — that mechanical question was never the gap. Applying this codebase\'s own NotificationEvent boundary criterion (0.9.274), "a publication arrived from a peer" has no recipient identity distinct from the local replica\'s own current identity without inventing one — it does not yet qualify as a NotificationEvent candidate. The existing local feedback/list-refresh mechanisms already cover this fact; no producer is built here, matching this milestone\'s own brief.');
 
     // ===============================================================
     // Section I — Repository convergence.
@@ -776,9 +776,9 @@ async function run() {
         const { searchPublicationsUseCase } = new CreateDiscoveryUseCase().execute({ decentralizedDiscoveryProvider: sharedProvider });
         const result = searchPublicationsUseCase.execute({ text: 'connection-synced convergence atlas' });
         assert(result.items.length === 1 && result.items[0] === view.content,
-            '4. Repository\'s own real, unmodified search finds it — application/CreateDiscoveryUseCase.js, discovery/CompositeDiscoveryProvider.js, application/SearchPublicationsUseCase.js are all completely untouched by this milestone.');
+            '4. Repository\'s own real, unmodified search finds it — application/discovery/CreateDiscoveryUseCase.js, discovery/CompositeDiscoveryProvider.js, application/publication/SearchPublicationsUseCase.js are all completely untouched by this milestone.');
 
-        const createDiscoverySource = await readSource('application/CreateDiscoveryUseCase.js');
+        const createDiscoverySource = await readSource('application/discovery/CreateDiscoveryUseCase.js');
         assert(!/peer|connectedPeerRegistry|PublicationPeerExchange/i.test(createDiscoverySource),
             '5. Repository\'s own composition root has, and needs, zero peer-specific or connection-sync-specific code — the entire seam lives upstream of discovery, exactly where 0.9.335-0.9.339 already drew that line.');
 
@@ -826,9 +826,9 @@ async function run() {
 
         // 3. Structural: no Nostr/network-wide broadcast, relay, or
         // global index concept was introduced anywhere by this seam.
-        const peerExchangeSource = await readSource('application/PublicationPeerExchange.js');
+        const peerExchangeSource = await readSource('application/publication/PublicationPeerExchange.js');
         assert(!/nostr|relay|globalIndex|broadcastToNetwork/i.test(peerExchangeSource),
-            '3. no global/network-wide propagation concept exists in application/PublicationPeerExchange.js — this seam only ever reaches a DIRECTLY, LIVE-connected peer.');
+            '3. no global/network-wide propagation concept exists in application/publication/PublicationPeerExchange.js — this seam only ever reaches a DIRECTLY, LIVE-connected peer.');
 
         alicePeerExchange.dispose();
         aliceConnectUseCase.registry.dispose();
@@ -839,16 +839,16 @@ async function run() {
     console.log(
         '\nVerdict: CLEAR_SEAM — PROCEED.\n' +
         '  A real, live-reproduced product gap (Section D Part 1) closes with a seam built entirely from\n' +
-        '  already-public methods on application/PublicationPeerExchange.js, application/LocalPublicationCatalog.js,\n' +
-        '  and application/ConnectedPeerRegistry.js (Section D Part 2) — no wire-format change (Section B), no\n' +
+        '  already-public methods on application/publication/PublicationPeerExchange.js, application/publication/LocalPublicationCatalog.js,\n' +
+        '  and application/peer/ConnectedPeerRegistry.js (Section D Part 2) — no wire-format change (Section B), no\n' +
         '  content-transfer risk (Sections C/F), no new deduplication policy (Section E), full field preservation\n' +
         '  (Section G), and zero required Repository change (Section I). The one candidate this audit found NOT\n' +
         '  ready is a NotificationEvent producer (Section H) — deferred, not built, exactly as this milestone\'s\n' +
         '  own brief asked. The offline/indexing boundary (Section J) is confirmed as a genuine architectural\n' +
         '  edge, not something this seam should ever try to cross.\n' +
         '  Recommended next step (0.9.342): wire this seam into production — the smallest change is a new,\n' +
-        '  small decorator composed alongside application/CreatePublicationPeerExchangeUseCase.js (the same\n' +
-        '  "wrap, do not modify" shape application/PublicationCommentaryNotificationProducer.js already\n' +
+        '  small decorator composed alongside application/publication/CreatePublicationPeerExchangeUseCase.js (the same\n' +
+        '  "wrap, do not modify" shape application/publication/commentary/PublicationCommentaryNotificationProducer.js already\n' +
         '  established one domain over), reusing catalog.list()/peerExchange.announce()/registry.onChange()\n' +
         '  unchanged. 0.9.343 (a notification boundary for this fact) is explicitly NOT recommended next —\n' +
         '  Section H found no evidenced recipient concept to build it on yet.'

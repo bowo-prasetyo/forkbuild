@@ -5,12 +5,12 @@ import { namingView as deriveNamingView } from '../core/PlaceNamingView.js';
 import {
     buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope
 } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { buildPlaceNamingClaimPublication } from '../application/PlaceNamingClaimPublication.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStore.js';
+import { buildPlaceNamingClaimPublication } from '../application/placeNaming/PlaceNamingClaimPublication.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -209,7 +209,7 @@ async function runTests() {
         assert(nearbyBlock.includes('claim.createdAtLabel'),
             'A3b. The row still renders createdAtLabel, unremoved since 0.9.266.');
 
-        const exchangeSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimExchange.js'));
+        const exchangeSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js'));
         const validateIdx = exchangeSource.indexOf('validatePlaceNamingClaimPublication(pkg)');
         const constructIdx = exchangeSource.indexOf('PlaceNamingClaim.fromJSON(pkg.claim)');
         const verifyIdx = exchangeSource.indexOf('this._verifier.verifyPlaceNamingClaim(');
@@ -271,8 +271,8 @@ async function runTests() {
         // "World-authoritative" etc. as prose — see core/PlaceNamingClaim.js
         // line 18 — which is why this check strips comments first).
         for (const file of [
-            'core/PlaceNamingClaim.js', 'application/PlaceNamingClaimExchange.js',
-            'application/PlaceNamingClaimUseCase.js', 'application/LocalPlaceNamingClaimStore.js'
+            'core/PlaceNamingClaim.js', 'application/placeNaming/PlaceNamingClaimExchange.js',
+            'application/placeNaming/PlaceNamingClaimUseCase.js', 'application/placeNaming/LocalPlaceNamingClaimStore.js'
         ]) {
             const code = codeOnlyLines(await rawSource(file));
             assert(!/\bofficial\b|\bauthoritative\b|\btrusted\b|\badopted\b|\bisAdopted\b/i.test(code),
@@ -300,7 +300,7 @@ async function runTests() {
         // claim I adopted."
         assert(bobReplica.preferenceStore.getPreferredName('world-1', 'region-1') === null,
             'B3a. Pair 2 (alreadySaved !== preferred): adopting "Fernbrook" never sets a preference as a side effect.');
-        const preferenceSource = codeOnlyLines(await rawSource('application/LocalNamePreferenceStore.js'));
+        const preferenceSource = codeOnlyLines(await rawSource('application/identity/LocalNamePreferenceStore.js'));
         assert(/setPreferredName\(worldId, regionId, name\)/.test(preferenceSource) && !/claimId/.test(preferenceSource),
             'B3b. LocalNamePreferenceStore is keyed by (worldId, regionId, name), never claimId — preference and "already saved" remain two structurally separate concepts.');
 
@@ -312,7 +312,7 @@ async function runTests() {
         // value carries only {claim, isNew}, never the verification
         // result itself. "Already saved" therefore reports nothing about
         // HOW confidently a claim was verified, only THAT it passed once.
-        const exchangeSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimExchange.js'));
+        const exchangeSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js'));
         const importClaimBody = exchangeSource.slice(exchangeSource.indexOf('importClaim(pkg)'), exchangeSource.indexOf('importClaim(pkg)') + 1000);
         assert(importClaimBody.includes('return { claim, isNew: true };') && importClaimBody.includes('return { claim: existing || claim, isNew: false };'),
             'B4a. sanity: both of importClaim()\'s own success returns still carry only {claim, isNew}, unchanged.');
@@ -383,7 +383,7 @@ async function runTests() {
         // C7. Export/import — COMPLETE (0.9.265 Section C4, reconfirmed
         // structurally: exportClaim() still exists and is still a pure
         // passthrough).
-        assert(exchangeSourceHasExport(await rawSource('application/PlaceNamingClaimExchange.js')),
+        assert(exchangeSourceHasExport(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js')),
             'C7. Export/import: PlaceNamingClaimExchange#exportClaim() still exists as a pure passthrough — COMPLETE.');
         matrix.push(['Export/import', 'COMPLETE']);
 
@@ -404,7 +404,7 @@ async function runTests() {
         // C10. World association — COMPLETE (0.9.270 Section I's own
         // colliding-id-across-Worlds proof; reconfirmed structurally via
         // hasClaim()'s own two-argument signature below).
-        const useCaseSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimUseCase.js'));
+        const useCaseSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js'));
         assert(useCaseSource.includes('hasClaim(worldId, claimId) {') && useCaseSource.includes('this._store.has(worldId, claimId)'),
             'C10. World association: hasClaim() is still keyed by (worldId, claimId), never claimId alone — COMPLETE.');
         matrix.push(['World association', 'COMPLETE']);
@@ -506,7 +506,7 @@ async function runTests() {
         // "remove my local copy" capability already exists, unmodified;
         // building it would mean adding a new use-case method that skips
         // the authorship check, never touching storage.
-        const storeSource = codeOnlyLines(await rawSource('application/LocalPlaceNamingClaimStore.js'));
+        const storeSource = codeOnlyLines(await rawSource('application/placeNaming/LocalPlaceNamingClaimStore.js'));
         const storeRetractBody = storeSource.slice(storeSource.indexOf('retract(worldId, claimId) {'), storeSource.indexOf('retract(worldId, claimId) {') + 350);
         assert(!/authorIdentityId/.test(storeRetractBody),
             'E4a. LocalPlaceNamingClaimStore#retract() itself never reads authorIdentityId — it removes by id alone, with no opinion about who is asking.');
@@ -519,21 +519,21 @@ async function runTests() {
         // dormant capability, never an accidentally-open door. The
         // Place-Naming store's retract() is uniquely identifiable by its
         // own (worldId, claimId) call shape — Blueprint's own two
-        // retract() primitives (application/BlueprintAttributionUseCase.js,
-        // application/BlueprintLineageUseCase.js) are keyed by
+        // retract() primitives (application/blueprint/BlueprintAttributionUseCase.js,
+        // application/blueprint/BlueprintLineageUseCase.js) are keyed by
         // (fingerprint, ...) instead, so this pattern cannot accidentally
         // count an unrelated domain's own call site.
         const storeRetractCallSites = await grepCount('\\.retract(worldId', ['ui', 'application']);
         assert(storeRetractCallSites === 1,
-            `E5a. Exactly one file calls LocalPlaceNamingClaimStore#retract(worldId, ...) directly — application/PlaceNamingClaimUseCase.js, the author-gated door; found ${storeRetractCallSites}.`);
+            `E5a. Exactly one file calls LocalPlaceNamingClaimStore#retract(worldId, ...) directly — application/placeNaming/PlaceNamingClaimUseCase.js, the author-gated door; found ${storeRetractCallSites}.`);
         const useCaseRetractCallSites = await grepCount('_placeNamingClaimUseCase\\.retract(', ['ui', 'application']);
         assert(useCaseRetractCallSites === 1,
-            `E5b. Exactly one file calls PlaceNamingClaimUseCase#retract() — application/WorldNavigationSession.js, the thin forward Section A5c already confirmed; found ${useCaseRetractCallSites}. No UI file, and no other application file, reaches either retract() primitive directly.`);
+            `E5b. Exactly one file calls PlaceNamingClaimUseCase#retract() — application/world/WorldNavigationSession.js, the thin forward Section A5c already confirmed; found ${useCaseRetractCallSites}. No UI file, and no other application file, reaches either retract() primitive directly.`);
 
         // E6. Confirmed this remains a DELIBERATE, stated design choice,
         // not an oversight — the use case's own header still states its
         // intent directly.
-        const useCaseSource = await rawSource('application/PlaceNamingClaimUseCase.js');
+        const useCaseSource = await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js');
         assert(/only ever "take back my own word,"/.test(useCaseSource),
             'E6. retract()\'s own header still states its intent directly: "take back my own word."');
 
@@ -571,34 +571,34 @@ async function runTests() {
         // rejection, the detail surfaces only inside a THROWN error's own
         // message (a side channel, not a queryable inspection); on
         // success, it never surfaces at all.
-        const exchangeSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimExchange.js'));
+        const exchangeSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js'));
         assert(exchangeSource.includes('refusing to import an unverifiable claim — ${result.reason}'),
             'F2. On rejection, `result.reason` only ever reaches a caller embedded inside a thrown Error\'s message string — never as a structured, independently inspectable value.');
 
         // F3. THE FINDING THIS SECTION ALMOST MISSED: a THIRD call site
         // to verifyPlaceNamingClaim() already exists —
-        // application/PlaceNamingClaimPublicationKind.js's own `verify`
+        // application/placeNaming/PlaceNamingClaimPublicationKind.js's own `verify`
         // field, composed WITHOUT a store by
-        // application/CreatePublicationDisplayKindRegistryUseCase.js
+        // application/publication/CreatePublicationDisplayKindRegistryUseCase.js
         // (0.7.5) specifically so that "resolve a publication only to
         // DISPLAY what it is" never imports it anywhere — a genuine,
         // pre-existing, NON-MUTATING verification pathway for a
-        // PlaceNamingClaim, feeding application/PublicationResolver.js's
+        // PlaceNamingClaim, feeding application/publication/PublicationResolver.js's
         // own `{ outcome, content, publication, reason }` result. Naively
         // concluding "no non-mutating verification surface exists
         // anywhere" — the trap this milestone's own brief warned against
         // for the F conclusion generally — would have been WRONG.
-        const kindPluginSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimPublicationKind.js'));
+        const kindPluginSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimPublicationKind.js'));
         assert(kindPluginSource.includes('verify: (pkg) => verifier.verifyPlaceNamingClaim(pkg.claim)'),
-            'F3a. application/PlaceNamingClaimPublicationKind.js#verify still forwards straight onto the real verifier — a genuine, non-mutating verify path.');
-        const registrySource = codeOnlyLines(await rawSource('application/CreatePublicationDisplayKindRegistryUseCase.js'));
+            'F3a. application/placeNaming/PlaceNamingClaimPublicationKind.js#verify still forwards straight onto the real verifier — a genuine, non-mutating verify path.');
+        const registrySource = codeOnlyLines(await rawSource('application/publication/CreatePublicationDisplayKindRegistryUseCase.js'));
         assert(registrySource.includes('createPlaceNamingClaimPublicationKind({ verifier })') && !registrySource.includes('createPlaceNamingClaimPublicationKind({ verifier, store'),
             'F3b. That kindPlugin is composed with `store` deliberately omitted — resolving never imports the claim into LocalPlaceNamingClaimStore as a side effect, exactly this section\'s own "non-mutating" requirement.');
 
         // F4. BUT — this pathway is reachable only for a claim that
         // arrived as a cataloged DecentralizedPublication (0.7.x/0.8.x's
         // own IPFS-style anchor/snapshot pipeline through
-        // application/LocalPublicationCatalog.js) — a completely
+        // application/publication/LocalPublicationCatalog.js) — a completely
         // separate, heavier transport from the one this ENTIRE arc
         // (0.5.3's file exchange, 0.9.253+'s Nostr Nearby discovery) has
         // ever used for a PlaceNamingClaim. Nothing anywhere in this
@@ -610,9 +610,9 @@ async function runTests() {
         const kindConstantFiles = await grepCount('PLACE_NAMING_CLAIM_PUBLICATION_KIND', ['application']);
         assert(kindConstantFiles === 3,
             `F4a. PLACE_NAMING_CLAIM_PUBLICATION_KIND appears in exactly three application/ files (PlaceNamingClaimPublication.js, PlaceNamingClaimPublicationValidator.js, PlaceNamingClaimPublicationKind.js) — its own definition and internal plumbing, never a call site that anchors or catalogs a naming claim into the DecentralizedPublication pipeline; found ${kindConstantFiles}.`);
-        const createWorldPlaceNamingSource = await rawSource('application/CreateWorldPlaceNamingUseCase.js');
+        const createWorldPlaceNamingSource = await rawSource('application/placeNaming/CreateWorldPlaceNamingUseCase.js');
         assert(!/DecentralizedPublication|PublicationAnchor|LocalPublicationCatalog/.test(createWorldPlaceNamingSource),
-            'F4b. The real Place Naming composition root (application/CreateWorldPlaceNamingUseCase.js) never touches DecentralizedPublication/PublicationAnchor/LocalPublicationCatalog at all — the generic resolver pathway and the actual Nearby/Adopt feature are structurally disjoint today.');
+            'F4b. The real Place Naming composition root (application/placeNaming/CreateWorldPlaceNamingUseCase.js) never touches DecentralizedPublication/PublicationAnchor/LocalPublicationCatalog at all — the generic resolver pathway and the actual Nearby/Adopt feature are structurally disjoint today.');
 
         console.log('✓ F: the verifier already computes rich, structured diagnostic detail (valid/signed/reason) for both success and failure (F1), discarded on the mutating success path and surfaced only inside a thrown error\'s message on the mutating failure path (F2). A genuine, pre-existing, NON-MUTATING verify pathway for a PlaceNamingClaim DOES already exist (F3) — the "Publications Center" display-kind registry (0.7.5) — contradicting a naive "no such surface exists anywhere" conclusion. But it is reachable only through a completely separate, heavier DecentralizedPublication/anchor/catalog transport that nothing in the real Place Naming feature (publish/Nearby/Adopt) has ever used (F4): the two pathways are structurally disjoint. Wiring "inspect this Nearby claim\'s verification status" therefore still means building something NEW relative to this arc — either a disproportionate bridge into the unrelated Publications-Center transport, or a small, dedicated non-mutating verify call next to Nearby itself — never merely flipping on a switch that already reaches Nearby-discovered claims today. Per this milestone\'s own brief, this is recorded, not selected as the next seam.');
     }
@@ -622,16 +622,16 @@ async function runTests() {
     // confirmed fresh, not a NEW asymmetry.
     // ---------------------------------------------------------------
     {
-        const nostrSource = codeOnlyLines(await rawSource('application/NostrPlaceNamingDiscoverySource.js'));
+        const nostrSource = codeOnlyLines(await rawSource('application/placeNaming/NostrPlaceNamingDiscoverySource.js'));
         assert(!/publishEvent|sendEvent|broadcast|\.publish\(/i.test(nostrSource),
-            'G1. application/NostrPlaceNamingDiscoverySource.js contains no publish/send/broadcast call of any kind — this codebase\'s only Nostr integration for Place Naming is query-only, reconfirmed fresh.');
+            'G1. application/placeNaming/NostrPlaceNamingDiscoverySource.js contains no publish/send/broadcast call of any kind — this codebase\'s only Nostr integration for Place Naming is query-only, reconfirmed fresh.');
 
-        const exchangeSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimExchange.js'));
+        const exchangeSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimExchange.js'));
         const importClaimBody = exchangeSource.slice(exchangeSource.indexOf('importClaim(pkg)'), exchangeSource.indexOf('importClaim(pkg)') + 700);
         assert(!/publish|broadcast|gossip|relay|nostr/i.test(importClaimBody),
             'G2. importClaim()\'s own body still contains no publish/broadcast/gossip/relay reference of any kind.');
 
-        const useCaseSource = codeOnlyLines(await rawSource('application/PlaceNamingClaimUseCase.js'));
+        const useCaseSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js'));
         assert(!/publish\(.*relay|nostr|broadcast/i.test(useCaseSource),
             'G3. PlaceNamingClaimUseCase#publish() (the self-authoring path) has the identical absence of any relay/broadcast call — adoption did not introduce this asymmetry; self-publishing a name has always been exactly as local.');
 

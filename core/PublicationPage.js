@@ -2,7 +2,7 @@
 // enough information to render pagination controls and an honest
 // count, without the caller needing to re-derive any of it (or
 // needing to know how the query was actually answered — see
-// application/SearchPublicationsUseCase.js).
+// application/publication/SearchPublicationsUseCase.js).
 //
 // `totalCount`/`totalPages` are included beyond the query.md mockup's
 // minimal `items/page/pageSize/hasNext/hasPrevious` shape because the

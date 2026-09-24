@@ -41,7 +41,7 @@ import { SignatureType } from './Signature.js';
 // already its own, independently valid identity, provable entirely on
 // its own terms the moment it was created"). A device proves its own
 // key possession the ordinary way, live, over its own connection —
-// see application/DeviceAuthorizationPropagationUseCase.js's own
+// see application/identity/DeviceAuthorizationPropagationUseCase.js's own
 // header for how a GRANT is never itself treated as proof that the
 // connection on the other end of a live PeerConnection actually IS
 // the device it names.

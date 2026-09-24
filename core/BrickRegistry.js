@@ -40,7 +40,7 @@ export class BrickRegistry {
 
     // Ordered [{ category, definitions }] for palette rendering, grouped
     // in first-seen order — the same shape
-    // application/EditorActionRegistry.js#groupByCategory() already
+    // application/editor/EditorActionRegistry.js#groupByCategory() already
     // established for the Command Palette. 0.2.80 adds this because a
     // flat list of fifteen definitions across eleven categories is
     // meaningfully harder to scan than four; getAll() and getByCategory()

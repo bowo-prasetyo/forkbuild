@@ -265,7 +265,7 @@ async function runTests() {
 
         // A VehicleInstance whose position has diverged from its
         // spawnPosition — exactly what riding a mounted bicycle
-        // (application/AvatarVehicleMovementController.js, 0.9.116)
+        // (application/avatar/AvatarVehicleMovementController.js, 0.9.116)
         // actually produces.
         const ridden = new VehicleInstance({
             id: 'vehicle:1:0,0',

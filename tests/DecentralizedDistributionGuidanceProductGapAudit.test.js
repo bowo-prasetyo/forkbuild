@@ -2,9 +2,9 @@ import { readFile } from 'node:fs/promises';
 
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -167,9 +167,9 @@ async function run() {
         assert(/snapshotPlacementCreationCoordinator|preferredSnapshotPlacementCreationCoordinator/.test(decentralizedPubsSource),
             '7. Snapshot Placement (explicit Local/IPFS storage-type buttons, CONTENT-provider-preference-integrated) ALSO lives in that same third file.');
 
-        const anchorFiles = await readSource('application/BlockchainKind.js');
+        const anchorFiles = await readSource('application/anchoring/BlockchainKind.js');
         assert(/BITCOIN/.test(anchorFiles) && /BASE/.test(anchorFiles),
-            '8. two chains are domain-modeled (application/BlockchainKind.js), but only Bitcoin has a real wallet/PSBT/broadcast transport (anchoring/Bitcoin*.js) — no anchoring/Base*.js file exists anywhere in this repo; Base\'s own application/CreateBaseAnchorPublicationRecordUseCase.js records an anchor a person obtained EXTERNALLY, it does not create one in-app.');
+            '8. two chains are domain-modeled (application/anchoring/BlockchainKind.js), but only Bitcoin has a real wallet/PSBT/broadcast transport (anchoring/Bitcoin*.js) — no anchoring/Base*.js file exists anywhere in this repo; Base\'s own application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js records an anchor a person obtained EXTERNALLY, it does not create one in-app.');
 
         console.log(`
 Capability inventory (Section B):
@@ -218,12 +218,12 @@ Capability inventory (Section B):
     // Section D — Local-first invariant.
     // =======================================================================
     {
-        const publishSource = await readSource('application/PublishDocumentUseCase.js');
+        const publishSource = await readSource('application/publication/PublishDocumentUseCase.js');
         assert(!/fetch\(|XMLHttpRequest|RTCPeerConnection|WebSocket|Arweave|Nostr|Ipfs|Bitcoin/i.test(publishSource),
-            '1. application/PublishDocumentUseCase.js contains no network I/O and no reference to any distribution substrate — structurally incapable of letting a distribution failure affect it, because it never calls out to one.');
-        const unpublishSource = await readSource('application/UnpublishDocumentUseCase.js');
+            '1. application/publication/PublishDocumentUseCase.js contains no network I/O and no reference to any distribution substrate — structurally incapable of letting a distribution failure affect it, because it never calls out to one.');
+        const unpublishSource = await readSource('application/publication/UnpublishDocumentUseCase.js');
         assert(!/fetch\(|XMLHttpRequest|RTCPeerConnection|WebSocket|Arweave|Nostr|Ipfs|Bitcoin/i.test(unpublishSource),
-            '2. application/UnpublishDocumentUseCase.js is identically clean — it is the mirror of publish, by its own header, and touches nothing beyond the publisherProvider.');
+            '2. application/publication/UnpublishDocumentUseCase.js is identically clean — it is the mirror of publish, by its own header, and touches nothing beyond the publisherProvider.');
 
         // Live: a publish succeeds and produces a fully valid, immediately
         // unpublish-able Publication with ZERO distribution collaborator
@@ -271,11 +271,11 @@ Capability inventory (Section B):
         // OTHER four families' own orchestration classes anywhere in its
         // source.
         const families = [
-            ['application/SnapshotDistributionCommand.js', 'Snapshot distribution', 'SnapshotDistributionCommand'],
-            ['application/PublicationDistributionExecutor.js', 'Publication distribution', 'PublicationDistributionExecutor'],
-            ['application/CreateExternalSnapshotPlacementUseCase.js', 'Snapshot placement', 'CreateExternalSnapshotPlacementUseCase'],
-            ['application/IpfsRemotePublicationCoordinator.js', 'Remote IPFS pinning', 'IpfsRemotePublicationCoordinator'],
-            ['application/AddPublicationAnchorUseCase.js', 'Anchor cataloging', 'AddPublicationAnchorUseCase']
+            ['application/snapshot/SnapshotDistributionCommand.js', 'Snapshot distribution', 'SnapshotDistributionCommand'],
+            ['application/publication/distribution/PublicationDistributionExecutor.js', 'Publication distribution', 'PublicationDistributionExecutor'],
+            ['application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js', 'Snapshot placement', 'CreateExternalSnapshotPlacementUseCase'],
+            ['application/ipfs/IpfsRemotePublicationCoordinator.js', 'Remote IPFS pinning', 'IpfsRemotePublicationCoordinator'],
+            ['application/anchoring/AddPublicationAnchorUseCase.js', 'Anchor cataloging', 'AddPublicationAnchorUseCase']
         ];
         for (const [path, label, ownName] of families) {
             const source = await readSource(path);
@@ -294,15 +294,15 @@ Capability inventory (Section B):
     // =======================================================================
     {
         const preferenceToken = /RoleProviderPreference|RoleAwareProviderResolver|ResolvePreferredRoleProviderUseCase/;
-        const snapshotPlacementSource = await readSource('application/CreateExternalSnapshotPlacementUseCase.js');
-        const preferredCoordinatorSource = await readSource('application/PreferredSnapshotPlacementCreationCoordinator.js');
+        const snapshotPlacementSource = await readSource('application/snapshot/placement/CreateExternalSnapshotPlacementUseCase.js');
+        const preferredCoordinatorSource = await readSource('application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js');
         assert(preferenceToken.test(preferredCoordinatorSource),
-            '1. exactly the Snapshot-placement family has a real preference consumer — application/PreferredSnapshotPlacementCreationCoordinator.js.');
+            '1. exactly the Snapshot-placement family has a real preference consumer — application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js.');
 
-        const snapshotDistSource = await readSource('application/SnapshotDistributionCommand.js');
-        const pubDistSource = await readSource('application/PublicationDistributionExecutor.js');
-        const remoteIpfsSource = await readSource('application/IpfsRemotePublicationCoordinator.js');
-        const anchorCatalogSource = await readSource('application/AddPublicationAnchorUseCase.js');
+        const snapshotDistSource = await readSource('application/snapshot/SnapshotDistributionCommand.js');
+        const pubDistSource = await readSource('application/publication/distribution/PublicationDistributionExecutor.js');
+        const remoteIpfsSource = await readSource('application/ipfs/IpfsRemotePublicationCoordinator.js');
+        const anchorCatalogSource = await readSource('application/anchoring/AddPublicationAnchorUseCase.js');
         for (const [source, label] of [
             [snapshotDistSource, 'Snapshot distribution (Distribute Snapshot)'],
             [pubDistSource, 'Publication distribution (Distribute Publication)'],
@@ -314,7 +314,7 @@ Capability inventory (Section B):
                 `2. ${label} has zero reference to the CONTENT RoleProviderPreference vocabulary — this mechanism offers no "select a provider" concept at all today, confirmed by source, not merely by absence of a UI control.`);
         }
     }
-    console.log('✓ Section F: the CONTENT RoleProviderPreference arc (0.9.293-0.9.304) touches exactly ONE of the five mechanisms in Section B\'s inventory (Snapshot placement, through application/PreferredSnapshotPlacementCreationCoordinator.js) — the other four (Distribute Snapshot, Distribute Publication, Remote IPFS pinning, and anchor cataloging) reference no preference vocabulary anywhere in their own source. Any future post-publish guidance surface literally cannot degrade into "select a provider for every conceivable role" today, because four of the five roles have no provider-selection concept to surface in the first place — confirming 0.9.304\'s own STOP verdict remains accurate, unrevisited here, not re-litigated.');
+    console.log('✓ Section F: the CONTENT RoleProviderPreference arc (0.9.293-0.9.304) touches exactly ONE of the five mechanisms in Section B\'s inventory (Snapshot placement, through application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js) — the other four (Distribute Snapshot, Distribute Publication, Remote IPFS pinning, and anchor cataloging) reference no preference vocabulary anywhere in their own source. Any future post-publish guidance surface literally cannot degrade into "select a provider for every conceivable role" today, because four of the five roles have no provider-selection concept to surface in the first place — confirming 0.9.304\'s own STOP verdict remains accurate, unrevisited here, not re-litigated.');
 
     // =======================================================================
     // Section G — UI duplication assessment.
@@ -326,16 +326,16 @@ Capability inventory (Section B):
         // pinning (hosted service): DISTINCT, not duplicative.
         assert(/new IpfsContentStore\(\)/.test(await readSource('ui/main.js')) && /composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/.test(await readSource('ui/main.js')),
             '1. Snapshot Placement\'s own "ipfs" storage type is backed by content/IpfsContentStore.js (Kubo — a locally-run IPFS daemon the person must have installed), confirmed in ui/main.js\'s own composition. (AMENDED 0.9.665 — the gateway construction now carries a resolved, settings-backed gatewayUrl; AMENDED FURTHER 0.9.666 — that construction now goes through composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls) for read failover; see docs/Roadmap.md.)');
-        assert(/HttpPinningProvider/.test(await readSource('application/IpfsRemotePublicationCoordinator.js')),
+        assert(/HttpPinningProvider/.test(await readSource('application/ipfs/IpfsRemotePublicationCoordinator.js')),
             '2. "Publish to Remote IPFS" is backed by a completely different collaborator, content/HttpPinningProvider.js (a hosted, third-party pinning service, no local daemon required) — genuinely different infrastructure behind a similar-sounding label, not the same capability shown twice.');
 
         // G2 — Distribute Snapshot vs. Distribute Publication: DISTINCT
         // content, by the Snapshot family's own explicit boundary.
-        const snapshotDistSource = await readSource('application/SnapshotDistributionCommand.js');
+        const snapshotDistSource = await readSource('application/snapshot/SnapshotDistributionCommand.js');
         assert(snapshotDistSource.includes('A "Publication package" combining a Signed Claim and a Snapshot')
             && snapshotDistSource.includes('No coupling to Signed Claim')
             && snapshotDistSource.includes('unscheduled concern, if ever built at all'),
-            '3. application/SnapshotDistributionCommand.js\'s own header explicitly disclaims combining Snapshot bytes with the signed Publication record — the two "Distribute" buttons announce genuinely different material (Snapshot bytes vs. a signed claim), not the same thing under two names.');
+            '3. application/snapshot/SnapshotDistributionCommand.js\'s own header explicitly disclaims combining Snapshot bytes with the signed Publication record — the two "Distribute" buttons announce genuinely different material (Snapshot bytes vs. a signed claim), not the same thing under two names.');
 
         // G3 — Export Snapshot vs. Distribute Snapshot: DISTINCT (local,
         // synchronous, no network, vs. external content store + announce).
@@ -376,8 +376,8 @@ Capability inventory (Section B):
     // =======================================================================
     {
         const surfaces = [
-            ['application/PublishDocumentUseCase.js', 'PublishDocumentUseCase'],
-            ['application/UnpublishDocumentUseCase.js', 'UnpublishDocumentUseCase']
+            ['application/publication/PublishDocumentUseCase.js', 'PublishDocumentUseCase'],
+            ['application/publication/UnpublishDocumentUseCase.js', 'UnpublishDocumentUseCase']
         ];
         const distributionVocabulary = /snapshotDistributionCommand|distributionCommand|ipfsRemotePublicationCoordinator|createAnchor|PublicationDistributionExecutor|executeSnapshotDistributionCommand|SnapshotPlacementCreationCoordinator/;
         for (const [path, label] of surfaces) {

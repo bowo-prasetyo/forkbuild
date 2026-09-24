@@ -1,7 +1,7 @@
 // 0.5.7 — World View UX & Progressive Exploration.
 //
 // A generic, dumb "title + count, collapse/expand" wrapper — the visual
-// half of application/WorldViewNavigationState.js's per-section
+// half of application/world/WorldViewNavigationState.js's per-section
 // collapsed/expanded bookkeeping. Deliberately owns NO state of its
 // own: `collapsed` is a prop, toggling emits `toggle` for the host to
 // act on (exactly the same controlled-component shape every other

@@ -148,7 +148,7 @@ async function run() {
         // so the settings entry point offers exactly the providers this
         // role's own real registry actually has, the same "never
         // hardcoded, never a second, disconnected list" restraint
-        // application/RoleProviderPreferenceSettingsView.js's own header
+        // application/settings/RoleProviderPreferenceSettingsView.js's own header
         // holds. It never calls `.create()`.
         const allProductionFiles = await repoWideProductionFiles();
         const hits = [];
@@ -172,8 +172,8 @@ async function run() {
             const text = await source(file);
             if (/from ['"].*PreferredSnapshotPlacementCreationCoordinator\.js['"]/.test(text)) classImporters.push(file);
         }
-        assert(classImporters.length === 1 && classImporters[0] === 'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
-            `A4a. application/PreferredSnapshotPlacementCreationCoordinator.js is imported by exactly its own composition root in production (found ${classImporters.length}: ${classImporters.join(', ')}) — no ui/ view imports it directly either`);
+        assert(classImporters.length === 1 && classImporters[0] === 'application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
+            `A4a. application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js is imported by exactly its own composition root in production (found ${classImporters.length}: ${classImporters.join(', ')}) — no ui/ view imports it directly either`);
 
         console.log('✓ Section A — VERDICT (UPDATED by 0.9.301): PreferredSnapshotPlacementCreationCoordinator.create() is now reachable from a real, user-triggered code path — ui/views/DecentralizedPublicationsView.js\'s own "Use Preferred Provider" action (0.9.301 — Preferred Content Provider Placement Trigger), this audit\'s own named next step, carried out. This section originally proved ZERO callers as of 0.9.300; it is updated, not deleted, to keep asserting a true fact about the current repository, following the exact precedent every other repo-wide sweep in this sequence already set.');
     }
@@ -196,7 +196,7 @@ async function run() {
         // similar), never a generic "Create Placement" naming nothing.
         assert(/placementCreationButtonLabel\(entry, storage\)/.test(viewSource),
             'B2a. the button label is computed per-card, from that card\'s own storage type');
-        const buttonLabelSource = await source('application/SnapshotPlacementCreationView.js');
+        const buttonLabelSource = await source('application/snapshot/placement/SnapshotPlacementCreationView.js');
         assert(/describeCreationButtonLabel\(storageLabel/.test(buttonLabelSource),
             'B2b. describeCreationButtonLabel() takes the storage label as its own first argument — the button\'s text is never storage-agnostic');
 
@@ -234,7 +234,7 @@ async function run() {
         assert(!/'local'|'ipfs'|"local"|"ipfs"/.test(humanizeMatch[0]),
             'B4c. humanizeContentKind() has no per-provider special case for either "local" or "ipfs" — both flow through the exact same generic capitalization rule');
 
-        console.log('✓ Section B — VERDICT: today\'s explicit storage selection is category (1), an intentional per-action choice — one dedicated card and button PER real registered storage type, each button\'s own label naming that specific storage, with no dropdown, no shared "pick then confirm" control, and no hardcoded framing of either provider as more "default" than the other. This is a genuine "for THIS placement, use Ipfs" click, not a default disguised as explicit and not a bare technical parameter — so it must remain authoritative, exactly as application/PreferredSnapshotPlacementCreationCoordinator.js\'s own header already guarantees (an explicit `storage` is never even weighed against a preference).');
+        console.log('✓ Section B — VERDICT: today\'s explicit storage selection is category (1), an intentional per-action choice — one dedicated card and button PER real registered storage type, each button\'s own label naming that specific storage, with no dropdown, no shared "pick then confirm" control, and no hardcoded framing of either provider as more "default" than the other. This is a genuine "for THIS placement, use Ipfs" click, not a default disguised as explicit and not a bare technical parameter — so it must remain authoritative, exactly as application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js\'s own header already guarantees (an explicit `storage` is never even weighed against a preference).');
     }
 
     // ===============================================================
@@ -316,7 +316,7 @@ async function run() {
         // contract (Section B of 0.9.298's own product audit already
         // established this; re-verified here directly against the class
         // this view actually calls).
-        const coordinatorSource = await source('application/SnapshotPlacementCreationCoordinator.js');
+        const coordinatorSource = await source('application/snapshot/placement/SnapshotPlacementCreationCoordinator.js');
         assert(/availableStorageTypes\(\)\s*\{\s*return this\._storeRegistry\.availableStorageTypes\(\);/.test(coordinatorSource) || /availableStorageTypes/.test(coordinatorSource),
             'D2a. availableStorageTypes() is a direct pass-through to the registry\'s own registered keys — confirmed from source');
 
@@ -371,9 +371,9 @@ async function run() {
     // display today, including a real gap this audit finds.
     // ===============================================================
     {
-        const outcomeSource = await source('application/SnapshotPlacementCreationOutcome.js');
-        const viewModelSource = await source('application/SnapshotPlacementCreationView.js');
-        const resolverSource = await source('application/RoleAwareProviderResolver.js');
+        const outcomeSource = await source('application/snapshot/placement/SnapshotPlacementCreationOutcome.js');
+        const viewModelSource = await source('application/snapshot/placement/SnapshotPlacementCreationView.js');
+        const resolverSource = await source('application/settings/RoleAwareProviderResolver.js');
 
         // F1. NO_PREFERENCE: today's view-model already handles an
         // absent-storage refusal as a thrown error (the UNAVAILABLE-shaped
@@ -381,7 +381,7 @@ async function run() {
         // today's exact behavior, exactly as application/
         // PreferredSnapshotPlacementCreationCoordinator.js's own header
         // already documents.
-        const coordinatorSource = await source('application/PreferredSnapshotPlacementCreationCoordinator.js');
+        const coordinatorSource = await source('application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js');
         assert(/NO_PREFERENCE PRESERVES EXISTING BEHAVIOR, LITERALLY/.test(coordinatorSource),
             'F1a. the coordinator\'s own header states NO_PREFERENCE forwards the identical absent-storage refusal already in production');
 
@@ -475,15 +475,15 @@ async function run() {
         }
         // UPDATED by 0.9.302 — Content Provider Preference Settings Entry
         // Point, this audit's own Section I, step 4, carried out.
-        // application/SetRoleProviderPreferenceUseCase.js is now the ONE
+        // application/settings/SetRoleProviderPreferenceUseCase.js is now the ONE
         // production file that calls RoleProviderPreferenceStore.save() —
         // never storage/RoleProviderPreferenceStore.js's own save() called
         // directly from ui/ (see ui/views/ContentProviderSettingsView.js's
         // own header, "the UI never constructs or interprets a
         // RoleProviderPreference itself").
-        const KNOWN_SAVE_CALLER_FILES = new Set(['application/SetRoleProviderPreferenceUseCase.js']);
+        const KNOWN_SAVE_CALLER_FILES = new Set(['application/settings/SetRoleProviderPreferenceUseCase.js']);
         assert(saveCallers === KNOWN_SAVE_CALLER_FILES.size && saveCallerFiles.every((f) => KNOWN_SAVE_CALLER_FILES.has(f)),
-            `H1. RoleProviderPreferenceStore.save() is called from exactly application/SetRoleProviderPreferenceUseCase.js today (found ${saveCallers}: ${saveCallerFiles.join(', ')}) — as of 0.9.300 this was ZERO production files (see reasoning above); 0.9.302 is the legitimate settings-writing seam this audit's own Section I verdict named as the correct next step, once a consumer (0.9.301) existed`);
+            `H1. RoleProviderPreferenceStore.save() is called from exactly application/settings/SetRoleProviderPreferenceUseCase.js today (found ${saveCallers}: ${saveCallerFiles.join(', ')}) — as of 0.9.300 this was ZERO production files (see reasoning above); 0.9.302 is the legitimate settings-writing seam this audit's own Section I verdict named as the correct next step, once a consumer (0.9.301) existed`);
 
         const decision = B_CONSUMER_FIRST;
         assert(decision === B_CONSUMER_FIRST, 'H2. the decision this section exists to reach');

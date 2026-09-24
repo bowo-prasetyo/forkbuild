@@ -1,8 +1,8 @@
 // 0.2.99 — World Collaboration UX.
 //
 // 0.2.98 built the entire security substrate — ownership, signed
-// membership grants (application/WorldMembershipUseCase.js), and live
-// presence (application/WorldPresenceUseCase.js) — but named, rather
+// membership grants (application/identity/WorldMembershipUseCase.js), and live
+// presence (application/presence/WorldPresenceUseCase.js) — but named, rather
 // than closed, the gap this milestone answers: "any UI surface for
 // granting/revoking membership or displaying a presence roster" simply
 // did not exist. See docs/Roadmap.md, 0.2.98's own closing paragraph.
@@ -67,7 +67,7 @@ export const WorldCollaborationAccess = Object.freeze({
 //                    `.isAuthorized` are ever read).
 //   presence         session.getWorldPresenceRoster(documentId) — an
 //                    Array of `{ identityId, deviceCount, activity,
-//                    canEdit }` (application/WorldPresenceUseCase.js's
+//                    canEdit }` (application/presence/WorldPresenceUseCase.js's
 //                    own shape).
 //
 // Every row: { identityId, access, online, deviceCount, activity,
@@ -120,7 +120,7 @@ export function buildWorldCollaborationRoster({
             deviceCount: presenceEntry ? presenceEntry.deviceCount : null,
             activity: presenceEntry ? presenceEntry.activity : null,
             // Only the World's true owner may ever grant/revoke (see
-            // application/WorldMembershipUseCase.js's own header) —
+            // application/identity/WorldMembershipUseCase.js's own header) —
             // and an owner never manages their own row.
             canManage: isViewerOwner && !isOwner
         };

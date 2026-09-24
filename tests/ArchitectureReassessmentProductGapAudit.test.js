@@ -11,14 +11,14 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { RemoveWorldPlacementUseCase } from '../application/RemoveWorldPlacementUseCase.js';
-import { DiscoverWorldsUseCase } from '../application/DiscoverWorldsUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { UnpublishDocumentUseCase } from '../application/UnpublishDocumentUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { RemoveWorldPlacementUseCase } from '../application/placement/RemoveWorldPlacementUseCase.js';
+import { DiscoverWorldsUseCase } from '../application/discovery/DiscoverWorldsUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { UnpublishDocumentUseCase } from '../application/publication/UnpublishDocumentUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { worldNavigationSessionFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
@@ -137,8 +137,8 @@ async function runTests() {
         const vehicleTypeCode = codeOnlyLines(vehicleTypeSource).join('\n');
         assert(!/passenger|capacity|multi-?rider|\bfuel\b|\brange\b/i.test(vehicleTypeCode), 'B2. VehicleType.js\'s own CODE (not its header prose, which discusses the boundary by name) still declares no capacity/passenger/fuel vocabulary — the exact restraint its own 0.9.70 header documents');
         const repoWideVehicleFiles = [
-            'application/AvatarVehicleInteractionController.js',
-            'application/AvatarVehicleMovementController.js',
+            'application/avatar/AvatarVehicleInteractionController.js',
+            'application/avatar/AvatarVehicleMovementController.js',
             'core/VehicleInstance.js',
             'core/VehiclePresence.js'
         ];
@@ -174,10 +174,10 @@ async function runTests() {
         // C1 — RemoveWorldPlacementUseCase is composed into every one of
         // the four spatial-index composition roots that build it...
         const compositionRoots = [
-            'application/CreateSpatialIndexUseCase.js',
-            'application/CreateSpatialDiscoveryUseCase.js',
-            'application/CreatePlacementRegistryUseCase.js',
-            'application/CreateDecentralizedSpatialDiscoveryUseCase.js'
+            'application/world/CreateSpatialIndexUseCase.js',
+            'application/discovery/CreateSpatialDiscoveryUseCase.js',
+            'application/placement/CreatePlacementRegistryUseCase.js',
+            'application/discovery/CreateDecentralizedSpatialDiscoveryUseCase.js'
         ];
         for (const file of compositionRoots) {
             const source = await rawSource(file);
@@ -221,7 +221,7 @@ async function runTests() {
         // which closed exactly this half of the gap. At the time of THIS
         // audit (0.9.196), the read model a Wanderer saw named Move but
         // never Remove; getPlacementInfo()'s own returned shape (the
-        // single place in application/WorldNavigationSession.js that
+        // single place in application/world/WorldNavigationSession.js that
         // shape is assembled) carried `movable`, gated on ownership, with
         // no `removable` counterpart. 0.9.197 added exactly that
         // counterpart — gated on the SAME ownership signal, no new

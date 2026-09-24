@@ -25,7 +25,7 @@ import { resolveMovementHeading } from './AvatarMovementSteeringSimulation.js';
 //
 // Pure function: identical inputs always produce identical outputs.
 // No hidden clock, no Math.random, no Three.js import. The caller
-// (application/AvatarMovementController.js) owns the only mutable
+// (application/avatar/AvatarMovementController.js) owns the only mutable
 // state — verticalVelocity/grounded between ticks — and feeds it back
 // in on the next call; this file never remembers anything itself.
 const WALK_SPEED = 3; // world units / second
@@ -70,8 +70,8 @@ const STEERING_TARGET_HEADING_OFFSET_RADIANS = 2; // radians (~114.6°)
 // callers, and every test that never mentions ground height at all)
 // gets byte-for-byte the same behavior as before this milestone: a
 // single, permanently flat GROUND_Y = 0 plane. A caller that DOES pass
-// one (application/AvatarMovementController.js, once an
-// application/AvatarStepConstraint.js is wired) is supplying "the
+// one (application/avatar/AvatarMovementController.js, once an
+// application/avatar/AvatarStepConstraint.js is wired) is supplying "the
 // support height directly beneath the avatar's CURRENT position" —
 // see that class's own header — so gravity/landing/the jump's own
 // apex all resolve relative to whatever surface (terrain or a brick
@@ -84,7 +84,7 @@ const STEERING_TARGET_HEADING_OFFSET_RADIANS = 2; // radians (~114.6°)
 // are UNCHANGED — they have integrated `verticalVelocity` against
 // `groundHeight` and snapped a grounded avatar onto it since 0.2.36/0.3.2
 // alike. What's new this milestone lives one layer up, in
-// application/AvatarStepConstraint.js: whether a grounded avatar's next
+// application/avatar/AvatarStepConstraint.js: whether a grounded avatar's next
 // tick is still "standing on something" at all is now a real geometric
 // question (falling off a ledge), not merely "block the step and stay
 // put" — see that class's own 0.3.4 header. This file only gained one
@@ -102,7 +102,7 @@ const STEERING_TARGET_HEADING_OFFSET_RADIANS = 2; // radians (~114.6°)
 // non-finite, or <= 0) degrades to WALK_SPEED, so every existing
 // caller that has never heard of a movement capability (every test
 // in this codebase predating 0.9.86, and every production call site
-// until application/AvatarMovementController.js starts passing one)
+// until application/avatar/AvatarMovementController.js starts passing one)
 // computes the exact same speed it always has — byte-for-byte, not
 // merely "close." Running still means exactly what it always has:
 // whatever base speed is active, doubled — see RUN_SPEED_MULTIPLIER
@@ -125,7 +125,7 @@ const STEERING_TARGET_HEADING_OFFSET_RADIANS = 2; // radians (~114.6°)
 // existing running-aware `speed` this file already computed) and
 // `currentMovementSpeed` combine into this tick's resolved,
 // SIGNED speed. Doing the wiring HERE, rather than in
-// application/AvatarMovementController.js, is deliberate: this file
+// application/avatar/AvatarMovementController.js, is deliberate: this file
 // already owns the one true "target speed a base speed plus running
 // implies" computation (RUN_SPEED_MULTIPLIER above) — teaching the
 // controller a second, duplicate copy of that arithmetic merely to feed
@@ -134,7 +134,7 @@ const STEERING_TARGET_HEADING_OFFSET_RADIANS = 2; // radians (~114.6°)
 // avoids (see tests/AvatarVehicleMovementSpeedIntegration.test.js's own
 // architectural regression sweep, which forbids the controller from ever
 // hardcoding a "double the speed" multiplication of its own).
-// `application/AvatarMovementController.js` still passes only bare
+// `application/avatar/AvatarMovementController.js` still passes only bare
 // numbers — its own resolved capability's `acceleration.acceleration`,
 // and its own transient `currentMovementSpeed` bookkeeping, the direct
 // structural twin of how it already threads `verticalVelocity`/
@@ -188,14 +188,14 @@ const STEERING_TARGET_HEADING_OFFSET_RADIANS = 2; // radians (~114.6°)
 // was never the place a signed current speed lived. Heading is different:
 // `rotationY` IS the avatar's current heading, already part of
 // `AvatarPresence`, already threaded through this exact function every
-// tick (see `application/AvatarMovementController.js#tick()`, unchanged
+// tick (see `application/avatar/AvatarMovementController.js#tick()`, unchanged
 // since 0.2.36). Reusing it is not a shortcut — it is the direct
 // consequence of `docs/Roadmap.md`'s own framing for this milestone:
 // "connects this milestone's pure heading math to an actual, STATEFUL
 // vehicle heading" — that stateful heading already exists, and always has.
 // A capability switch (mount/dismount) therefore preserves the avatar's
 // own physical facing automatically, with no reset logic anywhere in this
-// file or in `application/AvatarMovementController.js#setMovementCapability()`
+// file or in `application/avatar/AvatarMovementController.js#setMovementCapability()`
 // — heading is spatial state, never capability-relative transient state
 // the way speed is (see that method's own 0.9.91 comment for the contrast).
 export function simulateAvatarMovement({
@@ -245,7 +245,7 @@ export function simulateAvatarMovement({
     // `resolveMovementHeading()`'s own `diff === 0` no-op fires — a
     // released turn key stops heading change outright, the same tick,
     // with no residual creep and no persistent "turning left" state
-    // required anywhere (see application/AvatarMovementController.js's
+    // required anywhere (see application/avatar/AvatarMovementController.js's
     // own 0.9.94 header for why no new controller state was needed for
     // this either).
     //
@@ -281,7 +281,7 @@ export function simulateAvatarMovement({
     // 0.9.634 — Avatar Shallow-Water Ground Traversal. `waterSpeedFactor`
     // (optional, a plain [0, 1] multiplier — application/
     // AvatarMovementController.js's own job to have already resolved it,
-    // via application/AvatarWaterConstraint.js#speedFactorAt(), from the
+    // via application/avatar/AvatarWaterConstraint.js#speedFactorAt(), from the
     // avatar's CURRENT position, BEFORE this tick simulates) multiplies
     // whatever base speed is already active, the exact same "multiply
     // whatever base speed a caller supplies" role RUN_SPEED_MULTIPLIER
@@ -303,7 +303,7 @@ export function simulateAvatarMovement({
     // this very tick" — the exact same INSTANT behavior this function has
     // always had, and the only behavior every pre-0.9.91 caller (every
     // test that has never heard of acceleration, and every call site
-    // until application/AvatarMovementController.js starts passing a real
+    // until application/avatar/AvatarMovementController.js starts passing a real
     // rate) ever produces: `resolvedMovementSpeed` below degrades to
     // `targetMovementSpeed` directly, computed with no rate math at all,
     // byte-for-byte identical to the pre-0.9.91 `forwardAxis * speed`
@@ -372,7 +372,7 @@ export function simulateAvatarMovement({
     if (nextGrounded) {
         // Grounded: the avatar walks on whatever flat surface
         // `floorY` names (Y=0 by default, exactly as before 0.3.2; a
-        // brick's own top once application/AvatarStepConstraint.js is
+        // brick's own top once application/avatar/AvatarStepConstraint.js is
         // wired). Snapping outright (rather than integrating toward
         // it) means any drift can never accumulate while walking — see
         // "no NaN/Infinity, reasonable vertical bounds" in the design

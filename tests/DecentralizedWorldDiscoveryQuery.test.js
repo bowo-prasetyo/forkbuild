@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import {
     DecentralizedDiscoveryQueryService,
     queryDecentralizedWorldDiscovery
-} from '../application/DecentralizedWorldDiscoveryQuery.js';
+} from '../application/discovery/DecentralizedWorldDiscoveryQuery.js';
 
 // 0.9.25 — Decentralized Discovery Query Adapter.
 //
@@ -10,7 +10,7 @@ import {
 // for the full milestone story. Every scenario below runs against a
 // mocked `DecentralizedDiscoveryQueryService`, never a live one — this
 // orchestration layer is service-agnostic, and its own tests never import
-// `application/ArweaveGraphqlDiscoveryQueryService.js` at all (see
+// `application/arweave/ArweaveGraphqlDiscoveryQueryService.js` at all (see
 // tests/ArweaveGraphqlDiscoveryQueryService.test.js for that adapter's
 // own, separately-mocked wire coverage).
 
@@ -168,7 +168,7 @@ async function run() {
     //    this orchestration file's own code
     // ---------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/DecentralizedWorldDiscoveryQuery.js', import.meta.url);
+        const sourceUrl = new URL('../application/discovery/DecentralizedWorldDiscoveryQuery.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -181,7 +181,7 @@ async function run() {
             'trust', 'priority', 'confidence', 'rank', 'dedup', 'cache'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `application/DecentralizedWorldDiscoveryQuery.js code must never use the word "${term}"`);
+            assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `application/discovery/DecentralizedWorldDiscoveryQuery.js code must never use the word "${term}"`);
         }
 
         console.log('✓ 7. No registry, no WorldEncounter, no UI, no network/backend/trust vocabulary in this file\'s own code');

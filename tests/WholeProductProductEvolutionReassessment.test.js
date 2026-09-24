@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { execFileSync, execSync } from 'node:child_process';
 
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { sanitizeDistributionErrorMessage } from '../application/DistributionErrorMessageSanitizer.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
@@ -208,26 +208,26 @@ async function run() {
     {
         const capabilityInventory = [
             { capability: 'Document creation & editing', evidence: ['core/Document.js', 'ui/views/EditorView.js'], classification: 'COMPLETE' },
-            { capability: 'Local Publication (publish)', evidence: ['publisher/Publication.js', 'application/PublishDocumentUseCase.js'], classification: 'COMPLETE' },
-            { capability: 'Peer Publication exchange', evidence: ['application/AutoConnectKnownPeersUseCase.js', 'application/ResolvePublicationUseCase.js'], classification: 'COMPLETE' },
-            { capability: 'Decentralized Publication discovery', evidence: ['application/NostrPublicationDiscoveryPublisher.js', 'content/ArweaveContentStore.js'], classification: 'COMPLETE' },
-            { capability: 'Publication distribution (material + discovery announce)', evidence: ['application/PublicationDistributionCommand.js', 'application/PublicationDistributionOrchestrator.js'], classification: 'COMPLETE', note: 'reachable from EditorView, OwnPublicationPanel, and WorldEncounterCanvas — converged onto one command, 0.9.377-0.9.378' },
+            { capability: 'Local Publication (publish)', evidence: ['publisher/Publication.js', 'application/publication/PublishDocumentUseCase.js'], classification: 'COMPLETE' },
+            { capability: 'Peer Publication exchange', evidence: ['application/peer/AutoConnectKnownPeersUseCase.js', 'application/publication/ResolvePublicationUseCase.js'], classification: 'COMPLETE' },
+            { capability: 'Decentralized Publication discovery', evidence: ['application/nostr/NostrPublicationDiscoveryPublisher.js', 'content/ArweaveContentStore.js'], classification: 'COMPLETE' },
+            { capability: 'Publication distribution (material + discovery announce)', evidence: ['application/publication/distribution/PublicationDistributionCommand.js', 'application/publication/distribution/PublicationDistributionOrchestrator.js'], classification: 'COMPLETE', note: 'reachable from EditorView, OwnPublicationPanel, and WorldEncounterCanvas — converged onto one command, 0.9.377-0.9.378' },
             { capability: 'Post-publish -> Repository navigation', evidence: ['ui/views/EditorView.js'], classification: 'COMPLETE', note: 'this arc\'s own newest edge, 0.9.381-0.9.382 — see Section B/D' },
             { capability: 'Explore (Repository / World View)', evidence: ['ui/views/WorldView.js', 'ui/views/RepositoryView.js'], classification: 'COMPLETE' },
-            { capability: 'Fork', evidence: ['application/ForkDocumentUseCase.js', 'application/ForkFailureReason.js'], classification: 'COMPLETE' },
-            { capability: 'Snapshot creation & distribution', evidence: ['application/CreateSnapshotPlacementOrchestratorUseCase.js', 'application/SnapshotDistributionRuntimeComposition.js'], classification: 'COMPLETE' },
-            { capability: 'Snapshot discovery & recovery', evidence: ['application/NostrSnapshotDiscoveryQueryService.js', 'application/ResolveSelectedSnapshotCommand.js'], classification: 'COMPLETE' },
-            { capability: 'Publication Commentary', evidence: ['core/PublicationCommentary.js', 'application/AddPublicationCommentaryUseCase.js'], classification: 'COMPLETE' },
-            { capability: 'Notifications & history', evidence: ['storage/NotificationEventStore.js', 'application/GetRecipientNotificationEventsUseCase.js'], classification: 'COMPLETE', note: 'durable history only — delivery/unread/read deliberately absent, see Section H' },
-            { capability: 'Place Naming (claim, persist, publish, discover, adopt)', evidence: ['core/PlaceNamingClaim.js', 'core/PlaceNamingView.js', 'application/NostrPlaceNamingDiscoverySource.js'], classification: 'COMPLETE' },
+            { capability: 'Fork', evidence: ['application/document/ForkDocumentUseCase.js', 'application/document/ForkFailureReason.js'], classification: 'COMPLETE' },
+            { capability: 'Snapshot creation & distribution', evidence: ['application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js', 'application/snapshot/SnapshotDistributionRuntimeComposition.js'], classification: 'COMPLETE' },
+            { capability: 'Snapshot discovery & recovery', evidence: ['application/nostr/NostrSnapshotDiscoveryQueryService.js', 'application/snapshot/ResolveSelectedSnapshotCommand.js'], classification: 'COMPLETE' },
+            { capability: 'Publication Commentary', evidence: ['core/PublicationCommentary.js', 'application/publication/commentary/AddPublicationCommentaryUseCase.js'], classification: 'COMPLETE' },
+            { capability: 'Notifications & history', evidence: ['storage/NotificationEventStore.js', 'application/chat/GetRecipientNotificationEventsUseCase.js'], classification: 'COMPLETE', note: 'durable history only — delivery/unread/read deliberately absent, see Section H' },
+            { capability: 'Place Naming (claim, persist, publish, discover, adopt)', evidence: ['core/PlaceNamingClaim.js', 'core/PlaceNamingView.js', 'application/placeNaming/NostrPlaceNamingDiscoverySource.js'], classification: 'COMPLETE' },
             { capability: 'World presence', evidence: ['presence/AvatarPresenceBroadcastProvider.js'], classification: 'COMPLETE' },
             { capability: 'Collaboration', evidence: ['collaboration/CollaborationSession.js'], classification: 'COMPLETE', note: 'STOP since 0.9.241, reconfirmed since' },
             { capability: 'Provider preference (Snapshot content)', evidence: ['core/RoleProviderPreference.js', 'ui/views/ContentProviderSettingsView.js'], classification: 'COMPLETE' },
             { capability: 'Endpoint resilience settings (Arweave/Nostr)', evidence: ['core/ArweaveGatewayConfiguration.js', 'core/NostrRelayConfiguration.js'], classification: 'COMPLETE' },
-            { capability: 'IPFS placement/pinning', evidence: ['application/IpfsRemotePublicationCoordinator.js'], classification: 'COMPLETE', note: 'gated by a real external prerequisite (a hosted pinning endpoint), not the default path' },
-            { capability: 'Bitcoin anchoring', evidence: ['application/CreateBitcoinAnchorPublisherUseCase.js'], classification: 'COMPLETE' },
-            { capability: 'Base anchoring', evidence: ['application/BlockchainKind.js'], classification: 'DEFERRED', note: 'BlockchainKind.BASE remains named, reserved, unimplemented' },
-            { capability: 'Repository federation (encounter/decentralized-discovery-driven)', evidence: ['application/ResolvePublicationUseCase.js', 'application/SearchPublicationsUseCase.js'], classification: 'COMPLETE', note: 'proactive/crawling discovery remains DEFERRED — see Section C/H' },
+            { capability: 'IPFS placement/pinning', evidence: ['application/ipfs/IpfsRemotePublicationCoordinator.js'], classification: 'COMPLETE', note: 'gated by a real external prerequisite (a hosted pinning endpoint), not the default path' },
+            { capability: 'Bitcoin anchoring', evidence: ['application/anchoring/bitcoin/CreateBitcoinAnchorPublisherUseCase.js'], classification: 'COMPLETE' },
+            { capability: 'Base anchoring', evidence: ['application/anchoring/BlockchainKind.js'], classification: 'DEFERRED', note: 'BlockchainKind.BASE remains named, reserved, unimplemented' },
+            { capability: 'Repository federation (encounter/decentralized-discovery-driven)', evidence: ['application/publication/ResolvePublicationUseCase.js', 'application/publication/SearchPublicationsUseCase.js'], classification: 'COMPLETE', note: 'proactive/crawling discovery remains DEFERRED — see Section C/H' },
             { capability: 'Achievement/Reconciliation Leaderboard', evidence: ['ui/views/ReconciliationCandidateLeaderboardView.js'], classification: 'INTERNAL', note: 'correct when reached, but no router-link or programmatic navigation anywhere leads to it — reconfirmed unchanged since 0.9.374' }
         ];
         for (const row of capabilityInventory) {
@@ -318,24 +318,24 @@ async function run() {
 
         // B4. Discover -> Attribute -> Place. Snapshot placement in the
         // world is its own real, composed use case, distinct from Fork.
-        assert(await sourceExists('application/CreateSnapshotPlacementOrchestratorUseCase.js'),
-            n('Discover -> Attribute -> Place: application/CreateSnapshotPlacementOrchestratorUseCase.js exists — placing a discovered Snapshot is a real, reachable action'));
+        assert(await sourceExists('application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js'),
+            n('Discover -> Attribute -> Place: application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js exists — placing a discovered Snapshot is a real, reachable action'));
         const panelCodeOnly = await codeOnlySource('ui/components/OwnPublicationPanel.js');
         assert(panelCodeOnly.includes('>Place Materialized Snapshot</button>') && panelCodeOnly.includes('>Register Placed Snapshot</button>'),
             n('OwnPublicationPanel.js still renders real, distinct "Place Materialized Snapshot" and "Register Placed Snapshot" buttons, not merely a placement-orchestrator file with no UI entry point'));
 
         // B5. Comment -> Notify -> History.
-        assert(await sourceExists('application/AddPublicationCommentaryUseCase.js') && await sourceExists('application/PublicationCommentaryNotificationProducer.js'),
+        assert(await sourceExists('application/publication/commentary/AddPublicationCommentaryUseCase.js') && await sourceExists('application/publication/commentary/PublicationCommentaryNotificationProducer.js'),
             n('Comment -> Notify: a real commentary use case exists and feeds a real notification-producing collaborator'));
-        assert(await sourceExists('application/GetRecipientNotificationEventsUseCase.js') && await sourceExists('ui/components/NotificationHistoryPanel.js'),
+        assert(await sourceExists('application/chat/GetRecipientNotificationEventsUseCase.js') && await sourceExists('ui/components/NotificationHistoryPanel.js'),
             n('Notify -> History: a real recipient-facing query use case feeds a real, mounted history panel component'));
 
         // B6. Name -> Persist -> Publish -> Discover -> Adopt.
         const placeNamingClaimSource = await readSource('core/PlaceNamingClaim.js');
         assert(placeNamingClaimSource.includes('class PlaceNamingClaim') && placeNamingClaimSource.includes('Signature'),
             n('Name -> Persist: PlaceNamingClaim.js is a real, signed, persistable value object'));
-        assert(await sourceExists('application/NostrPlaceNamingDiscoverySource.js'),
-            n('Publish -> Discover: application/NostrPlaceNamingDiscoverySource.js is the real decentralized publish/discover transport for a naming claim'));
+        assert(await sourceExists('application/placeNaming/NostrPlaceNamingDiscoverySource.js'),
+            n('Publish -> Discover: application/placeNaming/NostrPlaceNamingDiscoverySource.js is the real decentralized publish/discover transport for a naming claim'));
         const placeNamingViewSource = await readSource('core/PlaceNamingView.js');
         assert(placeNamingViewSource.includes('export function claimsForRegion') || placeNamingViewSource.includes('namingView'),
             n('Discover -> Adopt: core/PlaceNamingView.js derives a consensus reading from whatever claims a replica knows about — a discovered claim genuinely becomes the adopted, displayed name via distinct-author confidence scoring, not merely stored inert'));
@@ -347,8 +347,8 @@ async function run() {
         const mainSource = await readSource('ui/main.js');
         assert(mainSource.includes('AutoConnectKnownPeersUseCase'),
             n('Peer -> Sync: ui/main.js composes AutoConnectKnownPeersUseCase, not merely importing an unused class'));
-        assert(await sourceExists('application/ResolvePublicationUseCase.js'),
-            n('Sync -> Repository: application/ResolvePublicationUseCase.js is the real admission step Repository search reads through'));
+        assert(await sourceExists('application/publication/ResolvePublicationUseCase.js'),
+            n('Sync -> Repository: application/publication/ResolvePublicationUseCase.js is the real admission step Repository search reads through'));
         const publicationCatalogSource = await readSource('ui/components/PublicationCatalog.js');
         assert(publicationCatalogSource.includes("router.push({ path: `/world/${pub.documentId}`"),
             n('Repository -> Explore: PublicationCatalog.js\'s own real "Explore" action pushes /world/:documentId'));
@@ -406,7 +406,7 @@ async function run() {
         const placementSource = await codeOnlySource('core/PublicationSnapshotPlacement.js');
         assert(!placementSource.includes("from '../publisher/Publication.js'"),
             n('C3. PublicationSnapshotPlacement.js does not import publisher/Publication.js — Snapshot placement carries its own identity, never fused with Publication\'s'));
-        const snapshotDistributionCommandSource = await readSource('application/SnapshotDistributionCommand.js');
+        const snapshotDistributionCommandSource = await readSource('application/snapshot/SnapshotDistributionCommand.js');
         assert(!snapshotDistributionCommandSource.includes('publisher/Publication.js'),
             n('C3. SnapshotDistributionCommand.js does not import publisher/Publication.js — Snapshot distribution stays its own command, never fused with Publication distribution'));
 
@@ -418,7 +418,7 @@ async function run() {
         // C5. Proactive decentralized Repository search is explicitly NOT
         // reopened by this audit — reconfirmed absent, one more time,
         // on the same footing every prior reassessment has left it.
-        const searchCode = await codeOnlySource('application/SearchPublicationsUseCase.js');
+        const searchCode = await codeOnlySource('application/publication/SearchPublicationsUseCase.js');
         assert(!/Arweave|Nostr|Ipfs|fetch\(|WebSocket/i.test(searchCode) && !/async execute/.test(searchCode),
             n('C5. SearchPublicationsUseCase.js still imports no network/discovery collaborator and stays synchronous — proactive Repository search is not reopened here'));
 
@@ -508,8 +508,8 @@ async function run() {
         // E3. Snapshot identity is never conflated with Publication.id —
         // reconfirmed the SnapshotDistributionCommand result shape names
         // its own fields, distinct from PublicationDistributionCommand's.
-        const snapshotDistCommandSource = await codeOnlySource('application/SnapshotDistributionCommand.js');
-        const pubDistCommandSource = await codeOnlySource('application/PublicationDistributionCommand.js');
+        const snapshotDistCommandSource = await codeOnlySource('application/snapshot/SnapshotDistributionCommand.js');
+        const pubDistCommandSource = await codeOnlySource('application/publication/distribution/PublicationDistributionCommand.js');
         assert(snapshotDistCommandSource !== pubDistCommandSource,
             n('E3. Snapshot distribution and Publication distribution remain two independent command files, never one fused command keyed by a shared identity'));
 
@@ -532,25 +532,25 @@ async function run() {
     // Section F — Temporal semantics audit.
     // ===============================================================
     {
-        const publishSource = await readSource('application/PublishDocumentUseCase.js');
-        const distributionCommandSource = await readSource('application/PublicationDistributionCommand.js');
+        const publishSource = await readSource('application/publication/PublishDocumentUseCase.js');
+        const distributionCommandSource = await readSource('application/publication/distribution/PublicationDistributionCommand.js');
         assert(publishSource.length > 0 && distributionCommandSource.length > 0 && publishSource !== distributionCommandSource,
             n('F1. "published" (local act) and "distributed" (explicit separate action) remain two distinct real files, never fused'));
 
         assert(await sourceExists('core/DecentralizedWorldDiscoveryLead.js'),
             n('F2. "discovered" (a lead, no content) has its own carrier type'));
-        assert(await sourceExists('application/ResolvePublicationUseCase.js'),
+        assert(await sourceExists('application/publication/ResolvePublicationUseCase.js'),
             n('F3. "resolved" is its own distinct step'));
-        const resolutionOutcomeSource = await readSource('application/PublicationResolutionOutcome.js');
+        const resolutionOutcomeSource = await readSource('application/publication/PublicationResolutionOutcome.js');
         assert(/CONTENT_UNAVAILABLE/.test(resolutionOutcomeSource),
             n('F4. "retrieved" stays separate from "resolved" — CONTENT_UNAVAILABLE is its own named outcome, resolution succeeding without content being fetched'));
-        assert(await sourceExists('application/PublicationAnchorVerificationLifecycleView.js'),
+        assert(await sourceExists('application/anchoring/PublicationAnchorVerificationLifecycleView.js'),
             n('F5. "verified" (anchor verification) is its own distinct lifecycle, never fused with resolution or distribution'));
-        assert(await sourceExists('application/CreateSnapshotPlacementOrchestratorUseCase.js'),
+        assert(await sourceExists('application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js'),
             n('F6. "placed" (Snapshot placement in the World) is its own distinct step from discovery/resolution'));
-        assert(await sourceExists('application/PublicationEvidenceDiscoveryView.js') || await sourceExists('application/NostrPlaceNamingDiscoverySource.js'),
+        assert(await sourceExists('application/publication/evidence/PublicationEvidenceDiscoveryView.js') || await sourceExists('application/placeNaming/NostrPlaceNamingDiscoverySource.js'),
             n('F7. "registered" (world discovery registry / naming claim registration) stays a separate concept from "visible"'));
-        assert(await sourceExists('application/SearchPublicationsUseCase.js'),
+        assert(await sourceExists('application/publication/SearchPublicationsUseCase.js'),
             n('F8. "visible" (Repository search result) is a distinct, later read, never fused with resolution itself'));
 
         // Notification family, reconfirmed fresh.
@@ -563,10 +563,10 @@ async function run() {
 
         // The Conversations "unread" counter is a genuinely different
         // feature (per-conversation local read-marker over chat
-        // messages, application/PeerPresenceUseCase.js) — reconfirmed
+        // messages, application/presence/PeerPresenceUseCase.js) — reconfirmed
         // distinct from the deferred NotificationEvent delivered/seen/
         // read direction, not accidentally the same mechanism reused.
-        const peerPresenceSource = await codeOnlySource('application/PeerPresenceUseCase.js');
+        const peerPresenceSource = await codeOnlySource('application/presence/PeerPresenceUseCase.js');
         assert(peerPresenceSource.includes('unreadCount') && !peerPresenceSource.includes('NotificationEvent'),
             n('F11. Conversations\' own unreadCount (chat messages, PeerPresenceUseCase.js) is unrelated to NotificationEvent — two separate mechanisms, not one "unread" concept silently spanning both'));
 
@@ -604,7 +604,7 @@ async function run() {
         // G2. Fork failure — a named, distinct reason is available rather
         // than a generic error, and the UI has its own dedicated recovery
         // screen (backFromForkFailure), reconfirmed present.
-        const forkFailureReasonSource = await readSource('application/ForkFailureReason.js');
+        const forkFailureReasonSource = await readSource('application/document/ForkFailureReason.js');
         assert(/LICENSE_DENIED/.test(forkFailureReasonSource) && /MATERIAL_UNAVAILABLE/.test(forkFailureReasonSource),
             n('G2. ForkFailureReason.js still names two distinct fork-failure causes — the person is told WHY, not just THAT it failed'));
         assert(editorViewCodeOnly.includes('function backFromForkFailure()'),
@@ -612,9 +612,9 @@ async function run() {
 
         // G3. Resolution failure (CONTENT_UNAVAILABLE) is rendered with
         // its own description, not a bare boolean.
-        const resolutionViewSource = await readSource('application/PublicationResolutionView.js');
+        const resolutionViewSource = await readSource('application/publication/PublicationResolutionView.js');
         assert(resolutionViewSource.includes('describePublicationOutcome'),
-            n('G3. application/PublicationResolutionView.js exports describePublicationOutcome() — a resolution failure is described in words, not left as an opaque status code'));
+            n('G3. application/publication/PublicationResolutionView.js exports describePublicationOutcome() — a resolution failure is described in words, not left as an opaque status code'));
 
         console.log('✓ Section G: every failure path checked (distribution, fork, resolution) leaves the user with an understandable message and a genuine next action — a manual retry that actually works (live-proven), a named fork-failure reason with its own recovery screen, and a described resolution outcome. Existing graceful degradation remains preferable to a generalized error framework; none is warranted here.');
     }
@@ -647,7 +647,7 @@ async function run() {
             const hits = await grepCodeOnlyFiles(term, PRODUCTION_DIRS);
             assert(hits.length === 0, n(`no "${term}" vocabulary exists anywhere in production — found: ${JSON.stringify(hits)}`));
         }
-        const storeCode = await codeOnlySource('application/PublicationDistributionLifecycleStore.js');
+        const storeCode = await codeOnlySource('application/publication/distribution/PublicationDistributionLifecycleStore.js');
         assert(!storeCode.includes('push('), n('the lifecycle store still accumulates no history array'));
 
         console.log('\n=== SECTION H: PREVIOUSLY DEFERRED CANDIDATES ===');

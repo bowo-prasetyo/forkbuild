@@ -1,13 +1,13 @@
 import { computed, inject } from 'vue';
 import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPreferenceForm.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
-import { describeRoleProviderPreferenceSettings } from '../../application/RoleProviderPreferenceSettingsView.js';
+import { describeRoleProviderPreferenceSettings } from '../../application/settings/RoleProviderPreferenceSettingsView.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 
 // Mirrors ui/views/ContentProviderSettingsView.js's own shape, one role
 // over — the same small, dedicated settings page, the same
 // RoleProviderPreferenceStore/SetRoleProviderPreferenceUseCase pair
-// (application/RoleProviderPreferenceSettingsView.js's own
+// (application/settings/RoleProviderPreferenceSettingsView.js's own
 // describeRoleProviderPreferenceSettings() is already role-agnostic; this
 // view is the first caller to pass it RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY
 // rather than CONTENT).
@@ -15,8 +15,8 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 // Chooses which substrate this replica's own composition roots — Publication,
 // Snapshot, and Place Naming distribution, and Commentary distribution's
 // own asynchronous publish — construct their announcement/discovery
-// collaborator against (see application/PublicationDistributionRuntimeComposition.js,
-// application/SnapshotDistributionRuntimeComposition.js, application/
+// collaborator against (see application/publication/distribution/PublicationDistributionRuntimeComposition.js,
+// application/snapshot/SnapshotDistributionRuntimeComposition.js, application/
 // PlaceNamingPublicationRuntimeComposition.js, and ui/main.js's own
 // addPublicationCommentaryCommand()). A caller that already offers its own
 // explicit, per-action Nostr/Arweave choice (WorldEncounterCanvas's own
@@ -28,7 +28,7 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 // UNLIKE CONTENT, THE PROVIDER LIST IS HARDCODED HERE, NOT READ FROM A
 // REGISTRY. Announcement & Discovery has no keyed registry the way
 // content/ContentStore.js's own SnapshotPlacementStoreRegistry does (see
-// application/RoleAwareProviderResolver.js's own header, "Discovery has NO
+// application/settings/RoleAwareProviderResolver.js's own header, "Discovery has NO
 // such registry yet") — 'nostr'/'arweave' are this codebase's only two
 // real Announcement/Discovery substrates today, named here the same way
 // every composition root above already names them as literal strings.

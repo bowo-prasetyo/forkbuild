@@ -5,7 +5,7 @@ import { Position } from '../core/Position.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { DiscoverPlacementsUseCase } from '../application/DiscoverPlacementsUseCase.js';
+import { DiscoverPlacementsUseCase } from '../application/placement/DiscoverPlacementsUseCase.js';
 import { worldNavigationSessionFiles, worldEncounterCanvasFiles, editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.307 — Post-Arc Product Evolution Reassessment.
@@ -115,17 +115,17 @@ async function runTests() {
     {
         const capabilities = [
             ['World View / navigation', 'ui/views/WorldView.js', 'export default'],
-            ['Avatar / vehicle', 'application/AvatarVehicleInteractionController.js', 'export class'],
+            ['Avatar / vehicle', 'application/avatar/AvatarVehicleInteractionController.js', 'export class'],
             ['Publication discovery', 'discovery/LocalDiscoveryProvider.js', 'export class LocalDiscoveryProvider'],
-            ['Publication verification', 'application/WorldEncounterMaterialVerification.js', 'export class WorldEncounterMaterialVerifier'],
-            ['Publication placement', 'application/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
-            ['Snapshot discovery', 'application/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
-            ['Snapshot inspection / comparison', 'application/WorldSnapshotComparison.js', 'export function compareSnapshotWorldPublications'],
-            ['Snapshot World placement', 'application/SnapshotWorldPlacement.js', 'export function resolveSnapshotWorldPlacement'],
+            ['Publication verification', 'application/worldEncounter/WorldEncounterMaterialVerification.js', 'export class WorldEncounterMaterialVerifier'],
+            ['Publication placement', 'application/placement/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
+            ['Snapshot discovery', 'application/snapshot/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
+            ['Snapshot inspection / comparison', 'application/snapshot/WorldSnapshotComparison.js', 'export function compareSnapshotWorldPublications'],
+            ['Snapshot World placement', 'application/snapshot/placement/SnapshotWorldPlacement.js', 'export function resolveSnapshotWorldPlacement'],
             ['Publication Commentary', 'core/PublicationCommentary.js', 'export class PublicationCommentary'],
-            ['Collaboration (live, current)', 'application/DocumentCommandPropagationUseCase.js', 'export class'],
-            ['Autosave / recovery', 'application/AutosaveScheduler.js', 'export class'],
-            ['Command history / undo / redo', 'application/CommandHistory.js', 'export class CommandHistory'],
+            ['Collaboration (live, current)', 'application/document/DocumentCommandPropagationUseCase.js', 'export class'],
+            ['Autosave / recovery', 'application/document/AutosaveScheduler.js', 'export class'],
+            ['Command history / undo / redo', 'application/editor/CommandHistory.js', 'export class CommandHistory'],
             ['Notifications / History', 'core/NotificationEvent.js', 'export class NotificationEvent'],
             ['Content Provider Preference', 'core/RoleProviderPreference.js', 'export class RoleProviderPreference'],
             ['Place Naming', 'core/PlaceNamingClaim.js', 'export class PlaceNamingClaim']
@@ -217,7 +217,7 @@ async function runTests() {
         assert(/documentCommandPropagation/.test(editorViewSource) && /publishDocumentUseCase/.test(editorViewSource),
             'B5b. EditorView.js still composes both live collaboration AND the publish use case in the same view — no route change needed between them.');
         const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
-        assert(/publishActiveDocument/.test(worldViewSource) && /WorldCommandPropagationUseCase/.test(await rawSource('application/CreateWorldViewUseCase.js')),
+        assert(/publishActiveDocument/.test(worldViewSource) && /WorldCommandPropagationUseCase/.test(await rawSource('application/world/CreateWorldViewUseCase.js')),
             'B5c. WorldView.js still exposes publishActiveDocument() in the same view CreateWorldViewUseCase.js composes live World collaboration for.');
 
         // B6. "Can something be published but not naturally discovered
@@ -249,9 +249,9 @@ async function runTests() {
         classifications.push(['Snapshot discovery/compare/materialize/place/observe', 'REACHABLE_AND_COMPLETE']);
 
         // C2. DiscoverPlacementsUseCase — this milestone's own selected
-        // finding. Fully implemented (application/DiscoverPlacementsUseCase.js),
+        // finding. Fully implemented (application/placement/DiscoverPlacementsUseCase.js),
         // fully tested (tests/PlacementRegistry.test.js), constructed
-        // exactly once in production (application/CreatePlacementRegistryUseCase.js)
+        // exactly once in production (application/placement/CreatePlacementRegistryUseCase.js)
         // — a composition root ITSELF never called anywhere outside its
         // own file in production.
         const cprUseCaseCallers = await grepCount('new CreatePlacementRegistryUseCase', ['application', 'ui']);
@@ -259,13 +259,13 @@ async function runTests() {
         classifications.push(['DiscoverPlacementsUseCase (findByPublicationId/findByOwner)', 'REACHABLE_BUT_INCOMPLETE — orphaned']);
 
         // C3. Editor-surface CommandHistory timeline/replay/restore —
-        // generic capability exists (application/CommandHistory.js), is
+        // generic capability exists (application/editor/CommandHistory.js), is
         // composed for World Documents (CreateWorldViewUseCase.js), but
         // EditorSession.js never constructs ReplayDocumentUseCase or
         // RestoreHistoryStateUseCase at all.
-        const editorSessionSource = codeOnlyLines(await rawSource('application/EditorSession.js'));
+        const editorSessionSource = codeOnlyLines(await rawSource('application/editor/EditorSession.js'));
         assert(!/ReplayDocumentUseCase|RestoreHistoryStateUseCase|getTimeline/.test(editorSessionSource),
-            'C3. application/EditorSession.js still has zero references to ReplayDocumentUseCase/RestoreHistoryStateUseCase/getTimeline.');
+            'C3. application/editor/EditorSession.js still has zero references to ReplayDocumentUseCase/RestoreHistoryStateUseCase/getTimeline.');
         classifications.push(['History Timeline for Editor/Structure Documents', 'NO_REAL_USER_VALUE-CANDIDATE — never composed, not merely un-wired']);
 
         // C4. World-surface Autosave/Recovery — the mirror gap: the
@@ -287,7 +287,7 @@ async function runTests() {
         // OBSOLETE, reconfirmed fresh a fifth time (0.9.241, 0.9.250,
         // 0.9.272, 0.9.288, now).
         const legacyCollabCallers = await grepCount('CreateCollaborationUseCase', ['application', 'ui']);
-        assert(legacyCollabCallers <= 1, `C6. application/CreateCollaborationUseCase.js still has no caller outside its own file (found ${legacyCollabCallers}).`);
+        assert(legacyCollabCallers <= 1, `C6. application/document/CreateCollaborationUseCase.js still has no caller outside its own file (found ${legacyCollabCallers}).`);
         classifications.push(['Legacy 0.2.7-0.2.9 authority collaboration protocol', 'OBSOLETE']);
 
         console.log('✓ C: Weak-exposure census, classified against real source, not convention:');
@@ -308,7 +308,7 @@ async function runTests() {
         // coincidentally standing in the right World with the right
         // document active. DiscoverPlacementsUseCase (Section C2/G)
         // is the exact, already-built, already-tested answer.
-        assert(await sourceExists('application/DiscoverPlacementsUseCase.js'),
+        assert(await sourceExists('application/placement/DiscoverPlacementsUseCase.js'),
             'D1. The capability this chain\'s own weak link needs already exists on disk.');
 
         // D2. Discover → Verify → Inspect → Comment. Fully convergent
@@ -340,8 +340,8 @@ async function runTests() {
         // surfaces (Editor has Recover, not Review history; World View
         // has Review history, not Recover) — reconfirmed fresh here.
         const hasEditorRecovery = /RecoveryObserver/.test((await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n'));
-        const hasEditorHistory = await sourceExists('application/EditorSession.js') &&
-            /getTimeline/.test(codeOnlyLines(await rawSource('application/EditorSession.js')));
+        const hasEditorHistory = await sourceExists('application/editor/EditorSession.js') &&
+            /getTimeline/.test(codeOnlyLines(await rawSource('application/editor/EditorSession.js')));
         const hasWorldRecovery = /Recovery/i.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         const hasWorldHistory = /HistoryTimelinePanel/.test((await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n'));
         assert(hasEditorRecovery && !hasEditorHistory, 'D4a. Editor surface: Recover yes, Review-history no.');
@@ -446,7 +446,7 @@ async function runTests() {
         // is future scope."
         const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => rawSource(file)))).join('\n');
         assert(sessionSource.includes('browsing/choosing among several is future scope'),
-            'G3. application/WorldNavigationSession.js still carries this exact admission next to _resolvePlacementRecord().');
+            'G3. application/world/WorldNavigationSession.js still carries this exact admission next to _resolvePlacementRecord().');
         assert(/records\.reduce\(\(latest, r\) => \(!latest \|\| r\.updatedAt > latest\.updatedAt\) \? r : latest, null\)/.test(sessionSource),
             'G3b. The exact reduce-to-one-record line is still present, unchanged, immediately after retrieving the FULL findByPublicationId() array.');
         // Live proof of the same reduction, using the SAME shape

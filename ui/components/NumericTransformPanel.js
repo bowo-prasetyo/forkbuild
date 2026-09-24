@@ -1,4 +1,4 @@
-import { TransformInput } from '../../application/TransformInput.js';
+import { TransformInput } from '../../application/editor/TransformInput.js';
 
 // Numeric transform input surface (0.1.49).
 //

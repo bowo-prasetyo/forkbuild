@@ -5,7 +5,7 @@ const DEFAULT_TIMEOUT_MS = 15000;
 // 0.9.425 — Arweave Proof/Anchoring Provider Implementation.
 //
 // 0.9.424's own audit named PROOF_AND_ANCHORING's Arweave gap a pure
-// PROVIDER_GAP: application/ExternalAnchorPublisherRegistry.js already
+// PROVIDER_GAP: application/anchoring/ExternalAnchorPublisherRegistry.js already
 // accepts an "arweave" key with zero registry change (see that audit's
 // own Section C). This class is the missing publisher — the CREATION-
 // side counterpart of anchoring/ArweaveTransactionDataProofVerifier.js,
@@ -20,7 +20,7 @@ const DEFAULT_TIMEOUT_MS = 15000;
 //       │
 //       ├──► injected signer.sign(contentHash)   — the SAME
 //       │        `signer.sign(material) -> Promise<{ id, transaction }>`
-//       │        contract application/ArweavePublicationMaterialUploader.js
+//       │        contract application/arweave/ArweavePublicationMaterialUploader.js
 //       │        (0.9.45) already established, reused unchanged
 //       │
 //       ▼
@@ -72,10 +72,10 @@ const DEFAULT_TIMEOUT_MS = 15000;
 // transport failure are both "cannot PRESENTLY tell," reported as
 // `{ published: false, unavailable: true, reason }` — never treated as a
 // definite rejection, and never left to propagate as an uncaught
-// rejection the way application/ArweavePublicationMaterialUploader.js
+// rejection the way application/arweave/ArweavePublicationMaterialUploader.js
 // (a RETRIEVAL/UPLOAD-side class, not a creation-side one) deliberately
 // lets a signer failure propagate. This class is creation-side, and
-// application/CreateExternalPublicationAnchorUseCase.js's own pipeline
+// application/anchoring/CreateExternalPublicationAnchorUseCase.js's own pipeline
 // already expects a publisher to report failure this way, never to throw.
 //
 // A SIGNER THAT RESOLVES BUT VIOLATES ITS OWN CONTRACT THROWS. If
@@ -100,7 +100,7 @@ export class ArweaveAnchorPublisher {
     //   signed transaction and its own deterministic id.
     // gatewayUrl: which Arweave gateway accepts a transaction POST at
     //   `<gatewayUrl>/tx` — defaults to Arweave's own `arweave.net`, the
-    //   same default host application/ArweavePublicationMaterialUploader.js
+    //   same default host application/arweave/ArweavePublicationMaterialUploader.js
     //   already targets.
     // fetchImpl: an injection point, not a convenience — the same
     //   pattern every real-network adapter in this codebase already runs

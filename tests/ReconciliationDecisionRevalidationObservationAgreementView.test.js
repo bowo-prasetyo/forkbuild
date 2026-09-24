@@ -3,7 +3,7 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationAgreement,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationAgreement
 } from '../application/claimSnapshotReconciliation/revalidationObservation/AgreementView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.170 — Revalidation Observation Agreement Projection.
 //

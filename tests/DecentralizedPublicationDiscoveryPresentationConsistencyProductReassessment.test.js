@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { Document } from '../core/Document.js';
@@ -259,7 +259,7 @@ async function run() {
     // =======================================================================
     // Section E — Trust/evidence vocabulary: reconfirms, rather than
     // re-derives, that the ONE apparent wording difference between
-    // application/WorldEncounterMaterialInspectionView.js's "Confirmed to
+    // application/worldEncounter/WorldEncounterMaterialInspectionView.js's "Confirmed to
     // match the selected encounter" (0.9.519) and application/
     // SnapshotOutcomeInspectionView.js's "Confirmed to match this
     // Publication" (0.9.528) remains DOCUMENTED as a deliberate
@@ -267,8 +267,8 @@ async function run() {
     // file's own header for the full reasoning.
     // =======================================================================
     {
-        const materialInspectionSource = await readSource('application/WorldEncounterMaterialInspectionView.js');
-        const snapshotOutcomeSource = await readSource('application/SnapshotOutcomeInspectionView.js');
+        const materialInspectionSource = await readSource('application/worldEncounter/WorldEncounterMaterialInspectionView.js');
+        const snapshotOutcomeSource = await readSource('application/snapshot/SnapshotOutcomeInspectionView.js');
         assert(materialInspectionSource.includes("'Confirmed to match the selected encounter'"),
             'E1. WorldEncounterMaterialInspectionView.js still holds its own VERIFIED label unchanged.');
         assert(snapshotOutcomeSource.includes("match: 'Confirmed to match this Publication'"),
@@ -304,8 +304,8 @@ async function run() {
     {
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         const canvasCode = codeOnly(canvasSource);
-        assert(!/from ['"]\.\.\/\.\.\/application\/SnapshotWorldPositionClaim\.js['"]/.test(canvasCode),
-            'F1. WorldEncounterCanvas.js still never imports application/SnapshotWorldPositionClaim.js.');
+        assert(!/from ['"]\.\.\/\.\.\/application\/snapshot\/placement\/SnapshotWorldPositionClaim\.js['"]/.test(canvasCode),
+            'F1. WorldEncounterCanvas.js still never imports application/snapshot/placement/SnapshotWorldPositionClaim.js.');
         assert(!/\.claimedPosition\b/.test(canvasCode),
             'F2. WorldEncounterCanvas.js still never reads `.claimedPosition` anywhere in its own code — claimed-position semantics stay out of observer-local presentation, exactly 0.9.571\'s own closing guard.');
         assert(/const placedPublicationIds = new Set\(\(this\.publicationRows \|\| \[\]\)\.map\(\(row\) => row\.objectId\)\);/.test(canvasCode)

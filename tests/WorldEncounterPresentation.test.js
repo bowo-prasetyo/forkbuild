@@ -2,13 +2,13 @@ import {
     describeWorldEncounterPresentation,
     describeWorldEncounterPresentationSourceFamily,
     WorldEncounterPresentationSourceFamily
-} from '../application/WorldEncounterPresentation.js';
-import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/WorldEncounterIntegration.js';
+} from '../application/worldEncounter/WorldEncounterPresentation.js';
+import { LOCAL_WORLD_DISCOVERY_ORIGIN } from '../application/worldEncounter/WorldEncounterIntegration.js';
 
 // 0.9.176 — World Snapshot Presentation.
 //
 // Unit coverage for the one new pure module this milestone introduces:
-// `application/WorldEncounterPresentation.js`. See that file's own header
+// `application/worldEncounter/WorldEncounterPresentation.js`. See that file's own header
 // for the full rationale — a plain join of an already-computed
 // `WorldEncounterInspection` row and an already-resolved
 // `{ kind, objectId, origin }` selection into `{ ..., sourceFamily }`.

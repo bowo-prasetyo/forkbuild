@@ -11,16 +11,16 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { WorldMembershipUseCase } from '../application/WorldMembershipUseCase.js';
-import { WorldPresenceUseCase } from '../application/WorldPresenceUseCase.js';
-import { WorldAuthorizationService } from '../application/WorldAuthorizationService.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { WorldMembershipUseCase } from '../application/identity/WorldMembershipUseCase.js';
+import { WorldPresenceUseCase } from '../application/presence/WorldPresenceUseCase.js';
+import { WorldAuthorizationService } from '../application/identity/WorldAuthorizationService.js';
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { WorldCommandPropagationUseCase } from '../application/WorldCommandPropagationUseCase.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { WorldCommandPropagationUseCase } from '../application/document/WorldCommandPropagationUseCase.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.217 — Wire World Presence Activity Refresh.
@@ -192,7 +192,7 @@ async function runTests() {
 // ---------------------------------------------------------------------
 {
     const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-    const navigationSessionSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
+    const navigationSessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
 
     // A1 — the method itself is unchanged: still a real implementation,
     // never a stub, still delegating to WorldPresenceUseCase#setActivity

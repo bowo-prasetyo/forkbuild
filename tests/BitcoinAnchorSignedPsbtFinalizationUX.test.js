@@ -4,15 +4,15 @@ import { BitcoinAnchorPsbtBuilder } from '../anchoring/BitcoinAnchorPsbtBuilder.
 import { BitcoinAnchorSignedPsbtFinalizer } from '../anchoring/BitcoinAnchorSignedPsbtFinalizer.js';
 import { BitcoinWalletConnection } from '../anchoring/BitcoinWalletConnection.js';
 import { BitcoinInjectedProviderWalletAdapter } from '../anchoring/BitcoinInjectedProviderWalletAdapter.js';
-import { BitcoinAnchorFundingObservationState } from '../application/BitcoinAnchorFundingObservationState.js';
-import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/BitcoinAnchorTransactionConstructionCoordinator.js';
-import { BitcoinAnchorTransactionConstructionState } from '../application/BitcoinAnchorTransactionConstructionState.js';
-import { BitcoinAnchorTransactionReviewCoordinator } from '../application/BitcoinAnchorTransactionReviewCoordinator.js';
-import { BitcoinAnchorReviewedSigningCoordinator } from '../application/BitcoinAnchorReviewedSigningCoordinator.js';
-import { BitcoinAnchorReviewedSigningState } from '../application/BitcoinAnchorReviewedSigningState.js';
-import { BitcoinAnchorSignedPsbtFinalizationCoordinator } from '../application/BitcoinAnchorSignedPsbtFinalizationCoordinator.js';
-import { BitcoinAnchorSignedPsbtFinalizationState, isValidBitcoinAnchorSignedPsbtFinalizationState } from '../application/BitcoinAnchorSignedPsbtFinalizationState.js';
-import { describeBitcoinAnchorSignedPsbtFinalization } from '../application/BitcoinAnchorSignedPsbtFinalizationView.js';
+import { BitcoinAnchorFundingObservationState } from '../application/anchoring/bitcoin/BitcoinAnchorFundingObservationState.js';
+import { BitcoinAnchorTransactionConstructionCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionCoordinator.js';
+import { BitcoinAnchorTransactionConstructionState } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionConstructionState.js';
+import { BitcoinAnchorTransactionReviewCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorTransactionReviewCoordinator.js';
+import { BitcoinAnchorReviewedSigningCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningCoordinator.js';
+import { BitcoinAnchorReviewedSigningState } from '../application/anchoring/bitcoin/BitcoinAnchorReviewedSigningState.js';
+import { BitcoinAnchorSignedPsbtFinalizationCoordinator } from '../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationCoordinator.js';
+import { BitcoinAnchorSignedPsbtFinalizationState, isValidBitcoinAnchorSignedPsbtFinalizationState } from '../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationState.js';
+import { describeBitcoinAnchorSignedPsbtFinalization } from '../application/anchoring/bitcoin/BitcoinAnchorSignedPsbtFinalizationView.js';
 
 // 0.8.63 — Explicit Signed PSBT Verification & Transaction Finalization UI.
 //
@@ -681,7 +681,7 @@ async function run() {
         assert(idleView.txid === null && idleView.rawTransactionHex === null && idleView.verifiedInputCount === null, '45. an IDLE view carries no leftover fact from any previous attempt');
 
         // "verified" and "finalized" are deliberately NOT forbidden here —
-        // unlike application/BitcoinAnchorReviewedSigningView.js one stage
+        // unlike application/anchoring/bitcoin/BitcoinAnchorReviewedSigningView.js one stage
         // earlier, THIS view's entire reason for existing is the boundary
         // that actually performs cryptographic verification, so its own
         // state vocabulary naming that fact is honest, not a verdict. Only

@@ -2,15 +2,15 @@ import { readFile } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { resolveSnapshotPublicationAttribution } from '../application/SnapshotPublicationAttribution.js';
-import { SnapshotPublicationAttributionOutcome } from '../application/SnapshotPublicationAttributionOutcome.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
+import { resolveSnapshotPublicationAttribution } from '../application/snapshot/SnapshotPublicationAttribution.js';
+import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -19,7 +19,7 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 // 0.9.144 — World View Snapshot Attribution Integration.
 //
 // 0.9.142 gave World View "Discover Snapshot"; 0.9.143 built
-// `application/SnapshotPublicationAttribution.js#resolveSnapshotPublicationAttribution()`
+// `application/snapshot/SnapshotPublicationAttribution.js#resolveSnapshotPublicationAttribution()`
 // — the pure Q3 comparison — and deliberately stopped short of any UI
 // wiring. This milestone is that wiring, at BOTH entry points 0.9.144's own
 // design calls for:
@@ -35,7 +35,7 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 //                                       │
 //                                       ▼
 //                          resolveSnapshotPublicationAttribution(publication, snapshotDiscoveryResult)
-//                          (application/SnapshotPublicationAttribution.js, 0.9.143, unmodified)
+//                          (application/snapshot/SnapshotPublicationAttribution.js, 0.9.143, unmodified)
 //                                       │
 //                                       ▼
 //                          snapshotAttributionResult
@@ -331,7 +331,7 @@ async function runTests() {
 
         // A resolved result reporting genuinely different, but internally
         // self-consistent, verified content — the scenario
-        // application/SnapshotPublicationAttribution.js's own header names:
+        // application/snapshot/SnapshotPublicationAttribution.js's own header names:
         // "a caller resolved resolvedSnapshot against some OTHER
         // contentHash... and is now asking whether that already-verified
         // Snapshot also happens to belong to THIS Publication."
@@ -513,7 +513,7 @@ async function runTests() {
             'ATTRIBUTED', 'OWNED', 'CONFIRMED'
         ];
         for (const term of forbiddenInUi) {
-            assert(!panelCode.includes(term), `26. OwnPublicationPanel.js never references '${term}' — attribution stays entirely inside application/SnapshotPublicationAttribution.js`);
+            assert(!panelCode.includes(term), `26. OwnPublicationPanel.js never references '${term}' — attribution stays entirely inside application/snapshot/SnapshotPublicationAttribution.js`);
             assert(!canvasCode.includes(term), `27. WorldEncounterCanvas.js never references '${term}' either`);
         }
 
@@ -534,7 +534,7 @@ async function runTests() {
             '28c. attributeSelectedSnapshot() (0.9.154) contains its own, independent call site');
         assert((canvasCode.match(/resolveSnapshotPublicationAttribution\(/g) || []).length === 1,
             '29. WorldEncounterCanvas.js calls resolveSnapshotPublicationAttribution() from exactly one place');
-        assert(panelCode.includes("from '../../application/SnapshotPublicationAttribution.js'") && canvasCode.includes("from '../../../application/SnapshotPublicationAttribution.js'"),
+        assert(panelCode.includes("from '../../application/snapshot/SnapshotPublicationAttribution.js'") && canvasCode.includes("from '../../../application/snapshot/SnapshotPublicationAttribution.js'"),
             '30. both UI files import the SAME application-layer seam — no second, parallel comparison implementation');
 
         // Snapshot Distribution stays entirely untouched by this

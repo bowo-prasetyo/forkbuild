@@ -3,9 +3,9 @@ import {
     resolveDecentralizedWorldEncounterLead,
     resolveDecentralizedWorldEncounterLeadFromRegistry,
     DecentralizedWorldEncounterLeadResolutionStatus
-} from '../application/DecentralizedWorldEncounterLeadResolution.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 import { describeDecentralizedWorldDiscoveryLead } from '../core/DecentralizedWorldDiscoveryLead.js';
-import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 
 // 0.9.28 — Decentralized Lead → Encounter Resolution Boundary.
 //
@@ -229,7 +229,7 @@ const publicationMaterial = Object.freeze({ kind: 'PUBLICATION', objectId: 'pub-
 // 8. Architectural regression.
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../application/DecentralizedWorldEncounterLeadResolution.js', import.meta.url);
+    const sourceUrl = new URL('../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js', import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource
         .split('\n')

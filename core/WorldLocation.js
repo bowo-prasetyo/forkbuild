@@ -8,7 +8,7 @@ import { WorldLocationKind, isValidWorldLocationKind } from './WorldLocationKind
 // deliberately NOT a new persisted entity: every instance is DERIVED,
 // on demand, from identity that already exists elsewhere (a
 // StructurePlacement's own id/position, or the world's fixed origin) —
-// see application/WorldLocationDirectory.js, the one place instances of
+// see application/world/WorldLocationDirectory.js, the one place instances of
 // this class are ever constructed. There is no WorldLocation.save(),
 // no WorldLocation store, and no WorldLocation id that outlives the
 // thing it was derived from — deleting the StructurePlacement a

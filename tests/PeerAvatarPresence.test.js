@@ -1,9 +1,9 @@
 import { PresenceVisibility } from '../core/PresenceVisibility.js';
 import { PresenceVisibilityPolicy } from '../core/PresenceVisibilityPolicy.js';
-import { PresenceVisibilityUseCase } from '../application/PresenceVisibilityUseCase.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { PresenceVisibilityUseCase } from '../application/presence/PresenceVisibilityUseCase.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { PeerAvatarPresenceBroadcastProvider } from '../presence/PeerAvatarPresenceBroadcastProvider.js';
@@ -14,11 +14,11 @@ import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -26,7 +26,7 @@ import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
 import { License, LicenseId } from '../core/License.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvertisement.js';
@@ -451,7 +451,7 @@ async function runTests() {
         // signature stolen from a different position, sent directly
         // over the SAME authenticated peer connection Bob just
         // legitimately received presence over, is rejected by the
-        // completely unmodified application/PresenceTrustBoundary.js —
+        // completely unmodified application/presence/PresenceTrustBoundary.js —
         // Bob's displayed position for Alice stays exactly what the
         // last ACCEPTED claim said.
         const lastGenuineAdvertisement = {

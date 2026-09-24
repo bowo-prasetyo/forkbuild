@@ -1,19 +1,19 @@
-import { PublicationReferenceRecord } from '../application/PublicationReferenceRecord.js';
+import { PublicationReferenceRecord } from '../application/publication/PublicationReferenceRecord.js';
 import {
     appendPublicationReferenceRecordHistoryEntry,
     findPublicationReferenceRecordsBySource,
     findPublicationReferenceRecordsByReferenced
-} from '../application/PublicationReferenceRecordHistory.js';
+} from '../application/publication/PublicationReferenceRecordHistory.js';
 import {
     describePublicationReferenceRecordHistoryEntry,
     describePublicationReferenceRecordHistory
-} from '../application/PublicationReferenceRecordHistoryView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreatePublicationReferenceRecordUseCase } from '../application/CreatePublicationReferenceRecordUseCase.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreateBaseAnchorPublicationRecordUseCase } from '../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { BlockchainKind } from '../application/BlockchainKind.js';
-import { BlockchainPublicationIdentity } from '../application/BlockchainPublicationIdentity.js';
+} from '../application/publication/PublicationReferenceRecordHistoryView.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreateBaseAnchorPublicationRecordUseCase } from '../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { BlockchainKind } from '../application/anchoring/BlockchainKind.js';
+import { BlockchainPublicationIdentity } from '../application/anchoring/BlockchainPublicationIdentity.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 
@@ -25,7 +25,7 @@ import { LocalStoragePublicationObservationArchive } from '../storage/LocalStora
 // a shared `contentHash`, never auto-created by any finalization or
 // observation flow, and never collapsed with a second, independent
 // reference between the identical two publications. Both identities are
-// reused, UNCHANGED, application/BlockchainPublicationIdentity.js (0.8.89)
+// reused, UNCHANGED, application/anchoring/BlockchainPublicationIdentity.js (0.8.89)
 // instances — this milestone assembles neither by hand.
 //
 //   Section A: PublicationReferenceRecord — construction, validation,
@@ -243,7 +243,7 @@ async function run() {
 
         // 0.9.393 — this assertion had gone stale at "8": SCHEMA_VERSION
         // has since been bumped twice more (to 9, then to 10 — see
-        // application/PublicationObservationArchive.js's own header),
+        // application/publication/observationArchive/PublicationObservationArchive.js's own header),
         // uncaught because nothing re-ran this guard until 0.9.393's own
         // full-suite execution.
         assert(PublicationObservationArchive.SCHEMA_VERSION === 10, '35. SCHEMA_VERSION is now 10 (bumped from 5 by 0.8.104, to 7 by 0.8.108, to 8 by 0.8.130, then to 9 and 10 by two later milestones)');

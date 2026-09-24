@@ -88,7 +88,7 @@ the shared domain EventBus and wires it to both World and the renderer —
 core/ and renderer/ never reference each other directly, only the events
 between them.
 
-EditorContext (application/EditorContext.js) holds all transient editor
+EditorContext (application/editor/EditorContext.js) holds all transient editor
 state: selection, active tool, active brick, camera pose, preview,
 settings. Editor State, not Domain State. Its EditorEvent vocabulary
 lives in core/events/ because renderer/ subscribes to it and must never
@@ -101,7 +101,7 @@ As of 0.1.18, InputDispatcher normalizes raw DOM events and performs
 picking ONCE per pointer event; tools receive pre-picked results and
 never call PickingService themselves.
 
-EditorSession (application/EditorSession.js), added 0.1.20C, owns the
+EditorSession (application/editor/EditorSession.js), added 0.1.20C, owns the
 entire live runtime graph as one unit — render session, EventBus, World,
 CommandHistory, ToolManager, InputDispatcher — rebuilt identically by
 start()/loadDocument()/newDocument()/openDocument(). Since 0.1.46 it
@@ -114,7 +114,7 @@ deleteSelection() so the action layer can drive it (getSelectionCount()
 was removed on 2026-09-23; getSelectionSummary() replaces it). Group and
 clipboard operations (0.1.42/0.1.43) are EditorSession methods too.
 
-WorldNavigationSession (application/WorldNavigationSession.js), updated
+WorldNavigationSession (application/world/WorldNavigationSession.js), updated
 0.1.30, owns the live runtime graph for World View: camera
 positioning via SpatialCameraController, spatial discovery via
 WorldLayoutProvider, document loading, world load/unload
@@ -125,7 +125,7 @@ so World View now only observes and navigates, apart from the few
 exceptions in docs/CapabilityMatrix.md. selectAll()/getSelectionCount()
 (0.1.50) remain, for inspection and focus.
 
-SpatialEditingService (application/SpatialEditingService.js) translates
+SpatialEditingService (application/editor/SpatialEditingService.js) translates
 spatial editing intent into domain mutations via CommandHistory. Since
 0.1.38 it owns the transform gesture transaction:
 
@@ -154,7 +154,7 @@ one command type — five input sources terminate here:
     distribute ┤
     numeric ───┘
 
-TransformMath (application/TransformMath.js, 0.1.46) is the single
+TransformMath (application/editor/TransformMath.js, 0.1.46) is the single
 source of truth for every transform calculation: translation, Y-axis
 rotation around a pivot, angle measurement, axis projection, rotation
 deltas, calculateTransforms()/transformsEqual(). Keyboard, gizmo,
@@ -163,7 +163,7 @@ resolve to these functions. renderer/ needs it without importing
 application/ — resolved by INJECTION: the render use cases hand it to
 the gizmo controller they construct.
 
-TransformSnap (application/TransformSnap.js, 0.1.47) snaps GESTURE
+TransformSnap (application/editor/TransformSnap.js, 0.1.47) snaps GESTURE
 DELTAS, never absolute positions, always from the gesture origin —
 snapping once per frame from the origin makes previews stable and
 pointer motion reversible. TransformSettings (application/
@@ -171,18 +171,18 @@ TransformSettings.js, 0.1.47) holds session preferences
 (snappingEnabled, translationSnap 1, rotationSnap 15°,
 precisionMultiplier 0.1) — never document state, never protocol.
 
-TransformAlignment (application/TransformAlignment.js, 0.1.48) is pure
+TransformAlignment (application/editor/TransformAlignment.js, 0.1.48) is pure
 alignment/distribution math: nine world-axis alignment modes and even
 center distribution with deterministic ordering (axis coordinate, then
 buildingId, then brickId) and pinned endpoints. Inputs/outputs are plain
 data; no group is visible to this layer.
 
-TransformInput (application/TransformInput.js, 0.1.49) parses numeric
+TransformInput (application/editor/TransformInput.js, 0.1.49) parses numeric
 intent with a strict grammar and structured results; empty fields mean
 "unchanged". It never calculates transformed positions — that remains
 the transform machinery's job.
 
-CommandHistory (application/CommandHistory.js): tools call
+CommandHistory (application/editor/CommandHistory.js): tools call
 commandHistory.execute(command); linear history invariant (execute after
 undo clears redo). Persistent-session shape { schemaVersion, cursor,
 commands } since 0.1.37, deserialized through CommandRegistry. History
@@ -198,7 +198,7 @@ DocumentManager owns document lifecycle and DocumentState; publishes
 DocumentManagerEvent.STATE_CHANGED; trackCommandHistory() marks dirty on
 every executed/undone/redone command.
 
-EditorActionRegistry (application/EditorActionRegistry.js, 0.1.50) is
+EditorActionRegistry (application/editor/EditorActionRegistry.js, 0.1.50) is
 the action layer: one registry of user-facing operations — id, label,
 category, shortcut (display string + machine key combinations),
 description, enabled(context), disabledReason(context),
@@ -223,14 +223,14 @@ opening the palette is UI state, feedback is transient). The registry
 never touches CommandHistory or World; it invokes the existing sessions,
 which remain the single gateway to the kernel.
 
-EditorActionContext (application/EditorActionContext.js, 0.1.50) is the
+EditorActionContext (application/editor/EditorActionContext.js, 0.1.50) is the
 pure availability snapshot: selection count, clipboard count, groups,
 selected group, undo/redo flags and labels, gesture activity, palette
 state, active tool. Captured fresh on every consumption; capture() is
 defensive — surfaces expose what they have, missing capabilities fall
 back to inert defaults, so no surface can make the palette throw.
 
-InputRouter (application/InputRouter.js, 0.1.50) is minimal input
+InputRouter (application/editor/InputRouter.js, 0.1.50) is minimal input
 routing, introduced where the fragmentation justified it and not before:
 (1) the explicit Escape priority chain — input > palette > gesture >
 marquee > selection — as a pure resolveEscapeTarget(state); (2)
@@ -786,7 +786,7 @@ Key components:
 - collaboration/CollaborationTransport.js — adapter base class
 - collaboration/LocalCollaborationTransport.js — in-memory broadcast
 - collaboration/CollaborationSession.js — local participant
-- application/CreateCollaborationUseCase.js — DI wiring
+- application/document/CreateCollaborationUseCase.js — DI wiring
 
 The collaboration layer sits BESIDE CommandHistory, not inside it.
 CollaborationSession observes COMMAND_EXECUTED events and broadcasts
@@ -817,9 +817,9 @@ create → save → publish → place → inspect → fork → edit → save →
 publish → coexist.
 
 Key components:
-- application/ForkPublishedWorldUseCase.js — forks a Publication
+- application/publication/ForkPublishedWorldUseCase.js — forks a Publication
   snapshot into a new editable Document
-- application/CreateWorldViewUseCase.js — wires the fork use case
+- application/world/CreateWorldViewUseCase.js — wires the fork use case
 
 The three operations on a Publication:
 - Inspect: Publication → PublishedWorldSession (read-only)
@@ -854,7 +854,7 @@ Key components:
 - collaboration/DocumentAuthority.js — central ordering service
 - collaboration/AuthorityCollaborationTransport.js — transport routing
   through the authority
-- application/CreateCollaborationUseCase.js — updated with
+- application/document/CreateCollaborationUseCase.js — updated with
   executeAuthority() for authority mode
 
 Conflict detection is the heart of the milestone. Most ForkBuild
@@ -884,8 +884,8 @@ Key components:
 - core/PlacementRecord.js — publishable spatial record
 - placement/PlacementRegistry.js — adapter interface
 - placement/LocalPlacementRegistry.js — V0.1 concrete implementation
-- application/DiscoverPlacementsUseCase.js — richer discovery queries
-- application/CreatePlacementRegistryUseCase.js — DI wiring
+- application/placement/DiscoverPlacementsUseCase.js — richer discovery queries
+- application/placement/CreatePlacementRegistryUseCase.js — DI wiring
 
 The three ownership layers:
 - Document author — who created the content
@@ -914,9 +914,9 @@ Key components:
 - discovery/LocalSpatialDiscoveryProvider.js — V0.1 concrete
 - discovery/ContentResolver.js — "Where/how do I retrieve content?" adapter
 - discovery/LocalContentResolver.js — V0.1 concrete
-- application/DiscoverWorldAreaUseCase.js — spatial discovery orchestration
-- application/ResolvePublicationUseCase.js — content resolution
-- application/CreateSpatialDiscoveryUseCase.js — DI wiring
+- application/discovery/DiscoverWorldAreaUseCase.js — spatial discovery orchestration
+- application/publication/ResolvePublicationUseCase.js — content resolution
+- application/discovery/CreateSpatialDiscoveryUseCase.js — DI wiring
 
 The four adapter boundaries:
 - SpatialDiscoveryProvider — "Where are things?"
@@ -949,7 +949,7 @@ Key components:
 - world/LoadedWorld.js — ephemeral runtime state for a placement instance
 - world/PublicationContentCache.js — prevents redundant snapshot I/O
 - world/WorldViewStreamingSession.js — the runtime coordinator
-- application/CreateWorldViewStreamingUseCase.js — DI wiring
+- application/world/CreateWorldViewStreamingUseCase.js — DI wiring
 
 Hysteresis: The session uses separate loadRadius and unloadRadius
 thresholds. Worlds crossing out of the load radius drop their heavy
@@ -1041,9 +1041,9 @@ Key components:
 - spatial/DecentralizedSpatialDiscoveryProvider.js — viewport ->
   cells -> manifests -> record resolution -> spatial filter. Never
   loads publication content.
-- application/RebuildSpatialIndexUseCase.js — full rebuild from the
+- application/world/RebuildSpatialIndexUseCase.js — full rebuild from the
   authoritative PlacementRegistry.
-- application/CreateDecentralizedSpatialDiscoveryUseCase.js — DI
+- application/discovery/CreateDecentralizedSpatialDiscoveryUseCase.js — DI
   wiring, counterpart of CreateSpatialDiscoveryUseCase.
 
 Immutable revisions, mutable pointers:
@@ -1127,7 +1127,7 @@ Key components:
   authorized?) with deliberately simple 0.2.16 rules: publisher signs
   publications, owner signs placement revisions, builder signs index
   roots (optional pinned index authority).
-- application/VerifyPublicationUseCase.js, VerifyPlacementUseCase.js,
+- application/publication/VerifyPublicationUseCase.js, VerifyPlacementUseCase.js,
   CreateIdentityUseCase.js.
 
 Signed objects (no parallel Signed* entities — the signature field
@@ -1284,9 +1284,9 @@ Key components:
   minimal transport-independent seam (`getReferences(scope)`, `get`,
   `put`, `has`) that exchanges immutable objects, namespaced by scope
   (`placement-revision` today). It never interprets or merges anything.
-- application/ReplicatePlacementUseCase.js — accepts a single incoming
+- application/placement/ReplicatePlacementUseCase.js — accepts a single incoming
   revision through ReplicaMergeService.
-- application/SynchronizeReplicaUseCase.js — the batch flow: advertise
+- application/placement/SynchronizeReplicaUseCase.js — the batch flow: advertise
   references, diff against what this replica already has, pull and
   merge exactly what's missing. Deliberately pull-only: a replica's
   registry only ever changes through ITS OWN merge pipeline, never by
@@ -1705,17 +1705,17 @@ Core additions:
   — no `DOCUMENT_SCHEMA_VERSION`/`PROTOCOL_VERSION` bump, the same
   backward-compatible pattern `license` and `parentDocumentId` were
   added under.
-- `application/DocumentLifecycleStatus.js` — `computeLifecycleStatus`
+- `application/document/DocumentLifecycleStatus.js` — `computeLifecycleStatus`
   and `describeLifecycleStatus`, the one place status is computed
   (from facts that already exist: has this been saved, is a
   Publication known for it) rather than a fourth piece of state to
   keep in sync. Shared by the Editor's and World View's Document Info
   panels.
-- `application/LicenseLabels.js` — human-readable labels for every
+- `application/document/LicenseLabels.js` — human-readable labels for every
   `LicenseId` (`describeLicense`) and the ordered option list the
   license selector renders (`LICENSE_OPTIONS`), so the read view and
   the edit form can never show a different label for the same license.
-- `application/UpdateDocumentMetadataUseCase.js` — the Editor's entry
+- `application/document/UpdateDocumentMetadataUseCase.js` — the Editor's entry
   point: applies whichever of title/description/license the caller
   passed to `documentManager.document.metadata`, calls `touch()`,
   marks the document dirty. Thin by design — DocumentMetadata's
@@ -2033,7 +2033,7 @@ Unlike every prior milestone in this stretch, 0.2.23's gap was not
 that a feature had never been built — it was that a genuinely mature
 feature (`core/WorldPlacement.js`, `core/PlacementRecord.js`,
 `placement/LocalPlacementRegistry.js`, `application/
-PlacePublicationUseCase.js`, `application/MoveWorldPlacementUseCase.js`
+PlacePublicationUseCase.js`, `application/placement/MoveWorldPlacementUseCase.js`
 — revisioned, signed per-revision (0.2.16), causally stamped per-
 revision (0.2.18), fully covered by `tests/PlacementRegistry.test.js`
 and `tests/WorldPlacement.test.js`) had never been connected to
@@ -2078,7 +2078,7 @@ equivalent resolve-then-lookup in `findVisibleDocuments`).
 
 Making placement explicit and reachable:
 
-- `application/InitialPlacementStrategy.js` — `GridPlacementStrategy`,
+- `application/placement/InitialPlacementStrategy.js` — `GridPlacementStrategy`,
   the ONE strategy implemented (reproducing the pre-existing
   fallback's exact grid math, so a freshly published world still
   lands where it always visually appeared to). `NextAvailable`/
@@ -2201,7 +2201,7 @@ pure function of `publicationId` alone.
   range — at the cost of accepting that two different ids CAN land on
   the same cell. Resolving that is explicitly out of scope (see
   docs/Roadmap.md); determinism is the only property established here.
-- `application/InitialPlacementStrategy.js` — `GridPlacementStrategy`
+- `application/placement/InitialPlacementStrategy.js` — `GridPlacementStrategy`
   now just calls the function above with `context.publicationId` and
   drops its `discoveryProvider` constructor parameter entirely, since
   nothing it does depends on local discovery state anymore.
@@ -2398,7 +2398,7 @@ count instead of just seeing it — without touching the placement
 protocol, adding a new wire format, or building a directory as a
 second source of truth.
 
-    application/SearchWorldUseCase.js          WorldNavigationSession
+    application/world/SearchWorldUseCase.js          WorldNavigationSession
        "which publications match?"          .searchWorld/getDocumentsAtPosition
               │                                    "enrich for the UI:
               ▼                                     position, hasPlacement,
@@ -2409,7 +2409,7 @@ second source of truth.
                                               WorldSearchPanel.js
                                               LocationDocumentsDialog.js
 
-- `application/SearchWorldUseCase.js` (new) — a case-insensitive
+- `application/world/SearchWorldUseCase.js` (new) — a case-insensitive
   substring match against `title`/`author`, both already on every
   `Publication`. `description` is deliberately NOT searched — it lives
   on `DocumentMetadata`, only available once a candidate's full
@@ -2655,7 +2655,7 @@ the same `searchWorld` call.
   makes sense as a straight point-to-point number. Reusing the
   bounds-aware test here would silently produce a `distance` that
   disagreed with the requested radius.
-- `application/SearchWorldUseCase.js` — `execute()` now accepts either
+- `application/world/SearchWorldUseCase.js` — `execute()` now accepts either
   the original plain string (byte-identical 0.2.26 behavior, so every
   existing caller — including this milestone's own new test file —
   is unaffected) or `{ text, center, radius }`. The class still does
@@ -2757,7 +2757,7 @@ spatial query in this codebase.
         Select → setActiveDocument (active only, camera untouched)
         Inspect → inspectDocument (read-only, never loads/navigates)
 
-- `application/WorldNavigationSession.js`:
+- `application/world/WorldNavigationSession.js`:
   - `DEFAULT_EXPLORE_RADIUS = 25` / `NEARBY_RADIUS = 5` — the two
     radii "Explore Here" and "What's Here?" default to, respectively a
     reasonable starting neighborhood and a small tolerance for
@@ -2875,7 +2875,7 @@ restraint is deliberate, not an oversight.
   "Diagnostics Are Received From The Discovery Layer, Never Invented
   By The UI," for the four states it can produce and why each is
   distinguishable.
-- `application/WorldNavigationSession.js`:
+- `application/world/WorldNavigationSession.js`:
   - Constructor gains an OPTIONAL `spatialDiscoveryProvider` — anything
     exposing `discover(center, radius)` + `getLastDiagnostics()` (i.e.
     a real `DecentralizedSpatialDiscoveryProvider`, or a test double
@@ -3008,7 +3008,7 @@ Core/application:
   order shares. See docs/Principles.md, "Ordering Must Be Deterministic
   Across Replicas," for why every branch falls back to an ordinal
   `publicationId` tiebreak and never uses locale-aware collation.
-- `application/SearchPublicationsUseCase.js` — the Repository/Author
+- `application/publication/SearchPublicationsUseCase.js` — the Repository/Author
   catalog's own search: filters `discoveryProvider.list()` by author
   scope and text (title/author always; description only when
   `includeDescriptions` is set — see docs/Principles.md, "Description
@@ -3036,7 +3036,7 @@ Core/application:
   deliberately: grouping the whole catalog independent of pagination
   would mean a group could legitimately span multiple pages, a real UX
   question this milestone doesn't attempt to answer.
-- `application/CreateDiscoveryUseCase.js` — gains
+- `application/discovery/CreateDiscoveryUseCase.js` — gains
   `loadPublicationDocumentUseCase` and `searchPublicationsUseCase`
   alongside the existing `listPublicationsUseCase`/`findPublicationUseCase`.
 
@@ -3115,7 +3115,7 @@ entirely in a disposable client-side cache.
                                                      │
                                     (client loads content on demand)
                                                      ▼
-    ui/components/PublicationPreview.js  →  application/PreviewService.js
+    ui/components/PublicationPreview.js  →  application/editor/PreviewService.js
        (visible? IntersectionObserver)          (queue, dedupe, cache,
                                                    cancellation, priority)
                                                      │
@@ -3163,7 +3163,7 @@ Infrastructure/application:
   of thumbnails (which would break OTHER WebGL surfaces on the page,
   e.g. a live World View open in another view). Only the per-render
   MESH content (geometry/material) is disposed between renders.
-- `application/PreviewService.js` (new) — the queue/cache/scheduling
+- `application/editor/PreviewService.js` (new) — the queue/cache/scheduling
   brain. `getCached(contentHash)` for a synchronous cache check;
   `request(publication, { priority })` returns `{ promise, cancel }`.
   Concurrent requests for the same `contentHash` share one job with
@@ -3179,7 +3179,7 @@ Infrastructure/application:
   and moves on to the next job — it never throws, and never stops the
   queue, matching the failure-isolation posture 0.2.15/0.2.16/0.2.19
   already established.
-- `application/CreatePreviewUseCase.js` (new) — wires
+- `application/editor/CreatePreviewUseCase.js` (new) — wires
   `LoadPublicationDocumentUseCase` (0.2.31), a `CreateBrickRegistryUseCase`
   registry, and a lazy `() => new DocumentThumbnailRenderer(registry)`
   thunk into one `PreviewService`.
@@ -3231,10 +3231,10 @@ section covers the concrete files.
     Identity (existing)
          │
          ▼
-    application/CreateAvatarProfileUseCase.js
+    application/avatar/CreateAvatarProfileUseCase.js
          │
          ▼
-    application/AvatarProfileUseCase.js  ---persists via--->  StorageProvider
+    application/avatar/AvatarProfileUseCase.js  ---persists via--->  StorageProvider
          │  getProfile() / updateProfile()                  (avatar-profile:<username>)
          ▼
     core/AvatarProfile.js
@@ -3242,10 +3242,10 @@ section covers the concrete files.
          │
          │ (constructs)
          ▼
-    application/CreateAvatarPresenceSessionUseCase.js
+    application/avatar/CreateAvatarPresenceSessionUseCase.js
          │
          ▼
-    application/AvatarPresenceSession.js   (NO StorageProvider dependency)
+    application/avatar/AvatarPresenceSession.js   (NO StorageProvider dependency)
          │  current / update() / onPresenceChanged()
          ▼
     core/AvatarPresence.js
@@ -3282,7 +3282,7 @@ Core:
 
 Application:
 
-- `application/AvatarProfileUseCase.js` (new) — `getProfile()` loads
+- `application/avatar/AvatarProfileUseCase.js` (new) — `getProfile()` loads
   the current identity's profile, lazily creating and persisting a
   default one on first access so the same `avatarId` survives a reload
   (the exact "load-or-create-once" shape
@@ -3292,14 +3292,14 @@ Application:
   `IdentityUseCase.onUserChanged`'s subscription shape. One profile per
   identity, keyed `avatar-profile:<username>` in the injected
   `StorageProvider`.
-- `application/AvatarPresenceSession.js` (new) — tracks ONE user's own
+- `application/avatar/AvatarPresenceSession.js` (new) — tracks ONE user's own
   live presence for a World View session. Constructed from an
   `AvatarProfile` (never a `StorageProvider` — that dependency does
   not exist on this class at all, a structural guarantee, not a
   convention); `current` / `update(...)` / `onPresenceChanged(...)`.
   Deliberately scoped to the LOCAL avatar only — a registry of other
   participants' presences is 0.2.37's job, not this one's.
-- `application/CreateAvatarProfileUseCase.js` /
+- `application/avatar/CreateAvatarProfileUseCase.js` /
   `CreateAvatarPresenceSessionUseCase.js` (new) — the usual DI wiring,
   so `ui/` never imports `storage/` directly, matching
   `CreateIdentityProviderUseCase`/`CreatePublisherUseCase`.
@@ -3379,10 +3379,10 @@ Core:
 
 Application:
 
-- `application/CreateAvatarTemplateRegistryUseCase.js` (new) — builds
+- `application/avatar/CreateAvatarTemplateRegistryUseCase.js` (new) — builds
   an `AvatarTemplateRegistry` and registers `CoreAvatarTemplateLibrary`,
   mirroring `CreateBrickRegistryUseCase`.
-- `application/AvatarProfileUseCase.js` — gains a required
+- `application/avatar/AvatarProfileUseCase.js` — gains a required
   `templateRegistry` constructor dependency and two new/changed
   methods: `updateProfile()` now validates `templateId`/`appearance`
   against the resolved template before persisting anything (and resets
@@ -3390,7 +3390,7 @@ Application:
   without an accompanying `appearance` — see docs/Principles.md);
   `getEffectiveAvatar()` (new) is the never-throws read path described
   above, returning `{ profile, template, appearance }`.
-- `application/CreateAvatarProfileUseCase.js` — now also wires
+- `application/avatar/CreateAvatarProfileUseCase.js` — now also wires
   `CreateAvatarTemplateRegistryUseCase` and returns `templateRegistry`
   alongside `avatarProfileUseCase`.
 
@@ -3444,7 +3444,7 @@ From The Avatar Itself."
                                     diff/rebuild lifecycle)
                      │
                      ▼            ▲
-    application/RenderWorldViewUseCase.js facade
+    application/world/RenderWorldViewUseCase.js facade
     (setLocalAvatar / updateLocalAvatarAppearance /
      updateLocalAvatarPresence / setLocalAvatarVisible /
      removeLocalAvatar)
@@ -3503,7 +3503,7 @@ Renderer:
 
 Application:
 
-- `application/RenderWorldViewUseCase.js` — gains a local-avatar
+- `application/world/RenderWorldViewUseCase.js` — gains a local-avatar
   facade (`setLocalAvatar`/`updateLocalAvatarAppearance`/
   `updateLocalAvatarPresence`/`setLocalAvatarVisible`/
   `removeLocalAvatar`), backed by exactly ONE `AvatarVisual` — 0.2.35
@@ -3511,7 +3511,7 @@ Application:
   0.2.37. The `AvatarVisual` is constructed lazily (on the first
   `setLocalAvatar` call), so a viewport with nobody logged in never
   builds one.
-- `application/WorldNavigationSession.js` — gains optional
+- `application/world/WorldNavigationSession.js` — gains optional
   `avatarProfileUseCase`/`avatarPresenceSession` constructor
   dependencies (absent when nobody is logged in, the same
   "enforce/offer only when the collaborator is actually wired" pattern
@@ -3534,7 +3534,7 @@ Application:
   placement, per 0.2.24's deterministic grid strategy, is essentially
   never near the origin, so the avatar was rendering correctly but was
   effectively always out of frame until this shipped).
-- `application/CreateWorldViewUseCase.js` — wires
+- `application/world/CreateWorldViewUseCase.js` — wires
   `CreateAvatarPresenceSessionUseCase` (reusing the SAME
   `avatarProfileUseCase` instance it already builds internally for
   `avatarPresenceSession`, so the two never drift into independently-
@@ -3583,7 +3583,7 @@ object.**
               │  session.avatarKeyDown/avatarKeyUp
               │  (only while Avatar Control Mode is on)
               ▼
-    application/AvatarMovementController.js
+    application/avatar/AvatarMovementController.js
               │  tick(deltaSeconds), once per render frame
               ▼
     core/AvatarMovementSimulation.js (PURE kinematics)
@@ -3657,11 +3657,11 @@ Renderer:
 
 Application:
 
-- `application/AvatarMovementController.js` (new) — the one place raw
+- `application/avatar/AvatarMovementController.js` (new) — the one place raw
   input becomes a presence update. `keyDown`/`keyUp` recognize only
   W/A/S/D/Shift/Space (case-insensitive) and deliberately do NOT alias
   the arrow keys, which already mean "nudge the selection" (see
-  `application/EditorActionRegistry.js`) — Avatar Control Mode must
+  `application/editor/EditorActionRegistry.js`) — Avatar Control Mode must
   never silently steal that binding. `tick(deltaSeconds)` runs
   `simulateAvatarMovement()` and publishes a new `AvatarPresence` via
   `avatarPresenceSession.update()` ONLY when the result actually
@@ -3675,13 +3675,13 @@ Application:
   — called whenever Avatar Control Mode is turned off, so a keyup the
   browser never delivered (alt-tab mid-stride) can never leave the
   avatar walking forever.
-- `application/RenderWorldViewUseCase.js` — registers a frame listener
+- `application/world/RenderWorldViewUseCase.js` — registers a frame listener
   that ticks the local `AvatarVisual`'s gait clock every frame
   (harmless no-op before any avatar exists), and exposes
   `onAnimationFrame(callback)` as a thin pass-through to
   `Renderer.addFrameListener` so `WorldNavigationSession` can tick its
   own movement controller through the same loop.
-- `application/WorldNavigationSession.js` — `_setupLocalAvatar()`
+- `application/world/WorldNavigationSession.js` — `_setupLocalAvatar()`
   additionally constructs an `AvatarMovementController` and, when the
   render facade supports `onAnimationFrame`, subscribes to it to drive
   `controller.tick(deltaSeconds)` every frame. New public surface:
@@ -3842,13 +3842,13 @@ abstract-base + `Local*` shape):
 
 Application:
 
-- `application/LocalPresenceStore.js` (new) — `avatarId -> { advertisement,
+- `application/presence/LocalPresenceStore.js` (new) — `avatarId -> { advertisement,
   receivedAt }`, the ingestion boundary: `ingest()` runs every incoming
   advertisement through `core/PresenceIngestion.js` before accepting
   it; `list(now)` derives each record's lifecycle state and PRUNES any
   that have aged into ABSENT as a side effect of being asked. Never
   StorageProvider-backed — nothing here survives a reload.
-- `application/PresenceSyncService.js` (new) — the advertise/pull round
+- `application/presence/PresenceSyncService.js` (new) — the advertise/pull round
   trip: `publish(advertisement)` hands a local update to the transport;
   `pull(now)` drains whatever arrived since the last pull through
   `LocalPresenceStore.ingest()` and returns the current known-presences
@@ -3859,13 +3859,13 @@ Application:
   the local avatar's own id defensively (a channel never delivers its
   own message, but this stays as defense in depth for a future
   transport that might not offer that guarantee for free).
-- `application/RemoteAvatarInterpolator.js` (new) — ONE remote avatar's
+- `application/avatar/RemoteAvatarInterpolator.js` (new) — ONE remote avatar's
   interpolation state (`_from`/`_to`/`_startedAt`). `retarget()` only
   fires on a genuinely new sequence, snapshotting the CURRENT
   interpolated position as the new `_from` so a rapid string of
   updates blends smoothly instead of jerking; `sequence` always reads
   `_to`, never the interpolated value.
-- `application/RemoteAvatarRegistry.js` (new) — reconciles which
+- `application/avatar/RemoteAvatarRegistry.js` (new) — reconciles which
   remote avatars exist against `PresenceSyncService`'s known-presences
   list (`sync()`) and drives every known avatar's interpolated pose to
   the render facade every frame (`tick()`) — the same
@@ -3875,7 +3875,7 @@ Application:
   avatar renders with a single, fixed placeholder template+appearance
   resolved once by `WorldNavigationSession` and handed in unchanged —
   0.2.37 does not synchronize real appearance at all.
-- `application/RenderWorldViewUseCase.js` — gains the remote-avatar
+- `application/world/RenderWorldViewUseCase.js` — gains the remote-avatar
   counterpart to the local-avatar facade: `setRemoteAvatar`/
   `updateRemoteAvatarPresence`/`removeRemoteAvatar`/
   `setRemoteAvatarsVisible`, backed by a `Map<avatarId, AvatarVisual>`.
@@ -3884,7 +3884,7 @@ Application:
   by `RemoteAvatarRegistry` instead of local movement input. The
   existing per-frame gait-clock tick now covers every known remote
   avatar too.
-- `application/WorldNavigationSession.js` — gains optional
+- `application/world/WorldNavigationSession.js` — gains optional
   `presenceBroadcastProvider`/`avatarTemplateRegistry` constructor
   dependencies and `_setupRemoteAvatars()`, called from `start()`
   BEFORE `_setupLocalAvatar()` (whose presence-changed subscription
@@ -3898,7 +3898,7 @@ Application:
   `setRemoteAvatarsVisible()` (a pure client rendering preference,
   exactly like `setLocalAvatarVisible`) and
   `getKnownRemoteAvatarCount()` (debug/UI surface).
-- `application/CreateWorldViewUseCase.js` — constructs
+- `application/world/CreateWorldViewUseCase.js` — constructs
   `LocalAvatarPresenceBroadcastProvider` and the avatar template
   registry (via the existing `CreateAvatarTemplateRegistryUseCase`)
   UNCONDITIONALLY, never gated on login state — matching "Watching
@@ -3929,8 +3929,8 @@ document/spatial-index counts) in the flagship test.
 Hardens the ingestion boundary 0.2.37 built — never redesigns
 presence synchronization itself. `core/PresenceIngestion.js`,
 `core/PresenceFreshness.js`, `core/PresenceInterpolation.js`,
-`application/PresenceSyncService.js`, `application/RemoteAvatarInterpolator.js`,
-`application/RemoteAvatarRegistry.js`, and the `presence/` transport are
+`application/presence/PresenceSyncService.js`, `application/avatar/RemoteAvatarInterpolator.js`,
+`application/avatar/RemoteAvatarRegistry.js`, and the `presence/` transport are
 all UNCHANGED. One new gate sits between "an advertisement arrived"
 and "this replica's state changed":
 
@@ -4023,19 +4023,19 @@ Identity:
 
 Application:
 
-- `application/PresenceSigning.js` (new) — `signAvatarPresenceAdvertisement(advertisement,
+- `application/presence/PresenceSigning.js` (new) — `signAvatarPresenceAdvertisement(advertisement,
   identityProvider)`: attaches a real Ed25519 signature when the
   identityProvider can produce one, otherwise returns the advertisement
   completely unchanged. Never throws — a not-logged-in or
   signing-incapable identityProvider degrades to unsigned rather than
   breaking presence publishing.
-- `application/PresenceTrustBoundary.js` (new) — the orchestrator
+- `application/presence/PresenceTrustBoundary.js` (new) — the orchestrator
   described in the diagram above. Composes `LocalAuthorizationVerifier`,
   `PresenceAuthorityRegistry`, `PresenceReplayWindow`,
   `PresenceTrustPolicy`, `detectPresenceEquivocation`, and the
   UNCHANGED `resolveIncomingPresence`, in that order, into one
   `evaluate(incoming, current)` call returning `{ accepted, observation }`.
-- `application/LocalPresenceStore.js` — `ingest()` now delegates its
+- `application/presence/LocalPresenceStore.js` — `ingest()` now delegates its
   entire accept/reject decision to an injected `PresenceTrustBoundary`
   (defaulting to a permissive one, so a store built without one behaves
   EXACTLY as 0.2.37 left it). Every avatarId's most recent
@@ -4043,7 +4043,7 @@ Application:
   was rejected, and `list()` now returns it alongside
   `advertisement`/`lifecycleState` — diagnostics-only, never consumed
   by `RemoteAvatarRegistry`.
-- `application/WorldNavigationSession.js` — `_setupLocalAvatar()`'s
+- `application/world/WorldNavigationSession.js` — `_setupLocalAvatar()`'s
   publish call now runs the outgoing advertisement through
   `signAvatarPresenceAdvertisement()` before handing it to
   `PresenceSyncService.publish()`. New public surface:
@@ -4107,16 +4107,16 @@ Application:
   avatar-target counterpart to `SpatialSelectionState`/`SpatialHoverState`:
   `{ avatarId }`, `isEmpty`, `static empty()`/`avatar(avatarId)`. A
   SEPARATE state slice on purpose — see docs/Principles.md.
-- `application/AvatarPresenceLabels.js` (new) — `describeLifecycleState()`/
+- `application/avatar/AvatarPresenceLabels.js` (new) — `describeLifecycleState()`/
   `describeTrustStatus()`, human-readable labels for
   `PresenceLifecycleState`/`TrustStatus`, shared by `AvatarInfoPanel.js`,
-  same reasoning as `application/LicenseLabels.js`.
-- `application/RemoteAvatarRegistry.js` — gains `has(avatarId)` and
+  same reasoning as `application/document/LicenseLabels.js`.
+- `application/avatar/RemoteAvatarRegistry.js` — gains `has(avatarId)` and
   `currentPosition(avatarId, now)`, reading the SAME
   `RemoteAvatarInterpolator` `tick()` already drives — used by
   avatar-follow and by pruning an interaction target the moment its
   presence actually expires.
-- `application/WorldNavigationSession.js` — `pick()` now also calls
+- `application/world/WorldNavigationSession.js` — `pick()` now also calls
   `this._session.pickAvatar()` (guarded — a facade without it degrades
   to "no avatar hit," never throws) and compares its `distance` against
   a simultaneous brick hit's own `distance`; whichever branch wins
@@ -4149,7 +4149,7 @@ Renderer:
   `distance` (the raycaster's own hit distance), additive and ignored
   by every existing caller, consumed only by the new priority
   comparison above.
-- `application/RenderWorldViewUseCase.js` — constructs an
+- `application/world/RenderWorldViewUseCase.js` — constructs an
   `AvatarPickingService` alongside the existing `PickingService`;
   tracks `localAvatarId` (from `setLocalAvatar`'s own `presence.avatarId`,
   cleared by `removeLocalAvatar`); exposes `pickAvatar(screenX, screenY)`,
@@ -4179,7 +4179,7 @@ Transport Scope," and docs/Roadmap.md), avatar collision, pushing
 other avatars, gestures/emotes, chat, voice, trading, avatar ownership
 transfer, a friends/social graph, and decentralized avatar-template
 distribution. Also not in 0.2.39: any change to `core/PresenceIngestion.js`,
-`application/PresenceTrustBoundary.js`, or anything else 0.2.37/0.2.38
+`application/presence/PresenceTrustBoundary.js`, or anything else 0.2.37/0.2.38
 already established — this milestone adds an INTERACTION layer on top
 of presence, never touches trust/replay/transport underneath it, and
 the flagship test verifies exactly that (Alice's AvatarPresence/
@@ -4238,21 +4238,21 @@ Core:
 
 Application:
 
-- `application/PresenceVisibilityUseCase.js` (new) — persistence +
-  defaults, structurally mirroring `application/AvatarProfileUseCase.js`:
+- `application/presence/PresenceVisibilityUseCase.js` (new) — persistence +
+  defaults, structurally mirroring `application/avatar/AvatarProfileUseCase.js`:
   `getPolicy()` (never-fails, creates-and-persists a default PUBLIC
   policy on first access), `updatePolicy()` (throws on an unrecognized
   visibility value, never partially applies), `onPolicyChanged()`
   (same EventBus subscription shape as `onProfileChanged`/
   `onUserChanged`). Storage key `presence-visibility:<username>`,
   deliberately separate from `avatar-profile:<username>`.
-- `application/CreatePresenceVisibilityUseCase.js` (new) — the
+- `application/presence/CreatePresenceVisibilityUseCase.js` (new) — the
   storage-wiring shim, same shape as `CreateAvatarProfileUseCase.js`.
-- `application/CreateAvatarPresenceSessionUseCase.js` — now also wires
+- `application/avatar/CreateAvatarPresenceSessionUseCase.js` — now also wires
   and returns `presenceVisibilityUseCase` alongside
   `avatarProfileUseCase`/`presenceSession`, since "which identity is
   this a live view of" is the same question all three answer.
-- `application/WorldNavigationSession.js` — gains an OPTIONAL
+- `application/world/WorldNavigationSession.js` — gains an OPTIONAL
   `presenceVisibilityUseCase` constructor dependency (same
   "enforce/offer only when wired" posture as every other optional
   avatar collaborator — a session built without one always advertises,
@@ -4263,7 +4263,7 @@ Application:
   `PresenceSyncService.publish()` is ever called — a policy change
   mid-session takes effect on the very next movement, with no separate
   "apply" step.
-- `application/CreateWorldViewUseCase.js` — threads
+- `application/world/CreateWorldViewUseCase.js` — threads
   `presenceVisibilityUseCase` through from the same avatar-wiring
   block that already builds `avatarProfileUseCase`/
   `avatarPresenceSession`, absent under the exact same "nobody logged
@@ -4288,8 +4288,8 @@ cryptographic anonymity. In particular: HIDDEN means "don't advertise,"
 never "advertise an encrypted presence nobody can read" — encryption
 is explicitly a separate, larger protocol problem left for later. Also
 not in 0.2.40: any change to `core/PresenceIngestion.js`,
-`application/PresenceTrustBoundary.js`, `application/PresenceSyncService.js`,
-`application/RemoteAvatarRegistry.js`, or anything else the RECEIVER
+`application/presence/PresenceTrustBoundary.js`, `application/presence/PresenceSyncService.js`,
+`application/avatar/RemoteAvatarRegistry.js`, or anything else the RECEIVER
 side already established in 0.2.37/0.2.38 — visibility is entirely a
 SENDER-side gate, and the flagship test verifies exactly that: Bob's
 session, its `PresenceTrustBoundary`, and its `RemoteAvatarRegistry`
@@ -4384,10 +4384,10 @@ Identity:
 Application — the profile pipeline, deliberately NOT sharing state
 with presence's own equivalents even where a class is reused:
 
-- `application/AvatarProfileSigning.js` (new) — mirrors
-  `application/PresenceSigning.js`.
-- `application/AvatarProfileTrustBoundary.js` (new) — the profile
-  counterpart to `application/PresenceTrustBoundary.js`, same six-step
+- `application/avatar/AvatarProfileSigning.js` (new) — mirrors
+  `application/presence/PresenceSigning.js`.
+- `application/avatar/AvatarProfileTrustBoundary.js` (new) — the profile
+  counterpart to `application/presence/PresenceTrustBoundary.js`, same six-step
   decision (structural validity → signature → authority → replay →
   equivocation → freshness). REUSES `core/PresenceAuthority.js`'s
   `PresenceAuthorityRegistry` directly, but with its OWN separate
@@ -4401,18 +4401,18 @@ with presence's own equivalents even where a class is reused:
   `core/PresenceTrustPolicy.js` exists yet — unsigned profile claims
   are always tolerated, the same permissive default presence itself
   ships with.
-- `application/LocalAvatarProfileStore.js` (new) — `avatarId →`
+- `application/avatar/LocalAvatarProfileStore.js` (new) — `avatarId →`
   latest accepted `AvatarProfileAdvertisement`, judged by an injected
   `AvatarProfileTrustBoundary` on every `ingest()`. Deliberately NEVER
   time-prunes, unlike `LocalPresenceStore` — see docs/Principles.md,
   "Appearance Is Durable; Presence Is Ephemeral."
-- `application/AvatarProfileSyncService.js` (new) — the advertise/pull
+- `application/avatar/AvatarProfileSyncService.js` (new) — the advertise/pull
   round trip, one layer up, mirroring `application/
   PresenceSyncService.js`'s shape as its own small class (not a direct
   reuse — `listKnownPresences()` reads oddly applied to profiles, and
   profile callers need an `O(1)` `getKnownProfile(avatarId)` lookup
   presence callers don't).
-- `application/RemoteAvatarAppearanceRegistry.js` (new) — the
+- `application/avatar/RemoteAvatarAppearanceRegistry.js` (new) — the
   appearance counterpart to `RemoteAvatarRegistry`: `resolve()` (pure
   read — no known profile, or an unrecognized `templateId`, both
   degrade to the same fixed placeholder), `resolveAndTrack()` (resolve
@@ -4420,17 +4420,17 @@ with presence's own equivalents even where a class is reused:
   creation and by `sync()`), `sync(knownAvatarIds)` (per-frame, only
   pushes `updateRemoteAvatarAppearance` for an avatarId whose
   `profileRevision` actually changed), `forget()`/`clear()`.
-- `application/RemoteAvatarRegistry.js` — gains an OPTIONAL
+- `application/avatar/RemoteAvatarRegistry.js` — gains an OPTIONAL
   `appearanceResolver` constructor dependency, consulted the moment a
   brand-new remote avatar's visual is first created (instead of always
   falling back to the fixed placeholder — full backward compatibility
   when unwired), and `knownAvatarIds()` for
   `RemoteAvatarAppearanceRegistry.sync()` to iterate.
-- `application/RenderWorldViewUseCase.js` — gains
+- `application/world/RenderWorldViewUseCase.js` — gains
   `updateRemoteAvatarAppearance(avatarId, template, appearance)`, a
   no-op if the avatar's visual doesn't exist yet (mirrors
   `updateLocalAvatarAppearance`'s own shape).
-- `application/WorldNavigationSession.js` — the integration point.
+- `application/world/WorldNavigationSession.js` — the integration point.
   `_setupRemoteAvatars()` conditionally builds `AvatarProfileSyncService`
   + `RemoteAvatarAppearanceRegistry` when an `avatarProfileBroadcastProvider`
   is wired; its per-frame callback drains the PROFILE inbox BEFORE
@@ -4448,7 +4448,7 @@ with presence's own equivalents even where a class is reused:
   `presenceVisibilityUseCase.getPolicy().shouldAdvertise()` gate
   presence publishing already used (0.2.40) — see docs/Principles.md,
   "Presence And Profile Share One Publication Gate."
-- `application/CreateWorldViewUseCase.js` — constructs a SECOND
+- `application/world/CreateWorldViewUseCase.js` — constructs a SECOND
   `LocalAvatarPresenceBroadcastProvider('forkbuild:avatar-profile')`
   (the class reused directly — it has nothing presence-specific baked
   into its actual logic, just a channel name), threaded through
@@ -4487,7 +4487,7 @@ The movement pipeline becomes:
     core/AvatarMovementSimulation.js   (pure kinematics — UNTOUCHED this milestone)
        │  proposed position
        ▼
-    application/AvatarMovementConstraint.js   (WHICH geometry is currently available)
+    application/avatar/AvatarMovementConstraint.js   (WHICH geometry is currently available)
        │  + core/AvatarCollision.js            (pure geometry math)
        │  constrained position, collided
        ▼
@@ -4499,7 +4499,7 @@ The movement pipeline becomes:
 Deliberately NOT Three.js collision logic inside the simulation — see
 docs/Principles.md, "Collision Is A Constraint Applied To Movement,
 Never Part Of The Movement Simulation Itself." The split mirrors
-`core/PresenceIngestion.js`/`application/PresenceTrustBoundary.js`'s
+`core/PresenceIngestion.js`/`application/presence/PresenceTrustBoundary.js`'s
 own pure-kernel/applied-constraint shape, one layer over.
 
 Core — pure geometry, no Document/WorldPlacement/BrickRegistry
@@ -4510,7 +4510,7 @@ knowledge at all:
   capsule — see docs/Principles.md, "Start Simple: A Box Is A Good
   Enough Capsule"), `avatarAabbAt()`, `brickAabb()` (axis-aligned,
   ignoring `Brick.rotation` — the same simplification
-  `application/SelectionBoundsService.js` already makes),
+  `application/editor/SelectionBoundsService.js` already makes),
   `translateAabb()`, `aabbsOverlap()`, and the real algorithm,
   `resolveHorizontalMovement()`: an axis-separated SWEPT slide —
   X and Z resolved independently (so a diagonal approach into a
@@ -4529,7 +4529,7 @@ knowledge at all:
 Application — supplies "the world geometry currently available to
 this replica":
 
-- `application/AvatarMovementConstraint.js` (new) — given
+- `application/avatar/AvatarMovementConstraint.js` (new) — given
   WorldNavigationSession's own `_loadedDocuments` Map (BY REFERENCE,
   never a snapshot — see docs/Principles.md, "The Local Avatar Is
   Constrained By Collision Geometry Currently Available To This
@@ -4545,7 +4545,7 @@ this replica":
   "Validate Strictly On Write; Degrade Gracefully On Read"). Nothing
   here is ever persisted or cached across ticks — every obstacle AABB
   is recomputed fresh, on demand.
-- `application/AvatarMovementController.js` — gains an OPTIONAL
+- `application/avatar/AvatarMovementController.js` — gains an OPTIONAL
   `movementConstraint` constructor argument (unchanged single-argument
   construction still works, exactly 0.2.36's own signature — the same
   "enforce/offer only when wired" posture as every other optional
@@ -4554,7 +4554,7 @@ this replica":
   recent tick's outcome — transient, never part of `AvatarPresence`
   (see docs/Principles.md, "Collided Is Movement Information, Not An
   Animation Vocabulary").
-- `application/WorldNavigationSession.js` — `_setupLocalAvatar()`
+- `application/world/WorldNavigationSession.js` — `_setupLocalAvatar()`
   builds an `AvatarMovementConstraint` from state the session ALREADY
   owns (`_loadedDocuments`, `_getWorldPosition`, `_registry`) — no new
   constructor dependency on `WorldNavigationSession` itself; collision
@@ -4612,7 +4612,7 @@ Core:
 
 - `core/AvatarProximity.js` (new) — `computeNearbyAvatars({ localPosition,
   knownPresences, radius })`, a pure function over exactly the shape
-  `application/PresenceSyncService.js#listKnownPresences()` already
+  `application/presence/PresenceSyncService.js#listKnownPresences()` already
   returns (`{ advertisement, lifecycleState, trustObservation }`).
   Reuses `core/SpatialQuery.js`'s `distanceBetween()`/`isWithinRadius()`
   verbatim rather than reimplementing 3D distance math — see
@@ -4623,7 +4623,7 @@ Core:
 
 Application:
 
-- `application/WorldNavigationSession.js` gains three methods:
+- `application/world/WorldNavigationSession.js` gains three methods:
   - `getNearbyAvatars(radius = 15)` — reads
     `PresenceSyncService.listKnownPresences()` (never `pull()`, the
     same read-only posture `getRemoteAvatarDiagnostics()` already
@@ -4656,7 +4656,7 @@ UI:
   mockup: a small list of nearby avatars (display name, distance,
   animation, a lifecycle/trust status dot) inside World View's
   existing AVATAR sidebar section, shown alongside "Show Other
-  Avatars." Reuses `application/AvatarPresenceLabels.js` and
+  Avatars." Reuses `application/avatar/AvatarPresenceLabels.js` and
   `AvatarInfoPanel`'s own `.avatar-info-status-dot` CSS verbatim — one
   visual vocabulary for lifecycle/trust across both surfaces. Emits
   `select`; `ui/views/WorldView.js` handles it by calling
@@ -4765,7 +4765,7 @@ Application:
   the existing field name rather than the design doc's own
   illustrative `targetAvatarId` — the name is already load-bearing
   across ~20 call sites and tests; renaming it would be pure churn.
-- `application/WorldNavigationSession.js` gains
+- `application/world/WorldNavigationSession.js` gains
   `performAvatarInteraction(kind)`: rejects when there is no current
   target, the target is the local avatar itself (gesturing at
   yourself is meaningless), the kind is invalid/NONE, or the shared
@@ -4780,7 +4780,7 @@ Application:
   `AvatarMovementController#hasMovementInput()` (new getter) is
   false — an actively-moving player's own input always wins over the
   temporary "look at target" override.
-- `application/AvatarMovementController.js` gains `hasMovementInput()`
+- `application/avatar/AvatarMovementController.js` gains `hasMovementInput()`
   — a cheap getter over already-tracked key state, added purely so the
   facing behavior above has something honest to gate on.
 
@@ -4800,7 +4800,7 @@ Renderer:
   body/head tilt the locomotion pose would otherwise contribute, while
   leg splay and hop height still come from locomotion — a gesture is
   upper-body-only.
-- `application/RenderWorldViewUseCase.js`'s facade gains
+- `application/world/RenderWorldViewUseCase.js`'s facade gains
   `setLocalAvatarFacing(yawDegrees)` and `setLocalAvatarGesture
   (interactionKind)` — thin pass-throughs to the local
   `AvatarVisual`. Neither has a remote-avatar counterpart; see
@@ -4941,11 +4941,11 @@ Core (all pure, no dependency on transport or rendering):
 
 Application:
 
-- `application/AvatarInteractionSigning.js` (new) —
+- `application/avatar/AvatarInteractionSigning.js` (new) —
   `signAvatarInteractionAdvertisement(advertisement, identityProvider)`,
-  mirroring `application/PresenceSigning.js` exactly: optional by
+  mirroring `application/presence/PresenceSigning.js` exactly: optional by
   construction, degrades to unsigned rather than throwing.
-- `application/AvatarInteractionTrustBoundary.js` (new) — the
+- `application/avatar/AvatarInteractionTrustBoundary.js` (new) — the
   interaction counterpart to `PresenceTrustBoundary`/
   `AvatarProfileTrustBoundary`, with its OWN `PresenceAuthorityRegistry`
   instance (never shared with presence's or profile's own). `evaluate()`
@@ -4953,7 +4953,7 @@ Application:
   compare against — and has deliberately NO equivocation check; see
   docs/Principles.md, "An Event Stream Has No Room For Equivocation
   Detection, And That Gap Is Named, Not Hidden."
-- `application/AvatarInteractionSyncService.js` (new) — the
+- `application/avatar/AvatarInteractionSyncService.js` (new) — the
   advertise/pull round trip `PresenceSyncService`/
   `AvatarProfileSyncService` already established, but deliberately
   simpler: no `LocalAvatarInteractionStore`, no `list()`/`get()`.
@@ -4963,12 +4963,12 @@ Application:
   (unlike profile's `PROFILE_REPUBLISH_INTERVAL_MS`) — a missed
   gesture is never something a later-joining replica should catch up
   on.
-- `application/CreateWorldViewUseCase.js` wires a THIRD
+- `application/world/CreateWorldViewUseCase.js` wires a THIRD
   `LocalAvatarPresenceBroadcastProvider` instance, reused as-is (the
   same generic named-BroadcastChannel wrapper 0.2.41 already reused for
   profile) on its own `'forkbuild:avatar-interaction'` channel name —
   never sharing a channel with presence's or profile's own traffic.
-- `application/WorldNavigationSession.js`: `performAvatarInteraction()`
+- `application/world/WorldNavigationSession.js`: `performAvatarInteraction()`
   gains one more step after its existing 0.2.44 local-state update —
   `_publishAvatarInteraction(kind, targetAvatarId, now)` — which signs
   and publishes a fresh advertisement through the visibility gate
@@ -4990,7 +4990,7 @@ Application:
 
 Renderer:
 
-- `application/RenderWorldViewUseCase.js`'s facade gains
+- `application/world/RenderWorldViewUseCase.js`'s facade gains
   `setRemoteAvatarGesture(avatarId, interactionKind)` — the remote
   counterpart to `setLocalAvatarGesture`, but calling the EXACT SAME
   `AvatarVisual.setGesture()` 0.2.44 already built (already generic,
@@ -5142,7 +5142,7 @@ Identity provider (the seam every other file actually calls through):
   "no user logged in" — a distinction that matters because it is now
   possible (and tested) for a `LocalIdentity` to exist on a device
   with no session currently authenticated onto it.
-- `application/IdentityUseCase.js` — gains `createIdentity(label)`,
+- `application/identity/IdentityUseCase.js` — gains `createIdentity(label)`,
   `listIdentities()`, `authenticate(identityId)`, `endSession()`,
   `currentSession()`, `isAuthenticated()`, and `onSessionChanged()`
   alongside the unchanged `login()`/`logout()`/`currentUser()`/
@@ -5325,7 +5325,7 @@ Identity provider (the seam, extended rather than replaced):
   its exact 0.1.21/0.2.16/0.2.46 signature — the passphrase parameter is
   optional and additive; every caller that passes none (all ~45
   pre-existing tests, unmodified) sees no behavior change whatsoever.
-- `application/IdentityUseCase.js` — gains `protectIdentity()`,
+- `application/identity/IdentityUseCase.js` — gains `protectIdentity()`,
   `unlock()`, `lock()`, `vaultLock()`, `isUnlocked()`,
   `checkVaultTimeouts()`, and a THIRD event type,
   `VaultLockChanged` (`onVaultLockChanged()`), deliberately NOT folded
@@ -5503,7 +5503,7 @@ Identity provider (the seam, extended again):
   identity starts, and stays, LOCKED exactly like any other protected
   identity, because import proves this device now HOLDS the key, never
   that it has been authenticated with it.
-- `application/IdentityUseCase.js` — thin `exportIdentity()`/
+- `application/identity/IdentityUseCase.js` — thin `exportIdentity()`/
   `importIdentity()` delegation, the same division every other method
   in the file already follows.
 
@@ -5694,7 +5694,7 @@ an invitation (rejecting an expired one outright, before any
 flagship test below), hold discovered records in memory, notify
 subscribers.
 
-`application/DiscoverPeersUseCase.js` (new) and `application/
+`application/peer/DiscoverPeersUseCase.js` (new) and `application/
 ConnectToPeerUseCase.js` (new) are the use-case pair the design doc's
 `DiscoverPeersUseCase`/`ConnectToPeerUseCase` sketch asked for.
 `ConnectToPeerUseCase.connect(discoveryRecord)` is the ACTIVE half:
@@ -5707,7 +5707,7 @@ symmetry is real, not merely documented. Neither method ever reads
 `discoveryRecord.identityHint` — see docs/Principles.md, "Discovery Finds
 A Candidate; It Never Authenticates One."
 
-`application/ConnectedPeer.js` (new) is the live, UI-facing aggregate: a
+`application/peer/ConnectedPeer.js` (new) is the live, UI-facing aggregate: a
 connection plus its authentication session plus (when this side did the
 discovering) the discovery record that led here. `getLifecycleState()`
 calls `peer/PeerLifecycleState.js`'s new `derivePeerLifecycleState()` — a
@@ -5716,7 +5716,7 @@ PURE function, computed fresh on every call from the two real, unmodified
 "A Peer's Lifecycle Is Derived, Never A Third State Machine"). `setAlias()`
 is a deliberately narrow, local-only, never-persisted label — see
 docs/Principles.md, "A Peer Alias Is A Local Note, Never A Claim About The
-Peer." `application/ConnectedPeerRegistry.js` (new) tracks every live
+Peer." `application/peer/ConnectedPeerRegistry.js` (new) tracks every live
 `ConnectedPeer`, keyed by connectionId, and — structurally, not by
 caller discipline — removes one automatically the instant its lifecycle
 reaches CLOSED or FAILED: there is no persisted "connected peers" list
@@ -5823,8 +5823,8 @@ WebRtcPeerConnectionProvider.js` (new) satisfy the exact same `peer/
 PeerConnection.js`/`peer/PeerConnectionProvider.js` contracts `peer/
 LocalPeerConnectionProvider.js` already does — `connect(remoteAddress)`,
 `onIncomingConnection()`, `dispose()`, `send()`, `onMessage()`,
-`onStateChange()`, `close()` — so `application/ConnectToPeerUseCase.js`
-and `application/DiscoverPeersUseCase.js` needed no changes to their own
+`onStateChange()`, `close()` — so `application/peer/ConnectToPeerUseCase.js`
+and `application/peer/DiscoverPeersUseCase.js` needed no changes to their own
 decision logic to drive a real transport instead of an in-process one.
 The base `peer/PeerConnection.js` interface is deliberately widened by
 exactly two things, both purely about moving bytes, never about
@@ -5898,7 +5898,7 @@ latency improvement, not a correctness dependency.
 
 Building and testing this against a REAL, two-connection, realistically-
 timed transport surfaced a genuine, pre-existing bug one layer up, in
-code 0.2.50 shipped: `application/ConnectedPeer.js#_notify()` iterated
+code 0.2.50 shipped: `application/peer/ConnectedPeer.js#_notify()` iterated
 its `_stateListeners` Set live, but `application/
 ConnectedPeerRegistry.js`'s own auto-removal-on-CLOSED handler calls
 `dispose()` — which `clear()`s that very Set — from inside that same
@@ -5972,7 +5972,7 @@ Peer Connection     └── test.alpha / test.beta / ...   (proven by this mil
       │  gated on: connectedPeer.getLifecycleState() === AUTHENTICATED,
       │  rechecked on EVERY message, never cached from attach() time
       │
-application/ConnectedPeer.js        (0.2.50, completely unmodified)
+application/peer/ConnectedPeer.js        (0.2.50, completely unmodified)
       │
 peer/PeerConnection.js  ◄── same interface, Local OR WebRTC ──►  peer/PeerConnection.js
 peer/PeerAuthenticationSession.js  (0.2.49, completely unmodified)
@@ -5998,7 +5998,7 @@ Message Envelope Carries Routing Information, Never Meaning." It carries
 no avatar state, no username, no authorization decision, no trust state,
 and no signature — see the "no second signature" note below. `peer/
 PeerMessageBus.js` (new) is the application-facing multiplexer sitting
-directly on `application/ConnectedPeer.js`, nothing lower:
+directly on `application/peer/ConnectedPeer.js`, nothing lower:
 `subscribe(protocol, handler)` registers a handler for a namespaced
 protocol name (`"avatar-presence"`, `"test.alpha"`, ...) ONCE, entirely
 independent of which peer eventually sends under that name;
@@ -6118,7 +6118,7 @@ AvatarPresenceBroadcastProvider    (0.2.37's interface, unmodified)
                   │    → PeerMessageBus.send(peer, 'forkbuild:avatar-presence', ad)
                   ▼
       peer/PeerMessageBus.js         (0.2.52, unmodified)
-      application/ConnectedPeer.js   (0.2.50, unmodified)
+      application/peer/ConnectedPeer.js   (0.2.50, unmodified)
       peer/PeerConnection.js — Local OR WebRTC (0.2.49/0.2.51, unmodified)
       peer/PeerAuthenticationSession.js (0.2.49, unmodified)
                   │
@@ -6130,8 +6130,8 @@ AvatarPresenceBroadcastProvider    (0.2.37's interface, unmodified)
                   │
                   ▼
       PresenceSyncService.pull()          (0.2.37, unmodified)
-      application/LocalPresenceStore.js   (0.2.37/0.2.38, unmodified)
-      application/PresenceTrustBoundary.js (0.2.38, unmodified)
+      application/presence/LocalPresenceStore.js   (0.2.37/0.2.38, unmodified)
+      application/presence/PresenceTrustBoundary.js (0.2.38, unmodified)
       core/PresenceIngestion.js / PresenceAuthority.js /
       PresenceReplayWindow.js / PresenceEquivocation.js  (all unmodified)
                   │
@@ -6150,10 +6150,10 @@ interesting on its own: `presence/PeerAvatarPresenceBroadcastProvider.js`
 (new) is a SECOND, real implementation of `presence/
 AvatarPresenceBroadcastProvider.js`'s own `advertise()`/`onAdvertisement()`/
 `dispose()` contract, sitting on `peer/PeerMessageBus.js` and
-`application/ConnectedPeerRegistry.js` (both 0.2.50/0.2.52, both
+`application/peer/ConnectedPeerRegistry.js` (both 0.2.50/0.2.52, both
 completely unmodified) instead of the browser's `BroadcastChannel` API
 — and because every file downstream of that interface
-(`application/PresenceSyncService.js` through `core/PresenceFreshness.js`)
+(`application/presence/PresenceSyncService.js` through `core/PresenceFreshness.js`)
 only ever depended on the INTERFACE, not on which concrete provider
 implemented it, not one of them needed to change. See docs/Principles.md,
 "A Transport Migration Should Leave The Trust Model Untouched."
@@ -6243,7 +6243,7 @@ special-casing. Finally, a tampered advertisement — Alice's own genuine
 signature, stolen from one position and paired with a different one —
 sent directly over the same authenticated connection Bob just
 legitimately received presence over, is rejected by the completely
-unmodified `application/PresenceTrustBoundary.js`, proving 0.2.38's
+unmodified `application/presence/PresenceTrustBoundary.js`, proving 0.2.38's
 trust semantics survived the transport swap rather than merely being
 untouched by inspection. Throughout, Alice's `AvatarProfile`, her
 `Publication`, and its `WorldPlacement` stay byte-identical, the same
@@ -6302,7 +6302,7 @@ AvatarPresenceBroadcastProvider's interface  (0.2.37's interface, unmodified,
                   │    → PeerMessageBus.send(peer, 'forkbuild:avatar-profile', ad)
                   ▼
       peer/PeerMessageBus.js         (0.2.52, unmodified — the SAME shared
-      application/ConnectedPeer.js    bus/registry a node's presence
+      application/peer/ConnectedPeer.js    bus/registry a node's presence
       peer/PeerConnection.js          transport already attached to)
       peer/PeerAuthenticationSession.js (all unmodified)
                   │
@@ -6314,10 +6314,10 @@ AvatarPresenceBroadcastProvider's interface  (0.2.37's interface, unmodified,
                   │
                   ▼
       AvatarProfileSyncService.pull()        (0.2.41, unmodified)
-      application/LocalAvatarProfileStore.js  (0.2.41, unmodified)
-      application/AvatarProfileTrustBoundary.js (0.2.41, unmodified)
+      application/avatar/LocalAvatarProfileStore.js  (0.2.41, unmodified)
+      application/avatar/AvatarProfileTrustBoundary.js (0.2.41, unmodified)
       core/AvatarProfileIngestion.js / AvatarProfileEquivocation.js
-      application/AvatarProfileSigning.js  (all unmodified)
+      application/avatar/AvatarProfileSigning.js  (all unmodified)
                   │
                   ▼
       RemoteAvatarAppearanceRegistry → renderer  (0.2.41, unmodified)
@@ -6341,8 +6341,8 @@ own 0.2.53 header even named this exact future reuse as the reason its
 in the first place. Because every file downstream of `presence/
 AvatarPresenceBroadcastProvider.js`'s interface only ever depended on
 the interface, not on which concrete provider (or which INSTANCE of a
-provider) implemented it, `application/AvatarProfileSyncService.js`
-through `application/RemoteAvatarAppearanceRegistry.js` — the entire
+provider) implemented it, `application/avatar/AvatarProfileSyncService.js`
+through `application/avatar/RemoteAvatarAppearanceRegistry.js` — the entire
 0.2.41 profile pipeline — needed zero changes, the identical payoff
 0.2.53 already collected for presence.
 
@@ -6361,7 +6361,7 @@ unmodified `PeerAvatarPresenceBroadcastProvider#advertise()` loop, once
 per AUTHENTICATED peer, exactly the way presence's own policy already
 is. 0.2.54's own default rule is deliberately minimal — "every
 AUTHENTICATED peer is eligible," the same permissive posture
-`application/AvatarProfileTrustBoundary.js` already took on the TRUST
+`application/avatar/AvatarProfileTrustBoundary.js` already took on the TRUST
 side in 0.2.41 ("no `PresenceTrustPolicy`-equivalent knob exists for
 profiles") — because there is still no live profile-sharing
 configuration surface anywhere in the running app for a richer
@@ -6430,7 +6430,7 @@ own proposal.
 ui/views/PeerConnectionsView.js          (NEW — pure presentation, /peers)
         │
         ▼
-application/PeerSessionManager.js        (NEW — the only new application
+application/peer/PeerSessionManager.js        (NEW — the only new application
         │                                 class this milestone adds)
         │
         ├── createInvitation()             Alice: WebRTC offer -> attach()
@@ -6445,11 +6445,11 @@ application/PeerSessionManager.js        (NEW — the only new application
                                              connection.acceptRemoteAnswer()
                     │
                     ▼            (every verb above is a THIN wrapper —
-      application/DiscoverPeersUseCase.js    no new logic lives here)
-      application/ConnectToPeerUseCase.js     (0.2.50, unmodified)
+      application/peer/DiscoverPeersUseCase.js    no new logic lives here)
+      application/peer/ConnectToPeerUseCase.js     (0.2.50, unmodified)
       peer/WebRtcPeerConnectionProvider.js     (0.2.51, unmodified)
-      application/ConnectedPeer.js             (0.2.50, unmodified)
-      application/ConnectedPeerRegistry.js      (0.2.50, unmodified)
+      application/peer/ConnectedPeer.js             (0.2.50, unmodified)
+      application/peer/ConnectedPeerRegistry.js      (0.2.50, unmodified)
       peer/PeerAuthenticationSession.js          (0.2.49, unmodified)
       peer/PeerLifecycleState.js                  (0.2.50, unmodified —
                                                      read, never computed
@@ -6465,7 +6465,7 @@ but none of it was reachable from the running app. This milestone adds
 exactly one new application-layer class and one new view; it adds no
 new cryptography, no new lifecycle state, and no new trust decision.
 
-`application/PeerSessionManager.js` is the "small application
+`application/peer/PeerSessionManager.js` is the "small application
 abstraction" the design doc asked for, and its own header states its
 scope as narrowly as `peer/PeerMessageBus.js` states its own:
 invitations → connections → authenticated peers →
@@ -6502,7 +6502,7 @@ WebRtcPeerTransport.test.js` already exercises with `JSON.stringify`/
 clipboard instead of a test's `relay()` helper. The Peer Identity panel
 never shows a `remoteIdentity` for a peer whose `getLifecycleState()`
 is not, right now, AUTHENTICATED — the same "read the derived state,
-never assume" discipline `application/ConnectedPeer.js` has enforced
+never assume" discipline `application/peer/ConnectedPeer.js` has enforced
 since 0.2.50 — and labels the connection "Ephemeral," never "Friend,"
 per docs/Principles.md, "An Authenticated Peer Is Not A Friend." A
 per-peer local alias (`ConnectedPeer#setAlias`) is editable directly on
@@ -6536,7 +6536,7 @@ any connection attempt is even made.
 
 Deliberately not in 0.2.55, matching the design doc's own explicit,
 narrow scope: chat — `peer/PeerMessageBus.js` is not imported anywhere
-in `application/PeerSessionManager.js` or `ui/views/
+in `application/peer/PeerSessionManager.js` or `ui/views/
 PeerConnectionsView.js`; a persistent friends/contacts list — a closed
 peer still simply disappears from `ConnectedPeerRegistry`, exactly as
 it always has, and there is no "forget" operation because there is
@@ -6582,7 +6582,7 @@ core/PeerRelationship.js        "Have I proven that identity before
         │  createdAt, lastAuthenticatedAt — NO endpoint, NO
         │  connectionId, NO session nonce
         ▼
-application/PeerRelationshipUseCase.js   (NEW)
+application/peer/PeerRelationshipUseCase.js   (NEW)
         │  getRelationships() / getRelationship(id) / isKnown(id)
         │  rememberPeer(peerIdentity, {alias})   ← ui/views/
         │  noteAuthenticated(peerIdentity)         PeerConnectionsView.js
@@ -6591,9 +6591,9 @@ application/PeerRelationshipUseCase.js   (NEW)
         ▼
 storage/LocalStorageProvider.js  (unmodified) — one record list per
                                     local owner, same shape as
-                                    application/AvatarProfileUseCase.js
+                                    application/avatar/AvatarProfileUseCase.js
 
-application/ConnectedPeerRegistry.js (0.2.50, unmodified) — answers
+application/peer/ConnectedPeerRegistry.js (0.2.50, unmodified) — answers
    "is this identity connected RIGHT NOW?" independently, always fresh;
    never read BY PeerRelationship, never written INTO it.
 ```
@@ -6627,8 +6627,8 @@ PeerIdentity` check, the ONLY place in the whole application layer
 allowed to construct a `PeerRelationship` from a live object rather
 than from trusted storage via `fromJSON()`.
 
-`application/PeerRelationshipUseCase.js` scopes its storage exactly
-the way `application/AvatarProfileUseCase.js` already does — one
+`application/peer/PeerRelationshipUseCase.js` scopes its storage exactly
+the way `application/avatar/AvatarProfileUseCase.js` already does — one
 record list per `identityProvider.currentUser().username`, resolved
 fresh on every call, never cached — so switching which local identity
 is signed in on a device switches which Known Peers list is in view,
@@ -6668,7 +6668,7 @@ immutability, and `PeerRelationshipUseCase`'s CRUD surface, per-owner
 scoping, and change notifications — needs no network transport at all.
 The second drives the design doc's own end-to-end scenario over a REAL
 `peer/WebRtcPeerConnectionProvider.js` connection via
-`application/PeerSessionManager.js` (0.2.55, unmodified): Alice and Bob
+`application/peer/PeerSessionManager.js` (0.2.55, unmodified): Alice and Bob
 authenticate; Alice remembers Bob using ONLY his freshly proven
 `remoteIdentity`, never the invitation she originally sent him;
 disconnecting empties `ConnectedPeerRegistry` exactly as 0.2.50 already
@@ -6716,7 +6716,7 @@ core/FriendshipAdvertisement.js   "actorIdentity did REQUEST/ACCEPT,
         │  sent via peer/PeerMessageBus.js, over an already-
         │  AUTHENTICATED (0.2.49) connection only
         ▼
-application/FriendRelationshipUseCase.js   (NEW)
+application/identity/FriendRelationshipUseCase.js   (NEW)
         │  ingestion boundary, in order:
         │   1. well-formed shape
         │   2. subjectIdentity === my current identity
@@ -6773,7 +6773,7 @@ trust-on-first-use binding here the way `core/PresenceAuthority.js`
 allows one layer down; a REQUEST/ACCEPT must be provably from the
 identity it claims to be from, every single time.
 
-`application/FriendRelationshipUseCase.js` is the first LIVE consumer
+`application/identity/FriendRelationshipUseCase.js` is the first LIVE consumer
 of `peer/PeerMessageBus.js` in the running app: 0.2.52 through 0.2.55
 built and tested the peer-based transport, but `application/
 CreateWorldViewUseCase.js`'s presence/profile/interaction sync still
@@ -6813,7 +6813,7 @@ LocalAuthorizationVerifier.js`'s required-signature/tamper/actor-
 binding checks, and `FriendRelationshipUseCase`'s local security
 boundary — needs no network transport. The second drives the design
 doc's own scripted scenario over REAL `peer/WebRtcPeerConnectionProvider.js`
-connections via `application/PeerSessionManager.js` (0.2.55,
+connections via `application/peer/PeerSessionManager.js` (0.2.55,
 unmodified): Alice requests, Bob receives and verifies it as pending,
 Bob accepts, Alice receives and verifies the acceptance, both
 independently derive `FRIEND` with zero server involved; the
@@ -6952,7 +6952,7 @@ Authority Can Revoke An Identity It Does Not Control."
 alongside its existing unlock/export ones — Change Passphrase, Declare
 Successor, Revoke — plus a lifecycle badge and successor pointer on
 each identity card, all pure presentation over
-`application/IdentityUseCase.js`'s thin delegation, exactly matching
+`application/identity/IdentityUseCase.js`'s thin delegation, exactly matching
 this view's existing division of labor.
 
 The flagship test (`tests/IdentityLifecycle.test.js`) runs the
@@ -7012,9 +7012,9 @@ only with a strictly NEWER one (by `declaredAt`) from the SAME
 predecessor, preserving identity/LocalIdentityProvider.js's own
 single-successor-per-predecessor invariant on the receiving side too.
 
-**The use case.** `application/IdentityLifecyclePropagationUseCase.js`
+**The use case.** `application/identity/IdentityLifecyclePropagationUseCase.js`
 owns both persistence and transport, the same combined shape
-`application/FriendRelationshipUseCase.js` established in 0.2.57 for
+`application/identity/FriendRelationshipUseCase.js` established in 0.2.57 for
 an identical reason (a lifecycle fact only means something once it
 actually reaches another identity) — but with one load-bearing
 difference from it. A friendship advertisement is a first-person claim,
@@ -7036,7 +7036,7 @@ received — multi-hop relay is real, deliberately deferred future work.
 A `knowsIdentity(identityId)` predicate — injected the same way
 `FriendRelationshipUseCase`'s own `isBlocked` is, consulted fresh on
 every incoming message, never cached — is the relevance gate:
-`application/CreateIdentityLifecyclePropagationUseCase.js` wires it, in
+`application/identity/CreateIdentityLifecyclePropagationUseCase.js` wires it, in
 the live app, against the SAME `peerRelationshipUseCase`/
 `friendRelationshipUseCase` already running in `ui/main.js`. A record
 about an identity neither store has ever heard of is dropped before it
@@ -7046,7 +7046,7 @@ lifecycle facts about identities neither has otherwise interacted with.
 
 **Sending side.** `ui/views/IdentityManagementView.js`'s existing
 Declare Successor / Revoke forms (0.2.67, unmodified in shape) each
-gain one additional step: once `application/IdentityUseCase.js`'s
+gain one additional step: once `application/identity/IdentityUseCase.js`'s
 `declareSuccessor()`/`revokeIdentity()` produces the signed record
 locally, an OPTIONALLY-injected `identityLifecyclePropagationUseCase`
 broadcasts it to whoever is currently authenticated. Propagation is
@@ -7112,12 +7112,12 @@ a third party, never a new wire protocol, never a new trust input. The
 answer extends 0.2.63's own durable outbox rather than redesigning
 chat: `forkbuild:chat`, `forkbuild:chat-delivery-ack`, `core/
 ChatMessage.js`, `core/ChatReplayWindow.js`, and every trust gate in
-`application/ChatUseCase.js#_handleIncoming()` are completely
+`application/chat/ChatUseCase.js#_handleIncoming()` are completely
 unmodified.
 
 **The durable half of a message.** `core/ConversationEntry.js` is to a
 live chat message what `core/ChatOutboxEntry.js` already is to a queued
-one — the durable wrapper application/ConversationStore.js actually
+one — the durable wrapper application/chat/ConversationStore.js actually
 persists. It carries `message` (a `core/ChatMessage.js`, verbatim,
 never re-validated here), `peerIdentityId`, `direction` (a new, small
 closed vocabulary this file also defines, `ChatMessageDirection` —
@@ -7126,10 +7126,10 @@ four-value vocabulary). Immutable, like `core/ChatOutboxEntry.js` and
 `core/PeerRelationship.js`: a delivery-state transition is always a NEW
 entry (`withDeliveryState()`), never a mutation in place.
 
-**The store.** `application/ConversationStore.js` follows the exact
+**The store.** `application/chat/ConversationStore.js` follows the exact
 "one flat list per LOCAL owner, loaded/created/saved through an
 injected StorageProvider, filtered by peerIdentityId on read" shape
-`application/ChatOutbox.js` already established — but answers a
+`application/chat/ChatOutbox.js` already established — but answers a
 genuinely different question, with the opposite retention posture. The
 outbox prunes itself the instant a message is acknowledged or expires
 (0.2.63's own "It Is Not A Message Database"); this store keeps every
@@ -7140,15 +7140,15 @@ key. `append()` is idempotent by `(peerIdentityId, messageId)` — a
 re-append of an already-stored message is a harmless no-op, which
 matters because `core/ChatReplayWindow.js` (the in-memory duplicate
 detector 0.2.61 built) resets on every reload; without this store's own
-idempotence, a retransmit `application/ChatUseCase.js` no longer
+idempotence, a retransmit `application/chat/ChatUseCase.js` no longer
 recognizes as a duplicate could otherwise double-append to a persisted
 transcript. `conversations()` returns one summary per peer with any
 stored history — `{ peerIdentityId, lastEntry }`, most recently active
-first — the read `application/ChatUseCase.js#_rehydrateFromStore()`
+first — the read `application/chat/ChatUseCase.js#_rehydrateFromStore()`
 performs at construction, and a future conversation-list UI could read
 identically.
 
-**The write-through.** `application/ChatUseCase.js#_appendMessage()`
+**The write-through.** `application/chat/ChatUseCase.js#_appendMessage()`
 and `#_publishDeliveryState()` — the exact two places this class
 already touched `LiveConversation` — now ALSO call through to
 `ConversationStore` in the same call, for every outgoing send, every
@@ -7156,7 +7156,7 @@ incoming accepted message, and every delivery-state transition
 (QUEUED/SENT/DELIVERED/EXPIRED alike). Neither store is ever aware of
 the other; `ChatUseCase` is the one place that keeps them in sync, the
 same "one owner writes through, the stores never talk to each other"
-discipline `application/ChatOutbox.js` and `application/
+discipline `application/chat/ChatOutbox.js` and `application/
 LiveConversation.js` already kept independent in 0.2.63.
 
 **Rehydration and sequence continuity.** The constructor's new
@@ -7177,7 +7177,7 @@ reload continues the same logical conversation": nothing about it
 touches the wire protocol, `core/ChatMessage.js`, or `core/
 ChatReplayWindow.js` at all.
 
-**Security.** `application/ConversationStore.js` inherits 0.2.63's own
+**Security.** `application/chat/ConversationStore.js` inherits 0.2.63's own
 "addressed to an identity, never a connection" property directly —
 every entry carries a `peerIdentityId`, never a connectionId. Combined
 with 0.2.62's `expectedIdentityId` guard, this produces the identical
@@ -7196,7 +7196,7 @@ validity, and is never consulted to decide whether to trust anything —
 it only ever records what was already trusted one layer up.
 
 The flagship test (`tests/ReliableOfflineConversations.test.js`) proves
-`core/ConversationEntry.js` and `application/ConversationStore.js` in
+`core/ConversationEntry.js` and `application/chat/ConversationStore.js` in
 isolation (immutability, JSON round-trip, idempotent append,
 per-owner/per-peer scoping, the cap dropping only the oldest entries of
 the ONE peer that exceeded it), then scripts the design scenario end to
@@ -7255,17 +7255,17 @@ applied a second time. Its one substantive field,
 per-(conversation, sender) sequence space `core/ChatMessage.js#sequence`
 already defines — never a list of individually-acknowledged message
 ids. That single design choice is what lets the receiving side
-(`application/ChatUseCase.js#_handleIncomingRead()`) apply nothing more
+(`application/chat/ChatUseCase.js#_handleIncomingRead()`) apply nothing more
 than a `Math.max` write and skip a replay window entirely: an
 out-of-order or duplicate receipt is absorbed as a harmless no-op by
 construction, not something that needs detecting and rejecting.
 
 **Independent computation, not transmission.** `ChatUseCase.sendReadReceipt()`
-never reads `application/ConversationReadTracker.js`. It recomputes
+never reads `application/chat/ConversationReadTracker.js`. It recomputes
 "the highest incoming sequence I currently hold for this peer" itself,
 directly from its own live `_conversations` — the exact same
-computation `application/PeerPresenceUseCase.js#markRead()`
-independently performs against `application/ConversationStore.js` for
+computation `application/presence/PeerPresenceUseCase.js#markRead()`
+independently performs against `application/chat/ConversationStore.js` for
 the LOCAL marker one layer over. Two callers, two independent
 computations of one underlying fact, feeding two genuinely different
 stores; neither one is ever derived from the other. `ui/views/ChatView.js`
@@ -7276,8 +7276,8 @@ use cases, rather than either one implying the other.
 
 **A coalescing outbox, not a per-message one.** A read acknowledgement
 that cannot be delivered immediately is queued in
-`application/ConversationReadOutbox.js` — a fourth durable per-owner
-store, structurally unlike `application/ChatOutbox.js` on purpose: it
+`application/chat/ConversationReadOutbox.js` — a fourth durable per-owner
+store, structurally unlike `application/chat/ChatOutbox.js` on purpose: it
 holds at most ONE entry per peer (`core/ConversationReadOutboxEntry.js`),
 and every `enqueue()` call coalesces into that single entry via a
 monotonic advance rather than accumulating. "Read through 20" already
@@ -7289,7 +7289,7 @@ now also flushes this one, in the same pass, for the identical peer
 identity — no new subscription, no new trigger.
 
 **The opposite-direction store.** `core/RemoteReadReceipt.js` /
-`application/RemoteReadReceiptStore.js` answer "what has the PEER told
+`application/chat/RemoteReadReceiptStore.js` answer "what has the PEER told
 me they've seen of MY OWN messages" — a fifth durable per-owner store,
 structurally identical in shape to `core/ConversationReadMarker.js`
 (peerIdentityId + monotonic sequence) but deliberately kept as a
@@ -7304,7 +7304,7 @@ independently re-derives — the identical five-point trust discipline
 `_handleIncoming()`/`_handleIncomingAck()` already established for
 content and for delivery acks, applied a third time.
 
-**Security.** `application/ConversationReadOutbox.js` inherits 0.2.63's
+**Security.** `application/chat/ConversationReadOutbox.js` inherits 0.2.63's
 own "addressed to an identity, never a connection" property directly —
 every entry carries a `peerIdentityId`, never a connectionId. Combined
 with 0.2.62's `expectedIdentityId` guard, this produces the identical
@@ -7353,16 +7353,16 @@ one identity's key.
 0.2.69–0.2.71 built a durable outbox, a durable conversation history,
 and two independent durable read-state stores, without ever asking what
 happens to any of it once the SOCIAL relationship underneath a
-conversation changes. `application/PeerBlockUseCase.js` (0.2.60) and
+conversation changes. `application/peer/PeerBlockUseCase.js` (0.2.60) and
 `FriendRelationshipUseCase#unfriend()` (0.2.60) already existed, and
 `ChatUseCase#canChat()`/`_requireEligible()` already re-checked both
 fresh on every send and every incoming message (0.2.61) — but nobody
 had asked the question only durability makes meaningful: what happens
-to a message that is ALREADY QUEUED in `application/ChatOutbox.js` the
+to a message that is ALREADY QUEUED in `application/chat/ChatOutbox.js` the
 instant that authorization is withdrawn?
 
 **Nothing new protects history — because nothing needed to.**
-`application/ConversationStore.js` (0.2.69), `application/
+`application/chat/ConversationStore.js` (0.2.69), `application/
 ConversationReadTracker.js` (0.2.70), and `application/
 RemoteReadReceiptStore.js` (0.2.71) each have exactly one writer —
 `ChatUseCase`'s own `_appendMessage()`/`_publishDeliveryState()`/
@@ -7382,8 +7382,8 @@ would sit QUEUED, misleadingly, until an unrelated 7-day TTL happened
 to expire it as `EXPIRED` — a fact about TIME standing in for a fact
 that was really about a withdrawn RELATIONSHIP. `core/ChatDeliveryState.js`
 gains a fifth value, `CANCELLED`, kept genuinely distinct from `EXPIRED`
-for exactly that reason. `application/ChatOutbox.js#cancel(peerIdentityId)`
-and `application/ConversationReadOutbox.js#cancel(peerIdentityId)` are
+for exactly that reason. `application/chat/ChatOutbox.js#cancel(peerIdentityId)`
+and `application/chat/ConversationReadOutbox.js#cancel(peerIdentityId)` are
 the new proactive operations — scoped to QUEUED/PENDING entries only
 (never SENT — already on the wire, beyond recall, mirroring
 `acknowledge()`'s own SENT-only precondition), removing them from
@@ -7466,12 +7466,12 @@ NOTHING about identity, discovery, rendezvous, authentication, or the
 message bus.
 
 **Media never establishes peer identity; authenticated peer identity
-authorizes media.** `application/VoiceUseCase.js` never runs its own
+authorizes media.** `application/chat/VoiceUseCase.js` never runs its own
 handshake and never touches `peer/PeerAuthenticationSession.js` at all —
 every operation (`startCall()`, `acceptCall()`, incoming-signal handling)
 starts by requiring a `connectedPeer` that is ALREADY, right now,
 `PeerLifecycleState.AUTHENTICATED`, the identical precondition
-`application/ChatUseCase.js#sendMessage()` already enforces. A WebRTC
+`application/chat/ChatUseCase.js#sendMessage()` already enforces. A WebRTC
 media track carries no cryptographic proof of anything — it is exactly
 as untrusted as a raw `RTCDataChannel` byte was before 0.2.49 existed —
 so voice is layered strictly ON TOP of authentication, never beside or
@@ -7510,7 +7510,7 @@ longer recognizes its `callId`, never because a timer says so.
 
 **No glare, by construction.** Real WebRTC renegotiation between two
 peers that might BOTH try to renegotiate at once normally needs an
-explicit "polite peer" protocol. `application/VoiceUseCase.js` never
+explicit "polite peer" protocol. `application/chat/VoiceUseCase.js` never
 needs one: exactly ONE side of a call ever creates a renegotiation
 offer — whichever side's connection is `role === 'offerer'`, a fact
 fixed forever at 0.2.51's own original handshake, completely
@@ -7532,13 +7532,13 @@ identity and the OTHER of which is the SENDING connection's own
 already-proven `remoteIdentity`, never merely whatever the payload
 itself claims. This defeats a forged-sender attack for every signal
 type at once with a single check, the same "claimed identity must match
-the proven connection" discipline `application/ChatUseCase.js#_handleIncoming()`
+the proven connection" discipline `application/chat/ChatUseCase.js#_handleIncoming()`
 already established for chat content.
 
 **Voice reuses chat's own authorization question, never a
-voice-specific trust system.** `application/VoiceUseCase.js#canCall()`
+voice-specific trust system.** `application/chat/VoiceUseCase.js#canCall()`
 is deliberately byte-for-byte the same predicate as
-`application/ChatUseCase.js#canChat()` — authenticated, not blocked,
+`application/chat/ChatUseCase.js#canChat()` — authenticated, not blocked,
 `FriendshipState.FRIEND` — checked fresh at INVITE, again at ACCEPT
 (eligibility at invite time does not guarantee eligibility at accept
 time), and again, proactively, the instant it changes mid-call: this
@@ -7554,7 +7554,7 @@ ENDED) is deliberately its own state machine, never folded into
 `peer/PeerLifecycleState.js` — the identical "transport state and
 authentication state are two different questions" discipline
 `peer/PeerConnection.js`'s own header established for its first two
-axes, extended to a third. Nothing in `application/VoiceUseCase.js` ever
+axes, extended to a third. Nothing in `application/chat/VoiceUseCase.js` ever
 calls `connectedPeer.close()`; ending a call (`endCall()`, a rejection,
 or a proactive block-triggered termination) only ever tears down local
 media and notifies the peer over the call-signal protocol — the
@@ -7566,7 +7566,7 @@ to carry audio — never because voice chose to end anything.
 
 **One call at a time, per device.** A deliberately narrow scope,
 matching the design doc's own "one authenticated peer, one live audio
-session, ephemeral only": `application/VoiceUseCase.js` tracks at most
+session, ephemeral only": `application/chat/VoiceUseCase.js` tracks at most
 one call, globally, for the whole local device, the same shape an
 ordinary phone has. An INVITE arriving while a call is already in
 progress (with anyone) is answered with `VoiceCallSignalType.BUSY`,
@@ -7576,10 +7576,10 @@ the same moment, before either's INVITE arrives) are not specially
 reconciled — a real, named limitation, not a hidden gap.
 
 **Local media is requested only once a call is actually happening.**
-`application/LocalAudioTrackProvider.js` is the one place this codebase
+`application/chat/LocalAudioTrackProvider.js` is the one place this codebase
 asks the platform for a real microphone
 (`navigator.mediaDevices.getUserMedia`), injected into
-`application/VoiceUseCase.js` exactly like `storage/StorageProvider.js`
+`application/chat/VoiceUseCase.js` exactly like `storage/StorageProvider.js`
 is injected everywhere else. Neither placing a call nor merely ringing
 ever touches it — only `startCall()`'s own caller-side negotiation and
 `acceptCall()`'s callee-side acceptance do, at the exact moment a track
@@ -7598,10 +7598,10 @@ presence vocabulary the way the design doc explicitly warned against.
 
 **Voice is ephemeral, exactly like presence and connections — never
 like conversations, relationships, or identity.** Unlike
-`application/ConversationStore.js` (0.2.69), nothing about a call is
+`application/chat/ConversationStore.js` (0.2.69), nothing about a call is
 ever written to durable storage — no call history, no call record, no
 "missed call" log. `core/VoiceSessionState.js#ENDED` is a genuinely
-terminal, transient value: `application/VoiceUseCase.js` publishes it
+terminal, transient value: `application/chat/VoiceUseCase.js` publishes it
 exactly once and then immediately clears its own `_call` back to
 nothing, the identical "terminal for one connection, never a state
 anything lingers in" shape `peer/PeerAuthenticationState.js#FAILED`
@@ -7662,7 +7662,7 @@ type, and the underlying `peer/PeerConnection.js` is never touched by
 anything this milestone adds.
 
 **Device selection is local state, exactly like muting already was.**
-`application/VoiceUseCase.js#setMuted()` never produced a wire message in
+`application/chat/VoiceUseCase.js#setMuted()` never produced a wire message in
 0.2.73; `setInputDevice()` follows the identical discipline. The peer
 hears whichever microphone this device happens to be using and has no
 more business knowing WHICH one than it does knowing whether silence on
@@ -7766,7 +7766,7 @@ exactly as ephemeral as every other piece of voice state has been since
 ### World Ground & Terrain Foundation (0.2.76)
 
 0.2.76 steps outside the voice arc entirely. World View's camera has
-been free to roam wherever `application/SpatialCameraController.js`
+been free to roam wherever `application/world/SpatialCameraController.js`
 sends it since 0.2.23 — `focusDocument()`, `moveCamera()`, following an
 avatar — and documents land potentially hundreds of units apart
 (`core/DeterministicGridPlacement.js`'s own `GRID_SPACING = 40`,
@@ -7862,8 +7862,8 @@ this file's own header already lists "grid" as part of the
 visualization pipeline it owns; terrain is simply the next item in that
 same list, a new camera-following solid ground layered underneath both
 Editor and World View since both share one `Renderer` instance
-(`application/RenderWorldUseCase.js` and
-`application/RenderWorldViewUseCase.js` both construct one). The
+(`application/world/RenderWorldUseCase.js` and
+`application/world/RenderWorldViewUseCase.js` both construct one). The
 constructor forces an initial `update()` (there's nothing to diff
 against yet) and `_renderFrame()` ticks the controller every frame off
 `this._cameraController.camera.position` — the SAME camera position
@@ -7871,7 +7871,7 @@ against yet) and `_renderFrame()` ticks the controller every frame off
 tracked copy. `terrainHeightAt(x, z)` is a two-line pass-through to
 `core/TerrainHeightField.js` with the fixed `DEFAULT_WORLD_SEED` — the
 ONE shared query point `renderer/WorldRenderer.js` and
-`application/RenderWorldViewUseCase.js` both call, never a second,
+`application/world/RenderWorldViewUseCase.js` both call, never a second,
 independently-computed terrain function anywhere else in the renderer
 layer.
 
@@ -7892,7 +7892,7 @@ that has no `terrainHeightAt()` at all, and every one of those keeps
 behaving exactly as it did before this milestone, `groundY` simply 0 —
 the same graceful-absence posture every other optional collaborator in
 this codebase already follows (`WorldNavigationSession`'s constructor is
-full of exactly this pattern). `application/RenderWorldViewUseCase.js`'s
+full of exactly this pattern). `application/world/RenderWorldViewUseCase.js`'s
 own `withGroundElevation()` does the equivalent for avatars: it adds
 `renderer.terrainHeightAt(x, z)` on top of whatever
 `AvatarPresence.position.y` already means (ground level = 0, plus
@@ -7975,7 +7975,7 @@ mesh/visual is actually drawn, by the renderer, never written back
 anywhere a domain object could read it. That single fact reframes the
 whole milestone: there is no Y-coordinate divergence bug to fix — the
 avatar's RENDERED position already tracks terrain continuously, because
-`application/RenderWorldViewUseCase.js#withGroundElevation()` recomputes
+`application/world/RenderWorldViewUseCase.js#withGroundElevation()` recomputes
 the offset fresh every frame from whatever X/Z the avatar currently
 occupies. The real, narrower gap is that nothing in the MOVEMENT pipeline
 had ever asked "is this candidate step too steep to climb" — an avatar
@@ -7999,8 +7999,8 @@ steep. `DEFAULT_MAX_WALKABLE_SLOPE` (0.75, roughly 37 degrees) is a
 single shared constant, the same "one hardcoded default, not a
 per-World knob" posture `DEFAULT_WORLD_SEED` already established.
 
-**`application/AvatarTerrainConstraint.js` is the application-layer
-adapter, mirroring `application/AvatarMovementConstraint.js`'s own
+**`application/avatar/AvatarTerrainConstraint.js` is the application-layer
+adapter, mirroring `application/avatar/AvatarMovementConstraint.js`'s own
 split exactly.** It supplies real world coordinates and the real
 terrain field to `core/TerrainWalkability.js`'s pure math — reading
 `core/TerrainHeightField.js#terrainHeightAt(seed, x, z)` DIRECTLY,
@@ -8024,7 +8024,7 @@ injectable override (defaulting to the real terrain field) purely so
 tests can substitute a deliberately engineered cliff.
 
 **Unlike building collision, terrain needs no "currently loaded"
-streaming concept at all.** `application/AvatarMovementConstraint.js`
+streaming concept at all.** `application/avatar/AvatarMovementConstraint.js`
 exists largely to answer "which obstacles are actually streamed into
 this replica's memory right now" — a real question, since brick
 geometry only exists once some document has streamed in. `core/
@@ -8039,7 +8039,7 @@ threads through `_loadedDocuments`/`_getWorldPosition`/`_registry`. See
 docs/Principles.md, "Terrain Requires No Streaming Concept; Collision
 Does."
 
-**`application/AvatarMovementController.js` gains one new optional
+**`application/avatar/AvatarMovementController.js` gains one new optional
 collaborator, `terrainConstraint`, applied SECOND — after building
 collision, on top of whatever position collision already resolved to.**
 The pipeline reads, in order: pure kinematics
@@ -8164,8 +8164,8 @@ later regaining a device is an ordinary, recoverable event for the parent
 identity, never the identity's own compromise, so a strictly newer grant
 re-authorizes a device previously revoked.
 
-**`application/DeviceAuthorizationPropagationUseCase.js` is
-`application/IdentityLifecyclePropagationUseCase.js` again, one layer
+**`application/identity/DeviceAuthorizationPropagationUseCase.js` is
+`application/identity/IdentityLifecyclePropagationUseCase.js` again, one layer
 over — same namespaced `peer/PeerMessageBus.js` protocol pattern
 (`'forkbuild:device-authorization'`), same "a record is trusted by its
 own signature, never by who relayed it" ingestion boundary, same injected
@@ -8182,7 +8182,7 @@ own DIRECT/DELEGATED split as an architectural SHAPE — never its code
 path, since that class answers an unrelated question (publication
 ownership delegation). Not one line under `peer/` changed to make this
 possible: `peer/PeerAuthenticationSession.js`, `peer/PeerIdentity.js`,
-and `application/ConnectedPeer.js#remoteIdentity` all remain exactly what
+and `application/peer/ConnectedPeer.js#remoteIdentity` all remain exactly what
 they were the day 0.2.49/0.2.50 shipped them.
 
 The flagship test (`tests/MultiDeviceIdentity.test.js`) drives real,
@@ -8208,8 +8208,8 @@ explicitly given: device synchronization, message fan-out, shared read
 state, multi-device voice ringing, a device management UI, a device
 revocation UI, and cross-device presence aggregation. `resolvePeerAuthority()`
 is proven correct in isolation but consulted by nothing else in this
-codebase yet — `application/PeerRelationshipUseCase.js`,
-`application/ChatUseCase.js`, `application/VoiceUseCase.js`, and every
+codebase yet — `application/peer/PeerRelationshipUseCase.js`,
+`application/chat/ChatUseCase.js`, `application/chat/VoiceUseCase.js`, and every
 presence/profile sync remain completely unmodified, each still exactly
 "one local device holding one identity's key," the unchanged caveat every
 milestone from 0.2.69 through 0.2.71 already carried. See docs/Roadmap.md,
@@ -8335,7 +8335,7 @@ name. Also out of scope: a per-`World`/per-`Document` surface palette or
 classification (today's `SURFACE_PALETTE` is the one shared look every
 document's terrain uses, matching `DEFAULT_WORLD_SEED`'s own posture);
 consulting `core/TerrainSurface.js` from `core/TerrainWalkability.js` or
-`application/AvatarTerrainConstraint.js` (walkability remains exactly the
+`application/avatar/AvatarTerrainConstraint.js` (walkability remains exactly the
 slope-only decision 0.2.77 established — SOIL/ROCK mean "this looks like
 exposed dirt/stone," never "this is unwalkable");
 `renderer/PickingService.js#pickGroundPosition()`, still raycasting the
@@ -8365,7 +8365,7 @@ referencing `core:cube` always was.
 **The width/height/depth on a `BrickDefinition` is an axis-aligned
 bounding box, not a literal shape description — and that was already
 true before 0.2.80, just never exercised by a shape this different from
-a box.** `core/AvatarCollision.js` and `application/SelectionBoundsService.js`
+a box.** `core/AvatarCollision.js` and `application/editor/SelectionBoundsService.js`
 both already read `definition.width/height/depth` as a brick's AABB for
 collision and selection purposes, the same "a box is a good enough
 capsule" restraint 0.2.42 established for avatar collision against
@@ -8415,11 +8415,11 @@ symmetric enough that this distinction never surfaced until now).
 **`core/BrickRegistry.js#groupByCategory()` is new, everything else on
 the registry is unchanged.** It returns an ordered `[{ category,
 definitions }]`, grouped in first-seen order — deliberately the same
-shape `application/EditorActionRegistry.js#groupByCategory()` already
+shape `application/editor/EditorActionRegistry.js#groupByCategory()` already
 established for the Command Palette, reused as an architectural pattern
 rather than reinvented. `get()`, `has()`, `getAll()`, `getByCategory()`,
 and `search()` are all byte-for-byte the same methods 0.1.5 shipped.
-`application/PaletteUseCase.js` gains one matching passthrough,
+`application/editor/PaletteUseCase.js` gains one matching passthrough,
 `getGroupedDefinitions()`; `ui/components/BrickPalette.js` renders that
 grouping as labeled sections instead of one flat list of fifteen items —
 genuinely needed for the first time since the original four definitions
@@ -8483,8 +8483,8 @@ the IDENTICAL way a World's always were, never a second, potentially
 stale, cached number. `core/StructureRegistry.js` is `core/
 BrickRegistry.js`'s own `register()/get()/has()/getAll()/
 getByCategory()/search()` contract, byte-for-byte, aimed at Structures
-instead of BrickDefinitions — `application/CreateStructureRegistryUseCase.js`
-mirrors `application/CreateBrickRegistryUseCase.js` line for line.
+instead of BrickDefinitions — `application/editor/CreateStructureRegistryUseCase.js`
+mirrors `application/editor/CreateBrickRegistryUseCase.js` line for line.
 
 **`core/library/VillageLibrary.js` is the first, deliberately curated
 Structure library — six structures, each proving a different corner of
@@ -8502,8 +8502,8 @@ in the live `BrickRegistry`), not merely by construction. See
 docs/Principles.md, "A Structure Is The Next Rung On The Brick Ladder,
 Not An Escape From It."
 
-**`application/ForkStructureUseCase.js` is deliberately the smallest
-version of what `application/ForkPublishedWorldUseCase.js` already does
+**`application/editor/ForkStructureUseCase.js` is deliberately the smallest
+version of what `application/publication/ForkPublishedWorldUseCase.js` already does
 one rung up, for a whole published World.** A built-in library Structure
 is local, static data — not a Publication, no snapshot, no signature to
 verify — so this use case goes straight from `Structure` to `Document`:
@@ -8615,7 +8615,7 @@ message; blocking or unfriending the PARENT identity reaches every one of
 her currently-resolved devices at once. See docs/Principles.md, "Device
 Authorization Changes Peer Authority, Never Social Identity."
 
-**`application/DeviceAuthorizationPropagationUseCase.js` gains
+**`application/identity/DeviceAuthorizationPropagationUseCase.js` gains
 `resolveConnectionIdentity(connectedPeer)`, the counterpart query to
 0.2.78's own `resolvePeerAuthority()`.** Where that method needs a
 CANDIDATE identityId already in mind ("does this connection represent
@@ -8633,15 +8633,15 @@ pathological scenario no single honest parent ever produces — resolves
 DIRECT rather than guessing, a named, deliberately conservative edge
 case.
 
-**`application/SocialIdentityResolver.js` (new) is the DEFAULT resolver
+**`application/identity/SocialIdentityResolver.js` (new) is the DEFAULT resolver
 every social use case falls back to** when no real device-authorization
 wiring is injected: `resolveDirectSocialIdentity()` treats a connection's
 own key as its own social identity, DIRECT, full stop — byte-identical to
 every pre-0.2.79 behavior, so every existing test and every caller that
 never opts in keeps working completely unchanged.
 
-**`application/FriendRelationshipUseCase.js`, `application/ChatUseCase.js`,
-and `application/VoiceUseCase.js` each gain an optional `resolveSocialIdentity`
+**`application/identity/FriendRelationshipUseCase.js`, `application/chat/ChatUseCase.js`,
+and `application/chat/VoiceUseCase.js` each gain an optional `resolveSocialIdentity`
 collaborator**, consulted through a small per-class `_resolvePeerSocialIdentity()`
 helper. Real app wiring (`ui/main.js`) constructs one app-wide
 `DeviceAuthorizationPropagationUseCase` (via the new `application/
@@ -8664,11 +8664,11 @@ own `subjectIdentity`/`actorIdentity`, `core/ChatMessage.js`'s own
 `calleeIdentity`/`callerIdentity` — stays addressed to the RAW,
 literally-authenticated key on BOTH ends; only business-state KEYING
 (which `FriendshipRecord`, which `LiveConversation`, which call record)
-resolves. `application/VoiceUseCase.js`'s own call record grew a
+resolves. `application/chat/VoiceUseCase.js`'s own call record grew a
 dedicated `remoteConnectionIdentityId` field for exactly this split — its
 resolved `peerIdentityId` drives eligibility, UI exposure
 (`getActiveCall()`/`onIncomingCall()`/`onCallStateChanged()`), and the SAME
-block/friend reconciliation `application/ChatUseCase.js` already uses,
+block/friend reconciliation `application/chat/ChatUseCase.js` already uses,
 while `remoteConnectionIdentityId` is what every outgoing
 `core/VoiceCallSignal.js` wire field actually carries.
 
@@ -8678,11 +8678,11 @@ carries the RAW authenticating device's key as its own `actorIdentity`/
 `subjectIdentity`, even though the record itself is now keyed by the
 resolved parent — "who this relationship is with" and "which specific
 device performed this action" are two independently available facts
-without a second field. `application/ChatUseCase.js` gets the identical
+without a second field. `application/chat/ChatUseCase.js` gets the identical
 property for free: `message.senderIdentity` stays the literal, raw,
 authenticated device key on every stored entry, while the `LiveConversation`
 bucket it lives in is now keyed by the resolved parent —
-`application/LiveConversation.js`'s own pre-existing "`conversationId` is
+`application/chat/LiveConversation.js`'s own pre-existing "`conversationId` is
 carried for display/debugging only" already made this safe: a bucket
 shared by two of Alice's devices simply keeps whichever raw pairing
 happened to create it first as its own top-level `conversationId`, while
@@ -8693,7 +8693,7 @@ what it always was.
 connected to.** See docs/Principles.md, "A Device Is Never Taught To
 Resolve Itself": this is what keeps "who authorized me?" — a genuinely
 much harder, still-unsolved question — entirely out of scope.
-`application/ChatUseCase.js`'s own `sendMessage()`/`_handleIncoming()`
+`application/chat/ChatUseCase.js`'s own `sendMessage()`/`_handleIncoming()`
 resolve the PEER side only; `myIdentityId` (this device's own signing
 identity) is never resolved, exactly preserving "a conversation still
 belongs to one local device holding one identity's key" on the SENDING
@@ -8725,19 +8725,19 @@ message/conversation synchronization BETWEEN Alice's own several devices
 shared/propagated read state, multi-device voice ringing (calling "Alice"
 still means calling one, explicitly chosen connection, never fanning out
 to every device at once), a device management UI, a device revocation UI,
-and cross-device presence aggregation. `application/PeerRelationshipUseCase.js`
+and cross-device presence aggregation. `application/peer/PeerRelationshipUseCase.js`
 ("Known Peers") deliberately was NOT taught to resolve social identity —
 remembering a peer stays 0.2.56's own "deliberate act, never automatic,"
 and extending it would mean automatically remembering every device of an
 already-known identity, a real product decision this milestone declines
-to make silently. `application/PeerBlockUseCase.js` stays completely
+to make silently. `application/peer/PeerBlockUseCase.js` stays completely
 untouched as a store — blocking already flows through the SAME `isBlocked`
 predicate every use case above now checks against the RESOLVED identity,
 so blocking Alice's parent identity already blocks every one of her
 currently-resolved devices for free — but the UI gesture of blocking a
 specific live connection (`ui/views/PeerConnectionsView.js#blockIdentity()`)
 still passes whatever raw identity shape a card exposes today, unresolved.
-Also named directly: `application/FriendRelationshipUseCase.js#acceptFriendRequest()`
+Also named directly: `application/identity/FriendRelationshipUseCase.js#acceptFriendRequest()`
 has no verb for acknowledging a SECOND device of an already-FRIEND parent
 identity once the first device's ACCEPT is already recorded — a device
 that never independently completes its own request/accept cycle is
@@ -8754,19 +8754,19 @@ conversation, while explicitly leaving Alice's OWN several devices
 completely unaware of each other: "a conversation still belongs to one
 local device holding one identity's key... Alice's Phone and Alice's
 Laptop do not know about each other's messages at all." 0.2.83 closes
-that gap with one new protocol, `application/DeviceConversationSyncUseCase.js`,
+that gap with one new protocol, `application/chat/DeviceConversationSyncUseCase.js`,
 riding its own namespaced channel (`forkbuild:device-conversation-sync`)
-strictly alongside `application/ChatUseCase.js`'s own `forkbuild:chat` —
+strictly alongside `application/chat/ChatUseCase.js`'s own `forkbuild:chat` —
 never folded into it, and never visible to a third party's `ChatUseCase`
 at all.
 
 The security boundary is a single, symmetric comparison:
 
 ```text
-application/DeviceAuthorizationPropagationUseCase.js
+application/identity/DeviceAuthorizationPropagationUseCase.js
     #resolveConnectionIdentity(peer).identityId
         ===
-application/DeviceAuthorizationPropagationUseCase.js
+application/identity/DeviceAuthorizationPropagationUseCase.js
     #resolveOwnSocialIdentity().identityId
 ```
 
@@ -8812,13 +8812,13 @@ IS what a revoked device's own resolution now produces.
 │                                               (one device's own local
 │                                               read marker for one peer)
 ├── core/SiblingReadMarker.js /
-│   application/SiblingReadStateStore.js       a monotonic high-water
+│   application/chat/SiblingReadStateStore.js       a monotonic high-water
 │                                               mark per peer — "what has
 │                                               each sibling reported
 │                                               about ITSELF" — never
 │                                               written into
-│                                               application/ConversationReadTracker.js
-├── application/ChatUseCase.js#ingestSyncedEntry()
+│                                               application/chat/ConversationReadTracker.js
+├── application/chat/ChatUseCase.js#ingestSyncedEntry()
 │                                               the one trusted entrypoint
 │                                               for an already-trusted
 │                                               synced entry — idempotent
@@ -8828,7 +8828,7 @@ IS what a revoked device's own resolution now produces.
 │                                               (core/ChatDeliveryState.js
 │                                               #isDeliveryStateAdvancement),
 │                                               never sends an ack/receipt
-└── application/DeviceConversationSyncUseCase.js
+└── application/chat/DeviceConversationSyncUseCase.js
       full-state push to a newly eligible connection
       (`_syncIfEligible`), a live reactive push for one already
       connected (subscribed to ChatUseCase#onMessage()), explicit
@@ -8884,8 +8884,8 @@ one method that flattened a Document's bricks, framed a camera, and
 rendered — is split so the frame-and-render half
 (`renderBricks(bricks)`) stands alone, and `renderDocument()` becomes a
 two-line adapter over it. That split is what lets
-`application/LibraryPreviewService.js` (new, a deliberately smaller
-sibling of `application/PreviewService.js` — lazy renderer, cached,
+`application/editor/LibraryPreviewService.js` (new, a deliberately smaller
+sibling of `application/editor/PreviewService.js` — lazy renderer, cached,
 idle-scheduled queue, cancellable, the same four properties, minus
 `PreviewService`'s own async "load a Publication's document by
 contentHash" step, since a `BrickDefinition`/`Structure` is already
@@ -8924,13 +8924,13 @@ Editor sidebar, on purpose.
 
 0.2.85 — Multi-Device Presence Semantics — closes the one 0.2.79-era gap
 0.2.79's own "Proposed, unscheduled follow-on milestones" list named
-directly: `application/PeerPresenceUseCase.js` (0.2.70) was the one
-social surface `application/DeviceAuthorizationPropagationUseCase.js#resolveConnectionIdentity()`
+directly: `application/presence/PeerPresenceUseCase.js` (0.2.70) was the one
+social surface `application/identity/DeviceAuthorizationPropagationUseCase.js#resolveConnectionIdentity()`
 was never wired into, so "is Alice online" matched a connection's raw
 authenticated key only, unable to see a live connection from an
 authorized DEVICE of hers at all. Gains one optional constructor
 collaborator, `resolveSocialIdentity` (default:
-`application/SocialIdentityResolver.js#resolveDirectSocialIdentity`,
+`application/identity/SocialIdentityResolver.js#resolveDirectSocialIdentity`,
 byte-identical to every pre-0.2.85 caller), the exact same pattern
 `FriendRelationshipUseCase`/`ChatUseCase`/`VoiceUseCase` already
 established in 0.2.79 — no new class, no new store.
@@ -8980,7 +8980,7 @@ simultaneous connections from the literal same device never inflating
 entirely reproduces byte-identical pre-0.2.85 behavior.
 
 Deliberately not in 0.2.85: any new durable `PresenceStore` (presence
-stays exactly as ephemeral and uncached as `application/ConnectedPeerRegistry.js`
+stays exactly as ephemeral and uncached as `application/peer/ConnectedPeerRegistry.js`
 itself); any device-level UI (the new fields exist in the data model,
 read by nothing yet); presence gossip/synchronization between one
 identity's own devices; and any voice/ringing change — 0.2.86
@@ -8995,10 +8995,10 @@ membership, and a real Members panel — but a collaborator was only ever
 a row: "Bob · Editor · Online." 0.3.0 makes collaboration spatially
 visible with one new, THIRD protocol,
 `forkbuild:world-spatial-presence`, structured as closely as possible
-after `application/WorldPresenceUseCase.js` (0.2.98) itself:
+after `application/presence/WorldPresenceUseCase.js` (0.2.98) itself:
 
 ```text
-application/WorldSpatialPresenceUseCase.js
+application/presence/WorldSpatialPresenceUseCase.js
     #enterWorld / #updateSpatial / #leaveWorld
         ↓
 core/WorldSpatialPresenceAdvertisement.js   (unsigned wire shape)
@@ -9023,7 +9023,7 @@ ingestion reuses `core/PresenceIngestion.js#resolveIncomingPresence()`
 completely unmodified — the exact "newest sequence wins, gaps need no
 special handling" rule 0.2.37 already built for avatar movement.
 
-`application/WorldNavigationSession.js` gains a third optional
+`application/world/WorldNavigationSession.js` gains a third optional
 collaborator (`worldSpatialPresenceUseCase`), mirroring
 `worldPresenceUseCase`'s own `enterWorldPresence`/`leaveWorldPresence`/
 `getWorldPresenceRoster`/`onWorldPresenceChanged` shape exactly, plus
@@ -9036,7 +9036,7 @@ This class also drives its own render facade directly on every roster
 change (`_applySpatialPresenceRoster()` calling
 `this._session.setRemoteSpatialPresence()`/`removeRemoteSpatialPresence()`)
 — the identical "application layer drives its own renderer" shape
-`application/RemoteAvatarRegistry.js` already established for remote
+`application/avatar/RemoteAvatarRegistry.js` already established for remote
 avatars; `ui/views/WorldView.js` never touches
 `renderer/RemoteSpatialPresenceRenderer.js` directly, and only ever
 calls `enterWorldSpatialPresence`/`syncWorldSpatialPresence`/
@@ -9126,7 +9126,7 @@ generous 140°-wide legibility heuristic, not a literal render-frustum
 test (no aspect ratio, no near/far planes) — named and documented as
 exactly that.
 
-`application/WorldNavigationSession.js#_applySpatialPresenceRoster()` is
+`application/world/WorldNavigationSession.js#_applySpatialPresenceRoster()` is
 where the derivation actually happens: this session's OWN camera
 position/heading (already read for `syncWorldSpatialPresence()`) becomes
 the anchor's viewer for every device in the freshly-fetched roster, and
@@ -9134,7 +9134,7 @@ each device's `WorldSpatialSelection` is resolved to a contextual label
 through `_resolveSpatialContextualLabel()` — a placement selection
 resolves through `document.world.getStructurePlacement()` to find which
 document it references, then `getSavedDocumentTitle()`, the SAME two
-steps `application/EditorSession.js#getSelectedPlacementInfo()` already
+steps `application/editor/EditorSession.js#getSelectedPlacementInfo()` already
 takes for a LOCAL placement selection, generalized to any loaded
 document rather than only the active one. A brick selection resolves to
 no label at all — `core/Building.js` carries no title field — so
@@ -9151,7 +9151,7 @@ than a name does. What it draws depends entirely on the anchor's own
 truncated name and nothing else; MARKER_ONLY hides the label sprite
 entirely, leaving just the cone; HIDDEN removes the marker from the
 scene the same way a missing position always has —
-`application/RenderWorldViewUseCase.js`'s own facade checks
+`application/world/RenderWorldViewUseCase.js`'s own facade checks
 `presentationMode === WorldSpatialPresentationMode.HIDDEN` alongside its
 pre-existing `!presence.position` check so the THREE.js object is
 actually removed from the scene graph, not just internally disposed.
@@ -9281,7 +9281,7 @@ maxStepHeight)` (a plain, symmetric height-difference check, mirroring
 never physically slid" posture). `DEFAULT_MAX_STEP_HEIGHT` is 0.6 world
 units — roughly one low brick.
 
-`application/AvatarStepConstraint.js` is the application-layer
+`application/avatar/AvatarStepConstraint.js` is the application-layer
 collaborator (same split as `AvatarMovementConstraint`/
 `AvatarTerrainConstraint`): its `supportHeightAt(x, z)` returns the
 higher of a flat baseline (0 — the walking plane every pre-0.3.2 avatar
@@ -9381,7 +9381,7 @@ about a box's min/max corners can answer "what is the actual support
 height at this specific (x, z)?" the way a real ramp needs to.
 `core/WalkableSurface.js` therefore never touches `SpatialBounds`, never
 widens what placement collision considers, and is read by exactly one
-consumer: `application/AvatarStepConstraint.js`.
+consumer: `application/avatar/AvatarStepConstraint.js`.
 
 ### STEP — stairs, tread by tread
 
@@ -9426,7 +9426,7 @@ local space, produces a correct world-space climb direction at any of
 the 90°-increment rotations the placement UI offers, or any arbitrary
 angle.
 
-### `application/AvatarStepConstraint.js` — unchanged in shape
+### `application/avatar/AvatarStepConstraint.js` — unchanged in shape
 
 `supportHeightAt(x, z)` still takes the max walkable height across the
 flat baseline and every currently-loaded brick at that point — it now
@@ -9437,7 +9437,7 @@ bricks still reports its topmost surface; a flat-topped brick still
 reports exactly the height it always did; missing collaborators still
 degrade to the flat plane, never throw.
 
-### `application/AvatarMovementConstraint.js` — a directional shape is never a flat wall
+### `application/avatar/AvatarMovementConstraint.js` — a directional shape is never a flat wall
 
 The one genuinely new wiring problem STEP/SLOPE raise, not answered by
 `core/WalkableSurface.js` alone: this class used to decide whether a
@@ -9497,13 +9497,13 @@ export function deriveAvatarVerticalState({ grounded, verticalVelocity }) { /* p
 ```
 
 A pure label over the exact same `grounded`/`verticalVelocity` bookkeeping
-`core/AvatarMovementSimulation.js` and `application/AvatarMovementController.js`
+`core/AvatarMovementSimulation.js` and `application/avatar/AvatarMovementController.js`
 already carried — `core/AvatarMovementSimulation.js`'s own result gains a
 `verticalState` field (additive), and `AvatarMovementController` gains a
 `verticalState()` accessor mirroring `isCollided()`/`isBlockedBySlope()`/
 `isBlockedByStepHeight()`. No new mutable state anywhere.
 
-### `application/AvatarStepConstraint.js#apply()` — the actual behavior change
+### `application/avatar/AvatarStepConstraint.js#apply()` — the actual behavior change
 
 Through 0.3.3, ANY height delta beyond `maxStepHeight` was blocked
 identically, whichever direction it went. 0.3.4 splits the two directions:
@@ -9515,7 +9515,7 @@ toHeight - fromHeight < -maxStepHeight   -> now FALLING     (new — a ledge)
       blocked: false, falling: true }
 ```
 
-`falling: true` tells `application/AvatarMovementController.js` to force
+`falling: true` tells `application/avatar/AvatarMovementController.js` to force
 its own `_grounded` to `false` for the NEXT tick, regardless of what that
 tick's own `simulateAvatarMovement()` result said — the avatar WAS
 standing on something when the tick began; it just walked past the edge
@@ -9523,7 +9523,7 @@ of it. `_verticalVelocity` is already `0` at that moment (every grounded
 tick zeroes it), so the following tick's gravity integration starts
 cleanly from rest, using `core/AvatarMovementSimulation.js`'s own
 UNCHANGED gravity/landing code — `groundHeight` for each of those ticks
-is `application/AvatarStepConstraint.js#supportHeightAt()`, recomputed
+is `application/avatar/AvatarStepConstraint.js#supportHeightAt()`, recomputed
 fresh from wherever the avatar currently is, so landing resolves against
 the SAME `core/WalkableSurface.js` a walking step has always used —
 including a stair's own tread or a slope's own ramp mid-surface, never
@@ -9565,7 +9565,7 @@ deriveWorldSpatialActivity({ ..., rising, falling })
 ```
 
 Both default `false`, so every pre-0.3.4 caller is byte-for-byte
-unchanged. `application/WorldNavigationSession.js#syncWorldSpatialPresence()`
+unchanged. `application/world/WorldNavigationSession.js#syncWorldSpatialPresence()`
 reads `_avatarMovementController.verticalState()` fresh each sync call,
 exactly like it already reads `hasMovementInput()` for `isMoving`.
 `core/AvatarAnimationState.js` is deliberately untouched — its existing
@@ -9576,8 +9576,8 @@ Second Physics Bookkeeping (0.3.4)."
 ### What never changes
 
 `core/SpatialBounds.js`/`core/AvatarCollision.js` (collision),
-`application/AvatarMovementConstraint.js` (horizontal obstruction),
-`application/AvatarTerrainConstraint.js` (terrain slope), and
+`application/avatar/AvatarMovementConstraint.js` (horizontal obstruction),
+`application/avatar/AvatarTerrainConstraint.js` (terrain slope), and
 `core/WalkableSurface.js` itself are all completely unmodified by this
 milestone — 0.3.4 is entirely a question of WHEN the avatar's own
 vertical state changes, never a question of what geometry means. Nothing

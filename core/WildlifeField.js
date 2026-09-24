@@ -243,7 +243,7 @@ export function wildlifeInRegion(seed, minX, minZ, maxX, maxZ) {
 // a future catch mechanic to reference; it still decides nothing about
 // catching, carrying, or removing one, all of which stay entirely
 // outside this file (see core/AvatarAnimalCatchTransition.js and
-// application/AnimalRuntimeInstances.js instead);
+// application/world/AnimalRuntimeInstances.js instead);
 // species blending by climate the way core/NaturalFeatureField.js#TREE_SPECIES
 // blends CONIFER/BROADLEAF by moisture (a plausible follow-on once more
 // than two species exist, not required for this milestone); day/night or

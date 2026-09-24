@@ -1,7 +1,7 @@
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 
 // 0.9.246 — Publication Commentary Authorization Boundary.

@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/DecentralizedWorldDiscoveryLeadRegistry.js';
+import { DecentralizedWorldDiscoveryLeadRegistry } from '../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js';
 
 // 0.9.26 — Decentralized World Discovery Lead Registry.
 //
@@ -287,7 +287,7 @@ function leadOf(overrides = {}) {
 //     file is membership only, never a second World-data registry.
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../application/DecentralizedWorldDiscoveryLeadRegistry.js', import.meta.url);
+    const sourceUrl = new URL('../application/discovery/DecentralizedWorldDiscoveryLeadRegistry.js', import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource
         .split('\n')

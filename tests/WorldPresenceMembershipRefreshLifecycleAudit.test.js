@@ -11,15 +11,15 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { WorldMembershipUseCase } from '../application/WorldMembershipUseCase.js';
-import { WorldPresenceUseCase } from '../application/WorldPresenceUseCase.js';
-import { WorldAuthorizationService } from '../application/WorldAuthorizationService.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { WorldMembershipUseCase } from '../application/identity/WorldMembershipUseCase.js';
+import { WorldPresenceUseCase } from '../application/presence/WorldPresenceUseCase.js';
+import { WorldAuthorizationService } from '../application/identity/WorldAuthorizationService.js';
 import { WorldPresenceActivity } from '../core/WorldPresenceActivity.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.218 — World Presence Membership-Refresh Lifecycle Audit.
@@ -38,7 +38,7 @@ import { worldViewFiles } from './support/SourceFileGroups.js';
 //
 // Section H found a real defect and this milestone carries its fix:
 // onWorldMembershipChanged() is a SHARED callback whose caller chain
-// runs INSIDE application/WorldMembershipUseCase.js's own
+// runs INSIDE application/identity/WorldMembershipUseCase.js's own
 // grantEdit()/_applyGrant() (self-issued) and _handleGrant()/
 // _handleIncoming() (gossiped). Neither EventBus.publish() nor
 // PeerMessageBus's own dispatch loop isolates one throwing listener
@@ -603,7 +603,7 @@ async function runTests() {
 // ---------------------------------------------------------------------
 {
     const worldViewSource = (await Promise.all(worldViewFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
-    const navigationSessionSource = await readFile(new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
+    const navigationSessionSource = await readFile(new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
 
     const membershipCallbackMatch = worldViewSource.match(/session\.onWorldMembershipChanged\(presentWorldDocumentId, \(\) => \{([\s\S]*?)\n\s{12}\}\);/);
     assert(membershipCallbackMatch, 'F0. the onWorldMembershipChanged(presentWorldDocumentId, ...) callback is still present');
@@ -647,7 +647,7 @@ async function runTests() {
 // ---------------------------------------------------------------------
 // Section H — FLAGSHIP: failure isolation. Proves the real defect this
 // milestone found: without isolation, a throwing refreshWorldPresenceActivity()
-// unwinds through application/WorldMembershipUseCase.js's own event
+// unwinds through application/identity/WorldMembershipUseCase.js's own event
 // publish and, for a self-issued grant, skips its OWN subsequent network
 // broadcast entirely — breaking a grant/revocation for every peer, not
 // merely this replica's own presence. Proves the fix holds.

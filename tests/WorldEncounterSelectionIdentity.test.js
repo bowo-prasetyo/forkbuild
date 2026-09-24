@@ -7,10 +7,10 @@ import {
 import {
     describeWorldEncounterSelectionCandidates,
     describeWorldEncounterSelectionCandidatesFromRegistry
-} from '../application/WorldEncounterSelectionResolution.js';
+} from '../application/worldEncounter/WorldEncounterSelectionResolution.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
-import { describeLocalWorldDiscoverySource } from '../application/WorldEncounterIntegration.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { describeLocalWorldDiscoverySource } from '../application/worldEncounter/WorldEncounterIntegration.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
 function assert(condition, message) {
@@ -281,7 +281,7 @@ function peerSourceOf(origin, { publications = [], placements = [], avatarProfil
 {
     const filesToCheck = [
         '../core/WorldEncounterSelectionIdentity.js',
-        '../application/WorldEncounterSelectionResolution.js'
+        '../application/worldEncounter/WorldEncounterSelectionResolution.js'
     ];
 
     for (const path of filesToCheck) {
@@ -322,7 +322,7 @@ function peerSourceOf(origin, { publications = [], placements = [], avatarProfil
     const markerSource = await readFile(new URL('../ui/components/WorldEncounterMarker.js', import.meta.url), 'utf8');
 
     assert(!canvasSource.includes('WorldEncounterSelectionIdentity'), '41. WorldEncounterCanvas.js never imports core/WorldEncounterSelectionIdentity.js');
-    assert(!canvasSource.includes('WorldEncounterSelectionResolution'), '42. WorldEncounterCanvas.js never imports application/WorldEncounterSelectionResolution.js');
+    assert(!canvasSource.includes('WorldEncounterSelectionResolution'), '42. WorldEncounterCanvas.js never imports application/worldEncounter/WorldEncounterSelectionResolution.js');
     assert(!markerSource.includes('origin'), '43. WorldEncounterMarker.js carries no origin vocabulary of any kind');
 
     console.log('✓ WorldEncounterCanvas.js and WorldEncounterMarker.js are untouched — this milestone stays below the existing selection UI');

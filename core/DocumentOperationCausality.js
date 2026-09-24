@@ -17,7 +17,7 @@ import { isValidCausalPredecessorList } from './DocumentOperationEnvelope.js';
 // is pure causal METADATA — a way to record "operation B was authored
 // with knowledge of operations {A, C, ...}" and later ask "given what is
 // currently known, how do A and B relate?" It does not decide what to do
-// with the answer. Nothing here reorders `application/CommandHistory.js`,
+// with the answer. Nothing here reorders `application/editor/CommandHistory.js`,
 // buffers an operation, requests a retransmission, or resolves a
 // conflict — see "Deliberately excluded" below. That restraint is not an
 // oversight; it is this milestone's entire point, the same way
@@ -42,9 +42,9 @@ import { isValidCausalPredecessorList } from './DocumentOperationEnvelope.js';
 //   verifiably, not merely "arrived in some order."
 //
 // The graph this file builds mirrors exactly what
-// `application/CommandHistory.js` already is on a single replica: a
+// `application/editor/CommandHistory.js` already is on a single replica: a
 // LINEAR stack, never a branching structure a single replica can create
-// on its own (see `application/DocumentCommandPropagationUseCase.js`'s
+// on its own (see `application/document/DocumentCommandPropagationUseCase.js`'s
 // own `attachCommandHistory()`, which stamps each newly-broadcast local
 // command with exactly one predecessor — the command immediately before
 // it in that replica's own history, or none for the first). A DIAMOND
@@ -61,7 +61,7 @@ import { isValidCausalPredecessorList } from './DocumentOperationEnvelope.js';
 //   no gap/missing-operation detection, no logical/Lamport/vector clock,
 //   no CRDT, no OT, no conflict resolution, no automatic reordering, no
 //   rollback, no synchronized undo, no offline synchronization, no
-//   convergence guarantee. `application/CommandHistory.js` is UNCHANGED
+//   convergence guarantee. `application/editor/CommandHistory.js` is UNCHANGED
 //   by this milestone — see `core/DocumentCollaborationConsistencyPolicy.js`,
 //   `history.orderingBasis = ARRIVAL_ORDER`, which this milestone does
 //   not touch or reassign.

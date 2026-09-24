@@ -1,9 +1,9 @@
-import { PublicationObservationArchive } from '../../application/PublicationObservationArchive.js';
-import { PublisherIdentityRecord } from '../../application/PublisherIdentityRecord.js';
-import { reconstructDistinctPublisherIdentifiers } from '../../application/PublisherAssociationView.js';
-import { reconstructPublisherAchievementProfile } from '../../application/PublisherAchievementProfileView.js';
-import { reconstructPublisherAchievementBadges } from '../../application/PublisherAchievementBadgeView.js';
-import { reconstructPublisherAchievementStatistics } from '../../application/PublisherAchievementStatisticsView.js';
+import { PublicationObservationArchive } from '../../application/publication/observationArchive/PublicationObservationArchive.js';
+import { PublisherIdentityRecord } from '../../application/publisher/PublisherIdentityRecord.js';
+import { reconstructDistinctPublisherIdentifiers } from '../../application/publisher/PublisherAssociationView.js';
+import { reconstructPublisherAchievementProfile } from '../../application/achievement/PublisherAchievementProfileView.js';
+import { reconstructPublisherAchievementBadges } from '../../application/achievement/PublisherAchievementBadgeView.js';
+import { reconstructPublisherAchievementStatistics } from '../../application/achievement/PublisherAchievementStatisticsView.js';
 import { sortLabels } from '../../utils/sortOptionsByLabel.js';
 
 // Leaderboard Hub — a single contextual entry point from /publications
@@ -20,8 +20,8 @@ import { sortLabels } from '../../utils/sortOptionsByLabel.js';
 // they are genuinely upstream of the Publisher Performance Leaderboard's
 // own data, not merely adjacent to it: Publisher Achievement Statistics
 // (0.8.111) is exactly the `PublisherAchievementStatistics` object
-// application/PublisherRankingPolicy.js's own reconstructPublisherRanking()
-// (0.8.112) consumes per publisher, and application/PublisherLeaderboardView.js
+// application/leaderboard/PublisherRankingPolicy.js's own reconstructPublisherRanking()
+// (0.8.112) consumes per publisher, and application/leaderboard/PublisherLeaderboardView.js
 // (0.8.113) presents that ranking as the Publisher Performance Leaderboard.
 // Publisher Achievement Badges (0.8.110) composes application/
 // AchievementBadgeView.js's own reconstructAchievementBadges() directly
@@ -345,7 +345,7 @@ export default {
                  associated publications and their derived achievements —
                  never decides whether those facts are good, bad, important,
                  or worthy of a higher rank on their own; this is the exact
-                 statistics object application/PublisherRankingPolicy.js
+                 statistics object application/leaderboard/PublisherRankingPolicy.js
                  (0.8.112) consumes to build the Publisher Performance
                  Leaderboard linked above. Collapsed by default. Performs
                  ZERO network operations. -->

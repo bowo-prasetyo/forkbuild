@@ -5,21 +5,21 @@ import { execSync } from 'node:child_process';
 
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
-import { isValidContentHash as isValidContentHashInPeerContentProtocol } from '../application/PeerContentProtocol.js';
-import { isValidContentHash as isValidContentHashInPeerSnapshotPossessionProtocol } from '../application/PeerSnapshotPossessionProtocol.js';
-import { isValidContentHash as isValidContentHashInPeerSnapshotContentProtocol } from '../application/PeerSnapshotContentProtocol.js';
-import { validatePublicationSnapshotTransferPackage } from '../application/PublicationSnapshotTransferPackageValidator.js';
-import { buildPublicationSnapshotTransferPackage } from '../application/PublicationSnapshotTransferPackage.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContentOutcome.js';
+import { isValidContentHash as isValidContentHashInPeerContentProtocol } from '../application/peer/PeerContentProtocol.js';
+import { isValidContentHash as isValidContentHashInPeerSnapshotPossessionProtocol } from '../application/snapshot/possession/PeerSnapshotPossessionProtocol.js';
+import { isValidContentHash as isValidContentHashInPeerSnapshotContentProtocol } from '../application/snapshot/materialization/PeerSnapshotContentProtocol.js';
+import { validatePublicationSnapshotTransferPackage } from '../application/snapshot/PublicationSnapshotTransferPackageValidator.js';
+import { buildPublicationSnapshotTransferPackage } from '../application/snapshot/PublicationSnapshotTransferPackage.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { StoreSnapshotContentOutcome } from '../application/snapshot/materialization/StoreSnapshotContentOutcome.js';
 
 // 0.9.593 — Content Hash Validation Boundary Audit.
 //
 // Type: test-only architectural audit. Production changes: NONE. Every
 // section below is either (a) a regex/substring match against the real,
-// unmodified application/PeerContentProtocol.js,
-// application/PeerSnapshotPossessionProtocol.js,
-// application/PeerSnapshotContentProtocol.js,
+// unmodified application/peer/PeerContentProtocol.js,
+// application/snapshot/possession/PeerSnapshotPossessionProtocol.js,
+// application/snapshot/materialization/PeerSnapshotContentProtocol.js,
 // application/PublicationSnapshotTransferPackage(Validator).js,
 // core/ContentReference.js, or serializer/contentHash.js source, or
 // (b) a live execution of the real, imported isValidContentHash()
@@ -69,7 +69,7 @@ import { StoreSnapshotContentOutcome } from '../application/StoreSnapshotContent
 // algorithm or length, changing Publication/Snapshot identity, changing
 // verification, storage, discovery, or Repository admission, altering
 // error vocabulary, and any change to
-// application/PeerContentProtocol.js, application/
+// application/peer/PeerContentProtocol.js, application/
 // PeerSnapshotPossessionProtocol.js, application/
 // PeerSnapshotContentProtocol.js, or any other production file.
 
@@ -97,18 +97,18 @@ async function run() {
     let peerContentSrc, possessionSrc, snapshotContentSrc, transferPkgSrc, transferValidatorSrc, contentRefSrc;
     {
         [peerContentSrc, possessionSrc, snapshotContentSrc, transferPkgSrc, transferValidatorSrc, contentRefSrc] = await Promise.all([
-            source('application/PeerContentProtocol.js'),
-            source('application/PeerSnapshotPossessionProtocol.js'),
-            source('application/PeerSnapshotContentProtocol.js'),
-            source('application/PublicationSnapshotTransferPackage.js'),
-            source('application/PublicationSnapshotTransferPackageValidator.js'),
+            source('application/peer/PeerContentProtocol.js'),
+            source('application/snapshot/possession/PeerSnapshotPossessionProtocol.js'),
+            source('application/snapshot/materialization/PeerSnapshotContentProtocol.js'),
+            source('application/snapshot/PublicationSnapshotTransferPackage.js'),
+            source('application/snapshot/PublicationSnapshotTransferPackageValidator.js'),
             source('core/ContentReference.js')
         ]);
 
         const definesIt = (src) => /export function isValidContentHash\(hash\) \{/.test(src);
-        assert(definesIt(peerContentSrc), n('A1. application/PeerContentProtocol.js exports its own isValidContentHash(hash) — Definition #1, layer: peer wire-protocol (0.7.4), caller: toContentRequestMessage/toContentResponseMessage/isValidPeerContentMessage, all in the SAME file'));
-        assert(definesIt(possessionSrc), n('A2. application/PeerSnapshotPossessionProtocol.js exports its own isValidContentHash(hash) — Definition #2, layer: peer wire-protocol (0.8.40), caller: toSnapshotPossessionRequestMessage/toSnapshotPossessionResponseMessage/isValidPeerSnapshotPossessionMessage, all in the SAME file'));
-        assert(definesIt(snapshotContentSrc), n('A3. application/PeerSnapshotContentProtocol.js exports its own isValidContentHash(hash) — Definition #3, layer: peer wire-protocol (0.8.37), caller: toSnapshotContentRequestMessage/toSnapshotContentResponseMessage/isValidPeerSnapshotContentMessage, all in the SAME file'));
+        assert(definesIt(peerContentSrc), n('A1. application/peer/PeerContentProtocol.js exports its own isValidContentHash(hash) — Definition #1, layer: peer wire-protocol (0.7.4), caller: toContentRequestMessage/toContentResponseMessage/isValidPeerContentMessage, all in the SAME file'));
+        assert(definesIt(possessionSrc), n('A2. application/snapshot/possession/PeerSnapshotPossessionProtocol.js exports its own isValidContentHash(hash) — Definition #2, layer: peer wire-protocol (0.8.40), caller: toSnapshotPossessionRequestMessage/toSnapshotPossessionResponseMessage/isValidPeerSnapshotPossessionMessage, all in the SAME file'));
+        assert(definesIt(snapshotContentSrc), n('A3. application/snapshot/materialization/PeerSnapshotContentProtocol.js exports its own isValidContentHash(hash) — Definition #3, layer: peer wire-protocol (0.8.37), caller: toSnapshotContentRequestMessage/toSnapshotContentResponseMessage/isValidPeerSnapshotContentMessage, all in the SAME file'));
 
         // All three are algorithmically identical at the source level —
         // not merely coincidentally same-behaving (Section B proves that
@@ -125,10 +125,10 @@ async function run() {
         // IMPORT Definition #1, reusing it unchanged across an entirely
         // different transport (an offline file, not a live peer
         // connection).
-        assert(/import \{ isValidContentHash \} from '\.\/PeerContentProtocol\.js';/.test(transferPkgSrc),
-            n('A5. application/PublicationSnapshotTransferPackage.js imports (never redefines) isValidContentHash from PeerContentProtocol.js — reuse, not a fourth definition'));
-        assert(/import \{ isValidContentHash \} from '\.\/PeerContentProtocol\.js';/.test(transferValidatorSrc),
-            n('A6. application/PublicationSnapshotTransferPackageValidator.js imports (never redefines) isValidContentHash from PeerContentProtocol.js — reuse, not a fifth definition'));
+        assert(/import \{ isValidContentHash \} from '\.\.\/peer\/PeerContentProtocol\.js';/.test(transferPkgSrc),
+            n('A5. application/snapshot/PublicationSnapshotTransferPackage.js imports (never redefines) isValidContentHash from PeerContentProtocol.js — reuse, not a fourth definition'));
+        assert(/import \{ isValidContentHash \} from '\.\.\/peer\/PeerContentProtocol\.js';/.test(transferValidatorSrc),
+            n('A6. application/snapshot/PublicationSnapshotTransferPackageValidator.js imports (never redefines) isValidContentHash from PeerContentProtocol.js — reuse, not a fifth definition'));
 
         // core/ContentReference.js — the actual identity object `hash`
         // belongs to — has NO isValidContentHash of its own at all: no
@@ -137,7 +137,7 @@ async function run() {
         // different, later question.
         assert(!/isValidContentHash/.test(contentRefSrc), n('A7. core/ContentReference.js contains no isValidContentHash whatsoever — the identity object that OWNS `hash` performs no syntax check on it at construction time; format validation is entirely an application-layer, boundary-entry concern in this codebase, never a core/ one'));
 
-        console.log('✓ Section A: exactly three production DEFINITIONS (application/PeerContentProtocol.js, application/PeerSnapshotPossessionProtocol.js, application/PeerSnapshotContentProtocol.js — byte-identical source text) plus two IMPORTERS of Definition #1 (application/PublicationSnapshotTransferPackage.js, application/PublicationSnapshotTransferPackageValidator.js); core/ContentReference.js defines none');
+        console.log('✓ Section A: exactly three production DEFINITIONS (application/peer/PeerContentProtocol.js, application/snapshot/possession/PeerSnapshotPossessionProtocol.js, application/snapshot/materialization/PeerSnapshotContentProtocol.js — byte-identical source text) plus two IMPORTERS of Definition #1 (application/snapshot/PublicationSnapshotTransferPackage.js, application/snapshot/PublicationSnapshotTransferPackageValidator.js); core/ContentReference.js defines none');
     }
 
     // ===============================================================
@@ -190,9 +190,9 @@ async function run() {
         // Every one of the three headers states, in its own words, that
         // it checks SHAPE only, never willingness-to-serve or
         // hash-actually-matches-bytes.
-        assert(/Structural validity ONLY/.test(peerContentSrc), n('C1. application/PeerContentProtocol.js\'s own header states "Structural validity ONLY" — this is a SYNTAX check: "is this shaped like a content hash?"'));
-        assert(/Structural validity ONLY/.test(possessionSrc), n('C2. application/PeerSnapshotPossessionProtocol.js\'s own header states "Structural validity ONLY" — the identical syntax-only scope'));
-        assert(/Structural validity ONLY/.test(snapshotContentSrc), n('C3. application/PeerSnapshotContentProtocol.js\'s own header states "Structural validity ONLY" — the identical syntax-only scope'));
+        assert(/Structural validity ONLY/.test(peerContentSrc), n('C1. application/peer/PeerContentProtocol.js\'s own header states "Structural validity ONLY" — this is a SYNTAX check: "is this shaped like a content hash?"'));
+        assert(/Structural validity ONLY/.test(possessionSrc), n('C2. application/snapshot/possession/PeerSnapshotPossessionProtocol.js\'s own header states "Structural validity ONLY" — the identical syntax-only scope'));
+        assert(/Structural validity ONLY/.test(snapshotContentSrc), n('C3. application/snapshot/materialization/PeerSnapshotContentProtocol.js\'s own header states "Structural validity ONLY" — the identical syntax-only scope'));
 
         // None of the three ever appears anywhere near an actual
         // hash-vs-bytes comparison in its own file.
@@ -268,12 +268,12 @@ async function run() {
         // among them — a hard, codebase-wide invariant for this module
         // family, not an isValidContentHash-specific choice.
         const wireProtocolFiles = [
-            'application/PeerContentProtocol.js',
-            'application/PeerSnapshotPossessionProtocol.js',
-            'application/PeerSnapshotContentProtocol.js',
-            'application/PublicationAnchorPeerProtocol.js',
-            'application/PublicationPeerProtocol.js',
-            'application/PublicationSnapshotPlacementPeerProtocol.js'
+            'application/peer/PeerContentProtocol.js',
+            'application/snapshot/possession/PeerSnapshotPossessionProtocol.js',
+            'application/snapshot/materialization/PeerSnapshotContentProtocol.js',
+            'application/anchoring/PublicationAnchorPeerProtocol.js',
+            'application/publication/PublicationPeerProtocol.js',
+            'application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js'
         ];
         const importCounts = await Promise.all(wireProtocolFiles.map(async (f) => ({ f, count: (await source(f)).match(/^import /gm)?.length ?? 0 })));
         assert(importCounts.every(({ count }) => count === 0),
@@ -291,9 +291,9 @@ async function run() {
         // narrower and more precise than "zero imports": no wire-protocol
         // module ever imports a validator FUNCTION from a sibling
         // protocol module.
-        const encounterProtoSrc = await source('application/PeerWorldEncounterMaterialProtocol.js');
-        assert(/^import \{ WorldEncounterKind \} from '\.\.\/core\/WorldEncounter\.js';$/m.test(encounterProtoSrc),
-            n('E2. application/PeerWorldEncounterMaterialProtocol.js is the one *Protocol.js sibling with a non-zero import count — but it imports a plain core/ enum (WorldEncounterKind), never a validator function from another protocol module'));
+        const encounterProtoSrc = await source('application/worldEncounter/PeerWorldEncounterMaterialProtocol.js');
+        assert(/^import \{ WorldEncounterKind \} from '\.\.\/\.\.\/core\/WorldEncounter\.js';$/m.test(encounterProtoSrc),
+            n('E2. application/worldEncounter/PeerWorldEncounterMaterialProtocol.js is the one *Protocol.js sibling with a non-zero import count — but it imports a plain core/ enum (WorldEncounterKind), never a validator function from another protocol module'));
         assert(!/from '\.\/Peer/.test(encounterProtoSrc) && !/from '\.\/Publication.*Protocol/.test(encounterProtoSrc),
             n('E3. even this one exception never imports FROM another *Protocol.js sibling — its own isValidEncounterKind/isValidWorldEncounterObjectId are both defined locally, preserving the unbroken "no validator function crosses a protocol-module boundary" rule across all seven files'));
 
@@ -302,8 +302,8 @@ async function run() {
         // (not just the two that also carry isValidContentHash) — this is
         // a systematic module-family policy, not an isValidContentHash-
         // specific accident.
-        const placementSrc = await source('application/PublicationSnapshotPlacementPeerProtocol.js');
-        const anchorSrc = await source('application/PublicationAnchorPeerProtocol.js');
+        const placementSrc = await source('application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js');
+        const anchorSrc = await source('application/anchoring/PublicationAnchorPeerProtocol.js');
         const CANONICAL_PUBID_BODY = "return typeof value === 'string' && value.trim().length > 0 && value.length <= MAX_PUBLICATION_ID_LENGTH;";
         for (const [label, src] of [['PeerSnapshotPossessionProtocol', possessionSrc], ['PeerSnapshotContentProtocol', snapshotContentSrc], ['PublicationSnapshotPlacementPeerProtocol', placementSrc], ['PublicationAnchorPeerProtocol', anchorSrc]]) {
             assert(src.includes('function isValidPublicationId(value) {') && !src.includes('export function isValidPublicationId'),
@@ -317,7 +317,7 @@ async function run() {
         // different category that already imports freely elsewhere in
         // this codebase (sibling Package/Validator pairs routinely carry
         // 3-5 imports each), so reuse there costs nothing architecturally.
-        const siblingPackageFiles = ['application/BlueprintImportValidator.js', 'application/PublicationReplicaPackageValidator.js', 'application/PublicationReplicaPackage.js'];
+        const siblingPackageFiles = ['application/blueprint/BlueprintImportValidator.js', 'application/publication/replica/PublicationReplicaPackageValidator.js', 'application/publication/replica/PublicationReplicaPackage.js'];
         const siblingImportCounts = await Promise.all(siblingPackageFiles.map(async (f) => (await source(f)).match(/^import /gm)?.length ?? 0));
         assert(siblingImportCounts.every((c) => c >= 3), n(`E5. sibling *Package.js/*PackageValidator.js modules import freely (${JSON.stringify(siblingImportCounts)} imports respectively) — the zero-import discipline in Section E1 is specific to the wire-protocol family, not a codebase-wide anti-import stance, so PublicationSnapshotTransferPackage(Validator).js importing isValidContentHash from PeerContentProtocol.js is ordinary reuse, not an exception to any rule`));
 
@@ -361,8 +361,8 @@ async function run() {
         // never calls isValidContentHash at all — it goes straight to
         // ContentReference#verify(), confirming the two boundaries are
         // consumed by entirely disjoint call graphs.
-        const storeUseCaseSrc = await source('application/StoreSnapshotContentUseCase.js');
-        assert(!/isValidContentHash/.test(storeUseCaseSrc), n('F4. application/StoreSnapshotContentUseCase.js — the codebase\'s own sole content-trust boundary (per its own header) — never calls isValidContentHash at all; it trusts core/ContentReference.js#verify() exclusively for the question that actually matters'));
+        const storeUseCaseSrc = await source('application/snapshot/materialization/StoreSnapshotContentUseCase.js');
+        assert(!/isValidContentHash/.test(storeUseCaseSrc), n('F4. application/snapshot/materialization/StoreSnapshotContentUseCase.js — the codebase\'s own sole content-trust boundary (per its own header) — never calls isValidContentHash at all; it trusts core/ContentReference.js#verify() exclusively for the question that actually matters'));
 
         console.log('✓ Section F: every real caller of any isValidContentHash copy uses it for the identical purpose — guard acceptance of a hash-shaped field at a message/package boundary — and none of them, nor the codebase\'s own verification boundary (StoreSnapshotContentUseCase), ever crosses into the other\'s job');
     }
@@ -463,9 +463,9 @@ async function run() {
         const allHits = grep('isValidContentHash', PRODUCTION_DIRS);
         const definitionFiles = new Set(allHits.filter((l) => /export function isValidContentHash/.test(l)).map((l) => l.split(':')[0]));
         assert(definitionFiles.size === 3
-            && definitionFiles.has('application/PeerContentProtocol.js')
-            && definitionFiles.has('application/PeerSnapshotPossessionProtocol.js')
-            && definitionFiles.has('application/PeerSnapshotContentProtocol.js'),
+            && definitionFiles.has('application/peer/PeerContentProtocol.js')
+            && definitionFiles.has('application/snapshot/possession/PeerSnapshotPossessionProtocol.js')
+            && definitionFiles.has('application/snapshot/materialization/PeerSnapshotContentProtocol.js'),
             n(`I1. a whole-repository sweep of every PRODUCTION directory confirms EXACTLY these three files define isValidContentHash — no fourth definition exists anywhere, including in ui/, core/, content/, discovery/, storage/ (tests/ excluded from this sweep since it only ever CONSUMES or, as here, DESCRIBES the production predicate, never defines a competing one): ${JSON.stringify([...definitionFiles])}`));
 
         // Two look-alike hex predicates exist, correctly OUT of scope:
@@ -474,9 +474,9 @@ async function run() {
         // transaction-data bytes," not "is this a syntactically valid
         // content hash"), and the anchor transaction-hash family
         // already ruled out in Section H.
-        const commitmentSrc = await source('application/BasePublicationCommitmentEncoding.js');
+        const commitmentSrc = await source('application/anchoring/base/BasePublicationCommitmentEncoding.js');
         assert(/CONTENT_HASH_PATTERN = \/\^\[0-9a-f\]\+\$\/i;/.test(commitmentSrc) && /contentHash\.length % 2 !== 0/.test(commitmentSrc),
-            n('I2. application/BasePublicationCommitmentEncoding.js has a similarly-shaped hex regex, but ADDS an even-length constraint absent from all three isValidContentHash copies — a genuinely different invariant (whole-byte encodability for a transaction\'s `data` field), never named isValidContentHash, and never imported by or into any of the three protocol modules — correctly classified as a distinct, legitimate, low-level validation that does not need to share the isValidContentHash function'));
+            n('I2. application/anchoring/base/BasePublicationCommitmentEncoding.js has a similarly-shaped hex regex, but ADDS an even-length constraint absent from all three isValidContentHash copies — a genuinely different invariant (whole-byte encodability for a transaction\'s `data` field), never named isValidContentHash, and never imported by or into any of the three protocol modules — correctly classified as a distinct, legitimate, low-level validation that does not need to share the isValidContentHash function'));
         assert(!/isValidContentHash/.test(commitmentSrc), n('I3. confirmed: BasePublicationCommitmentEncoding.js never itself calls or imports isValidContentHash — its even-length check is deliberately its own, separate gate, applied AFTER a hash has already been accepted as content-identity-valid elsewhere in the pipeline'));
 
         console.log('✓ Section I: whole-repository sweep confirms exactly three definitions and two importers, with the one look-alike hex predicate found (BasePublicationCommitmentEncoding.js\'s even-length byte-encodability check) correctly representing a different invariant that does not belong in this consolidation question');
@@ -553,7 +553,7 @@ async function run() {
         // amended for the same reason). Amended to exclude exactly
         // 0.9.597's own, already-accounted-for files, while still
         // catching any OTHER, unexpected production drift.
-        const expectedLaterMilestoneFiles = ['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js'];
+        const expectedLaterMilestoneFiles = ['application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js'];
         const changesToProduction = execSync('git status --porcelain -- core/ application/ ui/', { cwd: SOURCE_ROOT }).toString().trim()
             .split('\n').filter(Boolean).filter((line) => !expectedLaterMilestoneFiles.some((f) => line.includes(f)));
         assert(changesToProduction.length === 0, n(`DriftGuard1. AMENDED BY 0.9.597 — this milestone made zero UNEXPECTED changes to any file under core/, application/, or ui/ (0.9.597's own, separately-justified files excepted) — found: ${JSON.stringify(changesToProduction)}`));

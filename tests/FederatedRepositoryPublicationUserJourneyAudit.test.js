@@ -9,16 +9,16 @@ import { Building } from '../core/Building.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionCoordinator } from '../application/PublicationResolutionCoordinator.js';
-import { resolvePublicationView } from '../application/PublicationResolutionView.js';
-import { CreatePublicationDisplayKindRegistryUseCase } from '../application/CreatePublicationDisplayKindRegistryUseCase.js';
-import { CreateDiscoveryUseCase } from '../application/CreateDiscoveryUseCase.js';
-import { PUBLICATION_CONTENT_KIND } from '../application/PublicationContentValidator.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
-import { FindPublicationUseCase } from '../application/FindPublicationUseCase.js';
-import { ForkDocumentUseCase } from '../application/ForkDocumentUseCase.js';
-import { LoadDocumentUseCase } from '../application/LoadDocumentUseCase.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionCoordinator } from '../application/publication/PublicationResolutionCoordinator.js';
+import { resolvePublicationView } from '../application/publication/PublicationResolutionView.js';
+import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { CreateDiscoveryUseCase } from '../application/discovery/CreateDiscoveryUseCase.js';
+import { PUBLICATION_CONTENT_KIND } from '../application/publication/PublicationContentValidator.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
+import { FindPublicationUseCase } from '../application/publication/FindPublicationUseCase.js';
+import { ForkDocumentUseCase } from '../application/document/ForkDocumentUseCase.js';
+import { LoadDocumentUseCase } from '../application/document/LoadDocumentUseCase.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -71,7 +71,7 @@ import { editorViewFiles } from './support/SourceFileGroups.js';
 //               provider itself, require material presence anywhere?
 //   Section J — Final verdict.
 
-// application/CreateDiscoveryUseCase.js constructs a real
+// application/discovery/CreateDiscoveryUseCase.js constructs a real
 // storage/LocalStorageProvider.js, which reads window.localStorage — the
 // one thing this suite needs to invoke live (Section A/D/F/H's own point
 // is what the REAL composition root does, not a paraphrase of it) but
@@ -160,7 +160,7 @@ function makePublication({ documentId, title, author, license = new License({ id
 // A minimal, real World Document — the ACTUAL material a Publication's own
 // documentId points at, distinct from the Publication object itself. Saved
 // into a StorageProvider keyed by its own world.id, exactly the shape
-// application/LoadDocumentUseCase.js and application/ForkDocumentUseCase.js
+// application/document/LoadDocumentUseCase.js and application/document/ForkDocumentUseCase.js
 // both read with storageProvider.load(id).
 // `id`, when supplied, becomes the World's own id — matching the real
 // invariant a genuine publish always holds: Publication.documentId IS the
@@ -218,7 +218,7 @@ async function run() {
         // what a real user's "Repository" navigation actually renders.
         const catalogSource = await readSource('ui/components/PublicationCatalog.js');
         assert(catalogSource.includes('new CreateDiscoveryUseCase().execute({ decentralizedDiscoveryProvider })'),
-            '1. UPDATED (0.9.339): ui/components/PublicationCatalog.js builds its discoveryProvider/searchPublicationsUseCase from application/CreateDiscoveryUseCase.js, now passing through the injected decentralizedDiscoveryProvider — the same composition root 0.9.337 itself named, now actually reaching the shared provider.');
+            '1. UPDATED (0.9.339): ui/components/PublicationCatalog.js builds its discoveryProvider/searchPublicationsUseCase from application/discovery/CreateDiscoveryUseCase.js, now passing through the injected decentralizedDiscoveryProvider — the same composition root 0.9.337 itself named, now actually reaching the shared provider.');
         assert(catalogSource.includes("inject('decentralizedPublicationDiscoveryProvider', null)"),
             '2. UPDATED (0.9.339): ui/components/PublicationCatalog.js now injects decentralizedPublicationDiscoveryProvider (defaulting to null when absent) and threads it into CreateDiscoveryUseCase — confirmed by source, not inference.');
 
@@ -226,15 +226,15 @@ async function run() {
         assert(repositoryViewSource.includes('<PublicationCatalog') && !/decentralizedPublicationDiscoveryProvider/.test(repositoryViewSource),
             '3. ui/views/RepositoryView.js is still a thin wrapper around PublicationCatalog with no discovery wiring of its own — the injection lives in PublicationCatalog.js itself, not duplicated in every host view.');
 
-        // A2. Structural: application/CreateDiscoveryUseCase.js itself,
+        // A2. Structural: application/discovery/CreateDiscoveryUseCase.js itself,
         // reconfirmed fresh — UPDATED (0.9.339): it now accepts the
         // shared provider and composes it via discovery/
         // CompositeDiscoveryProvider.js's own small, generic merge, while
         // still constructing LocalDiscoveryProvider exactly as before.
-        const createDiscoverySource = await readSource('application/CreateDiscoveryUseCase.js');
+        const createDiscoverySource = await readSource('application/discovery/CreateDiscoveryUseCase.js');
         assert(createDiscoverySource.includes('new LocalDiscoveryProvider(storageProvider)') &&
             createDiscoverySource.includes('new CompositeDiscoveryProvider([localDiscoveryProvider, decentralizedDiscoveryProvider])'),
-            '4. UPDATED (0.9.339): application/CreateDiscoveryUseCase.js still constructs a plain LocalDiscoveryProvider, and now ALSO composes an optional decentralizedDiscoveryProvider alongside it via CompositeDiscoveryProvider.');
+            '4. UPDATED (0.9.339): application/discovery/CreateDiscoveryUseCase.js still constructs a plain LocalDiscoveryProvider, and now ALSO composes an optional decentralizedDiscoveryProvider alongside it via CompositeDiscoveryProvider.');
 
         // A3. LIVE proof: build the flagship decentralized-origin
         // Publication (documentId "9x7c2m", the brief's own flagship id),
@@ -279,7 +279,7 @@ async function run() {
         assert(directResult.items.length === 1 && directResult.items[0] === flagshipView.content,
             '8. by contrast, SearchPublicationsUseCase(flagshipProvider) — the shared provider directly — finds the identical single result the real composition root (A3 above) now also finds: the composite adds the decentralized candidate, it never duplicates or reshapes it.');
     }
-    console.log('✓ Section A: UPDATED (0.9.339). Repository visibility through the real UI composition root is now CONFIRMED, not FAILED. ui/components/PublicationCatalog.js (RepositoryView.js and AuthorView.js\'s shared implementation) now injects the shared decentralizedPublicationDiscoveryProvider and threads it into application/CreateDiscoveryUseCase.js, which composes it alongside LocalDiscoveryProvider via discovery/CompositeDiscoveryProvider.js. A flagship Publication (documentId "9x7c2m") that is genuinely resolved and genuinely admitted into the one shared provider is now found by the exact SearchPublicationsUseCase call the real Repository page runs, matching the result a SearchPublicationsUseCase built directly on that same shared provider already found. The gap this section originally located — one composition root, not the search class itself — is closed at exactly that root.');
+    console.log('✓ Section A: UPDATED (0.9.339). Repository visibility through the real UI composition root is now CONFIRMED, not FAILED. ui/components/PublicationCatalog.js (RepositoryView.js and AuthorView.js\'s shared implementation) now injects the shared decentralizedPublicationDiscoveryProvider and threads it into application/discovery/CreateDiscoveryUseCase.js, which composes it alongside LocalDiscoveryProvider via discovery/CompositeDiscoveryProvider.js. A flagship Publication (documentId "9x7c2m") that is genuinely resolved and genuinely admitted into the one shared provider is now found by the exact SearchPublicationsUseCase call the real Repository page runs, matching the result a SearchPublicationsUseCase built directly on that same shared provider already found. The gap this section originally located — one composition root, not the search class itself — is closed at exactly that root.');
 
     // ===============================================================
     // Section B — Selection identity: what does PublicationCatalog.js's
@@ -321,11 +321,11 @@ async function run() {
     {
         // C1. Structural: WorldView.js's own session (application/
         // CreateWorldViewUseCase.js) is built entirely on LocalStorageProvider
-        // — the identical storage layer application/LoadDocumentUseCase.js
-        // and application/ForkDocumentUseCase.js already use.
-        const worldViewUseCaseSource = await readSource('application/CreateWorldViewUseCase.js');
+        // — the identical storage layer application/document/LoadDocumentUseCase.js
+        // and application/document/ForkDocumentUseCase.js already use.
+        const worldViewUseCaseSource = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(worldViewUseCaseSource.includes('new LocalStorageProvider()'),
-            '1. application/CreateWorldViewUseCase.js — WorldView.js\'s own session composition — is built on the same LocalStorageProvider every other document-loading path uses; no decentralized-specific storage or fetch path exists here.');
+            '1. application/world/CreateWorldViewUseCase.js — WorldView.js\'s own session composition — is built on the same LocalStorageProvider every other document-loading path uses; no decentralized-specific storage or fetch path exists here.');
 
         // C2. LIVE: the exact document-loading mechanism this identity
         // reaches, called with the flagship Publication's own documentId,
@@ -377,7 +377,7 @@ async function run() {
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
         assert(editorViewSource.includes("inject('decentralizedPublicationDiscoveryProvider', null)") &&
             /new CreateDiscoveryUseCase\(\)\.execute\(\{\s*decentralizedDiscoveryProvider:/.test(editorViewSource),
-            '1. UPDATED (0.9.339): ui/views/EditorView.js builds findPublicationUseCase from the SAME application/CreateDiscoveryUseCase.js composition root Section A proved is now merged, now also injecting and threading through the shared decentralized provider.');
+            '1. UPDATED (0.9.339): ui/views/EditorView.js builds findPublicationUseCase from the SAME application/discovery/CreateDiscoveryUseCase.js composition root Section A proved is now merged, now also injecting and threading through the shared decentralized provider.');
         assert(editorViewSource.includes('sourcePublication = findPublicationUseCase.execute(route.query.publication);') &&
             editorViewSource.includes('forkDocumentUseCase.execute(route.query.fork, identityProvider, sourcePublication);'),
             '2. the fork branch looks up route.query.publication (Publication.id) via findPublicationUseCase, then hands the result (or null) to forkDocumentUseCase alongside route.query.fork (documentId) — exactly the identity Section B proved selection carries. Unchanged by 0.9.339 — only what findPublicationUseCase itself can see changed, not this call shape.');
@@ -412,11 +412,11 @@ async function run() {
 
         // Structural: ForkDocumentUseCase.js itself has no idea any of
         // this is decentralized — zero references anywhere in the file.
-        const forkUseCaseSource = await readSource('application/ForkDocumentUseCase.js');
+        const forkUseCaseSource = await readSource('application/document/ForkDocumentUseCase.js');
         assert(!/Decentralized|decentralizedPublicationDiscoveryProvider/.test(forkUseCaseSource),
-            '5. application/ForkDocumentUseCase.js contains no decentralized-specific code at all — it only ever knows about a documentId and an optional Publication.');
+            '5. application/document/ForkDocumentUseCase.js contains no decentralized-specific code at all — it only ever knows about a documentId and an optional Publication.');
     }
-    console.log('✓ Section D: UPDATED (0.9.339). Fork reaches the flagship Publication through the EXACT SAME findPublicationUseCase/forkDocumentUseCase/documentId call shape a local Publication uses — application/ForkDocumentUseCase.js itself is completely decentralized-agnostic. The lookup gap this section originally found was upstream and singular: findPublicationUseCase (built from the same application/CreateDiscoveryUseCase.js Section A named) could not see a decentralized-origin Publication by its own id, so sourcePublication silently defaulted to null rather than erroring. 0.9.339 closed that SAME Section A root cause, so findPublicationUseCase.execute(pub.id) now returns the flagship Publication itself, and sourcePublication is no longer silently null.');
+    console.log('✓ Section D: UPDATED (0.9.339). Fork reaches the flagship Publication through the EXACT SAME findPublicationUseCase/forkDocumentUseCase/documentId call shape a local Publication uses — application/document/ForkDocumentUseCase.js itself is completely decentralized-agnostic. The lookup gap this section originally found was upstream and singular: findPublicationUseCase (built from the same application/discovery/CreateDiscoveryUseCase.js Section A named) could not see a decentralized-origin Publication by its own id, so sourcePublication silently defaulted to null rather than erroring. 0.9.339 closed that SAME Section A root cause, so findPublicationUseCase.execute(pub.id) now returns the flagship Publication itself, and sourcePublication is no longer silently null.');
 
     // ===============================================================
     // Section E — Material acquisition boundary: is "resolved
@@ -424,27 +424,27 @@ async function run() {
     // chain?
     // ===============================================================
     {
-        // E1. Structural: application/PublicationResolver.js's own
+        // E1. Structural: application/publication/PublicationResolver.js's own
         // resolve() never reads publication.documentId or fetches a
         // second ContentReference off the wrapped content — it retrieves
         // bytes for exactly ONE ContentReference, the DecentralizedPublication
         // envelope's own (pointing at the serialized Publication metadata),
         // never the Publication's OWN contentReference (pointing at the
         // World Document's bytes).
-        const resolverSource = await readSource('application/PublicationResolver.js');
+        const resolverSource = await readSource('application/publication/PublicationResolver.js');
         assert(!/\.documentId/.test(resolverSource),
-            '1. application/PublicationResolver.js never references .documentId anywhere — resolving a Publication envelope has no idea a "document" exists at all.');
+            '1. application/publication/PublicationResolver.js never references .documentId anywhere — resolving a Publication envelope has no idea a "document" exists at all.');
         assert(countOccurrences(resolverSource, /this\._contentStore\.get\(/g) === 1,
             '2. exactly one ContentStore#get() call in the whole resolution pipeline — the envelope\'s own contentReference; the Publication\'s own (separate) contentReference, pointing at the World Document, is never fetched as a side effect of resolution.');
 
-        // E2. Structural: application/PublicationContentKind.js — the
+        // E2. Structural: application/publication/PublicationContentKind.js — the
         // forkbuild.publication kindPlugin — deliberately has no `store`
         // option, by its own header's explicit design (quoted, not
         // paraphrased, so a future edit that silently added one would
         // break this assertion rather than this audit going stale).
-        const kindSource = await readSource('application/PublicationContentKind.js');
+        const kindSource = await readSource('application/publication/PublicationContentKind.js');
         assert(kindSource.includes('Deliberately NO `store` option'),
-            '3. application/PublicationContentKind.js documents, in its own words, that it deliberately supplies no store step — resolving a Publication never persists anything, metadata or material.');
+            '3. application/publication/PublicationContentKind.js documents, in its own words, that it deliberately supplies no store step — resolving a Publication never persists anything, metadata or material.');
         assert(!/store:/.test(kindSource.replace(/\/\/.*$/gm, '')),
             "4. confirmed structurally: the plugin object this module returns has no `store` key at all (comments stripped before the check, so the header's own prose mentioning the word does not trip this assertion).");
 
@@ -461,7 +461,7 @@ async function run() {
         assert(freshStorage.load('world-e3-material-check') === null,
             "5. after a genuine publish/resolve round trip, storage holds NOTHING under the Publication's own documentId — confirming, live, that resolving a Publication's identity/metadata never materializes its World Document.");
     }
-    console.log('✓ Section E: "resolved Publication" and "material bytes" are never conflated anywhere in this chain. application/PublicationResolver.js resolves exactly one ContentReference — the envelope\'s own, addressing the Publication\'s metadata — and never touches documentId or a second ContentReference for the underlying World Document. application/PublicationContentKind.js deliberately supplies no store step, by its own documented design. Repository (and this audit\'s own Section A gap) is never silently made responsible for material retrieval — that boundary already exists, upstream of Repository entirely, at application/PublicationResolver.js\'s own ten-step discipline.');
+    console.log('✓ Section E: "resolved Publication" and "material bytes" are never conflated anywhere in this chain. application/publication/PublicationResolver.js resolves exactly one ContentReference — the envelope\'s own, addressing the Publication\'s metadata — and never touches documentId or a second ContentReference for the underlying World Document. application/publication/PublicationContentKind.js deliberately supplies no store step, by its own documented design. Repository (and this audit\'s own Section A gap) is never silently made responsible for material retrieval — that boundary already exists, upstream of Repository entirely, at application/publication/PublicationResolver.js\'s own ten-step discipline.');
 
     // ===============================================================
     // Section F — Failure classification: are discovery/resolution/
@@ -483,10 +483,10 @@ async function run() {
         // single generic "unavailable" flag (0.9.337 Section D already
         // proved CONTENT_UNAVAILABLE live; reconfirmed here it is one of
         // SEVERAL distinct values, not the only one).
-        const outcomeSource = await readSource('application/PublicationResolutionOutcome.js');
+        const outcomeSource = await readSource('application/publication/PublicationResolutionOutcome.js');
         const outcomeValues = (outcomeSource.match(/^\s{4}\w+:/gm) || []).map((l) => l.trim().replace(':', ''));
         assert(outcomeValues.length >= 4,
-            `2. application/PublicationResolutionOutcome.js defines ${outcomeValues.length} distinct outcome values (${outcomeValues.join(', ')}) — resolution failure is not one generic state.`);
+            `2. application/publication/PublicationResolutionOutcome.js defines ${outcomeValues.length} distinct outcome values (${outcomeValues.join(', ')}) — resolution failure is not one generic state.`);
 
         // F3. Document retrieval failure — a thrown Error with a specific,
         // greppable message shape, distinct from resolution's own outcome
@@ -529,7 +529,7 @@ async function run() {
         assert(uniqueSignals.size === signals.length,
             '5. all four failure classes\' own signal strings are pairwise distinct — none is a substring alias of another.');
     }
-    console.log('✓ Section F: four failure classes stay genuinely distinct. Repository discovery "failure" (Section A\'s gap) is a well-formed empty result, never an exception. Publication resolution failure is one of several named application/PublicationResolutionOutcome.js values. Document retrieval failure is a specific, greppable thrown-Error message. Fork failure (a license denial) is a different thrown-Error message again. No generic "decentralized Publication unavailable" catch-all exists anywhere in this chain.');
+    console.log('✓ Section F: four failure classes stay genuinely distinct. Repository discovery "failure" (Section A\'s gap) is a well-formed empty result, never an exception. Publication resolution failure is one of several named application/publication/PublicationResolutionOutcome.js values. Document retrieval failure is a specific, greppable thrown-Error message. Fork failure (a license denial) is a different thrown-Error message again. No generic "decentralized Publication unavailable" catch-all exists anywhere in this chain.');
 
     // ===============================================================
     // Section G — Local/decentralized convergence: does a decentralized
@@ -655,7 +655,7 @@ async function run() {
             'this audit\'s own point-in-time record of the gap it found and the exact fix it ' +
             'recommended (its own "Recommended next step" paragraph is, verbatim, what 0.9.339 built).');
         console.log(`
-The gap is real, small, and precisely located: application/CreateDiscoveryUseCase.js
+The gap is real, small, and precisely located: application/discovery/CreateDiscoveryUseCase.js
 — the ONE composition root ui/components/PublicationCatalog.js (Repository,
 Author), ui/views/EditorView.js (fork/load lookup), and ui/views/WorldView.js
 (Explore's own session) all independently call — constructs a fresh

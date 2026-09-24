@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarTreeConstraint } from '../application/AvatarTreeConstraint.js';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarTreeConstraint } from '../application/avatar/AvatarTreeConstraint.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { treeCollisionGeometryInRegion } from '../core/TreeCollisionGeometry.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { AVATAR_COLLISION_RADIUS } from '../core/AvatarCollision.js';
@@ -8,18 +8,18 @@ import { VehicleType } from '../core/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.63 — Avatar Movement Collision Integration,
-// application/AvatarTreeConstraint.js.
+// application/avatar/AvatarTreeConstraint.js.
 //
-//   Section A: application/AvatarTreeConstraint.js — real + synthetic trees
-//   Section B: application/AvatarMovementController.js — tree constraint wired into the movement pipeline
+//   Section A: application/avatar/AvatarTreeConstraint.js — real + synthetic trees
+//   Section B: application/avatar/AvatarMovementController.js — tree constraint wired into the movement pipeline
 //   Section C: WorldNavigationSession integration
 //   Section D: FLAGSHIP — a real avatar walking straight at a real,
 //              deterministic tree through the entire chain
@@ -32,9 +32,9 @@ import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUs
 // core/TreeCollisionGeometry.js (0.9.59), core/AvatarTreeCollision.js
 // (0.9.60), core/AvatarTreeMovement.js (0.9.61), and
 // core/AvatarTreeCollisionQuery.js (0.9.62) — to the same
-// application/AvatarMovementController.js pipeline
-// application/AvatarMovementConstraint.js (buildings, 0.2.42) and
-// application/AvatarTerrainConstraint.js (terrain slope, 0.2.77) already
+// application/avatar/AvatarMovementController.js pipeline
+// application/avatar/AvatarMovementConstraint.js (buildings, 0.2.42) and
+// application/avatar/AvatarTerrainConstraint.js (terrain slope, 0.2.77) already
 // plug into. See docs/Roadmap.md, 0.9.63, for the full milestone story.
 
 class InMemoryStorageProvider extends StorageProvider {
@@ -103,7 +103,7 @@ async function runTests() {
     const realTree = findRealTree();
 
     // -------------------------------------------------------------
-    // Section A — application/AvatarTreeConstraint.js
+    // Section A — application/avatar/AvatarTreeConstraint.js
     // -------------------------------------------------------------
     {
         // A — Free movement: no candidate trees at all -> the requested
@@ -208,7 +208,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section B — application/AvatarMovementController.js
+    // Section B — application/avatar/AvatarMovementController.js
     // -------------------------------------------------------------
     {
         // H — Existing movement regression: a controller built WITHOUT a
@@ -486,7 +486,7 @@ async function runTests() {
     // mathematics, no new status vocabulary, no terrain coupling
     // -------------------------------------------------------------
     {
-        const sourceUrl = new URL('../application/AvatarTreeConstraint.js', import.meta.url);
+        const sourceUrl = new URL('../application/avatar/AvatarTreeConstraint.js', import.meta.url);
         const source = await readFile(sourceUrl, 'utf8');
         const codeOnly = source
             .split('\n')
@@ -505,18 +505,18 @@ async function runTests() {
             'CollisionEvent', 'velocity', 'acceleration', 'mass'
         ];
         for (const term of forbidden) {
-            assert(!codeOnly.includes(term), `35. application/AvatarTreeConstraint.js's own code never references "${term}" — a thin adapter only, never a second collision algorithm, never terrain coupling, never a physics engine, never a new event vocabulary`);
+            assert(!codeOnly.includes(term), `35. application/avatar/AvatarTreeConstraint.js's own code never references "${term}" — a thin adapter only, never a second collision algorithm, never terrain coupling, never a physics engine, never a new event vocabulary`);
         }
         assert(codeOnly.includes('treeCollisionCandidatesForMovement'),
-            '36. application/AvatarTreeConstraint.js does consume treeCollisionCandidatesForMovement() from core/AvatarTreeCollisionQuery.js — the one deliberate 0.9.62 entry point, never a second one it invents itself');
+            '36. application/avatar/AvatarTreeConstraint.js does consume treeCollisionCandidatesForMovement() from core/AvatarTreeCollisionQuery.js — the one deliberate 0.9.62 entry point, never a second one it invents itself');
         assert(codeOnly.includes('resolveAvatarTreeMovement'),
-            '37. application/AvatarTreeConstraint.js does consume resolveAvatarTreeMovement() from core/AvatarTreeMovement.js — the one deliberate 0.9.61 entry point');
+            '37. application/avatar/AvatarTreeConstraint.js does consume resolveAvatarTreeMovement() from core/AvatarTreeMovement.js — the one deliberate 0.9.61 entry point');
     }
     {
-        const exportsModule = await import('../application/AvatarTreeConstraint.js');
+        const exportsModule = await import('../application/avatar/AvatarTreeConstraint.js');
         const exportedNames = Object.keys(exportsModule).sort();
         assert(JSON.stringify(exportedNames) === JSON.stringify(['AvatarTreeConstraint']),
-            '38. application/AvatarTreeConstraint.js exports exactly the AvatarTreeConstraint class — nothing else');
+            '38. application/avatar/AvatarTreeConstraint.js exports exactly the AvatarTreeConstraint class — nothing else');
     }
 
     console.log('✅ All Avatar Movement Collision Integration tests passed.');

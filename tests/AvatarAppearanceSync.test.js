@@ -6,19 +6,19 @@ import { Signature, SignatureType } from '../core/Signature.js';
 import { TrustStatus } from '../core/TrustObservation.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { signAvatarProfileAdvertisement } from '../application/AvatarProfileSigning.js';
-import { AvatarProfileTrustBoundary } from '../application/AvatarProfileTrustBoundary.js';
-import { LocalAvatarProfileStore } from '../application/LocalAvatarProfileStore.js';
-import { AvatarProfileSyncService } from '../application/AvatarProfileSyncService.js';
-import { RemoteAvatarAppearanceRegistry } from '../application/RemoteAvatarAppearanceRegistry.js';
-import { RemoteAvatarRegistry } from '../application/RemoteAvatarRegistry.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { signAvatarProfileAdvertisement } from '../application/avatar/AvatarProfileSigning.js';
+import { AvatarProfileTrustBoundary } from '../application/avatar/AvatarProfileTrustBoundary.js';
+import { LocalAvatarProfileStore } from '../application/avatar/LocalAvatarProfileStore.js';
+import { AvatarProfileSyncService } from '../application/avatar/AvatarProfileSyncService.js';
+import { RemoteAvatarAppearanceRegistry } from '../application/avatar/RemoteAvatarAppearanceRegistry.js';
+import { RemoteAvatarRegistry } from '../application/avatar/RemoteAvatarRegistry.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
 // 0.2.41 — Remote Avatar Appearance Synchronization.
@@ -28,12 +28,12 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 //   Section C: core/AvatarProfileIngestion.js
 //   Section D: core/AvatarProfileEquivocation.js
 //   Section E: identity/LocalAuthorizationVerifier.verifyAvatarProfileAdvertisement (REAL Ed25519)
-//   Section F: application/AvatarProfileSigning.js
-//   Section G: application/AvatarProfileTrustBoundary.js — the full decision table
-//   Section H: application/LocalAvatarProfileStore.js — durable, never pruned by time
-//   Section I: application/AvatarProfileSyncService.js
-//   Section J: application/RemoteAvatarAppearanceRegistry.js
-//   Section K: application/RemoteAvatarRegistry.js — appearanceResolver integration
+//   Section F: application/avatar/AvatarProfileSigning.js
+//   Section G: application/avatar/AvatarProfileTrustBoundary.js — the full decision table
+//   Section H: application/avatar/LocalAvatarProfileStore.js — durable, never pruned by time
+//   Section I: application/avatar/AvatarProfileSyncService.js
+//   Section J: application/avatar/RemoteAvatarAppearanceRegistry.js
+//   Section K: application/avatar/RemoteAvatarRegistry.js — appearanceResolver integration
 //   Section L: WorldNavigationSession — publish on edit + periodic republish, visibility reuse
 //   Section M: FLAGSHIP — Bob renders Alice's REAL customized avatar over a real BroadcastChannel
 //
@@ -253,7 +253,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section F — application/AvatarProfileSigning.js
+    // Section F — application/avatar/AvatarProfileSigning.js
     // -------------------------------------------------------------
     {
         const ad = makeProfileAdvertisement({ avatarId: 'af1' });
@@ -264,7 +264,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section G — application/AvatarProfileTrustBoundary.js
+    // Section G — application/avatar/AvatarProfileTrustBoundary.js
     // -------------------------------------------------------------
     {
         const boundary = new AvatarProfileTrustBoundary();
@@ -326,7 +326,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section H — application/LocalAvatarProfileStore.js
+    // Section H — application/avatar/LocalAvatarProfileStore.js
     // -------------------------------------------------------------
     {
         const store = new LocalAvatarProfileStore();
@@ -347,7 +347,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section I — application/AvatarProfileSyncService.js
+    // Section I — application/avatar/AvatarProfileSyncService.js
     // -------------------------------------------------------------
     {
         function fakeBroadcastProvider() {
@@ -378,7 +378,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section J — application/RemoteAvatarAppearanceRegistry.js
+    // Section J — application/avatar/RemoteAvatarAppearanceRegistry.js
     // -------------------------------------------------------------
     {
         const facade = spyRenderFacade();
@@ -419,7 +419,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section K — application/RemoteAvatarRegistry.js: appearanceResolver integration
+    // Section K — application/avatar/RemoteAvatarRegistry.js: appearanceResolver integration
     // -------------------------------------------------------------
     {
         const facade = spyRenderFacade();
@@ -503,7 +503,7 @@ async function runTests() {
         // L4 — visibility gate reused: HIDDEN suppresses PROFILE
         // publishing too, exactly like presence.
         const { avatarProfileUseCase, avatarPresenceSession } = buildAvatarStack('session-l2', registry);
-        const { PresenceVisibilityUseCase } = await import('../application/PresenceVisibilityUseCase.js');
+        const { PresenceVisibilityUseCase } = await import('../application/presence/PresenceVisibilityUseCase.js');
         const { PresenceVisibility } = await import('../core/PresenceVisibility.js');
         const storage = new InMemoryStorageProvider();
         const identity = new LocalIdentityProvider(storage);

@@ -15,22 +15,22 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalContentResolver } from '../discovery/LocalContentResolver.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
-import { PublicationSnapshotPlacementPeerExchange } from '../application/PublicationSnapshotPlacementPeerExchange.js';
-import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
-import { SnapshotPlacementCreationOutcome } from '../application/SnapshotPlacementCreationOutcome.js';
-import { SnapshotPlacementResolver } from '../application/SnapshotPlacementResolver.js';
-import { SnapshotPlacementResolutionOutcome } from '../application/SnapshotPlacementResolutionOutcome.js';
-import { PlacementAcquisitionKind } from '../application/PlacementAcquisitionKind.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { PublicationSnapshotPlacementPeerMessageKind } from '../application/PublicationSnapshotPlacementPeerProtocol.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
+import { PublicationSnapshotPlacementPeerExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js';
+import { CreatePublicationSnapshotPlacementPeerExchangeUseCase } from '../application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { SnapshotPlacementCreationOutcome } from '../application/snapshot/placement/SnapshotPlacementCreationOutcome.js';
+import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
+import { SnapshotPlacementResolutionOutcome } from '../application/snapshot/placement/SnapshotPlacementResolutionOutcome.js';
+import { PlacementAcquisitionKind } from '../application/placement/PlacementAcquisitionKind.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { PublicationSnapshotPlacementPeerMessageKind } from '../application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 
 // 0.9.484 — Passive Peer Snapshot Discovery End-to-End Integration Audit.
 //
@@ -135,7 +135,7 @@ function readSource(relativePath) {
 }
 
 // Mirrors tests/SnapshotPlacementPeerAnnouncementProductionIntegrationAudit.test.js's
-// own shim: application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
+// own shim: application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js
 // constructs a real storage/LocalStorageProvider.js, which reads
 // window.localStorage.
 let _productionLocalStorageBacking = new Map();
@@ -285,15 +285,15 @@ async function run() {
     {
         const constructionSites = grepFiles('new PublicationSnapshotPlacement\\(', ['application', 'ui'])
             .filter((f) => f !== 'core/PublicationSnapshotPlacement.js');
-        assert(constructionSites.length === 1 && constructionSites[0] === 'application/CreatePublicationSnapshotPlacementUseCase.js',
+        assert(constructionSites.length === 1 && constructionSites[0] === 'application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js',
             `1. exactly one production file constructs a new PublicationSnapshotPlacement (found: ${JSON.stringify(constructionSites)}).`);
 
-        const createSource = readSource('application/CreatePublicationSnapshotPlacementUseCase.js');
+        const createSource = readSource('application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js');
         assert(/peerExchange/.test(createSource) && /\.announce\(/.test(createSource),
             '2. that one file is the one 0.9.483 wired to call announce() — reconfirmed still true today, not assumed from memory.');
 
-        const restoreSource = readSource('application/RestorePublicationSnapshotPlacementCatalogUseCase.js');
-        const packageImportSource = readSource('application/ImportPackageSnapshotPlacementsUseCase.js');
+        const restoreSource = readSource('application/snapshot/placement/RestorePublicationSnapshotPlacementCatalogUseCase.js');
+        const packageImportSource = readSource('application/snapshot/placement/ImportPackageSnapshotPlacementsUseCase.js');
         assert(!/CreatePublicationSnapshotPlacementUseCase/.test(restoreSource) && !/announce/i.test(restoreSource),
             '3. restore-on-startup still never references the creation use case or announce() — a restored placement is never re-announced.');
         assert(!/CreatePublicationSnapshotPlacementUseCase/.test(packageImportSource) && !/announce/i.test(packageImportSource),
@@ -302,7 +302,7 @@ async function run() {
         // A5. Walking discovery itself never creates or announces a
         // placement — the monitor only ever calls the injected
         // discovery command, never the creation use case.
-        const monitorSource = readSource('application/WorldSnapshotDiscoveryMonitor.js');
+        const monitorSource = readSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js');
         assert(!/CreatePublicationSnapshotPlacementUseCase|\.announce\(/.test(monitorSource),
             '5. WorldSnapshotDiscoveryMonitor never constructs or announces a placement of its own — it only ever queries.');
 
@@ -333,7 +333,7 @@ async function run() {
         // ConnectedPeerRegistry-capable class outside the one
         // composition-root use case that owns it.
         const secondExchangeSites = grepFiles('new PublicationSnapshotPlacementPeerExchange\\(', ['application', 'ui'])
-            .filter((f) => f !== 'application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js');
+            .filter((f) => f !== 'application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js');
         assert(secondExchangeSites.length === 0,
             `5. no production file other than CreatePublicationSnapshotPlacementPeerExchangeUseCase.js constructs a PublicationSnapshotPlacementPeerExchange (found: ${JSON.stringify(secondExchangeSites)}).`);
 
@@ -439,7 +439,7 @@ async function run() {
             return executeDiscoverSnapshotCandidatesCommand({ discoveryTag: DISCOVERY_TAG, discoveryQueryService: localSource });
         };
         // Deliberately NOT overriding `shouldRefresh` — the real
-        // application/ShouldRefreshSnapshotDiscovery.js default (100-unit
+        // application/snapshot/ShouldRefreshSnapshotDiscovery.js default (100-unit
         // radius) gates every observe() call below.
         monitor = new WorldSnapshotDiscoveryMonitor({ discoverSnapshotCandidatesCommand: countedCommand });
 
@@ -741,7 +741,7 @@ async function run() {
             // what Alice announced while Bob was away. There is no
             // sync-on-connect/REQUEST-on-connect wiring for placements in
             // production today (the pull-capable REQUEST/RESPONSE half of
-            // application/PublicationSnapshotPlacementPeerExchange.js
+            // application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js
             // exists and is fully mechanically sound, per its own 0.8.19
             // test coverage — nothing here is a mechanism gap — but no
             // production caller ever invokes requestPlacements() on a
@@ -852,7 +852,7 @@ async function run() {
             && bobComposition.knowledgeStore.get(placement2Id).acquisition.kind === PlacementAcquisitionKind.PEER,
             '5. ...and PEER for both of Alice\'s — a caller that wants to know CAN, but a caller that only wants candidates (the walking-triggered monitor, Section F/G above) never had to.');
 
-        console.log('✓ Section K: a future Local candidate adapter can consume application/LocalPublicationSnapshotPlacementCatalog.js exactly as it already does — one search() call, one uniform candidate shape — with zero knowledge of whether any given record originated locally or from a peer, because the catalog itself carries no such field. Provenance lives entirely in the separate, optional LocalPlacementKnowledgeStore, exactly the architectural separation 0.8.24 already drew.');
+        console.log('✓ Section K: a future Local candidate adapter can consume application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js exactly as it already does — one search() call, one uniform candidate shape — with zero knowledge of whether any given record originated locally or from a peer, because the catalog itself carries no such field. Provenance lives entirely in the separate, optional LocalPlacementKnowledgeStore, exactly the architectural separation 0.8.24 already drew.');
     }
 
     // ===============================================================
@@ -861,16 +861,16 @@ async function run() {
     // ===============================================================
     {
         const relevantFiles = [
-            'application/PublicationSnapshotPlacementPeerExchange.js',
-            'application/CreatePublicationSnapshotPlacementUseCase.js',
-            'application/CreateSnapshotPlacementOrchestratorUseCase.js',
-            'application/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js',
-            'application/WorldSnapshotDiscoveryMonitor.js',
-            'application/LocalPublicationSnapshotPlacementCatalog.js',
-            'application/DiscoverSnapshotCandidatesCommand.js',
-            'application/PublicationSnapshotPlacementPeerProtocol.js',
-            'application/LocalPlacementKnowledgeStore.js',
-            'application/PlacementAcquisitionKind.js'
+            'application/snapshot/placement/PublicationSnapshotPlacementPeerExchange.js',
+            'application/snapshot/placement/CreatePublicationSnapshotPlacementUseCase.js',
+            'application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js',
+            'application/snapshot/placement/CreatePublicationSnapshotPlacementPeerExchangeUseCase.js',
+            'application/snapshot/WorldSnapshotDiscoveryMonitor.js',
+            'application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js',
+            'application/snapshot/DiscoverSnapshotCandidatesCommand.js',
+            'application/snapshot/placement/PublicationSnapshotPlacementPeerProtocol.js',
+            'application/placement/LocalPlacementKnowledgeStore.js',
+            'application/placement/PlacementAcquisitionKind.js'
         ];
         // Every file in this family narrates its own architecture in
         // prose — including, deliberately, cross-references naming the
@@ -899,7 +899,7 @@ async function run() {
         // referenced in code there.
         assert(!/import[^\n]*WorldEncounter|new\s+\w*WorldEncounter\w*\(/.test(combinedCode),
             '2. this pipeline never imports or constructs any World Encounter material-loading class.');
-        const worldEncounterCode = stripLineComments(readSource('application/WorldEncounterMaterialLoading.js'));
+        const worldEncounterCode = stripLineComments(readSource('application/worldEncounter/WorldEncounterMaterialLoading.js'));
         assert(!/PublicationSnapshotPlacementPeerExchange|LocalPublicationSnapshotPlacementCatalog/.test(worldEncounterCode),
             '3. World Encounter material loading never references the placement peer exchange or catalog either — the separation holds in both directions.');
 
@@ -920,7 +920,7 @@ async function run() {
 
         // L7. No new peer identity concept — a PEER knowledge record
         // still names no peerId/connectionId/remote identity.
-        const knowledgeSource = readSource('application/LocalPlacementKnowledgeStore.js');
+        const knowledgeSource = readSource('application/placement/LocalPlacementKnowledgeStore.js');
         assert(!/peerId|connectionId|remoteIdentity/.test(knowledgeSource),
             '7. LocalPlacementKnowledgeStore still records no peer identity alongside a PEER acquisition entry — informational-only peer identity, never a new identity concept.');
 
@@ -934,7 +934,7 @@ async function run() {
         // (Its own header names all four as existing, separate machinery
         // it deliberately never calls — comment-stripped so that
         // documentation doesn't trip its own check.)
-        const monitorCode = stripLineComments(readSource('application/WorldSnapshotDiscoveryMonitor.js'));
+        const monitorCode = stripLineComments(readSource('application/snapshot/WorldSnapshotDiscoveryMonitor.js'));
         assert(!/SnapshotPlacementResolver|materializeSelectedSnapshot|placeMaterializedSnapshot|registerMaterializedSnapshot/.test(monitorCode),
             '9. the walking-triggered monitor still only ever stores candidates verbatim — it never resolves, materializes, places, or registers any of them itself.');
 
@@ -954,7 +954,7 @@ async function run() {
         // the same reason). Amended to exclude exactly 0.9.597's own,
         // already-accounted-for files, while still catching any OTHER,
         // unexpected production drift.
-        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js']);
+        const expectedLaterMilestoneFiles = new Set(['application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js']);
         const unexpectedChangedFiles = changedFiles.filter((f) => !expectedLaterMilestoneFiles.has(f));
         assert(unexpectedChangedFiles.length === 0,
             `10. AMENDED BY 0.9.597 — this milestone touches ZERO UNEXPECTED production files (0.9.597's own, separately-justified files excepted) — found: ${JSON.stringify(unexpectedChangedFiles)}. This is an audit, not an implementation milestone.`);

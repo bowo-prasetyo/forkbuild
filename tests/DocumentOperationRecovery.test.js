@@ -9,17 +9,17 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
-import { DocumentCommandPropagationUseCase } from '../application/DocumentCommandPropagationUseCase.js';
-import { RemoteDocumentOperationApplicationUseCase } from '../application/RemoteDocumentOperationApplicationUseCase.js';
+import { DocumentCommandPropagationUseCase } from '../application/document/DocumentCommandPropagationUseCase.js';
+import { RemoteDocumentOperationApplicationUseCase } from '../application/document/RemoteDocumentOperationApplicationUseCase.js';
 import { CausalGapStatus } from '../core/DocumentOperationCausalGapDetector.js';
-import { DocumentOperationCausalGapObservationUseCase } from '../application/DocumentOperationCausalGapObservationUseCase.js';
-import { DocumentOperationRecoveryUseCase } from '../application/DocumentOperationRecoveryUseCase.js';
+import { DocumentOperationCausalGapObservationUseCase } from '../application/document/DocumentOperationCausalGapObservationUseCase.js';
+import { DocumentOperationRecoveryUseCase } from '../application/document/DocumentOperationRecoveryUseCase.js';
 import { toDocumentOperationEnvelope } from '../core/DocumentOperationEnvelope.js';
 import { toDocumentOperationRecoveryResponseMessage } from '../core/DocumentOperationRecoveryProtocol.js';
 
@@ -98,7 +98,7 @@ async function connectAndAuthenticate(network, addressA, deviceA, addressB, devi
 
 // A full replica stack: propagation (0.9.222), gap observation
 // (0.9.228/0.9.229), and recovery (0.9.230) wired together exactly the
-// way application/EditorSession.js wires them in production — recovery's
+// way application/editor/EditorSession.js wires them in production — recovery's
 // own onOperationReceived() feed attached to gap observation, and gap
 // observation's own onGapObserved() feed attached to recovery, but
 // recovery NEVER attached to a RemoteDocumentOperationApplicationUseCase.
@@ -182,7 +182,7 @@ function moveCommand(worldId, delta) {
 }
 
 // alice/bob are ONE session-lifetime stack shared across every section
-// below (exactly like application/EditorSession.js wires a single
+// below (exactly like application/editor/EditorSession.js wires a single
 // detector/exchange for its own whole lifetime) — so their own
 // gapObservations/recovered/received/rejected arrays accumulate across
 // sections. snapshot()/since() let each section assert only on what IT
@@ -222,7 +222,7 @@ bob.connectedPeerRegistry.add(peerB);
 // ownership-match authorization model tests/
 // DocumentOperationCausalGapObservation.test.js and tests/
 // DocumentCollaborationBoundary.test.js already exercise; see
-// application/DocumentCommandPropagationUseCase.js's own header on why a
+// application/document/DocumentCommandPropagationUseCase.js's own header on why a
 // single owner identity's own several authorized devices is exactly what
 // this simplified model represents.
 function openPair(worldId, title) {

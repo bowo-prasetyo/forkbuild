@@ -5,29 +5,29 @@ import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { Position } from '../core/Position.js';
 import { World } from '../core/World.js';
 import { Group } from '../core/Group.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { SpatialEditingService } from '../application/SpatialEditingService.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { SpatialEditingService } from '../application/editor/SpatialEditingService.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { CopySelectionUseCase } from '../application/CopySelectionUseCase.js';
-import { PasteClipboardUseCase } from '../application/PasteClipboardUseCase.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { EditorContext } from '../application/EditorContext.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { CopySelectionUseCase } from '../application/editor/CopySelectionUseCase.js';
+import { PasteClipboardUseCase } from '../application/editor/PasteClipboardUseCase.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { EditorContext } from '../application/editor/EditorContext.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { SelectionTransformValidator } from '../core/SelectionTransformValidator.js';
 
 // 0.4.8 — Collision-Aware Multi-Brick Transform.
 //
 // 0.4.7's own "Deliberately excluded" section named exactly one gap left
-// in the multi-brick transform kernel (application/SpatialEditingService.js,
+// in the multi-brick transform kernel (application/editor/SpatialEditingService.js,
 // application/commands/TransformSelectionCommand.js — both already
 // shipped in 0.1.42-0.1.50, both otherwise unchanged since): moving or
 // rotating a selection had NO collision check at all, unlike single-brick
 // placement (core/PlacementValidator.js) and structure placement
-// (application/StructurePlacementValidator.js), both of which already
+// (application/editor/StructurePlacementValidator.js), both of which already
 // refuse an overlapping commit. This milestone closes exactly that gap —
 // nothing else. There is no new command, no new "group" concept
 // (core/Group.js already covers persistent named groups, untouched
@@ -36,7 +36,7 @@ import { SelectionTransformValidator } from '../core/SelectionTransformValidator
 // header), so "collision-aware preview" here means the SAME live preview
 // now also computes and exposes validity every frame, and commit refuses
 // to turn an invalid candidate into history — the exact posture
-// application/StructurePlacementGestureService.js already established
+// application/editor/StructurePlacementGestureService.js already established
 // for structure placements ("releasing over an invalid position cancels
 // the whole gesture, never a partial commit").
 //
@@ -289,7 +289,7 @@ function createWorldWithBricks(specs) {
     }));
 
     // Ctrl+D: duplicate becomes the active selection, re-anchored per
-    // application/EditorSession.js's own DUPLICATE_OFFSET — off its
+    // application/editor/EditorSession.js's own DUPLICATE_OFFSET — off its
     // sources, per 0.4.7's own flagship assertion, but not by a fixed
     // world-space delta a test should hard-code. This section derives
     // the actual delta from the real pre/post positions instead of

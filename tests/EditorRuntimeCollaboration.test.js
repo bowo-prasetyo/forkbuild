@@ -9,22 +9,22 @@ import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { PeerAuthenticationSession } from '../peer/PeerAuthenticationSession.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
-import { ConnectedPeer } from '../application/ConnectedPeer.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { DeviceAuthorizationPropagationUseCase } from '../application/DeviceAuthorizationPropagationUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateEditorContextUseCase } from '../application/CreateEditorContextUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { ConnectedPeer } from '../application/peer/ConnectedPeer.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { DeviceAuthorizationPropagationUseCase } from '../application/identity/DeviceAuthorizationPropagationUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { MoveBrickCommand } from '../application/commands/MoveBrickCommand.js';
 import {
     DocumentCommandPropagationUseCase,
     DocumentOperationRejectionReason
-} from '../application/DocumentCommandPropagationUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
+} from '../application/document/DocumentCommandPropagationUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
 
 // 0.9.224 — Wire Remote Document Operation Application into the Editor
 // Runtime.
@@ -34,7 +34,7 @@ import { EditorSession } from '../application/EditorSession.js';
 // (RemoteDocumentOperationApplicationUseCase#apply()/attachToPropagation())
 // but left it wired ONLY by hand, in that file's own flagship test — never
 // by a running Editor. This file proves the seam is now real runtime
-// composition: application/EditorSession.js's own constructor and
+// composition: application/editor/EditorSession.js's own constructor and
 // _rebuild() connect BOTH halves (attachToPropagation() for incoming,
 // attachCommandHistory() for outgoing) automatically, the moment an
 // EditorSession is built with a documentCommandPropagation collaborator —
@@ -175,7 +175,7 @@ function makeEditorRuntimeStack(device) {
 
     // THIS milestone's own seam: an EditorSession built WITH
     // documentCommandPropagation wires both halves itself — see
-    // application/EditorSession.js's own 0.9.224 constructor/_rebuild()
+    // application/editor/EditorSession.js's own 0.9.224 constructor/_rebuild()
     // comments. Nothing below this call ever touches
     // RemoteDocumentOperationApplicationUseCase.
     const editorSession = new EditorSession({
@@ -191,7 +191,7 @@ function makeEditorRuntimeStack(device) {
 }
 
 // Reproduces the two lines of EditorSession#_rebuild() 0.9.224 actually
-// added (see application/EditorSession.js's own comment there), PLUS
+// added (see application/editor/EditorSession.js's own comment there), PLUS
 // 0.9.237's own per-document deferral attachment (added by the 0.9.239
 // audit, which found this helper had quietly fallen out of sync with
 // real _rebuild()/_teardown() — see Section B below) — never the

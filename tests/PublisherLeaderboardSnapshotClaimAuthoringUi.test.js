@@ -5,15 +5,15 @@ import { fileURLToPath } from 'node:url';
 
 import PublisherLeaderboardSnapshotClaimAuthoringView from '../ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js';
 import ReconciliationWorkspaceView from '../ui/views/ReconciliationWorkspaceView.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
-import { exportPublisherLeaderboardSnapshotClaim } from '../application/PublisherLeaderboardSnapshotClaimExchange.js';
-import { ReconcilePublisherLeaderboardSnapshotClaimOutcome } from '../application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { exportPublisherLeaderboardSnapshotClaim } from '../application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js';
+import { ReconcilePublisherLeaderboardSnapshotClaimOutcome } from '../application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js';
 import { RevalidationObservationArchiveOutcome } from '../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
-import { LeaderboardClaimArchiveReceiptOutcome } from '../application/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
+import { LeaderboardClaimArchiveReceiptOutcome } from '../application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimIntoArchiveUseCase.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
@@ -113,7 +113,7 @@ function makeIdentity(label) {
     return provider;
 }
 
-// The SAME shape `application/IdentityUseCase.js#provider` already
+// The SAME shape `application/identity/IdentityUseCase.js#provider` already
 // exposes — see that file's own `get provider()`. A fake standing in for
 // the real IdentityUseCase, exposing exactly the one member this view's
 // own `inject`-time contract (`identityUseCase.provider`) reads.
@@ -541,8 +541,8 @@ async function run() {
     console.log('');
     console.log('ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js is now the');
     console.log('first user-facing surface over');
-    console.log('application/CreatePublisherLeaderboardSnapshotClaimUseCase.js (0.8.121)');
-    console.log('and application/PublisherLeaderboardSnapshotClaimExchange.js (0.8.122) —');
+    console.log('application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js (0.8.121)');
+    console.log('and application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js (0.8.122) —');
     console.log('a small, explicit page: generate and sign a claim about this replica\'s');
     console.log('own current leaderboard snapshot, explicitly, then export it separately,');
     console.log('explicitly. The full Author -> Sign -> Export -> Parse/import -> Workspace');

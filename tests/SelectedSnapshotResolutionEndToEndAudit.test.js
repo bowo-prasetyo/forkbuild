@@ -1,14 +1,14 @@
 import { readFile } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
-import { composeDiscoverSnapshotRuntime } from '../application/DiscoverSnapshotRuntimeComposition.js';
-import { executeDiscoverSnapshotCommand } from '../application/DiscoverSnapshotCommand.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { resolveSnapshotPublicationAttribution } from '../application/SnapshotPublicationAttribution.js';
-import { SnapshotPublicationAttributionOutcome } from '../application/SnapshotPublicationAttributionOutcome.js';
+import { composeDiscoverSnapshotRuntime } from '../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
+import { executeDiscoverSnapshotCommand } from '../application/snapshot/DiscoverSnapshotCommand.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { resolveSnapshotPublicationAttribution } from '../application/snapshot/SnapshotPublicationAttribution.js';
+import { SnapshotPublicationAttributionOutcome } from '../application/snapshot/SnapshotPublicationAttributionOutcome.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -501,7 +501,7 @@ async function run() {
         // resolve()'s own source still performs discovery + first-match
         // selection, then delegates — it never became a second explicit-
         // selection API of its own.
-        const resolverCode = await codeOnlySource('application/DecentralizedSnapshotResolver.js');
+        const resolverCode = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
         assert(resolverCode.includes('async resolve(discoveryTag, contentHash') && resolverCode.includes('this._queryService.search(discoveryTag)'),
             'F4. structural: resolve() still performs its own DISCOVERY step');
         assert(resolverCode.includes('candidates[0]') && resolverCode.includes('this.resolveCandidate(selected'),
@@ -518,9 +518,9 @@ async function run() {
         // G1. ResolveSelectedSnapshotCommand.js contains no location,
         // retrieval, verification, or hashing logic of its own.
         {
-            const code = await codeOnlySource('application/ResolveSelectedSnapshotCommand.js');
+            const code = await codeOnlySource('application/snapshot/ResolveSelectedSnapshotCommand.js');
             assert(!/\.get\(|computeContentHash\(|\.verify\(|storeRegistry\.get\(|new ContentReference\(/.test(code),
-                'G1. application/ResolveSelectedSnapshotCommand.js never retrieves, hashes, verifies, or constructs a ContentReference itself — it calls resolver.resolveCandidate() exactly once and returns the result verbatim');
+                'G1. application/snapshot/ResolveSelectedSnapshotCommand.js never retrieves, hashes, verifies, or constructs a ContentReference itself — it calls resolver.resolveCandidate() exactly once and returns the result verbatim');
             const callSites = code.match(/resolver\.resolveCandidate\(/g) || [];
             assert(callSites.length === 1, 'G1b. resolver.resolveCandidate() is called exactly once in this file — never a second, independent call site');
         }
@@ -538,9 +538,9 @@ async function run() {
         // anywhere in this seam — selected resolution preserves the
         // resolver's existing outcome vocabulary unchanged.
         {
-            const commandCode = await codeOnlySource('application/ResolveSelectedSnapshotCommand.js');
+            const commandCode = await codeOnlySource('application/snapshot/ResolveSelectedSnapshotCommand.js');
             const panelCode = await codeOnlySource('ui/components/OwnPublicationPanel.js');
-            const resolverCode = await codeOnlySource('application/DecentralizedSnapshotResolver.js');
+            const resolverCode = await codeOnlySource('application/snapshot/DecentralizedSnapshotResolver.js');
             const forbidden = /SELECTED_CANDIDATE_FAILED|SELECTION_FAILED|CANDIDATE_REJECTED|SELECTED_CONTENT_HASH_MISMATCH/;
             assert(!forbidden.test(commandCode) && !forbidden.test(panelCode) && !forbidden.test(resolverCode),
                 'G3. no new "selected candidate failed"-shaped outcome vocabulary was introduced anywhere in this seam');
@@ -555,7 +555,7 @@ async function run() {
                 'G4. DecentralizedSnapshotResolutionOutcome carries exactly its five pre-existing values — no sixth value was added for selected resolution');
         }
 
-        console.log('✓ Section G: structural sweep — resolveCandidate() inside application/DecentralizedSnapshotResolver.js is the ONLY retrieval/verification implementation; the command and UI layers contain no duplicate of it, and no new outcome vocabulary was introduced');
+        console.log('✓ Section G: structural sweep — resolveCandidate() inside application/snapshot/DecentralizedSnapshotResolver.js is the ONLY retrieval/verification implementation; the command and UI layers contain no duplicate of it, and no new outcome vocabulary was introduced');
     }
 
     // ===============================================================

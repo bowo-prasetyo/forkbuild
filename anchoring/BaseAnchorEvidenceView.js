@@ -43,7 +43,7 @@ export class BaseAnchorEvidenceView {
     // `externalLocator` is null whenever `proof.txid` is not a
     // recognizable 32-byte hex transaction hash — there is nothing
     // honest to link to. The explorer URL construction lives HERE and
-    // nowhere else — never in application/PublicationAnchorDetailView.js,
+    // nowhere else — never in application/anchoring/PublicationAnchorDetailView.js,
     // whose own header states it never reinterprets `proof` at all.
     describe(anchor) {
         const proof = anchor && anchor.proof && typeof anchor.proof === 'object' ? anchor.proof : {};

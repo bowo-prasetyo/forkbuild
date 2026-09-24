@@ -6,7 +6,7 @@
 // how to keep it — see that file's own header, "Deliberately excluded,"
 // bullet three. This file is the first to keep more than one: an
 // append-only collection of 0.8.145's own decision records, mirroring
-// `application/LeaderboardClaimHistory.js` (0.8.123) exactly, one
+// `application/leaderboard/LeaderboardClaimHistory.js` (0.8.123) exactly, one
 // relationship over:
 //
 //   []
@@ -98,7 +98,7 @@
 // none, and this file embeds that record by value, unchanged. A future
 // milestone that needs provenance can add an explicit `origin` field
 // reusing this codebase's own existing vocabulary (see
-// `application/LeaderboardClaimRecord.js`'s own
+// `application/leaderboard/LeaderboardClaimRecord.js`'s own
 // `PublicationObservationArchiveProvenanceOrigin`) if and when a genuine
 // need for it exists — this file does not anticipate that need.
 //

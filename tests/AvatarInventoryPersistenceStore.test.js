@@ -1,6 +1,6 @@
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { AvatarInventoryPersistenceStore } from '../storage/AvatarInventoryPersistenceStore.js';
-import { AvatarInventoryStore } from '../application/AvatarInventoryStore.js';
+import { AvatarInventoryStore } from '../application/avatar/AvatarInventoryStore.js';
 import {
     AvatarInventory,
     AvatarInventoryEntry,

@@ -4,20 +4,20 @@ import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
-import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/RoleAwareProviderResolver.js';
-import { ResolvePreferredRoleProviderUseCase } from '../application/ResolvePreferredRoleProviderUseCase.js';
-import { SetRoleProviderPreferenceUseCase } from '../application/SetRoleProviderPreferenceUseCase.js';
-import { describeRoleProviderPreferenceSettings } from '../application/RoleProviderPreferenceSettingsView.js';
-import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
-import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
-import { PreferredSnapshotPlacementCreationCoordinator } from '../application/PreferredSnapshotPlacementCreationCoordinator.js';
-import { SnapshotPlacementCreationOutcome } from '../application/SnapshotPlacementCreationOutcome.js';
-import { describeCreationAttempt } from '../application/SnapshotPlacementCreationView.js';
-import { SnapshotPlacementCreationUiState } from '../application/SnapshotPlacementCreationUiState.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
+import { RoleAwareProviderResolver, RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
+import { ResolvePreferredRoleProviderUseCase } from '../application/settings/ResolvePreferredRoleProviderUseCase.js';
+import { SetRoleProviderPreferenceUseCase } from '../application/settings/SetRoleProviderPreferenceUseCase.js';
+import { describeRoleProviderPreferenceSettings } from '../application/settings/RoleProviderPreferenceSettingsView.js';
+import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
+import { PreferredSnapshotPlacementCreationCoordinator } from '../application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js';
+import { SnapshotPlacementCreationOutcome } from '../application/snapshot/placement/SnapshotPlacementCreationOutcome.js';
+import { describeCreationAttempt } from '../application/snapshot/placement/SnapshotPlacementCreationView.js';
+import { SnapshotPlacementCreationUiState } from '../application/snapshot/placement/SnapshotPlacementCreationUiState.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
@@ -265,7 +265,7 @@ function composeApplication({ stores = [], identityProvider = makeIdentity('Alic
         preferenceStore
     });
     // The literal call ui/views/ContentProviderSettingsView.js's own
-    // `save()` makes — see application/SetRoleProviderPreferenceUseCase.js.
+    // `save()` makes — see application/settings/SetRoleProviderPreferenceUseCase.js.
     const setRoleProviderPreferenceUseCase = new SetRoleProviderPreferenceUseCase({ preferenceStore });
 
     return {
@@ -626,15 +626,15 @@ async function run() {
         // boundary, never a direct store write from ui/ or anywhere else.
         const saveCallerFiles = allProductionFiles.filter((f) =>
             /preferenceStore\.save\(|roleProviderPreferenceStore\.save\(/.test(fileTexts.get(f)));
-        assert(saveCallerFiles.length === 1 && saveCallerFiles[0] === 'application/SetRoleProviderPreferenceUseCase.js',
-            `46. RoleProviderPreferenceStore.save() is still called from exactly application/SetRoleProviderPreferenceUseCase.js (found: ${saveCallerFiles.join(', ') || 'none'})`);
+        assert(saveCallerFiles.length === 1 && saveCallerFiles[0] === 'application/settings/SetRoleProviderPreferenceUseCase.js',
+            `46. RoleProviderPreferenceStore.save() is still called from exactly application/settings/SetRoleProviderPreferenceUseCase.js (found: ${saveCallerFiles.join(', ') || 'none'})`);
 
         // I2. Exactly one production instantiation site for
         // RoleProviderPreferenceStore itself — never a second, disconnected
         // store constructed anywhere (which Section H's own object-identity
         // proof depends on being true).
         const constructorSites = allProductionFiles.filter((f) => /new RoleProviderPreferenceStore\(/.test(fileTexts.get(f)));
-        assert(constructorSites.length === 1 && constructorSites[0] === 'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
+        assert(constructorSites.length === 1 && constructorSites[0] === 'application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
             `47. RoleProviderPreferenceStore is still constructed in exactly one production file (found: ${constructorSites.join(', ') || 'none'})`);
 
         // I3. Exactly the closed, already-audited set of production files
@@ -644,11 +644,11 @@ async function run() {
             /RoleProviderPreference\b|RoleProviderRole\b|RoleAwareProviderResolver\b|ResolvePreferredRoleProviderUseCase\b|SetRoleProviderPreferenceUseCase\b/.test(fileTexts.get(f)));
         const EXPECTED_REFERENCING_FILES = new Set([
             'ui/views/ContentProviderSettingsView.js', 'ui/router/index.js', 'ui/main.js',
-            'storage/RoleProviderPreferenceStore.js', 'application/SetRoleProviderPreferenceUseCase.js',
-            'application/PreferredSnapshotPlacementCreationCoordinator.js', 'application/RoleProviderPreferenceSettingsView.js',
-            'application/SnapshotPlacementCreationUiState.js', 'application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
-            'application/RoleAwareProviderResolver.js', 'application/ResolvePreferredRoleProviderUseCase.js',
-            'application/SnapshotPlacementCreationView.js', 'core/RoleProviderPreference.js', 'core/RoleProviderRole.js'
+            'storage/RoleProviderPreferenceStore.js', 'application/settings/SetRoleProviderPreferenceUseCase.js',
+            'application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js', 'application/settings/RoleProviderPreferenceSettingsView.js',
+            'application/snapshot/placement/SnapshotPlacementCreationUiState.js', 'application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js',
+            'application/settings/RoleAwareProviderResolver.js', 'application/settings/ResolvePreferredRoleProviderUseCase.js',
+            'application/snapshot/placement/SnapshotPlacementCreationView.js', 'core/RoleProviderPreference.js', 'core/RoleProviderRole.js'
         ]);
         assert(referencingFiles.length === EXPECTED_REFERENCING_FILES.size && referencingFiles.every((f) => EXPECTED_REFERENCING_FILES.has(f)),
             `48. exactly the known 14-file closed set touches the preference vocabulary today (found ${referencingFiles.length}: ${referencingFiles.filter((f) => !EXPECTED_REFERENCING_FILES.has(f)).join(', ') || 'no unexpected files'})`);
@@ -678,7 +678,7 @@ async function run() {
                 if (CODE_LOCAL_IPFS_PATTERN.test(line)) literalHits.push(`${file}: ${line.trim()}`);
             }
         }
-        const EXPECTED_HITS = new Set(["application/RoleProviderPreferenceSettingsView.js: local: 'Local',", "application/RoleProviderPreferenceSettingsView.js: ipfs: 'IPFS'"]);
+        const EXPECTED_HITS = new Set(["application/settings/RoleProviderPreferenceSettingsView.js: local: 'Local',", "application/settings/RoleProviderPreferenceSettingsView.js: ipfs: 'IPFS'"]);
         const unexpectedHits = literalHits.filter((hit) => !Array.from(EXPECTED_HITS).some((expected) => hit.startsWith(expected.split(':').slice(0, 2).join(':'))));
         assert(literalHits.length > 0, '49. the sweep pattern itself finds the one known, legitimate label map (a sanity check on the pattern, not just the result)');
         assert(unexpectedHits.length === 0,
@@ -705,10 +705,10 @@ async function run() {
             ['Role vocabulary', true, 'core/RoleProviderRole.js — unchanged since 0.9.293'],
             ['Preference domain', true, 'core/RoleProviderPreference.js — unchanged since 0.9.293'],
             ['Persistence', true, 'storage/RoleProviderPreferenceStore.js — Section C above, fresh restart proof'],
-            ['Resolution', true, 'application/RoleAwareProviderResolver.js — Sections E/F/G above'],
-            ['Read application', true, 'application/ResolvePreferredRoleProviderUseCase.js — Sections E/F/G above'],
-            ['Write application', true, 'application/SetRoleProviderPreferenceUseCase.js — Section A above, Section I1'],
-            ['Placement consumer', true, 'application/PreferredSnapshotPlacementCreationCoordinator.js — Sections A/B/D above'],
+            ['Resolution', true, 'application/settings/RoleAwareProviderResolver.js — Sections E/F/G above'],
+            ['Read application', true, 'application/settings/ResolvePreferredRoleProviderUseCase.js — Sections E/F/G above'],
+            ['Write application', true, 'application/settings/SetRoleProviderPreferenceUseCase.js — Section A above, Section I1'],
+            ['Placement consumer', true, 'application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js — Sections A/B/D above'],
             ['Settings producer', true, 'ui/views/ContentProviderSettingsView.js — Section A/H above'],
             ['Restart', true, 'Section C above — fresh composition, immediately usable, twice over'],
             ['Failure visibility', true, 'Section F above — real UI-state shape, never silent']
@@ -727,9 +727,9 @@ async function run() {
         // unmentioned — so a future milestone that adds one of these does
         // so as a deliberate, visible decision, never by accretion.
         const allProductionFiles = await repoWideProductionFiles();
-        const preferenceChainFiles = ['storage/RoleProviderPreferenceStore.js', 'application/RoleAwareProviderResolver.js',
-            'application/ResolvePreferredRoleProviderUseCase.js', 'application/SetRoleProviderPreferenceUseCase.js',
-            'application/PreferredSnapshotPlacementCreationCoordinator.js', 'core/RoleProviderPreference.js'];
+        const preferenceChainFiles = ['storage/RoleProviderPreferenceStore.js', 'application/settings/RoleAwareProviderResolver.js',
+            'application/settings/ResolvePreferredRoleProviderUseCase.js', 'application/settings/SetRoleProviderPreferenceUseCase.js',
+            'application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js', 'core/RoleProviderPreference.js'];
         const chainTexts = await Promise.all(preferenceChainFiles.map((f) => source(f)));
         const chainCode = chainTexts.join('\n').split('\n').filter((line) => !/^\s*\/\//.test(line.trim())).join('\n');
 

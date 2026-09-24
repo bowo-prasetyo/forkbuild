@@ -5,7 +5,7 @@ import { Publication } from '../publisher/Publication.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
@@ -129,7 +129,7 @@ async function run() {
     {
         const toolbarSource = await readSource('ui/components/PublicationCatalogToolbar.js');
         const repositoryViewSource = await readSource('ui/views/RepositoryView.js');
-        const searchUseCaseSource = await readSource('application/SearchPublicationsUseCase.js');
+        const searchUseCaseSource = await readSource('application/publication/SearchPublicationsUseCase.js');
 
         // B1. The UI copy a Wanderer actually reads never claims a scope
         // wider than what SearchPublicationsUseCase actually searches
@@ -150,7 +150,7 @@ async function run() {
         // this distinction precisely ("Repository Search Is Not World
         // Search") — reconfirmed on file, not re-derived.
         assert(searchUseCaseSource.includes('Repository search asks "which publications match this description?"'),
-            "3. application/SearchPublicationsUseCase.js's own header still states plainly what Repository search answers — reconfirmed against current source.");
+            "3. application/publication/SearchPublicationsUseCase.js's own header still states plainly what Repository search answers — reconfirmed against current source.");
     }
     console.log('✓ Section B: Repository search semantics are honestly represented — the UI never implies a scope ("all decentralized content everywhere") the implementation does not guarantee. PRODUCT_COMPLETE.');
 
@@ -228,7 +228,7 @@ async function run() {
             "3. discovery/DecentralizedPublicationDiscoveryProvider.js's own add() takes exactly one argument, `publication` — no origin/source parameter alongside it, structurally confirmed — there is no provenance data being withheld from the UI; none was ever captured.");
         const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => readSource(file)))).join('\n');
         assert(canvasSource.includes('This file never reads `resolvedLead.origin`, `resolvedLead.discoveryTag`,')
-            || (await readSource('application/DecentralizedWorldEncounterMaterialSource.js')).includes('never reads `resolvedLead.origin`'),
+            || (await readSource('application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js')).includes('never reads `resolvedLead.origin`'),
             '4. the decentralized material path itself is on record as never even reading a lead\'s own origin — reconfirmed from source, not merely asserted.');
     }
     console.log('✓ Section D: no provenance is displayed, and none is being hidden — the underlying Publication objects Repository catalogs decentralized-origin material as carry no origin data at all, by an explicit, already-made 0.9.335 architectural decision. DELIBERATE_ASYMMETRY, not a gap.');
@@ -247,7 +247,7 @@ async function run() {
         // though the caller (refreshMaterialInspection(), below) already
         // held it in scope. Its DecentralizedPublicationsView.js sibling's
         // own analogous gate (`view.resolved`) only ever becomes true
-        // after application/PublicationResolver.js's full envelope/bytes/
+        // after application/publication/PublicationResolver.js's full envelope/bytes/
         // content signature-verification pipeline succeeds. The two
         // admission paths feeding the SAME Repository catalog therefore
         // held two different standards of evidence — an asymmetry a
@@ -291,7 +291,7 @@ async function run() {
         await flush();
         assert(unverifiableCtx.materialInspection.verification.status === 'UNVERIFIABLE', '8. setup sanity: no verifier injected -> UNVERIFIABLE.');
         assert(!provider.list().includes(unverifiableMaterial),
-            '9. GAP CLOSED: an UNVERIFIABLE resolution (nothing was ever checked) is ALSO no longer admitted — "we never looked" is never treated as good enough for an app-wide, cross-device catalog, exactly as application/WorldEncounterMaterialVerification.js\'s own header already insists it must never be confused with a pass.');
+            '9. GAP CLOSED: an UNVERIFIABLE resolution (nothing was ever checked) is ALSO no longer admitted — "we never looked" is never treated as good enough for an app-wide, cross-device catalog, exactly as application/worldEncounter/WorldEncounterMaterialVerification.js\'s own header already insists it must never be confused with a pass.');
 
         assert(provider.list().length === 1 && provider.list()[0] === verifiedMaterial,
             '10. after all three attempts, the provider holds EXACTLY the one genuinely VERIFIED Publication — never the REJECTED or UNVERIFIABLE ones.');
@@ -304,9 +304,9 @@ async function run() {
         // confirmed — reconfirmed structurally: the fix reuses that exact
         // existing status vocabulary, inventing no new "trusted"/"safe"
         // gradient of its own.
-        const verificationSource = await readSource('application/WorldEncounterMaterialVerification.js');
+        const verificationSource = await readSource('application/worldEncounter/WorldEncounterMaterialVerification.js');
         assert(verificationSource.includes("'VERIFIED'") || verificationSource.includes('VERIFIED:'),
-            '11. no new status vocabulary was invented — the fix reuses application/WorldEncounterMaterialVerification.js\'s own existing three-value enum verbatim.');
+            '11. no new status vocabulary was invented — the fix reuses application/worldEncounter/WorldEncounterMaterialVerification.js\'s own existing three-value enum verbatim.');
     }
     console.log('✓ Section E: FLAGSHIP. A genuine, demonstrated PRODUCT_GAP — World Encounter\'s Repository-admission gate ignored verification outcome entirely, unlike its own sibling — found, fixed (admitToRepositoryDiscovery() now requires verification.status === VERIFIED), and proven closed live in both directions (VERIFIED admits; REJECTED and UNVERIFIABLE do not). PRODUCT_GAP -> FIXED.');
 
@@ -416,7 +416,7 @@ async function run() {
         // ui/components/PublicationList.js, unrelated to World Encounter
         // Repository-admission gating.
         const expectedLaterMilestoneFiles = new Set([
-            'application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js',
+            'application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js',
             'ui/components/PublicationCard.js', 'ui/components/PublicationList.js'
         ]);
         const unexpectedChangedFiles = changedFiles.filter((f) => f !== 'ui/components/WorldEncounterCanvas.js' && !expectedLaterMilestoneFiles.has(f));

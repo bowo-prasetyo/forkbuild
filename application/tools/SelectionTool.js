@@ -4,8 +4,8 @@ import { CompositeCommand } from '../commands/CompositeCommand.js';
 import { RemoveStructurePlacementCommand } from '../commands/RemoveStructurePlacementCommand.js';
 import { MoveStructurePlacementCommand } from '../commands/MoveStructurePlacementCommand.js';
 import { RotateStructurePlacementCommand } from '../commands/RotateStructurePlacementCommand.js';
-import { StructurePlacementValidator } from '../StructurePlacementValidator.js';
-import { PlacementPositionService } from '../PlacementPositionService.js';
+import { StructurePlacementValidator } from '../editor/StructurePlacementValidator.js';
+import { PlacementPositionService } from '../editor/PlacementPositionService.js';
 import { SpatialBounds } from '../../core/SpatialBounds.js';
 import { Position } from '../../core/Position.js';
 
@@ -34,9 +34,9 @@ const DELETE_KEYS = new Set(['Delete', 'Backspace']);
 // constituent brick, per SelectionState's own header — and, clicking
 // the ALREADY-selected instance a second time, begins a terrain-aware
 // drag: pointer move recomputes a ground-snapped candidate position
-// (application/PlacementPositionService.js#calculateStructureGround(),
+// (application/editor/PlacementPositionService.js#calculateStructureGround(),
 // the exact ground-snap math StructurePlacementTool already uses),
-// validates it (application/StructurePlacementValidator.js, excluding
+// validates it (application/editor/StructurePlacementValidator.js, excluding
 // the placement from consideration against itself), and drives the SAME
 // StructurePreviewState/StructurePreviewUseCase/StructurePreviewRenderer
 // 0.2.90 built for placing a NEW structure — "reuse the existing
@@ -232,7 +232,7 @@ export class SelectionTool extends Tool {
         this._dragValid = true;
     }
 
-    // Mirrors application/EditorSession.js#_structurePlacementFits()
+    // Mirrors application/editor/EditorSession.js#_structurePlacementFits()
     // exactly (same validator, same excludePlacementId reasoning) —
     // duplicated at the Tool layer rather than shared because Tool and
     // Session are two independent entry points into the same commands,

@@ -4,15 +4,15 @@ import { execSync } from 'node:child_process';
 import { Publication } from '../publisher/Publication.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { PeerWorldEncounterMaterialSource } from '../application/PeerWorldEncounterMaterialSource.js';
+import { PeerWorldEncounterMaterialSource } from '../application/worldEncounter/PeerWorldEncounterMaterialSource.js';
 import {
     PeerWorldEncounterMaterialMessageKind,
     toWorldEncounterMaterialResponseMessage
-} from '../application/PeerWorldEncounterMaterialProtocol.js';
+} from '../application/worldEncounter/PeerWorldEncounterMaterialProtocol.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -86,7 +86,7 @@ import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles } from
 //               Publication` gate excludes it automatically -- exactly
 //               0.9.337's own discrimination, requiring no new logic.
 //   Section G -- The family this is NOT about: the Automatic Snapshot
-//               Encounter Cascade (application/AutomaticSnapshotEncounterCascade.js)
+//               Encounter Cascade (application/snapshot/AutomaticSnapshotEncounterCascade.js)
 //               most closely matches the brief's own "automatic encounter
 //               ... materialized" language, but is structurally gated on
 //               a Publication already being locally known
@@ -213,13 +213,13 @@ async function run() {
     // ===============================================================
     {
         // A1. "Snapshot" (World placement material, discoveryTag-keyed --
-        // application/DiscoverSnapshotCandidatesCommand.js,
-        // application/MaterializeSnapshotFromPlacementUseCase.js) and
+        // application/snapshot/DiscoverSnapshotCandidatesCommand.js,
+        // application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js) and
         // "Publication" (Repository's own object, publisher/Publication.js)
         // are already-established, structurally disjoint domain concepts
         // -- 0.9.330's own Section A drew this line first; reconfirmed
         // here by direct import search rather than accepted by citation.
-        const snapshotSource = await readSource('application/MaterializeSnapshotFromPlacementUseCase.js');
+        const snapshotSource = await readSource('application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js');
         assert(!/from '\.\.\/publisher\/Publication\.js'/.test(snapshotSource) || /publisherIdentity|attribution/i.test(snapshotSource),
             "1. the Snapshot placement pipeline's own use of Publication (if any) is limited to attribution lookups, never a placement-native identity.");
 
@@ -229,17 +229,17 @@ async function run() {
         //
         //   (a) ui/components/WorldEncounterCanvas.js's own peer-broadcast
         //       Publication markers (core/WorldEncounter.js,
-        //       application/WorldEncounterMaterialLoading.js,
-        //       application/PeerWorldEncounterMaterialSource.js) -- a
+        //       application/worldEncounter/WorldEncounterMaterialLoading.js,
+        //       application/worldEncounter/PeerWorldEncounterMaterialSource.js) -- a
         //       connected peer's own World contribution is registered into
-        //       application/WorldDiscoverySourceRegistry.js UNCONDITIONALLY,
+        //       application/discovery/WorldDiscoverySourceRegistry.js UNCONDITIONALLY,
         //       under its own "peer:<identityId>" origin
         //       (peer/PeerWorldDiscoveryLifecycleBridge.js), regardless of
         //       whether this device has ever seen that Publication before.
         //       This is the ONLY family that can produce the brief's own
         //       symptom -- encountering something genuinely new.
         //
-        //   (b) application/AutomaticSnapshotEncounterCascade.js's own
+        //   (b) application/snapshot/AutomaticSnapshotEncounterCascade.js's own
         //       background discover -> resolve -> materialize -> place ->
         //       register chain -- whose OWN vocabulary ("Automatic
         //       Snapshot Encounter") most closely echoes the brief's own
@@ -252,7 +252,7 @@ async function run() {
         const worldEncounterCoreSource = await readSource('core/WorldEncounter.js');
         assert(worldEncounterCoreSource.includes("WorldEncounterKind.PUBLICATION") && worldEncounterCoreSource.includes('AVATAR'),
             '2. core/WorldEncounter.js still names exactly the two kinds this audit reasons about.');
-        const cascadeSource = await readSource('application/AutomaticSnapshotEncounterCascade.js');
+        const cascadeSource = await readSource('application/snapshot/AutomaticSnapshotEncounterCascade.js');
         assert(/_findPublicationById/.test(cascadeSource),
             '3. the Automatic Snapshot Encounter Cascade is real and, as Section G traces, gated on a publication lookup.');
     }
@@ -277,14 +277,14 @@ async function run() {
         // proof). Every OTHER file in this list is untouched -- this
         // finding stays true, unchanged, for all eight of them.
         const worldEncounterFiles = [
-            'application/WorldEncounterMaterialLoading.js',
-            'application/WorldEncounterMaterialInspection.js',
-            'application/PeerWorldEncounterMaterialSource.js',
-            'application/LocalWorldEncounterMaterialSource.js',
-            'application/DecentralizedWorldEncounterMaterialSource.js',
-            'application/WorldEncounterInspection.js',
-            'application/WorldEncounterReadModel.js',
-            'application/WorldEncounterView.js'
+            'application/worldEncounter/WorldEncounterMaterialLoading.js',
+            'application/worldEncounter/WorldEncounterMaterialInspection.js',
+            'application/worldEncounter/PeerWorldEncounterMaterialSource.js',
+            'application/worldEncounter/LocalWorldEncounterMaterialSource.js',
+            'application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js',
+            'application/worldEncounter/WorldEncounterInspection.js',
+            'application/worldEncounter/WorldEncounterReadModel.js',
+            'application/worldEncounter/WorldEncounterView.js'
         ];
         for (const file of worldEncounterFiles) {
             const src = await readSource(file);
@@ -491,9 +491,9 @@ async function run() {
     // Section F -- content-kind/origin isolation, reconfirmed for free.
     // ===============================================================
     {
-        const decentralizedSource = await readSource('application/DecentralizedWorldEncounterMaterialSource.js');
+        const decentralizedSource = await readSource('application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js');
         assert(decentralizedSource.includes('no `Publication.fromJSON()`'),
-            "1. application/DecentralizedWorldEncounterMaterialSource.js's own header states directly that resolved material is returned exactly as supplied -- no Publication.fromJSON(), no hash check, no signature read.");
+            "1. application/worldEncounter/DecentralizedWorldEncounterMaterialSource.js's own header states directly that resolved material is returned exactly as supplied -- no Publication.fromJSON(), no hash check, no signature read.");
         assert(!/instanceof Publication/.test(decentralizedSource),
             '2. ... confirmed structurally: the file never even performs the instanceof check a hydration step would require.');
     }
@@ -526,13 +526,13 @@ async function run() {
         // the cascade fires at all. Assertions 1/3 are amended to prove
         // the new, narrower fact directly rather than assert the
         // now-superseded absence.
-        const sessionSource = await readSource('application/WorldNavigationSession.js');
+        const sessionSource = await readSource('application/world/WorldNavigationSession.js');
         assert(/findPublicationById\(publicationId\) \{[\s\S]{0,300}_publicationActionDiscoveryProvider\.findById\(publicationId\)/.test(sessionSource),
-            '1. AMENDED BY 0.9.597 — WorldNavigationSession#findPublicationById() now delegates to its own `_publicationActionDiscoveryProvider.findById()` — a SEPARATE collaborator from fork-policy/world-layout\'s own `_discoveryProvider` (see that constructor\'s own comment) — the exact collaborator application/AutomaticSnapshotEncounterCascade.js reads, unchanged (still "null ... when ... the publication is not locally known", now meaning "not known to EITHER local or Repository-admitted discovery").');
+            '1. AMENDED BY 0.9.597 — WorldNavigationSession#findPublicationById() now delegates to its own `_publicationActionDiscoveryProvider.findById()` — a SEPARATE collaborator from fork-policy/world-layout\'s own `_discoveryProvider` (see that constructor\'s own comment) — the exact collaborator application/snapshot/AutomaticSnapshotEncounterCascade.js reads, unchanged (still "null ... when ... the publication is not locally known", now meaning "not known to EITHER local or Repository-admitted discovery").');
 
-        const createWorldViewSource = await readSource('application/CreateWorldViewUseCase.js');
+        const createWorldViewSource = await readSource('application/world/CreateWorldViewUseCase.js');
         assert(/new LocalDiscoveryProvider\(storageProvider\)/.test(createWorldViewSource),
-            "2. UNCHANGED BY 0.9.597 — application/CreateWorldViewUseCase.js still constructs a plain, local-only LocalDiscoveryProvider for `discoveryProvider` -- still never composed with decentralizedPublicationDiscoveryProvider itself, confirmed directly against 0.9.339's own explicit note that session.searchWorld() stays local-only and untouched.");
+            "2. UNCHANGED BY 0.9.597 — application/world/CreateWorldViewUseCase.js still constructs a plain, local-only LocalDiscoveryProvider for `discoveryProvider` -- still never composed with decentralizedPublicationDiscoveryProvider itself, confirmed directly against 0.9.339's own explicit note that session.searchWorld() stays local-only and untouched.");
         assert(/publicationActionDiscoveryProvider\s*=\s*decentralizedPublicationDiscoveryProvider/.test(createWorldViewSource),
             '3. AMENDED BY 0.9.597 — the file now DOES reference a decentralized provider, but only to compose a SEPARATE `publicationActionDiscoveryProvider` (confirmed present); `discoveryProvider` itself — assertion 2, above — is untouched by that composition.');
 
@@ -648,7 +648,7 @@ async function run() {
         // the same reason). Amended to exclude exactly 0.9.597's own,
         // already-accounted-for files, while still catching any OTHER,
         // unexpected production drift.
-        const expectedLaterMilestoneFiles = new Set(['application/CreateWorldViewUseCase.js', 'application/WorldNavigationSession.js', 'ui/views/WorldView.js']);
+        const expectedLaterMilestoneFiles = new Set(['application/world/CreateWorldViewUseCase.js', 'application/world/WorldNavigationSession.js', 'ui/views/WorldView.js']);
         const unexpectedNonTestFiles = changedNonTestFiles.split('\n').filter(Boolean)
             .filter((f) => !expectedLaterMilestoneFiles.has(f));
         assert(unexpectedNonTestFiles.length === 0, `1. AMENDED BY 0.9.597 — no UNEXPECTED production file is modified by this milestone (0.9.597's own, separately-justified files excepted) — found: ${unexpectedNonTestFiles.join(', ') || 'none'}.`);

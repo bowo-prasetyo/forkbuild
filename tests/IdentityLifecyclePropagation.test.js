@@ -3,10 +3,10 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { PeerIdentity } from '../peer/PeerIdentity.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
-import { ConnectedPeerRegistry } from '../application/ConnectedPeerRegistry.js';
-import { PeerSessionManager } from '../application/PeerSessionManager.js';
-import { PeerRelationshipUseCase } from '../application/PeerRelationshipUseCase.js';
-import { IdentityLifecyclePropagationUseCase } from '../application/IdentityLifecyclePropagationUseCase.js';
+import { ConnectedPeerRegistry } from '../application/peer/ConnectedPeerRegistry.js';
+import { PeerSessionManager } from '../application/peer/PeerSessionManager.js';
+import { PeerRelationshipUseCase } from '../application/peer/PeerRelationshipUseCase.js';
+import { IdentityLifecyclePropagationUseCase } from '../application/identity/IdentityLifecyclePropagationUseCase.js';
 import { RemoteIdentityLifecycle } from '../core/RemoteIdentityLifecycle.js';
 import {
     IdentityLifecycleGossipKind,
@@ -121,7 +121,7 @@ async function runTests() {
     // — never a signature check. A structurally well-formed but UNSIGNED
     // record passes here; whether it is a REQUIRED-signature envelope is
     // identity/LocalAuthorizationVerifier.js's own job, one layer up in
-    // application/IdentityLifecyclePropagationUseCase.js's ingestion
+    // application/identity/IdentityLifecyclePropagationUseCase.js's ingestion
     // boundary (verifyIdentityRevocation()/verifyIdentitySuccession()
     // both explicitly refuse an unsigned record — see their own headers).
     const unsignedRevocationMessage = toIdentityLifecycleGossipMessage(IdentityLifecycleGossipKind.REVOCATION,
@@ -188,9 +188,9 @@ async function runTests() {
     const { inviterPeer: aliceCharliePeer, accepterPeer: charliePeer } = await connectPeers(aliceSessions, charlieSessions);
 
     // Bob and Charlie both deliberately choose to remember Alice — see
-    // application/PeerRelationshipUseCase.js's own header, "Remembering
+    // application/peer/PeerRelationshipUseCase.js's own header, "Remembering
     // A Peer Is A Deliberate Act." Propagation's own relevance gate
-    // (application/CreateIdentityLifecyclePropagationUseCase.js's
+    // (application/identity/CreateIdentityLifecyclePropagationUseCase.js's
     // `knowsIdentity`) is wired against exactly this store.
     const bobStorage = new InMemoryStorageProvider();
     const charlieStorage = new InMemoryStorageProvider();
@@ -287,7 +287,7 @@ async function runTests() {
 // 4/5/6 — security: a fabricated claim is rejected; a GENUINE record
 //    relayed by a party who is neither the subject nor its owner is
 //    still accepted (the deliberate, documented opposite of
-//    application/FriendRelationshipUseCase.js's actor-must-match-
+//    application/identity/FriendRelationshipUseCase.js's actor-must-match-
 //    connection rule — see application/
 //    IdentityLifecyclePropagationUseCase.js's own header); and a
 //    genuinely, validly signed record about an identity this device
@@ -352,7 +352,7 @@ async function runTests() {
     //    now, relays the resulting GENUINE signed record. Bob accepts
     //    it: what makes it trustworthy is the record's OWN signature,
     //    never who handed it to him. This is the deliberate, documented
-    //    opposite of application/FriendRelationshipUseCase.js's own
+    //    opposite of application/identity/FriendRelationshipUseCase.js's own
     //    actor-must-match-connection replay defense — see application/
     //    IdentityLifecyclePropagationUseCase.js's own header.
     const genuineRevocation = aliceDevice.revokeIdentity(alice.identityId, { reason: 'compromised, relayed via a third party' });
@@ -384,7 +384,7 @@ async function runTests() {
 console.log('\nAll identity lifecycle propagation tests passed.');
 console.log('Note (deliberately not solved here, see docs/Roadmap.md 0.2.68): propagation is direct-broadcast-to-');
 console.log('currently-connected-peers only — no durable retry to a peer who is offline right now (unlike');
-console.log('application/ChatOutbox.js\'s own reliable-delivery model), and no multi-hop relay beyond a device\'s');
+console.log('application/chat/ChatOutbox.js\'s own reliable-delivery model), and no multi-hop relay beyond a device\'s');
 console.log('own directly-connected peers. Both are real, deliberately deferred future work.');
 }
 

@@ -18,8 +18,8 @@ import { isValidVehicleInstance } from '../core/VehicleInstance.js';
 // 0.9.115. It never computes vehicle placement, never decides whether a
 // vehicle should exist, never mutates the instance it is handed, and
 // never queries core/VehiclePlacement.js or core/VehicleIdentity.js
-// itself — a caller (application/WorldNavigationSession.js, via
-// application/NearbyVehicleInstances.js) supplies the real, already-
+// itself — a caller (application/world/WorldNavigationSession.js, via
+// application/world/NearbyVehicleInstances.js) supplies the real, already-
 // resolved VehicleInstance; this class only ever turns one into
 // something visible.
 //
@@ -51,7 +51,7 @@ import { isValidVehicleInstance } from '../core/VehicleInstance.js';
 // before it, this class only ever returns/tracks Object3D references —
 // it never calls `renderer.add`/`renderer.remove` itself. Deciding when a
 // freshly-returned root needs to be added to the scene (first sighting
-// only) is its caller's job — see application/RenderWorldViewUseCase.js's
+// only) is its caller's job — see application/world/RenderWorldViewUseCase.js's
 // own `syncVehicles()`.
 export class VehicleFieldRenderer {
     constructor(vehicleRenderer = new VehicleRenderer()) {

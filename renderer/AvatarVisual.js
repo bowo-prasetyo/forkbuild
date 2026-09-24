@@ -131,7 +131,7 @@ export class AvatarVisual {
     // 0.2.44 — a temporary, LOCAL-ONLY yaw override layered on top of
     // whatever AvatarPresence.rotation last set via setPose() —
     // never written back to AvatarPresence, never networked (see
-    // application/WorldNavigationSession.js's avatar-facing behavior
+    // application/world/WorldNavigationSession.js's avatar-facing behavior
     // for who calls this and when). `null` restores the avatar to its
     // real presence-driven facing immediately, using the rotation
     // setPose already remembered — no new presence update required to

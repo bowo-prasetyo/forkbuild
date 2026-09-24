@@ -1,18 +1,18 @@
 import { readFile } from 'node:fs/promises';
 
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
-import { describePublicationDistribution } from '../application/PublicationDistributionDescriptor.js';
-import { describePublicationDistributionResult } from '../application/PublicationDistributionResult.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
-import { ArweaveWorldEncounterMaterialResolver } from '../application/ArweaveWorldEncounterMaterialResolver.js';
+import { describePublicationDistribution } from '../application/publication/distribution/PublicationDistributionDescriptor.js';
+import { describePublicationDistributionResult } from '../application/publication/distribution/PublicationDistributionResult.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
+import { ArweaveWorldEncounterMaterialResolver } from '../application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js';
 import { ArweaveAnchorPublisher } from '../anchoring/ArweaveAnchorPublisher.js';
 import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransactionDataProofVerifier.js';
-import { executePublicationDistribution } from '../application/PublicationDistributionExecutor.js';
-import { composePublicationDistributionRuntime } from '../application/PublicationDistributionRuntimeComposition.js';
-import { orchestratePublicationDistribution } from '../application/PublicationDistributionOrchestrator.js';
+import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
+import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
+import { orchestratePublicationDistribution } from '../application/publication/distribution/PublicationDistributionOrchestrator.js';
 
 // 0.9.429 — Arweave Announcement/Discovery Integration Boundary Audit.
 //
@@ -335,7 +335,7 @@ async function run() {
         check(retrievedMaterial !== null, 'C4. ArweaveWorldEncounterMaterialResolver retrieves the real distributed publication material directly off the discovered candidate\'s own uri — no envelope-recovery hop required on the resolve side (0.9.493 Section E\'s own finding, now true in production)');
         check(JSON.stringify(retrievedMaterial) === JSON.stringify({ body: 'round-trip-material' }), 'C6. ...and it is byte-identical to the exact material the SAME executor call actually distributed — the discovery observation leads all the way back to the correct publication representation, with no intermediate envelope shape leaking through');
 
-        check(!/node\.tags|tags:\s*\{/.test(await source('application/ArweaveGraphqlDiscoveryQueryService.js')), 'C8. this full round trip required zero node.tags query expansion — the existing bare-id query plus one additional envelope-decoding gateway fetch (0.9.494) already suffice');
+        check(!/node\.tags|tags:\s*\{/.test(await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js')), 'C8. this full round trip required zero node.tags query expansion — the existing bare-id query plus one additional envelope-decoding gateway fetch (0.9.494) already suffice');
 
         console.log('✓ Section C: Arweave functions as a genuine discovery substrate — search finds the real announcement, decodes its own envelope, reports the material\'s own uri directly, and the real (unmodified, discovery-unaware) material resolver completes the round trip back to the distributed publication, using only already-existing production classes');
     }
@@ -462,7 +462,7 @@ async function run() {
         check(anchorSignCalls === 0, 'F1. publishing an Arweave announcement never invokes the anchor publisher\'s signer — no anchor was created as a side effect, confirmed live, with a real ArweaveAnchorPublisher instance sitting unused right beside the call');
         check(verifyCalls === 0, 'F2. ...and never invokes the proof verifier either, confirmed live with a real ArweaveTransactionDataProofVerifier instance sitting unused right beside the call');
 
-        const announcementSource = await source('application/ArweaveAnnouncementPublisher.js');
+        const announcementSource = await source('application/arweave/ArweaveAnnouncementPublisher.js');
         const codeOnly = announcementSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         check(!/ArweaveAnchorPublisher|ArweaveTransactionDataProofVerifier|PublicationAnchor/.test(codeOnly), 'F3. ArweaveAnnouncementPublisher.js imports and references nothing from the Proof/Anchor role — confirmed by source sweep, not merely by this section\'s live spies');
 
@@ -563,8 +563,8 @@ async function run() {
         // exists); what this check actually needs to confirm is that
         // neither file's CODE branches on relayUrl's own scheme.
         const codeOnly = (text) => text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-        const executorCode = codeOnly(await source('application/PublicationDistributionExecutor.js'));
-        const resultCode = codeOnly(await source('application/PublicationDistributionResult.js'));
+        const executorCode = codeOnly(await source('application/publication/distribution/PublicationDistributionExecutor.js'));
+        const resultCode = codeOnly(await source('application/publication/distribution/PublicationDistributionResult.js'));
         check(!/wss:|relay\.damus|NostrPublicationDiscoveryPublisher/i.test(executorCode), 'G7. PublicationDistributionExecutor.js\'s own CODE (header comments excluded) performs no Nostr-specific parsing, validation, or scheme-check of relayUrl anywhere — confirmed by source sweep, not just this section\'s one live gatewayUrl value');
         check(!/wss:|relay\.damus|NostrPublicationDiscoveryPublisher/i.test(resultCode), 'G8. neither does PublicationDistributionResult.js\'s own CODE — both treat relayUrl as an opaque, substrate-neutral string');
 
@@ -623,8 +623,8 @@ async function run() {
     // ===============================================================
     {
         // Live proof, first: a caller of the REAL, production
-        // orchestrator — application/PublicationDistributionOrchestrator.js,
-        // the one file application/PublicationDistributionCommand.js (and,
+        // orchestrator — application/publication/distribution/PublicationDistributionOrchestrator.js,
+        // the one file application/publication/distribution/PublicationDistributionCommand.js (and,
         // through it, ui/main.js's own composed command) actually calls —
         // asks for Arweave explicitly, supplying everything
         // composePublicationDistributionRuntime() itself would need.
@@ -668,9 +668,9 @@ async function run() {
         // never interpreting either — see each file's own "AMENDED BY
         // 0.9.430" header section.
         const threadedChainFiles = [
-            'application/PublicationDistributionOrchestrator.js',
-            'application/PublicationDistributionCommand.js',
-            'application/PublicationDistributionCommandComposition.js'
+            'application/publication/distribution/PublicationDistributionOrchestrator.js',
+            'application/publication/distribution/PublicationDistributionCommand.js',
+            'application/publication/distribution/PublicationDistributionCommandComposition.js'
         ];
         for (const file of threadedChainFiles) {
             const code = await source(file);
@@ -684,7 +684,7 @@ async function run() {
         // of its own — provider SELECTION stays entirely the orchestrator's
         // own concern, per `PublicationDistributionRuntimeComposition.js`'s
         // own header, "discoveryProvider itself is the one new option."
-        const runtimeConfigurationCode = await source('application/PublicationDistributionRuntimeConfiguration.js');
+        const runtimeConfigurationCode = await source('application/publication/distribution/PublicationDistributionRuntimeConfiguration.js');
         check(/arweaveAnnouncementPublisherOptions/.test(runtimeConfigurationCode) && !/discoveryProvider/.test(runtimeConfigurationCode),
             'I3b. PublicationDistributionRuntimeConfiguration.js now resolves arweaveAnnouncementPublisherOptions (0.9.430) but still carries no discoveryProvider concept of its own — selection stays the orchestrator\'s own job');
 
@@ -699,9 +699,9 @@ async function run() {
         // (0.9.430 built no Arweave-announcement host-capability adapter —
         // see this file's own header, "Deliberately excluded").
         const untouchedChainFiles = [
-            'application/PublicationDistributionConfigurationProvider.js',
-            'application/PublicationDistributionRuntimeProvider.js',
-            'application/ArweavePublicationDistributionRuntimeAdapter.js'
+            'application/publication/distribution/PublicationDistributionConfigurationProvider.js',
+            'application/publication/distribution/PublicationDistributionRuntimeProvider.js',
+            'application/arweave/ArweavePublicationDistributionRuntimeAdapter.js'
         ];
         for (const file of untouchedChainFiles) {
             const code = await source(file);
@@ -732,12 +732,12 @@ async function run() {
         // through a real registry a real coordinator exposes to a real
         // v-for. Announcement/Discovery has no equivalent of either.
         const registrySweepTargets = [
-            'application/PublicationDistributionCommandComposition.js',
-            'application/PublicationDistributionRuntimeConfiguration.js'
+            'application/publication/distribution/PublicationDistributionCommandComposition.js',
+            'application/publication/distribution/PublicationDistributionRuntimeConfiguration.js'
         ];
         for (const file of registrySweepTargets) {
             const code = await source(file);
-            check(!/availableDiscoveryTypes|DiscoveryProviderRegistry|AnnouncementPublisherRegistry/.test(code), `I8[${file}]. no availableDiscoveryTypes()-style hook or discovery-provider registry exists anywhere near this seam — unlike application/PublicationAnchorCreationCoordinator.js's own availableAnchorTypes(), rendered by a real v-for in ui/views/DecentralizedPublicationsView.js, Announcement/Discovery has no equivalent UI-facing enumeration mechanism at all`);
+            check(!/availableDiscoveryTypes|DiscoveryProviderRegistry|AnnouncementPublisherRegistry/.test(code), `I8[${file}]. no availableDiscoveryTypes()-style hook or discovery-provider registry exists anywhere near this seam — unlike application/anchoring/PublicationAnchorCreationCoordinator.js's own availableAnchorTypes(), rendered by a real v-for in ui/views/DecentralizedPublicationsView.js, Announcement/Discovery has no equivalent UI-facing enumeration mechanism at all`);
         }
 
         // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
@@ -766,7 +766,7 @@ async function run() {
         });
         check(arbitraryResult !== null && arbitraryResult.discovery.relayUrl === 'not-a-url-at-all-just-an-opaque-label', 'J1. PublicationDistributionResult.js validates relayUrl only as a non-empty string — no URL parsing, no wss:// vs https:// scheme requirement, no Nostr-specific shape check of any kind; renaming it later (e.g. to announcementOrigin) would be a pure rename, never a validation-logic change');
 
-        const publisherHeaderSource = await source('application/ArweaveAnnouncementPublisher.js');
+        const publisherHeaderSource = await source('application/arweave/ArweaveAnnouncementPublisher.js');
         check(/A NOSTR WIRE TERM, KNOWINGLY REUSED/.test(publisherHeaderSource), 'J2. ArweaveAnnouncementPublisher.js already documents this exact compromise, explicitly, in its own header — this audit reaffirms an already-acknowledged decision rather than discovering a new one');
 
         console.log('✓ Section J: relayUrl remains a Nostr-coined but, in practice, substrate-neutral field — both real consumers (the executor, the result boundary; see Section G) treat it as opaque cargo, so it is a naming/documentation concern, never a correctness gap; renaming it is real, separate, unscheduled future work, not something this audit escalates');
@@ -806,12 +806,12 @@ async function run() {
         }
         console.log(`\n(${assertionCount} checks)`);
         console.log('\nThe precise seam this audit originally named (below) was built exactly as named, by 0.9.430 — Announcement/Discovery Provider Selection Reachability:');
-        console.log('  application/PublicationDistributionOrchestrator.js        — forwards discoveryProvider + arweaveAnnouncementPublisherOptions to composePublicationDistributionRuntime()');
-        console.log('  application/PublicationDistributionCommand.js             — forwards both through to the orchestrator call');
-        console.log('  application/PublicationDistributionCommandComposition.js  — binds arweaveAnnouncementPublisherOptions alongside lifecycleStore; discoveryProvider passes through the caller\'s own request, unbound');
-        console.log('  application/PublicationDistributionConfigurationProvider.js — resolveArweaveAnnouncementPublisherOptions(), mirroring resolveNostrPublisherOptions()');
-        console.log('  application/PublicationDistributionRuntimeConfiguration.js  — threads an announcement-options section through');
-        console.log('  application/PublicationDistributionRuntimeProvider.js      — regroups uploadTaggedTransaction into that same section');
+        console.log('  application/publication/distribution/PublicationDistributionOrchestrator.js        — forwards discoveryProvider + arweaveAnnouncementPublisherOptions to composePublicationDistributionRuntime()');
+        console.log('  application/publication/distribution/PublicationDistributionCommand.js             — forwards both through to the orchestrator call');
+        console.log('  application/publication/distribution/PublicationDistributionCommandComposition.js  — binds arweaveAnnouncementPublisherOptions alongside lifecycleStore; discoveryProvider passes through the caller\'s own request, unbound');
+        console.log('  application/publication/distribution/PublicationDistributionConfigurationProvider.js — resolveArweaveAnnouncementPublisherOptions(), mirroring resolveNostrPublisherOptions()');
+        console.log('  application/publication/distribution/PublicationDistributionRuntimeConfiguration.js  — threads an announcement-options section through');
+        console.log('  application/publication/distribution/PublicationDistributionRuntimeProvider.js      — regroups uploadTaggedTransaction into that same section');
         console.log('  ui/main.js                                                 — resolves arweaveAnnouncementPublisherOptions at the composition root, still via the existing runtime-provider/configuration seam, never a direct 0.9.105 import');
         console.log('  ui/views/WorldView.js                                      — forwards a caller-supplied discoveryProvider through distributeWorldEncounterPublication()');
         console.log('  ui/components/WorldEncounterCanvas.js                      — the actual UI choice: an Announcement/Discovery substrate <select>, Nostr/Arweave, exactly one selection, never fan-out');

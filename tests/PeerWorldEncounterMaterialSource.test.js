@@ -2,7 +2,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 import {
@@ -12,9 +12,9 @@ import {
     toWorldEncounterMaterialRequestMessage,
     toWorldEncounterMaterialResponseMessage,
     isValidPeerWorldEncounterMaterialMessage
-} from '../application/PeerWorldEncounterMaterialProtocol.js';
-import { PeerWorldEncounterMaterialSource } from '../application/PeerWorldEncounterMaterialSource.js';
-import { WorldEncounterMaterialSource, loadWorldEncounterMaterial } from '../application/WorldEncounterMaterialLoading.js';
+} from '../application/worldEncounter/PeerWorldEncounterMaterialProtocol.js';
+import { PeerWorldEncounterMaterialSource } from '../application/worldEncounter/PeerWorldEncounterMaterialSource.js';
+import { WorldEncounterMaterialSource, loadWorldEncounterMaterial } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { Publication } from '../publisher/Publication.js';
 import { AvatarProfile } from '../core/AvatarProfile.js';

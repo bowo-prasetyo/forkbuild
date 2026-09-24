@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
 import {
     describeLocalWorldDiscoverySource,
     describeWorldFromDiscoverySources
-} from '../application/WorldEncounterIntegration.js';
-import { describeWorldFromDiscoveryRegistry } from '../application/WorldDiscoveryRegistryProjection.js';
+} from '../application/worldEncounter/WorldEncounterIntegration.js';
+import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
 import { describeWorldDiscoverySource } from '../core/WorldDiscoverySource.js';
 
@@ -169,7 +169,7 @@ function connectedPeerOf(identityId) {
 //     never a source of registry-shaped fields.
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../application/WorldDiscoveryRegistryProjection.js', import.meta.url);
+    const sourceUrl = new URL('../application/discovery/WorldDiscoveryRegistryProjection.js', import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource
         .split('\n')
@@ -218,10 +218,10 @@ function connectedPeerOf(identityId) {
 //    describeWorldFromDiscoverySources().
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../application/WorldDiscoveryRegistryProjection.js', import.meta.url);
+    const sourceUrl = new URL('../application/discovery/WorldDiscoveryRegistryProjection.js', import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
 
-    assert(fullSource.includes("from './WorldEncounterIntegration.js'"), 'imports describeWorldFromDiscoverySources from 0.9.8');
+    assert(fullSource.includes("from '../worldEncounter/WorldEncounterIntegration.js'"), 'imports describeWorldFromDiscoverySources from 0.9.8');
     assert(fullSource.includes('listSources'), 'reads sources through registry.listSources()');
     assert(!fullSource.includes("from '../core/"), 'never imports directly from core/ — 0.9.8 remains the one seam this file depends on');
 

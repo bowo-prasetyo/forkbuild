@@ -4,10 +4,10 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
-import { GetRecipientNotificationEventsUseCase } from '../application/GetRecipientNotificationEventsUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
+import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -165,8 +165,8 @@ const NOTIFICATION_ARC_FILES = [
     'core/NotificationEvent.js',
     'core/NotificationDeduplicationPolicy.js',
     'storage/NotificationEventStore.js',
-    'application/PublicationCommentaryNotificationProducer.js',
-    'application/GetRecipientNotificationEventsUseCase.js',
+    'application/publication/commentary/PublicationCommentaryNotificationProducer.js',
+    'application/chat/GetRecipientNotificationEventsUseCase.js',
     'ui/components/NotificationHistoryPanel.js'
 ];
 
@@ -181,7 +181,7 @@ async function runTests() {
     {
         const sources = {};
         for (const path of NOTIFICATION_ARC_FILES) sources[path] = await rawSource(path);
-        const composition = await rawSource('application/CreateWorldViewUseCase.js');
+        const composition = await rawSource('application/world/CreateWorldViewUseCase.js');
 
         // A1. Immutable NotificationEvent.
         assert(sources['core/NotificationEvent.js'].includes('export class NotificationEvent')
@@ -189,8 +189,8 @@ async function runTests() {
             'A1. core/NotificationEvent.js still exports NotificationEvent with no setter — immutable.');
 
         // A2. Commentary producer.
-        assert(sources['application/PublicationCommentaryNotificationProducer.js'].includes('export class PublicationCommentaryNotificationProducer'),
-            'A2. application/PublicationCommentaryNotificationProducer.js still exports the one real producer.');
+        assert(sources['application/publication/commentary/PublicationCommentaryNotificationProducer.js'].includes('export class PublicationCommentaryNotificationProducer'),
+            'A2. application/publication/commentary/PublicationCommentaryNotificationProducer.js still exports the one real producer.');
 
         // A3. Deduplication policy.
         assert(sources['core/NotificationDeduplicationPolicy.js'].includes('export function classifyNotificationCollision'),
@@ -201,8 +201,8 @@ async function runTests() {
             'A4. storage/NotificationEventStore.js still exports the durable store.');
 
         // A5. Authenticated recipient query.
-        assert(sources['application/GetRecipientNotificationEventsUseCase.js'].includes('resolveSigningIdentityId'),
-            'A5. application/GetRecipientNotificationEventsUseCase.js still resolves the CURRENT authenticated identity, never a caller-supplied one.');
+        assert(sources['application/chat/GetRecipientNotificationEventsUseCase.js'].includes('resolveSigningIdentityId'),
+            'A5. application/chat/GetRecipientNotificationEventsUseCase.js still resolves the CURRENT authenticated identity, never a caller-supplied one.');
 
         // A6. Notification History UI.
         assert(sources['ui/components/NotificationHistoryPanel.js'].includes("name: 'NotificationHistoryPanel'"),
@@ -214,15 +214,15 @@ async function runTests() {
         // the real invariant ("every construction site shares the same
         // durable sink, so no notification is ever lost to a second,
         // unwired store"), and 0.9.29x-era work added
-        // application/CreatePublicationCommentaryUseCase.js as a second,
+        // application/publication/commentary/CreatePublicationCommentaryUseCase.js as a second,
         // legitimate composition root reusing the identical sink — never
         // caught because nothing re-ran this guard until 0.9.393's own
         // full-suite execution. Replaced here with the real invariant:
         // an exact, named set of construction sites, each proven to
         // route through the SAME `notificationEventStore.save()` sink.
         const KNOWN_PRODUCER_CONSTRUCTION_SITES = [
-            'application/CreateWorldViewUseCase.js',
-            'application/CreatePublicationCommentaryUseCase.js'
+            'application/world/CreateWorldViewUseCase.js',
+            'application/publication/commentary/CreatePublicationCommentaryUseCase.js'
         ];
         const producerConstructionFiles = execSync('grep -rl "new PublicationCommentaryNotificationProducer(" application ui --include="*.js" || true',
             { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean).sort();
@@ -237,7 +237,7 @@ async function runTests() {
         assert(composition.includes('new NotificationEventStore(storageProvider)')
             && composition.includes('new GetRecipientNotificationEventsUseCase(notificationEventStore, identityProvider)')
             && (composition.match(/notificationEventStore/g) || []).length >= 2,
-            'A7b. application/CreateWorldViewUseCase.js still constructs exactly one NotificationEventStore and hands the SAME instance to both the read use case and (via the sink) the producer.');
+            'A7b. application/world/CreateWorldViewUseCase.js still constructs exactly one NotificationEventStore and hands the SAME instance to both the read use case and (via the sink) the producer.');
 
         // A8. Persistence across restart — reconfirmed fresh, through the
         // full real pipeline, one more time (0.9.282 Section E; 0.9.286
@@ -312,7 +312,7 @@ async function runTests() {
 
         // B3. The panel itself renders this without any additional
         // wiring — reusing the exact command shape
-        // application/CreateWorldViewUseCase.js already produces.
+        // application/world/CreateWorldViewUseCase.js already produces.
         const panelSource = await rawSource('ui/components/NotificationHistoryPanel.js');
         assert(panelSource.includes('getRecipientNotificationEventsCommand()'),
             'B3. ui/components/NotificationHistoryPanel.js still calls exactly the injected command this pipeline already produces — no missing hop.');
@@ -461,9 +461,9 @@ async function runTests() {
     {
         // E1. The one real, existing consumer: NotificationHistoryPanel,
         // reached exclusively through WorldView's own thin command.
-        const worldNavSession = await rawSource('application/WorldNavigationSession.js');
+        const worldNavSession = await rawSource('application/world/WorldNavigationSession.js');
         assert(worldNavSession.includes('getRecipientNotificationEvents'),
-            'E1a. application/WorldNavigationSession.js still exposes the one thin read method this arc built.');
+            'E1a. application/world/WorldNavigationSession.js still exposes the one thin read method this arc built.');
         const historyPanelCallers = await grepCount('NotificationHistoryPanel', ['ui']);
         assert(historyPanelCallers >= 1, 'E1b. NotificationHistoryPanel is referenced by at least one other UI file (its host view).');
 
@@ -471,12 +471,12 @@ async function runTests() {
         // append-only domain fact with a clear recipient already exists
         // for it (mirroring Section G's own bar), never invented. Publication
         // Commentary is the only one built. Future Collaboration events:
-        // application/CreateCollaborationUseCase.js builds a LIVE session
+        // application/document/CreateCollaborationUseCase.js builds a LIVE session
         // (LocalCollaborationTransport/AuthorityCollaborationTransport),
         // not a durable, recipient-addressed fact log — checked directly.
-        const collaborationSource = await rawSource('application/CreateCollaborationUseCase.js');
+        const collaborationSource = await rawSource('application/document/CreateCollaborationUseCase.js');
         assert(!/NotificationEvent|recipientIdentityId/.test(collaborationSource),
-            'E2a. application/CreateCollaborationUseCase.js still has no notion of a NotificationEvent or a recipient identity — collaboration is a live session, not a durable per-recipient fact today.');
+            'E2a. application/document/CreateCollaborationUseCase.js still has no notion of a NotificationEvent or a recipient identity — collaboration is a live session, not a durable per-recipient fact today.');
 
         // E3. Future relationship events: FriendRelationshipUseCase's own
         // REQUEST/ACCEPT/REJECT exchange is carried over a live
@@ -484,18 +484,18 @@ async function runTests() {
         // synchronous signaling exchange, not an asynchronous durable
         // record a recipient could discover later the way a Publication
         // visitor's Commentary waits for an absent publisher.
-        const friendRelSource = await rawSource('application/FriendRelationshipUseCase.js');
+        const friendRelSource = await rawSource('application/identity/FriendRelationshipUseCase.js');
         assert(/peerMessageBus/.test(friendRelSource) && !/NotificationEvent/.test(friendRelSource),
-            'E3. application/FriendRelationshipUseCase.js still carries its REQUEST/ACCEPT/REJECT exchange over a live peerMessageBus, with no NotificationEvent participation — it already has its own live delivery path; the asynchronous-absence gap Commentary\'s notification producer exists to bridge dose not obviously apply here.');
+            'E3. application/identity/FriendRelationshipUseCase.js still carries its REQUEST/ACCEPT/REJECT exchange over a live peerMessageBus, with no NotificationEvent participation — it already has its own live delivery path; the asynchronous-absence gap Commentary\'s notification producer exists to bridge dose not obviously apply here.');
 
         // E4. Future world events: place-naming claims
-        // (application/PlaceNamingClaimUseCase.js) are broadcast/discovered
+        // (application/placeNaming/PlaceNamingClaimUseCase.js) are broadcast/discovered
         // facts about SHARED world state, not addressed to one specific
         // recipient identity the way a Commentary addresses its
         // Publication's own publisher.
-        const placeNamingSource = await sourceExists('application/PlaceNamingClaimUseCase.js') ? await rawSource('application/PlaceNamingClaimUseCase.js') : '';
+        const placeNamingSource = await sourceExists('application/placeNaming/PlaceNamingClaimUseCase.js') ? await rawSource('application/placeNaming/PlaceNamingClaimUseCase.js') : '';
         assert(!/recipientIdentityId/.test(placeNamingSource),
-            'E4. application/PlaceNamingClaimUseCase.js still has no recipientIdentityId concept — a claim concerns a location, not a specific person to notify.');
+            'E4. application/placeNaming/PlaceNamingClaimUseCase.js still has no recipientIdentityId concept — a claim concerns a location, not a specific person to notify.');
 
         console.log('✓ E: Consumer analysis. The one real consumer of notification history is Notification History (through WorldNavigationSession\'s own thin read method) — reconfirmed fresh (E1). Three plausible future producers were checked directly rather than assumed: Collaboration is a live session with no durable per-recipient fact (E2); Friend Relationship already has its own live, synchronous delivery path over peerMessageBus, so the specific gap Commentary\'s producer fills (an author acts while the recipient is provably absent) does not obviously apply to it (E3); Place Naming claims concern shared world state, not one addressed recipient (E4). None of the three is a ready producer candidate today — this is evidence, not a decision to build any of them.');
     }
@@ -517,8 +517,8 @@ async function runTests() {
         //   (i) a durable, independently re-derivable identity
         //   (ii) a real, already-on-file recipient field
         //   (iii) a genuine fact timestamp, not a derived/live one
-        const collaborationSource = await rawSource('application/CreateCollaborationUseCase.js');
-        const friendRelSource = await rawSource('application/FriendRelationshipUseCase.js');
+        const collaborationSource = await rawSource('application/document/CreateCollaborationUseCase.js');
+        const friendRelSource = await rawSource('application/identity/FriendRelationshipUseCase.js');
         assert(!/publisherIdentity|recipientIdentityId/.test(collaborationSource),
             'F2a. Collaboration still has no already-on-file single recipient field (i) — a live multi-participant session, several participants, no one "recipient".');
         // Friend Relationship's own advertisement carries a peerIdentity
@@ -593,7 +593,7 @@ async function runTests() {
         // publication/leaderboard reconciliation) that this section does
         // not question. "Defines" (export function/class), not merely
         // "references" (an import) — storage/NotificationEventStore.js
-        // and application/GetRecipientNotificationEventsUseCase.js both
+        // and application/chat/GetRecipientNotificationEventsUseCase.js both
         // reference the policy's own exports without redefining any of
         // them.
         const dedupDefinitionHits = await grepCount('export function notificationDeduplicationIdentity\\|export function classifyNotificationCollision\\|export function haveSameNotificationDeduplicationIdentity', ['core', 'application', 'storage']);
@@ -604,8 +604,8 @@ async function runTests() {
         // the panel must never recompute an identity of their own.
         const storeUsesIt = (await rawSource('storage/NotificationEventStore.js')).includes('notificationDeduplicationIdentity(');
         assert(storeUsesIt, 'I2a. storage/NotificationEventStore.js is still a caller of the policy.');
-        const producerUsesIt = /notificationDeduplicationIdentity|classifyNotificationCollision/.test(await rawSource('application/PublicationCommentaryNotificationProducer.js'));
-        assert(!producerUsesIt, 'I2b. application/PublicationCommentaryNotificationProducer.js still performs no deduplication of its own — the store remains the sole authority, reconfirmed fresh.');
+        const producerUsesIt = /notificationDeduplicationIdentity|classifyNotificationCollision/.test(await rawSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js'));
+        assert(!producerUsesIt, 'I2b. application/publication/commentary/PublicationCommentaryNotificationProducer.js still performs no deduplication of its own — the store remains the sole authority, reconfirmed fresh.');
         const panelUsesIt = /notificationDeduplicationIdentity|classifyNotificationCollision/.test(await rawSource('ui/components/NotificationHistoryPanel.js'));
         assert(!panelUsesIt, 'I2c. ui/components/NotificationHistoryPanel.js still performs no deduplication of its own.');
 
@@ -618,11 +618,11 @@ async function runTests() {
     // delivery? Still no.
     // ===============================================================
     {
-        const chatOutbox = await rawSource('application/ChatOutbox.js');
+        const chatOutbox = await rawSource('application/chat/ChatOutbox.js');
         const notificationStore = await rawSource('storage/NotificationEventStore.js');
 
         assert(chatOutbox.includes('STORAGE_KEY_PREFIX') && chatOutbox.includes('peerIdentityId'),
-            'J1. application/ChatOutbox.js still scopes storage per LOCAL OWNER (a key prefix) and addresses entries to a peerIdentityId that must reconnect.');
+            'J1. application/chat/ChatOutbox.js still scopes storage per LOCAL OWNER (a key prefix) and addresses entries to a peerIdentityId that must reconnect.');
         assert(notificationStore.includes("const NOTIFICATION_EVENT_STORE_KEY = 'notification-events:entries';"),
             'J2. storage/NotificationEventStore.js still persists every recipient under one single, shared, unprefixed key — the opposite storage shape.');
         assert(!/import.*ChatOutbox/.test(notificationStore) && !/import.*NotificationEvent/.test(chatOutbox),
@@ -714,7 +714,7 @@ async function runTests() {
 
         // Recipient supplied by the caller — execute() takes no
         // arguments naming a recipient.
-        const queryCode = await rawSource('application/GetRecipientNotificationEventsUseCase.js');
+        const queryCode = await rawSource('application/chat/GetRecipientNotificationEventsUseCase.js');
         assert(/execute\(\)\s*\{/.test(codeOnlyLines(queryCode)),
             'L3. GetRecipientNotificationEventsUseCase.execute() still takes zero arguments — no caller-suppliable recipientIdentityId.');
 

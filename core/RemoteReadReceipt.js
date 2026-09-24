@@ -14,7 +14,7 @@
 //                                       have seen of MY OWN messages.
 //                                       A received, trusted NETWORK
 //                                       claim — see
-//                                       application/ChatUseCase.js#_handleIncomingRead(),
+//                                       application/chat/ChatUseCase.js#_handleIncomingRead(),
 //                                       which only ever writes this
 //                                       AFTER the exact same
 //                                       "connection-proven sender,

@@ -32,7 +32,7 @@
 // AERIAL MOVEMENT PIPELINE MILESTONE UPDATE: stepDroneAltitude() (below
 // deriveAvatarDroneVerticalState()) now DOES decide how fast a drone
 // rises or falls, core/AvatarVehicleMovementCapability.js's own DRONE
-// `supported` flag is now `true`, and application/AvatarVehicleMovementController.js's
+// `supported` flag is now `true`, and application/avatar/AvatarVehicleMovementController.js's
 // own tick() calls both every frame a drone is mounted and moving. See
 // each function's own header, below, for exactly what changed.
 export const AvatarDroneVerticalStateKind = Object.freeze({
@@ -66,7 +66,7 @@ export function deriveAvatarDroneVerticalState({ altitude = 0, ascending = false
 // that one place, mirroring core/AvatarMovementAccelerationSimulation.js's
 // own role for horizontal speed — a small, pure, per-tick stepping
 // function, deliberately kept out of the shared, heavily-depended-on
-// core/AvatarMovementSimulation.js (see application/AvatarVehicleMovementController.js's
+// core/AvatarMovementSimulation.js (see application/avatar/AvatarVehicleMovementController.js's
 // own header for where this is actually called from and why altitude
 // stays a controller-layer concern rather than joining that file's own
 // horizontal kinematics).

@@ -1,13 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import NotificationHistoryPanel from '../ui/components/NotificationHistoryPanel.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
-import { GetRecipientNotificationEventsUseCase } from '../application/GetRecipientNotificationEventsUseCase.js';
+import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
-import { PublicationCommentaryNotificationProducer } from '../application/PublicationCommentaryNotificationProducer.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
+import { PublicationCommentaryNotificationProducer } from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -108,7 +108,7 @@ function makeSharedBackend() {
 // AddPublicationCommentaryUseCase authored by `commentAuthorProvider`,
 // with its sink writing into the SAME shared notificationEventStore —
 // the exact "a Commentary was created; tell the publisher" pipeline
-// application/PublicationCommentaryNotificationProducer.js's own header
+// application/publication/commentary/PublicationCommentaryNotificationProducer.js's own header
 // describes. Never wired into WorldNavigationSession itself — 0.9.284
 // deliberately does not wire the producer into any composition root
 // (see docs/Roadmap.md's own 0.9.284 entry) — this helper exists only so
@@ -121,7 +121,7 @@ function makeProducer(backend, commentAuthorProvider) {
 // The real read-side composition this milestone actually adds:
 // GetRecipientNotificationEventsUseCase, wired into a REAL
 // WorldNavigationSession, exactly the shape
-// application/CreateWorldViewUseCase.js wires in production — plus the
+// application/world/CreateWorldViewUseCase.js wires in production — plus the
 // IDENTICAL thin wrapper ui/views/WorldView.js's own
 // getRecipientNotificationEventsCommand() is.
 function makeReaderFor(recipientIdentityProvider, backend) {
@@ -478,7 +478,7 @@ async function runTests() {
         const panelCode = await codeOnlySource('ui/components/NotificationHistoryPanel.js');
 
         // K1. The panel imports nothing from storage/, core/NotificationEvent.js,
-        // or application/GetRecipientNotificationEventsUseCase.js — only Vue.
+        // or application/chat/GetRecipientNotificationEventsUseCase.js — only Vue.
         const panelRawImports = (await rawSource('ui/components/NotificationHistoryPanel.js')).match(/^import .*/gm) || [];
         assert(panelRawImports.length === 0, `32. ui/components/NotificationHistoryPanel.js imports nothing at all (found: ${JSON.stringify(panelRawImports)}) — it is a pure options object over injected props/data.`);
 
@@ -527,7 +527,7 @@ async function runTests() {
             '39. WorldView.js\'s own command forwards to WorldNavigationSession, never a use case directly.');
 
         // K7. WorldNavigationSession delegates to the unmodified use case.
-        const sessionCode = await codeOnlySource('application/WorldNavigationSession.js');
+        const sessionCode = await codeOnlySource('application/world/WorldNavigationSession.js');
         assert(sessionCode.includes('this._getRecipientNotificationEventsUseCase.execute()'),
             '40. WorldNavigationSession delegates reads to the unmodified GetRecipientNotificationEventsUseCase, with no arguments.');
 
@@ -535,7 +535,7 @@ async function runTests() {
         // GetRecipientNotificationEventsUseCase, reusing the SAME
         // storageProvider/identityProvider every other local collaborator
         // already uses.
-        const compositionCode = await codeOnlySource('application/CreateWorldViewUseCase.js');
+        const compositionCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
         assert(compositionCode.includes('new NotificationEventStore(storageProvider)'),
             '41. the composition root reuses the SAME storageProvider every other local store already uses.');
         assert(compositionCode.includes('new GetRecipientNotificationEventsUseCase(notificationEventStore, identityProvider)'),
@@ -547,7 +547,7 @@ async function runTests() {
         // completely unmodified by this milestone.
         const { execSync } = await import('node:child_process');
         const gitDiffStat = execSync(
-            'git diff --stat HEAD -- application/GetRecipientNotificationEventsUseCase.js storage/NotificationEventStore.js core/NotificationEvent.js core/NotificationDeduplicationPolicy.js application/PublicationCommentaryNotificationProducer.js 2>/dev/null || true',
+            'git diff --stat HEAD -- application/chat/GetRecipientNotificationEventsUseCase.js storage/NotificationEventStore.js core/NotificationEvent.js core/NotificationDeduplicationPolicy.js application/publication/commentary/PublicationCommentaryNotificationProducer.js 2>/dev/null || true',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         assert(gitDiffStat === '', `43. no pre-existing production file this milestone depends on was modified. Found: ${gitDiffStat || '(none)'}.`);

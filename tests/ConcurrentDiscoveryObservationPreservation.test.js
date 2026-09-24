@@ -2,11 +2,11 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-import { composePublicationDistributionCommand } from '../application/PublicationDistributionCommandComposition.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { PublicationDistributionState } from '../application/PublicationDistributionLifecycle.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
+import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { worldEncounterCanvasFiles } from './support/SourceFileGroups.js';
 
@@ -389,7 +389,7 @@ async function run() {
 
         // Structurally: the new store methods' own code bodies never read
         // or write anything material-shaped.
-        const storeSource = codeOnly(await source('application/PublicationDistributionLifecycleStore.js'));
+        const storeSource = codeOnly(await source('application/publication/distribution/PublicationDistributionLifecycleStore.js'));
         const recordStart = storeSource.indexOf('recordDiscoveryObservation(publicationId, discoveryProvider, discoverySection) {');
         const recordEnd = storeSource.indexOf('\n    }', recordStart);
         const getObservationsStart = storeSource.indexOf('getDiscoveryObservations(publicationId) {');
@@ -407,9 +407,9 @@ async function run() {
     // ===============================================================
     {
         const anchorFiles = [
-            'application/CreateArweaveAnchorPublisherUseCase.js',
-            'application/CreateArweaveAnchorProofVerifierUseCase.js',
-            'application/CreateArweaveAnchorEvidenceViewUseCase.js'
+            'application/anchoring/CreateArweaveAnchorPublisherUseCase.js',
+            'application/anchoring/CreateArweaveAnchorProofVerifierUseCase.js',
+            'application/anchoring/CreateArweaveAnchorEvidenceViewUseCase.js'
         ];
         for (const file of anchorFiles) {
             const code = await source(file);
@@ -419,8 +419,8 @@ async function run() {
 
         const placementFiles = [
             'core/PublicationSnapshotPlacement.js',
-            'application/LocalPublicationSnapshotPlacementCatalog.js',
-            'application/AddPublicationSnapshotPlacementUseCase.js'
+            'application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js',
+            'application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js'
         ];
         for (const file of placementFiles) {
             const code = await source(file).catch(() => '');
@@ -457,8 +457,8 @@ async function run() {
     // ===============================================================
     {
         const forbiddenVocabulary = ['PARTIAL', 'MULTI_SUCCESS', 'FAILED', 'SUCCESS', 'PENDING', 'RETRYING', 'CONFIRMED', 'WITHDRAWN', 'kind/objectId'];
-        const storeCode = codeOnly(await source('application/PublicationDistributionLifecycleStore.js'));
-        const commandCode = codeOnly(await source('application/PublicationDistributionCommand.js'));
+        const storeCode = codeOnly(await source('application/publication/distribution/PublicationDistributionLifecycleStore.js'));
+        const commandCode = codeOnly(await source('application/publication/distribution/PublicationDistributionCommand.js'));
         const canvasCode = codeOnly((await Promise.all(worldEncounterCanvasFiles().map((file) => source(file)))).join('\n'));
 
         for (const term of forbiddenVocabulary) {
@@ -475,11 +475,11 @@ async function run() {
     // Section M — architectural regression.
     // ===============================================================
     {
-        const storeSource = await source('application/PublicationDistributionLifecycleStore.js');
+        const storeSource = await source('application/publication/distribution/PublicationDistributionLifecycleStore.js');
         assert(!storeSource.includes('PublicationDistributionCommand'), n('M1. the store still never names any particular caller by file — it remains just as ignorant of PublicationDistributionCommand.js as it always was'));
         assert(/get\(publicationId\)\s*\{/.test(storeSource) && /set\(publicationId, lifecycle\)\s*\{/.test(storeSource) && /subscribe\(publicationId, listener\)\s*\{/.test(storeSource), n('M2. get()/set()/subscribe() keep exactly their pre-0.9.433 signatures'));
 
-        const commandSource = await source('application/PublicationDistributionCommand.js');
+        const commandSource = await source('application/publication/distribution/PublicationDistributionCommand.js');
         assert(/typeof lifecycleStore\.recordDiscoveryObservation === 'function'/.test(codeOnly(commandSource)), n('M3. the command duck-types recordDiscoveryObservation() before calling it — a minimal { get, set } lifecycleStore (this codebase\'s own existing test convention) keeps working exactly as before, unmodified'));
 
         console.log('✓ Section M: get()/set()/subscribe() keep their exact pre-0.9.433 shape, and the command stays duck-typed rather than newly required');

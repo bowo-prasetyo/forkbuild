@@ -4,10 +4,10 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
@@ -222,7 +222,7 @@ async function runTests() {
         assert(discoveryProvider.findById(publicationId).id === publicationId,
             'C3. discoveryProvider.findById(publicationId) ALREADY resolves this exact Publication — LocalDiscoveryProvider\'s id-keyed lookup is not missing; it is simply not the method PublicationQuery\'s free-text widget calls.');
 
-        const materialSourceSrc = await rawSource('application/LocalWorldEncounterMaterialSource.js');
+        const materialSourceSrc = await rawSource('application/worldEncounter/LocalWorldEncounterMaterialSource.js');
         assert(materialSourceSrc.includes('this._discoveryProvider.findById(publicationId)'),
             'C4. Structural: LocalWorldEncounterMaterialSource — the exact class resolving World\'s own observer-local encounters — is ALREADY built on discoveryProvider.findById(), not on PublicationQuery/SearchPublicationsUseCase at all. World\'s own return-path candidate never needed the search widget in the first place.');
         assert(!materialSourceSrc.includes('SearchPublicationsUseCase') && !materialSourceSrc.includes('PublicationQuery'),

@@ -1,15 +1,15 @@
 // 0.9.231 — Recovered Operation Provenance Boundary.
 //
-// 0.9.230 (`application/DocumentOperationRecoveryUseCase.js`) closed the
+// 0.9.230 (`application/document/DocumentOperationRecoveryUseCase.js`) closed the
 // recovery-request seam: a replica that detects a causal gap can now ask
 // a peer for the specific missing operation, verify the response through
 // the SAME trust chain an ordinarily-received operation survives, and make
 // it KNOWN to its own causal graph — all without ever handing it to
-// `application/CommandHistory.js`. That restraint was correct, but it left
+// `application/editor/CommandHistory.js`. That restraint was correct, but it left
 // an implicit distinction that this file makes explicit:
 //
 //   EXECUTED  — this operation has gone through `CommandHistory#execute()`
-//               (`application/CommandHistory.js`, the ONE chokepoint every
+//               (`application/editor/CommandHistory.js`, the ONE chokepoint every
 //               local edit and every `RemoteDocumentOperationApplicationUseCase
 //               #apply()` call already goes through — see that file's own
 //               header, "Tools call commandHistory.execute() ... instead of
@@ -17,7 +17,7 @@
 //               changed this replica's own document state.
 //
 //   RECOVERED — this operation arrived through
-//               `application/DocumentOperationRecoveryUseCase.js`'s own
+//               `application/document/DocumentOperationRecoveryUseCase.js`'s own
 //               `onOperationReceived()` feed: verified, authentic causal
 //               EVIDENCE that the operation exists and precedes whatever
 //               named it as a predecessor — but never applied. It has NOT
@@ -68,13 +68,13 @@
 // sources of truth (`CommandHistory` and
 // `DocumentOperationRecoveryUseCase#onOperationReceived()`).
 //
-// `application/DocumentOperationRecoveryUseCase.js` is the ONE place this
+// `application/document/DocumentOperationRecoveryUseCase.js` is the ONE place this
 // vocabulary is actually threaded onto a real, running event: its own
 // `onOperationReceived()` callback now carries `DocumentOperationProvenance.RECOVERED`
 // as an explicit fifth argument, so a caller reading that feed never has
 // to infer provenance merely from "which feed am I subscribed to" — see
 // that file's own header for the exact wiring. There is no equivalent
-// runtime tag for EXECUTED: `application/CommandHistory.js` stays
+// runtime tag for EXECUTED: `application/editor/CommandHistory.js` stays
 // UNTOUCHED by this milestone (see "Deliberately excluded" above) — its
 // own `getExecutedCommands()`/`getCommands()` already ARE the unambiguous,
 // pre-existing record of every EXECUTED operation; this file names what

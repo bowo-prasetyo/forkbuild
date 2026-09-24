@@ -30,7 +30,7 @@
 // exactly the kind of fact that needs proving to someone else. Blocking
 // proves nothing to anyone — it is one device's own local refusal to
 // keep talking to an identity — so it lives entirely outside this wire
-// protocol, in core/PeerBlockRecord.js/application/PeerBlockUseCase.js,
+// protocol, in core/PeerBlockRecord.js/application/peer/PeerBlockUseCase.js,
 // which never send anything over the network at all.
 export const FriendshipAction = Object.freeze({
     REQUEST: 'REQUEST',

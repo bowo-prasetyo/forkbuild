@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
-import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
+import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { PlaceNamingDiscoveryMonitor } from '../application/PlaceNamingDiscoveryMonitor.js';
+import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
 
 // 0.9.258 — Comprehensive Place Naming E2E & Lifecycle Audit.
 //
@@ -14,13 +14,13 @@ import { PlaceNamingDiscoveryMonitor } from '../application/PlaceNamingDiscovery
 //   Nostr relay
 //        │
 //        ▼
-//   application/NostrPlaceNamingDiscoverySource.js        (0.9.254)
+//   application/placeNaming/NostrPlaceNamingDiscoverySource.js        (0.9.254)
 //        ▼
-//   application/PlaceNamingDiscoveryQueryService.js        (0.9.253)
+//   application/placeNaming/PlaceNamingDiscoveryQueryService.js        (0.9.253)
 //        ▼
-//   application/DiscoverPlaceNamingClaimsCommand.js        (0.9.253)
+//   application/placeNaming/DiscoverPlaceNamingClaimsCommand.js        (0.9.253)
 //        ▼
-//   application/PlaceNamingDiscoveryMonitor.js              (0.9.256)
+//   application/placeNaming/PlaceNamingDiscoveryMonitor.js              (0.9.256)
 //        ├── resolveClaimPosition (session-supplied)
 //        └── core/PlaceNamingProximitySelection.js          (0.9.255)
 //        ▼
@@ -160,7 +160,7 @@ function nostrEventFor(envelopeOrRawContent, { tag, pubkey = 'pk-relay-transport
     return { id: `event-${nextEventId}`, pubkey, kind: 1, tags: [['t', tag]], content, sig: `sig-${nextEventId}` };
 }
 
-// A fake `application/WorldNavigationSession.js` stand-in exposing ONLY
+// A fake `application/world/WorldNavigationSession.js` stand-in exposing ONLY
 // `getRegions()` — see this file's own header. Any other property access
 // throws immediately.
 function makeSession(regionsOrFn) {
@@ -795,11 +795,11 @@ async function runTests() {
         // collaborator, and none contain a ranking/sorting/authority
         // vocabulary of their own.
         const pipelineFiles = [
-            'application/PlaceNamingDiscoveryMonitor.js',
-            'application/PlaceNamingDiscoveryQueryService.js',
-            'application/DiscoverPlaceNamingClaimsCommand.js',
-            'application/NostrPlaceNamingDiscoverySource.js',
-            'application/PlaceNamingDiscoveryRuntimeComposition.js',
+            'application/placeNaming/PlaceNamingDiscoveryMonitor.js',
+            'application/placeNaming/PlaceNamingDiscoveryQueryService.js',
+            'application/placeNaming/DiscoverPlaceNamingClaimsCommand.js',
+            'application/placeNaming/NostrPlaceNamingDiscoverySource.js',
+            'application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js',
             'core/PlaceNamingProximitySelection.js',
             'core/PlaceNamingDiscoveryEnvelope.js'
         ];

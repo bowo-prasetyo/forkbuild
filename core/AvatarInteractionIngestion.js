@@ -7,7 +7,7 @@
 // full "currently stored claim" the way resolveIncomingPresence/
 // resolveIncomingProfile do — an interaction EVENT has no "current"
 // slot to hold: it is rendered once and discarded (see
-// application/AvatarInteractionSyncService.js's own header). Monotonic
+// application/avatar/AvatarInteractionSyncService.js's own header). Monotonic
 // acceptance alone is still worth enforcing even so — it is what
 // stops a captured, genuinely-signed OLD event from being replayed
 // with a fresh (but still old-sequence) claim after a newer one from

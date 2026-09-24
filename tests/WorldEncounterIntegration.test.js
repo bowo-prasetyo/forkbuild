@@ -3,7 +3,7 @@ import {
     describeLocalWorldDiscoverySource,
     describeWorldFromDiscoverySources,
     LOCAL_WORLD_DISCOVERY_ORIGIN
-} from '../application/WorldEncounterIntegration.js';
+} from '../application/worldEncounter/WorldEncounterIntegration.js';
 import { describePeerWorldDiscoverySource } from '../peer/PeerWorldDataIngress.js';
 
 function assert(condition, message) {
@@ -174,7 +174,7 @@ function connectedPeerOf(identityId) {
 //    file is orchestration only, never a second projection algorithm.
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../application/WorldEncounterIntegration.js', import.meta.url);
+    const sourceUrl = new URL('../application/worldEncounter/WorldEncounterIntegration.js', import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
     const codeOnly = fullSource
         .split('\n')
@@ -182,35 +182,35 @@ function connectedPeerOf(identityId) {
         .join('\n');
 
     // No peer transport or network knowledge.
-    assert(!codeOnly.includes('PeerMessageBus'), 'application/WorldEncounterIntegration.js code must never import PeerMessageBus');
-    assert(!codeOnly.includes('PeerConnection'), 'application/WorldEncounterIntegration.js code must never reference PeerConnection');
-    assert(!codeOnly.includes('PeerDiscoveryProvider'), 'application/WorldEncounterIntegration.js code must never reference PeerDiscoveryProvider');
-    assert(!/fetch\(/.test(codeOnly), 'application/WorldEncounterIntegration.js code must never call fetch(...)');
-    assert(!codeOnly.includes('WebSocket'), 'application/WorldEncounterIntegration.js code must never reference WebSocket');
-    assert(!codeOnly.includes('RTCPeerConnection'), 'application/WorldEncounterIntegration.js code must never reference RTCPeerConnection');
+    assert(!codeOnly.includes('PeerMessageBus'), 'application/worldEncounter/WorldEncounterIntegration.js code must never import PeerMessageBus');
+    assert(!codeOnly.includes('PeerConnection'), 'application/worldEncounter/WorldEncounterIntegration.js code must never reference PeerConnection');
+    assert(!codeOnly.includes('PeerDiscoveryProvider'), 'application/worldEncounter/WorldEncounterIntegration.js code must never reference PeerDiscoveryProvider');
+    assert(!/fetch\(/.test(codeOnly), 'application/worldEncounter/WorldEncounterIntegration.js code must never call fetch(...)');
+    assert(!codeOnly.includes('WebSocket'), 'application/worldEncounter/WorldEncounterIntegration.js code must never reference WebSocket');
+    assert(!codeOnly.includes('RTCPeerConnection'), 'application/worldEncounter/WorldEncounterIntegration.js code must never reference RTCPeerConnection');
 
     // No storage.
-    assert(!codeOnly.includes('StorageProvider'), 'application/WorldEncounterIntegration.js code must never reference StorageProvider');
-    assert(!/\blocalStorage\b/.test(codeOnly), 'application/WorldEncounterIntegration.js code must never reference localStorage');
+    assert(!codeOnly.includes('StorageProvider'), 'application/worldEncounter/WorldEncounterIntegration.js code must never reference StorageProvider');
+    assert(!/\blocalStorage\b/.test(codeOnly), 'application/worldEncounter/WorldEncounterIntegration.js code must never reference localStorage');
 
     // No reconciliation, dedup, sort, or match vocabulary.
     const reconciliationTerms = ['dedup', 'reconcile', '.find(', 'compare', '.sort(', 'winner'];
     for (const term of reconciliationTerms) {
-        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `application/WorldEncounterIntegration.js code must never use "${term}"`);
+        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `application/worldEncounter/WorldEncounterIntegration.js code must never use "${term}"`);
     }
 
     // No trust/authority/proximity vocabulary of any kind.
     const trustTerms = ['trusted', 'trust(', 'reputation', 'verified', 'verify(', 'authority', 'priority', 'weight', 'confidence', 'ranking', 'scoring', 'nearest', 'proximity'];
     for (const term of trustTerms) {
-        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `application/WorldEncounterIntegration.js code must never use "${term}"`);
+        assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `application/worldEncounter/WorldEncounterIntegration.js code must never use "${term}"`);
     }
 
     // No per-record loop of this file's own invention — every fact must
     // come from the four functions it calls, not a for/map/filter over
     // individual records.
-    assert(!/\.map\(/.test(codeOnly), 'application/WorldEncounterIntegration.js code must never call .map(...) itself');
-    assert(!/\.filter\(/.test(codeOnly), 'application/WorldEncounterIntegration.js code must never call .filter(...) itself');
-    assert(!/for\s*\(/.test(codeOnly), 'application/WorldEncounterIntegration.js code must never write its own for-loop');
+    assert(!/\.map\(/.test(codeOnly), 'application/worldEncounter/WorldEncounterIntegration.js code must never call .map(...) itself');
+    assert(!/\.filter\(/.test(codeOnly), 'application/worldEncounter/WorldEncounterIntegration.js code must never call .filter(...) itself');
+    assert(!/for\s*\(/.test(codeOnly), 'application/worldEncounter/WorldEncounterIntegration.js code must never write its own for-loop');
 
     console.log('✓ Architectural regression: forbidden imports and vocabulary');
 }
@@ -220,11 +220,11 @@ function connectedPeerOf(identityId) {
 //    calling each of 0.9.0/0.9.1/0.9.2/0.9.7's own entry points once.
 // ---------------------------------------------------------------------
 {
-    const sourceUrl = new URL('../application/WorldEncounterIntegration.js', import.meta.url);
+    const sourceUrl = new URL('../application/worldEncounter/WorldEncounterIntegration.js', import.meta.url);
     const fullSource = await readFile(sourceUrl, 'utf8');
 
-    assert(fullSource.includes("from '../core/WorldDiscoverySourceAssembly.js'"), 'imports assembleWorldDiscoveryInputs from 0.9.7');
-    assert(fullSource.includes("from '../core/WorldEncounter.js'"), 'imports deriveWorldEncounters from 0.9.0');
+    assert(fullSource.includes("from '../../core/WorldDiscoverySourceAssembly.js'"), 'imports assembleWorldDiscoveryInputs from 0.9.7');
+    assert(fullSource.includes("from '../../core/WorldEncounter.js'"), 'imports deriveWorldEncounters from 0.9.0');
     assert(fullSource.includes("from './WorldEncounterReadModel.js'"), 'imports describeWorldEncounterReadModel from 0.9.1');
     assert(fullSource.includes("from './WorldEncounterView.js'"), 'imports describeWorldEncounterView from 0.9.2');
 

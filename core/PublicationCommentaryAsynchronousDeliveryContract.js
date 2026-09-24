@@ -58,8 +58,8 @@
 // at content stored elsewhere. This is why
 // describesConformingPublicationCommentaryAsynchronousDeliverySubstrate()
 // below requires BOTH `publish` and `retrieve`; the existing
-// application/NostrPublicationDiscoveryPublisher.js and
-// application/ArweaveAnnouncementPublisher.js classes, unmodified, each
+// application/nostr/NostrPublicationDiscoveryPublisher.js and
+// application/arweave/ArweaveAnnouncementPublisher.js classes, unmodified, each
 // expose only `publish` (they announce a locator to content stored
 // elsewhere; there is nothing of their own to retrieve) and so, correctly,
 // never conform to this contract — see this file's own tests for a live
@@ -71,7 +71,7 @@
 //      -> a local, unsigned core/PublicationCommentary.js exists
 //   SIGNED
 //      -> wrapped and signed as a PublicationCommentaryDistributionEnvelope
-//         (application/PublicationCommentaryDistributionExchange.js#
+//         (application/publication/commentary/PublicationCommentaryDistributionExchange.js#
 //         exportCommentary(), unmodified)
 //   PERSISTENTLY_PUBLISHED
 //      -> a conforming substrate's own publish() accepted the envelope
@@ -127,7 +127,7 @@
 // own header, unmodified by this milestone), any new deduplication
 // service, any Publication authorization change, and any change whatsoever
 // to the existing WebRTC path
-// (application/PublicationCommentaryDistributionPeerExchange.js, untouched
+// (application/publication/commentary/PublicationCommentaryDistributionPeerExchange.js, untouched
 // by this milestone). This file adds no field to, and imports nothing
 // mutable from, any of those.
 //
@@ -193,7 +193,7 @@ export function isValidPublicationCommentaryDeliveryStatusTransition(from, to) {
 // executable, never a base class, never something a real adapter extends.
 // This mirrors the same "shape documented in a header comment, enforced by
 // a caller's own duck-typed usage, never a formal interface class" style
-// application/NostrPublicationDiscoveryPublisher.js's own header already
+// application/nostr/NostrPublicationDiscoveryPublisher.js's own header already
 // uses for its own `publishImpl` contract, generalized here one layer up
 // so it names no substrate.
 export function describePublicationCommentaryAsynchronousDeliverySubstrateContract() {

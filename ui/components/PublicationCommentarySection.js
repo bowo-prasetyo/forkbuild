@@ -81,7 +81,7 @@ export default {
     },
     computed: {
         // The signed-in identity's did:key id, or `null` — the SAME
-        // tolerant lookup application/WorldNavigationSession.js's own
+        // tolerant lookup application/world/WorldNavigationSession.js's own
         // getMyIdentityId() wraps.
         viewerIdentityId() {
             if (!this.identityUseCase) {

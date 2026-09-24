@@ -41,7 +41,7 @@ export function worldEncounterCanvasFiles() {
 }
 
 export function worldNavigationSessionFiles() {
-    return fileGroup('application/WorldNavigationSession.js', 'application/worldNavigation');
+    return fileGroup('application/world/WorldNavigationSession.js', 'application/worldNavigation');
 }
 
 // css/main.css only @imports its parts, in cascade order.

@@ -2,25 +2,25 @@ import { readFile } from 'node:fs/promises';
 
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { resolveSnapshotWorldPlacement } from '../application/SnapshotWorldPlacement.js';
-import { SnapshotWorldPlacementOutcome } from '../application/SnapshotWorldPlacementOutcome.js';
-import { SnapshotWorldRegistrationOutcome } from '../application/SnapshotWorldRegistrationOutcome.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { executeResolveSelectedSnapshotCommand } from '../application/ResolveSelectedSnapshotCommand.js';
-import { executeMaterializeSelectedSnapshotCommand } from '../application/MaterializeSelectedSnapshotCommand.js';
-import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/MaterializeSnapshotFromSelectedCandidateUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { SnapshotCandidateMaterializationOutcome } from '../application/SnapshotCandidateMaterializationOutcome.js';
-import { DecentralizedSnapshotResolutionOutcome } from '../application/DecentralizedSnapshotResolutionOutcome.js';
-import { DecentralizedSnapshotResolver } from '../application/DecentralizedSnapshotResolver.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { executeSnapshotDistributionCommand } from '../application/SnapshotDistributionCommand.js';
-import { composeSnapshotDistributionRuntime } from '../application/SnapshotDistributionRuntimeComposition.js';
-import { SnapshotWorldPositionClaimOutcome } from '../application/SnapshotWorldPositionClaimOutcome.js';
-import { WorldDiscoverySourceRegistry } from '../application/WorldDiscoverySourceRegistry.js';
-import { describeWorldFromDiscoveryRegistry } from '../application/WorldDiscoveryRegistryProjection.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
+import { resolveSnapshotWorldPlacement } from '../application/snapshot/placement/SnapshotWorldPlacement.js';
+import { SnapshotWorldPlacementOutcome } from '../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
+import { SnapshotWorldRegistrationOutcome } from '../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { executeResolveSelectedSnapshotCommand } from '../application/snapshot/ResolveSelectedSnapshotCommand.js';
+import { executeMaterializeSelectedSnapshotCommand } from '../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { SnapshotCandidateMaterializationOutcome } from '../application/snapshot/materialization/SnapshotCandidateMaterializationOutcome.js';
+import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
+import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { executeSnapshotDistributionCommand } from '../application/snapshot/SnapshotDistributionCommand.js';
+import { composeSnapshotDistributionRuntime } from '../application/snapshot/SnapshotDistributionRuntimeComposition.js';
+import { SnapshotWorldPositionClaimOutcome } from '../application/snapshot/placement/SnapshotWorldPositionClaimOutcome.js';
+import { WorldDiscoverySourceRegistry } from '../application/discovery/WorldDiscoverySourceRegistry.js';
+import { describeWorldFromDiscoveryRegistry } from '../application/discovery/WorldDiscoveryRegistryProjection.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { ArweaveContentStore } from '../content/ArweaveContentStore.js';
@@ -45,7 +45,7 @@ import { worldViewFiles, worldNavigationSessionFiles } from './support/SourceFil
 // 0.9.565 traced the exact seam where a Publication's own deterministic
 // position claim was dropped before Snapshot distribution — a PRODUCT_GAP,
 // not architectural. 0.9.566 closed it, at exactly the two stacked points
-// 0.9.565 named: `application/SnapshotDistributionCommand.js` now accepts
+// 0.9.565 named: `application/snapshot/SnapshotDistributionCommand.js` now accepts
 // and forwards `publicationId`/`claimedPosition`, and `ui/views/
 // WorldView.js#distributeWorldEncounterSnapshot()` now reads them from
 // `WorldNavigationSession#getPlacementInfoForPublication()`. Neither
@@ -258,11 +258,11 @@ function placeReal(placementRegistry, publicationId, position, owner = 'alice') 
     return record;
 }
 
-// Mirrors application/WorldNavigationSession.js's own real
+// Mirrors application/world/WorldNavigationSession.js's own real
 // getPlacementInfoForPublication(publicationId) exactly — reproduced
 // rather than imported (that class pulls in renderer/three.js, which this
 // project's plain `node` test runner cannot resolve; confirmed directly:
-// `node --input-type=module -e "import('./application/WorldNavigationSession.js')"`
+// `node --input-type=module -e "import('./application/world/WorldNavigationSession.js')"`
 // fails with "Cannot find package 'three'"). Section A below verifies this
 // reproduction against the real source, the identical technique 0.9.566's
 // own test already established.
@@ -681,9 +681,9 @@ async function run() {
         assert(receiverPlacementRegistry.findByPublicationId(publication.id).length === 0,
             '5. yet the receiver\'s own authoritative placement/LocalPlacementRegistry.js STILL holds ZERO PlacementRecords for it — a remote Publication possessing VERIFIED content and a CLAIMED position, but lacking an authoritative PlacementRecord, remains in the existing non-authoritative state. This connects directly to the 0.9.551 decision: this capability creates or mutates no PlacementRecord, and never becomes an automatic-placement mechanism.');
 
-        const commandSource = await readSource('application/SnapshotDistributionCommand.js');
+        const commandSource = await readSource('application/snapshot/SnapshotDistributionCommand.js');
         assert(!/PlacementRecord|LocalPlacementRegistry|WorldPlacement/.test(commandSource),
-            '6. application/SnapshotDistributionCommand.js still references no PlacementRecord/LocalPlacementRegistry/WorldPlacement machinery whatsoever.');
+            '6. application/snapshot/SnapshotDistributionCommand.js still references no PlacementRecord/LocalPlacementRegistry/WorldPlacement machinery whatsoever.');
         console.log('✓ Section I: the complete distributed-claim journey creates or mutates no PlacementRecord, on the publisher\'s side or the receiver\'s — the feature remains a claim-consumption mechanism, never an automatic-placement one.');
     }
 
@@ -693,8 +693,8 @@ async function run() {
     // consistency across).
     // =======================================================================
     {
-        const publisherSource = await readSource('application/NostrSnapshotDiscoveryPublisher.js');
-        const queryServiceSource = await readSource('application/NostrSnapshotDiscoveryQueryService.js');
+        const publisherSource = await readSource('application/nostr/NostrSnapshotDiscoveryPublisher.js');
+        const queryServiceSource = await readSource('application/nostr/NostrSnapshotDiscoveryQueryService.js');
         assert(/Publishing to more than one relay, or any relay-selection/.test(publisherSource),
             '1. NostrSnapshotDiscoveryPublisher deliberately excludes multi-relay fan-out of any kind — there is no existing multi-relay architecture in this codebase to verify cross-relay consistency against; this milestone\'s own original framing assumed one that was never built.');
         assert(/exactly one relay per instance/i.test(queryServiceSource),
@@ -811,9 +811,9 @@ async function run() {
 
         // No retries or fallback were introduced anywhere by any of the
         // above.
-        const commandSource = await readSource('application/SnapshotDistributionCommand.js');
+        const commandSource = await readSource('application/snapshot/SnapshotDistributionCommand.js');
         assert(!/retry|setTimeout|fallback/i.test(commandSource),
-            '9. no retry/fallback vocabulary of any kind exists in application/SnapshotDistributionCommand.js — none of the failure boundaries above required, or were given, one.');
+            '9. no retry/fallback vocabulary of any kind exists in application/snapshot/SnapshotDistributionCommand.js — none of the failure boundaries above required, or were given, one.');
 
         console.log('✓ Section K: each of the five named failure boundaries fails in isolation, propagating its own pre-existing outcome verbatim, never corrupting or retrying an unrelated, already-succeeded distribution.');
     }

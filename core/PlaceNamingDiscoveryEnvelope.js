@@ -1,11 +1,11 @@
 // 0.9.253 — Place Naming Discovery Boundary.
 //
 // 0.5.2 built the naming MODEL (core/PlaceNamingClaim.js) and 0.5.3 built
-// its first TRANSPORT (application/PlaceNamingClaimExchange.js — manual
+// its first TRANSPORT (application/placeNaming/PlaceNamingClaimExchange.js — manual
 // file export/import, deliberately protocol-independent so "every future
 // transport... plugs into THIS class's importClaim()/exportClaim(),
 // never into core/PlaceNamingView.js or
-// application/LocalPlaceNamingClaimStore.js directly"). Neither file
+// application/placeNaming/LocalPlaceNamingClaimStore.js directly"). Neither file
 // answers a question a peer-to-peer or decentralized transport actually
 // needs answered first: given nothing but a `worldId`/`regionId` a
 // Wanderer currently cares about, WHAT WIRE SHAPE does a source hand back
@@ -25,7 +25,7 @@
 //        derivePlaceNamingDiscoveryTag()
 //                    │
 //                    ▼
-//   application/PlaceNamingDiscoveryQueryService.js   (0.9.253, sibling —
+//   application/placeNaming/PlaceNamingDiscoveryQueryService.js   (0.9.253, sibling —
 //        aggregates whatever a source's own search() hands back, parsing
 //        each raw payload through THIS file)
 //
@@ -68,14 +68,14 @@
 // fields `core/PlaceNamingClaim.js`'s own constructor already requires
 // (`id`, `worldId`, `regionId`, `name`, `authorIdentityId`, `createdAt`)
 // and a `signature` object carrying the same five fields
-// `application/PlaceNamingClaimPublicationValidator.js` already checks
+// `application/placeNaming/PlaceNamingClaimPublicationValidator.js` already checks
 // (`algorithm`, `signer`, `signature`, `signedHash`, `domain`). Whether
 // that signature actually verifies, and whether its signer actually
 // equals `claim.authorIdentityId`, is deliberately NOT this file's
 // question — `identity/LocalAuthorizationVerifier.js#verifyPlaceNamingClaim()`
 // answers that, on the CONSUMING side, exactly the "well-formed is a
 // weaker claim than authentic" boundary
-// `application/PlaceNamingClaimPublicationValidator.js`'s own header
+// `application/placeNaming/PlaceNamingClaimPublicationValidator.js`'s own header
 // already draws for the file-exchange transport. A discovery source
 // handing back a well-formed-but-forged envelope is expected, ordinary,
 // and this file's problem to describe, never this file's problem to
@@ -90,7 +90,7 @@
 // whichever it ends up with. `buildPlaceNamingDiscoveryEnvelope()` is the
 // inverse: given an already-SIGNED `PlaceNamingClaim` instance, produces
 // the plain-object shape a future publishing source hands to a transport
-// — the identical role `application/PlaceNamingClaimPublication.js#
+// — the identical role `application/placeNaming/PlaceNamingClaimPublication.js#
 // buildPlaceNamingClaimPublication()` already plays for the file-exchange
 // transport, one wire shape over.
 //
@@ -105,7 +105,7 @@
 // VERIFICATION. Every value this file returns is `Object.freeze()`'d
 // (including the nested `claim` and `claim.signature`); nothing passed in
 // is ever mutated. This file never imports `identity/
-// LocalAuthorizationVerifier.js`, `application/LocalPlaceNamingClaimStore.js`,
+// LocalAuthorizationVerifier.js`, `application/placeNaming/LocalPlaceNamingClaimStore.js`,
 // or anything transport-shaped (Nostr, WebRTC, a relay client) — it only
 // names a JSON contract.
 //
@@ -251,7 +251,7 @@ export function parsePlaceNamingDiscoveryEnvelope(rawPayload) {
 // shape a future publishing source hands to a transport. Throws
 // synchronously (never returns `null`) for a missing/non-instance
 // `claim`, or an unsigned one — the identical discipline
-// `application/PlaceNamingClaimPublication.js#buildPlaceNamingClaimPublication()`
+// `application/placeNaming/PlaceNamingClaimPublication.js#buildPlaceNamingClaimPublication()`
 // already holds: publishing a claim no receiver's own validator could
 // ever accept back is a caller-side mistake to fail loudly on, not to
 // silently produce dead-on-arrival data for.

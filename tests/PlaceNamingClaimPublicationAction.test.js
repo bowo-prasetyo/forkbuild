@@ -2,13 +2,13 @@ import { readFile } from 'node:fs/promises';
 
 import PlaceNamingPanel from '../ui/components/PlaceNamingPanel.js';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
-import { composePlaceNamingPublicationRuntime } from '../application/PlaceNamingPublicationRuntimeComposition.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
+import { composePlaceNamingPublicationRuntime } from '../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -98,7 +98,7 @@ function makeReplica(identityProvider, { storage = new InMemoryStorageProvider()
 }
 
 // ---------------------------------------------------------------------
-// A fake `application/WorldNavigationSession.js` stand-in exposing ONLY
+// A fake `application/world/WorldNavigationSession.js` stand-in exposing ONLY
 // `getPlaceNamingClaims()` — the ONE session method
 // `publishNamingClaimToNostr()` (per ui/views/WorldView.js's own 0.9.320
 // wiring) ever calls. Any other access throws, so a test failing this way
@@ -553,8 +553,8 @@ async function run() {
         // The use case this whole family rests on is untouched — publish()
         // still has no idea a Nostr publisher exists (0.9.316's own
         // "never automatic" decision, preserved unchanged).
-        const useCaseCode = await codeOnlySource('application/PlaceNamingClaimUseCase.js');
-        assert(!useCaseCode.includes('Nostr') && !useCaseCode.includes('DiscoveryPublisher'), '48. application/PlaceNamingClaimUseCase.js remains completely unaware of Nostr publication — publish() stays local-only and synchronous');
+        const useCaseCode = await codeOnlySource('application/placeNaming/PlaceNamingClaimUseCase.js');
+        assert(!useCaseCode.includes('Nostr') && !useCaseCode.includes('DiscoveryPublisher'), '48. application/placeNaming/PlaceNamingClaimUseCase.js remains completely unaware of Nostr publication — publish() stays local-only and synchronous');
 
         console.log('✓ Section I: architectural regression — ui/main.js/ui/views/WorldView.js/ui/components/PlaceNamingPanel.js actually contain the wiring every section above assumes, and PlaceNamingClaimUseCase.js remains untouched');
     }

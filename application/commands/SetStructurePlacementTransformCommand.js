@@ -7,7 +7,7 @@ import { Position } from '../../core/Position.js';
 // RotateStructurePlacementCommand's own RELATIVE deltas — sets a
 // StructurePlacement's position and/or rotation to an EXACT target
 // value, remembering the prior exact value for undo(). Mirrors
-// application/SpatialEditingService.js#applyNumericTransform()'s own
+// application/editor/SpatialEditingService.js#applyNumericTransform()'s own
 // existing ABSOLUTE convention for bricks/selections (0.1.49) — the
 // natural future caller for this command is the same numeric-transform-
 // input surface, extended to structure placements.

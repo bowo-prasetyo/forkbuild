@@ -51,7 +51,7 @@ import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/Sour
 //   G. Verdict.
 //
 // THE CONCRETE FIX THIS MILESTONE MAKES (test-only, detailed in Section B):
-// `application/ArweaveGraphqlDiscoveryQueryService.js#search()` was amended
+// `application/arweave/ArweaveGraphqlDiscoveryQueryService.js#search()` was amended
 // by 0.9.494 to perform one additional gateway fetch per discovered
 // transaction — decoding it as a real `core/DecentralizedDiscoveryEnvelope
 // .js` envelope and reporting THAT envelope's own claimed `uri`, never the
@@ -174,9 +174,9 @@ async function run() {
         // — never a second, hand-rolled envelope implementation.
         for (const file of ['tests/WorldViewDecentralizedPublicationRetrievalIntegration.test.js', 'tests/WorldViewDiscoveredPublicationSelectionIntegration.test.js']) {
             const src = await source(file);
-            check(src.includes("import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';"),
+            check(src.includes("import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';"),
                 `B. ${file} imports the real, production ArweaveAnnouncementPublisher`);
-            check(src.includes("import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';"),
+            check(src.includes("import { describeDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';"),
                 `B. ${file} imports the real, production describeDecentralizedDiscoveryEnvelope`);
             check(src.includes('function makeFakeArweaveSubstrate()'),
                 `B. ${file} carries the SAME makeFakeArweaveSubstrate() fixture tests/ArweaveDiscoveryUriIdentityBoundaryAudit.test.js (0.9.494's own convergence proof) already established — reused, not reinvented`);
@@ -198,9 +198,9 @@ async function run() {
         // Root cause, confirmed directly from the real production file
         // these four fixtures were built against — never merely asserted
         // in this file's own prose.
-        const querySrc = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const querySrc = await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         check(/AMENDED BY 0\.9\.494/.test(querySrc),
-            "B. application/ArweaveGraphqlDiscoveryQueryService.js's own header confirms the 0.9.494 amendment these four fixtures predated");
+            "B. application/arweave/ArweaveGraphqlDiscoveryQueryService.js's own header confirms the 0.9.494 amendment these four fixtures predated");
         check(/_fetchAnnouncementEnvelope\(announcementId\)/.test(codeOnly(querySrc)),
             'B. ...and search() genuinely performs the additional per-candidate envelope fetch the fix names, in current production source, right now');
 
@@ -243,23 +243,23 @@ async function run() {
         check(/creationCoordinator\.create\(entry\.publication\.id, anchorType\)/.test(createAnchorBody),
             'C1. ...confirmed by what it actually calls: exactly (publicationId, anchorType), nothing else');
 
-        const coordinatorSrc = codeOnly(await source('application/PublicationAnchorCreationCoordinator.js'));
+        const coordinatorSrc = codeOnly(await source('application/anchoring/PublicationAnchorCreationCoordinator.js'));
         check(/async create\(publicationId, anchorType\)/.test(coordinatorSrc),
             'C1. PublicationAnchorCreationCoordinator#create() itself takes exactly (publicationId, anchorType) — no storage/discoveryProvider parameter exists at this layer to couple through');
         check(!/storage|discoveryProvider|snapshotDistribution/i.test(coordinatorSrc),
             'C1. ...and the file carries no storage/discoveryProvider/snapshotDistribution vocabulary of any kind');
 
-        const useCaseSrc = codeOnly(await source('application/CreateExternalPublicationAnchorUseCase.js'));
+        const useCaseSrc = codeOnly(await source('application/anchoring/CreateExternalPublicationAnchorUseCase.js'));
         check(/async execute\(publicationId, anchorType\)/.test(useCaseSrc),
             'C1. the deepest layer, CreateExternalPublicationAnchorUseCase#execute(), ALSO takes exactly (publicationId, anchorType) — the independence holds all the way down, not just at the UI');
         check(useCaseSrc.includes('publication.contentReference.hash') && !/execute\(publicationId, anchorType, ?(storage|contentHash|discoveryProvider)/.test(useCaseSrc),
             "C1. the contentHash an anchor commits to is read from the publication's OWN contentReference.hash — never a caller-supplied value that could vary with whichever Content backend served this particular distribution attempt");
 
         // C2. Content backend selection never reads anchorType.
-        const backendSelectionSrc = codeOnly(await source('application/SnapshotDistributionContentBackendSelection.js'));
+        const backendSelectionSrc = codeOnly(await source('application/snapshot/SnapshotDistributionContentBackendSelection.js'));
         check(!/anchorType/.test(backendSelectionSrc),
-            'C2. application/SnapshotDistributionContentBackendSelection.js carries zero anchorType vocabulary — Content backend eligibility/resolution never branches on which Proof/Anchoring substrates happen to be registered');
-        const resolverSrc = codeOnly(await source('application/DecentralizedSnapshotResolver.js'));
+            'C2. application/snapshot/SnapshotDistributionContentBackendSelection.js carries zero anchorType vocabulary — Content backend eligibility/resolution never branches on which Proof/Anchoring substrates happen to be registered');
+        const resolverSrc = codeOnly(await source('application/snapshot/DecentralizedSnapshotResolver.js'));
         check(!/anchorType/.test(resolverSrc),
             'C2. ...neither does Snapshot resolution — a discovered Snapshot resolves through its own declared storage alone');
 
@@ -311,11 +311,11 @@ async function run() {
         // D1. No shared catalog: /publications' own LocalPublicationCatalog
         // (the Evidence/Anchoring data source) is never read by any World
         // Encounter material-loading file, and vice versa.
-        const localMaterialSourceSrc = codeOnly(await source('application/LocalWorldEncounterMaterialSource.js'));
+        const localMaterialSourceSrc = codeOnly(await source('application/worldEncounter/LocalWorldEncounterMaterialSource.js'));
         check(!/LocalPublicationCatalog|publicationCatalog/i.test(localMaterialSourceSrc),
-            'D1. application/LocalWorldEncounterMaterialSource.js never references LocalPublicationCatalog/publicationCatalog — World Encounter material loading reads through discovery/LocalDiscoveryProvider.js alone, a genuinely different collaborator');
+            'D1. application/worldEncounter/LocalWorldEncounterMaterialSource.js never references LocalPublicationCatalog/publicationCatalog — World Encounter material loading reads through discovery/LocalDiscoveryProvider.js alone, a genuinely different collaborator');
 
-        const anchorCoordinatorSrc = codeOnly(await source('application/PublicationAnchorCreationCoordinator.js'));
+        const anchorCoordinatorSrc = codeOnly(await source('application/anchoring/PublicationAnchorCreationCoordinator.js'));
         check(!/WorldEncounter/i.test(anchorCoordinatorSrc),
             'D1. ...and, in the other direction, PublicationAnchorCreationCoordinator.js carries zero WorldEncounter vocabulary — Proof/Anchoring never reads World Encounter\'s own material chain either');
 
@@ -336,14 +336,14 @@ async function run() {
 
         // D3. The two "verification" vocabularies are honestly distinct,
         // not a shared or overloaded term.
-        const worldStatusSrc = await source('application/WorldEncounterMaterialVerification.js');
+        const worldStatusSrc = await source('application/worldEncounter/WorldEncounterMaterialVerification.js');
         check(/VERIFIED|REJECTED|UNVERIFIABLE/.test(worldStatusSrc),
             "D3. World Encounter's own verification status vocabulary (signature-based) is present and independently named");
-        const anchorStatusSrc = await source('application/AnchorVerificationLifecycleState.js');
+        const anchorStatusSrc = await source('application/anchoring/AnchorVerificationLifecycleState.js');
         check(anchorStatusSrc.length > 0,
             "D3. Proof/Anchoring's own, separately-named anchor verification lifecycle file exists — a genuinely different status machine, never a re-export or alias of World Encounter's own");
-        check(!/WorldEncounterMaterialVerification/.test(await source('application/PublicationEvidenceView.js')),
-            "D3. application/PublicationEvidenceView.js (the Evidence -> Verification labels Section E of 0.9.514 already proved honest) never imports World Encounter's own verification module — 'Independently verified' always means an external anchor check, never a signature check");
+        check(!/WorldEncounterMaterialVerification/.test(await source('application/publication/evidence/PublicationEvidenceView.js')),
+            "D3. application/publication/evidence/PublicationEvidenceView.js (the Evidence -> Verification labels Section E of 0.9.514 already proved honest) never imports World Encounter's own verification module — 'Independently verified' always means an external anchor check, never a signature check");
 
         console.log('✓ Section D: World Encounter material verification and Proof/Anchoring evidence verification are two DELIBERATELY SEPARATE subsystems — no shared catalog, no shared route or in-app link, no shared verification vocabulary, confirmed in both directions from real source. This matches the requesting brief\'s own two-diagram framing (Snapshot/World Encounter drawn separately from Proof/Anchoring) rather than the eleven-step single list being a claim that the two must be one continuous UI flow. Introducing a cross-link is a genuine, new product decision (would a Wanderer encountering an arbitrary object in World actually want an Evidence lookup for it, given most encountered material carries no anchor at all?) — correctly OUT OF SCOPE for a continuity audit, not a broken continuity this milestone can honestly report as a bug.');
     }

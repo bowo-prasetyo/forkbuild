@@ -5,18 +5,18 @@ import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { CreateEditorContextUseCase } from '../application/CreateEditorContextUseCase.js';
-import { CopyStructureIntoDocumentUseCase } from '../application/CopyStructureIntoDocumentUseCase.js';
-import { CompositionPreviewUseCase } from '../application/CompositionPreviewUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
+import { CopyStructureIntoDocumentUseCase } from '../application/editor/CopyStructureIntoDocumentUseCase.js';
+import { CompositionPreviewUseCase } from '../application/editor/CompositionPreviewUseCase.js';
 import { StructureCompositionTool } from '../application/tools/StructureCompositionTool.js';
-import { transformStructureBricks } from '../application/StructureCompositionTransform.js';
-import { StructureDocumentResolver } from '../application/StructureDocumentResolver.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { transformStructureBricks } from '../application/editor/StructureCompositionTransform.js';
+import { StructureDocumentResolver } from '../application/editor/StructureDocumentResolver.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { EditorEvent } from '../core/events/EditorEvent.js';
 import { ToolId } from '../application/editor-state/ToolId.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -125,7 +125,7 @@ async function run() {
 
         // A single 1x1 brick at local (2, 0.5, 0), rotated +90 around the
         // structure's own origin: (x, z) -> (-z, x) by the same formula
-        // application/TransformMath.js uses everywhere else in this
+        // application/editor/TransformMath.js uses everywhere else in this
         // codebase (x' = cos*dx - sin*dz, z' = sin*dx + cos*dz).
         const singleBrickStructure = { id: 'test:single', name: 'Single', bricks: [
             new Brick({ definitionId: 'core:cube', position: new Position(2, 0.5, 0), rotation: 0 })

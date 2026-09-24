@@ -3,13 +3,13 @@ import { readFile } from 'node:fs/promises';
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
-import { LocalWorldEncounterPublicationAdmissionLog } from '../application/LocalWorldEncounterPublicationAdmissionLog.js';
-import { ReconstructWorldEncounterPublicationDiscoveryUseCase } from '../application/ReconstructWorldEncounterPublicationDiscoveryUseCase.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
+import { LocalWorldEncounterPublicationAdmissionLog } from '../application/worldEncounter/LocalWorldEncounterPublicationAdmissionLog.js';
+import { ReconstructWorldEncounterPublicationDiscoveryUseCase } from '../application/worldEncounter/ReconstructWorldEncounterPublicationDiscoveryUseCase.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -19,7 +19,7 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 //
 // 0.9.650's own Major User Journey Product Reassessment found the SAME
 // continuity class 0.9.607/0.9.608 already closed for the OTHER admission
-// path (application/PublicationExchange.js -> application/
+// path (application/publication/PublicationExchange.js -> application/
 // LocalPublicationCatalog.js), on this second one:
 // ui/components/WorldEncounterCanvas.js's own admitToRepositoryDiscovery()
 // (0.9.474/0.9.523/0.9.595) admits a resolved, AVAILABLE+VERIFIED
@@ -29,10 +29,10 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 // admitted before shutdown.
 //
 // This file is the flagship, end-to-end closure audit for the fix: a new,
-// purpose-built application/LocalWorldEncounterPublicationAdmissionLog.js
-// (deliberately NOT application/LocalPublicationCatalog.js — see that new
+// purpose-built application/worldEncounter/LocalWorldEncounterPublicationAdmissionLog.js
+// (deliberately NOT application/publication/LocalPublicationCatalog.js — see that new
 // log's own header, and Section E below, for the live proof of why not),
-// reconstructed via application/ReconstructWorldEncounterPublicationDiscoveryUseCase.js
+// reconstructed via application/worldEncounter/ReconstructWorldEncounterPublicationDiscoveryUseCase.js
 // into the SAME decentralizedPublicationDiscoveryProvider instance.
 //
 //   Section A — Flagship restart journey: admit through the real,

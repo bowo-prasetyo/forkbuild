@@ -4,17 +4,17 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateEditorContextUseCase } from '../application/CreateEditorContextUseCase.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateEditorContextUseCase } from '../application/editor/CreateEditorContextUseCase.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { EditorActionRegistry, createStandardActions } from '../application/EditorActionRegistry.js';
-import { EditorActionContext } from '../application/EditorActionContext.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { EditorActionRegistry, createStandardActions } from '../application/editor/EditorActionRegistry.js';
+import { EditorActionContext } from '../application/editor/EditorActionContext.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 
 // 0.9.660 — Editor Selected-Brick Camera Focus Boundary Audit.
 //
@@ -26,9 +26,9 @@ import { WorldNavigationSession } from '../application/WorldNavigationSession.js
 // selection" action, without inventing a second camera-control system?
 //
 // This file answers that question against real, current production code
-// only — application/EditorSession.js, application/SelectionBoundsService.js,
-// application/editor-state/SelectionState.js, application/EditorActionRegistry.js,
-// application/WorldNavigationSession.js, application/CameraFocusAnimator.js — never
+// only — application/editor/EditorSession.js, application/editor/SelectionBoundsService.js,
+// application/editor-state/SelectionState.js, application/editor/EditorActionRegistry.js,
+// application/world/WorldNavigationSession.js, application/editor/CameraFocusAnimator.js — never
 // a bespoke stand-in for any of them.
 //
 // SECTIONS, mirroring the brief's own lettering:
@@ -121,7 +121,7 @@ async function run() {
         // exact module this codebase already imports it from, never a
         // re-typed literal that could silently drift from the source.
         const worldModuleSource = await (await import('node:fs/promises')).readFile(
-            new URL('../application/WorldNavigationSession.js', import.meta.url), 'utf8');
+            new URL('../application/world/WorldNavigationSession.js', import.meta.url), 'utf8');
         assert(worldModuleSource.includes('const LOCATION_FOCUS_OFFSET = { x: 12, y: 12, z: 12 };'),
             n('A2. WorldNavigationSession\'s real focus offset is a FIXED { x: 12, y: 12, z: 12 } box — never derived from any target\'s own size'));
         assert(worldModuleSource.includes('const CAMERA_FOCUS_DURATION_MS = 900;'),
@@ -234,7 +234,7 @@ async function run() {
         // D1. frameCameraOn()'s real offset is byte-identical to World's
         // LOCATION_FOCUS_OFFSET — one shared convention, not a second.
         const editorModuleSource = await (await import('node:fs/promises')).readFile(
-            new URL('../application/EditorSession.js', import.meta.url), 'utf8');
+            new URL('../application/editor/EditorSession.js', import.meta.url), 'utf8');
         assert(editorModuleSource.includes('const ENTRY_CAMERA_OFFSET = { x: 12, y: 12, z: 12 };'),
             n('D1. EditorSession\'s real ENTRY_CAMERA_OFFSET is { x: 12, y: 12, z: 12 } — the exact same fixed box World uses'));
 
@@ -432,7 +432,7 @@ async function run() {
     // `.get('selection.focus') === null`) and probed a throwaway action
     // on a scratch registry to show the shape would fit (H3). 0.9.661
     // implemented exactly the shape this section predicted, verbatim,
-    // in the real application/EditorActionRegistry.js — so H1/H3 now
+    // in the real application/editor/EditorActionRegistry.js — so H1/H3 now
     // assert against the REAL 'selection.focus' action instead of its
     // absence or a disposable stand-in. H2 and H4 are unchanged: they
     // were already checking real, pre-existing production code.
@@ -525,7 +525,7 @@ async function run() {
 
         console.log('\n=== SECTION I: STRUCTURE-PLACEMENT SCOPE ===');
         console.log('✓ getSelectedPlacementInfo() DOES resolve a real position for a placement selection, but');
-        console.log('  through a deliberately separate data shape (application/EditorSession.js\'s own header on');
+        console.log('  through a deliberately separate data shape (application/editor/EditorSession.js\'s own header on');
         console.log('  why placement info and brick-selection bounds are never folded into one). Whether');
         console.log('  "Focus Selection" ALSO covers a single selected structure placement (by branching to');
         console.log('  getSelectedPlacementInfo().position when selection.isStructurePlacementSelection is true,');
@@ -539,9 +539,9 @@ async function run() {
     // ===============================================================
     {
         const editorModuleSource = await (await import('node:fs/promises')).readFile(
-            new URL('../application/EditorSession.js', import.meta.url), 'utf8');
+            new URL('../application/editor/EditorSession.js', import.meta.url), 'utf8');
         assert(!editorModuleSource.includes('CameraFocusAnimator'),
-            n('J1. application/EditorSession.js never imports CameraFocusAnimator — Editor camera framing has no animation machinery today'));
+            n('J1. application/editor/EditorSession.js never imports CameraFocusAnimator — Editor camera framing has no animation machinery today'));
         assert(!editorModuleSource.includes('onAnimationFrame'),
             n('J1. ...and no frame-tick subscription either — frameCameraOn() is a single, INSTANT setCameraState() call, unlike World\'s animated _beginCameraFocus()'));
 
@@ -621,7 +621,7 @@ async function run() {
         console.log('Selection" action needs — target resolution (Section B), the correct target point (Section');
         console.log('C), distance semantics (Section D), lifecycle correctness including the multi-selection case');
         console.log('(Section E), the camera-only side-effect invariant (Section F), and determinism (Section G)');
-        console.log('— already exists in application/EditorSession.js and application/SelectionBoundsService.js,');
+        console.log('— already exists in application/editor/EditorSession.js and application/editor/SelectionBoundsService.js,');
         console.log('unchanged, and composes today with zero new code (Section K). The natural UI seam already');
         console.log('exists too (Section H): one EditorActionRegistry entry, category "Selection", surfacing');
         console.log('automatically through the command palette, keyboard dispatch, and a fourth SelectionInspector');

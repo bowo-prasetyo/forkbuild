@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarMovementController } from '../application/AvatarMovementController.js';
+import { AvatarMovementController } from '../application/avatar/AvatarMovementController.js';
 import { VehicleType } from '../core/VehicleType.js';
 import { resolveAvatarVehicleMovementCapability } from '../core/AvatarVehicleMovementCapability.js';
 import { AvatarVehicleBrakingIntent } from '../core/AvatarVehicleBrakingIntent.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 
@@ -17,7 +17,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 // { brakeRequested }) are both pure and, on their own, prove nothing
 // about REAL movement — see each file's own test suite for that half.
 // This suite proves the other half: that
-// application/AvatarMovementController.js's own new
+// application/avatar/AvatarMovementController.js's own new
 // `setVehicleBrakingIntent()`/`_resolvedBrakingRequested()` seam
 // (0.9.95) genuinely closes the gap `AvatarMovementState.brakingRequested`
 // left open since 0.9.92 — a real `AvatarMovementController`, driven only
@@ -426,7 +426,7 @@ async function runTests() {
         assert(controller.vehicleBrakingIntent() === NONE, '31. null degrades to NONE as well');
     }
     {
-        const controllerSource = await readFile(new URL('../application/AvatarMovementController.js', import.meta.url), 'utf8');
+        const controllerSource = await readFile(new URL('../application/avatar/AvatarMovementController.js', import.meta.url), 'utf8');
 
         // The method body of _resolvedBrakingRequested() itself must
         // read only `_vehicleBrakingIntent` — never `_movementCapability`,

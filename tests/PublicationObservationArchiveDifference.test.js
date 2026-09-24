@@ -1,16 +1,16 @@
 import { computeContentHash } from '../serializer/contentHash.js';
-import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/IpfsPublicationRecord.js';
-import { BitcoinAnchorBroadcastState } from '../application/BitcoinAnchorBroadcastState.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
-import { fingerprintPublicationObservationArchive } from '../application/PublicationObservationArchiveFingerprint.js';
+import { IpfsPublicationRecord, IpfsPublicationMethod } from '../application/ipfs/IpfsPublicationRecord.js';
+import { BitcoinAnchorBroadcastState } from '../application/anchoring/bitcoin/BitcoinAnchorBroadcastState.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
+import { fingerprintPublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveFingerprint.js';
 import {
     PublicationObservationArchiveFingerprintComparisonResult,
     comparePublicationObservationArchiveFingerprint
-} from '../application/PublicationObservationArchiveFingerprintComparison.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { BitcoinAnchorPublicationRecord } from '../application/BitcoinAnchorPublicationRecord.js';
-import { describePublicationObservationArchiveDifference } from '../application/PublicationObservationArchiveDifference.js';
+} from '../application/publication/observationArchive/PublicationObservationArchiveFingerprintComparison.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { BitcoinAnchorPublicationRecord } from '../application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js';
+import { describePublicationObservationArchiveDifference } from '../application/publication/observationArchive/PublicationObservationArchiveDifference.js';
 
 // 0.8.87 — Durable Publication Archive Difference Projection.
 //
@@ -336,7 +336,7 @@ async function run() {
         assert(!networkCallOccurred, '47. computing a difference performs zero network operations');
 
         const fileText = await (await import('node:fs/promises')).readFile(
-            new URL('../application/PublicationObservationArchiveDifference.js', import.meta.url), 'utf8'
+            new URL('../application/publication/observationArchive/PublicationObservationArchiveDifference.js', import.meta.url), 'utf8'
         );
         const importLines = fileText.split('\n').filter((line) => line.trim().startsWith('import ')).join('\n').toLowerCase();
         const FORBIDDEN_IMPORT_SUBSTRINGS = ['wallet', 'signer', 'pinning', 'bitcoinrpc', 'fetch', 'xmlhttprequest', 'websocket', 'storage'];

@@ -1,25 +1,25 @@
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND } from '../core/BlueprintAttribution.js';
-import { LocalBlueprintAttributionStore } from '../application/LocalBlueprintAttributionStore.js';
-import { createBlueprintAttributionPublicationKind } from '../application/BlueprintAttributionPublicationKind.js';
+import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
+import { createBlueprintAttributionPublicationKind } from '../application/blueprint/BlueprintAttributionPublicationKind.js';
 import {
     PublicationPeerMessageKind,
     toPublicationAnnounceMessage,
     isValidPublicationPeerMessage
-} from '../application/PublicationPeerProtocol.js';
-import { PublicationPeerExchange } from '../application/PublicationPeerExchange.js';
+} from '../application/publication/PublicationPeerProtocol.js';
+import { PublicationPeerExchange } from '../application/publication/PublicationPeerExchange.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
-import { ConnectToPeerUseCase } from '../application/ConnectToPeerUseCase.js';
+import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 
 // 0.7.3 — Peer Publication Exchange.
@@ -36,7 +36,7 @@ import { PeerMessageBus } from '../peer/PeerMessageBus.js';
 //              LocalPeerConnectionProvider.js + application/
 //              ConnectToPeerUseCase.js, unmodified) carries Alice's
 //              publication to Bob with no file, no clipboard, and no
-//              second call to application/PublicationExchange.js — Bob
+//              second call to application/publication/PublicationExchange.js — Bob
 //              catalogs it the moment it arrives, resolves
 //              CONTENT_UNAVAILABLE against his own empty ContentStore,
 //              then RESOLVED the instant the bytes propagate, exactly
@@ -88,7 +88,7 @@ function publishTestEnvelope(identityProvider, { contentKind = 'forkbuild.test-c
 }
 
 // A minimal stand-in for peer/PeerMessageBus.js — real enough to exercise
-// application/PublicationPeerExchange.js's own routing/gating logic in
+// application/publication/PublicationPeerExchange.js's own routing/gating logic in
 // isolation, deterministically, without a real handshake. Section C below
 // runs the identical class against the REAL bus.
 class StubPeerMessageBus {

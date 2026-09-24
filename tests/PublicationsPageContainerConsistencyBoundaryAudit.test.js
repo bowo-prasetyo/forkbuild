@@ -149,7 +149,7 @@ async function run() {
         // (search, sort, pagination) via PublicationCatalogToolbar.js/
         // PublicationPagination.js.
         assert(!/from ['"]\.\.\/components\/PublicationCatalog\.js['"]|from ['"]\.\.\/components\/PublicationPagination\.js['"]|from ['"]\.\.\/components\/PublicationCatalogToolbar\.js['"]/.test(publicationsViewSrc),
-            n('A: DecentralizedPublicationsView.js imports none of ui/components/PublicationCatalog.js/PublicationPagination.js/PublicationCatalogToolbar.js — no catalog-browsing chrome exists on this page to begin with (its own unrelated mentions of application/LocalPublicationCatalog.js, a different, non-UI store class, are not this)'));
+            n('A: DecentralizedPublicationsView.js imports none of ui/components/PublicationCatalog.js/PublicationPagination.js/PublicationCatalogToolbar.js — no catalog-browsing chrome exists on this page to begin with (its own unrelated mentions of application/publication/LocalPublicationCatalog.js, a different, non-UI store class, are not this)'));
 
         // The entries list itself: exactly the SAME card vocabulary
         // (.identity-mgmt-list/.identity-mgmt-card) as the tools panel's

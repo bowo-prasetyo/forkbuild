@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 
-import { AvatarTerrainConstraint } from '../application/AvatarTerrainConstraint.js';
+import { AvatarTerrainConstraint } from '../application/avatar/AvatarTerrainConstraint.js';
 import { simulateAvatarMovement } from '../core/AvatarMovementSimulation.js';
 import { AvatarMovementState } from '../core/AvatarMovementState.js';
 import { DEFAULT_MAX_WALKABLE_SLOPE } from '../core/TerrainWalkability.js';
@@ -20,7 +20,7 @@ import { DEFAULT_MAX_WALKING_DEPTH } from '../core/AvatarWaterWalkability.js';
 // max(terrainHeight, LAKE_SURFACE_HEIGHT) wherever the ground is
 // SURFACE_CATEGORY.WATER, and 0.9.616 confirmed that closure was coherent
 // enough to stand on its own. That fix was deliberately depth-blind BY
-// DESIGN (see application/RenderWorldViewUseCase.js's own 0.9.615 header):
+// DESIGN (see application/world/RenderWorldViewUseCase.js's own 0.9.615 header):
 // it treats one inch of water and the deepest lake in the world
 // identically, both rendered exactly AT the surface plane — which is
 // physically the "avatar walks ON the water" look this milestone's own
@@ -156,7 +156,7 @@ function scanWaterDepthCensus(seed, halfExtent, step) {
     return { count, meanDepth: sum / count, minDepth, maxDepth, deepest, exceedingCollisionHeight };
 }
 
-// The SAME render-time formula application/RenderWorldViewUseCase.js's
+// The SAME render-time formula application/world/RenderWorldViewUseCase.js's
 // own withGroundElevation() already uses before any water gate at all —
 // reproduced here read-only, exactly as 0.9.614's own realRenderedY().
 function realRenderedY(seed, position) {
@@ -189,7 +189,7 @@ function candidateShallowWaterFloorRenderedY(seed, position, maxWalkingDepth) {
 }
 
 // Section E's own candidate — mirrors
-// application/AvatarTerrainConstraint.js#apply()'s own {position,
+// application/avatar/AvatarTerrainConstraint.js#apply()'s own {position,
 // blocked} contract exactly: X/Z revert to the caller's CURRENT position
 // when blocked, Y still passes through from `desiredPosition` unchanged
 // (a rejected horizontal step must never cancel a jump/fall already in
@@ -273,9 +273,9 @@ async function runTests() {
     // -------------------------------------------------------------
     let realWithGroundElevation;
     {
-        const terrainConstraintSource = codeOnly(await readSource('application/AvatarTerrainConstraint.js'));
+        const terrainConstraintSource = codeOnly(await readSource('application/avatar/AvatarTerrainConstraint.js'));
         assert(!/Hydrology|WATER|LAKE_SURFACE_HEIGHT|surfaceCategoryAt/.test(terrainConstraintSource),
-            '6. application/AvatarTerrainConstraint.js — the ONE existing seam that can currently reject a horizontal step at all — contains no Hydrology/WATER reference anywhere in its own code; it is structurally INCAPABLE of ever gating on depth, only ever on slope');
+            '6. application/avatar/AvatarTerrainConstraint.js — the ONE existing seam that can currently reject a horizontal step at all — contains no Hydrology/WATER reference anywhere in its own code; it is structurally INCAPABLE of ever gating on depth, only ever on slope');
 
         // A single, ordinary real footstep (1 world unit) from a real
         // WATER neighbor into the deepest scanned coordinate, using the
@@ -291,9 +291,9 @@ async function runTests() {
         // The real, shipped withGroundElevation(), extracted from its
         // own current source text — never re-typed — same technique
         // 0.9.616 already established.
-        const renderWorldViewSource = await readSource('application/RenderWorldViewUseCase.js');
+        const renderWorldViewSource = await readSource('application/world/RenderWorldViewUseCase.js');
         const withGroundElevationBody = extractFunctionBody(renderWorldViewSource, 'function withGroundElevation(position) {');
-        assert(withGroundElevationBody !== null, 'setup: application/RenderWorldViewUseCase.js#withGroundElevation() is located and extracted from its real, current source text');
+        assert(withGroundElevationBody !== null, 'setup: application/world/RenderWorldViewUseCase.js#withGroundElevation() is located and extracted from its real, current source text');
         // AMENDED BY 0.9.634 — Avatar Shallow-Water Ground Traversal
         // installed exactly this file's own Section D candidate into
         // withGroundElevation() itself, so its real, current source text
@@ -440,7 +440,7 @@ async function runTests() {
             deepGateResult.position.x === deepNeighbor.x && deepGateResult.position.z === deepNeighbor.z && deepGateResult.position.y === deepPoint.y,
             '20. at the real deep coordinate, the depth gate returns blocked:true with X/Z reverted to the caller\'s own current position and Y passed through from the desired position unchanged — the IDENTICAL revert shape AvatarTerrainConstraint.apply()\'s own slope rejection already uses, never a new result shape this codebase has not already seen');
 
-        const controllerSource = codeOnly(await readSource('application/AvatarMovementController.js'));
+        const controllerSource = codeOnly(await readSource('application/avatar/AvatarMovementController.js'));
         // AMENDED BY 0.9.634 — Avatar Shallow-Water Ground Traversal took
         // exactly this section's own recommendation: a fifth, optional,
         // append-only `waterConstraint` parameter, following the
@@ -502,7 +502,7 @@ async function runTests() {
             '27. simulateAvatarMovement()\'s own existing movementSpeed parameter already scales the resulting step distance through the IDENTICAL arithmetic a ground-vehicle speed already uses — a depth-derived speed needs no change to this consumption seam, exactly as 0.9.614 already found for a hypothetical water speed');
 
         assert(resolveAvatarVehicleMovementCapability.length === 1,
-            '28. but resolveAvatarVehicleMovementCapability() still takes exactly one input (a VehicleType), and application/WorldNavigationSession.js still never calls surfaceCategoryAt()/hydrologyFeatureAt() anywhere in its own real code (reconfirming 0.9.614\'s own assertions 19-20, unchanged by 0.9.615/0.9.616) — the PRODUCER side of a depth-derived speed remains a real, still-open TERRAIN_INTERACTION_SEAM_GAP; the vertical rendering fix did not incidentally close it');
+            '28. but resolveAvatarVehicleMovementCapability() still takes exactly one input (a VehicleType), and application/world/WorldNavigationSession.js still never calls surfaceCategoryAt()/hydrologyFeatureAt() anywhere in its own real code (reconfirming 0.9.614\'s own assertions 19-20, unchanged by 0.9.615/0.9.616) — the PRODUCER side of a depth-derived speed remains a real, still-open TERRAIN_INTERACTION_SEAM_GAP; the vertical rendering fix did not incidentally close it');
     }
 
     // -------------------------------------------------------------

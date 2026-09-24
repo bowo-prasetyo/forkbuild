@@ -27,7 +27,7 @@
 // (core/Document.js#toJSON()/core/World.js#toJSON() have no field for
 // it and never will), and never persisted anywhere — it lives for the
 // span of one router navigation and is discarded by EditorView's own
-// onMounted() the instant it's applied (see application/EditorSession.js
+// onMounted() the instant it's applied (see application/editor/EditorSession.js
 // #applyEntryContext()).
 //
 // -----------------------------------------------------------------
@@ -37,7 +37,7 @@
 // The obvious-looking design is "carry the focused structure's own
 // brick ids, then select exactly those in the fork." That design is
 // wrong, and would fail the very first time it ran: every fork/clone
-// in this codebase (application/DocumentCloneService.js, the ONE
+// in this codebase (application/document/DocumentCloneService.js, the ONE
 // cloning mechanism both "Edit a Copy" and ForkStructureUseCase share)
 // deliberately strips and regenerates every world/building/brick id —
 // "independent documents never share brick ids" is that module's own
@@ -49,7 +49,7 @@
 // STRUCTURE's own `documentId` (see core/WorldFocusContext.js's own
 // per-kind table) is, by construction, the placed structure's ENTIRE
 // content document — nothing else lives in it (see
-// application/ForkStructureUseCase.js's own header: a library
+// application/editor/ForkStructureUseCase.js's own header: a library
 // Structure forks into a Document containing exactly that structure's
 // bricks, one Building). So "select the structure" and "select every
 // brick currently in the freshly-opened fork" are the SAME operation,

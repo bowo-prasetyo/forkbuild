@@ -6,15 +6,15 @@ import { StructurePlacement } from '../core/StructurePlacement.js';
 import { Position } from '../core/Position.js';
 import { MoveStructurePlacementCommand } from '../application/commands/MoveStructurePlacementCommand.js';
 import { WorldConflictResolver, WorldOperationOutcome } from '../replication/WorldConflictResolver.js';
-import { NostrPlaceNamingDiscoveryPublisher } from '../application/NostrPlaceNamingDiscoveryPublisher.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
-import { PlaceNamingDiscoveryQueryService } from '../application/PlaceNamingDiscoveryQueryService.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
+import { NostrPlaceNamingDiscoveryPublisher } from '../application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryQueryService } from '../application/placeNaming/PlaceNamingDiscoveryQueryService.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
 import { derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
@@ -190,34 +190,34 @@ async function runTests() {
     {
         const REACHABLE_SURFACES = [
             ['Editor', 'ui/views/EditorView.js', 'export default'],
-            ['Publish', 'application/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase'],
-            ['Distribution', 'application/NostrPublicationDistributionRuntimeAdapter.js', 'export function createNostrPublicationDistributionRuntimeAdapter'],
+            ['Publish', 'application/publication/PublishDocumentUseCase.js', 'export class PublishDocumentUseCase'],
+            ['Distribution', 'application/nostr/NostrPublicationDistributionRuntimeAdapter.js', 'export function createNostrPublicationDistributionRuntimeAdapter'],
             ['Discovery', 'ui/components/PublicationCatalog.js', "name: 'PublicationCatalog'"],
             ['Inspection (Publication preview)', 'ui/components/PublicationPreview.js', 'export default'],
             ['Commentary', 'core/PublicationCommentary.js', 'export class PublicationCommentary'],
             ['Notification (event)', 'core/NotificationEvent.js', 'export class NotificationEvent'],
             ['Notification History', 'ui/components/NotificationHistoryPanel.js', "name: 'NotificationHistoryPanel'"],
-            ['Placement (Publish -> World)', 'application/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
-            ['Snapshot discovery', 'application/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
-            ['Snapshot materialization', 'application/MaterializeSnapshotFromPlacementUseCase.js', 'export class MaterializeSnapshotFromPlacementUseCase'],
-            ['Snapshot placement (multi)', 'application/AddPublicationSnapshotPlacementUseCase.js', 'export class AddPublicationSnapshotPlacementUseCase'],
+            ['Placement (Publish -> World)', 'application/placement/PlacePublicationUseCase.js', 'export class PlacePublicationUseCase'],
+            ['Snapshot discovery', 'application/snapshot/DiscoverSnapshotCandidatesCommand.js', 'export function executeDiscoverSnapshotCandidatesCommand'],
+            ['Snapshot materialization', 'application/snapshot/materialization/MaterializeSnapshotFromPlacementUseCase.js', 'export class MaterializeSnapshotFromPlacementUseCase'],
+            ['Snapshot placement (multi)', 'application/snapshot/placement/AddPublicationSnapshotPlacementUseCase.js', 'export class AddPublicationSnapshotPlacementUseCase'],
             ['World View', 'ui/views/WorldView.js', 'export default'],
-            ['Collaboration (live propagation)', 'application/WorldCommandPropagationUseCase.js', 'export class WorldCommandPropagationUseCase'],
+            ['Collaboration (live propagation)', 'application/document/WorldCommandPropagationUseCase.js', 'export class WorldCommandPropagationUseCase'],
             ['Collaboration (conflict resolution)', 'replication/WorldConflictResolver.js', 'export class WorldConflictResolver'],
             ['Place Naming', 'core/PlaceNamingClaim.js', 'export class PlaceNamingClaim'],
-            ['Place Naming decentralized discovery', 'application/NostrPlaceNamingDiscoverySource.js', 'export class NostrPlaceNamingDiscoverySource'],
+            ['Place Naming decentralized discovery', 'application/placeNaming/NostrPlaceNamingDiscoverySource.js', 'export class NostrPlaceNamingDiscoverySource'],
             // 0.9.320 — Explicit Place Naming Publication Action gave this
             // class a real composition-root/UI caller
-            // (application/PlaceNamingPublicationRuntimeComposition.js,
+            // (application/placeNaming/PlaceNamingPublicationRuntimeComposition.js,
             // ui/main.js, ui/views/WorldView.js, ui/components/PlaceNamingPanel.js),
             // reclassifying it from IMPLEMENTED+INTERNAL (this file's own
             // original 0.9.319 record, superseded — see the former fourth
             // INTERNAL_CAPABILITIES entry, below) to IMPLEMENTED+REACHABLE,
             // moved here rather than left misclassified.
-            ['Place Naming decentralized publication', 'application/NostrPlaceNamingDiscoveryPublisher.js', 'export class NostrPlaceNamingDiscoveryPublisher'],
+            ['Place Naming decentralized publication', 'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js', 'export class NostrPlaceNamingDiscoveryPublisher'],
             ['Provider preferences', 'core/RoleProviderPreference.js', 'export class RoleProviderPreference'],
             ['Authentication/identity', 'identity/LocalIdentityProvider.js', 'export class LocalIdentityProvider'],
-            ['Wanderer/vehicle', 'application/AvatarVehicleInteractionController.js', 'export class AvatarVehicleInteractionController'],
+            ['Wanderer/vehicle', 'application/avatar/AvatarVehicleInteractionController.js', 'export class AvatarVehicleInteractionController'],
             // 0.9.392 — this closure guard's own B-nav assertion had gone
             // stale: 0.9.364-0.9.372 (Arweave Gateway/Nostr Relay
             // settings) and 0.9.386/0.9.388 (STUN/Rendezvous settings)
@@ -423,8 +423,8 @@ async function runTests() {
     {
         const HISTORICAL_FAMILY_FILES = new Set([
             'replication/ConflictResolver.js', 'replication/ReplicaMergeService.js',
-            'replication/LocalReplicationStore.js', 'application/ReplicatePlacementUseCase.js',
-            'application/SynchronizeReplicaUseCase.js', 'application/CreateReplicationUseCase.js',
+            'replication/LocalReplicationStore.js', 'application/placement/ReplicatePlacementUseCase.js',
+            'application/placement/SynchronizeReplicaUseCase.js', 'application/placement/CreateReplicationUseCase.js',
             'replication/ConflictPolicy.js'
         ]);
         for (const path of HISTORICAL_FAMILY_FILES) {
@@ -435,8 +435,8 @@ async function runTests() {
         }
         const guardPatterns = [
             "from '.*replication/ConflictResolver.js'", "from '.*replication/ReplicaMergeService.js'",
-            "from '.*replication/LocalReplicationStore.js'", "from '.*application/ReplicatePlacementUseCase.js'",
-            "from '.*application/SynchronizeReplicaUseCase.js'", "from '.*application/CreateReplicationUseCase.js'",
+            "from '.*replication/LocalReplicationStore.js'", "from '.*application/placement/ReplicatePlacementUseCase.js'",
+            "from '.*application/placement/SynchronizeReplicaUseCase.js'", "from '.*application/placement/CreateReplicationUseCase.js'",
             "from '.*replication/ConflictPolicy.js'",
             'new ConflictResolver(', 'new ReplicaMergeService(', 'new CreateReplicationUseCase(',
             'new ReplicatePlacementUseCase(', 'new SynchronizeReplicaUseCase(', 'new LocalReplicationStore(',
@@ -451,7 +451,7 @@ async function runTests() {
         assert(violations.length === 0,
             `F. No production path outside the historical family's own seven files depends on it through any import, construction, or adapter-naming pattern (violations: ${violations.join('; ') || 'none'}).`);
 
-        const compositionRoots = ['ui/main.js', 'application/CreateWorldViewUseCase.js'];
+        const compositionRoots = ['ui/main.js', 'application/world/CreateWorldViewUseCase.js'];
         const familyNames = ['ReplicaMergeService', 'CreateReplicationUseCase', 'ReplicatePlacementUseCase', 'SynchronizeReplicaUseCase', 'LocalReplicationStore', 'ConflictPolicy'];
         for (const rootPath of compositionRoots) {
             const source = await rawSource(rootPath);
@@ -497,7 +497,7 @@ async function runTests() {
         const NAMED_SINGLE_SOURCE_CHECKS = [
             ['Notification persistence', 'NotificationEventStore', 'storage/NotificationEventStore.js'],
             ['Temporal semantics', 'LogicalClock', 'core/LogicalClock.js'],
-            ['Place Naming decentralized publication', 'NostrPlaceNamingDiscoveryPublisher', 'application/NostrPlaceNamingDiscoveryPublisher.js']
+            ['Place Naming decentralized publication', 'NostrPlaceNamingDiscoveryPublisher', 'application/placeNaming/NostrPlaceNamingDiscoveryPublisher.js']
         ];
         for (const [area, className, expectedOwner] of NAMED_SINGLE_SOURCE_CHECKS) {
             const definers = grepFiles(`class ${className}\\b`, ['core', 'application', 'storage', 'identity', 'replication', 'collaboration']);

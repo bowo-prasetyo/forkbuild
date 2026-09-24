@@ -6,18 +6,18 @@ import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSIO
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalBlueprintAttributionStore } from '../application/LocalBlueprintAttributionStore.js';
-import { LocalBlueprintAttributionPublicationLog } from '../application/LocalBlueprintAttributionPublicationLog.js';
-import { BlueprintAttributionUseCase } from '../application/BlueprintAttributionUseCase.js';
-import { BlueprintAttributionExchange } from '../application/BlueprintAttributionExchange.js';
+import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
+import { LocalBlueprintAttributionPublicationLog } from '../application/blueprint/LocalBlueprintAttributionPublicationLog.js';
+import { BlueprintAttributionUseCase } from '../application/blueprint/BlueprintAttributionUseCase.js';
+import { BlueprintAttributionExchange } from '../application/blueprint/BlueprintAttributionExchange.js';
 import {
     validateBlueprintAttributionPublication,
     BlueprintAttributionPublicationError
-} from '../application/BlueprintAttributionPublicationValidator.js';
-import { buildBlueprintPackage, BLUEPRINT_KIND, CURRENT_SCHEMA_VERSION as BLUEPRINT_SCHEMA_VERSION } from '../application/BlueprintPackage.js';
-import { validateBlueprintPackage, BlueprintPackageError } from '../application/BlueprintImportValidator.js';
-import { ExportBlueprintUseCase } from '../application/ExportBlueprintUseCase.js';
-import { ImportBlueprintUseCase } from '../application/ImportBlueprintUseCase.js';
+} from '../application/blueprint/BlueprintAttributionPublicationValidator.js';
+import { buildBlueprintPackage, BLUEPRINT_KIND, CURRENT_SCHEMA_VERSION as BLUEPRINT_SCHEMA_VERSION } from '../application/blueprint/BlueprintPackage.js';
+import { validateBlueprintPackage, BlueprintPackageError } from '../application/blueprint/BlueprintImportValidator.js';
+import { ExportBlueprintUseCase } from '../application/blueprint/ExportBlueprintUseCase.js';
+import { ImportBlueprintUseCase } from '../application/blueprint/ImportBlueprintUseCase.js';
 
 // 0.6.6 — Decentralized Blueprint Exchange.
 //
@@ -280,7 +280,7 @@ async function run() {
 
         // ImportBlueprintUseCase is UNCHANGED by this milestone — it still
         // only ever returns a Structure; reading pkg.attributions back out
-        // is the caller's own job (see application/BlueprintAttributionExchange.js).
+        // is the caller's own job (see application/blueprint/BlueprintAttributionExchange.js).
         const rebuiltStructure = new ImportBlueprintUseCase().execute(bundledPkg);
         assert(rebuiltStructure instanceof Structure, '41. ImportBlueprintUseCase still returns a plain Structure');
         assert(blueprintFingerprintsEqual(deriveBlueprintFingerprint(rebuiltStructure), fingerprint),

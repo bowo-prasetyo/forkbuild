@@ -20,7 +20,7 @@ import { isTerminalFriendshipAction } from './FriendshipAction.js';
 // record IS its own evidence: `outgoingAction` is what THIS device can
 // show as proof of what it did, and `incomingAction` is what the OTHER
 // identity signed, already verified against their own key by
-// application/FriendRelationshipUseCase.js BEFORE it is ever stored
+// application/identity/FriendRelationshipUseCase.js BEFORE it is ever stored
 // here (see that file's own header) — this class never re-verifies
 // anything, the same "core/ trusts its caller's boundary check" posture
 // core/PeerRelationship.js's own fromPeerIdentity() already documents.
@@ -160,7 +160,7 @@ export class FriendshipRecord {
     // never itself the security boundary. The REAL guarantee — that
     // `peerIdentity` came from a completed peer/
     // PeerAuthenticationSession.js handshake — is enforced one layer
-    // up, by application/FriendRelationshipUseCase.js, the only caller.
+    // up, by application/identity/FriendRelationshipUseCase.js, the only caller.
     static fromPeerIdentity(peerIdentity, { now = new Date() } = {}) {
         if (!peerIdentity || typeof peerIdentity.identityId !== 'string' || typeof peerIdentity.publicKey !== 'string') {
             throw new Error('FriendshipRecord.fromPeerIdentity: a verified PeerIdentity is required');

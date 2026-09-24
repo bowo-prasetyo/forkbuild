@@ -17,7 +17,7 @@ import { RegionKind } from './RegionKind.js';
 //
 // A map is never another representation of World CONTENT — it reads
 // exactly the regions/landmarks/structures/collaborators that already
-// exist (see application/WorldNavigationSession.js#getMapContent()) and
+// exist (see application/world/WorldNavigationSession.js#getMapContent()) and
 // projects them. Nothing here invents geography, and nothing a viewer
 // does to the map (panning, zooming) ever reaches the World or even the
 // 3D camera — see WorldMapPanel's own header.

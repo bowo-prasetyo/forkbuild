@@ -27,7 +27,7 @@ export class WorldOperationOrdering {
 
     // "What logicalClock do I stamp MY OWN next outgoing operation
     // with" — called exactly once per LOCALLY-authored broadcast (see
-    // application/WorldCommandPropagationUseCase.js#broadcastCommand()).
+    // application/document/WorldCommandPropagationUseCase.js#broadcastCommand()).
     // Always strictly greater than any value this replica has produced
     // or observed so far.
     stampLocal() {
@@ -36,7 +36,7 @@ export class WorldOperationOrdering {
 
     // "I just accepted a remote operation stamped `logicalClock`; fold
     // that into what I've seen" — called exactly once per ACCEPTED
-    // incoming operation (see application/WorldCommandPropagationUseCase.js#
+    // incoming operation (see application/document/WorldCommandPropagationUseCase.js#
     // _handleIncoming()), BEFORE that operation is handed to
     // replication/WorldConflictResolver.js. Never mints a new value by
     // itself — see core/LogicalClock.js#observe()'s own header.

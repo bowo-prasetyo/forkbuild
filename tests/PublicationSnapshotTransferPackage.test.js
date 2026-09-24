@@ -2,25 +2,25 @@ import {
     buildPublicationSnapshotTransferPackage,
     PUBLICATION_SNAPSHOT_TRANSFER_PACKAGE_KIND,
     CURRENT_SCHEMA_VERSION
-} from '../application/PublicationSnapshotTransferPackage.js';
+} from '../application/snapshot/PublicationSnapshotTransferPackage.js';
 import {
     validatePublicationSnapshotTransferPackage,
     PublicationSnapshotTransferPackageError
-} from '../application/PublicationSnapshotTransferPackageValidator.js';
-import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/BuildPublicationSnapshotTransferPackageUseCase.js';
-import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/ImportPublicationSnapshotTransferPackageUseCase.js';
-import { StoreSnapshotContentUseCase } from '../application/StoreSnapshotContentUseCase.js';
-import { SnapshotContentTransferOutcome } from '../application/SnapshotContentTransferOutcome.js';
-import { buildPublicationReplicaPackage } from '../application/PublicationReplicaPackage.js';
-import { ImportPublicationReplicaPackageUseCase } from '../application/ImportPublicationReplicaPackageUseCase.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { PublicationExchange } from '../application/PublicationExchange.js';
+} from '../application/snapshot/PublicationSnapshotTransferPackageValidator.js';
+import { BuildPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/BuildPublicationSnapshotTransferPackageUseCase.js';
+import { ImportPublicationSnapshotTransferPackageUseCase } from '../application/snapshot/ImportPublicationSnapshotTransferPackageUseCase.js';
+import { StoreSnapshotContentUseCase } from '../application/snapshot/materialization/StoreSnapshotContentUseCase.js';
+import { SnapshotContentTransferOutcome } from '../application/snapshot/materialization/SnapshotContentTransferOutcome.js';
+import { buildPublicationReplicaPackage } from '../application/publication/replica/PublicationReplicaPackage.js';
+import { ImportPublicationReplicaPackageUseCase } from '../application/publication/replica/ImportPublicationReplicaPackageUseCase.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { PublicationExchange } from '../application/publication/PublicationExchange.js';
 import { DecentralizedPublication } from '../core/DecentralizedPublication.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { LocalPublicationAnchorCatalog } from '../application/LocalPublicationAnchorCatalog.js';
-import { PublicationAnchorExchange } from '../application/PublicationAnchorExchange.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationSnapshotPlacementExchange } from '../application/PublicationSnapshotPlacementExchange.js';
+import { LocalPublicationAnchorCatalog } from '../application/anchoring/LocalPublicationAnchorCatalog.js';
+import { PublicationAnchorExchange } from '../application/anchoring/PublicationAnchorExchange.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationSnapshotPlacementExchange } from '../application/snapshot/placement/PublicationSnapshotPlacementExchange.js';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { PublicationAnchor } from '../core/PublicationAnchor.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';

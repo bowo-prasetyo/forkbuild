@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
-import { AvatarVehicleInteractionController } from '../application/AvatarVehicleInteractionController.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
-import { VehicleRuntimeInstances } from '../application/VehicleRuntimeInstances.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { AvatarVehicleInteractionController } from '../application/avatar/AvatarVehicleInteractionController.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
+import { VehicleRuntimeInstances } from '../application/world/VehicleRuntimeInstances.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { vehiclePresenceInRegion } from '../core/VehiclePlacement.js';
 import { DEFAULT_WORLD_SEED } from '../core/TerrainHeightField.js';
 import { BICYCLE_DISMOUNT_OFFSET_X } from '../core/AvatarVehicleDismountPosition.js';
@@ -10,10 +10,10 @@ import { VehicleType } from '../core/VehicleType.js';
 import { Position } from '../core/Position.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 
 // 0.9.117 — Vehicle-Aware Dismount.
 //
@@ -97,7 +97,7 @@ function mountVehicle(controller) {
 }
 
 // A genuine release + re-press — see
-// application/AvatarVehicleInteractionController.js's own header for
+// application/avatar/AvatarVehicleInteractionController.js's own header for
 // why merely continuing to hold the key would not trigger a second
 // transition.
 function attemptDismount(controller) {
@@ -151,7 +151,7 @@ async function runTests() {
         assert(controller.mount() !== null, '4. setup: mounted');
 
         // Simulate "this vehicle has been ridden far away" — exactly
-        // what application/AvatarVehicleMovementController.js's own
+        // what application/avatar/AvatarVehicleMovementController.js's own
         // setPosition() call does over many real frames (0.9.116) —
         // WITHOUT touching the avatar's own AvatarPresenceSession
         // position at all. The old spawn-anchored dismount path could
@@ -181,7 +181,7 @@ async function runTests() {
         const spawnAnchoredX = clearVehicle.position.x + BICYCLE_DISMOUNT_OFFSET_X;
         assert(finalX !== spawnAnchoredX, '7. sanity: a spawn-anchored resolution and the actual Section B result are numerically distinct');
 
-        const controllerSourceUrl = new URL('../application/AvatarVehicleInteractionController.js', import.meta.url);
+        const controllerSourceUrl = new URL('../application/avatar/AvatarVehicleInteractionController.js', import.meta.url);
         const controllerSource = await readFile(controllerSourceUrl, 'utf8');
         const controllerCodeOnly = controllerSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
         // 0.9.670 — Avatar Inventory (store/deploy) legitimately
@@ -196,7 +196,7 @@ async function runTests() {
         // real violation, while no longer tripping on an object-literal
         // key it was never written to guard against.
         assert(!/\.spawnPosition\b/.test(controllerCodeOnly),
-            '8. ARCHITECTURAL: application/AvatarVehicleInteractionController.js\'s own code never reads `.spawnPosition` — the dismount path has no way to even reach for it');
+            '8. ARCHITECTURAL: application/avatar/AvatarVehicleInteractionController.js\'s own code never reads `.spawnPosition` — the dismount path has no way to even reach for it');
 
         const dismountPositionSourceUrl = new URL('../core/AvatarVehicleDismountPosition.js', import.meta.url);
         const dismountPositionSource = await readFile(dismountPositionSourceUrl, 'utf8');
@@ -450,7 +450,7 @@ async function runTests() {
     // second dismount-position implementation.
     // -------------------------------------------------------------
     {
-        const controllerSourceUrl = new URL('../application/AvatarVehicleInteractionController.js', import.meta.url);
+        const controllerSourceUrl = new URL('../application/avatar/AvatarVehicleInteractionController.js', import.meta.url);
         const controllerSource = await readFile(controllerSourceUrl, 'utf8');
         const controllerCodeOnly = controllerSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
@@ -462,7 +462,7 @@ async function runTests() {
             '26. resolveAvatarVehicleDismountPosition is still called from exactly one place — the fix is in what is handed to it, never a second, divergent implementation');
 
         assert(controllerCodeOnly.includes('_vehicleRuntimeInstances') && controllerCodeOnly.includes('_currentMountedVehicle'),
-            '27. the fix is real: application/AvatarVehicleInteractionController.js actually references its own vehicleRuntimeInstances collaborator and the new identity-first lookup');
+            '27. the fix is real: application/avatar/AvatarVehicleInteractionController.js actually references its own vehicleRuntimeInstances collaborator and the new identity-first lookup');
 
         const dismountPositionSourceUrl = new URL('../core/AvatarVehicleDismountPosition.js', import.meta.url);
         const dismountPositionSource = await readFile(dismountPositionSourceUrl, 'utf8');

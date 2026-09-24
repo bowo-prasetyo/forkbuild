@@ -1,5 +1,5 @@
-import { PublicationObservationArchive } from '../../PublicationObservationArchive.js';
-import { PublicationObservationArchiveProvenanceOrigin, isValidPublicationObservationArchiveProvenanceOrigin } from '../../PublicationObservationArchiveProvenance.js';
+import { PublicationObservationArchive } from '../../publication/observationArchive/PublicationObservationArchive.js';
+import { PublicationObservationArchiveProvenanceOrigin, isValidPublicationObservationArchiveProvenanceOrigin } from '../../publication/observationArchive/PublicationObservationArchiveProvenance.js';
 
 // 0.8.150 — Durable Reconciliation Decision History Archive Integration:
 // the recording boundary, now writing to a durable archive.
@@ -43,7 +43,7 @@ import { PublicationObservationArchiveProvenanceOrigin, isValidPublicationObserv
 // or any other module in the reconciliation family to re-derive, verify, or
 // second-guess the decision record a caller hands it — it trusts the
 // record's own `decided === true` exactly as far as
-// `application/PublicationObservationArchive.js`'s own
+// `application/publication/observationArchive/PublicationObservationArchive.js`'s own
 // `appendReconciliationDecisionRecord()` already trusts it, and no further.
 // This class never deduplicates two decisions naming the same candidate,
 // never computes or reads any "current"/"resolved"/"pending" state, and

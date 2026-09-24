@@ -4,11 +4,11 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
-import { SearchPublicationsUseCase } from '../application/SearchPublicationsUseCase.js';
+import { SearchPublicationsUseCase } from '../application/publication/SearchPublicationsUseCase.js';
 import { PublicationQuery } from '../core/PublicationQuery.js';
-import { ObserverLocalEncounterStore } from '../application/ObserverLocalEncounterStore.js';
-import { LocalWorldEncounterMaterialSource } from '../application/LocalWorldEncounterMaterialSource.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
+import { ObserverLocalEncounterStore } from '../application/worldEncounter/ObserverLocalEncounterStore.js';
+import { LocalWorldEncounterMaterialSource } from '../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import WorldEncounterCanvas from '../ui/components/WorldEncounterCanvas.js';
 import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileGroups.js';
 
@@ -37,7 +37,7 @@ import { worldEncounterCanvasFiles, worldViewFiles } from './support/SourceFileG
 // milestone history alone, and never from this file's own prose.
 //
 // A CONSTRAINT INHERITED FROM 0.9.535/0.9.550, RECONFIRMED FRESH BELOW —
-// application/WorldNavigationSession.js's own first import
+// application/world/WorldNavigationSession.js's own first import
 // (RenderWorldViewUseCase.js) transitively reaches renderer/Renderer.js,
 // which imports 'three' — not installed in this Node-only harness (checked
 // fresh: `node -e "import('three')"` still throws "Cannot find package
@@ -188,7 +188,7 @@ async function runTests() {
     // Editor, or browse Repository) and coming back.
     //
     // WorldView.js's own comments already document that `session`
-    // (application/WorldNavigationSession.js) and
+    // (application/world/WorldNavigationSession.js) and
     // `observerLocalEncounterStore` are each constructed fresh, once,
     // inside WorldView's own setup() — this section verifies that
     // documentation against the real source (never re-asserts it from
@@ -264,7 +264,7 @@ async function runTests() {
         // "Visit 1": a WorldView mount whose own ObserverLocalEncounterStore
         // records encounter X (mirroring what AutomaticSnapshotEncounterCascade's
         // real callback into the store would do on a genuine walk-based
-        // discovery — see application/ObserverLocalEncounterStore.js's own
+        // discovery — see application/worldEncounter/ObserverLocalEncounterStore.js's own
         // header for why `record()` is that callback's only writer).
         const storeVisit1 = new ObserverLocalEncounterStore();
         storeVisit1.record({ publicationId, contentHash, position: { x: 1, y: 0, z: 1 } });
@@ -370,7 +370,7 @@ async function runTests() {
         // documented contract, not merely this one instance's behavior —
         // "text" matches only title/author(+opt-in description), by
         // design, never id or contentHash.
-        const searchSource = await rawSource('application/SearchPublicationsUseCase.js');
+        const searchSource = await rawSource('application/publication/SearchPublicationsUseCase.js');
         const matchesStart = searchSource.indexOf('_matches(publication');
         const matchesBody = searchSource.slice(matchesStart, searchSource.indexOf('\n    }', matchesStart));
         assert(!/\.id\b|contentHash/.test(matchesBody), 'D6. _matches() itself never reads .id or .contentHash on the candidate Publication — title/author/description are the ENTIRE match surface, by design, confirmed against the real source.');

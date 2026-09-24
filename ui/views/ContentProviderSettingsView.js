@@ -2,7 +2,7 @@ import { ref, computed, inject } from 'vue';
 import { useRoleProviderPreferenceForm } from '../composables/useRoleProviderPreferenceForm.js';
 import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
-import { describeRoleProviderPreferenceSettings } from '../../application/RoleProviderPreferenceSettingsView.js';
+import { describeRoleProviderPreferenceSettings } from '../../application/settings/RoleProviderPreferenceSettingsView.js';
 import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 
@@ -20,7 +20,7 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 // It reads one back from `roleProviderPreferenceStore.get(role)` (0.9.294)
 // only to display what is already on file, and it saves a change by calling
 // `setRoleProviderPreferenceUseCase.execute({ role, providerKey })`
-// (application/SetRoleProviderPreferenceUseCase.js, 0.9.302) with a plain
+// (application/settings/SetRoleProviderPreferenceUseCase.js, 0.9.302) with a plain
 // `{ role, providerKey }` — never `new RoleProviderPreference(...)`, and
 // never a call into storage/RoleProviderPreferenceStore.js's own `save()`
 // directly. See that use case's own header for the full "smallest possible
@@ -29,7 +29,7 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 // THE PROVIDER LIST COMES FROM THE REGISTRY, WITH ONE DELIBERATE, HARDCODED
 // EXCEPTION. `availableProviderKeys` starts from the SAME
 // `preferredSnapshotPlacementCreationCoordinator`
-// (application/PreferredSnapshotPlacementCreationCoordinator.js, 0.9.299)
+// (application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js, 0.9.299)
 // the Publication Center's own "Use Preferred Provider" trigger already
 // consumes — its `availableStorageTypes()` is a pass-through to the real,
 // currently-registered content/ContentStore.js registry (application/

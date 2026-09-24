@@ -5,12 +5,12 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import {
     PublicationCommentaryNotificationProducer,
     PUBLICATION_COMMENTED_EVENT_TYPE
-} from '../application/PublicationCommentaryNotificationProducer.js';
+} from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import {
     NotificationCollisionOutcome,
@@ -583,7 +583,7 @@ async function runTests() {
         // Architectural regression: no production file outside this
         // milestone's own new policy file was modified.
         const gitDiffStat = execSync(
-            'git diff --stat HEAD -- application/PublicationCommentaryNotificationProducer.js application/AddPublicationCommentaryUseCase.js storage/PublicationCommentaryStore.js core/PublicationCommentary.js core/NotificationEvent.js application/ChatOutbox.js core/ChatOutboxEntry.js 2>/dev/null || true',
+            'git diff --stat HEAD -- application/publication/commentary/PublicationCommentaryNotificationProducer.js application/publication/commentary/AddPublicationCommentaryUseCase.js storage/PublicationCommentaryStore.js core/PublicationCommentary.js core/NotificationEvent.js application/chat/ChatOutbox.js core/ChatOutboxEntry.js 2>/dev/null || true',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         assert(gitDiffStat === '', `K6. no pre-existing production file this milestone examines was modified. Found: ${gitDiffStat || '(none)'}.`);

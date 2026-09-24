@@ -4,9 +4,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { BaseProofVerifier } from '../anchoring/BaseProofVerifier.js';
-import { CreateBaseAnchorProofVerifierUseCase } from '../application/CreateBaseAnchorProofVerifierUseCase.js';
+import { CreateBaseAnchorProofVerifierUseCase } from '../application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js';
 import { BasePublicationTransactionPlanner } from '../base/BasePublicationTransactionPlanner.js';
-import { encodeBasePublicationCommitment } from '../application/BasePublicationCommitmentEncoding.js';
+import { encodeBasePublicationCommitment } from '../application/anchoring/base/BasePublicationCommitmentEncoding.js';
 import { BitcoinOpReturnProofVerifier } from '../anchoring/BitcoinOpReturnProofVerifier.js';
 import { ArweaveTransactionDataProofVerifier } from '../anchoring/ArweaveTransactionDataProofVerifier.js';
 
@@ -385,7 +385,7 @@ async function run() {
         assert(wiredResult.valid === true, '48. the composition-root-wired verifier, driven only by an injected fetchImpl, correctly verifies a real transaction end to end');
         assert(requests[0] === 'eth_getTransactionByHash', '49. the wired BaseJsonRpcClient issued exactly the expected JSON-RPC method');
 
-        const useCaseCode = codeOnly(await source('application/CreateBaseAnchorProofVerifierUseCase.js'));
+        const useCaseCode = codeOnly(await source('application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js'));
         assert(/export class CreateBaseAnchorProofVerifierUseCase/.test(useCaseCode), '50. the use case follows the identical Create*AnchorProofVerifierUseCase naming and export shape as its Bitcoin/Arweave siblings');
     }
     console.log('✓ Section J: architectural guard & composition-root use case');
@@ -401,7 +401,7 @@ async function run() {
         const AUTHORIZED = new Set([
             'tests.html',
             'anchoring/BaseProofVerifier.js',
-            'application/CreateBaseAnchorProofVerifierUseCase.js',
+            'application/anchoring/base/CreateBaseAnchorProofVerifierUseCase.js',
             'tests/BaseTransactionProofVerifier.test.js'
         ]);
         const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));

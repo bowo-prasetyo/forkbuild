@@ -10,15 +10,15 @@ import { getAvatarPresenceSigningDescriptor } from '../core/AvatarPresenceAdvert
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
-import { signAvatarPresenceAdvertisement } from '../application/PresenceSigning.js';
-import { PresenceTrustBoundary } from '../application/PresenceTrustBoundary.js';
-import { LocalPresenceStore } from '../application/LocalPresenceStore.js';
+import { signAvatarPresenceAdvertisement } from '../application/presence/PresenceSigning.js';
+import { PresenceTrustBoundary } from '../application/presence/PresenceTrustBoundary.js';
+import { LocalPresenceStore } from '../application/presence/LocalPresenceStore.js';
 import { LocalAvatarPresenceBroadcastProvider } from '../presence/LocalAvatarPresenceBroadcastProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
@@ -26,11 +26,11 @@ import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
-import { PlacePublicationUseCase } from '../application/PlacePublicationUseCase.js';
-import { GridPlacementStrategy } from '../application/InitialPlacementStrategy.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
+import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -46,9 +46,9 @@ import { License, LicenseId } from '../core/License.js';
 //   Section D: core/PresenceTrustPolicy.js — the one real policy axis
 //   Section E: core/AvatarPresenceAdvertisement.js — signing descriptor
 //   Section F: identity/LocalAuthorizationVerifier.verifyPresenceAdvertisement — REAL Ed25519
-//   Section G: application/PresenceSigning.js
-//   Section H: application/PresenceTrustBoundary.js — the orchestrated gate
-//   Section I: application/LocalPresenceStore.js — trust surfaced through ingest()/list()
+//   Section G: application/presence/PresenceSigning.js
+//   Section H: application/presence/PresenceTrustBoundary.js — the orchestrated gate
+//   Section I: application/presence/LocalPresenceStore.js — trust surfaced through ingest()/list()
 //   Section J: core/PresenceDiagnosticsSummary.js
 //   Section K: WorldNavigationSession integration (signing, diagnostics)
 //   Section L: FLAGSHIP — the design doc's own malicious scripted scenario
@@ -309,7 +309,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section G — application/PresenceSigning.js
+    // Section G — application/presence/PresenceSigning.js
     // -------------------------------------------------------------
     {
         const ad = makeAdvertisement({ avatarId: 'ag1' });
@@ -327,7 +327,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section H — application/PresenceTrustBoundary.js
+    // Section H — application/presence/PresenceTrustBoundary.js
     // -------------------------------------------------------------
     {
         // H1 — permissive default: unsigned presence works exactly
@@ -401,7 +401,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section I — application/LocalPresenceStore.js: trust surfaced
+    // Section I — application/presence/LocalPresenceStore.js: trust surfaced
     // through ingest()/list()
     // -------------------------------------------------------------
     {

@@ -3,16 +3,16 @@ import { execSync } from 'node:child_process';
 
 import { NostrRelayConfiguration, DEFAULT_NOSTR_RELAY_URL } from '../core/NostrRelayConfiguration.js';
 import { ArweaveGatewayConfiguration } from '../core/ArweaveGatewayConfiguration.js';
-import { NostrDiscoveryQueryService } from '../application/NostrDiscoveryQueryService.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
+import { NostrDiscoveryQueryService } from '../application/nostr/NostrDiscoveryQueryService.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
 import {
     describeDecentralizedDiscoveryEnvelope,
     DECENTRALIZED_DISCOVERY_ENVELOPE_PROTOCOL,
     DECENTRALIZED_DISCOVERY_ENVELOPE_VERSION
 } from '../core/DecentralizedDiscoveryEnvelope.js';
 import { WorldEncounterKind } from '../core/WorldEncounter.js';
-import { PublicationDistributionLifecycleMemoryStore } from '../application/PublicationDistributionLifecycleStore.js';
-import { executePublicationDistributionCommand } from '../application/PublicationDistributionCommand.js';
+import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
+import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
 
 // 0.9.442 — Nostr Relay Multiplicity & Resilience Product Reassessment.
 //
@@ -203,9 +203,9 @@ async function run() {
         // ('nostr' vs 'arweave'), never a relay-level one. Reconfirmed live
         // in Section F, below, where this becomes the audit's central
         // finding.
-        const lifecycleStoreSource = await source('application/PublicationDistributionLifecycleStore.js');
+        const lifecycleStoreSource = await source('application/publication/distribution/PublicationDistributionLifecycleStore.js');
         assert(lifecycleStoreSource.includes('KEYED BY `(publicationId, discoveryProvider)`'),
-            n('B6. application/PublicationDistributionLifecycleStore.js\'s own header names its own observation key\'s granularity explicitly — substrate-level, confirmed live against real calls in Section F'));
+            n('B6. application/publication/distribution/PublicationDistributionLifecycleStore.js\'s own header names its own observation key\'s granularity explicitly — substrate-level, confirmed live against real calls in Section F'));
 
         console.log('\n=== SECTION B: CURRENT NOSTR MODEL ===');
         console.log('Configuration: single relayUrl string (core/NostrRelayConfiguration.js) — no plural successor, unlike Arweave (0.9.440).');
@@ -415,7 +415,7 @@ async function run() {
             n('F2. each origin names its OWN relay exactly, never the other\'s and never a merged value'));
 
         // F3. THE REAL GAP. One layer up, at
-        // application/PublicationDistributionLifecycleStore.js's own
+        // application/publication/distribution/PublicationDistributionLifecycleStore.js's own
         // recordDiscoveryObservation()/getDiscoveryObservations() pair
         // (0.9.433) — the seam this codebase already built to solve an
         // ANALOGOUS collision (two independently-successful SUBSTRATES
@@ -442,7 +442,7 @@ async function run() {
         // BLOCKED BY A DIFFERENT, ORTHOGONAL LAYER. `discoveryProvider` is
         // not just coarse; the exact value a fan-out caller would need to
         // widen it (e.g. `"nostr:wss://relay-a.example"`) is REJECTED
-        // outright by application/PublicationDistributionRuntimeComposition.js's
+        // outright by application/publication/distribution/PublicationDistributionRuntimeComposition.js's
         // own strict two-value selector, reached on every single call
         // through executePublicationDistributionCommand() ->
         // orchestratePublicationDistribution() ->
@@ -500,7 +500,7 @@ async function run() {
         // all — A's own recorded fact survives completely untouched.
         // Only a DOUBLE SUCCESS (Section F3) loses a fact, never a
         // success-then-failure.
-        const commandSource = await source('application/PublicationDistributionCommand.js');
+        const commandSource = await source('application/publication/distribution/PublicationDistributionCommand.js');
         assert(/if \(freshLifecycle\.discovery\.state === PublicationDistributionState\.PRESENT\) \{/.test(commandSource),
             n('G2. recordPublicationDistributionResult()\'s own recordDiscoveryObservation() call is real, live-confirmed to sit strictly inside the discovery-PRESENT branch — a failed relay call, producing no PRESENT fact, cannot silently erase a previously-recorded success the way Section F3\'s double-success scenario does'));
 
@@ -616,9 +616,9 @@ async function run() {
         console.log('');
         console.log('RECOMMENDED NEXT MILESTONE: 0.9.443 — Nostr Multi-Relay Announcement Distribution (write side first — the side where');
         console.log('decentralization/reach actually accrues to OTHER Wanderers, not just to the one performing the write). That milestone must');
-        console.log('treat Section F3/F4\'s own finding as a real prerequisite, not an afterthought: application/PublicationDistributionCommand.js\'s');
+        console.log('treat Section F3/F4\'s own finding as a real prerequisite, not an afterthought: application/publication/distribution/PublicationDistributionCommand.js\'s');
         console.log('own discoveryProvider is currently double-booked as BOTH a strict two-value substrate selector (application/');
-        console.log('PublicationDistributionRuntimeComposition.js) AND the sole attribution key application/PublicationDistributionLifecycleStore.js\'s');
+        console.log('PublicationDistributionRuntimeComposition.js) AND the sole attribution key application/publication/distribution/PublicationDistributionLifecycleStore.js\'s');
         console.log('own recordDiscoveryObservation() has available — separating those two jobs (or widening the observation key some other way)');
         console.log('is a small, narrow, well-understood fix, not grounds to avoid building fan-out. Read-side fan-out (Nostr relay,');
         console.log('read/discovery, above) remains a real but lower-urgency companion, since it improves one Wanderer\'s own coverage rather than');

@@ -156,9 +156,9 @@ async function run() {
         // A4-A6: every real publisher, whatever its own creation contract,
         // ends at the SAME generic CreatePublicationAnchorUseCase.execute()
         // call — the actual point where the three substrates converge.
-        assert(/CreatePublicationAnchorUseCase/.test(await source('application/BitcoinAnchorPublicationCoordinator.js')), n('A4. Bitcoin\'s own real anchor-minting path (Section E) converges on CreatePublicationAnchorUseCase'));
+        assert(/CreatePublicationAnchorUseCase/.test(await source('application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js')), n('A4. Bitcoin\'s own real anchor-minting path (Section E) converges on CreatePublicationAnchorUseCase'));
         assert(/createPublicationAnchorUseCase/.test(baseSrc), n('A5. Base\'s publisher converges on the same createPublicationAnchorUseCase'));
-        const orchestratorSrc = codeOnly(await source('application/CreateExternalPublicationAnchorUseCase.js'));
+        const orchestratorSrc = codeOnly(await source('application/anchoring/CreateExternalPublicationAnchorUseCase.js'));
         assert(/createPublicationAnchorUseCase/i.test(orchestratorSrc), n('A6. the generic orchestrator Bitcoin\'s stub and Arweave both go through converges on it too'));
 
         // A7-A9: the verification half. Each verifier reads a proof shape
@@ -273,7 +273,7 @@ async function run() {
         // parallel-but-different structure this section\'s own opening
         // finding names.
         assert(/publicationObservationArchive\.value = createBitcoinAnchorPublicationRecordUseCase\.execute/.test(viewSrc), n('D5. the granular pipeline\'s own durable record (CreateBitcoinAnchorPublicationRecordUseCase) writes to publicationObservationArchive'));
-        assert(/publicationObservationArchive\.value = publicationObservationArchive\.value\.appendBitcoinBroadcastRecord/.test(viewSrc), n('D6. and its own broadcast/confirmation observations write to the SAME observation archive — never application/LocalPublicationAnchorCatalog.js, which only the two paths named in Section A/C1 ever populate for Bitcoin'));
+        assert(/publicationObservationArchive\.value = publicationObservationArchive\.value\.appendBitcoinBroadcastRecord/.test(viewSrc), n('D6. and its own broadcast/confirmation observations write to the SAME observation archive — never application/anchoring/LocalPublicationAnchorCatalog.js, which only the two paths named in Section A/C1 ever populate for Bitcoin'));
 
         console.log('✓ Section D: this is not an inference from absence — it is a structural proof. Every one of the six real, live, network-connected Bitcoin coordinators is built without the one dependency (createPublicationAnchorUseCase / a publication catalog) an anchor-minting class needs, and the view built on top of them never references that use case either. A person can broadcast a real Bitcoin transaction, end to end, through this application today, and it will never become a verifiable PublicationAnchor.');
     }
@@ -283,8 +283,8 @@ async function run() {
     // "UniSat" naming clarification.
     // ===============================================================
     {
-        assert(await sourceExists('application/BitcoinAnchorPublicationCoordinator.js'), n('E1. application/BitcoinAnchorPublicationCoordinator.js exists — built at 0.8.53, specifically to close the exact gap Section D re-confirms is still open'));
-        const coordinatorSrc = await source('application/BitcoinAnchorPublicationCoordinator.js');
+        assert(await sourceExists('application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js'), n('E1. application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js exists — built at 0.8.53, specifically to close the exact gap Section D re-confirms is still open'));
+        const coordinatorSrc = await source('application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js');
         assert(/publicationCatalog,\s*\n\s*createPublicationAnchorUseCase,/.test(coordinatorSrc), n('E2. its own constructor REQUIRES both a publication catalog and createPublicationAnchorUseCase — the exact two collaborators Section D found missing from every construction call actually wired'));
         assert(/async publishAnchor\(publicationId, \{ utxos, changeAddress, utxoDetails, changeScriptPubKey \} = \{\}\)/.test(coordinatorSrc), n('E3. its publishAnchor() runs the FULL plan->PSBT->sign->finalize->broadcast->anchor sequence in one call, composing the identical six real primitives Section C confirms are already live'));
         assert(/this\._createPublicationAnchorUseCase\.execute\(publicationId, \{/.test(coordinatorSrc), n('E4. and it genuinely calls createPublicationAnchorUseCase.execute() once broadcast succeeds — Stage 6, confirmed in its own real method body, not only its header'));
@@ -299,7 +299,7 @@ async function run() {
         ).toString().trim();
         const referencingFiles = grepOutput ? grepOutput.split('\n') : [];
         assert(
-            referencingFiles.every((f) => f === 'application/BitcoinAnchorPublicationCoordinator.js' || f === 'application/CreateBitcoinAnchorPublicationCoordinatorUseCase.js'),
+            referencingFiles.every((f) => f === 'application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js' || f === 'application/anchoring/bitcoin/CreateBitcoinAnchorPublicationCoordinatorUseCase.js'),
             n(`E5. across every production directory, only the class's own file and its own factory actually IMPORT or CONSTRUCT it — no composition root, no view (found: ${JSON.stringify(referencingFiles)}; many OTHER files mention its name in cross-referencing comments only, which this check deliberately excludes)`)
         );
         assert(!/import.*BitcoinAnchorPublicationCoordinator|new BitcoinAnchorPublicationCoordinator|new CreateBitcoinAnchorPublicationCoordinatorUseCase/.test(await source('ui/main.js')), n('E6. ui/main.js — the real composition root — never imports or constructs it, confirmed fresh'));
@@ -312,7 +312,7 @@ async function run() {
         // Coinbase Wallet, etc. under one shared class.
         const grepUnisat = execSync("grep -rli 'unisat' --include='*.js' anchoring application base core identity persistence storage ui 2>/dev/null || true", { cwd: SOURCE_ROOT }).toString().trim();
         const unisatFiles = grepUnisat ? grepUnisat.split('\n') : [];
-        assert(unisatFiles.length > 0 && unisatFiles.every((f) => f === 'application/CreateBitcoinInjectedProviderWalletAdapterUseCase.js' || f === 'anchoring/BitcoinInjectedProviderWalletAdapter.js' || f.startsWith('ui/')), n(`E8. "UniSat" appears only inside the generic injected-provider wallet adapter (naming it as one supported wallet brand among others) and its UI wiring — never as a separate class, module, or pipeline (found: ${JSON.stringify(unisatFiles)})`));
+        assert(unisatFiles.length > 0 && unisatFiles.every((f) => f === 'application/anchoring/bitcoin/CreateBitcoinInjectedProviderWalletAdapterUseCase.js' || f === 'anchoring/BitcoinInjectedProviderWalletAdapter.js' || f.startsWith('ui/')), n(`E8. "UniSat" appears only inside the generic injected-provider wallet adapter (naming it as one supported wallet brand among others) and its UI wiring — never as a separate class, module, or pipeline (found: ${JSON.stringify(unisatFiles)})`));
         const adapterSrc = await source('anchoring/BitcoinInjectedProviderWalletAdapter.js');
         assert(!/class\s+\w*[Uu]ni[Ss]at\w*/.test(adapterSrc), n('E9. no UniSat-specific class exists inside that adapter file either — it is one generic adapter over whichever compatible wallet extension a device has installed'));
 
@@ -337,7 +337,7 @@ async function run() {
         // unrevisited decision — re-checked here, not re-argued.
         assert(!/externalAnchorPublisherRegistry\.register\(baseAnchorPublisher\)/.test(mainSrc), n('F6. Base remains absent from the generic publisher registry, confirmed fresh (re-check of B3)'));
         const baseSrc = await source('anchoring/BaseAnchorPublisher.js');
-        assert(/NOT REGISTERED IN application\/ExternalAnchorPublisherRegistry\.js — A\s*\n\/\/ DELIBERATE DEPARTURE/.test(baseSrc), n('F7. and its own header still names this deliberate, not an oversight — this audit does not reopen that decision'));
+        assert(/NOT REGISTERED IN application\/anchoring\/ExternalAnchorPublisherRegistry\.js — A\s*\n\/\/ DELIBERATE DEPARTURE/.test(baseSrc), n('F7. and its own header still names this deliberate, not an oversight — this audit does not reopen that decision'));
 
         console.log('✓ Section F: Base\'s bespoke creation path is the one substrate today that is COMPLETE for creation, cataloging, and verification through a dedicated (not generic-registry) UI action — the exact shape Section E recommends Bitcoin acquire next. Its registry absence is confirmed deliberate, not a gap.');
     }
@@ -397,7 +397,7 @@ async function run() {
         // are opaque, unlike Bitcoin's/Base's own named funding-observer
         // concepts.
         assert(await sourceExists('anchoring/BitcoinWalletFundingObserver.js'), n('I4. Bitcoin has a dedicated funding/balance observer concept'));
-        assert(await sourceExists('application/BaseAccountObservation.js') && /nativeBalanceWei/.test(await source('application/BaseAccountObservation.js')), n('I5. Base has an equivalent native-balance observation concept'));
+        assert(await sourceExists('application/anchoring/base/BaseAccountObservation.js') && /nativeBalanceWei/.test(await source('application/anchoring/base/BaseAccountObservation.js')), n('I5. Base has an equivalent native-balance observation concept'));
         const arweaveGatewayGrep = execSync("grep -rli 'arweave' --include='*.js' . 2>/dev/null | grep -iE 'balance|funding' | grep -v node_modules | grep -v tests/ || true", { cwd: SOURCE_ROOT }).toString().trim();
         assert(arweaveGatewayGrep === '', n('I6. no comparable Arweave funding/balance observation concept exists anywhere — an insufficient-balance failure surfaces only as ArweaveAnchorPublisher\'s own opaque { unavailable: true, reason } string, never a distinguished state'));
 
@@ -450,7 +450,7 @@ async function run() {
         const candidateArcs = [
             {
                 label: 'BITCOIN_BRIDGE_INTEGRATION',
-                summary: 'Wire the already-built, already-tested application/BitcoinAnchorPublicationCoordinator.js into ui/main.js, and add a dedicated createBitcoinAnchor(entry)-shaped view action — the exact structural precedent Base\'s own createBaseAnchor() (0.9.472) already set. This closes Section D\'s ARCHITECTURAL_GAP without inventing anything: every primitive it needs is real, live, and already composed by the dormant coordinator itself. One open sub-decision this audit does not make: whether to wire the coordinator\'s own `publishAnchor()` as-is (its own internal `pipelineBroadcaster` adapter — see that file\'s own header, "WHY BitcoinAnchorPublisher IS CONSTRUCTED HERE, FRESH, PER CALL" — already avoids a second real broadcast) or to first reshape it to match createBaseAnchor()\'s own per-stage-then-one-mint-action UI shape more closely. Both are integration choices about an already-complete backend, never a new Bitcoin capability.'
+                summary: 'Wire the already-built, already-tested application/anchoring/bitcoin/BitcoinAnchorPublicationCoordinator.js into ui/main.js, and add a dedicated createBitcoinAnchor(entry)-shaped view action — the exact structural precedent Base\'s own createBaseAnchor() (0.9.472) already set. This closes Section D\'s ARCHITECTURAL_GAP without inventing anything: every primitive it needs is real, live, and already composed by the dormant coordinator itself. One open sub-decision this audit does not make: whether to wire the coordinator\'s own `publishAnchor()` as-is (its own internal `pipelineBroadcaster` adapter — see that file\'s own header, "WHY BitcoinAnchorPublisher IS CONSTRUCTED HERE, FRESH, PER CALL" — already avoids a second real broadcast) or to first reshape it to match createBaseAnchor()\'s own per-stage-then-one-mint-action UI shape more closely. Both are integration choices about an already-complete backend, never a new Bitcoin capability.'
             },
             {
                 label: 'BASE_EVIDENCE_VIEW',

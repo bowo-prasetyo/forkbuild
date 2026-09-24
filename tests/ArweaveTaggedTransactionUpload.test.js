@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 
-import { createArweaveTaggedTransactionUpload } from '../application/ArweaveTaggedTransactionUpload.js';
+import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
 
 // 0.9.490 — Arweave Tagged Transaction Upload Implementation.
@@ -231,7 +231,7 @@ async function run() {
     // substrate, invokes Nostr, queries discovery, or resolves content.
     // ---------------------------------------------------------------
     {
-        const adapterSource = await source('application/ArweaveTaggedTransactionUpload.js');
+        const adapterSource = await source('application/arweave/ArweaveTaggedTransactionUpload.js');
         const codeOnly = adapterSource.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
         assert(!/contentHash|sha256|crypto\.subtle|createHash/i.test(codeOnly), 'F1. never hashes content — no hashing primitive referenced');

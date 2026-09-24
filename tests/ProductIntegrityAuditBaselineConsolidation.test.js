@@ -3,12 +3,12 @@ import { execSync } from 'node:child_process';
 
 import { findRawStatusInterpolations, OVERCLAIM_WORDS } from './support/RawStatusInterpolationSweep.js';
 
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
 import { TrustStatus } from '../core/TrustObservation.js';
-import { AnchorVerificationOutcome } from '../application/AnchorVerificationOutcome.js';
-import { describeVerificationOutcome } from '../application/PublicationEvidenceView.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
-import { describePublicationOutcome } from '../application/PublicationResolutionView.js';
+import { AnchorVerificationOutcome } from '../application/anchoring/AnchorVerificationOutcome.js';
+import { describeVerificationOutcome } from '../application/publication/evidence/PublicationEvidenceView.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
+import { describePublicationOutcome } from '../application/publication/PublicationResolutionView.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles } from './support/SourceFileGroups.js';
 
 // 0.9.522 — Product Integrity Audit Baseline Consolidation.
@@ -196,7 +196,7 @@ async function run() {
         // B8. Re-confirm a representative sample of the SAFE_TECHNICAL_TOKEN
         // bucket's own claim, live, against the real backing enum — not
         // merely inherited from 0.9.520's own prose.
-        const decentralizedOutcomeSource = await source('application/DecentralizedSnapshotResolutionOutcome.js');
+        const decentralizedOutcomeSource = await source('application/snapshot/DecentralizedSnapshotResolutionOutcome.js');
         const decentralizedOutcomeValues = [...decentralizedOutcomeSource.matchAll(/:\s*'([^']*)'/g)].map((m) => m[1]);
         check(decentralizedOutcomeValues.length > 0 && decentralizedOutcomeValues.includes('resolved')
             && decentralizedOutcomeValues.every((v) => /^[a-z-]+$/.test(v)) && !decentralizedOutcomeValues.some((v) => OVERCLAIM_WORDS.test(v) || /verified/i.test(v)),
@@ -216,7 +216,7 @@ async function run() {
         check(/\bid\s*=\s*createId\(\)/.test(publicationSource) && publicationSource.includes('contentHash = null'),
             'C1. publisher/Publication.js still constructs `id` (publicationId) and `contentHash` as two separate constructor fields — never one merged identifier');
 
-        const discoverySource = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const discoverySource = await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         check(discoverySource.includes('uri: envelope.uri,') && discoverySource.includes('announcementId'),
             'C2. a discovered candidate\'s own claimed material location (uri) and the transaction id that carried the announcement (announcementId) stay two separate fields');
 
@@ -224,7 +224,7 @@ async function run() {
         check(decentralizedViewSource.includes('<dt>Locator</dt>') && decentralizedViewSource.includes('<dt>Transaction</dt>') && decentralizedViewSource.includes('<dt>Content hash</dt>'),
             'C3. Locator (material location) / Transaction (anchor proof) / Content hash stay three separately-labeled fields on the Publication Center\'s own detail view');
 
-        const inspectionSource = await source('application/WorldEncounterMaterialInspection.js');
+        const inspectionSource = await source('application/worldEncounter/WorldEncounterMaterialInspection.js');
         check(inspectionSource.includes('objectId'),
             'C4. World Encounter material inspection still routes on `resolvedSelection.objectId` (the Publication identity a Wanderer selected) — never re-derives or substitutes a contentHash for it');
         check(!/contentHash\s*=\s*resolvedSelection\.objectId|objectId\s*=\s*.*contentHash/.test(inspectionSource),
@@ -265,11 +265,11 @@ async function run() {
         // D3. Authorship/Ownership stay unclaimed vocabulary across this
         // arc's own established label functions — a structural re-check,
         // independent of any one milestone's own per-outcome assertions.
-        const evidenceViewSource = await source('application/PublicationEvidenceView.js');
+        const evidenceViewSource = await source('application/publication/evidence/PublicationEvidenceView.js');
         const codeOnlyEvidenceView = evidenceViewSource.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
         const evidenceViewLabels = codeOnlyEvidenceView.match(/return `[^`]*`/g)?.join(' ') || '';
         check(!OVERCLAIM_WORDS.test(evidenceViewLabels),
-            'D3. application/PublicationEvidenceView.js\'s own returned label strings still carry no ownership/authorship/trust word');
+            'D3. application/publication/evidence/PublicationEvidenceView.js\'s own returned label strings still carry no ownership/authorship/trust word');
 
         console.log('✓ Section D (Evidence boundary): Discovery/Resolution/Anchor-verification failures stay four distinct, non-success labels; TrustObservation remains purely descriptive, never a verdict; no established evidence label claims authorship or ownership.');
     }
@@ -303,7 +303,7 @@ async function run() {
         check(arweaveAnchorPublisherSource.includes("get anchorType() { return 'arweave'; }"),
             "E2b. the Arweave ANCHOR's own anchorType remains the long form 'arweave' — deliberately a different string literal for the same real-world network");
 
-        const anchorUseCaseSource = await source('application/CreateExternalPublicationAnchorUseCase.js');
+        const anchorUseCaseSource = await source('application/anchoring/CreateExternalPublicationAnchorUseCase.js');
         const codeOnlyAnchor = anchorUseCaseSource.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n');
         const executeMatch = codeOnlyAnchor.match(/async execute\(([^)]*)\)/);
         check(Boolean(executeMatch) && !/storage|discoveryProvider/.test(executeMatch[1]),
@@ -318,7 +318,7 @@ async function run() {
         // E5. The one real failover mechanism in this codebase remains
         // same-substrate-only — never an implicit cross-substrate
         // fallback just because another provider happens to be available.
-        const failoverSource = await source('application/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js');
+        const failoverSource = await source('application/worldEncounter/ArweaveGatewayFailoverWorldEncounterMaterialResolver.js');
         check(failoverSource.includes("throw new Error('ArweaveGatewayFailoverWorldEncounterMaterialResolver: a non-empty gatewayUrls array is required')"),
             'E5a. the failover resolver still requires an explicit, caller-supplied gatewayUrls array — it never invents or discovers additional gateways, and never reaches for a different storage backend, on its own');
         check(failoverSource.includes("get storage() { return 'ar'; }") && !/ipfs|bitcoin|base/i.test(failoverSource),

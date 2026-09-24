@@ -13,7 +13,7 @@
 // where structures rarely sit on the brick grid at all). Unlike
 // PlacementValidator.js, "position-based" here means within EPSILON
 // rather than PlacementValidator's exact `===`: a rotated selection's
-// landing coordinates come out of sin/cos (application/TransformMath.js),
+// landing coordinates come out of sin/cos (application/editor/TransformMath.js),
 // so a brick conceptually landing exactly on a neighbor's cell arrives
 // as 1.9999999999999998, not 2 — real floating-point behavior a
 // flagship test caught directly, not a defensive guess. EPSILON is far
@@ -23,7 +23,7 @@ export class SelectionTransformValidator {
     // world: the World the transform would apply to.
     // transforms: the FULL final state of every selected brick —
     //   [{ buildingId, brickId, position: {x,y,z}, rotation }], exactly
-    //   the shape application/TransformMath.js#calculateTransforms
+    //   the shape application/editor/TransformMath.js#calculateTransforms
     //   already produces and TransformSelectionCommand already commits.
     //   Deliberately takes the same plain-data shape rather than Brick/
     //   Position instances, so callers mid-gesture (SpatialEditingService)

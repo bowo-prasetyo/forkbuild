@@ -2,11 +2,11 @@ import { AvatarPresence } from '../core/AvatarPresence.js';
 import { AvatarAnimationState } from '../core/AvatarAnimationState.js';
 import { Position } from '../core/Position.js';
 import { AvatarProfile } from '../core/AvatarProfile.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 
 // 0.2.33 — Avatar Identity & Presence Model. This file covers the
 // EPHEMERAL half: core/AvatarPresence.js (the live-state value
-// object) and application/AvatarPresenceSession.js (the in-memory,
+// object) and application/avatar/AvatarPresenceSession.js (the in-memory,
 // no-storage-dependency session that tracks the local user's own
 // presence). See tests/AvatarProfile.test.js for the PERSISTENT half.
 
@@ -83,7 +83,7 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // application/AvatarPresenceSession.js
+    // application/avatar/AvatarPresenceSession.js
     // -------------------------------------------------------------
     {
         // Structural guarantee, not merely a convention: the session

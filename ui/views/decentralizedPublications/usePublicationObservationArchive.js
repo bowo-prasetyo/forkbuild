@@ -1,34 +1,34 @@
 import { ref, reactive, computed } from 'vue';
-import { PublicationObservationArchive } from '../../../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../../../application/publication/observationArchive/PublicationObservationArchive.js';
 import {
     CreateBitcoinAnchorPublicationRecordUseCase
-} from '../../../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
+} from '../../../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
 import {
     CreateBaseAnchorPublicationRecordUseCase
-} from '../../../application/CreateBaseAnchorPublicationRecordUseCase.js';
-import { describePublicationObservationArchive } from '../../../application/PublicationObservationArchiveView.js';
+} from '../../../application/anchoring/base/CreateBaseAnchorPublicationRecordUseCase.js';
+import { describePublicationObservationArchive } from '../../../application/publication/observationArchive/PublicationObservationArchiveView.js';
 import {
     describePublicationObservationArchiveProvenance
-} from '../../../application/PublicationObservationArchiveProvenanceView.js';
+} from '../../../application/publication/observationArchive/PublicationObservationArchiveProvenanceView.js';
 import {
     describePublicationObservationArchiveFingerprint
-} from '../../../application/PublicationObservationArchiveFingerprintView.js';
+} from '../../../application/publication/observationArchive/PublicationObservationArchiveFingerprintView.js';
 import {
     comparePublicationObservationArchiveFingerprint
-} from '../../../application/PublicationObservationArchiveFingerprintComparison.js';
+} from '../../../application/publication/observationArchive/PublicationObservationArchiveFingerprintComparison.js';
 import {
     exportPublicationObservationArchive, importPublicationObservationArchive,
     PublicationObservationArchiveImportOutcome, recordPublicationObservationArchiveImport
-} from '../../../application/PublicationObservationArchiveExport.js';
+} from '../../../application/publication/observationArchive/PublicationObservationArchiveExport.js';
 import {
     inspectPublicationObservationArchive, PublicationObservationArchiveInspectionOutcome
-} from '../../../application/PublicationObservationArchiveInspection.js';
+} from '../../../application/publication/observationArchive/PublicationObservationArchiveInspection.js';
 import {
     describePublicationObservationArchiveDifference
-} from '../../../application/PublicationObservationArchiveDifference.js';
+} from '../../../application/publication/observationArchive/PublicationObservationArchiveDifference.js';
 import {
     describePublicationObservationArchiveReplacementReview
-} from '../../../application/PublicationObservationArchiveReplacementReview.js';
+} from '../../../application/publication/observationArchive/PublicationObservationArchiveReplacementReview.js';
 
 // The publication observation archive: the one durable record this page keeps.
 // Records publish/verify/broadcast/confirmation observations and anchor

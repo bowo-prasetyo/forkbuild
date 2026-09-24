@@ -1,4 +1,4 @@
-import { BaseTransactionInclusionObservationState } from '../application/BaseTransactionInclusionObservationState.js';
+import { BaseTransactionInclusionObservationState } from '../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 
 const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 
@@ -51,12 +51,12 @@ const TX_HASH_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 // like `base/BaseTransactionBroadcaster.js`'s own `finalizedTransaction`
 // parameter, the txid this class is asked to observe is always one this
 // codebase already derived itself — ordinarily the exact `txid` a real
-// `application/BaseTransactionBroadcastCoordinator.js` BROADCASTED outcome
+// `application/anchoring/base/BaseTransactionBroadcastCoordinator.js` BROADCASTED outcome
 // carries. A malformed txid is therefore a caller-contract violation,
 // checked before the injected `rpcSource` is ever consulted — never a
 // network-observation outcome of its own. This class still names its own
 // field `txid`, not `transactionHash`, purely to stay the SAME field name
-// `application/BaseTransactionBroadcastView.js` already exposes — never a
+// `application/anchoring/base/BaseTransactionBroadcastView.js` already exposes — never a
 // different name for the identical value one stage later.
 //
 // A "NOT INCLUDED" TRANSACTION IS NEVER A DEFINITE VERDICT. Unlike

@@ -1,7 +1,7 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { describePublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
-import { LeaderboardClaimRecord } from '../application/LeaderboardClaimRecord.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { describePublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
+import { LeaderboardClaimRecord } from '../application/leaderboard/LeaderboardClaimRecord.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationPlan } from '../application/claimSnapshotReconciliation/PlanView.js';
 import { describePublisherLeaderboardClaimSnapshotReconciliationDecision } from '../application/claimSnapshotReconciliation/decision/Decision.js';
 import { appendPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryEntry } from '../application/claimSnapshotReconciliation/decision/History.js';
@@ -22,16 +22,16 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference
 } from '../application/claimSnapshotReconciliation/decision/HistoryDifference.js';
-import { describePublicationObservationArchiveDifference } from '../application/PublicationObservationArchiveDifference.js';
-import { describePublicationObservationArchiveReplacementReview } from '../application/PublicationObservationArchiveReplacementReview.js';
+import { describePublicationObservationArchiveDifference } from '../application/publication/observationArchive/PublicationObservationArchiveDifference.js';
+import { describePublicationObservationArchiveReplacementReview } from '../application/publication/observationArchive/PublicationObservationArchiveReplacementReview.js';
 import {
     exportPublicationObservationArchive,
     importPublicationObservationArchive
-} from '../application/PublicationObservationArchiveExport.js';
-import { fingerprintPublicationObservationArchive } from '../application/PublicationObservationArchiveFingerprint.js';
-import { reconstructAchievementEvidenceFingerprint } from '../application/AchievementEvidenceFingerprint.js';
-import { PublicationObservationArchiveProvenanceOrigin } from '../application/PublicationObservationArchiveProvenance.js';
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
+} from '../application/publication/observationArchive/PublicationObservationArchiveExport.js';
+import { fingerprintPublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchiveFingerprint.js';
+import { reconstructAchievementEvidenceFingerprint } from '../application/achievement/AchievementEvidenceFingerprint.js';
+import { PublicationObservationArchiveProvenanceOrigin } from '../application/publication/observationArchive/PublicationObservationArchiveProvenance.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
 import { PublisherLeaderboardSnapshotClaim } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -471,7 +471,7 @@ async function run() {
         assert(imported.reconciliationDecisionRecordCount === 2, '55. import preserves the exact decision count');
         assert(serialize(imported.reconciliationDecisionRecords) === serialize(archive.reconciliationDecisionRecords), '56. import preserves every decision byte-for-byte');
         // Whole-archive import restamps provenance uniformly to IMPORTED —
-        // application/PublicationObservationArchive.js's own
+        // application/publication/observationArchive/PublicationObservationArchive.js's own
         // withUniformProvenance(), applied here exactly as it already is
         // for every other collection.
         assert(imported.reconciliationDecisionRecordProvenance.every((origin) => origin === PublicationObservationArchiveProvenanceOrigin.IMPORTED), '57. whole-archive import restamps every decision\'s own archive-level provenance to IMPORTED');

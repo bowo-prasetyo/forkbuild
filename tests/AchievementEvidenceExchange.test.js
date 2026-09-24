@@ -1,19 +1,19 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreatePublicationReferenceRecordUseCase } from '../application/CreatePublicationReferenceRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { reconstructAchievementEvidenceFingerprint } from '../application/AchievementEvidenceFingerprint.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { reconstructAchievementEvidenceFingerprint } from '../application/achievement/AchievementEvidenceFingerprint.js';
 import {
     exportAchievementEvidence,
     importAchievementEvidence,
     AchievementEvidenceImportOutcome
-} from '../application/AchievementEvidenceExport.js';
-import { mergeAchievementEvidence } from '../application/AchievementEvidenceMerge.js';
-import { reconstructAchievementEvents } from '../application/AchievementEvent.js';
-import { reconstructPublisherAchievementStatistics } from '../application/PublisherAchievementStatisticsView.js';
-import { reconstructPublisherRanking } from '../application/PublisherRankingPolicy.js';
-import { reconstructPublisherLeaderboard } from '../application/PublisherLeaderboardView.js';
+} from '../application/achievement/AchievementEvidenceExport.js';
+import { mergeAchievementEvidence } from '../application/achievement/AchievementEvidenceMerge.js';
+import { reconstructAchievementEvents } from '../application/achievement/AchievementEvent.js';
+import { reconstructPublisherAchievementStatistics } from '../application/achievement/PublisherAchievementStatisticsView.js';
+import { reconstructPublisherRanking } from '../application/leaderboard/PublisherRankingPolicy.js';
+import { reconstructPublisherLeaderboard } from '../application/leaderboard/PublisherLeaderboardView.js';
 import {
     AchievementEvidenceExchangeProtocolVersion,
     AchievementEvidenceExchangeResponseOutcome,
@@ -23,7 +23,7 @@ import {
     describeAchievementEvidenceExchangeResponse,
     reconstructAchievementEvidenceExchangeResponse,
     applyAchievementEvidenceExchange
-} from '../application/AchievementEvidenceExchange.js';
+} from '../application/achievement/AchievementEvidenceExchange.js';
 
 // 0.8.118 — Portable Evidence Synchronization Exchange.
 //
@@ -98,7 +98,7 @@ const CREATED_AT = {
 
 // Builds a Bitcoin publication for anchorId/txid 'a'|'b'|'c'|'d' — deterministic
 // across independently-built archives, since identity is derived from
-// these fields alone (application/BitcoinAnchorPublicationRecord.js's own
+// these fields alone (application/anchoring/bitcoin/BitcoinAnchorPublicationRecord.js's own
 // `toBlockchainPublicationIdentity()`), never from array position.
 function anchor(archive, letter, txid) {
     const useCase = new CreateBitcoinAnchorPublicationRecordUseCase();

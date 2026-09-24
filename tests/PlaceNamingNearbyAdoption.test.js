@@ -6,23 +6,23 @@ import { Position } from '../core/Position.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPlaceNamingClaimStore } from '../application/LocalPlaceNamingClaimStore.js';
-import { LocalPlaceNamingPublicationLog } from '../application/LocalPlaceNamingPublicationLog.js';
-import { PlaceNamingClaimUseCase } from '../application/PlaceNamingClaimUseCase.js';
-import { PlaceNamingClaimExchange } from '../application/PlaceNamingClaimExchange.js';
-import { LocalNamePreferenceStore } from '../application/LocalNamePreferenceStore.js';
+import { LocalPlaceNamingClaimStore } from '../application/placeNaming/LocalPlaceNamingClaimStore.js';
+import { LocalPlaceNamingPublicationLog } from '../application/placeNaming/LocalPlaceNamingPublicationLog.js';
+import { PlaceNamingClaimUseCase } from '../application/placeNaming/PlaceNamingClaimUseCase.js';
+import { PlaceNamingClaimExchange } from '../application/placeNaming/PlaceNamingClaimExchange.js';
+import { LocalNamePreferenceStore } from '../application/identity/LocalNamePreferenceStore.js';
 import { PlaceNamingClaim } from '../core/PlaceNamingClaim.js';
-import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION } from '../application/PlaceNamingClaimPublication.js';
-import { validatePlaceNamingClaimPublication } from '../application/PlaceNamingClaimPublicationValidator.js';
+import { PLACE_NAMING_CLAIM_PUBLICATION_KIND, CURRENT_SCHEMA_VERSION } from '../application/placeNaming/PlaceNamingClaimPublication.js';
+import { validatePlaceNamingClaimPublication } from '../application/placeNaming/PlaceNamingClaimPublicationValidator.js';
 import { buildPlaceNamingDiscoveryEnvelope, parsePlaceNamingDiscoveryEnvelope, derivePlaceNamingDiscoveryTag } from '../core/PlaceNamingDiscoveryEnvelope.js';
 import { namingView as deriveNamingView } from '../core/PlaceNamingView.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
-import { PlaceNamingDiscoveryMonitor } from '../application/PlaceNamingDiscoveryMonitor.js';
-import { executeDiscoverPlaceNamingClaimsCommand } from '../application/DiscoverPlaceNamingClaimsCommand.js';
-import { composePlaceNamingDiscoveryRuntime } from '../application/PlaceNamingDiscoveryRuntimeComposition.js';
-import { NostrPlaceNamingDiscoverySource } from '../application/NostrPlaceNamingDiscoverySource.js';
+import { PlaceNamingDiscoveryMonitor } from '../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
+import { executeDiscoverPlaceNamingClaimsCommand } from '../application/placeNaming/DiscoverPlaceNamingClaimsCommand.js';
+import { composePlaceNamingDiscoveryRuntime } from '../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
+import { NostrPlaceNamingDiscoverySource } from '../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.263 — Nearby Place Naming Claim Adoption UI.
@@ -271,7 +271,7 @@ async function runTests() {
 
         // 5. LIVE PROOF: a publication package built from the row ALONE
         // (never a second, separate lookup) is genuinely well-formed —
-        // application/PlaceNamingClaimPublicationValidator.js's own
+        // application/placeNaming/PlaceNamingClaimPublicationValidator.js's own
         // required-field check passes without throwing.
         const pkg = {
             kind: PLACE_NAMING_CLAIM_PUBLICATION_KIND, schemaVersion: CURRENT_SCHEMA_VERSION,
@@ -281,7 +281,7 @@ async function runTests() {
         try { validatePlaceNamingClaimPublication(pkg); } catch (e) { validationError = e; }
         assert(validationError === null, '5. a publication package built purely from the row\'s own fields passes structural validation — the row is genuinely complete, not merely carrying extra decoration.');
 
-        console.log('✓ Section A: the presentation row now carries every field application/PlaceNamingClaimPublicationValidator.js requires, restored from entry.claim exactly like regionId/worldId were restored at 0.9.260');
+        console.log('✓ Section A: the presentation row now carries every field application/placeNaming/PlaceNamingClaimPublicationValidator.js requires, restored from entry.claim exactly like regionId/worldId were restored at 0.9.260');
     }
 
     // -------------------------------------------------------------
@@ -567,15 +567,15 @@ async function runTests() {
     // -------------------------------------------------------------
     {
         const proximitySource = codeOnlyLines(await rawSource('core/PlaceNamingProximitySelection.js'));
-        const monitorSource = codeOnlyLines(await rawSource('application/PlaceNamingDiscoveryMonitor.js'));
+        const monitorSource = codeOnlyLines(await rawSource('application/placeNaming/PlaceNamingDiscoveryMonitor.js'));
         const envelopeSource = codeOnlyLines(await rawSource('core/PlaceNamingDiscoveryEnvelope.js'));
-        const orchestrationSource = codeOnlyLines(await rawSource('application/DiscoverPlaceNamingClaimsCommand.js'));
+        const orchestrationSource = codeOnlyLines(await rawSource('application/placeNaming/DiscoverPlaceNamingClaimsCommand.js'));
 
         for (const [name, source] of [
             ['core/PlaceNamingProximitySelection.js', proximitySource],
-            ['application/PlaceNamingDiscoveryMonitor.js', monitorSource],
+            ['application/placeNaming/PlaceNamingDiscoveryMonitor.js', monitorSource],
             ['core/PlaceNamingDiscoveryEnvelope.js', envelopeSource],
-            ['application/DiscoverPlaceNamingClaimsCommand.js', orchestrationSource]
+            ['application/placeNaming/DiscoverPlaceNamingClaimsCommand.js', orchestrationSource]
         ]) {
             assert(!/adoptNearbyPlaceNamingClaim|importPlaceNamingClaim|importClaim\(/.test(source),
                 `35. ${name} — no part of the discovery/proximity pipeline was touched by this milestone, and none of it references adoption in any form.`);
@@ -687,7 +687,7 @@ async function runTests() {
         const feedback = makeFeedback();
         const result = adoptNearbyPlaceNamingClaim(session, staleRow, feedback);
 
-        // Per application/WorldNavigationSession.js#importPlaceNamingClaim()'s
+        // Per application/world/WorldNavigationSession.js#importPlaceNamingClaim()'s
         // own header — "deliberately NOT scoped to regionId or to whatever
         // World is currently active" — adoption succeeds, but strictly
         // under the claim's OWN worldId ('world-old'), never reinterpreted
@@ -870,13 +870,13 @@ async function runTests() {
             'setPreferredPlaceName', 'clearPreferredPlaceName', 'rankClaimsByName', 'getPlaceNamingView'
         ];
         for (const term of forbiddenTerms) {
-            assert(!codeOnlyAdoptBlock.includes(term), `66. adoptNearbyPlaceNamingClaim() never contains '${term}' — no verification, persistence, signing, WorldRegion mutation, ranking, or preference logic of its own; every one of those responsibilities stays inside the existing, unmodified application/PlaceNamingClaimExchange.js#importClaim().`);
+            assert(!codeOnlyAdoptBlock.includes(term), `66. adoptNearbyPlaceNamingClaim() never contains '${term}' — no verification, persistence, signing, WorldRegion mutation, ranking, or preference logic of its own; every one of those responsibilities stays inside the existing, unmodified application/placeNaming/PlaceNamingClaimExchange.js#importClaim().`);
         }
 
         // 67. WorldView.js as a WHOLE, not merely this one function,
         // still never imports the verifier/store classes directly —
         // confirming the exchange boundary is genuinely the only door in.
-        assert(!worldViewCode.includes("from '../../identity/LocalAuthorizationVerifier.js'") && !worldViewCode.includes("from '../../application/LocalPlaceNamingClaimStore.js'"),
+        assert(!worldViewCode.includes("from '../../identity/LocalAuthorizationVerifier.js'") && !worldViewCode.includes("from '../../application/placeNaming/LocalPlaceNamingClaimStore.js'"),
             '67. ui/views/WorldView.js never imports LocalAuthorizationVerifier or LocalPlaceNamingClaimStore directly anywhere in the file — the ONLY way this view can ever affect naming claims is through WorldNavigationSession\'s own already-existing methods.');
 
         console.log('✓ Section Q: World View implements no verification or persistence of its own for adoption — it delegates entirely, and exclusively, to the existing session.importPlaceNamingClaim() boundary');

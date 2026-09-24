@@ -1,15 +1,15 @@
 import { CameraPerspective } from '../core/CameraPerspective.js';
 import { LocalWorldExperience } from '../core/LocalWorldExperience.js';
-import { LocalWorldExperienceStore } from '../application/LocalWorldExperienceStore.js';
-import { SpatialCameraController } from '../application/SpatialCameraController.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { AvatarProfileUseCase } from '../application/AvatarProfileUseCase.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { LocalWorldExperienceStore } from '../application/world/LocalWorldExperienceStore.js';
+import { SpatialCameraController } from '../application/world/SpatialCameraController.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { AvatarProfileUseCase } from '../application/avatar/AvatarProfileUseCase.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { AvatarTemplateRegistry } from '../core/AvatarTemplateRegistry.js';
 import { CoreAvatarTemplateLibrary } from '../core/library/CoreAvatarTemplateLibrary.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -27,7 +27,7 @@ import { Position } from '../core/Position.js';
 //              and round-tripping (core/LocalWorldExperience.js)
 //   Section B: LocalWorldExperienceStore — per-world records, recency
 //              ordering, and the perspective-clearing edge case
-//              (application/LocalWorldExperienceStore.js)
+//              (application/world/LocalWorldExperienceStore.js)
 //   Section C: WorldNavigationSession wiring — save/restore/hasVisited
 //              are graceful no-ops with nothing wired, and correctly
 //              save/restore camera framing (both the free/orbit

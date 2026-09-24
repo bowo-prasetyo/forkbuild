@@ -1,4 +1,4 @@
-import { WorldViewNavigationState, WorldViewPrimaryMode } from '../application/WorldViewNavigationState.js';
+import { WorldViewNavigationState, WorldViewPrimaryMode } from '../application/world/WorldViewNavigationState.js';
 
 // 0.5.7 — World View UX & Progressive Exploration.
 //
@@ -11,7 +11,7 @@ import { WorldViewNavigationState, WorldViewPrimaryMode } from '../application/W
 // a place's naming claims are expanded) that should survive switching
 // between them.
 //
-// application/WorldViewNavigationState.js is a thin, pure module — no
+// application/world/WorldViewNavigationState.js is a thin, pure module — no
 // Vue, no DOM, no session, no World access of any kind — so this suite
 // tests it exactly the way tests/CommandPalette.test.js tests
 // EditorActionRegistry/InputRouter: headlessly, as the one place any of

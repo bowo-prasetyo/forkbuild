@@ -3,7 +3,7 @@
 // The one place a did:key identityId is opportunistically read off an
 // IdentityProvider for attribution purposes — used by every site that
 // stamps DocumentMetadata.authorIdentityId at document-creation time
-// (application/CreateDocumentManagerUseCase.js, ForkDocumentUseCase.js,
+// (application/document/CreateDocumentManagerUseCase.js, ForkDocumentUseCase.js,
 // ForkPublishedWorldUseCase.js, ForkStructureUseCase.js), so the same
 // tolerant lookup logic exists exactly once rather than four times.
 //

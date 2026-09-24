@@ -1,5 +1,5 @@
 import { BaseTransactionSigner } from './BaseTransactionSigner.js';
-import { describeBasePublicationTransactionReview } from '../application/BasePublicationTransactionReview.js';
+import { describeBasePublicationTransactionReview } from '../application/anchoring/base/BasePublicationTransactionReview.js';
 
 // 0.8.93 — Explicit Base Reviewed Transaction Signing.
 //
@@ -12,7 +12,7 @@ import { describeBasePublicationTransactionReview } from '../application/BasePub
 // Mirrors `anchoring/BitcoinAnchorReviewedPsbtSigner.js`'s own header
 // (0.8.59) exactly, one chain over.
 //
-//   application/BasePublicationTransactionReview.js
+//   application/anchoring/base/BasePublicationTransactionReview.js
 //     describeBasePublicationTransactionReview(plan)
 //           │
 //           ▼
@@ -100,7 +100,7 @@ export class BaseReviewedTransactionSigner {
     // the wallet is ever consulted.
     async requestSignature({ plan, reviewedTransaction } = {}) {
         if (!reviewedTransaction || typeof reviewedTransaction !== 'object') {
-            throw new Error('BaseReviewedTransactionSigner: reviewedTransaction is required — review the transaction with application/BasePublicationTransactionReview.js before ever requesting a signature');
+            throw new Error('BaseReviewedTransactionSigner: reviewedTransaction is required — review the transaction with application/anchoring/base/BasePublicationTransactionReview.js before ever requesting a signature');
         }
 
         const currentReview = describeBasePublicationTransactionReview(plan);

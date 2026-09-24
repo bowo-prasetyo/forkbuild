@@ -3,7 +3,7 @@
 // A read-only browser over WorldNavigationSession#getTimeline(documentId) —
 // one row per top-level CommandHistory entry, in the exact order and with
 // the exact description CommandHistory.getTimeline() already produces (see
-// application/CommandHistory.js's own header on the Operation Timeline
+// application/editor/CommandHistory.js's own header on the Operation Timeline
 // projection). This panel never computes its own notion of "what
 // happened" — `entry.description`/`entry.applied`/`entry.timestamp` are
 // read straight through, unchanged.

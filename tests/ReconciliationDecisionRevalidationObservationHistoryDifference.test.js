@@ -3,7 +3,7 @@ import {
     describePublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference,
     reconstructPublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryDifference
 } from '../application/claimSnapshotReconciliation/revalidationObservation/HistoryDifference.js';
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
 
 // 0.8.166 — Revalidation Observation History Difference Projection.
 //

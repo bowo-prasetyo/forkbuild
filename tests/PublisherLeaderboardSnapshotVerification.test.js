@@ -1,18 +1,18 @@
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreatePublicationReferenceRecordUseCase } from '../application/CreatePublicationReferenceRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { PublisherIdentityRecord } from '../application/PublisherIdentityRecord.js';
-import { reconstructAchievementEvidenceFingerprint } from '../application/AchievementEvidenceFingerprint.js';
-import { describePublisherLeaderboard, reconstructPublisherLeaderboard } from '../application/PublisherLeaderboardView.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreatePublicationReferenceRecordUseCase } from '../application/publication/CreatePublicationReferenceRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { PublisherIdentityRecord } from '../application/publisher/PublisherIdentityRecord.js';
+import { reconstructAchievementEvidenceFingerprint } from '../application/achievement/AchievementEvidenceFingerprint.js';
+import { describePublisherLeaderboard, reconstructPublisherLeaderboard } from '../application/leaderboard/PublisherLeaderboardView.js';
 import {
     describePublisherLeaderboardSnapshot,
     reconstructPublisherLeaderboardSnapshot
-} from '../application/PublisherLeaderboardSnapshot.js';
+} from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
 import {
     describePublisherLeaderboardSnapshotVerification,
     verifyPublisherLeaderboardSnapshot
-} from '../application/PublisherLeaderboardSnapshotVerification.js';
+} from '../application/leaderboard/PublisherLeaderboardSnapshotVerification.js';
 
 // 0.8.120 — Reproducible Leaderboard Snapshot Verification.
 //

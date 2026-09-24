@@ -1,12 +1,12 @@
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
-import { PublicationResolutionOutcome } from '../application/PublicationResolutionOutcome.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
+import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND, CURRENT_SCHEMA_VERSION as ATTRIBUTION_SCHEMA_VERSION } from '../core/BlueprintAttribution.js';
-import { LocalBlueprintAttributionStore } from '../application/LocalBlueprintAttributionStore.js';
-import { createBlueprintAttributionPublicationKind } from '../application/BlueprintAttributionPublicationKind.js';
+import { LocalBlueprintAttributionStore } from '../application/blueprint/LocalBlueprintAttributionStore.js';
+import { createBlueprintAttributionPublicationKind } from '../application/blueprint/BlueprintAttributionPublicationKind.js';
 
 // 0.7.1 — IPFS Content Publication & Resolution.
 //
@@ -26,7 +26,7 @@ import { createBlueprintAttributionPublicationKind } from '../application/Bluepr
 //   FORKBUILD_TEST_IPFS_API_B (default http://127.0.0.1:5002)
 //
 // What this file actually proves, when it runs for real: the complete
-// application/PublicationResolver.js pipeline — sign, add to a real
+// application/publication/PublicationResolver.js pipeline — sign, add to a real
 // node, build a real CID, retrieve it back over the real Kubo HTTP API,
 // verify the real hash, verify the real signature — genuinely works
 // against genuine IPFS wire behavior, not just this codebase's own

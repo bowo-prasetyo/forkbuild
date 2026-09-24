@@ -6,8 +6,8 @@ import {
     SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL,
     SNAPSHOT_DISCOVERY_ENVELOPE_VERSION
 } from '../core/SnapshotDiscoveryEnvelope.js';
-import { NostrSnapshotDiscoveryPublisher } from '../application/NostrSnapshotDiscoveryPublisher.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryPublisher } from '../application/nostr/NostrSnapshotDiscoveryPublisher.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 
 // 0.9.171 — Decentralized Snapshot World Position Claim.
 //
@@ -53,7 +53,7 @@ import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshot
 //   Section F — old announcements: an envelope/candidate naming neither
 //     field remains byte-for-byte identical to the pre-0.9.171 shape.
 //   Section G — no World placement yet: this milestone's own files never
-//     reference `application/SnapshotWorldPlacement.js` or `application/
+//     reference `application/snapshot/placement/SnapshotWorldPlacement.js` or `application/
 //     MaterializedSnapshotWorldDiscoveryBridge.js`, and neither of those
 //     two files references this milestone's own new claim vocabulary —
 //     discovery can carry the claim without silently modifying placement.
@@ -114,8 +114,8 @@ async function codeOnlySource(relativePath) {
 
 const CLAIM_FILES = [
     'core/SnapshotDiscoveryEnvelope.js',
-    'application/NostrSnapshotDiscoveryPublisher.js',
-    'application/NostrSnapshotDiscoveryQueryService.js'
+    'application/nostr/NostrSnapshotDiscoveryPublisher.js',
+    'application/nostr/NostrSnapshotDiscoveryQueryService.js'
 ];
 
 async function run() {
@@ -328,20 +328,20 @@ async function run() {
     {
         for (const file of CLAIM_FILES) {
             const code = await codeOnlySource(file);
-            assert(!code.includes('SnapshotWorldPlacement'), `41. ${file} never references application/SnapshotWorldPlacement.js — discovery carries the claim, it never consumes it`);
-            assert(!code.includes('MaterializedSnapshotWorldDiscoveryBridge'), `42. ${file} never references application/MaterializedSnapshotWorldDiscoveryBridge.js`);
+            assert(!code.includes('SnapshotWorldPlacement'), `41. ${file} never references application/snapshot/placement/SnapshotWorldPlacement.js — discovery carries the claim, it never consumes it`);
+            assert(!code.includes('MaterializedSnapshotWorldDiscoveryBridge'), `42. ${file} never references application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js`);
             assert(!code.includes('WorldDiscoverySourceRegistry'), `43. ${file} never references the World Discovery runtime registry`);
             assert(!code.includes('resolveSnapshotWorldPlacement'), `44. ${file} never calls resolveSnapshotWorldPlacement()`);
         }
 
-        const placementCode = await codeOnlySource('application/SnapshotWorldPlacement.js');
-        assert(!placementCode.includes('claimedPosition'), '45. FLAGSHIP — application/SnapshotWorldPlacement.js is untouched by this milestone: it carries no reference to claimedPosition');
-        assert(!placementCode.includes('SnapshotDiscoveryEnvelope') && !placementCode.includes('NostrSnapshotDiscovery'), '46. application/SnapshotWorldPlacement.js never imports this milestone\'s own discovery files');
+        const placementCode = await codeOnlySource('application/snapshot/placement/SnapshotWorldPlacement.js');
+        assert(!placementCode.includes('claimedPosition'), '45. FLAGSHIP — application/snapshot/placement/SnapshotWorldPlacement.js is untouched by this milestone: it carries no reference to claimedPosition');
+        assert(!placementCode.includes('SnapshotDiscoveryEnvelope') && !placementCode.includes('NostrSnapshotDiscovery'), '46. application/snapshot/placement/SnapshotWorldPlacement.js never imports this milestone\'s own discovery files');
 
-        const bridgeCode = await codeOnlySource('application/MaterializedSnapshotWorldDiscoveryBridge.js');
-        assert(!bridgeCode.includes('claimedPosition'), '47. application/MaterializedSnapshotWorldDiscoveryBridge.js carries no reference to claimedPosition either');
+        const bridgeCode = await codeOnlySource('application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js');
+        assert(!bridgeCode.includes('claimedPosition'), '47. application/snapshot/materialization/MaterializedSnapshotWorldDiscoveryBridge.js carries no reference to claimedPosition either');
 
-        console.log('✓ Section G: discovery carries the claim without silently modifying World placement — application/SnapshotWorldPlacement.js and its registration bridge remain completely untouched');
+        console.log('✓ Section G: discovery carries the claim without silently modifying World placement — application/snapshot/placement/SnapshotWorldPlacement.js and its registration bridge remain completely untouched');
     }
 
     // ===============================================================

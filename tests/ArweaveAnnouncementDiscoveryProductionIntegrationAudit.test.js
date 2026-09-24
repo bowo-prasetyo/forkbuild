@@ -4,23 +4,23 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { describeDecentralizedDiscoveryEnvelope } from '../core/DecentralizedDiscoveryEnvelope.js';
-import { ArweaveAnnouncementPublisher } from '../application/ArweaveAnnouncementPublisher.js';
-import { createArweaveTaggedTransactionUpload } from '../application/ArweaveTaggedTransactionUpload.js';
+import { ArweaveAnnouncementPublisher } from '../application/arweave/ArweaveAnnouncementPublisher.js';
+import { createArweaveTaggedTransactionUpload } from '../application/arweave/ArweaveTaggedTransactionUpload.js';
 import { createArweaveInjectedProviderSigner } from '../arweave/ArweaveInjectedProviderSigner.js';
-import { ArweaveGraphqlDiscoveryQueryService } from '../application/ArweaveGraphqlDiscoveryQueryService.js';
-import { ArweavePublicationMaterialUploader } from '../application/ArweavePublicationMaterialUploader.js';
-import { NostrPublicationDiscoveryPublisher } from '../application/NostrPublicationDiscoveryPublisher.js';
-import { resolveArweaveAnnouncementPublisherOptions } from '../application/PublicationDistributionConfigurationProvider.js';
-import { composePublicationDistributionRuntime } from '../application/PublicationDistributionRuntimeComposition.js';
-import { executePublicationDistribution } from '../application/PublicationDistributionExecutor.js';
+import { ArweaveGraphqlDiscoveryQueryService } from '../application/arweave/ArweaveGraphqlDiscoveryQueryService.js';
+import { ArweavePublicationMaterialUploader } from '../application/arweave/ArweavePublicationMaterialUploader.js';
+import { NostrPublicationDiscoveryPublisher } from '../application/nostr/NostrPublicationDiscoveryPublisher.js';
+import { resolveArweaveAnnouncementPublisherOptions } from '../application/publication/distribution/PublicationDistributionConfigurationProvider.js';
+import { composePublicationDistributionRuntime } from '../application/publication/distribution/PublicationDistributionRuntimeComposition.js';
+import { executePublicationDistribution } from '../application/publication/distribution/PublicationDistributionExecutor.js';
 import {
     composeDecentralizedWorldEncounterMaterialDiscoveryServices,
     composeDecentralizedWorldEncounterMaterialDiscoveryRuntime
-} from '../application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
-import { composeWorldEncounterMaterialVerifier } from '../application/WorldEncounterMaterialVerifierRuntimeComposition.js';
-import { WorldEncounterMaterialLoadStatus } from '../application/WorldEncounterMaterialLoading.js';
-import { WorldEncounterMaterialVerificationStatus } from '../application/WorldEncounterMaterialVerification.js';
-import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/DecentralizedWorldEncounterLeadResolution.js';
+} from '../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
+import { composeWorldEncounterMaterialVerifier } from '../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
+import { WorldEncounterMaterialLoadStatus } from '../application/worldEncounter/WorldEncounterMaterialLoading.js';
+import { WorldEncounterMaterialVerificationStatus } from '../application/worldEncounter/WorldEncounterMaterialVerification.js';
+import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/worldEncounter/DecentralizedWorldEncounterLeadResolution.js';
 
 // 0.9.491 — Arweave Announcement/Discovery Production Integration Audit.
 //
@@ -31,7 +31,7 @@ import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/
 // discoveryTag the instant `uploadTaggedTransaction` was absent, so
 // selecting "Arweave" in `ui/components/WorldEncounterCanvas.js` threw on
 // every real click. 0.9.490 closed the CAPABILITY gap Section C sized
-// exactly — `application/ArweaveTaggedTransactionUpload.js` is a real, unit-
+// exactly — `application/arweave/ArweaveTaggedTransactionUpload.js` is a real, unit-
 // tested, production-grade adapter today. But 0.9.490's own header drew one
 // deliberate line: "Wiring a real host signer... into `ui/main.js`'s own
 // production composition root... is a separate, later, composition-root
@@ -46,7 +46,7 @@ import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/
 // audit finds TWO gaps, not one, and they are different in kind.
 //
 // GAP 1 — COMPOSITION-ROOT WIRING (Sections A/B). `ui/main.js` still never
-// imports `application/ArweaveTaggedTransactionUpload.js`, never calls
+// imports `application/arweave/ArweaveTaggedTransactionUpload.js`, never calls
 // `createArweaveTaggedTransactionUpload()`, and its own 0.9.430 comment
 // ("No uploadTaggedTransaction host capability exists anywhere in this
 // codebase yet") is now a STALE, FALSE statement about this codebase — a
@@ -116,10 +116,10 @@ import { DecentralizedWorldEncounterLeadResolutionStatus } from '../application/
 // AMENDED BY 0.9.494 — GAP 2 IS NOW CLOSED. `tests/
 // ArweaveDiscoveryUriIdentityBoundaryAudit.test.js` (0.9.493) named the exact
 // invariant Gap 2 violated and proved a fix live via a throwaway prototype;
-// `application/ArweaveGraphqlDiscoveryQueryService.js` (0.9.494) moved that
+// `application/arweave/ArweaveGraphqlDiscoveryQueryService.js` (0.9.494) moved that
 // fix into production. `search()` now performs one additional raw gateway
 // fetch per discovered transaction — the same `GET <gatewayUrl>/<id>`
-// primitive `application/ArweaveWorldEncounterMaterialResolver.js` already
+// primitive `application/worldEncounter/ArweaveWorldEncounterMaterialResolver.js` already
 // shipped — decodes each transaction's own signed publication envelope via
 // the existing, unmodified `core/DecentralizedDiscoveryEnvelope.js`, and
 // reports THAT envelope's own claimed `uri` as `candidate.uri`, with the
@@ -347,8 +347,8 @@ async function run() {
         const mainSource = await source('ui/main.js');
         const mainCodeOnly = codeOnlyOf(mainSource);
 
-        check(/from ['"]\.\.\/application\/ArweaveTaggedTransactionUpload\.js['"]/.test(mainCodeOnly),
-            'A1. ui/main.js now imports application/ArweaveTaggedTransactionUpload.js — the 0.9.490 adapter is referenced from the production composition root');
+        check(/from ['"]\.\.\/application\/arweave\/ArweaveTaggedTransactionUpload\.js['"]/.test(mainCodeOnly),
+            'A1. ui/main.js now imports application/arweave/ArweaveTaggedTransactionUpload.js — the 0.9.490 adapter is referenced from the production composition root');
         check(/createArweaveTaggedTransactionUpload\(/.test(mainCodeOnly),
             'A2. ...and calls createArweaveTaggedTransactionUpload() — CONSTRUCTED? YES');
 
@@ -375,7 +375,7 @@ async function run() {
         check(/nostrHostPublisher\s*=\s*async function/.test(mainCodeOnly) && /createNostrInjectedProviderPublisher\(/.test(mainCodeOnly),
             'A7. ...and nostrHostPublisher IS constructed here too — a real production host-capability adapter for the Nostr announcement role. uploadTaggedTransaction (A1-A5b) now receives the identical treatment, reusing the same arweaveHostSigner instance rather than a second one');
 
-        console.log('✓ Section A: WIRED (0.9.492). application/ArweaveTaggedTransactionUpload.js (0.9.490) is now constructed and referenced by ui/main.js\'s own production composition root, closing the composition-root wire 0.9.490\'s own header deferred and 0.9.491 originally found still missing.');
+        console.log('✓ Section A: WIRED (0.9.492). application/arweave/ArweaveTaggedTransactionUpload.js (0.9.490) is now constructed and referenced by ui/main.js\'s own production composition root, closing the composition-root wire 0.9.490\'s own header deferred and 0.9.491 originally found still missing.');
     }
 
     // ===============================================================
@@ -453,7 +453,7 @@ async function run() {
         check(decodeBase64Url(entryOne.tags[0].name) === ArweaveAnnouncementPublisher.DEFAULT_TAG_NAME,
             'C4. the on-wire tag NAME is exactly the literal the real reader already matches against');
 
-        const adapterSource = await source('application/ArweaveTaggedTransactionUpload.js');
+        const adapterSource = await source('application/arweave/ArweaveTaggedTransactionUpload.js');
         check(!/discoveryTag\s*=|chooseCampaign|selectDiscoveryTag/.test(codeOnlyOf(adapterSource)),
             'C5. the adapter\'s own source never authors, selects, or derives a discovery tag of its own — re-confirmed live here, matching 0.9.490 Section F2\'s own source sweep, never re-derived from scratch');
 
@@ -463,9 +463,9 @@ async function run() {
         check(publishedOne.id.startsWith('ProdIntegrationTx') && net.ledger.has(publishedOne.id),
             'C6. the id ArweaveAnnouncementPublisher.publish() hands back is the real signer\'s own deterministically-computed transaction id, and a real ledger entry exists under exactly that id');
         for (const [filePath, forbidden] of [
-            ['application/ArweaveAnnouncementPublisher.js', /contentHash|sha256|crypto\.subtle|createHash|uuid/i],
-            ['application/ArweaveTaggedTransactionUpload.js', /contentHash|sha256|crypto\.subtle|createHash|uuid/i],
-            ['application/ArweaveGraphqlDiscoveryQueryService.js', /contentHash|sha256|crypto\.subtle|createHash|uuid/i]
+            ['application/arweave/ArweaveAnnouncementPublisher.js', /contentHash|sha256|crypto\.subtle|createHash|uuid/i],
+            ['application/arweave/ArweaveTaggedTransactionUpload.js', /contentHash|sha256|crypto\.subtle|createHash|uuid/i],
+            ['application/arweave/ArweaveGraphqlDiscoveryQueryService.js', /contentHash|sha256|crypto\.subtle|createHash|uuid/i]
         ]) {
             check(!forbidden.test(codeOnlyOf(await source(filePath))), `C7. ${filePath} never computes an alternate identity (no hashing/uuid primitive of any kind) — the real signer's own id is the ONLY identity this chain ever produces`);
         }
@@ -477,7 +477,7 @@ async function run() {
     // Section D — GraphQL discovery reachability in production shape.
     // ===============================================================
     {
-        const compositionSource = await source('application/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
+        const compositionSource = await source('application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js');
         check(/const arweave = new ArweaveGraphqlDiscoveryQueryService\(/.test(codeOnlyOf(compositionSource)),
             'D1. the real production discovery-services composition unconditionally constructs a real ArweaveGraphqlDiscoveryQueryService — no host-capability gate of any kind, matching this file\'s own header, "Arweave\'s own discovery query... already works with no host capability at all"');
 
@@ -570,13 +570,13 @@ async function run() {
         check(result.discovery.arweave[0].uri === 'ar://TX-MATERIAL',
             'E2b. FIXED (0.9.494): candidate.uri is now `ar://TX-MATERIAL` — the uri the announced envelope itself actually claims — never `ar://${announced.id}`, the announcement transaction\'s own id this section used to (incorrectly) find here');
         check(result.resolution.status === DecentralizedWorldEncounterLeadResolutionStatus.RESOLVED,
-            'E3. SELECT/RESOLVE — GAP 2, CLOSED: resolution against this replica\'s own real, signed Publication (contentReference.uri = "ar://TX-MATERIAL") now reports RESOLVED — the exact-string-equality association match (application/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js) fires, because the candidate uri and the Publication\'s own claimed uri are now the same string');
+            'E3. SELECT/RESOLVE — GAP 2, CLOSED: resolution against this replica\'s own real, signed Publication (contentReference.uri = "ar://TX-MATERIAL") now reports RESOLVED — the exact-string-equality association match (application/worldEncounter/DecentralizedWorldEncounterLeadAssociationEvidenceIngress.js) fires, because the candidate uri and the Publication\'s own claimed uri are now the same string');
         check(result.inspection !== null && result.inspection.loading.status === WorldEncounterMaterialLoadStatus.AVAILABLE,
             'E4. ...and the real, unmodified ArweaveWorldEncounterMaterialResolver retrieves the real Publication material directly off that uri — loading succeeds');
         check(result.inspection.verification.status === WorldEncounterMaterialVerificationStatus.VERIFIED,
             'E4b. ...and verification reports VERIFIED — the full announce -> discover -> resolve -> verify chain converges end to end, through real production classes alone');
 
-        const discoverySource = codeOnlyOf(await source('application/ArweaveGraphqlDiscoveryQueryService.js'));
+        const discoverySource = codeOnlyOf(await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js'));
         check(/query \{ transactions\(tags: \[\{ name: /.test(discoverySource),
             'E5. the GraphQL query this service issues still requests only `edges { node { id } }` — unchanged by 0.9.494, exactly as Section D already confirmed');
         check(/parseDecentralizedDiscoveryEnvelope/.test(discoverySource) && /gatewayUrl/.test(discoverySource),
@@ -659,7 +659,7 @@ async function run() {
         // ever prevent a Nostr query in the SAME discoverWorldEncounterPublication()
         // call from running (or vice versa) — confirmed by source sweep and
         // one live "gateway down" scenario.
-        const discoveryServiceSource = await source('application/ArweaveGraphqlDiscoveryQueryService.js');
+        const discoveryServiceSource = await source('application/arweave/ArweaveGraphqlDiscoveryQueryService.js');
         check(/NEVER THROWS/i.test(discoveryServiceSource) && /return \[\];/.test(discoveryServiceSource),
             'F4. ArweaveGraphqlDiscoveryQueryService.search() is documented and implemented to never throw — every failure (network, non-2xx, unparseable body) degrades to [], confirmed by source, not merely assumed');
 
@@ -702,8 +702,8 @@ async function run() {
         check(arweaveResult !== null && arweaveResult.published === true, 'G3. sanity: the real Arweave announcement, through the real adapter, genuinely succeeds in this section');
         check(nostrPublishCalls === 0, 'G4. ...and never, at any point, invoked the sibling spying Nostr publishImpl — selecting Arweave through the real adapter never constructs or calls Nostr as a side effect');
 
-        const compositionSource = await source('application/PublicationDistributionRuntimeComposition.js');
-        const executorSource = await source('application/PublicationDistributionExecutor.js');
+        const compositionSource = await source('application/publication/distribution/PublicationDistributionRuntimeComposition.js');
+        const executorSource = await source('application/publication/distribution/PublicationDistributionExecutor.js');
         check(!/catch[\s\S]{0,120}(nostr|arweave)/i.test(compositionSource) && !/catch[\s\S]{0,120}(nostr|arweave)/i.test(executorSource),
             'G5. neither file contains catch-and-retry-on-the-other-substrate logic — re-confirmed by source sweep, unchanged since 0.9.489');
 

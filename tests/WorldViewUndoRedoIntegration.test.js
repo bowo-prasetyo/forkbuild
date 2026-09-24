@@ -5,22 +5,22 @@ import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { DocumentManager } from '../application/DocumentManager.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
 import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
-import { LoadPublicationDocumentUseCase } from '../application/LoadPublicationDocumentUseCase.js';
-import { SaveDocumentUseCase } from '../application/SaveDocumentUseCase.js';
-import { PublishDocumentUseCase } from '../application/PublishDocumentUseCase.js';
-import { ReplayDocumentUseCase } from '../application/ReplayDocumentUseCase.js';
-import { RestoreHistoryStateUseCase } from '../application/RestoreHistoryStateUseCase.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
+import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
+import { SaveDocumentUseCase } from '../application/document/SaveDocumentUseCase.js';
+import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
+import { ReplayDocumentUseCase } from '../application/document/ReplayDocumentUseCase.js';
+import { RestoreHistoryStateUseCase } from '../application/document/RestoreHistoryStateUseCase.js';
 import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPublisherProvider } from '../publisher/LocalPublisherProvider.js';
-import { WorldNavigationSession } from '../application/WorldNavigationSession.js';
-import { AvatarPresenceSession } from '../application/AvatarPresenceSession.js';
+import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
+import { AvatarPresenceSession } from '../application/avatar/AvatarPresenceSession.js';
 import { worldViewFiles } from './support/SourceFileGroups.js';
 
 // 0.9.210 — World View Undo/Redo UI Integration.
@@ -172,7 +172,7 @@ async function run() {
         // CommandHistory's own linear-history invariant: executing a new
         // command after an undo clears the redo branch entirely — the
         // undone "Landmark B" create is now permanently gone, not merely
-        // hidden. See application/CommandHistory.js's own header.
+        // hidden. See application/editor/CommandHistory.js's own header.
         assert(session.canRedo() === false, '15. redo is unavailable — B\'s create was wiped by C\'s execute, exactly like CommandHistory always does for every other command');
         assert(session.redo() === false, '16. redo() itself is a safe no-op, not a throw');
         assert(liveWorld().getWorldLandmark(landmarkBId) === null, '17. B never comes back');
@@ -409,7 +409,7 @@ async function run() {
         assert(worldViewSource.includes("window.addEventListener('keydown', onKeyDown)"), 'keydown is attached through the existing single listener');
         assert(worldViewSource.includes("window.removeEventListener('keydown', onKeyDown)"), 'the same listener is torn down on unmount — no stale undo/redo shortcut survives');
 
-        const sessionSource = codeOnlyLines(await rawSource('application/WorldNavigationSession.js'));
+        const sessionSource = codeOnlyLines(await rawSource('application/world/WorldNavigationSession.js'));
         assert(/canUndo\(\)\s*\{[\s\S]*?_getActiveCommandHistory\(\)/.test(sessionSource), 'canUndo() delegates to _getActiveCommandHistory(), not a duplicated stack');
         assert(/canRedo\(\)\s*\{[\s\S]*?_getActiveCommandHistory\(\)/.test(sessionSource), 'canRedo() delegates to _getActiveCommandHistory(), not a duplicated stack');
         const canUndoMatch = sessionSource.match(/canUndo\(\)\s*\{[\s\S]*?\n    \}/);

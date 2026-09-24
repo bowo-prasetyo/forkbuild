@@ -33,7 +33,7 @@
 // somebody could simply publish the same claim 10,000 times." A single
 // BlueprintAttribution re-exported to ten peers and re-imported ten
 // times is still exactly ONE claim in any one replica's own store —
-// application/LocalBlueprintAttributionStore.js already dedupes by the
+// application/blueprint/LocalBlueprintAttributionStore.js already dedupes by the
 // attribution's own `id` on import (application/
 // BlueprintAttributionExchange.js#importAttribution()). What this file
 // adds is the next layer: the SAME identity publishing several,

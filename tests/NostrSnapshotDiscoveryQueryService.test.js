@@ -1,4 +1,4 @@
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
 
 // 0.9.133 — Nostr Snapshot Discovery Query Service.
 // See docs/Roadmap.md, "0.9.133 — Snapshot Location Discovery via Nostr."

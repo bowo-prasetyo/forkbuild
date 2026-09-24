@@ -2,19 +2,19 @@ import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlaceme
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { RoleProviderPreference } from '../core/RoleProviderPreference.js';
 import { RoleProviderPreferenceStore } from '../storage/RoleProviderPreferenceStore.js';
-import { RoleProviderResolutionStatus } from '../application/RoleAwareProviderResolver.js';
+import { RoleProviderResolutionStatus } from '../application/settings/RoleAwareProviderResolver.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPublicationCatalog } from '../application/LocalPublicationCatalog.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { PublicationResolver } from '../application/PublicationResolver.js';
+import { LocalPublicationCatalog } from '../application/publication/LocalPublicationCatalog.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { PublicationResolver } from '../application/publication/PublicationResolver.js';
 import { PublicationCatalogDiscoveryProvider } from '../discovery/PublicationCatalogDiscoveryProvider.js';
 import { PublicationCatalogContentResolver } from '../discovery/PublicationCatalogContentResolver.js';
-import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/CreateSnapshotPlacementOrchestratorUseCase.js';
-import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
-import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
-import { SnapshotPlacementCreationOutcome } from '../application/SnapshotPlacementCreationOutcome.js';
-import { SnapshotPlacementCreationUiState } from '../application/SnapshotPlacementCreationUiState.js';
-import { describeCreationAttempt } from '../application/SnapshotPlacementCreationView.js';
+import { CreateSnapshotPlacementOrchestratorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementOrchestratorUseCase.js';
+import { CreateSnapshotPlacementCreationCoordinatorUseCase } from '../application/snapshot/placement/CreateSnapshotPlacementCreationCoordinatorUseCase.js';
+import { CreatePreferredSnapshotPlacementCreationCoordinatorUseCase } from '../application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js';
+import { SnapshotPlacementCreationOutcome } from '../application/snapshot/placement/SnapshotPlacementCreationOutcome.js';
+import { SnapshotPlacementCreationUiState } from '../application/snapshot/placement/SnapshotPlacementCreationUiState.js';
+import { describeCreationAttempt } from '../application/snapshot/placement/SnapshotPlacementCreationView.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { IpfsContentStore } from '../content/IpfsContentStore.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -57,8 +57,8 @@ import { publicationsPageFiles } from './support/SourceFileGroups.js';
 //   Section I — regression: every existing explicit-selection workflow is
 //               unchanged with the new trigger composed alongside it.
 //
-// See application/PreferredSnapshotPlacementCreationCoordinator.js,
-// application/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js,
+// See application/snapshot/placement/PreferredSnapshotPlacementCreationCoordinator.js,
+// application/snapshot/placement/CreatePreferredSnapshotPlacementCreationCoordinatorUseCase.js,
 // and tests/ContentProviderPreferenceReachabilityAudit.test.js for the full
 // design rationale this milestone carries out.
 

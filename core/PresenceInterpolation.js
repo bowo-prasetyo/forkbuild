@@ -9,7 +9,7 @@
 // docs/Principles.md, "The Authoritative Position Is Always The
 // Latest Presence; Interpolation Is Only Ever A Presentation Detail"
 // — `to` here, not the interpolated output, is that authoritative
-// value; `application/RemoteAvatarInterpolator.js` is the only thing
+// value; `application/avatar/RemoteAvatarInterpolator.js` is the only thing
 // that ever reads it as ground truth).
 //
 // `t` is a caller-supplied progress fraction (elapsed time since the

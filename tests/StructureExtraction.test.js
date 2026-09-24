@@ -4,12 +4,12 @@ import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateStructureRegistryUseCase } from '../application/CreateStructureRegistryUseCase.js';
-import { CopyStructureIntoDocumentUseCase } from '../application/CopyStructureIntoDocumentUseCase.js';
-import { CreateStructureFromSelectionUseCase } from '../application/CreateStructureFromSelectionUseCase.js';
-import { ForkStructureUseCase } from '../application/ForkStructureUseCase.js';
-import { CommandHistory } from '../application/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateStructureRegistryUseCase } from '../application/editor/CreateStructureRegistryUseCase.js';
+import { CopyStructureIntoDocumentUseCase } from '../application/editor/CopyStructureIntoDocumentUseCase.js';
+import { CreateStructureFromSelectionUseCase } from '../application/editor/CreateStructureFromSelectionUseCase.js';
+import { ForkStructureUseCase } from '../application/editor/ForkStructureUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
 
 // 0.4.2 — Structure Extraction & Blueprint Creation.
 //

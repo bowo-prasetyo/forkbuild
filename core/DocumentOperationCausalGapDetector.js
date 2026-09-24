@@ -72,8 +72,8 @@ import { isValidCausalPredecessorList } from './DocumentOperationEnvelope.js';
 // requests, no automatic predecessor retrieval, no retry, no
 // synchronization protocol, no rollback, no reordering, no CRDT, no OT,
 // no vector clocks, no conflict resolution, no convergence guarantee, no
-// synchronized undo. `application/CommandHistory.js` and
-// `application/RemoteDocumentOperationApplicationUseCase.js` are both
+// synchronized undo. `application/editor/CommandHistory.js` and
+// `application/document/RemoteDocumentOperationApplicationUseCase.js` are both
 // UNTOUCHED by this milestone — a detected gap changes nothing about
 // whether or how an operation gets applied; see
 // `tests/DocumentOperationCausalGapDetector.test.js` Section H, which

@@ -3,7 +3,7 @@ import { VehicleSteeringDirection } from './VehicleSteeringIntent.js';
 // 0.9.128 — Vehicle Steering Input Adapter.
 //
 // 0.9.127 wired `core/VehicleSteeringIntent.js`/`core/VehicleSteeringSimulation.js`
-// into the real mounted-vehicle pipeline through `application/WorldNavigationSession.js#
+// into the real mounted-vehicle pipeline through `application/world/WorldNavigationSession.js#
 // setVehicleSteeringIntent()` — a plain, programmatic seam, deliberately never a
 // key binding (see that milestone's own "What this milestone deliberately does
 // NOT do"). This file is the missing half: an INPUT INTERPRETATION step, the
@@ -68,7 +68,7 @@ import { VehicleSteeringDirection } from './VehicleSteeringIntent.js';
 // never a `direction`. Releasing a turn control does not mean "now go
 // straight"; the discrete "turn once, then hold the new heading" model this
 // milestone implements has no notion of a steering key-up meaning anything at
-// all (see `application/WorldNavigationSession.js`'s own 0.9.128 header for
+// all (see `application/world/WorldNavigationSession.js`'s own 0.9.128 header for
 // how a held-vs-released steering key becomes a real per-tick
 // `VehicleSteeringIntent` — decaying LEFT/RIGHT back to NONE the very next
 // simulated tick, never on a key release).
@@ -77,7 +77,7 @@ import { VehicleSteeringDirection } from './VehicleSteeringIntent.js';
 // IS. There is no `key` parameter here for a future caller to compare
 // against `'ArrowLeft'`/`'a'`. Deciding WHICH physical key, gamepad axis, or
 // on-screen control produces `type: 'steerleftdown'`/`'steerrightdown'` is
-// entirely `application/WorldNavigationSession.js`'s own job (see that
+// entirely `application/world/WorldNavigationSession.js`'s own job (see that
 // file's own `VEHICLE_STEER_LEFT_KEY`/`VEHICLE_STEER_RIGHT_KEY`) — this
 // file's own translation rule is identical no matter what eventually
 // produces those two facts.
@@ -92,7 +92,7 @@ import { VehicleSteeringDirection } from './VehicleSteeringIntent.js';
 // actual key/gamepad control (see "CONTROL-NAME-BLIND" above), constructing
 // or holding a `VehicleSteeringIntent`, calling `setVehicleSteeringIntent()`,
 // per-tick decay of a held request back to NONE (that is a per-SIMULATION-
-// TICK concern, owned entirely by `application/WorldNavigationSession.js`'s
+// TICK concern, owned entirely by `application/world/WorldNavigationSession.js`'s
 // own frame loop — see this file's own header above), steering angle,
 // heading, vehicle position, collision, movement simulation, rendering,
 // persistence, networking. See docs/Roadmap.md, 0.9.128.

@@ -7,9 +7,9 @@ import { World } from '../core/World.js';
 import { Group } from '../core/Group.js';
 import { DomainEvent } from '../core/events/Event.js';
 import { EventBus } from '../core/events/EventBus.js';
-import { CommandHistory } from '../application/CommandHistory.js';
-import { CreateBrickRegistryUseCase } from '../application/CreateBrickRegistryUseCase.js';
-import { CreateCommandRegistryUseCase } from '../application/CreateCommandRegistryUseCase.js';
+import { CommandHistory } from '../application/editor/CommandHistory.js';
+import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
+import { CreateCommandRegistryUseCase } from '../application/editor/CreateCommandRegistryUseCase.js';
 import { CreateGroupCommand } from '../application/commands/CreateGroupCommand.js';
 import { DeleteGroupCommand } from '../application/commands/DeleteGroupCommand.js';
 import { RenameGroupCommand } from '../application/commands/RenameGroupCommand.js';
@@ -20,13 +20,13 @@ import { PasteBricksCommand } from '../application/commands/PasteBricksCommand.j
 import { SpatialClipboardState } from '../application/spatial-state/SpatialClipboardState.js';
 import { SpatialSelectionState } from '../application/spatial-state/SpatialSelectionState.js';
 import { SelectionState } from '../application/editor-state/SelectionState.js';
-import { CopySelectionUseCase } from '../application/CopySelectionUseCase.js';
-import { PasteClipboardUseCase } from '../application/PasteClipboardUseCase.js';
-import { EditorSession } from '../application/EditorSession.js';
-import { EditorContext } from '../application/EditorContext.js';
-import { DocumentManager } from '../application/DocumentManager.js';
-import { SelectionUseCase } from '../application/SelectionUseCase.js';
-import { PreviewUseCase } from '../application/PreviewUseCase.js';
+import { CopySelectionUseCase } from '../application/editor/CopySelectionUseCase.js';
+import { PasteClipboardUseCase } from '../application/editor/PasteClipboardUseCase.js';
+import { EditorSession } from '../application/editor/EditorSession.js';
+import { EditorContext } from '../application/editor/EditorContext.js';
+import { DocumentManager } from '../application/document/DocumentManager.js';
+import { SelectionUseCase } from '../application/editor/SelectionUseCase.js';
+import { PreviewUseCase } from '../application/editor/PreviewUseCase.js';
 
 // ---------------------------------------------------------------------
 // Helpers & stubs

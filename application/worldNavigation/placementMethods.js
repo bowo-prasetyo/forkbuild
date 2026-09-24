@@ -1,4 +1,4 @@
-import { computeLifecycleStatus, describeLifecycleStatus } from '../DocumentLifecycleStatus.js';
+import { computeLifecycleStatus, describeLifecycleStatus } from '../document/DocumentLifecycleStatus.js';
 import { detectSpatialOverlap } from '../../core/SpatialOverlap.js';
 import { evaluateSpatialAllocation } from '../../core/SpatialAllocationPolicy.js';
 import { isWithinRadius, distanceBetween } from '../../core/SpatialQuery.js';
@@ -133,7 +133,7 @@ export const placementMethods = {
     },
 
     // Like getPlacementInfo() but starting from a publicationId, for background
-    // Snapshot processing (application/AutomaticSnapshotEncounterCascade.js)
+    // Snapshot processing (application/snapshot/AutomaticSnapshotEncounterCascade.js)
     // that has no open document. Returns only what
     // resolveSnapshotWorldPlacement() needs: `{ placementId, publicationId,
     // position }`. Null with no registry or no placement.
@@ -215,7 +215,7 @@ export const placementMethods = {
         };
     },
 
-    // Search over the shared discovery machinery (application/SearchWorldUseCase.js),
+    // Search over the shared discovery machinery (application/world/SearchWorldUseCase.js),
     // enriched with a resolved position and whether it came from a real
     // PlacementRecord or the deterministic fallback grid (see docs/Principles.md,
     // "Publication Found Is Not The Same As Placement Found"). Read-only.

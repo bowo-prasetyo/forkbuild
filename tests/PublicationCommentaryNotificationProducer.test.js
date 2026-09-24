@@ -2,19 +2,19 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { Publication } from '../publisher/Publication.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { PublicationCommentaryStore } from '../storage/PublicationCommentaryStore.js';
-import { CanCommentOnPublicationUseCase } from '../application/CanCommentOnPublicationUseCase.js';
-import { AddPublicationCommentaryUseCase } from '../application/AddPublicationCommentaryUseCase.js';
+import { CanCommentOnPublicationUseCase } from '../application/publication/CanCommentOnPublicationUseCase.js';
+import { AddPublicationCommentaryUseCase } from '../application/publication/commentary/AddPublicationCommentaryUseCase.js';
 import {
     PublicationCommentaryNotificationProducer,
     PUBLICATION_COMMENTED_EVENT_TYPE
-} from '../application/PublicationCommentaryNotificationProducer.js';
+} from '../application/publication/commentary/PublicationCommentaryNotificationProducer.js';
 import { NotificationEvent } from '../core/NotificationEvent.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { execSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 
 // 0.9.275 — Publication Commentary Notification Producer. Covers
-// application/PublicationCommentaryNotificationProducer.js — the first
+// application/publication/commentary/PublicationCommentaryNotificationProducer.js — the first
 // real NotificationEvent producer, selected by 0.9.274's own boundary
 // audit.
 //
@@ -398,7 +398,7 @@ async function runTests() {
     // dependency, no delivery/retry/lifecycle vocabulary (structural).
     // -------------------------------------------------------------
     {
-        const producerSource = codeOnlyLines(await rawSource('application/PublicationCommentaryNotificationProducer.js'));
+        const producerSource = codeOnlyLines(await rawSource('application/publication/commentary/PublicationCommentaryNotificationProducer.js'));
 
         assert(!/ChatOutbox|ChatMessage|ChatDeliveryState/.test(producerSource),
             'N1. no reference to ChatOutbox/ChatMessage/ChatDeliveryState anywhere in the producer\'s own code');
@@ -408,7 +408,7 @@ async function runTests() {
             'N3. no delivery/retry/read-state/lifecycle vocabulary appears anywhere in the producer\'s own code');
 
         const importLines = producerSource.split('\n').filter((line) => line.trim().startsWith('import'));
-        assert(importLines.length === 1 && importLines[0].includes("'../core/NotificationEvent.js'"),
+        assert(importLines.length === 1 && importLines[0].includes("'../../../core/NotificationEvent.js'"),
             'N4. the producer file imports exactly one thing — core/NotificationEvent.js — and nothing else');
     }
 
@@ -422,12 +422,12 @@ async function runTests() {
         assert(!/PublicationCommentary|AddPublicationCommentaryUseCase|LocalDiscoveryProvider|Publication\.js|ChatOutbox/.test(notificationEventSource),
             'O1. core/NotificationEvent.js still imports nothing Commentary/Publication/ChatOutbox-shaped — the dependency runs one way only, producer -> NotificationEvent, never the reverse');
 
-        const addUseCaseSource = codeOnlyLines(await rawSource('application/AddPublicationCommentaryUseCase.js'));
+        const addUseCaseSource = codeOnlyLines(await rawSource('application/publication/commentary/AddPublicationCommentaryUseCase.js'));
         assert(!/NotificationEvent|notificationSink|PublicationCommentaryNotificationProducer/.test(addUseCaseSource),
-            'O2. application/AddPublicationCommentaryUseCase.js is completely unmodified — no NotificationEvent awareness of any kind was added to the wrapped use case itself');
+            'O2. application/publication/commentary/AddPublicationCommentaryUseCase.js is completely unmodified — no NotificationEvent awareness of any kind was added to the wrapped use case itself');
 
         const gitDiffStat = execSync(
-            'git diff --stat HEAD -- application/AddPublicationCommentaryUseCase.js core/PublicationCommentary.js core/NotificationEvent.js 2>/dev/null || true',
+            'git diff --stat HEAD -- application/publication/commentary/AddPublicationCommentaryUseCase.js core/PublicationCommentary.js core/NotificationEvent.js 2>/dev/null || true',
             { cwd: SOURCE_ROOT.pathname }
         ).toString().trim();
         assert(gitDiffStat === '', `O3. none of the pre-existing domain/application files this producer wraps were modified by this milestone. Found: ${gitDiffStat || '(none)'}.`);

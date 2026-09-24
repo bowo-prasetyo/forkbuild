@@ -1,4 +1,4 @@
-import { describeLicense } from '../../application/LicenseLabels.js';
+import { describeLicense } from '../../application/document/LicenseLabels.js';
 
 // 0.2.21: the "Document Information" panel from the milestone design
 // — one component, shared by the Editor sidebar and World View's

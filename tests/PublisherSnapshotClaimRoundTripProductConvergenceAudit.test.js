@@ -3,17 +3,17 @@ import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PublicationObservationArchive } from '../application/PublicationObservationArchive.js';
-import { IpfsPublicationRecord } from '../application/IpfsPublicationRecord.js';
-import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/CreateBitcoinAnchorPublicationRecordUseCase.js';
-import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/CreatePublisherPublicationAssociationRecordUseCase.js';
-import { reconstructPublisherLeaderboardSnapshot } from '../application/PublisherLeaderboardSnapshot.js';
-import { describePublisherLeaderboardSnapshotFingerprint } from '../application/PublisherLeaderboardSnapshotFingerprint.js';
+import { PublicationObservationArchive } from '../application/publication/observationArchive/PublicationObservationArchive.js';
+import { IpfsPublicationRecord } from '../application/ipfs/IpfsPublicationRecord.js';
+import { CreateBitcoinAnchorPublicationRecordUseCase } from '../application/anchoring/bitcoin/CreateBitcoinAnchorPublicationRecordUseCase.js';
+import { CreatePublisherPublicationAssociationRecordUseCase } from '../application/publisher/CreatePublisherPublicationAssociationRecordUseCase.js';
+import { reconstructPublisherLeaderboardSnapshot } from '../application/leaderboard/PublisherLeaderboardSnapshot.js';
+import { describePublisherLeaderboardSnapshotFingerprint } from '../application/leaderboard/PublisherLeaderboardSnapshotFingerprint.js';
 import {
     exportPublisherLeaderboardSnapshotClaim,
     importPublisherLeaderboardSnapshotClaim,
     PublisherLeaderboardSnapshotClaimImportOutcome
-} from '../application/PublisherLeaderboardSnapshotClaimExchange.js';
+} from '../application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js';
 import { RevalidationObservationArchiveOutcome } from '../application/claimSnapshotReconciliation/revalidationObservation/RecordRevalidationObservationIntoArchiveUseCase.js';
 import { reconstructPublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage } from '../application/claimSnapshotReconciliation/leaderboard/LeaderboardPage.js';
 import {
@@ -261,7 +261,7 @@ async function run() {
         // milestone's own narrative).
         const authoringSource = await readSource('ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js');
         const workspaceSourceForA = await readSource('ui/views/ReconciliationWorkspaceView.js');
-        assert(/import\s*\{\s*exportPublisherLeaderboardSnapshotClaim\s*\}\s*from\s*'\.\.\/\.\.\/application\/PublisherLeaderboardSnapshotClaimExchange\.js'/.test(authoringSource), n('A8. the Authoring view imports the export function from the ONE exchange module — no second producer-side module'));
+        assert(/import\s*\{\s*exportPublisherLeaderboardSnapshotClaim\s*\}\s*from\s*'\.\.\/\.\.\/application\/leaderboard\/PublisherLeaderboardSnapshotClaimExchange\.js'/.test(authoringSource), n('A8. the Authoring view imports the export function from the ONE exchange module — no second producer-side module'));
         assert(!/PublisherLeaderboardSnapshotClaimExchange/.test(workspaceSourceForA), n('A9. the Workspace never imports the exchange module directly at all — it reaches import/parse exclusively through the composed ReconcilePublisherLeaderboardSnapshotClaimUseCase, one seam, never a second, parallel parsing path'));
 
         console.log('\n=== SECTION A: PRODUCER/CONSUMER FORMAT IDENTITY ===');
@@ -362,12 +362,12 @@ async function run() {
         assert(
             constructionSites.length === 2 &&
             constructionSites.includes('core/PublisherLeaderboardSnapshotClaim.js') &&
-            constructionSites.includes('application/CreatePublisherLeaderboardSnapshotClaimUseCase.js'),
+            constructionSites.includes('application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js'),
             n(`C1. exactly two files construct a PublisherLeaderboardSnapshotClaim: the core class itself (its own withSignature()/fromJSON()) and the ONE signing use case — never a second, competing constructor site (found: ${JSON.stringify(constructionSites)})`)
         );
 
         // Claim signing over THIS claim type: the ONE call site.
-        const createUseCaseSource = await readSource('application/CreatePublisherLeaderboardSnapshotClaimUseCase.js');
+        const createUseCaseSource = await readSource('application/leaderboard/CreatePublisherLeaderboardSnapshotClaimUseCase.js');
         assert(/identityProvider\.signCanonical\(claim\.getSigningDescriptor\(\)\)/.test(codeOnly(createUseCaseSource)), n('C2. the ONE production signing call for this claim type lives in CreatePublisherLeaderboardSnapshotClaimUseCase.js alone'));
         const signingElsewhere = grepFilesRegex(/claim\.getSigningDescriptor\s*\(\s*\)/, ['ui']);
         assert(signingElsewhere.length === 0, n(`C3. no ui/ file ever calls claim.getSigningDescriptor() itself — signing stays entirely server/application-side (found: ${JSON.stringify(signingElsewhere)})`));
@@ -377,7 +377,7 @@ async function run() {
         const handRolledEnvelope = grepFilesRegex(/evidenceFingerprint\s*:|snapshotFingerprint\s*:/, ['ui']);
         assert(handRolledEnvelope.length === 0, n(`C4. no ui/ file constructs an object literal with an evidenceFingerprint/snapshotFingerprint field of its own — every claim field is read from a real instance, never re-authored (found: ${JSON.stringify(handRolledEnvelope)})`));
         const kindReferences = grepFiles('PUBLISHER_LEADERBOARD_SNAPSHOT_CLAIM_KIND', ['core', 'application', 'ui']);
-        assert(kindReferences.length === 2 && kindReferences.includes('core/PublisherLeaderboardSnapshotClaim.js') && kindReferences.includes('application/PublisherLeaderboardSnapshotClaimExchange.js'), n(`C5. the self-describing "kind" constant is defined in exactly one place (core) and consumed in exactly one place (the exchange module) — never redefined anywhere (found: ${JSON.stringify(kindReferences)})`));
+        assert(kindReferences.length === 2 && kindReferences.includes('core/PublisherLeaderboardSnapshotClaim.js') && kindReferences.includes('application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js'), n(`C5. the self-describing "kind" constant is defined in exactly one place (core) and consumed in exactly one place (the exchange module) — never redefined anywhere (found: ${JSON.stringify(kindReferences)})`));
 
         // Claim export: the ONE function, called from the ONE authorized
         // UI site (already established at 0.9.411; re-derived fresh
@@ -395,11 +395,11 @@ async function run() {
         // never a third, competing parser.
         const importDefinitions = grepFiles('export function importPublisherLeaderboardSnapshotClaim', ['application']);
         assert(importDefinitions.length === 1, n(`C8. importPublisherLeaderboardSnapshotClaim is defined in exactly one file (found ${importDefinitions.length})`));
-        const importCallSites = grepFilesRegex(/importPublisherLeaderboardSnapshotClaim\s*\(/, ['application', 'ui']).filter((f) => f !== 'application/PublisherLeaderboardSnapshotClaimExchange.js');
+        const importCallSites = grepFilesRegex(/importPublisherLeaderboardSnapshotClaim\s*\(/, ['application', 'ui']).filter((f) => f !== 'application/leaderboard/PublisherLeaderboardSnapshotClaimExchange.js');
         assert(
             importCallSites.length === 2 &&
-            importCallSites.includes('application/ReceivePublisherLeaderboardSnapshotClaimUseCase.js') &&
-            importCallSites.includes('application/PublisherLeaderboardClaimHistoryExchange.js'),
+            importCallSites.includes('application/leaderboard/ReceivePublisherLeaderboardSnapshotClaimUseCase.js') &&
+            importCallSites.includes('application/leaderboard/PublisherLeaderboardClaimHistoryExchange.js'),
             n(`C9. exactly two production call sites for import exist, both pre-existing and each independently legitimate: the reconciliation receiving boundary this arc uses, and the unrelated claim-history exchange feature — no third, no ui/ call site of its own (found: ${JSON.stringify(importCallSites)})`)
         );
 
@@ -423,12 +423,12 @@ async function run() {
         const candidateCallSites = grepFilesRegex(CANDIDATE_FN, ['application']).filter((f) => f !== 'application/claimSnapshotReconciliation/ReconciliationCandidate.js');
         assert(
             candidateCallSites.length === 3 &&
-            candidateCallSites.includes('application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js') &&
+            candidateCallSites.includes('application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js') &&
             candidateCallSites.includes('application/claimSnapshotReconciliation/decision/Decision.js') &&
             candidateCallSites.includes('application/claimSnapshotReconciliation/decision/CandidateRevalidationView.js'),
             n(`C11. every call site of the ONE candidate-construction function is a pre-existing, legitimate reuse (production selection, the decision function it composes, and an unrelated historical read model) — never a second implementation of candidate selection logic (found: ${JSON.stringify(candidateCallSites)})`)
         );
-        assert(!/function\s+describePublisherLeaderboardClaimSnapshotReconciliationCandidate\b/.test(codeOnly(await readSource('application/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js'))), n('C12. ReconcilePublisherLeaderboardSnapshotClaimUseCase.js itself never REDEFINES candidate construction — it only calls the one, imported implementation'));
+        assert(!/function\s+describePublisherLeaderboardClaimSnapshotReconciliationCandidate\b/.test(codeOnly(await readSource('application/leaderboard/ReconcilePublisherLeaderboardSnapshotClaimUseCase.js'))), n('C12. ReconcilePublisherLeaderboardSnapshotClaimUseCase.js itself never REDEFINES candidate construction — it only calls the one, imported implementation'));
 
         console.log('\n=== SECTION C: NO SECOND SOURCE OF TRUTH ===');
         console.log('✓ Section C: for construction, signing, serialization, export, parsing, and candidate construction alike, exactly one production implementation exists, imported and reused wherever the capability is legitimately needed — never reimplemented, never duplicated, never forked into a UI-local variant.');
@@ -687,7 +687,7 @@ async function run() {
             { capability: 'Reconcile -> Leaderboard', classification: 'COMPLETE', section: 'B (persisted-fact observation, never a direct handoff)' },
             { capability: 'Automatic reconciliation', classification: 'INTENTIONALLY_DEFERRED', section: 'E/J' },
             { capability: 'Automatic peer evidence retrieval', classification: 'INTENTIONALLY_DEFERRED', section: 'J' },
-            { capability: 'Claim history', classification: 'NOT_A_PRODUCT_GAP', section: 'C9 (a separate, pre-existing, unrelated feature — application/LeaderboardClaimHistory.js — not part of this arc\'s own journey)' },
+            { capability: 'Claim history', classification: 'NOT_A_PRODUCT_GAP', section: 'C9 (a separate, pre-existing, unrelated feature — application/leaderboard/LeaderboardClaimHistory.js — not part of this arc\'s own journey)' },
             { capability: 'Reconciliation history', classification: 'NOT_A_PRODUCT_GAP', section: 'J (no user journey in this arc requires it)' },
             { capability: 'Trust/ranking semantics', classification: 'NOT_A_PRODUCT_GAP', section: 'J (never entered this product\'s vocabulary; not evaluated as a gap because no user journey requires it)' }
         ];

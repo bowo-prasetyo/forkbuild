@@ -22,9 +22,9 @@
 // same value it already stamps onto every ContentReference its own
 // put() returns (see core/ContentReference.js's own `storage` field).
 // Exposing it on the STORE itself, not just on what it produces, is
-// what lets application/SnapshotPlacementStoreRegistry.js key a lookup
+// what lets application/snapshot/placement/SnapshotPlacementStoreRegistry.js key a lookup
 // table by "the plugin's own name" — the identical discipline
-// application/ExternalProofVerifierRegistry.js already holds for a
+// application/anchoring/ExternalProofVerifierRegistry.js already holds for a
 // proofVerifier's own `anchorType` — without this codebase inventing a
 // second, competing way to spell the same backend's name.
 export class ContentStore {

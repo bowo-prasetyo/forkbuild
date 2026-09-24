@@ -3,15 +3,15 @@ import { execSync } from 'node:child_process';
 import { PublicationSnapshotPlacement } from '../core/PublicationSnapshotPlacement.js';
 import { SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../core/SnapshotDiscoveryEnvelope.js';
 import { StorageProvider } from '../storage/StorageProvider.js';
-import { LocalPublicationSnapshotPlacementCatalog } from '../application/LocalPublicationSnapshotPlacementCatalog.js';
-import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/LocalSnapshotCandidateDiscoveryQueryService.js';
-import { NostrSnapshotDiscoveryQueryService } from '../application/NostrSnapshotDiscoveryQueryService.js';
-import { ArweaveSnapshotDiscoveryQueryService } from '../application/ArweaveSnapshotDiscoveryQueryService.js';
-import { SnapshotCandidateDiscoveryQueryService } from '../application/SnapshotCandidateDiscoveryQueryService.js';
-import { composeSnapshotCandidateDiscoveryRuntime } from '../application/SnapshotCandidateDiscoveryRuntimeComposition.js';
-import { executeDiscoverSnapshotCandidatesCommand } from '../application/DiscoverSnapshotCandidatesCommand.js';
-import { WorldSnapshotDiscoveryMonitor } from '../application/WorldSnapshotDiscoveryMonitor.js';
-import { SnapshotPlacementResolver } from '../application/SnapshotPlacementResolver.js';
+import { LocalPublicationSnapshotPlacementCatalog } from '../application/snapshot/placement/LocalPublicationSnapshotPlacementCatalog.js';
+import { LocalSnapshotCandidateDiscoveryQueryService } from '../application/snapshot/LocalSnapshotCandidateDiscoveryQueryService.js';
+import { NostrSnapshotDiscoveryQueryService } from '../application/nostr/NostrSnapshotDiscoveryQueryService.js';
+import { ArweaveSnapshotDiscoveryQueryService } from '../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
+import { SnapshotCandidateDiscoveryQueryService } from '../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
+import { composeSnapshotCandidateDiscoveryRuntime } from '../application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js';
+import { executeDiscoverSnapshotCandidatesCommand } from '../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { WorldSnapshotDiscoveryMonitor } from '../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
+import { SnapshotPlacementResolver } from '../application/snapshot/placement/SnapshotPlacementResolver.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 // 0.9.500 — Compose Arweave into Snapshot Candidate Discovery.
@@ -362,8 +362,8 @@ async function run() {
     // Section I — No ranking/fallback; arrival order preserved.
     // ===============================================================
     {
-        const allSource = stripLineComments(readSource('application/SnapshotCandidateDiscoveryRuntimeComposition.js'))
-            + stripLineComments(readSource('application/SnapshotCandidateDiscoveryQueryService.js'));
+        const allSource = stripLineComments(readSource('application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js'))
+            + stripLineComments(readSource('application/snapshot/SnapshotCandidateDiscoveryQueryService.js'));
         assert(!/preferredSource|trustScore|rank\(|reselect|fallbackSource/i.test(allSource),
             '1. no ranking, preference, trust-scoring, or reselection concept exists in the composition or composite files.');
 
@@ -389,7 +389,7 @@ async function run() {
     // untouched.
     // ===============================================================
     {
-        const compositionSource = stripLineComments(readSource('application/SnapshotCandidateDiscoveryRuntimeComposition.js'));
+        const compositionSource = stripLineComments(readSource('application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js'));
         assert(!/WorldSnapshotDiscoveryMonitor|SnapshotPlacementResolver|WorldEncounter/.test(compositionSource),
             '1. the composition file mentions no monitor, resolver, or World Encounter concept — it only ever builds and injects sources.');
 
@@ -411,7 +411,7 @@ async function run() {
         assert(monitor.lastError === null && monitor.lastResult.some((c) => c.contentHash === localCandidate.contentHash),
             '4. a real walking-triggered observe() call, through the existing, unmodified monitor and command, still surfaces the Local candidate alongside the (empty, here) Nostr/Arweave sources.');
 
-        console.log('✓ Section J: no second discovery path exists; application/DiscoverSnapshotCandidatesCommand.js and application/WorldSnapshotDiscoveryMonitor.js remain exactly as they were, both by source and by live behavior.');
+        console.log('✓ Section J: no second discovery path exists; application/snapshot/DiscoverSnapshotCandidatesCommand.js and application/snapshot/WorldSnapshotDiscoveryMonitor.js remain exactly as they were, both by source and by live behavior.');
     }
 
     // ===============================================================
@@ -492,10 +492,10 @@ async function run() {
     // Section N — Deliberately-excluded vocabulary absent from the diff.
     // ===============================================================
     {
-        const diffSource = stripLineComments(readSource('application/SnapshotCandidateDiscoveryRuntimeComposition.js'));
+        const diffSource = stripLineComments(readSource('application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js'));
         const excludedPattern = /walkingDistance|distanceFilter|\bcache\b|caching|throttl|batchQuery|graphqlBatch|retry|retries|\brank\(|preferredSource|fallbackSource|announcementSync/i;
         assert(!excludedPattern.test(diffSource),
-            '1. application/SnapshotCandidateDiscoveryRuntimeComposition.js introduces none of: Arweave-specific walking/distance logic, caching, throttling, GraphQL batching, retry logic, ranking, preferred-source selection, automatic fallback, or cross-source announcement synchronization.');
+            '1. application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js introduces none of: Arweave-specific walking/distance logic, caching, throttling, GraphQL batching, retry logic, ranking, preferred-source selection, automatic fallback, or cross-source announcement synchronization.');
 
         console.log('✓ Section N: none of the deliberately-excluded vocabulary this milestone\'s own brief named appears anywhere in the production composition file.');
     }
@@ -507,20 +507,20 @@ async function run() {
         const changedFiles = execSync('git status --porcelain -- . ":(exclude)ui/components/PublicationCard.js" ":(exclude)ui/components/PublicationList.js"' /* AMENDED BY 0.9.638 -- excludes ui/components/PublicationCard.js/PublicationList.js, its own unrelated, separately-justified Commentary distribution-selector UI change */, { cwd: SOURCE_ROOT.pathname })
             .toString().split('\n').map((line) => line.replace(/\n$/, '')).filter(Boolean)
             .map((line) => line.slice(3).trim());
-        const expectedProductionFiles = ['application/SnapshotCandidateDiscoveryRuntimeComposition.js', 'ui/main.js'];
+        const expectedProductionFiles = ['application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js', 'ui/main.js'];
         const unexpectedProductionChanges = changedFiles.filter((f) =>
             !f.startsWith('tests/') && f !== 'tests.html' && !expectedProductionFiles.includes(f));
         assert(unexpectedProductionChanges.length === 0,
-            `1. this milestone's own working-tree changes are scoped to application/SnapshotCandidateDiscoveryRuntimeComposition.js, ui/main.js, tests/, and tests.html — found unexpected: ${JSON.stringify(unexpectedProductionChanges)}.`);
+            `1. this milestone's own working-tree changes are scoped to application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js, ui/main.js, tests/, and tests.html — found unexpected: ${JSON.stringify(unexpectedProductionChanges)}.`);
 
-        assert(!changedFiles.includes('application/DiscoverSnapshotCandidatesCommand.js'),
-            '2. application/DiscoverSnapshotCandidatesCommand.js is untouched.');
-        assert(!changedFiles.includes('application/WorldSnapshotDiscoveryMonitor.js'),
-            '3. application/WorldSnapshotDiscoveryMonitor.js is untouched.');
-        assert(!changedFiles.includes('application/SnapshotPlacementResolver.js'),
-            '4. application/SnapshotPlacementResolver.js is untouched.');
-        assert(!changedFiles.includes('application/ArweaveSnapshotDiscoveryQueryService.js'),
-            '5. application/ArweaveSnapshotDiscoveryQueryService.js itself (0.9.499) is untouched — this milestone injects it, never modifies it.');
+        assert(!changedFiles.includes('application/snapshot/DiscoverSnapshotCandidatesCommand.js'),
+            '2. application/snapshot/DiscoverSnapshotCandidatesCommand.js is untouched.');
+        assert(!changedFiles.includes('application/snapshot/WorldSnapshotDiscoveryMonitor.js'),
+            '3. application/snapshot/WorldSnapshotDiscoveryMonitor.js is untouched.');
+        assert(!changedFiles.includes('application/snapshot/placement/SnapshotPlacementResolver.js'),
+            '4. application/snapshot/placement/SnapshotPlacementResolver.js is untouched.');
+        assert(!changedFiles.includes('application/arweave/ArweaveSnapshotDiscoveryQueryService.js'),
+            '5. application/arweave/ArweaveSnapshotDiscoveryQueryService.js itself (0.9.499) is untouched — this milestone injects it, never modifies it.');
 
         console.log('✓ Section O: this milestone\'s own diff is scoped to exactly what it claims — the composition file, ui/main.js, and tests — with the walking pipeline\'s own command/monitor/resolver files, and the Arweave source class itself, all left unmodified.');
     }

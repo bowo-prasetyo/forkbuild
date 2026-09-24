@@ -10,9 +10,9 @@
 //
 // PRESENTATION ONLY — MAKES NO MOUNT/DISMOUNT DECISION OF ITS OWN.
 // `state` is exactly whatever
-// application/WorldNavigationSession.js#avatarVehicleInteractionState()
+// application/world/WorldNavigationSession.js#avatarVehicleInteractionState()
 // returned (in turn
-// application/AvatarVehicleInteractionController.js#vehicleInteractionState()'s
+// application/avatar/AvatarVehicleInteractionController.js#vehicleInteractionState()'s
 // own output) — an already-authoritative
 // `{ mounted, vehicleType, targetVehicleId }` snapshot. This component
 // never computes distance, never queries a vehicle list, never decides
