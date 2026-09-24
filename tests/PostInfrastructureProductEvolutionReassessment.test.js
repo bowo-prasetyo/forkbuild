@@ -270,7 +270,7 @@ async function run() {
         // C1. Commentary -> other Publication surfaces (0.9.289-0.9.291,
         // 0.9.305) — reconfirmed still reaching more than one surface,
         // not narrowed back to the original single one.
-        const commentarySurfaceFiles = execSync('grep -rl "GetPublicationCommentariesUseCase\\|PublicationCommentaryStore" ui/ --include="*.js" || true',
+        const commentarySurfaceFiles = execSync('grep -rl "GetPublicationCommentariesUseCase\\|PublicationCommentaryStore\\|getPublicationCommentariesCommand" ui/ --include="*.js" || true',
             { cwd: SOURCE_ROOT.pathname }).toString().trim().split('\n').filter(Boolean);
         assert(commentarySurfaceFiles.length >= 4, `C1. Publication Commentary still reaches at least four UI surfaces — found ${commentarySurfaceFiles.length}: ${commentarySurfaceFiles.join(', ')}`);
 

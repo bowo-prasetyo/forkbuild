@@ -223,11 +223,13 @@ export default {
             // same text reuses the id so the store's idempotent retry applies; editing
             // mints a new one.
             pendingCommentaryDraft: null,
-            // In the order returned, never sorted, deduplicated or reduced; [] is a real
+            // PLACEMENT RECORDS, NEVER WORLD VISIBILITY OR OCCUPANCY: whether it has been
+            // placed, not whether anyone can see it or something occupies the spot. In
+            // the order returned, never sorted, deduplicated or reduced; [] is a real
             // result.
             publicationPlacements: [],
-            // A failed refresh sets only this, so NO_PLACEMENTS ([] with no error) stays
-            // distinct from DISCOVERY_FAILED.
+            // NO_PLACEMENTS ≠ DISCOVERY_FAILED: a failed refresh sets only this, so []
+            // with no error stays distinct from a failed read.
             publicationPlacementsError: null
         };
     },
@@ -840,7 +842,7 @@ export default {
                 @distribute-snapshot="distributeOwnSnapshot"
             />
 
-            <!-- Shows the exported package's identity facts only (no download). -->
+            <!-- Shows the exported package's identity facts only. Deliberately no file save, download, or copy-to-clipboard. -->
             <button
                 v-if="exportSnapshotCommand"
                 type="button"
