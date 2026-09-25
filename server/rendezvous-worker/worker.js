@@ -229,6 +229,17 @@ function checkPublicationShape(publication, now) {
     return { publishedAtMs, expiresAtMs };
 }
 
+// Metered's shared relay, as its dashboard lists it. The TCP variants are
+// left out: they stalled ICE gathering for this app (see
+// peer/IceServerConfig.js's history, 0.3.4).
+function standardMeteredIceServers(username, credential) {
+    return [
+        { urls: 'stun:stun.relay.metered.ca:80' },
+        { urls: 'turn:standard.relay.metered.ca:80', username, credential },
+        { urls: 'turn:standard.relay.metered.ca:443', username, credential }
+    ];
+}
+
 function okResponse(requestId, result) {
     return JSON.stringify({ v: PROTOCOL_VERSION, type: 'OK', requestId, result });
 }
@@ -479,15 +490,20 @@ export class RendezvousNode {
             const iceServers = await this._createTurnCredential(domain, secretKey);
             const expiresAt = new Date(now + LIMITS.turnCredentialLifetimeSeconds * 1000).toISOString();
             return reply(200, { iceServers, expiresAt });
-        } catch {
-            return reply(502, { error: 'the TURN provider did not answer' });
+        } catch (err) {
+            // `detail` names the failing step and the provider's status or
+            // error text; it never contains the secret key.
+            const detail = String((err && err.message) || err).split(secretKey).join('<secret>');
+            console.error('turn-credentials:', detail);
+            return reply(502, { error: 'the TURN provider did not answer', detail });
         }
     }
 
     // Metered's REST API: POST /api/v1/turn/credential (secret key) creates
-    // an expiring credential; GET /api/v1/turn/credentials with that
-    // credential's own apiKey returns its ICE servers, routed to the
-    // caller's region.
+    // an expiring credential ({ username, password, apiKey, ... }); GET
+    // /api/v1/turn/credentials with that credential's own apiKey returns its
+    // ICE servers, routed to the caller's region. If that listing fails, the
+    // new username and password are used with Metered's standard relay.
     async _createTurnCredential(domain, secretKey) {
         const fetchImpl = this.fetchImpl || globalThis.fetch;
         const base = `https://${domain}/api/v1/turn`;
@@ -498,20 +514,28 @@ export class RendezvousNode {
             signal: AbortSignal.timeout(TURN_PROVIDER_TIMEOUT_MS)
         });
         if (!created.ok) {
-            throw new Error(`TURN provider answered ${created.status}`);
+            const text = (await created.text().catch(() => '')).slice(0, 200);
+            throw new Error(`creating a credential: ${domain} answered ${created.status} ${text}`.trim());
         }
-        const credential = await created.json();
-        if (!credential || typeof credential.apiKey !== 'string') {
-            throw new Error('TURN provider returned no credential');
+        const credential = await created.json().catch(() => null);
+        if (!credential || typeof credential.username !== 'string' || typeof credential.password !== 'string') {
+            const fields = credential && typeof credential === 'object' ? Object.keys(credential).join(', ') : typeof credential;
+            throw new Error(`creating a credential: unexpected response (fields: ${fields})`);
         }
-        const listed = await fetchImpl(`${base}/credentials?apiKey=${encodeURIComponent(credential.apiKey)}`, {
-            signal: AbortSignal.timeout(TURN_PROVIDER_TIMEOUT_MS)
-        });
-        const iceServers = listed.ok ? await listed.json() : null;
-        if (!Array.isArray(iceServers) || iceServers.length === 0) {
-            throw new Error('TURN provider returned no ICE servers');
+        if (typeof credential.apiKey === 'string') {
+            try {
+                const listed = await fetchImpl(`${base}/credentials?apiKey=${encodeURIComponent(credential.apiKey)}`, {
+                    signal: AbortSignal.timeout(TURN_PROVIDER_TIMEOUT_MS)
+                });
+                const iceServers = listed.ok ? await listed.json() : null;
+                if (Array.isArray(iceServers) && iceServers.length > 0) {
+                    return iceServers;
+                }
+            } catch {
+                // Fall through to the standard relay below.
+            }
         }
-        return iceServers;
+        return standardMeteredIceServers(credential.username, credential.password);
     }
 
     async alarm() {
