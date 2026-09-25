@@ -378,4 +378,41 @@ const MINUTE = 60 * 1000;
     console.log('✓ /turn-credentials mints expiring credentials behind a rate limit, never exposing the secret key');
 }
 
+// Cloudflare Realtime TURN: short-lived credentials from the TURN key, port
+// 53 dropped, and a monthly allowance.
+{
+    const env = { CLOUDFLARE_TURN_KEY_ID: 'key-id', CLOUDFLARE_TURN_API_TOKEN: 'api-token-value', METERED_DOMAIN: 'ignored.metered.test', METERED_SECRET_KEY: 'x', TURN_CREDENTIALS_PER_MONTH: '3' };
+    const calls = [];
+    const cloudflare = async (url, init = {}) => {
+        calls.push({ url, init });
+        return Response.json({ iceServers: [
+            { urls: ['stun:stun.cloudflare.com:3478', 'stun:stun.cloudflare.com:53'] },
+            { urls: ['turn:turn.cloudflare.com:3478?transport=udp', 'turn:turn.cloudflare.com:53?transport=udp', 'turns:turn.cloudflare.com:443?transport=tcp'], username: 'cu', credential: 'cc' }
+        ] });
+    };
+    const node = new RendezvousNode(fakeDurableObjectState(), env);
+    node.fetchImpl = cloudflare;
+    const request = (ip) => new Request('https://rendezvous.test/turn-credentials', { headers: { 'CF-Connecting-IP': ip } });
+
+    const body = await (await node.fetch(request('192.0.2.1'))).json();
+    assert(calls[0].url === 'https://rtc.live.cloudflare.com/v1/turn/keys/key-id/credentials/generate-ice-servers', 'Cloudflare is used when its key is configured, even if Metered is too');
+    assert(calls[0].init.headers.authorization === 'Bearer api-token-value' && JSON.parse(calls[0].init.body).ttl === LIMITS.turnCredentialLifetimeSeconds,
+        'the request carries the API token and asks for an hour-long credential');
+    const urls = body.iceServers.flatMap((e) => e.urls);
+    assert(urls.includes('turns:turn.cloudflare.com:443?transport=tcp') && !urls.some((u) => /:53\b/.test(u)), 'entries on port 53, which browsers block, are dropped');
+    assert(!JSON.stringify(body).includes('api-token-value'), 'the API token never appears in the response');
+
+    await node.fetch(request('192.0.2.2'));
+    await node.fetch(request('192.0.2.3'));
+    const overBudget = await node.fetch(request('192.0.2.4'));
+    assert(overBudget.status === 503, 'past the monthly allowance, every address gets 503 (the app falls back to STUN)');
+    assert(calls.length === 3, '...without asking Cloudflare');
+
+    const rejecting = new RendezvousNode(fakeDurableObjectState(), env);
+    rejecting.fetchImpl = async () => new Response('{"errors":[{"message":"Authentication error api-token-value"}]}', { status: 401 });
+    const failure = await (await rejecting.fetch(request('192.0.2.5'))).json();
+    assert(/Cloudflare answered 401/.test(failure.detail) && !failure.detail.includes('api-token-value'), 'a rejected token is reported without echoing it');
+    console.log('✓ Cloudflare TURN credentials, port 53 filtering and the monthly allowance');
+}
+
 console.log('✅ All ForkBuild Rendezvous Worker tests passed.');

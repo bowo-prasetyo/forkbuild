@@ -35,12 +35,17 @@
 //
 // TURN credentials. GET /turn-credentials returns
 //   { iceServers, expiresAt }
-// with short-lived credentials for a Metered TURN relay, created with the
-// account secret key the operator stores as the METERED_SECRET_KEY secret
-// (and the app's domain as METERED_DOMAIN, e.g. "yourapp.metered.live").
+// with credentials for a TURN relay that expire after an hour, created with
+// a long-term key only this worker holds:
+// - Cloudflare Realtime TURN: the CLOUDFLARE_TURN_KEY_ID and
+//   CLOUDFLARE_TURN_API_TOKEN secrets (used when both are set), or
+// - Metered (paid plans only): METERED_DOMAIN and the METERED_SECRET_KEY
+//   secret.
 // The key never reaches browsers, and the app asks for credentials only
-// when it starts a peer connection. Without both settings the endpoint
-// answers 404 and the app uses STUN alone.
+// when it starts a peer connection. At most TURN_CREDENTIALS_PER_MONTH
+// (default LIMITS.turnCredentialsPerMonth) are handed out per calendar
+// month, to bound the relay bill. Without a provider the endpoint answers
+// 404 and the app uses STUN alone.
 //
 // What it does not do: prove that the publisher answers at the published
 // endpoint. Peers still authenticate each other when they connect
@@ -77,7 +82,11 @@ export const LIMITS = Object.freeze({
     // TURN credentials (GET /turn-credentials): each lasts this long, and
     // one address may request this many per hour.
     turnCredentialLifetimeSeconds: 60 * 60,
-    turnCredentialsPerAddressPerHour: 20
+    turnCredentialsPerAddressPerHour: 20,
+    // Credentials handed out per calendar month (UTC), all addresses
+    // together. Can be overridden with the TURN_CREDENTIALS_PER_MONTH
+    // variable.
+    turnCredentialsPerMonth: 10000
 });
 
 // One entry per identity, stored under this prefix:
@@ -89,6 +98,7 @@ const ENTRY_COUNT_KEY = 'meta:entries';
 const SWEEP_INTERVAL_MS = 5 * 60 * 1000;
 
 const TURN_RATE_KEY_PREFIX = 'turn:';
+const TURN_MONTH_KEY_PREFIX = 'turnmonth:';
 const HOUR_MS = 60 * 60 * 1000;
 const TURN_PROVIDER_TIMEOUT_MS = 5000;
 
@@ -471,9 +481,8 @@ export class RendezvousNode {
         if (request.method !== 'GET') {
             return reply(405, { error: 'use GET' });
         }
-        const domain = this.env.METERED_DOMAIN;
-        const secretKey = this.env.METERED_SECRET_KEY;
-        if (!domain || !secretKey) {
+        const provider = this._turnProvider();
+        if (!provider) {
             return reply(404, { error: 'this rendezvous server offers no TURN relay' });
         }
 
@@ -486,17 +495,75 @@ export class RendezvousNode {
         }
         await this.ctx.storage.put(rateKey, { ...current, count: current.count + 1 });
 
+        const monthKey = TURN_MONTH_KEY_PREFIX + new Date(now).toISOString().slice(0, 7);
+        const issuedThisMonth = (await this.ctx.storage.get(monthKey)) || 0;
+        const configuredMonthly = Number.parseInt(this.env.TURN_CREDENTIALS_PER_MONTH, 10);
+        const monthlyLimit = Number.isFinite(configuredMonthly) && configuredMonthly >= 0 ? configuredMonthly : LIMITS.turnCredentialsPerMonth;
+        if (issuedThisMonth >= monthlyLimit) {
+            return reply(503, { error: 'this rendezvous server\'s relay allowance for the month is used up' });
+        }
+
         try {
-            const iceServers = await this._createTurnCredential(domain, secretKey);
+            const iceServers = await provider.create();
+            await this.ctx.storage.put(monthKey, issuedThisMonth + 1);
             const expiresAt = new Date(now + LIMITS.turnCredentialLifetimeSeconds * 1000).toISOString();
             return reply(200, { iceServers, expiresAt });
         } catch (err) {
             // `detail` names the failing step and the provider's status or
             // error text; it never contains the secret key.
-            const detail = String((err && err.message) || err).split(secretKey).join('<secret>');
+            const detail = String((err && err.message) || err).split(provider.secret).join('<secret>');
             console.error('turn-credentials:', detail);
             return reply(502, { error: 'the TURN provider did not answer', detail });
         }
+    }
+
+    // The configured TURN provider, or null. Cloudflare wins when both are
+    // configured.
+    _turnProvider() {
+        const env = this.env;
+        if (env.CLOUDFLARE_TURN_KEY_ID && env.CLOUDFLARE_TURN_API_TOKEN) {
+            return {
+                secret: env.CLOUDFLARE_TURN_API_TOKEN,
+                create: () => this._createCloudflareTurnCredential(env.CLOUDFLARE_TURN_KEY_ID, env.CLOUDFLARE_TURN_API_TOKEN)
+            };
+        }
+        if (env.METERED_DOMAIN && env.METERED_SECRET_KEY) {
+            return {
+                secret: env.METERED_SECRET_KEY,
+                create: () => this._createTurnCredential(env.METERED_DOMAIN, env.METERED_SECRET_KEY)
+            };
+        }
+        return null;
+    }
+
+    // Cloudflare Realtime TURN: POST .../credentials/generate-ice-servers
+    // with the TURN key's API token returns { iceServers: [...] } for a
+    // credential lasting `ttl` seconds. Entries on port 53 are dropped:
+    // browsers block that port, and trying it only delays ICE gathering.
+    async _createCloudflareTurnCredential(keyId, apiToken) {
+        const fetchImpl = this.fetchImpl || globalThis.fetch;
+        const response = await fetchImpl(`https://rtc.live.cloudflare.com/v1/turn/keys/${encodeURIComponent(keyId)}/credentials/generate-ice-servers`, {
+            method: 'POST',
+            headers: { authorization: `Bearer ${apiToken}`, 'content-type': 'application/json' },
+            body: JSON.stringify({ ttl: LIMITS.turnCredentialLifetimeSeconds }),
+            signal: AbortSignal.timeout(TURN_PROVIDER_TIMEOUT_MS)
+        });
+        if (!response.ok) {
+            const text = (await response.text().catch(() => '')).slice(0, 200);
+            throw new Error(`creating a credential: Cloudflare answered ${response.status} ${text}`.trim());
+        }
+        const body = await response.json().catch(() => null);
+        const listed = body && (Array.isArray(body.iceServers) ? body.iceServers : body.iceServers ? [body.iceServers] : null);
+        const iceServers = (listed || [])
+            .map((entry) => {
+                const urls = (Array.isArray(entry.urls) ? entry.urls : [entry.urls]).filter((url) => typeof url === 'string' && !/:53(\?|$)/.test(url));
+                return { ...entry, urls };
+            })
+            .filter((entry) => entry.urls.length > 0);
+        if (iceServers.length === 0) {
+            throw new Error('creating a credential: Cloudflare returned no ICE servers');
+        }
+        return iceServers;
     }
 
     // Metered's REST API: POST /api/v1/turn/credential (secret key) creates
@@ -540,6 +607,10 @@ export class RendezvousNode {
 
     async alarm() {
         const now = Date.now();
+        const currentMonthKey = TURN_MONTH_KEY_PREFIX + new Date(now).toISOString().slice(0, 7);
+        for (const key of (await this.ctx.storage.list({ prefix: TURN_MONTH_KEY_PREFIX })).keys()) {
+            if (key !== currentMonthKey) await this.ctx.storage.delete(key);
+        }
         const rateWindows = await this.ctx.storage.list({ prefix: TURN_RATE_KEY_PREFIX });
         for (const [key, rateWindow] of rateWindows) {
             if (!rateWindow || now - rateWindow.startedAt >= HOUR_MS) {

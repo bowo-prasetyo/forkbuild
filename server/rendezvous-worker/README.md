@@ -182,25 +182,39 @@ Cloudflare's own current pricing page if you expect heavy traffic.
 
 Some networks block direct peer connections; a TURN relay carries the
 traffic instead. The app asks its rendezvous server for relay credentials
-(`GET /turn-credentials`) when a peer connection starts. To offer them
-through a [Metered](https://www.metered.ca/) TURN account, store two
-settings on the worker:
+(`GET /turn-credentials`) when a peer connection starts. The worker creates
+credentials that expire after an hour, answers each IP address at most 20
+times an hour, and hands out at most 10,000 a month (set
+`TURN_CREDENTIALS_PER_MONTH` to change that; past it, the app connects
+without a relay). The long-term key stays on the worker; browsers only see
+the short-lived credential. Without a provider the endpoint answers 404 and
+the app connects with STUN alone.
 
-```
-wrangler secret put METERED_SECRET_KEY    # the account's Secret Key
-```
+**Cloudflare Realtime TURN (recommended).** On the same Cloudflare account:
 
-and, in `wrangler.toml`'s `[vars]` (or as a dashboard variable),
-`METERED_DOMAIN = "yourapp.metered.live"`.
+1. In the Cloudflare dashboard, open **Realtime → TURN Server** and create a
+   TURN key. Copy its **Turn Token ID** and **API Token** (the token is shown
+   once).
+2. From this folder, store both as secrets:
+   ```
+   wrangler secret put CLOUDFLARE_TURN_KEY_ID      # the Turn Token ID
+   wrangler secret put CLOUDFLARE_TURN_API_TOKEN   # the API Token
+   ```
+3. Open `https://<your-worker>/turn-credentials`: it should return
+   `iceServers` and an `expiresAt` an hour away.
 
-The worker then creates a credential that expires after an hour for each
-request, and answers each IP address at most 20 times an hour. The secret
-key stays on the worker; browsers only ever see the short-lived
-credential. Without these settings the endpoint answers 404 and the app
-connects with STUN alone.
+Cloudflare currently includes 1,000 GB of relay traffic a month, then
+charges per GB; check its current pricing, and set a billing notification
+in the dashboard.
 
-If an older version of the app ever shipped your Metered API key, rotate
-it in the Metered dashboard: that key was public.
+**Metered.** Creating credentials through Metered's API needs a paid or
+trial plan. Set `METERED_DOMAIN = "yourapp.metered.live"` under `[vars]` in
+`wrangler.toml` and store the account's Secret Key with
+`wrangler secret put METERED_SECRET_KEY`. If both providers are configured,
+Cloudflare is used.
+
+If an older version of the app ever shipped your Metered API key or TURN
+credential, delete that credential in the Metered dashboard: it was public.
 
 ## Upgrading an existing deployment
 

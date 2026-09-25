@@ -36,10 +36,10 @@ new_sqlite_classes = ["RendezvousNode"]
 # default) to allow any origin, matching peer/RendezvousConfig.js's own
 # "empty means unrestricted" default posture one layer up.
 #
-# TURN relay credentials (see README.md): the Metered app domain is set
-# below; the account's secret key is stored as a secret, never in this file:
-#   wrangler secret put METERED_SECRET_KEY
-# Delete METERED_DOMAIN to run without a relay.
-[vars]
+# TURN relay credentials (see README.md) come from Cloudflare Realtime TURN,
+# whose key is stored as secrets, never in this file:
+#   wrangler secret put CLOUDFLARE_TURN_KEY_ID
+#   wrangler secret put CLOUDFLARE_TURN_API_TOKEN
+# [vars]
 # ALLOWED_ORIGINS = "https://your-forkbuild-deployment.example"
-METERED_DOMAIN = "forkbuild.metered.live"
+# TURN_CREDENTIALS_PER_MONTH = "10000"

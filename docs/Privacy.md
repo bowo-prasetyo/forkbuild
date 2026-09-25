@@ -44,7 +44,7 @@ Each server sees your IP address and what you ask it for.
 | --- | --- | --- |
 | You make yourself discoverable, or look someone up, in **Peers** | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | your identity's public key and a connection offer, kept for at most 15 minutes; the identity you look up |
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |
-| A peer connection starts, if the rendezvous server offers a relay | the rendezvous server's `/turn-credentials`, then its TURN relay (Metered) | a request for short-lived relay credentials; relayed traffic is end-to-end encrypted by WebRTC |
+| A peer connection starts, if the rendezvous server offers a relay | the rendezvous server's `/turn-credentials`, then its TURN relay (Cloudflare) | a request for short-lived relay credentials; relayed traffic is end-to-end encrypted by WebRTC |
 | You distribute or discover publications over Nostr (*experimental*) | Nostr relays (`relay.damus.io`) | signed announcements you publish; your queries |
 | You store or fetch content on Arweave (*experimental*) | an Arweave gateway (`arweave.net`) | the content you publish; what you fetch |
 | You fetch content from IPFS (*experimental*) | an IPFS gateway (`ipfs.io`), or your own IPFS node (`127.0.0.1:5001`) | what you fetch or add |
