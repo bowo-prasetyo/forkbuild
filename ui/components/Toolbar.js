@@ -1,5 +1,6 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { saveFailureMessage } from './saveFailureMessages.js';
+import { saveDocument } from './saveDocument.js';
 
 // Save/New/dirty indicator/Recent Documents — all driven by
 // DocumentManager, LoadDocumentUseCase, and (as of 0.1.20C) EditorSession
@@ -115,9 +116,9 @@ export default {
             props.feedback.show(message);
         }
 
-        function save() {
+        async function save() {
             try {
-                props.saveDocumentUseCase.execute(props.documentManager);
+                await saveDocument(props.saveDocumentUseCase, props.documentManager);
             } catch (error) {
                 console.error('Save failed:', error);
                 props.feedback.show(saveFailureMessage(error), { durationMs: 10000 });

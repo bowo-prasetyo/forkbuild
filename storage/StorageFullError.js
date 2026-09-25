@@ -1,7 +1,8 @@
-// Browser storage has a fixed quota per site (about 5 MB of localStorage).
-// When a write would exceed it, the browser throws a QuotaExceededError
-// whose name and code differ between engines; LocalStorageProvider turns
-// that into this one error, whose message is safe to show the user as is.
+// Browser storage has a quota per site: about 5 MB of localStorage, or a
+// share of the disk for IndexedDB. When a write would exceed it, the
+// browser raises a QuotaExceededError whose name and code differ between
+// engines; LocalStorageProvider and IndexedDbStorageBackend turn that into
+// this one error, whose message is safe to show the user as is.
 export const STORAGE_FULL_MESSAGE =
     'This browser\'s storage for ForkBuild is full, so this was not saved. Nothing you have open was lost.';
 

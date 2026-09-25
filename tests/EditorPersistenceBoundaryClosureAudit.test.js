@@ -730,9 +730,10 @@ async function run() {
             'L5. flush()\'s own body contains no call to _setTimeout/setTimeout — it drains existing scheduled work, it never schedules new work.');
 
         // L6 — EditorView.js still calls the explicit Save use case
-        // exactly once; flush() did not add a second Save call site.
+        // exactly once; flush() did not add a second Save call site. The
+        // call goes directly or through ui/components/saveDocument.js.
         const editorViewSource = (await Promise.all(editorViewFiles().map((file) => readSource(file)))).join('\n');
-        const saveCallCount = (editorViewSource.match(/saveDocumentUseCase\.execute\(/g) || []).length;
+        const saveCallCount = (editorViewSource.match(/saveDocumentUseCase\.execute\(|saveDocument\(saveDocumentUseCase,/g) || []).length;
         assert(saveCallCount === 1,
             `L6. ui/views/EditorView.js still calls saveDocumentUseCase.execute( exactly once (the pre-existing explicit Save action) — flush() did not add a second Save call site (found ${saveCallCount}).`);
 

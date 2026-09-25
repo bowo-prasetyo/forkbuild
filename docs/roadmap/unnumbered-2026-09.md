@@ -550,3 +550,34 @@ allowance and the provider; counts only, so it skips the origin check and opens 
 of `TURN_CREDENTIALS_PER_MONTH` and on every request refused past it, and `wrangler.toml` enables `[observability]`
 so those logs are kept and searchable in the Cloudflare dashboard.
 
+
+## Local storage in IndexedDB (unnumbered, 2026-09-25)
+
+**Documents, chat history and everything else local now live in IndexedDB.** localStorage gives each site about
+5 MB, which is why the storage-full handling above was needed. Every store already went through the synchronous
+`StorageProvider`, and its 63 callers rely on getting an answer immediately, which IndexedDB cannot give. So instead of making the
+whole app asynchronous, `storage/LocalStorageProvider.js` now keeps its JSON strings in a pluggable backend, and
+`storage/IndexedDbStorageBackend.js` is one: it reads the whole database into memory once at startup, answers reads
+from memory, and commits writes in the background, one relaxed transaction per task. No store or use case changed.
+
+- `ui/boot.js` is the new page entry point: it opens storage (`storage/openBrowserStorage.js`) and only then imports
+  `ui/main.js`, so no module can read storage before it is ready. If IndexedDB is missing or does not open within
+  10 seconds, the session keeps using localStorage.
+- On open, any `forkbuild:` entries in localStorage are moved into IndexedDB (replacing the same names) and then
+  removed from localStorage, so existing data carries over, and so does anything saved during a localStorage session.
+- Save (Toolbar button and Ctrl/Cmd+S, through `ui/components/saveDocument.js`) waits for `flushLocalStorage()`,
+  which commits with strict durability, so "Saved" means stored and a full storage is still reported with
+  `StorageFullError`; the document is then marked unsaved again. The first flush asks the browser for persistent
+  storage (`navigator.storage.persist()`), so data is not evicted under disk pressure.
+- A failed background write stays in memory and is retried with the next commit; `onWriteError()` reports it.
+- Tabs: after a commit the written names are broadcast on the `forkbuild-storage` BroadcastChannel and other tabs
+  read those entries back from IndexedDB. Reading, rather than taking the values from the message, keeps each tab's
+  copy equal to disk, because IndexedDB orders transactions and messages can arrive in any order. Entries a tab has
+  written and not yet stored are left alone.
+- Tests: `tests/IndexedDbStorageBackend.test.js` (batching, durability, failures and retry, tabs, Save, fallback,
+  against a fake database) and `tests/IndexedDbStorageBackendBrowser.test.js` (real IndexedDB in Chromium:
+  reopening, moving localStorage data in, a 12 MB entry, two tabs). In Chromium the app starts as before, moves an
+  existing localStorage entry into IndexedDB, and Ctrl+S stores the document and its manifest in IndexedDB.
+- Not changed: the whole dataset stays in memory, which suits the tens of megabytes this app keeps. If published
+  content (`content:`, `snapshot:`) grows into hundreds of megabytes, those stores should read IndexedDB
+  asynchronously instead.
