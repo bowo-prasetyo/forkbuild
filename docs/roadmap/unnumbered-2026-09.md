@@ -480,3 +480,24 @@ expiry decades away, and fill its storage.
 - Not done here: the default server is still one personal `workers.dev` deployment. Running more than one server
   (the app already publishes to and looks up on every configured URL) is an operations task for the release.
 
+**TURN credentials: no key in the app, and no request on page load.** `peer/IceServerConfig.js` held a Metered API
+key and `ui/main` fetched TURN credentials with it in the background on every page load: every visitor, signed in or
+not, contacted `forkbuild.metered.live`, and anyone could read the key and spend the account's relay quota.
+
+- The key and the Metered endpoint are gone from the app. The rendezvous worker gains `GET /turn-credentials`: with
+  `METERED_DOMAIN` and the `METERED_SECRET_KEY` secret set, it creates a Metered credential that expires after an
+  hour and returns its ICE servers (`{ iceServers, expiresAt }`), answering each IP address at most 20 times an hour.
+  Without those settings it answers 404.
+- The app asks for credentials only when a connection starts: `WebRtcPeerConnectionProvider` takes a `turnIceServers`
+  source and `prepareIceServers()`, which `PeerSessionManager` awaits before `createInvitation()`,
+  `acceptInvitation()` and `connectToDiscovered()`. The source (`createTurnCredentialSource()`) asks the configured
+  rendezvous servers (`wss://host` → `https://host/turn-credentials`), caches the credential until five minutes
+  before it expires (a failure for ten minutes), shares concurrent requests, and degrades to STUN (plus any user TURN
+  entry) within 5 seconds.
+- Tests: `tests/IceServerConfig.test.js` is rewritten for the new source and hook, including that constructing the
+  provider requests nothing; the worker tests cover the endpoint, its rate limit, CORS and that the secret key never
+  appears in a response. Source-text assertions on the old background fetch were removed, as was
+  `TurnWebRtcIntegration`'s Section J, which re-ran other test files as child processes.
+- Operator action: the old key was public in this repository's history, so it must be rotated in the Metered
+  dashboard, and the worker redeployed with the new settings.
+

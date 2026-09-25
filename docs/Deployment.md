@@ -33,9 +33,11 @@ prints the new value).
 
 The app does make network requests of its own, to the endpoints its features
 use: Nostr relays, Arweave and IPFS gateways, an IPFS node (by default
-`http://127.0.0.1:5001`), Bitcoin and Base APIs, the rendezvous server, STUN
-servers, and the TURN credential service in `peer/IceServerConfig.js`. Most
-of these can be changed under **Network Settings**.
+`http://127.0.0.1:5001`), Bitcoin and Base APIs, the rendezvous server, and
+STUN servers. When a peer connection starts (and only then), it asks the
+rendezvous server for TURN relay credentials; the TURN provider's key lives
+only on that server (see `server/rendezvous-worker/README.md`). Most of these
+can be changed under **Network Settings**.
 
 ## Content Security Policy
 

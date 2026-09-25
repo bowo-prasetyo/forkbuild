@@ -6,7 +6,7 @@ import { WebRtcPeerConnectionProvider } from '../../peer/WebRtcPeerConnectionPro
 import { WebSocketRendezvousTransport } from '../../peer/WebSocketRendezvousTransport.js';
 import { RendezvousDiscoveryProvider } from '../../peer/RendezvousDiscoveryProvider.js';
 import { DiscoveryBootstrap } from '../../peer/DiscoveryBootstrap.js';
-import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../../peer/IceServerConfig.js';
+import { DEFAULT_ICE_SERVERS, createTurnCredentialSource } from '../../peer/IceServerConfig.js';
 import { IceServerConfigurationStore } from '../../storage/IceServerConfigurationStore.js';
 import { SetIceServerConfigurationUseCase } from '../../application/settings/SetIceServerConfigurationUseCase.js';
 import { TurnServerConfigurationStore } from '../../storage/TurnServerConfigurationStore.js';
@@ -63,16 +63,19 @@ export function composeIdentityAndPeers() {
     const resolvedIceServers = resolvedTurnServerConfiguration
         ? [...resolvedStunServers, resolvedTurnServerConfiguration.toIceServerEntry()]
         : resolvedStunServers;
-    const peerConnectionProvider = new WebRtcPeerConnectionProvider({ iceServers: resolvedIceServers });
-    // Upgrades the ICE servers in the background with live TURN credentials. Never
-    // awaited: startup must not depend on a third-party endpoint. On failure the
-    // fallback, including any user TURN entry, stays in effect.
-    fetchIceServers({ fallback: resolvedIceServers }).then((iceServers) => peerConnectionProvider.setIceServers(iceServers));
     const setIceServerConfigurationUseCase = new SetIceServerConfigurationUseCase({ iceServerConfigurationStore });
     // A saved rendezvous list overrides DEFAULT_RENDEZVOUS_URLS, which is empty by
     // default (out-of-band invitations only).
     const rendezvousConfigurationStore = new RendezvousConfigurationStore(new LocalStorageProvider());
     const resolvedRendezvousUrls = (rendezvousConfigurationStore.get() || { urls: DEFAULT_RENDEZVOUS_URLS }).urls;
+    // TURN relay credentials come from those same rendezvous servers, and only
+    // when a peer connection starts (PeerSessionManager awaits
+    // prepareIceServers()): opening the app contacts no TURN service. Without
+    // one, the configured STUN list and any user TURN entry are used as they are.
+    const peerConnectionProvider = new WebRtcPeerConnectionProvider({
+        iceServers: resolvedIceServers,
+        turnIceServers: createTurnCredentialSource({ rendezvousUrls: resolvedRendezvousUrls })
+    });
     const setRendezvousConfigurationUseCase = new SetRendezvousConfigurationUseCase({ rendezvousConfigurationStore });
     // Resolved early: the Bitcoin Esplora consumers below need it.
     const bitcoinEsploraConfigurationStore = new BitcoinEsploraConfigurationStore(new LocalStorageProvider());

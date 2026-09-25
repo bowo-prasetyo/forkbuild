@@ -79,7 +79,10 @@ Every peer connection starts by trying to negotiate a direct path between
 two browsers, with ForkBuild's own default public STUN servers helping
 each side discover its own reachable address. That's enough for most
 connections — but some networks (a symmetric NAT, a restrictive corporate
-firewall) never expose a path STUN alone can find. For those, open **TURN
+firewall) never expose a path STUN alone can find. If your rendezvous
+server offers a TURN relay, ForkBuild asks it for short-lived relay
+credentials when you start a connection (never just for opening the app)
+and uses them automatically. To use a relay of your own, open **TURN
 Server** from **Network Settings** in the top bar
 (`/settings/turn-server`) and configure your own TURN relay: a server
 that actually forwards the connection's data when a direct path can't be

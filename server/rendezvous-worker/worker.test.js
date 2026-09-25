@@ -321,4 +321,50 @@ const MINUTE = 60 * 1000;
     console.log('✓ connections per address are capped');
 }
 
+// GET /turn-credentials creates a short-lived Metered credential with the
+// secret key, which never appears in the response.
+{
+    const env = { METERED_DOMAIN: 'app.metered.test', METERED_SECRET_KEY: 'secret-key-value' };
+    const node = new RendezvousNode(fakeDurableObjectState(), env);
+    const calls = [];
+    node.fetchImpl = async (url, init = {}) => {
+        calls.push({ url, init });
+        if (url.startsWith('https://app.metered.test/api/v1/turn/credential?')) {
+            return Response.json({ username: 'u1', password: 'p1', apiKey: 'per-credential-key', expiryInSeconds: 3600 });
+        }
+        if (url === 'https://app.metered.test/api/v1/turn/credentials?apiKey=per-credential-key') {
+            return Response.json([{ urls: 'turn:relay.test:80', username: 'u1', credential: 'p1' }]);
+        }
+        return new Response('not found', { status: 404 });
+    };
+    const request = () => new Request('https://rendezvous.test/turn-credentials', {
+        headers: { 'CF-Connecting-IP': '198.51.100.4', Origin: 'https://forkbuild.test' }
+    });
+
+    const response = await node.fetch(request());
+    const body = await response.json();
+    assert(response.status === 200 && body.iceServers[0].urls === 'turn:relay.test:80', 'the endpoint returns the credential\'s ICE servers');
+    assert(Date.parse(body.expiresAt) - Date.now() <= 3600 * 1000 && Date.parse(body.expiresAt) > Date.now(), '...with an expiry an hour away');
+    assert(JSON.parse(calls[0].init.body).expiryInSeconds === LIMITS.turnCredentialLifetimeSeconds, 'the credential is created to expire');
+    assert(!JSON.stringify(body).includes('secret-key-value'), 'the secret key never appears in the response');
+    assert(response.headers.get('access-control-allow-origin') === '*', 'the app\'s origin may read it');
+
+    for (let i = 1; i < LIMITS.turnCredentialsPerAddressPerHour; i++) await node.fetch(request());
+    const limited = await node.fetch(request());
+    assert(limited.status === 429, `request ${LIMITS.turnCredentialsPerAddressPerHour + 1} from one address within an hour gets 429`);
+
+    const unconfigured = await new RendezvousNode(fakeDurableObjectState()).fetch(request());
+    assert(unconfigured.status === 404, 'without METERED_DOMAIN and METERED_SECRET_KEY the endpoint answers 404');
+
+    const failing = new RendezvousNode(fakeDurableObjectState(), env);
+    failing.fetchImpl = async () => new Response('down', { status: 503 });
+    assert((await failing.fetch(request())).status === 502, 'a provider failure answers 502');
+
+    const restricted = new RendezvousNode(fakeDurableObjectState(), { ...env, ALLOWED_ORIGINS: 'https://other.test' });
+    restricted.fetchImpl = node.fetchImpl;
+    const refused = await restricted.fetch(request());
+    assert(!refused.headers.get('access-control-allow-origin'), 'with ALLOWED_ORIGINS set, another origin gets no CORS permission');
+    console.log('✓ /turn-credentials mints expiring credentials behind a rate limit, never exposing the secret key');
+}
+
 console.log('✅ All ForkBuild Rendezvous Worker tests passed.');

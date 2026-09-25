@@ -178,6 +178,30 @@ being charged for idle connection time. For a personal or small-group
 ForkBuild deployment, this should stay within the free tier; check
 Cloudflare's own current pricing page if you expect heavy traffic.
 
+## Optional: TURN relay credentials
+
+Some networks block direct peer connections; a TURN relay carries the
+traffic instead. The app asks its rendezvous server for relay credentials
+(`GET /turn-credentials`) when a peer connection starts. To offer them
+through a [Metered](https://www.metered.ca/) TURN account, store two
+settings on the worker:
+
+```
+wrangler secret put METERED_SECRET_KEY    # the account's Secret Key
+```
+
+and, in `wrangler.toml`'s `[vars]` (or as a dashboard variable),
+`METERED_DOMAIN = "yourapp.metered.live"`.
+
+The worker then creates a credential that expires after an hour for each
+request, and answers each IP address at most 20 times an hour. The secret
+key stays on the worker; browsers only ever see the short-lived
+credential. Without these settings the endpoint answers 404 and the app
+connects with STUN alone.
+
+If an older version of the app ever shipped your Metered API key, rotate
+it in the Metered dashboard: that key was public.
+
 ## Upgrading an existing deployment
 
 Redeploy with `wrangler deploy`. Entries stored by the previous version

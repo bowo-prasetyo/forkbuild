@@ -33,6 +33,15 @@
 //   skew, requests per connection, connections per IP address, and the
 //   total number of stored identities.
 //
+// TURN credentials. GET /turn-credentials returns
+//   { iceServers, expiresAt }
+// with short-lived credentials for a Metered TURN relay, created with the
+// account secret key the operator stores as the METERED_SECRET_KEY secret
+// (and the app's domain as METERED_DOMAIN, e.g. "yourapp.metered.live").
+// The key never reaches browsers, and the app asks for credentials only
+// when it starts a peer connection. Without both settings the endpoint
+// answers 404 and the app uses STUN alone.
+//
 // What it does not do: prove that the publisher answers at the published
 // endpoint. Peers still authenticate each other when they connect
 // (peer/PeerAuthenticationSession.js); the server only decides who may
@@ -64,7 +73,11 @@ export const LIMITS = Object.freeze({
     maxConnectionsPerAddress: 16,
     // Distinct identities stored at once (tombstones included). Can be
     // overridden with the MAX_ENTRIES variable.
-    maxEntries: 100000
+    maxEntries: 100000,
+    // TURN credentials (GET /turn-credentials): each lasts this long, and
+    // one address may request this many per hour.
+    turnCredentialLifetimeSeconds: 60 * 60,
+    turnCredentialsPerAddressPerHour: 20
 });
 
 // One entry per identity, stored under this prefix:
@@ -74,6 +87,10 @@ const ENTRY_COUNT_KEY = 'meta:entries';
 
 // The alarm sweeps out entries nobody looked up after they expired.
 const SWEEP_INTERVAL_MS = 5 * 60 * 1000;
+
+const TURN_RATE_KEY_PREFIX = 'turn:';
+const HOUR_MS = 60 * 60 * 1000;
+const TURN_PROVIDER_TIMEOUT_MS = 5000;
 
 // ------------------------------------------------------------------
 // Signatures
@@ -256,6 +273,9 @@ export class RendezvousNode {
     }
 
     async fetch(request) {
+        if (new URL(request.url).pathname === '/turn-credentials') {
+            return this._handleTurnCredentials(request);
+        }
         if (request.headers.get('Upgrade') !== 'websocket') {
             return new Response('RendezvousNode: expected a WebSocket upgrade request', { status: 426 });
         }
@@ -425,8 +445,83 @@ export class RendezvousNode {
 
     // Deletes expired entries and tombstones, recounts what is left, and
     // reschedules itself.
+    // GET /turn-credentials: creates a credential with the provider and
+    // returns the ICE servers that use it. Rate limited per address.
+    async _handleTurnCredentials(request, now = Date.now()) {
+        const headers = {
+            'content-type': 'application/json',
+            'cache-control': 'no-store',
+            ...corsHeaders(request, this.env)
+        };
+        const reply = (status, body) => new Response(JSON.stringify(body), { status, headers });
+        if (request.method === 'OPTIONS') {
+            return new Response(null, { status: 204, headers });
+        }
+        if (request.method !== 'GET') {
+            return reply(405, { error: 'use GET' });
+        }
+        const domain = this.env.METERED_DOMAIN;
+        const secretKey = this.env.METERED_SECRET_KEY;
+        if (!domain || !secretKey) {
+            return reply(404, { error: 'this rendezvous server offers no TURN relay' });
+        }
+
+        const address = request.headers.get('CF-Connecting-IP') || 'unknown';
+        const rateKey = TURN_RATE_KEY_PREFIX + address;
+        const rateWindow = await this.ctx.storage.get(rateKey);
+        const current = rateWindow && now - rateWindow.startedAt < HOUR_MS ? rateWindow : { startedAt: now, count: 0 };
+        if (current.count >= LIMITS.turnCredentialsPerAddressPerHour) {
+            return reply(429, { error: 'too many TURN credential requests; try again later' });
+        }
+        await this.ctx.storage.put(rateKey, { ...current, count: current.count + 1 });
+
+        try {
+            const iceServers = await this._createTurnCredential(domain, secretKey);
+            const expiresAt = new Date(now + LIMITS.turnCredentialLifetimeSeconds * 1000).toISOString();
+            return reply(200, { iceServers, expiresAt });
+        } catch {
+            return reply(502, { error: 'the TURN provider did not answer' });
+        }
+    }
+
+    // Metered's REST API: POST /api/v1/turn/credential (secret key) creates
+    // an expiring credential; GET /api/v1/turn/credentials with that
+    // credential's own apiKey returns its ICE servers, routed to the
+    // caller's region.
+    async _createTurnCredential(domain, secretKey) {
+        const fetchImpl = this.fetchImpl || globalThis.fetch;
+        const base = `https://${domain}/api/v1/turn`;
+        const created = await fetchImpl(`${base}/credential?secretKey=${encodeURIComponent(secretKey)}`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ expiryInSeconds: LIMITS.turnCredentialLifetimeSeconds, label: 'forkbuild' }),
+            signal: AbortSignal.timeout(TURN_PROVIDER_TIMEOUT_MS)
+        });
+        if (!created.ok) {
+            throw new Error(`TURN provider answered ${created.status}`);
+        }
+        const credential = await created.json();
+        if (!credential || typeof credential.apiKey !== 'string') {
+            throw new Error('TURN provider returned no credential');
+        }
+        const listed = await fetchImpl(`${base}/credentials?apiKey=${encodeURIComponent(credential.apiKey)}`, {
+            signal: AbortSignal.timeout(TURN_PROVIDER_TIMEOUT_MS)
+        });
+        const iceServers = listed.ok ? await listed.json() : null;
+        if (!Array.isArray(iceServers) || iceServers.length === 0) {
+            throw new Error('TURN provider returned no ICE servers');
+        }
+        return iceServers;
+    }
+
     async alarm() {
         const now = Date.now();
+        const rateWindows = await this.ctx.storage.list({ prefix: TURN_RATE_KEY_PREFIX });
+        for (const [key, rateWindow] of rateWindows) {
+            if (!rateWindow || now - rateWindow.startedAt >= HOUR_MS) {
+                await this.ctx.storage.delete(key);
+            }
+        }
         const entries = await this.ctx.storage.list({ prefix: STORAGE_KEY_PREFIX });
         let remaining = 0;
         for (const [key, entry] of entries) {
@@ -449,11 +544,23 @@ function parseAllowedOrigins(raw) {
     return raw.split(',').map((origin) => origin.trim()).filter(Boolean);
 }
 
+// The app runs on another origin, so /turn-credentials needs CORS. Allowed
+// origins are ALLOWED_ORIGINS when set, otherwise any.
+function corsHeaders(request, env) {
+    const allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
+    const origin = request.headers.get('Origin');
+    const allowed = allowedOrigins ? (allowedOrigins.includes(origin) ? origin : null) : '*';
+    return allowed
+        ? { 'access-control-allow-origin': allowed, 'access-control-allow-methods': 'GET, OPTIONS', vary: 'Origin' }
+        : {};
+}
+
 // The Worker entry point: answers a plain GET so an operator can check the
 // deployment, and forwards WebSocket upgrades to the Durable Object.
 export default {
     async fetch(request, env) {
-        if (request.headers.get('Upgrade') !== 'websocket') {
+        const isTurnRequest = new URL(request.url).pathname === '/turn-credentials';
+        if (!isTurnRequest && request.headers.get('Upgrade') !== 'websocket') {
             return new Response(
                 'ForkBuild rendezvous worker is running.\n\n' +
                 'This endpoint only understands WebSocket connections speaking the\n' +

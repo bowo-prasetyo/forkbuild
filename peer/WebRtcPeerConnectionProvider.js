@@ -2,6 +2,7 @@ import { PeerConnectionProvider } from './PeerConnectionProvider.js';
 import { WebRtcPeerConnection } from './WebRtcPeerConnection.js';
 import { PeerConnectionOffer } from './PeerConnectionOffer.js';
 import { createId } from '../core/createId.js';
+import { mergeIceServers } from './IceServerConfig.js';
 
 // 0.2.51 — the real, two-different-browser-sessions transport this
 // codebase named and deferred all the way back in 0.2.49's own header
@@ -46,28 +47,48 @@ export class WebRtcPeerConnectionProvider extends PeerConnectionProvider {
     // undefined here simply means each connection falls back to
     // peer/WebRtcPeerConnection.js's own ICE_GATHERING_TIMEOUT_MS
     // default. See that constant's own header for why it exists.
-    constructor({ iceServers = [], RTCPeerConnectionImpl = globalThis.RTCPeerConnection, iceGatheringTimeoutMs } = {}) {
+    //
+    // `turnIceServers` — optional async function resolving to extra (TURN)
+    // ICE servers, e.g. peer/IceServerConfig.js#createTurnCredentialSource().
+    // It is consulted only by prepareIceServers(), just before a connection
+    // starts, never at construction.
+    constructor({ iceServers = [], RTCPeerConnectionImpl = globalThis.RTCPeerConnection, iceGatheringTimeoutMs, turnIceServers = null } = {}) {
         super();
         this._iceServers = iceServers;
+        this._baseIceServers = iceServers;
+        this._turnIceServers = turnIceServers;
         this._RTCPeerConnectionImpl = RTCPeerConnectionImpl;
         this._iceGatheringTimeoutMs = iceGatheringTimeoutMs;
         this._connections = new Map(); // connectionId -> WebRtcPeerConnection
         this._incomingListeners = new Set();
     }
 
-    // 0.3.7 — lets an already-constructed provider's `iceServers` be
-    // replaced in place, for exactly one reason: peer/IceServerConfig.js's
-    // own fetchIceServers() runs in the BACKGROUND, after this provider
-    // already exists and the app has already started — see that
-    // function's own header and ui/main.js's one call site. Every
-    // connection created BEFORE this call keeps whatever iceServers it
-    // was already built with (an RTCPeerConnection's own ICE
-    // configuration is fixed at construction, same as any real WebRTC
-    // implementation); only createOffer()/connect() calls AFTER this
-    // one see the new list — this._iceServers is read fresh at the top
-    // of each, never cached anywhere else.
+    // Replaces the configured ICE server list in place. Connections already
+    // created keep the servers they were built with (an RTCPeerConnection's
+    // ICE configuration is fixed at construction); createOffer()/connect()
+    // calls after this one use the new list.
     setIceServers(iceServers) {
         this._iceServers = Array.isArray(iceServers) ? iceServers : [];
+        this._baseIceServers = this._iceServers;
+    }
+
+    // Called (and awaited) by application/peer/PeerSessionManager.js before
+    // each createOffer()/connect(): fetches TURN servers from
+    // `turnIceServers`, if given, and puts them ahead of the configured
+    // list for the connections that follow. This is the only time TURN
+    // credentials are requested, so opening the app contacts no TURN
+    // service. Never throws; without TURN the configured list is used.
+    async prepareIceServers() {
+        if (typeof this._turnIceServers !== 'function') {
+            return;
+        }
+        let extra = [];
+        try {
+            extra = await this._turnIceServers();
+        } catch {
+            extra = [];
+        }
+        this._iceServers = mergeIceServers(Array.isArray(extra) ? extra : [], this._baseIceServers);
     }
 
     // Alice's side: mints a fresh connectionId, opens an RTCPeerConnection,

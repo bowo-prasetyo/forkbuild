@@ -4,7 +4,7 @@ import { StorageProvider } from '../storage/StorageProvider.js';
 import { IceServerConfigurationStore } from '../storage/IceServerConfigurationStore.js';
 import { SetIceServerConfigurationUseCase } from '../application/settings/SetIceServerConfigurationUseCase.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
-import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
+import { DEFAULT_ICE_SERVERS, mergeIceServers } from '../peer/IceServerConfig.js';
 import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
@@ -44,9 +44,8 @@ import { readSource as source } from './support/SourceText.js';
 //               unchanged, through the real, unmodified provider classes.
 //   Section I — reset to defaults: clear() restores genuine absence,
 //               never a saved copy of the default.
-//   Section J — no effect on TURN: fetchIceServers()'s own credential
-//               fetch, merge, and dedupe logic are completely unmodified;
-//               only the STUN baseline it merges with changes.
+//   Section J — fetched TURN credentials are merged with the user's own
+//               STUN list, never replacing it.
 //   Section K — no effect on Rendezvous: peer/RendezvousConfig.js and
 //               peer/PeerAuthenticationSession.js are untouched by this
 //               milestone's own configuration boundary.
@@ -145,12 +144,8 @@ async function run() {
             '6. the write use case is actually provided to the Vue app');
         const storeConstructions = (mainSource.match(/new IceServerConfigurationStore\(/g) || []).length;
         assert(storeConstructions === 1, `7. ui/main.js constructs exactly one IceServerConfigurationStore instance — found ${storeConstructions}`);
-        assert(mainSource.includes('new WebRtcPeerConnectionProvider({ iceServers: resolvedIceServers })'),
-            '8. WebRtcPeerConnectionProvider is constructed from resolvedIceServers, never a bare DEFAULT_ICE_SERVERS literal');
         assert(/const resolvedStunServers = \(iceServerConfigurationStore\.get\(\) \|\| \{ servers: DEFAULT_ICE_SERVERS \}\)\.servers;/.test(mainSource),
             '9. the resolved STUN list (resolvedStunServers, since 0.9.455 folded TURN into resolvedIceServers itself — see tests/TurnWebRtcIntegration.test.js) falls back to DEFAULT_ICE_SERVERS only when no override is on file, never persisting that fallback as a preference');
-        assert(mainSource.includes('fetchIceServers({ fallback: resolvedIceServers })'),
-            '10. the TURN-fetching background enrichment merges with resolvedIceServers, not a hard-coded default — TURN\'s own fetch/credential logic is otherwise untouched');
 
         const routerSource = await source('ui/router/index.js');
         assert(/path:\s*'\/settings\/stun'/.test(routerSource), '11. a real route exists for the settings entry point');
@@ -174,8 +169,6 @@ async function run() {
             '17. the ONE thing the view imports from peer/IceServerConfig.js is the plain default constant, for display only');
         assert(!/WebRtcPeerConnectionProvider|setIceServers\(/.test(viewExecutable),
             '18. the view never imports or constructs the peer connection provider, and never calls setIceServers() — a saved change only takes effect on the next application load');
-        assert(!/fetchIceServers/.test(viewExecutable),
-            '19. the view never touches the TURN-fetching seam either');
         console.log('✓ Section 0: the settings entry point is really wired — nav link, route, shared store, shared use case, and a view that only ever goes through the injected collaborators');
     }
 
@@ -443,42 +436,28 @@ async function run() {
     console.log('✓ Section I: "Reset to Defaults" clears to genuine absence; explicitly saving default-matching entries still persists a real, distinct entry');
 
     // ===============================================================
-    // Section J — no effect on TURN: fetchIceServers()'s own credential
-    // fetch, merge, and dedupe logic are completely unmodified; only the
-    // STUN baseline it merges with changes.
+    // Section J — fetched TURN credentials are merged with the user's own
+    // STUN list, never replacing it.
     // ===============================================================
     {
         const fetched = [
-            { urls: 'stun:stun.relay.metered.ca:80' },
-            { urls: 'turn:standard.relay.metered.ca:80', username: 'u', credential: 'c' }
+            { urls: 'stun:stun.relay.example:80' },
+            { urls: 'turn:relay.example:80', username: 'u', credential: 'c' }
         ];
-        const fetchImpl = async () => ({ ok: true, json: async () => fetched });
+        const customStun = [{ urls: 'stun:custom-fallback.example:3478' }];
+        const result = mergeIceServers(fetched, customStun);
+        assert(result.length === fetched.length + customStun.length, '67. fetched TURN/STUN entries are merged WITH the configured STUN list, never replacing it');
+        assert(result[0].urls === 'stun:stun.relay.example:80', '68. fetched entries come first');
+        assert(result.some((entry) => entry.urls === 'turn:relay.example:80' && entry.username === 'u' && entry.credential === 'c'),
+            '69. a fetched TURN entry\'s credentials pass through unmodified');
+        assert(result.some((entry) => entry.urls === 'stun:custom-fallback.example:3478'), '70. the user\'s own STUN list is kept');
 
-        const customFallback = [{ urls: 'stun:custom-fallback.example:3478' }];
-        const result = await fetchIceServers({ apiKey: 'test-key', fetchImpl, fallback: customFallback });
-        assert(result.length === fetched.length + customFallback.length,
-            '67. fetchIceServers() still merges fetched TURN/STUN entries WITH the fallback, never replacing it — unmodified merge behavior');
-        assert(result[0].urls === 'stun:stun.relay.metered.ca:80', '68. fetched entries still come first');
-        assert(result.some((entry) => entry.urls === 'turn:standard.relay.metered.ca:80' && entry.username === 'u' && entry.credential === 'c'),
-            '69. a fetched TURN entry\'s credentials pass through completely unmodified');
-        assert(result.some((entry) => entry.urls === 'stun:custom-fallback.example:3478'),
-            '70. the CUSTOM fallback (a user\'s own configured STUN list, as ui/main.js now passes) is what TURN\'s fetch merges with, instead of the hard-coded DEFAULT_ICE_SERVERS');
-
-        // A failed/slow fetch still degrades to exactly the given
-        // fallback, unmodified from before this milestone.
-        const failingFetchImpl = async () => { throw new Error('network unreachable'); };
-        const degraded = await fetchIceServers({ apiKey: 'k', fetchImpl: failingFetchImpl, fallback: customFallback });
-        assert(degraded === customFallback, '71. a failed TURN fetch degrades to exactly the given fallback, never throwing — unmodified degradation behavior');
-
-        // The TURN-fetching module itself carries no STUN-configuration
-        // import — this milestone never reached into it.
-        const iceConfigSource = await source('peer/IceServerConfig.js');
-        assert(!/IceServerConfiguration|IceServerConfigurationStore|SetIceServerConfigurationUseCase/.test(iceConfigSource),
-            '72. peer/IceServerConfig.js — the TURN-fetching module — imports none of this milestone\'s new configuration classes');
-        assert(iceConfigSource.includes("METERED_TURN_ENDPOINT = 'https://forkbuild.metered.live/api/v1/turn/credentials'"),
-            '73. TURN\'s own credential endpoint is completely unchanged by this milestone');
+        const provider = new WebRtcPeerConnectionProvider({ iceServers: customStun, turnIceServers: async () => { throw new Error('network unreachable'); } });
+        await provider.prepareIceServers();
+        assert(JSON.stringify(provider._iceServers) === JSON.stringify(customStun), '71. a failed TURN fetch leaves exactly the configured STUN list, never throwing');
+        provider.dispose();
     }
-    console.log('✓ Section J: TURN\'s own fetch/merge/dedupe/degrade logic is completely unmodified — only the STUN baseline it merges with now reflects a user\'s own configuration when one is on file');
+    console.log('✓ Section J: fetched TURN entries are merged with, and never replace, the user\'s own STUN list');
 
     // ===============================================================
     // Section K — no effect on Rendezvous: peer/RendezvousConfig.js and

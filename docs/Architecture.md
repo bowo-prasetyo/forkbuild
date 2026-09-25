@@ -527,7 +527,13 @@ top of it.
 
 **Connections.** A peer connection authenticates a key, not an account.
 peer/WebRtcPeerConnectionProvider.js makes real WebRTC connections using
-the ICE servers from the STUN and TURN settings (peer/IceServerConfig.js).
+the ICE servers from the STUN and TURN settings (peer/IceServerConfig.js),
+plus TURN relay credentials that the rendezvous servers hand out
+(GET /turn-credentials, cached until shortly before they expire). Those are
+fetched only when a connection starts:
+application/peer/PeerSessionManager.js awaits the provider's
+prepareIceServers() before each createOffer()/connect(), so opening the app
+contacts no TURN service, and the provider key never reaches the browser.
 Peers find each other through rendezvous (peer/RendezvousDiscoveryProvider.js
 over peer/WebSocketRendezvousTransport.js, one per configured rendezvous
 URL; the reference server is server/rendezvous-worker/) or through a
