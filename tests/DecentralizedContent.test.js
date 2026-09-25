@@ -51,7 +51,7 @@ function createTestDocument(title = 'Test') {
     const bytes = JSON.stringify({ hello: 'world' });
     const ref = store.put(bytes);
     assert(store.has(ref), 'store has content');
-    const retrieved = store.get(ref);
+    const retrieved = await store.get(ref);
     assert(retrieved === bytes, 'retrieved bytes match');
     console.log('✓ LocalContentStore stores by hash');
 }

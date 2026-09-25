@@ -28,12 +28,30 @@ export class LocalContentStore extends ContentStore {
         return reference;
     }
 
-    get(reference) {
+    // Resolves to the stored text, or null. Content can be large and, over
+    // IndexedDB, stays on disk until read (storage/IndexedDbStorageBackend.js),
+    // so reading it is asynchronous, as for every other ContentStore.
+    async get(reference) {
+        if (!this.has(reference)) return null;
+        const key = CONTENT_KEY_PREFIX + reference.hash;
+        return typeof this._storageProvider.loadAsync === 'function'
+            ? this._storageProvider.loadAsync(key)
+            : this._storageProvider.load(key);
+    }
+
+    // The stored text, or null, for a caller that cannot wait (World View
+    // streaming). Throws StorageEntryNotLoadedError when the content is on
+    // disk and not in memory; its `ready` resolves once it is.
+    getSync(reference) {
         if (!this.has(reference)) return null;
         return this._storageProvider.load(CONTENT_KEY_PREFIX + reference.hash);
     }
 
+    // Whether the content is stored, without reading it.
     has(reference) {
-        return this._storageProvider.load(CONTENT_KEY_PREFIX + reference.hash) !== null;
+        const key = CONTENT_KEY_PREFIX + reference.hash;
+        return typeof this._storageProvider.exists === 'function'
+            ? this._storageProvider.exists(key)
+            : this._storageProvider.load(key) !== null;
     }
 }

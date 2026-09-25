@@ -22,4 +22,17 @@ export class StorageProvider {
     list() {
         throw new Error('StorageProvider.list() must be implemented by a subclass');
     }
+
+    // Resolves like load(). A provider that keeps some entries on disk only
+    // (LocalStorageProvider over IndexedDB) reads them here; load() of such
+    // an entry throws StorageEntryNotLoadedError until one has.
+    loadAsync(name) {
+        return Promise.resolve().then(() => this.load(name));
+    }
+
+    // Whether an entry exists, without reading its value where the
+    // provider can tell.
+    exists(name) {
+        return this.load(name) !== null;
+    }
 }

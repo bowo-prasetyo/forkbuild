@@ -1,3 +1,4 @@
+import { retryWhenLoaded } from '../../../storage/StorageEntryNotLoadedError.js';
 import { SnapshotPlacementCreationOutcome } from './SnapshotPlacementCreationOutcome.js';
 
 // 0.8.18 — Decentralized Snapshot Placement Foundation.
@@ -119,7 +120,9 @@ export class CreateExternalSnapshotPlacementUseCase {
         // anywhere else — the identical integrity check application/
         // ResolvePublicationUseCase.js already runs before resolving a
         // snapshot locally.
-        const isValid = this._contentResolver.verify(publicationId, contentHash);
+        // The resolver reads synchronously; published content kept on disk is
+        // loaded first.
+        const isValid = await retryWhenLoaded(() => this._contentResolver.verify(publicationId, contentHash));
         if (!isValid) {
             throw new Error(
                 `CreateExternalSnapshotPlacementUseCase: local snapshot integrity check failed `
@@ -127,7 +130,7 @@ export class CreateExternalSnapshotPlacementUseCase {
             );
         }
 
-        const snapshotJson = this._contentResolver.resolve(publicationId);
+        const snapshotJson = await retryWhenLoaded(() => this._contentResolver.resolve(publicationId));
         const bytes = JSON.stringify(snapshotJson);
 
         let reference;

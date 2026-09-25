@@ -2,6 +2,7 @@ import { Position } from '../../core/Position.js';
 import { SpatialHoverState } from '../spatial-state/SpatialHoverState.js';
 import { CommandHistory } from '../editor/CommandHistory.js';
 import { STREAMING_RADIUS } from './constants.js';
+import { isStorageEntryNotLoadedError } from '../../storage/StorageEntryNotLoadedError.js';
 
 // WorldNavigationSession streaming: loading Worlds near the camera,
 // unloading distant ones, retrying failed loads, and resolving a document
@@ -113,7 +114,21 @@ export const worldStreamingMethods = {
     },
 
     _loadWorld(documentId) {
-        const { document, isMaterializedPublication } = this._resolveWorldDocument(documentId);
+        let resolved;
+        try {
+            resolved = this._resolveWorldDocument(documentId);
+        } catch (error) {
+            // Its published content is on disk and now being read (the read
+            // started when load() threw): not a failure, and nothing to wait
+            // for here, since navigation stays synchronous. A later
+            // updateSpatialView() (every few seconds) finds it in memory
+            // and loads it.
+            if (isStorageEntryNotLoadedError(error)) {
+                return;
+            }
+            throw error;
+        }
+        const { document, isMaterializedPublication } = resolved;
         this._loadedDocuments.set(documentId, document);
         // A streamed-in world is a published snapshot, immutable until an edit forks
         // it (see _ensureEditableDocumentId), but only when a Publication resolves.

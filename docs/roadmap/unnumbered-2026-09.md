@@ -681,3 +681,35 @@ pyramid was 7.49 MB.
 - Not done: autosave still writes the whole document. At hollow-pyramid scale that is now cheap; a change-only
   checkpoint (a base plus a journal of brick changes, compacted from time to time) would matter only near the solid
   pyramid's scale, where saving, loading and memory are all limits anyway.
+
+## Published copies stay on disk (unnumbered, 2026-09-25)
+
+**Published content and snapshots are no longer held in memory.** The IndexedDB backend read every entry into memory
+at startup. Publishing a build stores it three times (the editable document, `snapshot:{publicationId}` and
+`content:{hash}`), and every publication received from peers adds a `content:` entry, so memory and startup grew with
+everything ever published or seen: three published hollow pyramids were 16.4 MB, all resident.
+
+- `IndexedDbStorageBackend`: entries under `COLD_KEY_PREFIXES` (`content:`, `snapshot:`) are cold. `open()` reads
+  every name but only non-cold values (key ranges around the cold prefixes); a cold write stays in memory until stored,
+  then moves to a warm cache (16 M characters, most recently used first, the latest value always kept); `loadItem()`
+  reads one asynchronously (concurrent reads of one entry share a read); `hasItem()`, `keys()` and `isLoaded()` answer
+  without reading. A synchronous `getItem()` of a cold entry not in memory throws `StorageEntryNotLoadedError`
+  (`storage/StorageEntryNotLoadedError.js`) rather than returning null, which would read as "not stored". Other tabs'
+  cold writes update the index and drop the warm copy; entries moved from localStorage are cold too.
+- `LocalStorageProvider#load()` rethrows that error with `ready`, a promise already reading the entry (a failed read
+  never surfaces as an unhandled rejection); `loadAsync()` and `exists()` are new on `StorageProvider`.
+  `retryWhenLoaded(read)` runs a synchronous reader from async code, waiting for each entry it finds on disk.
+- `LocalContentStore#get()` is asynchronous, like every other ContentStore; `has()` checks existence without reading;
+  `getSync()` serves World View. The four UI distribution paths that read it synchronously now await it;
+  `CreateExternalSnapshotPlacementUseCase` reads through `retryWhenLoaded()`.
+- World View streaming stays synchronous (the rule `tests/WorldLifecycleIdentityProductReassessment.test.js` pins): a
+  world whose published content is still on disk is skipped without counting as a failed load, and the next periodic
+  `updateSpatialView()` loads it.
+- Measured in Chromium with three published hollow pyramids: 16.41 MB stored, 5.36 MB held in memory after a restart
+  (the three editable documents); opening the database took 15 ms. The Editor opens them as before.
+- Tests: `tests/ColdStorageBrowser.test.js` (real IndexedDB: names without values at open, reading on demand, the
+  bounded cache, cold writes, removal, two tabs, content moved from localStorage, and a published World loading
+  through `LoadPublishedWorldSessionUseCase` once read) and `tests/StreamingColdContent.test.js`.
+- Not changed: editable documents stay in memory, since about twenty places read them synchronously (collision and
+  selection against placed structures, World View streaming, search, catalogs, the Editor). Keeping them on disk too
+  means making those reads asynchronous, a larger change of its own.

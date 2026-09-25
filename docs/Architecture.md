@@ -272,7 +272,19 @@ backend: window.localStorage by default, or the IndexedDB backend
 imports ui/main.js, so nothing reads storage before it is ready.
 
 The IndexedDB backend reads every entry into memory when it opens and
-answers reads from that copy. Writes change the copy at once and are
+answers reads from that copy, except cold entries: published content
+(`content:`) and snapshots (`snapshot:`), whose names only are read. A
+cold entry written leaves memory once stored; `loadAsync()` (backend
+`loadItem()`) reads one into a most-recently-used cache of 16 M
+characters (the latest one always stays); a synchronous `load()` of one
+not in memory throws StorageEntryNotLoadedError, whose `ready` promise is
+already reading it (`retryWhenLoaded()` wraps a synchronous reader for an
+async caller). LocalContentStore's `get()` is therefore asynchronous, like
+every ContentStore, with `getSync()` for World View streaming, which skips
+a world whose content is still being read and loads it on a later
+refresh, staying synchronous itself. Editable documents stay in memory:
+about twenty places read them synchronously (collision, selection,
+search, catalogs). Writes change the copy at once and are
 committed in the background, one transaction per task. flushLocalStorage()
 commits what is waiting with strict durability and resolves once
 everything is stored; the Editor's Save (ui/components/saveDocument.js)

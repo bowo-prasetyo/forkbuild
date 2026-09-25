@@ -58,11 +58,11 @@ export function useWorldEncounterCommands({
     // path through ipfsRemotePublicationCoordinator, with a per-attempt
     // configuration, normalized to the same `{ contentReference, announcement }`
     // shape. `discoveryProvider` applies to every storage path.
-    function distributeWorldEncounterSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) {
+    async function distributeWorldEncounterSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) {
         if (!publicationContentStore || !publication.contentReference) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        const snapshotBytes = publicationContentStore.get(publication.contentReference);
+        const snapshotBytes = await publicationContentStore.get(publication.contentReference);
         if (snapshotBytes === null || snapshotBytes === undefined) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
