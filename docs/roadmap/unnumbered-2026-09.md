@@ -407,7 +407,7 @@ when no secure random source existed.
 
 - `identity/Ed25519.js` keeps its API but delegates to noble-curves 2.4.0 and noble-hashes 2.4.0 (noble-curves was
   audited by Trail of Bits at 2.3.0; 2.4.0 adds hardening on top). Their ES modules are copied into `vendor/` by
-  `scripts/vendor-noble.mjs`, which only rewrites the package-name imports into relative paths so the browser and
+  `scripts/vendor.mjs`, which only rewrites the package-name imports into relative paths so the browser and
   Node load the same files; `tests/IdentityCryptography.test.js` fails if `vendor/` differs from the pinned npm
   packages. Verification is strict RFC 8032 (non-canonical S and small-order keys are rejected), and signatures
   interoperate with WebCrypto's Ed25519 in both directions. `randomSeed()` throws when `crypto.getRandomValues` is
@@ -430,3 +430,31 @@ when no secure random source existed.
   Protect with Passphrase action (the provider supported it; no UI offered it). Actions that derive a key show
   progress. An end-to-end run in Chromium covered the opt-out, a protected identity signing a publication, unlocking
   after a reload, protecting an existing identity and unlocking a legacy key, which was upgraded in storage.
+
+**Scripts served from the app's own origin, under a Content Security Policy.** The page loaded Vue, Vue Router,
+`@vue/devtools-api` and Three.js from unpkg with no integrity check, so whoever controlled that CDN (or the path to
+it) could run code with access to every identity key the page unlocks.
+
+- `scripts/vendor-noble.mjs` became `scripts/vendor.mjs`, which also copies Vue 3.4.31 (the full browser build,
+  since templates compile in the browser), Vue Router 4.4.5, `@vue/devtools-api` 6.6.4 and Three.js 0.160.0 (the
+  module build and `OrbitControls`) into `vendor/`, byte for byte, with each package's license and version. The
+  versions are the ones the CDN URLs named, now pinned exactly in `package.json`. `index.html`'s import map and the
+  browser test runner point at `vendor/`, and the app works offline.
+- `index.html` carries a Content Security Policy: scripts only from the app's origin plus the import map by hash
+  (`'unsafe-eval'` remains for Vue's template compiler), styles and fonts only from the origin, no objects, frames,
+  workers, `<base>` or form submissions. `connect-src` allows any HTTPS/WSS endpoint, because relays, gateways and
+  APIs are user-configurable, and plain HTTP only to localhost (the IPFS node).
+- `tests/VendoredLibraries.test.js` replaces the vendor check in `tests/IdentityCryptography.test.js` and covers every
+  package; `tests/ContentSecurityPolicy.test.js` checks the import map's hash, the directives, and that every
+  import-map entry is a vendored file.
+- New `docs/Deployment.md`: hosting requirements, how to upgrade a vendored library, the policy directive by
+  directive, and the response headers a host should add (`frame-ancestors`, `nosniff`, `Referrer-Policy`,
+  `Permissions-Policy`).
+- In Chromium with every request to another host blocked, all routes render with no policy violations, and the
+  end-to-end run (creating a protected identity, building, saving, publishing and the Repository's thumbnails)
+  passes; an injected inline script and a script from another origin are both refused.
+- CI: `tests/UserConfigurableRendezvousConfiguration.test.js` sent a real lookup to the default rendezvous server.
+  Offline that failed at once; on GitHub's runners it connected, and the open socket kept the test's process
+  alive until the runner's timeout. The test now uses its fake WebSocket, and `tests/support/NodePreload.mjs`
+  makes WebSocket and fetch to any host but this machine fail immediately in every Node test.
+

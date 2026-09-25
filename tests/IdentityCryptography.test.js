@@ -4,7 +4,6 @@ import * as KeyEncryption from '../identity/KeyEncryption.js';
 import { LocalIdentityProvider, MIN_PASSPHRASE_LENGTH } from '../identity/LocalIdentityProvider.js';
 import { IdentityUseCase } from '../application/identity/IdentityUseCase.js';
 import { evaluateNewPassphrase } from '../application/identity/NewPassphrasePolicy.js';
-import { vendorDifferences } from '../scripts/vendor-noble.mjs';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -31,13 +30,6 @@ function throws(fn, pattern) {
         return pattern.test(error.message);
     }
     return false;
-}
-
-// The vendored noble code is exactly what the pinned npm packages contain.
-{
-    const differences = vendorDifferences();
-    assert(differences.length === 0, `vendor/ matches the pinned @noble packages (run node scripts/vendor-noble.mjs):\n  ${differences.join('\n  ')}`);
-    console.log('✓ vendor/ matches the pinned @noble/curves and @noble/hashes packages');
 }
 
 // RFC 8032 test vector 1, and strict verification.
