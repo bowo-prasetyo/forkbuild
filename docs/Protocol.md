@@ -410,6 +410,9 @@ The `ui/main.js` constants and the `*DiscoveryPublisher` /
 `forkbuild-publications` and `forkbuild-index` are local storage keys,
 not wire tags.
 
+The proposed Steem substrate groups by discovery thread instead of by tag;
+see "Proposed: Steem Announcement Substrate" below.
+
 ## Publication Commentary Distribution
 
 `core/PublicationCommentary.js` stays unsigned. Distribution wraps it in a signed envelope
@@ -443,6 +446,129 @@ both. A network failure never undoes the local write. Readers query both substra
 or on "Check for new comments", filter by `publicationId`, and import every candidate through the same verifier.
 A Nostr relay OK means "accepted," not durably stored. On Arweave, "not yet mined," "never published" and "gateway
 unreachable" all surface as `ContentUnavailableError`, and are never reported as "absent."
+
+## Proposed: Steem Announcement Substrate
+
+**Status: proposed, not implemented.** Nothing below exists in code yet. When built, it ships as Experimental
+alongside the other decentralized publication tooling, and this section is edited to describe what was built.
+
+Steem would be a third Announcement/Discovery substrate next to Nostr and Arweave. It carries the same envelopes as
+they do, unchanged, and is only a transport: every candidate is verified by content hash and ForkBuild signature
+through the family's existing verifier. A Steem account never becomes a publisher identity, and the UI never shows
+it as a Publication's author.
+
+Why Steem: blocks every 3 seconds become irreversible within about a minute, so an announcement gets a durable,
+ordered, timestamped place in the chain. A Nostr relay may drop an event, and Steem charges no per-post fee as
+Arweave does. The cost is that announcing needs a registered Steem account with enough Resource Credits. Reading
+needs no account.
+
+### Discovery threads
+
+Announcements are **replies** to a root post per family and month, not top-level posts. Replies stay out of tag
+feeds, so they don't clutter Steem front ends, and a reader finds a family by reading one post's replies instead of
+querying a tag. A discovery thread is a root post by a thread account, `@forkbuild` by default:
+
+    permlink:  forkbuild-<family>-<YYYY-MM>          (UTC month)
+
+| Family | Discovery thread (September 2026) | Envelope |
+|--------|-----------------------------------|----------|
+| Publications | `@forkbuild/forkbuild-publication-2026-09` | core/DecentralizedDiscoveryEnvelope.js |
+| Snapshots | `@forkbuild/forkbuild-snapshot-2026-09` | core/SnapshotDiscoveryEnvelope.js |
+| Place naming | `@forkbuild/forkbuild-place-naming-2026-09` | core/PlaceNamingDiscoveryEnvelope.js |
+| Commentary | `@forkbuild/forkbuild-commentary-2026-09` | core/PublicationCommentaryDistributionEnvelope.js |
+
+Place naming uses one thread for every region, not one per region as its Nostr tag does. Readers filter by the
+envelope's `worldId` and `regionId`.
+
+Threads rotate monthly because `condenser_api.get_content_replies` returns every direct reply at once, without
+paging. One thread per family for all time would grow until API nodes time out. Readers derive the permlinks for a
+time range, so rotation needs no index.
+
+A discovery thread post is broadcast by the thread account as one transaction:
+
+    ['comment', {
+      parent_author: '', parent_permlink: 'forkbuild',     // category
+      author: 'forkbuild', permlink: 'forkbuild-snapshot-2026-09',
+      title: 'ForkBuild snapshot announcements, 2026-09',
+      body: <human-readable explanation of the thread>,
+      json_metadata: JSON.stringify({ tags: ['forkbuild'],
+        forkbuild: { thread: { version: 1, family: 'snapshot', period: '2026-09' } } })
+    }]
+    ['comment_options', {
+      author: 'forkbuild', permlink: 'forkbuild-snapshot-2026-09',
+      max_accepted_payout: '0.000 SBD', percent_steem_dollars: 10000,
+      allow_votes: false, allow_curation_rewards: false, extensions: []
+    }]
+
+`allow_replies` stays true. The thread account's operator creates threads at least twelve months ahead, and never
+turns replies off on a current or future thread. Turning them off is the operator's one lever: it stops new
+announcements on that thread, but cannot remove existing ones, since the chain refuses to delete a post that has
+replies.
+
+### Announcing
+
+An announcement is one transaction of two operations, a reply to the current UTC month's thread for its family and
+its options:
+
+    ['comment', {
+      parent_author: 'forkbuild', parent_permlink: 'forkbuild-snapshot-2026-09',
+      author: <announcer's Steem account>,
+      permlink: 'forkbuild-<base36 ms timestamp>-<8 random [a-z0-9]>',
+      title: '',
+      body: <one or two human-readable lines; never empty, the chain rejects an empty body>,
+      json_metadata: JSON.stringify({ app: 'forkbuild/<app version>',
+        forkbuild: { version: 1, family: 'snapshot', envelope: <the family's envelope object> } })
+    }]
+    ['comment_options', {
+      author, permlink,
+      max_accepted_payout: '0.000 SBD', percent_steem_dollars: 10000,
+      allow_votes: false, allow_curation_rewards: false, extensions: []
+    }]
+
+- Payout is declined and votes are off in the same transaction because these options can only be set before a post
+  has votes. With votes off, the chain rejects every upvote and downvote, so an announcement can't be downvoted.
+- The transaction is signed with the announcer's posting key through Steem Keychain
+  (`steem_keychain.requestBroadcast(account, operations, 'Posting', callback)`), the injected signer that plays the
+  part NIP-07 plays for Nostr. ForkBuild never holds a Steem key.
+- The announcer checks the signed transaction against the chain's 64 KiB transaction size limit before broadcasting,
+  and refuses an oversized one rather than truncating the envelope.
+- If the current month's thread does not exist, announcing fails with a clear error. It never falls back to
+  another thread, so a reader always knows where to look.
+- The one-substrate rule holds: each action announces on exactly one of Nostr, Arweave or Steem, never on several,
+  and a network failure never undoes the local write.
+
+### Reading
+
+1. **Thread set.** Readers read every configured thread account (default `['forkbuild']`). A community can add its
+   own thread account if `@forkbuild` becomes unavailable or stops accepting replies, just as relays are
+   configured for Nostr. For each account and family, readers read every month from the configured earliest period
+   up to the current UTC month.
+2. **API nodes.** Readers use a configured list of API nodes (default `https://api.steemit.com`) and try them in
+   order. Every node serves the same chain, so the first node that answers is enough.
+3. **Fetch.** `condenser_api.get_content_replies(threadAccount, threadPermlink)`. A thread that doesn't exist yields
+   nothing. A thread whose author isn't a configured thread account is ignored.
+4. **Direct replies only.** Readers accept a reply only when its `parent_author` and `parent_permlink` name the
+   thread. They ignore nested replies, which are conversation, not announcements.
+5. **Parse defensively.** Anyone can reply, so readers skip a reply whose `json_metadata` is not JSON, lacks
+   `forkbuild.version === 1`, names a `family` other than the thread's, or has no `envelope`. Readers process at
+   most 2,000 replies per thread and say when they stopped early.
+6. **Verify.** Each envelope goes through the family's existing verifier, exactly as one from Nostr or Arweave does.
+   Readers deduplicate by the envelope's own identifier (for example `commentaryId` or `objectId`), never by Steem
+   author and permlink.
+7. **Ignore Steem signals.** Votes, payout, reputation and front-end muting never affect whether a candidate is
+   accepted.
+8. **Edits.** A reply can be edited, and `get_content_replies` returns only its current version. Readers take that
+   version as the candidate. An edit can only replace one signed envelope with another, because anything unsigned
+   or altered fails verification. Earlier versions stay in the chain's history, but readers don't scan it.
+
+### Status
+
+A broadcast the node accepted means "accepted", not "irreversible". Once the block holding the transaction is at
+or below the chain's `last_irreversible_block_num`, it is "irreversible". A missing thread, a reply not yet visible
+and an unreachable node all surface as `ContentUnavailableError`, and are never reported as "absent."
+
+The same format works on Hive by pointing at Hive API nodes and a Hive thread account. If Hive is added, it is a
+separate substrate choice, never merged with Steem results.
 
 ## Vehicles, animals and inventory
 

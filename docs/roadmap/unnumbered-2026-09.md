@@ -713,3 +713,19 @@ everything ever published or seen: three published hollow pyramids were 16.4 MB,
 - Not changed: editable documents stay in memory, since about twenty places read them synchronously (collision and
   selection against placed structures, World View streaming, search, catalogs, the Editor). Keeping them on disk too
   means making those reads asynchronous, a larger change of its own.
+
+## Steem announcement substrate proposed (unnumbered, 2026-09-25)
+
+**A written proposal for Steem as a third Announcement/Discovery substrate, before any code.** Nostr relays may drop
+events, and Arweave charges per post. Steem blocks become irreversible within about a minute, which gives
+announcements a durable, ordered and timestamped place at no per-post fee.
+
+- `docs/Protocol.md`, "Proposed: Steem Announcement Substrate": announcements are replies to monthly discovery
+  threads (`@forkbuild/forkbuild-<family>-<YYYY-MM>`), not top-level posts, so they stay out of Steem tag feeds.
+  Threads rotate monthly because `get_content_replies` has no paging. Threads and announcements decline payout and
+  turn votes off in the same transaction, so announcements can't be downvoted. Signing goes through Steem Keychain.
+  The existing envelopes are carried unchanged and verified by the existing verifiers. Readers accept direct replies
+  only, ignore votes and reputation, and read configurable thread accounts and API nodes.
+- "Discovery thread", not "anchor", because PublicationAnchor already means anchoring evidence.
+- `docs/Publishing.md` points to the proposal.
+- Not done: no code yet. The `@forkbuild` account exists; its threads have not been created.

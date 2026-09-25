@@ -202,6 +202,10 @@ Distribution".
 A Steem publisher was planned early on (see the Steem examples above) but
 never built. Nostr and Arweave filled that role through the discovery and
 distribution adapters instead, with the `publisher/` contract unchanged.
+Steem is now proposed as a third Announcement/Discovery substrate, not as a
+publisher: announcements are replies to monthly discovery threads posted by
+`@forkbuild`. See `docs/Protocol.md`, "Proposed: Steem Announcement
+Substrate".
 Real-time collaborative editing also exists now, but as command propagation
 with deterministic ordering (0.2.96/0.2.97), not as a publishing feature and
 never via OT or CRDTs; see `docs/Principles.md`, "Ordering Is A Deterministic
