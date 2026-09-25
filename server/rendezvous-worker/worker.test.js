@@ -357,8 +357,19 @@ const MINUTE = 60 * 1000;
     assert(unconfigured.status === 404, 'without METERED_DOMAIN and METERED_SECRET_KEY the endpoint answers 404');
 
     const failing = new RendezvousNode(fakeDurableObjectState(), env);
-    failing.fetchImpl = async () => new Response('down', { status: 503 });
-    assert((await failing.fetch(request())).status === 502, 'a provider failure answers 502');
+    failing.fetchImpl = async () => new Response('{"message":"Invalid secretKey secret-key-value"}', { status: 401 });
+    const failed = await failing.fetch(request());
+    const failure = await failed.json();
+    assert(failed.status === 502 && /creating a credential: .* answered 401/.test(failure.detail), `a provider failure answers 502 naming the step and status (got ${failure.detail})`);
+    assert(!JSON.stringify(failure).includes('secret-key-value'), '...without echoing the secret key');
+
+    const noListing = new RendezvousNode(fakeDurableObjectState(), env);
+    noListing.fetchImpl = async (url) => url.includes('/credential?')
+        ? Response.json({ username: 'u2', password: 'p2', apiKey: 'k2' })
+        : new Response('nope', { status: 500 });
+    const fallback = await (await noListing.fetch(request())).json();
+    assert(fallback.iceServers.some((e) => e.urls === 'turn:standard.relay.metered.ca:443' && e.username === 'u2' && e.credential === 'p2'),
+        'when listing ICE servers fails, the new credential is used with Metered\'s standard relay');
 
     const restricted = new RendezvousNode(fakeDurableObjectState(), { ...env, ALLOWED_ORIGINS: 'https://other.test' });
     restricted.fetchImpl = node.fetchImpl;
