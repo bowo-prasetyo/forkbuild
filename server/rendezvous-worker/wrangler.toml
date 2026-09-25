@@ -40,6 +40,12 @@ new_sqlite_classes = ["RendezvousNode"]
 # whose key is stored as secrets, never in this file:
 #   wrangler secret put CLOUDFLARE_TURN_KEY_ID
 #   wrangler secret put CLOUDFLARE_TURN_API_TOKEN
-# [vars]
-# ALLOWED_ORIGINS = "https://your-forkbuild-deployment.example"
-# TURN_CREDENTIALS_PER_MONTH = "10000"
+[vars]
+# The site this deployment serves: GitHub Pages at
+# https://bowo-prasetyo.github.io/forkbuild/. Browsers on any other origin
+# (including http://localhost for development) are refused; add theirs,
+# comma-separated, to allow them.
+ALLOWED_ORIGINS = "https://bowo-prasetyo.github.io"
+# A cautious starting allowance for TURN relay credentials; raise it as
+# usage shows what is needed.
+TURN_CREDENTIALS_PER_MONTH = "1000"
