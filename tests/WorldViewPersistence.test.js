@@ -1,3 +1,4 @@
+import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
 import { Brick } from '../core/Brick.js';
 import { Building } from '../core/Building.js';
 import { Document } from '../core/Document.js';
@@ -211,7 +212,7 @@ function createFixtureDocument() {
     const savedId = saveUseCase.execute(manager);
     assert(savedId === doc.world.id, 'save uses the world id');
     const stored = storage.load(doc.world.id);
-    assert(stored.world.buildings[0].bricks.length === 2, 'saved document contains the placed brick');
+    assert(storedBricks(stored).length === 2, 'saved document contains the placed brick');
     const manifest = storage.load('forkbuild-index');
     assert(manifest.length === 1 && manifest[0].id === doc.world.id, 'manifest upserted');
     assert(!manager.state.dirty && !history.isDirty(), 'clean after save');
@@ -280,7 +281,7 @@ function createFixtureDocument() {
     nav.saveDocument();
     assert(nav.isDocumentDirty(doc.world.id) === false, 'save clears dirty');
     const stored = storage.load(doc.world.id);
-    assert(stored.world.buildings[0].bricks[0].position.x === 1, 'saved world contains the moved brick');
+    assert(storedBricks(stored)[0].position.x === 1, 'saved world contains the moved brick');
 
     // Publish auto-saves when dirty
     history.execute(new MoveBrickCommand({
@@ -292,7 +293,7 @@ function createFixtureDocument() {
     assert(publication.author === 'alice', 'publish attributed via identity provider');
     assert(nav.isDocumentDirty(doc.world.id) === false, 'publish auto-saved first');
     const storedAfterPublish = storage.load(doc.world.id);
-    assert(storedAfterPublish.world.buildings[0].bricks[0].position.y === 1.5, 'published content matches live document');
+    assert(storedBricks(storedAfterPublish)[0].position.y === 1.5, 'published content matches live document');
 
     // Streaming unload pinning: dirty documents survive leaving the radius
     nav._spatialCameraController = {

@@ -272,7 +272,19 @@ backend: window.localStorage by default, or the IndexedDB backend
 imports ui/main.js, so nothing reads storage before it is ready.
 
 The IndexedDB backend reads every entry into memory when it opens and
-answers reads from that copy. Writes change the copy at once and are
+answers reads from that copy, except cold entries: published content
+(`content:`) and snapshots (`snapshot:`), whose names only are read. A
+cold entry written leaves memory once stored; `loadAsync()` (backend
+`loadItem()`) reads one into a most-recently-used cache of 16 M
+characters (the latest one always stays); a synchronous `load()` of one
+not in memory throws StorageEntryNotLoadedError, whose `ready` promise is
+already reading it (`retryWhenLoaded()` wraps a synchronous reader for an
+async caller). LocalContentStore's `get()` is therefore asynchronous, like
+every ContentStore, with `getSync()` for World View streaming, which skips
+a world whose content is still being read and loads it on a later
+refresh, staying synchronous itself. Editable documents stay in memory:
+about twenty places read them synchronously (collision, selection,
+search, catalogs). Writes change the copy at once and are
 committed in the background, one transaction per task. flushLocalStorage()
 commits what is waiting with strict durability and resolves once
 everything is stored; the Editor's Save (ui/components/saveDocument.js)
@@ -295,6 +307,15 @@ operation (docs/Principles.md, "Save is not Publish"):
 | Save | SaveDocumentUseCase | `{documentId}`, plus a DocumentManifest revision | the editable copy; overwritten on every save |
 | Autosave | AutosaveDocumentUseCase, run by AutosaveScheduler | `recovery:{documentId}` (persistence/LocalRecoveryStore.js) | a recovery checkpoint only; never cleans the dirty flag or publishes |
 | Publish | PublishDocumentUseCase → PublisherProvider | `snapshot:{publicationId}`, and a Publication record in `forkbuild-publications` | an immutable snapshot |
+
+Stored, published and exported documents use document schema 2, which
+keeps each building's bricks as one table (core/BrickTable.js: palettes of
+definitions and colors, the ids, and six numbers per brick) rather than
+one object per brick; Building/World/Document `toJSON()` write it when
+asked for `compactBricks`, and `Building.fromJSON()` reads either form.
+New bricks get 12-character ids (`createBrickId()`). Together these make
+a large build about a fifth of its former size, and serializing,
+hashing and parsing it several times faster.
 
 Every document that enters the domain goes through the same pipeline:
 parse → DocumentSchemaMigrator.migrate() (bring the envelope to
@@ -941,13 +962,27 @@ terrain TerrainStreamingControllers and the AnimationLoop (see
 docs/RendererLifecycle.md). The Editor and World View build it the same
 way, through RenderWorldUseCase and RenderWorldViewUseCase.
 
-- WorldRenderer turns domain events into meshes, one at a time, and
-  records them in MeshRegistry; structure placements are drawn from
-  their resolved documents and tracked in PlacementMeshRegistry.
-  BrickRenderer and ThreeBrickFactory build a brick's mesh from its
-  definitionId.
-- PickingService answers "what brick is here" and "where does the ray
-  hit the ground"; AvatarPickingService does the same for avatars.
+- WorldRenderer turns domain events into brick instances, one at a
+  time, in BrickInstanceRegistry: bricks are not meshes of their own but
+  instances of one InstancedMesh per definition and 16-unit cube of
+  space (a chunk), so a scene costs one draw call per chunk, and frustum
+  culling and raycasting skip whole chunks. Each instance carries its
+  transform, its color (instanceColor over one shared white material)
+  and a highlight (an `instanceEmissive` attribute the material's shader
+  adds to its emissive light); a chunk grows by doubling, and removing a
+  brick moves the chunk's last instance into its slot. The registry maps
+  brick ids to documents and buildings and answers position, bounds,
+  highlight and ray-hit questions for picking, selection and presence.
+  Structure placements are still standalone meshes, drawn from their
+  resolved documents and tracked in PlacementMeshRegistry.
+  BrickRenderer describes a brick (definition, transform, color) and,
+  with ThreeBrickFactory, builds standalone meshes for placements,
+  previews and thumbnails; ThreeBrickFactory also supplies the geometry
+  instances share.
+- PickingService answers "what brick is here" (a ray hit on a chunk,
+  resolved through the instance id; the hit normal includes the
+  instance's rotation) and "where does the ray hit the ground";
+  AvatarPickingService does the same for avatars.
 - Overlays: SelectionRenderer, SpatialSelectionRenderer,
   PreviewRenderer, SpatialPreviewRenderer, StructurePreviewRenderer,
   CompositionPreviewRenderer, and the gizmo (TransformGizmoRenderer draws

@@ -1,5 +1,5 @@
 import { Position } from './Position.js';
-import { createId } from './createId.js';
+import { createBrickId } from './createId.js';
 
 // A Brick is a placement: which definition, where, and how rotated. It
 // never carries geometry — that lives behind BrickRegistry, looked up by
@@ -11,7 +11,7 @@ export class Brick {
     // Brick Color: set at placement time (PlaceBrickCommand) or later via
     // the undoable SetBrickColorCommand; never required, so an existing
     // World with no colors set renders exactly as it always has.
-    constructor({ id = createId(), definitionId, position = new Position(), rotation = 0, color = null }) {
+    constructor({ id = createBrickId(), definitionId, position = new Position(), rotation = 0, color = null }) {
         this._id = id;
         this._definitionId = definitionId;
         this._position = position;

@@ -1,4 +1,5 @@
 
+import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
 import { Brick } from '../core/Brick.js';
 import { Building } from '../core/Building.js';
 import { Document } from '../core/Document.js';
@@ -94,7 +95,7 @@ async function run() {
         assert(exported !== null, '1. ExportDocumentUseCase.execute() returns something for a real document');
         assert(exported.schemaVersion === DOCUMENT_SCHEMA_VERSION, '2. exported artifact carries the schema envelope version');
         assert(exported.world.buildings.length === 1, '3. exported artifact contains the building');
-        assert(exported.world.buildings[0].bricks.length === 5, '4. exported artifact contains every brick');
+        assert(storedBricks(exported).length === 5, '4. exported artifact contains every brick');
         assert(exported.world.groups.length === 1 && exported.world.groups[0].name === 'ExportGroup',
             '5. exported artifact contains the group');
         assert(exported.metadata.title === 'Export Test World', '6. exported artifact contains metadata (title)');

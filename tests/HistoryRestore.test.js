@@ -187,7 +187,7 @@ function createEmptyBuildingDocument() {
     assert(!result.history.isDirty(), 'save point established in rebased history');
     const stored = storage.load(document.world.id);
     assert(
-        JSON.stringify(stored.world) === JSON.stringify(expected.toJSON()),
+        JSON.stringify(stored.world) === JSON.stringify(expected.toJSON({ compactBricks: true })),
         'saved document is the restored state'
     );
 
@@ -327,7 +327,7 @@ function createEmptyBuildingDocument() {
     assert(publication.author === 'alice', 'publication attributed via identity provider');
     const publishedPayload = storage.load(doc.world.id);
     assert(
-        JSON.stringify(publishedPayload.world) === JSON.stringify(expected.toJSON()),
+        JSON.stringify(publishedPayload.world) === JSON.stringify(expected.toJSON({ compactBricks: true })),
         'published document is the restored state'
     );
     assert(storage.load('forkbuild-publications').length === 1, 'publication record persisted');

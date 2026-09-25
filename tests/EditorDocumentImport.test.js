@@ -1,3 +1,4 @@
+import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -351,12 +352,12 @@ async function run() {
             })() },
             { label: 'invalid nested structure (non-numeric brick position)', json: (() => {
                 const clone = JSON.parse(JSON.stringify(validDoc));
-                clone.world.buildings[0].bricks[0].position = { x: 'not-a-number', y: 0, z: 0 };
+                corruptFirstBrickPosition(clone, 'not-a-number');
                 return clone;
             })() },
             { label: 'invalid nested structure (bricks as an object)', json: (() => {
                 const clone = JSON.parse(JSON.stringify(validDoc));
-                clone.world.buildings[0].bricks = { not: 'an array' };
+                clone.world.buildings[0].brickTable = { not: 'an array' };
                 return clone;
             })() },
             { label: 'invalid nested structure (group with non-string brickIds)', json: (() => {

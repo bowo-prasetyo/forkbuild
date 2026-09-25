@@ -12,14 +12,20 @@ that produces these formats.
   versioned independently of the application and stamped into
   DocumentMetadata as `protocolVersion`; a document must match it
   exactly.
-- `DOCUMENT_SCHEMA_VERSION` (core/documentSchema.js) is `1`. It versions
+- `DOCUMENT_SCHEMA_VERSION` (core/documentSchema.js) is `2`. It versions
   the JSON envelope only, and serializer/DocumentSchemaMigrator.js
   migrates older envelopes forward before anything reads them. Documents
-  written before 0.2.0 have no `schemaVersion` and are treated as 0.
+  written before 0.2.0 have no `schemaVersion` and are treated as 0;
+  schema 1 stored bricks as objects, schema 2 as a table (see "Brick
+  table" below). An app that predates schema 2 refuses schema 2
+  documents as newer than it supports.
 - Most other formats carry their own `formatVersion` or `schemaVersion`
   (currently 1) and a `kind` string where several formats share a carrier.
-- Instance ids (World, Building, Brick, Group, Publication, …) are
-  UUIDs from core/createId.js, opaque and never reused. Definition ids
+- Instance ids (World, Building, Group, Publication, …) are UUIDs from
+  core/createId.js, opaque and never reused. Brick ids created since
+  schema 2 are 12 random characters from `[0-9A-Za-z]`
+  (`createBrickId()`); older bricks keep their UUIDs, and nothing may
+  assume either shape. Definition ids
   such as `core:cube` or `village:house` are stable, namespaced type ids
   (docs/BrickIDs.md). Identity ids are did:key strings derived from an
   Ed25519 public key.
@@ -59,10 +65,10 @@ same envelope, produced by DocumentSerializer (canonical: serializing,
 deserializing and serializing again gives byte-identical JSON):
 
     {
-      schemaVersion: 1,
+      schemaVersion: 2,
       world: {
         id, metadata,
-        buildings: [ { id, creator, library, bricks: [Brick] } ],
+        buildings: [ { id, creator, library, brickTable: BrickTable } ],
         groups: [ { id, name, brickIds } ],
         placements: [ { id, documentId, position, rotation } ],        // StructurePlacements
         landmarks: [ { id, worldId, authorIdentityId, title, description, position } ],
@@ -77,7 +83,7 @@ deserializing and serializing again gives byte-identical JSON):
       }
     }
 
-    Brick: { id, definitionId, position: { x, y, z }, rotation, color }
+    Brick: { id, definitionId, position: { x, y, z }, rotation, color }   // in memory, and in schema 1
 
 - `rotation` is degrees around Y. Translate and rotate are the only
   transforms; there is no scale.
@@ -89,6 +95,32 @@ deserializing and serializing again gives byte-identical JSON):
   canonical JSON (FNV-1a, 32-bit, hex). `core/ContentReference.js`
   records the algorithm (`fnv1a-32` today), so a stronger hash can be
   introduced without changing the reference shape.
+
+### Brick table (schema 2)
+
+A building's bricks are stored as one table rather than one object each
+(core/BrickTable.js):
+
+    BrickTable: {
+      definitions: [ definitionId ],   // each definitionId used, in first-use order
+      colors: [ color ],               // each non-null color used, in first-use order
+      ids: [ brickId ],                // one per brick, in brick order
+      values: [ d, x, y, z, r, c, … ]  // six numbers per brick
+    }
+
+For brick `i`, `values[6i … 6i+5]` are the index of its definition in
+`definitions`, its position `x`, `y`, `z`, its `rotation` in degrees, and
+`0` for no color or `1 +` the index of its color in `colors`. Bricks keep
+their order, so the table is canonical: the same World always produces
+the same table. The migration from schema 1 turns each `bricks` array
+into a table and changes nothing else; brick ids, including UUIDs, are
+kept. A published schema 1 snapshot keeps its bytes, so its content hash
+still verifies.
+
+The table is about a quarter of the object form's size with UUID brick
+ids, and a fifth with short ones: the hollow 233-base pyramid (54,289
+bricks) is 7.49 MB as objects with UUIDs, 3.09 MB as a table with the
+same ids, and 1.79 MB built anew.
 
 ### Brick Color
 
@@ -146,7 +178,9 @@ Local storage keys (through a StorageProvider):
 - `{documentId}`: the editable document;
 - `snapshot:{publicationId}`: the immutable published snapshot;
 - `forkbuild-publications`: the list of Publication records;
-- `recovery:{documentId}`: an autosave checkpoint.
+- `recovery:{documentId}`: an autosave checkpoint, and
+  `recovery-info:{documentId}`: its `{ revision }`, so autosave and Save
+  need not read the whole checkpoint.
 
 A snapshot is loaded only after its bytes match `contentHash`. A
 DiscoveryProvider answers `list()`, `findById()`, `findByAuthor()`,
@@ -236,6 +270,28 @@ reads `payload`.
 | `forkbuild:snapshot-content-transfer` | application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js | Snapshot bytes |
 | `forkbuild:world-encounter-material` | application/worldEncounter/PeerWorldEncounterMaterialSource.js | encounter content |
 | `forkbuild:commentary-distribution` | core/PublicationCommentaryDistributionEnvelope.js | see "Publication Commentary Distribution" |
+
+### Large content in parts
+
+`forkbuild:content` and `forkbuild:snapshot-content-transfer` send
+content that does not fit one message (their RESPONSE takes at most
+48 KiB) as `RESPONSE_PART` messages instead
+(application/peer/ChunkedPeerTransfer.js). Each carries the same fields
+that name the content as a RESPONSE (`hash`, or `publicationId` and
+`contentHash`) plus:
+
+    { transferId, index, count, totalLength, part }
+
+`part` is a slice of the content's text whose JSON-escaped length is at
+most 60 KiB, so the message fits MAX_PEER_MESSAGE_BYTES; the parts of one
+`transferId`, joined in `index` order, are `totalLength` characters long.
+A transfer is at most 64 MiB (8,192 parts). The sender waits while the
+data channel's send buffer holds more than 1 MiB. The receiver accepts
+parts only for content it requested in the last five minutes, holds at
+most two transfers at once, drops a transfer idle for 30 s, and checks the
+joined content exactly like a RESPONSE (for `forkbuild:content`, also that
+`totalLength` matches the catalogued size). Content that fits is still
+one RESPONSE, and a peer that predates `RESPONSE_PART` ignores it.
 
 Each protocol owns its own replay, ordering and deduplication rules.
 Unless noted, a message carries no signature of its own and relies on

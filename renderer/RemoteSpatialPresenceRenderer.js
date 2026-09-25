@@ -91,15 +91,15 @@ function buildLabelSprite(primaryText, secondaryText, colorCss) {
 // only, never identity-resolving.
 //
 // Selection outlines are computed directly from already-built meshes —
-// via the SAME meshRegistry/placementMeshRegistry
+// via the SAME brickInstances/placementMeshRegistry
 // renderer/SpatialSelectionRenderer.js already reads — never from a
 // second, independent geometry source. A brickId or placementId this
 // renderer doesn't recognize (streamed out, or belonging to a document
 // this replica hasn't loaded) simply shows no outline; the marker and
 // label are unaffected.
 export class RemoteSpatialPresenceRenderer {
-    constructor(meshRegistry, placementMeshRegistry = null, terrainHeightAt = null) {
-        this._meshRegistry = meshRegistry;
+    constructor(brickInstances, placementMeshRegistry = null, terrainHeightAt = null) {
+        this._brickInstances = brickInstances;
         this._placementMeshRegistry = placementMeshRegistry;
         this._terrainHeightAt = typeof terrainHeightAt === 'function' ? terrainHeightAt : () => 0;
         this._entries = new Map(); // deviceId -> { group, marker, label, outline, sprite }
@@ -226,19 +226,17 @@ export class RemoteSpatialPresenceRenderer {
         if (!selection || selection.isEmpty) {
             return;
         }
-        const meshes = selection.kind === 'placement' && this._placementMeshRegistry
-            ? this._placementMeshRegistry.getMeshes(selection.placementId)
-            : (selection.kind === 'brick' && this._meshRegistry
-                ? [this._meshRegistry.getMesh(selection.brickId)].filter(Boolean)
-                : []);
-        if (!meshes || meshes.length === 0) {
-            return; // not a known local mesh — nothing to outline yet
-        }
         const worldBox = new THREE.Box3();
-        for (const mesh of meshes) {
-            worldBox.expandByObject(mesh);
+        if (selection.kind === 'placement' && this._placementMeshRegistry) {
+            for (const mesh of this._placementMeshRegistry.getMeshes(selection.placementId)) {
+                worldBox.expandByObject(mesh);
+            }
+        } else if (selection.kind === 'brick' && this._brickInstances) {
+            const bounds = this._brickInstances.getBounds(selection.brickId);
+            if (bounds) worldBox.union(bounds);
         }
         if (worldBox.isEmpty()) {
+            // not a known local brick or placement — nothing to outline yet
             return;
         }
         // entry.group is itself positioned at the marker's own world

@@ -1,7 +1,7 @@
 import { Document } from '../../core/Document.js';
 import { DocumentMetadata } from '../../core/DocumentMetadata.js';
 import { World } from '../../core/World.js';
-import { createId } from '../../core/createId.js';
+import { createBrickId } from '../../core/createId.js';
 
 // The single cloning mechanism for Documents (0.1.42). Deep-clones with
 // fresh identities throughout: a new world.id (the document identity),
@@ -58,7 +58,7 @@ export class DocumentCloneService {
         for (const buildingJson of worldJson.buildings) {
             delete buildingJson.id;
             for (const brickJson of buildingJson.bricks) {
-                const newBrickId = createId();
+                const newBrickId = createBrickId();
                 brickIdMap.set(brickJson.id, newBrickId);
                 brickJson.id = newBrickId;
             }

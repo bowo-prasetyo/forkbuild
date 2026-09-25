@@ -1,6 +1,8 @@
 import { ContentStore } from './ContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
+import { uploadTimeoutMs } from '../utils/uploadTimeout.js';
+import { byteLength } from '../utils/responseSize.js';
 
 const IPFS_URI_PREFIX = 'ipfs://';
 const DEFAULT_API_URL = 'http://127.0.0.1:5001';
@@ -90,7 +92,7 @@ export class IpfsContentStore extends ContentStore {
 
         const form = new FormData();
         form.append('file', new Blob([text], { type: 'application/json' }));
-        const response = await this._request('/api/v0/add?cid-version=1&pin=true', { body: form });
+        const response = await this._request('/api/v0/add?cid-version=1&pin=true', { body: form, timeoutMs: uploadTimeoutMs(this._timeoutMs, byteLength(text)) });
         const parsed = await this._readJson(response, 'add');
         const cid = parsed && parsed.Hash;
         if (!cid) {
@@ -133,9 +135,9 @@ export class IpfsContentStore extends ContentStore {
         }
     }
 
-    async _request(path, { body = null } = {}) {
+    async _request(path, { body = null, timeoutMs = this._timeoutMs } = {}) {
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), this._timeoutMs);
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
         let response;
         try {
             response = await this._fetch(`${this._apiUrl}${path}`, { method: 'POST', body, signal: controller.signal });

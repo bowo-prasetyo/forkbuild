@@ -581,3 +581,135 @@ from memory, and commits writes in the background, one relaxed transaction per t
 - Not changed: the whole dataset stays in memory, which suits the tens of megabytes this app keeps. If published
   content (`content:`, `snapshot:`) grows into hundreds of megabytes, those stores should read IndexedDB
   asynchronously instead.
+
+## Instanced brick rendering (unnumbered, 2026-09-25)
+
+**Bricks are drawn as instances, not one mesh each.** WorldRenderer used to give every brick its own `THREE.Mesh`,
+`BoxGeometry` and material: one draw call per brick, which made builds of tens of thousands of bricks unusable (a
+hollow 233×233 pyramid is 54,289 bricks). `renderer/BrickInstanceRegistry.js` replaces `renderer/MeshRegistry.js`:
+bricks of the same definition within the same 16-unit cube of space share one `InstancedMesh` (a chunk), with one
+material for every chunk and one geometry per definition.
+
+- Per instance: its transform, its color (`instanceColor` over a white material) and a highlight: an
+  `instanceEmissive` attribute that the material's shader (`onBeforeCompile`) adds to its emissive light, so selection
+  looks exactly as `material.emissive` did. A chunk starts at 64 instances and doubles when full; removing a brick
+  moves the chunk's last instance into its slot. Chunks are spatial so frustum culling and the raycaster's
+  bounding-sphere test skip whole regions.
+- The registry maps brick id → document and building, and answers what picking, selection and presence outlines ask
+  (`brickIdForIntersection()`, `getPosition()`, `getBounds()`, `setHighlight()`, `forEachPosition()`).
+  `WorldRenderer#brickInstances` replaces `#meshRegistry`; `PickingService`, `SelectionRenderer`,
+  `SpatialSelectionRenderer` and `RemoteSpatialPresenceRenderer` use it. A picked face's normal now includes the
+  instance's rotation.
+- `BrickRenderer#describe()` gives a brick's definition, transform and resolved color; `ThreeBrickFactory` builds
+  geometry on its own (`createGeometry()`), and still builds standalone meshes for structure placements, previews and
+  thumbnails, which are unchanged.
+- Tests: `tests/BrickInstanceRegistry.test.js` (batching, growth, removal, moves across chunks, WorldRenderer events,
+  picking with rotated instances, marquee, highlights, presence outlines) and
+  `tests/BrickInstanceRenderingBrowser.test.js` (real WebGL: each instance's color and highlight on screen). Seven
+  tests that built fake per-brick meshes now use the registry.
+- Measured in headless Chromium on the hollow pyramid (54,289 cubes, whole pyramid in view): draw calls 54,289 → 316,
+  JavaScript time per `render()` 386 ms → 2.2 ms, building the scene 1.4 s → 0.16 s, JS heap 819 MB → 29 MB, one pick
+  16 ms → 2.6 ms. The solid pyramid (2,135,445 cubes), impossible before, takes 680 draw calls, 5 ms of JavaScript
+  per frame, 9.7 s to build and 813 MB of heap. Frame times there are dominated by software rasterization (no GPU),
+  so they say nothing about a real GPU. In the Editor, the pyramid opens and a clicked brick glows exactly as before
+  (pixel-identical screenshot).
+- Not changed: every brick is drawn, including ones hidden inside a solid build, so a solid pyramid still sends about
+  25 million triangles per frame to the GPU; skipping bricks enclosed on all six sides is the natural next step.
+  Structure placements are still one mesh per brick.
+
+## Sharing large builds (unnumbered, 2026-09-25)
+
+**Large content moves between peers in parts, and large Snapshots are routed to IPFS.** A build's bytes leave a
+device three ways: the peer `forkbuild:content` protocol (publication content by hash), the peer
+`forkbuild:snapshot-content-transfer` protocol (Snapshot materialization), and Snapshot distribution to Arweave or
+IPFS. The two peer protocols refused anything over 48 KB (about 350 bricks), and Arweave took at most 256 KiB. The
+other 48 KB limits (World Encounter material, publication material, discovery envelopes) apply to the signed
+publication record, never to a build, so they stay.
+
+- `application/peer/ChunkedPeerTransfer.js`: content too large for one RESPONSE goes as `RESPONSE_PART` messages, each
+  part's JSON-escaped text at most 60 KiB, so every message fits the 64 KiB peer message limit whatever the content
+  escapes to. The sender pauses while the data channel holds more than 1 MiB (`PeerConnection#bufferedAmount`, new). The
+  receiver (`PartAssembler`) takes parts in any order, ignores duplicates, and accepts parts only for content it
+  requested (`OutstandingRequests`), at most 64 MiB per transfer and two transfers at once, dropping one idle for 30 s;
+  the joined content is hash-checked exactly like a RESPONSE. Content that fits is still one RESPONSE, and older peers
+  ignore the new kind. See docs/Protocol.md, "Large content in parts".
+- Both exchanges report `onTransferProgress()`, and `PeerContentRetrievalCoordinator` and
+  `MaterializeSnapshotFromPeerUseCase` restart their 8 s wait on each part, so the timeout bounds silence rather than
+  the whole transfer.
+- `ContentStore#maxContentBytes` (Infinity unless a store sets one): the Arweave stores take it from the signer's new
+  `maxDataBytes` (the injected wallet signer signs single-chunk transactions, 256 KiB). `executeSnapshotDistributionCommand`
+  refuses a larger build before anything is signed or uploaded, with `ContentTooLargeError`: "This build is 7.4 MB, more
+  than the 256 KB Arweave storage accepts. Choose IPFS storage to distribute it." IPFS has no limit.
+- IPFS uploads (local node, remote pinning) get one more second of timeout per 128 KiB (`utils/uploadTimeout.js`), so
+  a multi-megabyte upload over a slow connection is not cut off; smaller uploads keep their timeouts.
+- Tests: `tests/ChunkedPeerTransfer.test.js` (splitting, validation, reassembly bounds, send-buffer waiting, both
+  exchanges over an authenticated connection, unsolicited and forged parts, timeouts restarting on progress, Arweave
+  refusal and store limits) and `tests/ChunkedPeerTransferWebRtc.test.js`: the hollow 233-base pyramid (54,289 bricks,
+  7.4 MB) crosses a real WebRTC data channel in 141 parts in 0.4 s (on one machine), send buffer peaking at 330 KiB, and
+  arrives verified.
+- Not changed: Arweave storage still means one single-chunk transaction; multi-chunk Arweave uploads (and bundling) are
+  unimplemented, so large builds go to IPFS or directly to peers.
+
+## Compact document format (unnumbered, 2026-09-25)
+
+**Document schema 2 stores bricks as a table, and new bricks get short ids.** Of the 136 bytes a brick took in a
+stored or published document, 36 were its UUID and most of the rest repeated property names. The hollow 233-base
+pyramid was 7.49 MB.
+
+- `core/BrickTable.js`: each building's bricks are one `brickTable`: `definitions` and `colors` palettes in first-use
+  order, `ids`, and six numbers per brick (definition index, x, y, z, rotation, color index or 0). Bricks keep their
+  order, so the form is canonical and content hashes stay meaningful. `Building`/`World#toJSON({ compactBricks })`
+  write it and `Document#toJSON()` asks for it; `Building.fromJSON()` reads either form; `World#toJSON()` without the
+  option is unchanged for in-memory uses (forking, command history).
+- `DOCUMENT_SCHEMA_VERSION` is 2. The schema 1 → 2 migration turns each `bricks` array into a table and changes
+  nothing else, ids included; schema 0 documents migrate through it too. `DocumentValidator` checks the table, naming
+  the brick and field at fault. A published schema 1 snapshot keeps its bytes and still verifies. An app older than
+  this one refuses schema 2 documents as newer than it supports.
+- `createBrickId()`: new bricks, and a fork's copied bricks, get 12 random characters from `[0-9A-Za-z]` (71 bits;
+  about a one-in-a-billion chance of any collision in a two-million-brick document) instead of a 36-character UUID.
+- Hollow pyramid: 7.49 MB → 3.09 MB for an existing document (UUIDs kept), 1.79 MB built new (4.2× smaller); the solid
+  pyramid 290 MB → 70 MB. Serializing it takes 7 ms instead of about 85, stringifying 10 ms instead of 80.
+- Autosave and Save no longer parse the previous checkpoint to learn its revision: `LocalRecoveryStore` keeps a small
+  `recovery-info:{documentId}` record (`RecoveryStore#loadRevision()`), and falls back to the checkpoint for ones
+  written before it. Save no longer parses the checkpoint twice. An autosave of the hollow pyramid (median of repeated
+  runs, storage writing JSON text) takes 28 ms for a new build and 37 ms for one with UUIDs, instead of 119–135 ms.
+- Tests: `tests/CompactDocumentFormat.test.js` (codec, validation, short ids, canonical round trip, schema 0/1
+  migration with UUIDs and groups, old snapshots verifying, forks, sizes, revision reads); twelve tests that read
+  stored bricks directly now go through `tests/support/StoredDocumentBricks.js`, and the historical fixtures gain
+  `SCHEMA_1_DOCUMENT` next to a schema 2 `CURRENT_DOCUMENT`. In the browser, a schema 1 document written the old way
+  opens in the Editor and is saved back as schema 2.
+- Not done: autosave still writes the whole document. At hollow-pyramid scale that is now cheap; a change-only
+  checkpoint (a base plus a journal of brick changes, compacted from time to time) would matter only near the solid
+  pyramid's scale, where saving, loading and memory are all limits anyway.
+
+## Published copies stay on disk (unnumbered, 2026-09-25)
+
+**Published content and snapshots are no longer held in memory.** The IndexedDB backend read every entry into memory
+at startup. Publishing a build stores it three times (the editable document, `snapshot:{publicationId}` and
+`content:{hash}`), and every publication received from peers adds a `content:` entry, so memory and startup grew with
+everything ever published or seen: three published hollow pyramids were 16.4 MB, all resident.
+
+- `IndexedDbStorageBackend`: entries under `COLD_KEY_PREFIXES` (`content:`, `snapshot:`) are cold. `open()` reads
+  every name but only non-cold values (key ranges around the cold prefixes); a cold write stays in memory until stored,
+  then moves to a warm cache (16 M characters, most recently used first, the latest value always kept); `loadItem()`
+  reads one asynchronously (concurrent reads of one entry share a read); `hasItem()`, `keys()` and `isLoaded()` answer
+  without reading. A synchronous `getItem()` of a cold entry not in memory throws `StorageEntryNotLoadedError`
+  (`storage/StorageEntryNotLoadedError.js`) rather than returning null, which would read as "not stored". Other tabs'
+  cold writes update the index and drop the warm copy; entries moved from localStorage are cold too.
+- `LocalStorageProvider#load()` rethrows that error with `ready`, a promise already reading the entry (a failed read
+  never surfaces as an unhandled rejection); `loadAsync()` and `exists()` are new on `StorageProvider`.
+  `retryWhenLoaded(read)` runs a synchronous reader from async code, waiting for each entry it finds on disk.
+- `LocalContentStore#get()` is asynchronous, like every other ContentStore; `has()` checks existence without reading;
+  `getSync()` serves World View. The four UI distribution paths that read it synchronously now await it;
+  `CreateExternalSnapshotPlacementUseCase` reads through `retryWhenLoaded()`.
+- World View streaming stays synchronous (the rule `tests/WorldLifecycleIdentityProductReassessment.test.js` pins): a
+  world whose published content is still on disk is skipped without counting as a failed load, and the next periodic
+  `updateSpatialView()` loads it.
+- Measured in Chromium with three published hollow pyramids: 16.41 MB stored, 5.36 MB held in memory after a restart
+  (the three editable documents); opening the database took 15 ms. The Editor opens them as before.
+- Tests: `tests/ColdStorageBrowser.test.js` (real IndexedDB: names without values at open, reading on demand, the
+  bounded cache, cold writes, removal, two tabs, content moved from localStorage, and a published World loading
+  through `LoadPublishedWorldSessionUseCase` once read) and `tests/StreamingColdContent.test.js`.
+- Not changed: editable documents stay in memory, since about twenty places read them synchronously (collision and
+  selection against placed structures, World View streaming, search, catalogs, the Editor). Keeping them on disk too
+  means making those reads asynchronous, a larger change of its own.

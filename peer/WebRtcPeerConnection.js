@@ -226,6 +226,11 @@ export class WebRtcPeerConnection extends PeerConnection {
         this._dataChannel.send(JSON.stringify(message));
     }
 
+    get bufferedAmount() {
+        const amount = this._dataChannel ? Number(this._dataChannel.bufferedAmount) : 0;
+        return Number.isFinite(amount) ? amount : 0;
+    }
+
     onMessage(callback) {
         this._messageListeners.add(callback);
         return () => this._messageListeners.delete(callback);

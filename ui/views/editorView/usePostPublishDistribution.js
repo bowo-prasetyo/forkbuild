@@ -100,11 +100,11 @@ export function usePostPublishDistribution({
 
     // Sends the Publication's raw snapshot bytes. Like WorldView's version, but
     // with no placement here, claimedPosition and publicationId stay undefined.
-    function distributeEditorSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) {
+    async function distributeEditorSnapshot(publication, storage, remotePinningConfiguration, discoveryProvider) {
         if (!publicationContentStore || !publication.contentReference) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        const snapshotBytes = publicationContentStore.get(publication.contentReference);
+        const snapshotBytes = await publicationContentStore.get(publication.contentReference);
         if (snapshotBytes === null || snapshotBytes === undefined) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }

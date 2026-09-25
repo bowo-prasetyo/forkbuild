@@ -12,4 +12,7 @@
 // Migration between schema versions happens in
 // serializer/DocumentSchemaMigrator.js, BEFORE the JSON enters the
 // domain. Domain classes never see old-format envelopes.
-export const DOCUMENT_SCHEMA_VERSION = 1;
+//
+// Schema 2 stores each building's bricks as a table (core/BrickTable.js)
+// instead of one object per brick.
+export const DOCUMENT_SCHEMA_VERSION = 2;

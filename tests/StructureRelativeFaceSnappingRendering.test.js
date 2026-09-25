@@ -51,7 +51,7 @@ async function run() {
         mesh.updateMatrixWorld();
         placementMeshRegistry.set('placement-1', [mesh]);
 
-        const pickingService = new PickingService(camera, fakeDomElement, { getAllMeshes: () => [] }, placementMeshRegistry);
+        const pickingService = new PickingService(camera, fakeDomElement, { pickableObjects: () => [] }, placementMeshRegistry);
 
         const hit = pickingService.pickPlacement(SCREEN_CENTER_X, SCREEN_CENTER_Y);
         assert(hit && hit.placementId === 'placement-1', '1. pickPlacement() still resolves the placementId exactly as before 0.9.611');
@@ -99,7 +99,7 @@ async function run() {
         placementMeshRegistry.set('placement-near', [near]);
         placementMeshRegistry.set('placement-far', [far]);
 
-        const pickingService = new PickingService(camera, fakeDomElement, { getAllMeshes: () => [] }, placementMeshRegistry);
+        const pickingService = new PickingService(camera, fakeDomElement, { pickableObjects: () => [] }, placementMeshRegistry);
         const hit = pickingService.pickPlacement(SCREEN_CENTER_X, SCREEN_CENTER_Y);
         assert(hit.placementId === 'placement-near',
             '7. of two placements along the same ray, only the NEARER one is ever reported — multi-neighbor determinism is inherited from THREE.Raycaster returning hits nearest-first, never a candidate-list policy this codebase wrote (matching tests/StructureRelativeSnappingBoundaryAudit.test.js\'s own Section F finding)');

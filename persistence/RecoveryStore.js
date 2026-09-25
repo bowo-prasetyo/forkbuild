@@ -19,4 +19,10 @@ export class RecoveryStore {
     exists(documentId) {
         throw new Error('RecoveryStore.exists() must be implemented by a subclass');
     }
+    // The checkpoint's revision, or 0 when there is none. A store that can
+    // answer without reading the whole checkpoint overrides this.
+    loadRevision(documentId) {
+        const checkpoint = this.load(documentId);
+        return checkpoint && Number.isFinite(checkpoint.revision) ? checkpoint.revision : 0;
+    }
 }

@@ -18,6 +18,7 @@ import { ThreeBrickFactory } from '../renderer/ThreeBrickFactory.js';
 import {
     PRE_GROUPS_DOCUMENT,
     GROUPS_DOCUMENT,
+    SCHEMA_1_DOCUMENT,
     CURRENT_DOCUMENT
 } from './fixtures/historicalDocuments.js';
 import { assert } from './support/Assert.js';
@@ -278,7 +279,7 @@ async function runRendererTests() {
         const serializer = new DocumentSerializer();
         const registry = new CreateBrickRegistryUseCase().execute();
 
-        for (const fixture of [PRE_GROUPS_DOCUMENT, GROUPS_DOCUMENT, CURRENT_DOCUMENT]) {
+        for (const fixture of [PRE_GROUPS_DOCUMENT, GROUPS_DOCUMENT, SCHEMA_1_DOCUMENT, CURRENT_DOCUMENT]) {
             const doc = serializer.deserialize(fixture);
             for (const b of doc.world.getBuildings()) {
                 for (const brick of b.getBricks()) {

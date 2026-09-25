@@ -70,7 +70,11 @@ export class PublicationCatalogContentResolver extends ContentResolver {
     _readBytes(publicationId) {
         const publication = this._publicationCatalog.get(publicationId);
         if (!publication || !publication.contentReference) return null;
-        const bytes = this._contentStore.get(publication.contentReference);
+        // Synchronous; content kept on disk throws StorageEntryNotLoadedError
+        // until loaded (see storage/StorageEntryNotLoadedError.js#retryWhenLoaded()).
+        const bytes = typeof this._contentStore.getSync === 'function'
+            ? this._contentStore.getSync(publication.contentReference)
+            : this._contentStore.get(publication.contentReference);
         return bytes === null || bytes === undefined ? null : bytes;
     }
 }

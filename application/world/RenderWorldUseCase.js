@@ -12,7 +12,7 @@ import { TransformMath } from '../editor/TransformMath.js';
 // Wires the rendering pipeline up to a container element, the domain
 // EventBus, and the editor EventBus, then starts it. Also wires up
 // PickingService, SelectionRenderer, PreviewRenderer, and the interactive
-// transform gizmo, all against the same camera/canvas/MeshRegistry the
+// transform gizmo, all against the same camera/canvas/brick instances the
 // renderer already built. The caller gets pick(screenX, screenY),
 // pickGround(screenX, screenY), and a narrow gizmo surface on the
 // returned handle and never needs to know Renderer, WorldRenderer, or
@@ -34,7 +34,7 @@ export class RenderWorldUseCase {
         const pickingService = new PickingService(
             renderer.camera,
             renderer.domElement,
-            worldRenderer.meshRegistry,
+            worldRenderer.brickInstances,
             // 0.2.91 — a second, separate mesh source so a placement's
             // bricks can be picked back to their placementId, never a
             // brickId. See renderer/PickingService.js's own constructor
@@ -42,7 +42,7 @@ export class RenderWorldUseCase {
             // this stays a distinct registry rather than merged in.
             worldRenderer.placementMeshRegistry
         );
-        const selectionRenderer = new SelectionRenderer(worldRenderer.meshRegistry, worldRenderer.placementMeshRegistry);
+        const selectionRenderer = new SelectionRenderer(worldRenderer.brickInstances, worldRenderer.placementMeshRegistry);
         selectionRenderer.subscribe(editorEventBus);
         const previewRenderer = new PreviewRenderer(renderer);
         previewRenderer.subscribe(editorEventBus);

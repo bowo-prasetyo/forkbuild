@@ -60,7 +60,7 @@ function createTestDocument(brickCount = 3) {
     const doc = createTestDocument();
     const json = doc.toJSON();
     assert(json.schemaVersion === DOCUMENT_SCHEMA_VERSION, 'schemaVersion present in envelope');
-    assert(json.schemaVersion === 1, 'schemaVersion is 1');
+    assert(json.schemaVersion === 2, 'schemaVersion is 2');
     assert(json.world !== undefined, 'world present');
     assert(json.metadata !== undefined, 'metadata present');
     console.log('✓ schema version in serialized envelope');
@@ -242,7 +242,7 @@ function createTestDocument(brickCount = 3) {
     // Create a document with invalid structure by manually corrupting it.
     const doc = createTestDocument();
     const json = doc.toJSON();
-    json.world.buildings[0].bricks[0].definitionId = ''; // corrupt
+    json.world.buildings[0].brickTable.definitions[0] = ''; // corrupt
     // Try to publish the corrupted version.
     const corruptDoc = Document.fromJSON(json);
     const manager = new DocumentManager();

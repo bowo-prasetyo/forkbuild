@@ -122,7 +122,7 @@ export function useIpfsRemotePublishing({
         entry.ipfsPublicationContentVerification = null;
         entry.ipfsRemoteSnapshotAnnouncement = null;
         try {
-            const bytes = publicationContentStore.get(entry.publication.contentReference);
+            const bytes = await publicationContentStore.get(entry.publication.contentReference);
             if (bytes === null || bytes === undefined) {
                 throw new Error('local snapshot bytes are not available — refusing to publish it externally');
             }

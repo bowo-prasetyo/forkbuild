@@ -56,11 +56,11 @@ export function usePublicationDistribution({
         });
     }
 
-    function distributeEntrySnapshot(entry) {
+    async function distributeEntrySnapshot(entry) {
         if (!snapshotDistributionCommand || !publicationContentStore || !entry.publication.contentReference) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        const snapshotBytes = publicationContentStore.get(entry.publication.contentReference);
+        const snapshotBytes = await publicationContentStore.get(entry.publication.contentReference);
         if (snapshotBytes === null || snapshotBytes === undefined) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }

@@ -30,7 +30,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //              independent sets of meshes, proving the composite
 //              placementId-keyed tracking (never brick-id-keyed) works
 //   Section C: placement meshes are added to the low-level renderer but
-//              deliberately NEVER registered with meshRegistry — not
+//              deliberately NEVER registered with brickInstances — not
 //              pickable yet, named and deferred to 0.2.91
 //   Section D: removeWorld() removes every placement mesh it added
 //   Section E: event-driven (Editor) mode — STRUCTURE_PLACEMENT_ADDED/
@@ -120,7 +120,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section C: placement meshes are not pickable via meshRegistry
+    // Section C: placement meshes are not pickable via brickInstances
     // -------------------------------------------------------------
     {
         const storage = new InMemoryStorageProvider();
@@ -141,8 +141,8 @@ async function run() {
         worldRenderer.addWorld(village, 'village-doc', { x: 0, y: 0, z: 0 });
 
         assert(meshes.size === 2, '7. sanity: one ordinary brick + one placement brick were both added to the scene');
-        assert(worldRenderer.meshRegistry.getAllMeshes().length === 1,
-            '8. only the ORDINARY building brick is registered with meshRegistry — the placement brick is visible but not pickable (0.2.91)');
+        assert(worldRenderer.brickInstances.size === 1,
+            '8. only the ORDINARY building brick is registered with brickInstances — the placement brick is visible but not pickable (0.2.91)');
     }
 
     // -------------------------------------------------------------
@@ -262,7 +262,7 @@ async function run() {
 
     console.log('✓ Section A: addWorld() — position + rotation composition against the containing document\'s own offset/terrain');
     console.log('✓ Section B: the same Document placed twice renders two independent instances, no id collision');
-    console.log('✓ Section C: placement meshes render but are deliberately not registered with meshRegistry (not pickable yet)');
+    console.log('✓ Section C: placement meshes render but are deliberately not registered with brickInstances (not pickable yet)');
     console.log('✓ Section D: removeWorld() cleans up every placement mesh it added');
     console.log('✓ Section E: event-driven (Editor) mode renders/removes placements via STRUCTURE_PLACEMENT_ADDED/REMOVED');
     console.log('✓ Section F: graceful absence — no resolver, or an unresolvable documentId, never throws');

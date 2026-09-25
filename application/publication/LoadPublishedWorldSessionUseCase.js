@@ -27,7 +27,12 @@ export class LoadPublishedWorldSessionUseCase {
         let snapshotJson;
         
         if (publication.contentReference && this._contentStore) {
-            const bytes = this._contentStore.get(publication.contentReference);
+            // Synchronous: World View streaming calls this while the camera
+            // moves. Content stored on disk only throws
+            // StorageEntryNotLoadedError (with `ready`) until it is loaded.
+            const bytes = typeof this._contentStore.getSync === 'function'
+                ? this._contentStore.getSync(publication.contentReference)
+                : this._contentStore.get(publication.contentReference);
             if (!bytes) {
                 throw new Error(`LoadPublishedWorldSessionUseCase: content not found for hash ${publication.contentReference.hash}`);
             }

@@ -211,8 +211,8 @@ async function runTests() {
             const worldRenderer = new WorldRenderer(fakeRenderer, registry);
             const world = buildOneBrickWorld(3);
             worldRenderer.addWorld(world, 'doc-legacy', { x: 10, y: 0, z: 10 });
-            const mesh = Array.from(meshes)[0];
-            assert(mesh.position.y === 3, '27. A renderer without terrainHeightAt() behaves exactly as before 0.2.76 — no ground offset applied, backward compatible with every existing WorldRenderer test');
+            const [brick] = world.getBuildings()[0].getBricks();
+            assert(worldRenderer.brickInstances.getPosition(brick.id).y === 3, '27. A renderer without terrainHeightAt() behaves exactly as before 0.2.76 — no ground offset applied, backward compatible with every existing WorldRenderer test');
         }
 
         // D2 — a fake renderer WITH terrainHeightAt(x, z) lifts every
@@ -235,7 +235,7 @@ async function runTests() {
             world.addBuilding(building);
 
             worldRenderer.addWorld(world, 'doc-terrain', { x: 120, y: 0, z: -80 });
-            const positions = Array.from(meshes).map((m) => m.position.y).sort();
+            const positions = building.getBricks().map((b) => worldRenderer.brickInstances.getPosition(b.id).y).sort();
             assert(JSON.stringify(positions) === JSON.stringify([7.5, 8.5]), '28. Every brick in the building is lifted by the SAME 7.5 ground offset — the whole building moves as one rigid unit, never deformed per brick');
             assert(groundSamples.every((s) => s.x === 120 && s.z === -80), '29. The ground is sampled at the DOCUMENT\'s own placement position (120, -80), never per-brick');
         }
@@ -253,8 +253,7 @@ async function runTests() {
             const worldRenderer = new WorldRenderer(fakeRenderer, registry);
             const brick = new Brick({ definitionId: 'core:cube', position: new Position(0, 2, 0) });
             worldRenderer._onBrickAdded('building-x', brick); // buildingId with no known document -> falls back to origin offset
-            const mesh = Array.from(meshes)[0];
-            assert(mesh.position.y === 6.25, '30. Editor-mode (event-driven, no documentId) brick placement also gets a terrain-based ground lift, sampled at the origin');
+            assert(worldRenderer.brickInstances.getPosition(brick.id).y === 6.25, '30. Editor-mode (event-driven, no documentId) brick placement also gets a terrain-based ground lift, sampled at the origin');
         }
     }
 

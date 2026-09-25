@@ -1,5 +1,6 @@
 import { StorageProvider } from './StorageProvider.js';
 import { StorageFullError, isStorageFullError } from './StorageFullError.js';
+import { StorageEntryNotLoadedError, isStorageEntryNotLoadedError } from './StorageEntryNotLoadedError.js';
 
 const KEY_PREFIX = 'forkbuild:';
 
@@ -23,12 +24,39 @@ export class LocalStorageProvider extends StorageProvider {
         currentBackend().setItem(name, String(JSON.stringify(data)));
     }
 
+    // Throws StorageEntryNotLoadedError for an entry the backend keeps on
+    // disk only and has not loaded (published content and snapshots over
+    // IndexedDB); its `ready` resolves to what load() would have returned,
+    // and the entry is then loaded for a while.
     load(name) {
-        const raw = currentBackend().getItem(name);
+        let raw;
+        try {
+            raw = currentBackend().getItem(name);
+        } catch (error) {
+            if (isStorageEntryNotLoadedError(error)) {
+                const ready = this.loadAsync(name);
+                // A caller may only retry later rather than await this; a
+                // failed read must not then surface as an unhandled rejection.
+                ready.catch(() => {});
+                throw new StorageEntryNotLoadedError(name, ready);
+            }
+            throw error;
+        }
         if (raw === null) {
             return null;
         }
         return JSON.parse(raw);
+    }
+
+    async loadAsync(name) {
+        const backend = currentBackend();
+        const raw = typeof backend.loadItem === 'function' ? await backend.loadItem(name) : backend.getItem(name);
+        return raw === null ? null : JSON.parse(raw);
+    }
+
+    exists(name) {
+        const backend = currentBackend();
+        return typeof backend.hasItem === 'function' ? backend.hasItem(name) : backend.getItem(name) !== null;
     }
 
     remove(name) {

@@ -1,3 +1,4 @@
+import { BrickInstanceRegistry } from '../renderer/BrickInstanceRegistry.js';
 import * as THREE from 'three';
 import { WorldRenderer } from '../renderer/WorldRenderer.js';
 import { PlacementMeshRegistry } from '../renderer/PlacementMeshRegistry.js';
@@ -36,7 +37,7 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //   Section A: renderer/PlacementMeshRegistry.js — CRUD, mesh uuid ->
 //              placementId resolution
 //   Section B: renderer/WorldRenderer.js — placement meshes land in
-//              placementMeshRegistry, never meshRegistry (0.2.90's own
+//              placementMeshRegistry, never brickInstances (0.2.90's own
 //              claim, now from the OTHER side)
 //   Section C: renderer/PickingService.js#pickPlacement() — REAL
 //              raycasting resolves a hit on a placement's brick back to
@@ -121,7 +122,7 @@ async function run() {
     }
 
     // -------------------------------------------------------------
-    // Section B: WorldRenderer -> placementMeshRegistry, never meshRegistry
+    // Section B: WorldRenderer -> placementMeshRegistry, never brickInstances
     // -------------------------------------------------------------
     {
         const storage = new InMemoryStorageProvider();
@@ -139,8 +140,8 @@ async function run() {
         const worldRenderer = new WorldRenderer(renderer, registry, undefined, undefined, resolver, TransformMath);
         worldRenderer.addWorld(village, 'village-doc', { x: 0, y: 0, z: 0 });
 
-        assert(worldRenderer.meshRegistry.getAllMeshes().length === 0,
-            '12. the placement\'s brick is NOT registered with meshRegistry (unchanged 0.2.90 claim)');
+        assert(worldRenderer.brickInstances.size === 0,
+            '12. the placement\'s brick is NOT registered with brickInstances (unchanged 0.2.90 claim)');
         assert(worldRenderer.placementMeshRegistry.getAllMeshes().length === 1,
             '13. ...but IS registered with placementMeshRegistry (the 0.2.91 addition)');
         assert(worldRenderer.placementMeshRegistry.getPlacementId(worldRenderer.placementMeshRegistry.getAllMeshes()[0].uuid) === placement.id,
@@ -154,7 +155,7 @@ async function run() {
         const camera = makeTopDownCamera();
 
         // No placementMeshRegistry at all — graceful null, never throws.
-        const bareService = new PickingService(camera, fakeDomElement, { getAllMeshes: () => [] });
+        const bareService = new PickingService(camera, fakeDomElement, { pickableObjects: () => [] });
         assert(bareService.pickPlacement(SCREEN_CENTER_X, SCREEN_CENTER_Y) === null,
             '15. pickPlacement() is null when no placementMeshRegistry was injected');
 
@@ -164,8 +165,8 @@ async function run() {
         mesh.updateMatrixWorld();
         placementMeshRegistry.set('placement-1', [mesh]);
 
-        const brickMeshRegistry = { getAllMeshes: () => [] }; // deliberately empty — placements are disjoint from bricks
-        const pickingService = new PickingService(camera, fakeDomElement, brickMeshRegistry, placementMeshRegistry);
+        const brickInstances = { pickableObjects: () => [] }; // deliberately empty — placements are disjoint from bricks
+        const pickingService = new PickingService(camera, fakeDomElement, brickInstances, placementMeshRegistry);
 
         const hit = pickingService.pickPlacement(SCREEN_CENTER_X, SCREEN_CENTER_Y);
         assert(hit && hit.placementId === 'placement-1', '16. a centered ray resolves the placement mesh back to its placementId');
@@ -223,17 +224,15 @@ async function run() {
     // WHOLE instance
     // -------------------------------------------------------------
     {
-        const brickMeshA = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x4caf7d }));
-        const brickMeshRegistry = {
-            getMesh: (id) => (id === 'brick-1' ? brickMeshA : null)
-        };
+        const brickInstances = new BrickInstanceRegistry({ add() {}, remove() {} });
+        brickInstances.add('brick-1', 'doc', 'building-1', { definitionId: 'core:cube', x: 0, y: 0.5, z: 0, rotationY: 0, color: 0x4caf7d });
         const placementMeshRegistry = new PlacementMeshRegistry();
         const instanceMesh1 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x4caf7d }));
         const instanceMesh2 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x4caf7d }));
         placementMeshRegistry.set('placement-1', [instanceMesh1, instanceMesh2]);
 
         const editorEventBus = new EventBus();
-        const selectionRenderer = new SelectionRenderer(brickMeshRegistry, placementMeshRegistry);
+        const selectionRenderer = new SelectionRenderer(brickInstances, placementMeshRegistry);
         selectionRenderer.subscribe(editorEventBus);
 
         editorEventBus.publish(EditorEvent.SELECTION_CHANGED, {
@@ -241,16 +240,16 @@ async function run() {
         });
         assert(instanceMesh1.material.emissive.getHex() !== 0, '29. a placement selection highlights every mesh of that instance');
         assert(instanceMesh2.material.emissive.getHex() !== 0, '30. ...both meshes, not just the first');
-        assert(brickMeshA.material.emissive.getHex() === 0, '31. an ordinary brick is never highlighted by a placement selection');
+        assert(brickInstances.getHighlight('brick-1') === 0, '31. an ordinary brick is never highlighted by a placement selection');
 
         editorEventBus.publish(EditorEvent.SELECTION_CHANGED, {
             selection: new SelectionState({ brickId: 'brick-1', buildingId: 'building-1' })
         });
         assert(instanceMesh1.material.emissive.getHex() === 0, '32. selecting a brick afterward un-highlights the placement\'s meshes');
-        assert(brickMeshA.material.emissive.getHex() !== 0, '33. ...and highlights the brick instead');
+        assert(brickInstances.getHighlight('brick-1') !== 0, '33. ...and highlights the brick instead');
 
         editorEventBus.publish(EditorEvent.SELECTION_CHANGED, { selection: SelectionState.empty() });
-        assert(brickMeshA.material.emissive.getHex() === 0, '34. clearing the selection un-highlights everything');
+        assert(brickInstances.getHighlight('brick-1') === 0, '34. clearing the selection un-highlights everything');
     }
 
     // -------------------------------------------------------------
@@ -342,13 +341,13 @@ async function run() {
         const placedMesh = Array.from(worldRenderer.placementMeshRegistry.getAllMeshes())[0];
         placedMesh.position.set(0, 0, 0); // fake low-level renderer never actually calls updateMatrixWorld via a scene graph
         placedMesh.updateMatrixWorld();
-        const pickingService = new PickingService(camera, fakeDomElement, worldRenderer.meshRegistry, worldRenderer.placementMeshRegistry);
+        const pickingService = new PickingService(camera, fakeDomElement, worldRenderer.brickInstances, worldRenderer.placementMeshRegistry);
         const hit = pickingService.pickPlacement(SCREEN_CENTER_X, SCREEN_CENTER_Y);
         assert(hit && hit.placementId === placement.id, '48. flagship: picking the instance\'s brick resolves the SAME placementId');
 
         // Select it -> highlight.
         const editorContext = new CreateEditorContextUseCase().execute();
-        const selectionRenderer = new SelectionRenderer(worldRenderer.meshRegistry, worldRenderer.placementMeshRegistry);
+        const selectionRenderer = new SelectionRenderer(worldRenderer.brickInstances, worldRenderer.placementMeshRegistry);
         selectionRenderer.subscribe(editorContext.eventBus);
         editorContext.setSelection(new SelectionState({ items: [{ type: 'structure-placement', placementId: hit.placementId }] }));
         assert(placedMesh.material.emissive.getHex() !== 0, '49. flagship: selecting the picked placement highlights its mesh');
@@ -374,7 +373,7 @@ async function run() {
     }
 
     console.log('✓ Section A: renderer/PlacementMeshRegistry.js — CRUD, mesh uuid -> placementId resolution');
-    console.log('✓ Section B: renderer/WorldRenderer.js — placement meshes register with placementMeshRegistry, never meshRegistry');
+    console.log('✓ Section B: renderer/WorldRenderer.js — placement meshes register with placementMeshRegistry, never brickInstances');
     console.log('✓ Section C: renderer/PickingService.js#pickPlacement() — real raycasting resolves a placement hit');
     console.log('✓ Section D: renderer/WorldRenderer.js — STRUCTURE_PLACEMENT_UPDATED re-renders at the new transform');
     console.log('✓ Section E: renderer/SelectionRenderer.js — a placement selection highlights the WHOLE instance');

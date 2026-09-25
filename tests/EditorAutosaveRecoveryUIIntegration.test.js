@@ -1,3 +1,4 @@
+import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
 import { readFile } from 'node:fs/promises';
 
 import { Brick } from '../core/Brick.js';
@@ -450,7 +451,7 @@ async function run() {
         // recorded hash — RecoverDocumentUseCase's own integrity check
         // (unchanged by this milestone) must reject it.
         const raw = stack.storageProvider.load(`recovery:${id}`);
-        raw.document.world.buildings[0].bricks[0].position.x = 'NOT-A-NUMBER';
+        corruptFirstBrickPosition(raw.document);
         stack.storageProvider.save(`recovery:${id}`, raw);
 
         const managerStateBefore = JSON.stringify(manager.state);

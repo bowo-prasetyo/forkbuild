@@ -101,9 +101,9 @@ export const GROUPS_DOCUMENT = {
     // No "schemaVersion" field — pre-0.2.0 documents have none.
 };
 
-// Fixture 3: Current era (0.2.x).
-// Has schemaVersion: 1. Has groups field in world.
-export const CURRENT_DOCUMENT = {
+// Fixture 3: Schema 1 era (0.2.x to 1.0).
+// Has schemaVersion: 1. Has groups field in world. Bricks as objects.
+export const SCHEMA_1_DOCUMENT = {
     schemaVersion: 1,
     world: {
         id: 'fixture-current-world',
@@ -137,6 +137,39 @@ export const CURRENT_DOCUMENT = {
 };
 
 // Fixture 4: Malformed documents for validation testing.
+// Fixture 4: Current era (schema 2): SCHEMA_1_DOCUMENT with its bricks
+// as a table (core/BrickTable.js).
+export const CURRENT_DOCUMENT = {
+    schemaVersion: 2,
+    world: {
+        id: 'fixture-current-world',
+        metadata: {},
+        buildings: [
+            {
+                id: 'fixture-building-3',
+                creator: 'carol',
+                library: 'core',
+                brickTable: {
+                    definitions: ['core:cube'],
+                    colors: [],
+                    ids: ['fixture-brick-6'],
+                    values: [0, 0, 0.5, 0, 0, 0]
+                }
+            }
+        ],
+        groups: []
+    },
+    metadata: {
+        title: 'Current Fixture',
+        author: 'carol',
+        created: '2026-01-01T00:00:00.000Z',
+        modified: '2026-01-01T00:00:00.000Z',
+        protocolVersion: '0.1',
+        engineVersion: '0.2.0',
+        parentDocumentId: null
+    }
+};
+
 export const MALFORMED_NO_WORLD = {
     schemaVersion: 1,
     metadata: {

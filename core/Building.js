@@ -1,5 +1,6 @@
 import { Brick } from './Brick.js';
 import { createId } from './createId.js';
+import { encodeBrickTable, decodeBrickTable } from './BrickTable.js';
 
 // Building owns its bricks. Its addBrick()/removeBrick() are plain
 // mutations with no event publishing — World.addBrickToBuilding() /
@@ -43,15 +44,24 @@ export class Building {
         return Array.from(this._bricks.values());
     }
 
-    toJSON() {
-        return {
+    // compactBricks: write the bricks as one table (core/BrickTable.js),
+    // the form stored and published documents use (schema 2), rather
+    // than one object per brick.
+    toJSON({ compactBricks = false } = {}) {
+        const json = {
             id: this._id,
             creator: this._creator,
-            library: this._library,
-            bricks: this.getBricks().map((brick) => brick.toJSON())
+            library: this._library
         };
+        if (compactBricks) {
+            json.brickTable = encodeBrickTable(this.getBricks());
+        } else {
+            json.bricks = this.getBricks().map((brick) => brick.toJSON());
+        }
+        return json;
     }
 
+    // Reads either form of the bricks: a `brickTable` or a `bricks` array.
     static fromJSON(json) {
         const building = new Building({
             id: json.id,
@@ -59,7 +69,8 @@ export class Building {
             library: json.library
         });
 
-        for (const brickJson of json.bricks) {
+        const bricks = json.brickTable ? decodeBrickTable(json.brickTable) : json.bricks;
+        for (const brickJson of bricks) {
             building.addBrick(Brick.fromJSON(brickJson));
         }
 

@@ -29,7 +29,26 @@
 // second, competing way to spell the same backend's name.
 export class ContentStore {
     get storage() { throw new Error('ContentStore.storage not implemented'); }
+    // The largest content, in UTF-8 bytes, put() can store; Infinity when
+    // the backend sets no limit of its own.
+    get maxContentBytes() { return Infinity; }
     put(bytes) { throw new Error('ContentStore.put() not implemented'); }
     get(reference) { throw new Error('ContentStore.get() not implemented'); }
     has(reference) { throw new Error('ContentStore.has() not implemented'); }
+}
+
+// Thrown when content is larger than a store's maxContentBytes, before
+// anything is uploaded. The message is written for the user.
+export class ContentTooLargeError extends Error {
+    constructor(contentBytes, maxContentBytes, storageLabel) {
+        super(`This build is ${formatBytes(contentBytes)}, more than the ${formatBytes(maxContentBytes)} ${storageLabel} storage accepts. Choose IPFS storage to distribute it.`);
+        this.name = 'ContentTooLargeError';
+        this.contentBytes = contentBytes;
+        this.maxContentBytes = maxContentBytes;
+    }
+}
+
+function formatBytes(bytes) {
+    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${Math.ceil(bytes / 1024)} KB`;
 }

@@ -1,4 +1,5 @@
 import { DOCUMENT_SCHEMA_VERSION } from '../core/documentSchema.js';
+import { encodeBrickTable } from '../core/BrickTable.js';
 
 // Schema migration infrastructure for document envelopes.
 //
@@ -15,8 +16,11 @@ import { DOCUMENT_SCHEMA_VERSION } from '../core/documentSchema.js';
 //   0 (implicit) — pre-0.2.0 documents have no schemaVersion field.
 //                  Structure: { world, metadata }. No groups field in
 //                  world for pre-0.1.43 documents.
-//   1 (current)  — { schemaVersion: 1, world, metadata }. World may
+//   1            — { schemaVersion: 1, world, metadata }. World may
 //                  have a groups field.
+//   2 (current)  — each building's `bricks` array becomes a
+//                  `brickTable` (core/BrickTable.js); nothing else
+//                  changes.
 //
 // The migration from 0 → 1 adds the schemaVersion field. Pre-0.1.43
 // worlds without a groups field are handled by World.fromJSON() which
@@ -37,6 +41,29 @@ registerMigration(0, (json) => ({
     ...json,
     schemaVersion: 1
 }));
+
+// Schema 1 → 2: each building's bricks become a table. Bricks keep their
+// order, ids, positions, rotations and colors.
+registerMigration(1, (json) => {
+    const world = json.world;
+    if (!world || typeof world !== 'object' || !Array.isArray(world.buildings)) {
+        return { ...json, schemaVersion: 2 };
+    }
+    return {
+        ...json,
+        schemaVersion: 2,
+        world: {
+            ...world,
+            buildings: world.buildings.map((building) => {
+                if (!building || typeof building !== 'object' || !Array.isArray(building.bricks)) {
+                    return building;
+                }
+                const { bricks, ...rest } = building;
+                return { ...rest, brickTable: encodeBrickTable(bricks) };
+            })
+        }
+    };
+});
 
 export const DocumentSchemaMigrator = Object.freeze({
     // Returns a new JSON object at DOCUMENT_SCHEMA_VERSION.

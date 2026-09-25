@@ -1,3 +1,4 @@
+import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
 import { World } from '../core/World.js';
@@ -13,6 +14,7 @@ import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js'
 import {
     PRE_GROUPS_DOCUMENT,
     GROUPS_DOCUMENT,
+    SCHEMA_1_DOCUMENT,
     CURRENT_DOCUMENT,
     MALFORMED_NO_WORLD,
     MALFORMED_NO_METADATA,
@@ -95,7 +97,7 @@ function assertThrows(fn, expectedMessage, message) {
     assert(migratedPreGroups.world !== undefined, 'world preserved');
     assert(migratedPreGroups.metadata !== undefined, 'metadata preserved');
     assert(migratedPreGroups.world.buildings.length === 1, 'buildings preserved');
-    assert(migratedPreGroups.world.buildings[0].bricks.length === 2, 'bricks preserved');
+    assert(storedBricks(migratedPreGroups).length === 2, 'bricks preserved');
 
     // Groups document (no schemaVersion, has groups).
     const migratedGroups = DocumentSchemaMigrator.migrate(GROUPS_DOCUMENT);
@@ -110,6 +112,11 @@ function assertThrows(fn, expectedMessage, message) {
         'current document stays at current version');
     assert(JSON.stringify(migratedCurrent) === JSON.stringify(CURRENT_DOCUMENT),
         'current document is unchanged by migration');
+
+    // Schema 1 document: its bricks become a table (schema 2), nothing else changes.
+    const migratedSchema1 = DocumentSchemaMigrator.migrate(SCHEMA_1_DOCUMENT);
+    assert(JSON.stringify(migratedSchema1) === JSON.stringify(CURRENT_DOCUMENT),
+        'a schema 1 document migrates to exactly its schema 2 form');
 
     console.log('✓ DocumentSchemaMigrator: pre-0.2.0 → current');
 }
@@ -135,6 +142,10 @@ function assertThrows(fn, expectedMessage, message) {
     assert(groupsDoc.world.getGroups().length === 1, 'groups count');
     assert(groupsDoc.world.getGroups()[0].name === 'Walls', 'group name');
     assert(groupsDoc.world.getGroups()[0].memberCount === 2, 'group member count');
+
+    // Schema 1 document.
+    const schema1Doc = serializer.deserialize(SCHEMA_1_DOCUMENT);
+    assert(schema1Doc.world.getBuildings()[0].getBricks()[0].id === 'fixture-brick-6', 'schema 1 bricks load');
 
     // Current document.
     const currentDoc = serializer.deserialize(CURRENT_DOCUMENT);
@@ -295,7 +306,7 @@ function assertThrows(fn, expectedMessage, message) {
     });
     const json = doc.toJSON();
     assert(json.schemaVersion === DOCUMENT_SCHEMA_VERSION, 'toJSON includes schemaVersion');
-    assert(json.schemaVersion === 1, 'schemaVersion is 1');
+    assert(json.schemaVersion === 2, 'schemaVersion is 2');
 
     console.log('✓ Document.toJSON always includes schemaVersion');
 }
