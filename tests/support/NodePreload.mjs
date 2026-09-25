@@ -36,3 +36,39 @@ for (const [name, value] of Object.entries({ ...webRtc, RTCPeerConnection })) {
         globalThis[name] = value;
     }
 }
+
+// Tests never reach the internet. WebSocket and fetch to anything but this
+// machine fail at once, as they would with no network: otherwise a test
+// that accidentally reaches a real server passes offline but, where the
+// network is open, depends on that server and can hold its process open.
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+function isLoopback(url) {
+    try { return LOOPBACK_HOSTS.has(new URL(String(url)).hostname); } catch { return true; }
+}
+
+const NodeWebSocket = globalThis.WebSocket;
+if (NodeWebSocket) {
+    globalThis.WebSocket = class WebSocket extends EventTarget {
+        constructor(url, protocols) {
+            if (isLoopback(url)) return new NodeWebSocket(url, protocols);
+            super();
+            this.url = String(url);
+            this.readyState = WebSocket.CONNECTING;
+            setTimeout(() => {
+                this.readyState = WebSocket.CLOSED;
+                this.dispatchEvent(new Event('error'));
+                this.dispatchEvent(Object.assign(new Event('close'), { code: 1006, reason: '', wasClean: false }));
+            }, 0);
+        }
+        send() { throw new Error('WebSocket is not open'); }
+        close() {}
+    };
+    Object.assign(globalThis.WebSocket, { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 });
+}
+
+const nodeFetch = globalThis.fetch;
+globalThis.fetch = (input, init) => {
+    const url = typeof input === 'object' && input !== null && 'url' in input ? input.url : input;
+    if (!isLoopback(url)) return Promise.reject(new TypeError(`fetch failed: tests do not reach the internet (${url})`));
+    return nodeFetch(input, init);
+};

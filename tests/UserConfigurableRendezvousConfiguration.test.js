@@ -534,10 +534,16 @@ async function run() {
         const identityProvider = new LocalIdentityProvider(new InMemoryStorageProvider());
         identityProvider.login('regression-tester');
 
+        // No fake server is registered, so every connection fails at once:
+        // a unit test never reaches the real rendezvous service.
+        const unreachable = new Map();
         for (const urls of [DEFAULT_RENDEZVOUS_URLS, ['wss://regression-check.example']]) {
             const bootstrap = new DiscoveryBootstrap({
                 bootstrapProviders: urls.map((url) => new RendezvousDiscoveryProvider({
-                    transport: new WebSocketRendezvousTransport({ url }),
+                    transport: new WebSocketRendezvousTransport({
+                        url,
+                        WebSocketImpl: class extends FakeWebSocket { constructor(u) { super(u, unreachable); } }
+                    }),
                     identityProvider
                 }))
             });
