@@ -215,13 +215,13 @@ async function runTests() {
         const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1));
         mesh.position.set(0, 0, 0);
         mesh.updateMatrixWorld();
-        const fakeMeshRegistry = {
-            getAllMeshes: () => [mesh],
-            getBrickId: () => 'brick-1',
+        const fakeBrickInstances = {
+            pickableObjects: () => [mesh],
+            brickIdForIntersection: () => 'brick-1',
             getDocumentId: () => 'doc-1',
             getBuildingId: () => 'building-1'
         };
-        const pickingService = new PickingService(camera, fakeDomElement, fakeMeshRegistry);
+        const pickingService = new PickingService(camera, fakeDomElement, fakeBrickInstances);
         const result = pickingService.pickRich(400, 300);
         assert(result && result.type === 'brick', '17. pickRich still resolves a brick hit exactly as before');
         assert(Number.isFinite(result.distance) && result.distance > 0, '18. pickRich now also exposes the raycaster\'s own hit distance');

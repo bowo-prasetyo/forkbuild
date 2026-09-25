@@ -20,9 +20,13 @@ const NO_HIGHLIGHT_COLOR = 0x000000;
 // always mutually exclusive by construction — selecting one clears the
 // other (see selectMany/select/selectPlacement below), and clear()/
 // clearSelection() always clear both.
+//
+// Brick highlights are instance highlights in
+// renderer/BrickInstanceRegistry.js; a placement's meshes glow through
+// their own material's emissive color.
 export class SpatialSelectionRenderer {
-    constructor(meshRegistry, placementMeshRegistry = null) {
-        this._meshRegistry = meshRegistry;
+    constructor(brickInstances, placementMeshRegistry = null) {
+        this._brickInstances = brickInstances;
         this._placementMeshRegistry = placementMeshRegistry;
         this._selectedBrickIds = new Set();
         this._primaryBrickId = null;
@@ -118,17 +122,17 @@ export class SpatialSelectionRenderer {
     }
 
     _applyHighlight(brickId) {
-        const mesh = this._meshRegistry.getMesh(brickId);
-        if (!mesh || !mesh.material || !mesh.material.emissive) return;
+        if (!brickId || !this._brickInstances.has(brickId)) return;
 
         const isSelected = this._selectedBrickIds.has(brickId);
         const isPrimary = this._primaryBrickId === brickId;
         const isHovered = this._hoveredBrickId === brickId;
 
-        if (isSelected && isHovered) mesh.material.emissive.setHex(COMBINED_COLOR);
-        else if (isPrimary) mesh.material.emissive.setHex(PRIMARY_SELECTION_COLOR);
-        else if (isSelected) mesh.material.emissive.setHex(SELECTION_COLOR);
-        else if (isHovered) mesh.material.emissive.setHex(HOVER_COLOR);
-        else mesh.material.emissive.setHex(NO_HIGHLIGHT_COLOR);
+        let color = NO_HIGHLIGHT_COLOR;
+        if (isSelected && isHovered) color = COMBINED_COLOR;
+        else if (isPrimary) color = PRIMARY_SELECTION_COLOR;
+        else if (isSelected) color = SELECTION_COLOR;
+        else if (isHovered) color = HOVER_COLOR;
+        this._brickInstances.setHighlight(brickId, color);
     }
 }

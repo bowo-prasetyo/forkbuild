@@ -1,26 +1,29 @@
 import { BuildingRenderer } from './BuildingRenderer.js';
-import { MeshRegistry } from './MeshRegistry.js';
+import { BrickInstanceRegistry } from './BrickInstanceRegistry.js';
 import { PlacementMeshRegistry } from './PlacementMeshRegistry.js';
 import { AnimalRenderer } from './AnimalRenderer.js';
 import { AnimalVisual } from './AnimalVisual.js';
 import { DomainEvent } from '../core/events/Event.js';
 
 // WorldRenderer has no render(world) sweep. It subscribes to the domain
-// events World publishes and reacts incrementally — one event, one mesh
-// created or removed — instead of deleting and rebuilding everything on
-// every change. This is the same approach editors like Blender or Unity
+// events World publishes and reacts incrementally — one event, one brick
+// added, updated or removed — instead of deleting and rebuilding everything
+// on every change. This is the same approach editors like Blender or Unity
 // use to keep a scene view in sync with a document.
 //
 // BuildingAdded/BuildingRemoved handle bulk changes (a whole building,
 // possibly already containing bricks — e.g. on initial load). BrickAdded/
-// BrickRemoved handle single-brick changes. Both paths go through
-// BuildingRenderer -> BrickRenderer -> BrickRegistry -> ThreeBrickFactory,
-// exactly as before; only how they get triggered has changed.
+// BrickRemoved handle single-brick changes. Each brick is described by
+// BuildingRenderer -> BrickRenderer -> BrickRegistry (definition, color,
+// transform) and drawn as one instance in renderer/BrickInstanceRegistry.js,
+// which batches bricks of the same definition and region of space into
+// one InstancedMesh — so a build of tens of thousands of bricks costs a
+// few hundred draw calls, not one per brick.
 //
-// meshRegistry is exposed via a getter so PickingService (constructed
+// brickInstances is exposed via a getter so PickingService (constructed
 // alongside this in RenderWorldUseCase) can resolve raycast hits back to
-// brick/building ids without WorldRenderer needing to know PickingService
-// exists.
+// brick/building ids, and the selection renderers can highlight bricks,
+// without WorldRenderer needing to know either exists.
 //
 // 0.2.90 — Structure Placement & World Instances. A StructurePlacement
 // (core/StructurePlacement.js) is rendered by resolving its documentId
@@ -31,14 +34,15 @@ import { DomainEvent } from '../core/events/Event.js';
 // without any synchronization machinery: there is only ever one
 // authoritative representation of a structure's bricks to draw from.
 //
-// Placement meshes are tracked in their OWN registry
-// (`_placementMeshRegistry`, renderer/PlacementMeshRegistry.js, keyed by
-// placementId), deliberately NEVER registered with `meshRegistry` — the
+// A placement's bricks are standalone meshes (not instances), tracked in
+// their OWN registry (`_placementMeshRegistry`,
+// renderer/PlacementMeshRegistry.js, keyed by placementId), deliberately
+// NEVER registered with `brickInstances` — the
 // same Document placed twice (House at A, House at B) would otherwise
 // mint the SAME brick ids twice into a registry keyed by brick id alone.
 // 0.2.91 gives PickingService its OWN second raycast against this
 // registry instead (application/world/RenderWorldUseCase.js wires
-// placementMeshRegistry in alongside meshRegistry) — a placed
+// placementMeshRegistry in alongside brickInstances) — a placed
 // structure's individual bricks are still never individually pickable,
 // but the WHOLE instance now is, resolved via mesh uuid -> placementId
 // rather than mesh uuid -> brickId.
@@ -58,7 +62,7 @@ export class WorldRenderer {
         renderer,
         registry,
         buildingRenderer = new BuildingRenderer(registry),
-        meshRegistry = new MeshRegistry(),
+        brickInstances = null,
         structureResolver = null,
         transformMath = null,
         animalRenderer = new AnimalRenderer()
@@ -66,7 +70,7 @@ export class WorldRenderer {
         this._renderer = renderer;
         this._registry = registry;
         this._buildingRenderer = buildingRenderer;
-        this._meshRegistry = meshRegistry;
+        this._brickInstances = brickInstances || new BrickInstanceRegistry(renderer);
         this._structureResolver = structureResolver;
         this._transformMath = transformMath;
         // 0.9.702 — World Animal Decorations. Reuses the SAME
@@ -78,7 +82,7 @@ export class WorldRenderer {
         this._animalRenderer = animalRenderer;
         // decorationId -> AnimalVisual, one per decoration, for the
         // identical "look it up by id to remove/re-render it" job
-        // `_meshRegistry`/`_placementMeshRegistry` already do for
+        // `_brickInstances`/`_placementMeshRegistry` already do for
         // bricks/placements — simpler than either, since a decoration
         // is a single static visual, never a per-mesh collection.
         this._animalDecorationVisuals = new Map();
@@ -103,18 +107,18 @@ export class WorldRenderer {
         // resolve a raycast hit on a placement's brick back to the
         // instance it belongs to — the enabling change for "select the
         // whole instance." Exposed via its own getter below, mirroring
-        // meshRegistry's own getter exactly.
+        // brickInstances' own getter exactly.
         this._placementMeshRegistry = new PlacementMeshRegistry();
         this._placementToDocument = new Map();
     }
 
-    get meshRegistry() {
-        return this._meshRegistry;
+    get brickInstances() {
+        return this._brickInstances;
     }
 
     // 0.2.91 — read by application/world/RenderWorldUseCase.js to construct
     // PickingService with a second, placement-aware mesh source, exactly
-    // the way meshRegistry already is.
+    // the way brickInstances already is.
     get placementMeshRegistry() {
         return this._placementMeshRegistry;
     }
@@ -165,11 +169,7 @@ export class WorldRenderer {
         for (const building of world.getBuildings()) {
             this._buildingToDocument.set(building.id, documentId);
             for (const brick of building.getBricks()) {
-                const { brickId, mesh } = this._buildingRenderer.renderBrick(brick);
-                mesh.position.x += offset.x;
-                mesh.position.y += offset.y + groundY;
-                mesh.position.z += offset.z;
-                this._addBrickMesh(brickId, documentId, building.id, mesh);
+                this._addBrick(brick, documentId, building.id, offset, groundY);
             }
         }
         for (const placement of world.getStructurePlacements()) {
@@ -182,7 +182,7 @@ export class WorldRenderer {
         }
     }
 
-    // Remove every mesh belonging to a specific world. Called during
+    // Remove every brick and mesh belonging to a specific world. Called during
     // spatial unload — the world itself is not mutated, only its
     // visual representation is removed from the renderer.
     removeWorld(world, documentId) {
@@ -190,7 +190,7 @@ export class WorldRenderer {
         for (const building of world.getBuildings()) {
             this._buildingToDocument.delete(building.id);
             for (const brick of building.getBricks()) {
-                this._removeBrickMesh(brick.id);
+                this._brickInstances.remove(brick.id);
             }
         }
         for (const placement of world.getStructurePlacements()) {
@@ -207,71 +207,56 @@ export class WorldRenderer {
         const documentId = this._buildingToDocument.get(building.id);
         const offset = this._documentOffsets.get(documentId) || { x: 0, y: 0, z: 0 };
         const groundY = this._terrainOffsetY(offset.x, offset.z);
-        for (const { brickId, mesh } of this._buildingRenderer.renderBricks(building)) {
-            mesh.position.x += offset.x;
-            mesh.position.y += offset.y + groundY;
-            mesh.position.z += offset.z;
-            this._addBrickMesh(brickId, documentId, building.id, mesh);
+        for (const brick of building.getBricks()) {
+            this._addBrick(brick, documentId, building.id, offset, groundY);
         }
     }
 
     _onBuildingRemoved(building) {
         for (const brick of building.getBricks()) {
-            this._removeBrickMesh(brick.id);
+            this._brickInstances.remove(brick.id);
         }
     }
 
     _onBrickAdded(buildingId, brick) {
         const documentId = this._buildingToDocument.get(buildingId);
         const offset = this._documentOffsets.get(documentId) || { x: 0, y: 0, z: 0 };
-        const groundY = this._terrainOffsetY(offset.x, offset.z);
-        const { brickId, mesh } = this._buildingRenderer.renderBrick(brick);
-        mesh.position.x += offset.x;
-        mesh.position.y += offset.y + groundY;
-        mesh.position.z += offset.z;
-        this._addBrickMesh(brickId, documentId, buildingId, mesh);
+        this._addBrick(brick, documentId, buildingId, offset, this._terrainOffsetY(offset.x, offset.z));
     }
 
     _onBrickRemoved(brick) {
-        this._removeBrickMesh(brick.id);
+        this._brickInstances.remove(brick.id);
     }
 
+    // Move, rotate and Choose Your Brick Color's SetBrickColorCommand all
+    // publish BRICK_UPDATED; the brick is described afresh (the same
+    // "instance override wins, else the definition's own default" color
+    // resolution as when it was added) and its instance rewritten.
     _onBrickUpdated(buildingId, brick) {
-        const mesh = this._meshRegistry.getMesh(brick.id);
-        if (!mesh) {
+        if (!this._brickInstances.has(brick.id)) {
             return;
         }
-        const documentId = this._meshRegistry.getDocumentId(brick.id);
+        const documentId = this._brickInstances.getDocumentId(brick.id);
         const offset = this._documentOffsets.get(documentId) || { x: 0, y: 0, z: 0 };
-        const groundY = this._terrainOffsetY(offset.x, offset.z);
-        mesh.position.set(
-            brick.position.x + offset.x,
-            brick.position.y + offset.y + groundY,
-            brick.position.z + offset.z
-        );
-        mesh.rotation.y = brick.rotation * (Math.PI / 180);
-        this._applyBrickColor(mesh, brick);
+        this._brickInstances.update(brick.id, this._worldVisual(brick, offset, this._terrainOffsetY(offset.x, offset.z)));
     }
 
-    // Choose Your Brick Color — SetBrickColorCommand mutates a brick
-    // in place and publishes the SAME BRICK_UPDATED event MoveBrickCommand/
-    // RotateBrickCommand already use, so an already-rendered mesh (built
-    // once, at BRICK_ADDED, with whatever color applied then) needs its
-    // material updated in place here too — mirrors renderer/BrickRenderer.js's
-    // own "instance override wins, else the definition's own default"
-    // resolution exactly, so a live recolor and a fresh render of the
-    // same brick always agree.
-    _applyBrickColor(mesh, brick) {
-        if (!mesh.material || !mesh.material.color) {
-            return;
-        }
-        const definition = this._registry ? this._registry.get(brick.definitionId) : null;
-        const color = brick.color !== null && brick.color !== undefined
-            ? brick.color
-            : (definition ? definition.color : null);
-        if (color !== null && color !== undefined) {
-            mesh.material.color.setHex(color);
-        }
+    // Adding a brick id that is already drawn replaces it (see
+    // BrickInstanceRegistry#add()), so a document streaming out and back
+    // in, or any re-add without a remove in between, can never leave an
+    // orphaned, unpickable copy behind.
+    _addBrick(brick, documentId, buildingId, offset, groundY) {
+        this._brickInstances.add(brick.id, documentId, buildingId, this._worldVisual(brick, offset, groundY));
+    }
+
+    // A brick's description in world coordinates: its own position plus
+    // its document's layout offset and ground elevation.
+    _worldVisual(brick, offset, groundY) {
+        const visual = this._buildingRenderer.describeBrick(brick);
+        visual.x += offset.x;
+        visual.y += offset.y + groundY;
+        visual.z += offset.z;
+        return visual;
     }
 
     // 0.2.90 — mirrors _onBuildingAdded's own offset lookup exactly:
@@ -324,7 +309,7 @@ export class WorldRenderer {
         if (!placedWorld) {
             return;
         }
-        // Bug fix — same defensive guard as _addBrickMesh() above: a
+        // Bug fix — same defensive guard as _addBrick() above: a
         // stale entry already registered under this placement.id would
         // otherwise be silently overwritten by the set() call below,
         // orphaning its OLD meshes in the scene (never removed from the
@@ -394,7 +379,7 @@ export class WorldRenderer {
     // renderer/AnimalFieldRenderer.js#setAnimal() already takes for a
     // live released animal.
     _renderAnimalDecoration(decoration, offset) {
-        // Bug-fix guard, the same one _addBrickMesh()/_renderStructurePlacement()
+        // Bug-fix guard, the same one _addBrick()/_renderStructurePlacement()
         // already take: never let a stale visual already registered
         // under this id be silently overwritten/orphaned.
         this._removeAnimalDecorationVisual(decoration.id);
@@ -449,41 +434,5 @@ export class WorldRenderer {
         return typeof this._renderer.terrainHeightAt === 'function'
             ? this._renderer.terrainHeightAt(x, z)
             : 0;
-    }
-
-    // Bug fix — defensively removes any mesh ALREADY registered under
-    // this brickId before adding the new one. Every call site of
-    // _addBrickMesh() already believes it is adding a brick that isn't
-    // currently tracked, but nothing previously verified that: if this
-    // ever ran twice for the same brickId without a clean
-    // _removeBrickMesh() in between (e.g. a document rapidly streaming
-    // out and back in — see addWorld()/_onBrickAdded() above — racing
-    // against its own removeWorld() cleanup), the OLD mesh's
-    // MeshRegistry entry would simply be overwritten, orphaning the OLD
-    // Three.js object in the scene forever: still rendered (never
-    // removed from the renderer), but no longer reachable through
-    // meshRegistry — and renderer/PickingService.js's own pick()/
-    // pickRich() raycast EXCLUSIVELY against meshRegistry.getAllMeshes(),
-    // never the raw scene graph (see its own header). An orphaned mesh
-    // is therefore permanently unpickable and, since collision
-    // (application/avatar/AvatarMovementConstraint.js) reads
-    // WorldNavigationSession's own _loadedDocuments — a completely
-    // separate structure this class never touches — an orphan is
-    // exactly a visible-but-unselectable-and-uncollidable ghost: solid
-    // to the eye, absent to every other system. This one-line guard
-    // makes that outcome structurally impossible, regardless of what
-    // upstream condition ever causes a re-add without a prior remove.
-    _addBrickMesh(brickId, documentId, buildingId, mesh) {
-        this._removeBrickMesh(brickId);
-        this._meshRegistry.set(brickId, documentId, buildingId, mesh);
-        this._renderer.add(mesh);
-    }
-
-    _removeBrickMesh(brickId) {
-        const mesh = this._meshRegistry.getMesh(brickId);
-        if (mesh) {
-            this._renderer.remove(mesh);
-            this._meshRegistry.delete(brickId);
-        }
     }
 }

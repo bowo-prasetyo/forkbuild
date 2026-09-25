@@ -10,22 +10,25 @@ import { WorldPosition } from '../core/WorldPosition.js';
 // separate concerns built on top of this. Picking does not depend on
 // Selection or Preview; they depend on it.
 //
+// Bricks are instances in renderer/BrickInstanceRegistry.js's batched
+// meshes; a hit is resolved back to its brick through that registry.
+//
 // pickInRectangle is deliberately a CENTER test — a brick counts when
-// its mesh's world position projects inside the rectangle. Full
+// its world position projects inside the rectangle. Full
 // projected-bounds intersection is future work; center-in-rect is the
 // V0.1 simplification and matches how most editors feel at brick scale.
 export class PickingService {
     // placementMeshRegistry (0.2.91, optional) — a second, SEPARATE mesh
     // source (renderer/PlacementMeshRegistry.js) for pickPlacement()
-    // below. Kept apart from meshRegistry rather than merged into it:
+    // below. Kept apart from brickInstances rather than merged into it:
     // a placed structure's bricks are deliberately never registered
-    // with meshRegistry at all (renderer/WorldRenderer.js's own 0.2.90
+    // with brickInstances at all (renderer/WorldRenderer.js's own 0.2.90
     // header), so ordinary brick picking is completely unaffected by
     // whether a caller also constructs this with a placement registry.
-    constructor(camera, domElement, meshRegistry, placementMeshRegistry = null) {
+    constructor(camera, domElement, brickInstances, placementMeshRegistry = null) {
         this._camera = camera;
         this._domElement = domElement;
-        this._meshRegistry = meshRegistry;
+        this._brickInstances = brickInstances;
         this._placementMeshRegistry = placementMeshRegistry;
         this._raycaster = new THREE.Raycaster();
         this._groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -49,30 +52,21 @@ export class PickingService {
         const ndc = this._toNormalizedDeviceCoordinates(screenX, screenY);
         this._raycaster.setFromCamera(ndc, this._camera);
 
-        const meshes = this._meshRegistry.getAllMeshes();
-        const intersections = this._raycaster.intersectObjects(meshes, false);
+        const objects = this._brickInstances.pickableObjects();
+        const intersections = this._raycaster.intersectObjects(objects, false);
         if (intersections.length === 0) {
             return null;
         }
 
         const hit = intersections[0];
-        const hitMesh = hit.object;
-        const brickId = this._meshRegistry.getBrickId(hitMesh.uuid);
+        const brickId = this._brickInstances.brickIdForIntersection(hit);
         if (!brickId) {
             return null;
         }
 
-        const documentId = this._meshRegistry.getDocumentId(brickId);
-        const buildingId = this._meshRegistry.getBuildingId(brickId);
-
-        let normal = { x: 0, y: 1, z: 0 };
-        if (hit.face) {
-            const n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize();
-            const nx = Math.abs(n.x) > 0.5 ? Math.sign(n.x) : 0;
-            const ny = Math.abs(n.y) > 0.5 ? Math.sign(n.y) : 0;
-            const nz = Math.abs(n.z) > 0.5 ? Math.sign(n.z) : 0;
-            normal = { x: nx, y: ny, z: nz };
-        }
+        const documentId = this._brickInstances.getDocumentId(brickId);
+        const buildingId = this._brickInstances.getBuildingId(brickId);
+        const normal = hitNormal(hit);
 
         return {
             type: 'brick',
@@ -94,7 +88,7 @@ export class PickingService {
 
     // 0.2.91 — World Instance Editing & Placement Management. Raycasts
     // against ONLY the placement mesh registry (a completely separate
-    // mesh set from meshRegistry, see the constructor's own note) and
+    // mesh set from brickInstances, see the constructor's own note) and
     // resolves a hit back to the placementId that owns it — never a
     // brickId, matching "select the whole instance" exactly. Returns
     // null when there's no placementMeshRegistry (an older caller, a
@@ -119,19 +113,11 @@ export class PickingService {
             return null;
         }
 
-        // 0.9.611 — the same face-normal extraction pickRich() already
-        // does above, reused verbatim: StructurePlacementTool needs a
-        // hit face's normal to snap a new structure flush against this
-        // one, exactly like PlacementTool already does for bricks via
-        // pickedBrick.normal.
-        let normal = { x: 0, y: 1, z: 0 };
-        if (hit.face) {
-            const n = hit.face.normal.clone().transformDirection(hit.object.matrixWorld).normalize();
-            const nx = Math.abs(n.x) > 0.5 ? Math.sign(n.x) : 0;
-            const ny = Math.abs(n.y) > 0.5 ? Math.sign(n.y) : 0;
-            const nz = Math.abs(n.z) > 0.5 ? Math.sign(n.z) : 0;
-            normal = { x: nx, y: ny, z: nz };
-        }
+        // 0.9.611 — the same face-normal extraction pickRich() does:
+        // StructurePlacementTool needs a hit face's normal to snap a new
+        // structure flush against this one, exactly like PlacementTool
+        // already does for bricks via pickedBrick.normal.
+        const normal = hitNormal(hit);
 
         return {
             placementId,
@@ -157,8 +143,8 @@ export class PickingService {
     }
 
     // Marquee containment (0.1.45). Screen rectangle in CLIENT
-    // coordinates; returns one entry per registered mesh whose world
-    // position projects inside the rectangle:
+    // coordinates; returns one entry per brick whose world position
+    // projects inside the rectangle:
     //   [{ brickId, buildingId, documentId }]
     // documentId is null for meshes loaded through the event-driven
     // (single-world Editor) path — callers in that surface ignore it.
@@ -177,25 +163,21 @@ export class PickingService {
 
         const hits = [];
         const projected = new THREE.Vector3();
-        for (const mesh of this._meshRegistry.getAllMeshes()) {
-            projected.setFromMatrixPosition(mesh.matrixWorld).project(this._camera);
+        this._brickInstances.forEachPosition((brickId, x, y, z) => {
+            projected.set(x, y, z).project(this._camera);
             if (projected.z < -1 || projected.z > 1) {
-                continue; // behind the camera or beyond the frustum depth
+                return; // behind the camera or beyond the frustum depth
             }
             if (projected.x < ndcMinX || projected.x > ndcMaxX
                 || projected.y < ndcMinY || projected.y > ndcMaxY) {
-                continue;
-            }
-            const brickId = this._meshRegistry.getBrickId(mesh.uuid);
-            if (!brickId) {
-                continue;
+                return;
             }
             hits.push({
                 brickId,
-                buildingId: this._meshRegistry.getBuildingId(brickId),
-                documentId: this._meshRegistry.getDocumentId(brickId)
+                buildingId: this._brickInstances.getBuildingId(brickId),
+                documentId: this._brickInstances.getDocumentId(brickId)
             });
-        }
+        });
         return hits;
     }
 
@@ -205,4 +187,27 @@ export class PickingService {
         const y = -((screenY - rect.top) / rect.height) * 2 + 1;
         return new THREE.Vector2(x, y);
     }
+}
+
+const _hitMatrix = new THREE.Matrix4();
+const _instanceMatrix = new THREE.Matrix4();
+
+// The hit face's normal in world space, snapped to the nearest axis
+// ({ x: 0, y: 1, z: 0 } when the hit has no face). For an instance of an
+// InstancedMesh the instance's own transform (its rotation) applies too.
+function hitNormal(hit) {
+    if (!hit.face) {
+        return { x: 0, y: 1, z: 0 };
+    }
+    _hitMatrix.copy(hit.object.matrixWorld);
+    if (hit.object.isInstancedMesh && Number.isInteger(hit.instanceId)) {
+        hit.object.getMatrixAt(hit.instanceId, _instanceMatrix);
+        _hitMatrix.multiply(_instanceMatrix);
+    }
+    const n = hit.face.normal.clone().transformDirection(_hitMatrix);
+    return {
+        x: Math.abs(n.x) > 0.5 ? Math.sign(n.x) : 0,
+        y: Math.abs(n.y) > 0.5 ? Math.sign(n.y) : 0,
+        z: Math.abs(n.z) > 0.5 ? Math.sign(n.z) : 0
+    };
 }

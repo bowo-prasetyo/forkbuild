@@ -118,8 +118,7 @@ async function runTests() {
     }
 
     function meshPositionFor(worldRenderer, brickId) {
-        const mesh = worldRenderer.meshRegistry.getMesh(brickId);
-        return mesh ? { x: mesh.position.x, y: mesh.position.y, z: mesh.position.z } : null;
+        return worldRenderer.brickInstances.getPosition(brickId);
     }
 
     // -------------------------------------------------------------
@@ -200,7 +199,7 @@ async function runTests() {
         forkHistory.execute(new DeleteBrickCommand({
             worldId: forkId, buildingId: forkBuilding.id, brickId: forkBrickId
         }));
-        assert(worldRenderer.meshRegistry.getMesh(forkBrickId) === null,
+        assert(!worldRenderer.brickInstances.has(forkBrickId),
             '5. the deleted brick\'s mesh is gone — BRICK_REMOVED reaches the renderer on the fork too');
         assert(session.getDocument(forkId).world.getBuildings()[0].getBricks().length === 0,
             '5b. the fork\'s domain model is correctly empty');

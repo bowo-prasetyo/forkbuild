@@ -1,3 +1,4 @@
+import { BrickInstanceRegistry } from '../renderer/BrickInstanceRegistry.js';
 import * as THREE from 'three';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
@@ -140,27 +141,27 @@ async function run() {
         const instanceMesh2 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x4caf7d }));
         placementMeshRegistry.set('placement-a', [instanceMesh1, instanceMesh2]);
 
-        const brickMesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x4caf7d }));
-        const meshRegistry = { getMesh: (id) => (id === 'brick-1' ? brickMesh : null) };
+        const brickInstances = new BrickInstanceRegistry({ add() {}, remove() {} });
+        brickInstances.add('brick-1', 'doc', 'building-1', { definitionId: 'core:cube', x: 0, y: 0.5, z: 0, rotationY: 0, color: 0x4caf7d });
 
         // No placementMeshRegistry at all: selectPlacement() is a safe no-op.
-        const bareRenderer = new SpatialSelectionRenderer(meshRegistry);
+        const bareRenderer = new SpatialSelectionRenderer(brickInstances);
         bareRenderer.selectPlacement('placement-a');
         assert(instanceMesh1.material.emissive.getHex() === 0, '10. selectPlacement() without a placementMeshRegistry never throws and never highlights');
 
-        const renderer = new SpatialSelectionRenderer(meshRegistry, placementMeshRegistry);
+        const renderer = new SpatialSelectionRenderer(brickInstances, placementMeshRegistry);
         renderer.selectPlacement('placement-a');
         assert(instanceMesh1.material.emissive.getHex() !== 0, '11. selectPlacement() highlights every mesh of the instance');
         assert(instanceMesh2.material.emissive.getHex() !== 0, '12. ...both meshes, not just the first');
-        assert(brickMesh.material.emissive.getHex() === 0, '13. an ordinary brick is untouched by a placement highlight');
+        assert(brickInstances.getHighlight('brick-1') === 0, '13. an ordinary brick is untouched by a placement highlight');
 
         renderer.select('brick-1');
-        assert(brickMesh.material.emissive.getHex() !== 0, '14. selecting a brick afterward highlights it');
+        assert(brickInstances.getHighlight('brick-1') !== 0, '14. selecting a brick afterward highlights it');
         assert(instanceMesh1.material.emissive.getHex() === 0, '15. ...and un-highlights the placement\'s meshes — the two tracks are mutually exclusive');
 
         renderer.selectPlacement('placement-a');
         assert(instanceMesh1.material.emissive.getHex() !== 0, '16. selecting the placement again re-highlights it');
-        assert(brickMesh.material.emissive.getHex() === 0, '17. ...and un-highlights the brick');
+        assert(brickInstances.getHighlight('brick-1') === 0, '17. ...and un-highlights the brick');
 
         renderer.clearSelection();
         assert(instanceMesh1.material.emissive.getHex() === 0, '18. clearSelection() un-highlights the placement too, not just bricks');

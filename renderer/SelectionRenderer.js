@@ -10,28 +10,24 @@ const NO_HIGHLIGHT_COLOR = 0x000000;
 // measurement) follow this same shape: subscribe to an editor event,
 // touch only rendering state, never touch the World.
 //
-// Version 0.1 approach: emissive color on the selected mesh's own
-// material. No OutlinePass, no post-processing, no EffectComposer —
-// unnecessary complexity for this milestone. Trade-off worth knowing:
-// this mutates a mesh owned/created by BrickRenderer rather than adding a
-// separate overlay object, so it's not a "true" overlay layer yet in the
-// sense of a visually independent object — just the simplest thing that
-// looks right. A future pass could replace this with an actual outline
-// mesh layered on top, without SelectionRenderer's public shape changing.
+// Approach: an emissive glow. A brick's is its instance highlight in
+// renderer/BrickInstanceRegistry.js (setHighlight()); a structure
+// placement's meshes get it on their own material. No OutlinePass, no
+// post-processing, no EffectComposer. A future pass could replace this
+// with an actual outline layered on top, without SelectionRenderer's
+// public shape changing.
 //
 // 0.2.91 — World Instance Editing & Placement Management. A structure-
 // placement selection highlights EVERY mesh belonging to that instance
 // (renderer/PlacementMeshRegistry.js, optional constructor param), the
 // same emissive technique applied to a whole set of meshes instead of
 // one brick's — "selecting an instance selects its spatial reference,"
-// visually: the WHOLE house glows, never one brick of it. Tracking
-// switched from a Set<brickId> to a Set<mesh> so clear() can unhighlight
-// both categories uniformly without needing two parallel bookkeeping
-// structures.
+// visually: the WHOLE house glows, never one brick of it.
 export class SelectionRenderer {
-    constructor(meshRegistry, placementMeshRegistry = null) {
-        this._meshRegistry = meshRegistry;
+    constructor(brickInstances, placementMeshRegistry = null) {
+        this._brickInstances = brickInstances;
         this._placementMeshRegistry = placementMeshRegistry;
+        this._highlightedBrickIds = new Set();
         this._highlightedMeshes = new Set();
         this._subscription = null;
     }
@@ -51,7 +47,11 @@ export class SelectionRenderer {
     }
 
     highlight(brickId) {
-        this._highlightMesh(this._meshRegistry.getMesh(brickId));
+        if (!this._brickInstances.has(brickId)) {
+            return;
+        }
+        this._brickInstances.setHighlight(brickId, HIGHLIGHT_COLOR);
+        this._highlightedBrickIds.add(brickId);
     }
 
     // 0.2.91 — highlights every mesh belonging to one StructurePlacement.
@@ -65,6 +65,10 @@ export class SelectionRenderer {
     }
 
     clear() {
+        for (const brickId of this._highlightedBrickIds) {
+            this._brickInstances.setHighlight(brickId, NO_HIGHLIGHT_COLOR);
+        }
+        this._highlightedBrickIds.clear();
         for (const mesh of this._highlightedMeshes) {
             if (mesh && mesh.material && mesh.material.emissive) {
                 mesh.material.emissive.setHex(NO_HIGHLIGHT_COLOR);

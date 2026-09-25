@@ -53,7 +53,7 @@ export class RenderWorldViewUseCase {
         const pickingService = new PickingService(
             renderer.camera,
             renderer.domElement,
-            worldRenderer.meshRegistry,
+            worldRenderer.brickInstances,
             // 0.2.93 — a second, separate mesh source so a placement can
             // be picked back to its placementId, never a brickId. See
             // renderer/PickingService.js's own constructor note and
@@ -68,7 +68,7 @@ export class RenderWorldViewUseCase {
         // Never Document Selection."
         const avatarPickingService = new AvatarPickingService(renderer.camera, renderer.domElement);
         const spatialSelectionRenderer = new SpatialSelectionRenderer(
-            worldRenderer.meshRegistry,
+            worldRenderer.brickInstances,
             // 0.2.93 — enables selectPlacement() below: the World View
             // counterpart to renderer/SelectionRenderer.js's own
             // highlightPlacement(), reusing the SAME PlacementMeshRegistry
@@ -78,18 +78,18 @@ export class RenderWorldViewUseCase {
         const spatialPreviewRenderer = new SpatialPreviewRenderer(renderer);
         // 0.3.0 — Collaborative Spatial Presence: a remote participant's
         // OWN camera, never a document/placement fact — see that
-        // class's own header. Reuses the SAME meshRegistry/
+        // class's own header. Reuses the SAME brickInstances/
         // placementMeshRegistry spatialSelectionRenderer already reads,
         // and the SAME terrain-elevation convention
         // withGroundElevation()/renderer.terrainHeightAt() already
         // established for avatars, below.
         const remoteSpatialPresenceRenderer = new RemoteSpatialPresenceRenderer(
-            worldRenderer.meshRegistry,
+            worldRenderer.brickInstances,
             worldRenderer.placementMeshRegistry,
             (x, z) => renderer.terrainHeightAt(x, z)
         );
         // 0.9.115 — Vehicle Rendering. Deliberately NOT keyed off
-        // worldRenderer.meshRegistry/placementMeshRegistry the way
+        // worldRenderer.brickInstances/placementMeshRegistry the way
         // remoteSpatialPresenceRenderer above is — a VehicleInstance is
         // never a document/placement fact (see core/VehicleInstance.js's
         // own header), so this has nothing to look up a mesh for.

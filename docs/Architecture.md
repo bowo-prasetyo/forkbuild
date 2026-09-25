@@ -941,13 +941,27 @@ terrain TerrainStreamingControllers and the AnimationLoop (see
 docs/RendererLifecycle.md). The Editor and World View build it the same
 way, through RenderWorldUseCase and RenderWorldViewUseCase.
 
-- WorldRenderer turns domain events into meshes, one at a time, and
-  records them in MeshRegistry; structure placements are drawn from
-  their resolved documents and tracked in PlacementMeshRegistry.
-  BrickRenderer and ThreeBrickFactory build a brick's mesh from its
-  definitionId.
-- PickingService answers "what brick is here" and "where does the ray
-  hit the ground"; AvatarPickingService does the same for avatars.
+- WorldRenderer turns domain events into brick instances, one at a
+  time, in BrickInstanceRegistry: bricks are not meshes of their own but
+  instances of one InstancedMesh per definition and 16-unit cube of
+  space (a chunk), so a scene costs one draw call per chunk, and frustum
+  culling and raycasting skip whole chunks. Each instance carries its
+  transform, its color (instanceColor over one shared white material)
+  and a highlight (an `instanceEmissive` attribute the material's shader
+  adds to its emissive light); a chunk grows by doubling, and removing a
+  brick moves the chunk's last instance into its slot. The registry maps
+  brick ids to documents and buildings and answers position, bounds,
+  highlight and ray-hit questions for picking, selection and presence.
+  Structure placements are still standalone meshes, drawn from their
+  resolved documents and tracked in PlacementMeshRegistry.
+  BrickRenderer describes a brick (definition, transform, color) and,
+  with ThreeBrickFactory, builds standalone meshes for placements,
+  previews and thumbnails; ThreeBrickFactory also supplies the geometry
+  instances share.
+- PickingService answers "what brick is here" (a ray hit on a chunk,
+  resolved through the instance id; the hit normal includes the
+  instance's rotation) and "where does the ray hit the ground";
+  AvatarPickingService does the same for avatars.
 - Overlays: SelectionRenderer, SpatialSelectionRenderer,
   PreviewRenderer, SpatialPreviewRenderer, StructurePreviewRenderer,
   CompositionPreviewRenderer, and the gizmo (TransformGizmoRenderer draws

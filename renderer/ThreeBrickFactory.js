@@ -17,29 +17,26 @@ import { DEFAULT_STAIR_STEP_COUNT } from '../core/WalkableSurface.js';
 // mesh.rotation.y from the brick's own placement rotation on every
 // createMesh() call, so anything a factory left on mesh.rotation would
 // simply be overwritten the moment a brick is actually placed.
-const DEFAULT_COLOR = 0x4caf7d;
+export const DEFAULT_COLOR = 0x4caf7d;
 
-// Choose Your Brick Color — each factory below used to close over one
-// hardcoded hex value. Color now lives as DATA on BrickDefinition
+// Choose Your Brick Color — color lives as DATA on BrickDefinition
 // (core/library/CoreLibrary.js) and, per-instance, on Brick itself (an
-// undoable SetBrickColorCommand overrides it) — this factory just paints
-// with whatever color it's handed at createMesh() time, falling back to
-// DEFAULT_COLOR when none is given (e.g. FALLBACK_FACTORY, an unknown id).
-function boxMeshFactory(size) {
-    return (color = DEFAULT_COLOR) => {
+// undoable SetBrickColorCommand overrides it). The builders below make
+// geometry only; createMesh() paints it with whatever color it's handed,
+// falling back to DEFAULT_COLOR when none is given (e.g. an unknown id).
+function boxGeometry(size) {
+    return () => {
         const geometry = new THREE.BoxGeometry(size[0], size[1], size[2]);
-        const material = new THREE.MeshStandardMaterial({ color });
-        return new THREE.Mesh(geometry, material);
+        return geometry;
     };
 }
 
 // A slender cylinder — core:column. Centered at the origin, same as
 // CylinderGeometry's own default.
-function columnMeshFactory(radius, height) {
-    return (color = DEFAULT_COLOR) => {
+function columnGeometry(radius, height) {
+    return () => {
         const geometry = new THREE.CylinderGeometry(radius, radius, height, 16);
-        const material = new THREE.MeshStandardMaterial({ color });
-        return new THREE.Mesh(geometry, material);
+        return geometry;
     };
 }
 
@@ -50,13 +47,12 @@ function columnMeshFactory(radius, height) {
 // building actually needs. Only exact for a SQUARE footprint
 // (width === depth), which is what core:roof_hip's own BrickDefinition
 // declares.
-function hipRoofMeshFactory(width, depth, height) {
-    return (color = DEFAULT_COLOR) => {
+function hipRoofGeometry(width, depth, height) {
+    return () => {
         const radius = Math.sqrt((width / 2) ** 2 + (depth / 2) ** 2);
         const geometry = new THREE.ConeGeometry(radius, height, 4);
         geometry.rotateY(Math.PI / 4);
-        const material = new THREE.MeshStandardMaterial({ color });
-        return new THREE.Mesh(geometry, material);
+        return geometry;
     };
 }
 
@@ -73,8 +69,8 @@ function hipRoofMeshFactory(width, depth, height) {
 // (application/avatar/AvatarStepConstraint.js) can never quietly disagree on
 // how many there are. The value itself is unchanged (4), so this is
 // pixel-identical to every stair already rendered before this milestone.
-function stairMeshFactory(width, height, depth, steps = DEFAULT_STAIR_STEP_COUNT) {
-    return (color = DEFAULT_COLOR) => {
+function stairGeometry(width, height, depth, steps = DEFAULT_STAIR_STEP_COUNT) {
+    return () => {
         const shape = new THREE.Shape();
         const stepWidth = width / steps;
         const stepHeight = height / steps;
@@ -92,8 +88,7 @@ function stairMeshFactory(width, height, depth, steps = DEFAULT_STAIR_STEP_COUNT
 
         const geometry = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
         geometry.translate(-width / 2, -height / 2, -depth / 2);
-        const material = new THREE.MeshStandardMaterial({ color });
-        return new THREE.Mesh(geometry, material);
+        return geometry;
     };
 }
 
@@ -102,8 +97,8 @@ function stairMeshFactory(width, height, depth, steps = DEFAULT_STAIR_STEP_COUNT
 // THREE.Path hole on the outer THREE.Shape, faceted (straight segments)
 // rather than a true curve — a deliberately simple polygon, matching
 // every other factory's "single mesh, single primitive" restraint.
-function archMeshFactory(width, height, depth) {
-    return (color = DEFAULT_COLOR) => {
+function archGeometry(width, height, depth) {
+    return () => {
         const shape = new THREE.Shape();
         shape.moveTo(0, 0);
         shape.lineTo(width, 0);
@@ -134,42 +129,48 @@ function archMeshFactory(width, height, depth) {
 
         const geometry = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false });
         geometry.translate(-width / 2, -height / 2, -depth / 2);
-        const material = new THREE.MeshStandardMaterial({ color });
-        return new THREE.Mesh(geometry, material);
+        return geometry;
     };
 }
 
-const FACTORIES = new Map([
+const GEOMETRIES = new Map([
     // Original four (0.1.5) — unchanged.
-    ['core:cube', boxMeshFactory([1, 1, 1])],
-    ['core:slope_45', boxMeshFactory([1, 1, 1])],
-    ['core:plate_2x4', boxMeshFactory([2, 0.25, 4])],
-    ['core:window_small', boxMeshFactory([1, 1, 0.25])],
+    ['core:cube', boxGeometry([1, 1, 1])],
+    ['core:slope_45', boxGeometry([1, 1, 1])],
+    ['core:plate_2x4', boxGeometry([2, 0.25, 4])],
+    ['core:window_small', boxGeometry([1, 1, 0.25])],
 
     // 0.2.80 — Expanded Brick Vocabulary.
-    ['core:block_2x2', boxMeshFactory([2, 2, 2])],
-    ['core:wall_1x3', boxMeshFactory([1, 3, 0.25])],
-    ['core:slab_4x4', boxMeshFactory([4, 0.25, 4])],
-    ['core:roof_hip', hipRoofMeshFactory(2, 2, 1.5)],
-    ['core:stair', stairMeshFactory(1, 1, 1)],
-    ['core:column', columnMeshFactory(0.25, 3)],
-    ['core:beam', boxMeshFactory([4, 0.5, 0.5])],
-    ['core:arch', archMeshFactory(2, 2, 0.5)],
-    ['core:window_large', boxMeshFactory([2, 1.5, 0.25])],
-    ['core:door', boxMeshFactory([1, 2, 0.1])],
-    ['core:trim', boxMeshFactory([1, 0.25, 0.25])]
+    ['core:block_2x2', boxGeometry([2, 2, 2])],
+    ['core:wall_1x3', boxGeometry([1, 3, 0.25])],
+    ['core:slab_4x4', boxGeometry([4, 0.25, 4])],
+    ['core:roof_hip', hipRoofGeometry(2, 2, 1.5)],
+    ['core:stair', stairGeometry(1, 1, 1)],
+    ['core:column', columnGeometry(0.25, 3)],
+    ['core:beam', boxGeometry([4, 0.5, 0.5])],
+    ['core:arch', archGeometry(2, 2, 0.5)],
+    ['core:window_large', boxGeometry([2, 1.5, 0.25])],
+    ['core:door', boxGeometry([1, 2, 0.1])],
+    ['core:trim', boxGeometry([1, 0.25, 0.25])]
 ]);
 
-const FALLBACK_FACTORY = boxMeshFactory([1, 1, 1]);
+const FALLBACK_GEOMETRY = boxGeometry([1, 1, 1]);
 
 export class ThreeBrickFactory {
     // color: optional 0xRRGGBB override — Choose Your Brick Color. Falls
-    // back to DEFAULT_COLOR (via each factory's own default parameter)
-    // when omitted; callers that know a BrickDefinition/Brick color
-    // (renderer/BrickRenderer.js, renderer/PreviewRenderer.js) pass it
-    // explicitly instead of leaving every brick the same hardcoded shade.
-    createMesh(definitionId, color) {
-        const factory = FACTORIES.get(definitionId) || FALLBACK_FACTORY;
-        return factory(color);
+    // back to DEFAULT_COLOR when omitted; callers that know a
+    // BrickDefinition/Brick color (renderer/BrickRenderer.js,
+    // renderer/PreviewRenderer.js) pass it explicitly instead of leaving
+    // every brick the same hardcoded shade.
+    createMesh(definitionId, color = DEFAULT_COLOR) {
+        const material = new THREE.MeshStandardMaterial({ color });
+        return new THREE.Mesh(this.createGeometry(definitionId), material);
+    }
+
+    // A new geometry for this id, centered at the origin, with no color:
+    // what a mesh is built from, and what renderer/BrickInstanceRegistry.js
+    // draws every instance of this id with.
+    createGeometry(definitionId) {
+        return (GEOMETRIES.get(definitionId) || FALLBACK_GEOMETRY)();
     }
 }

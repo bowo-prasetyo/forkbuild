@@ -581,3 +581,38 @@ from memory, and commits writes in the background, one relaxed transaction per t
 - Not changed: the whole dataset stays in memory, which suits the tens of megabytes this app keeps. If published
   content (`content:`, `snapshot:`) grows into hundreds of megabytes, those stores should read IndexedDB
   asynchronously instead.
+
+## Instanced brick rendering (unnumbered, 2026-09-25)
+
+**Bricks are drawn as instances, not one mesh each.** WorldRenderer used to give every brick its own `THREE.Mesh`,
+`BoxGeometry` and material: one draw call per brick, which made builds of tens of thousands of bricks unusable (a
+hollow 233×233 pyramid is 54,289 bricks). `renderer/BrickInstanceRegistry.js` replaces `renderer/MeshRegistry.js`:
+bricks of the same definition within the same 16-unit cube of space share one `InstancedMesh` (a chunk), with one
+material for every chunk and one geometry per definition.
+
+- Per instance: its transform, its color (`instanceColor` over a white material) and a highlight: an
+  `instanceEmissive` attribute that the material's shader (`onBeforeCompile`) adds to its emissive light, so selection
+  looks exactly as `material.emissive` did. A chunk starts at 64 instances and doubles when full; removing a brick
+  moves the chunk's last instance into its slot. Chunks are spatial so frustum culling and the raycaster's
+  bounding-sphere test skip whole regions.
+- The registry maps brick id → document and building, and answers what picking, selection and presence outlines ask
+  (`brickIdForIntersection()`, `getPosition()`, `getBounds()`, `setHighlight()`, `forEachPosition()`).
+  `WorldRenderer#brickInstances` replaces `#meshRegistry`; `PickingService`, `SelectionRenderer`,
+  `SpatialSelectionRenderer` and `RemoteSpatialPresenceRenderer` use it. A picked face's normal now includes the
+  instance's rotation.
+- `BrickRenderer#describe()` gives a brick's definition, transform and resolved color; `ThreeBrickFactory` builds
+  geometry on its own (`createGeometry()`), and still builds standalone meshes for structure placements, previews and
+  thumbnails, which are unchanged.
+- Tests: `tests/BrickInstanceRegistry.test.js` (batching, growth, removal, moves across chunks, WorldRenderer events,
+  picking with rotated instances, marquee, highlights, presence outlines) and
+  `tests/BrickInstanceRenderingBrowser.test.js` (real WebGL: each instance's color and highlight on screen). Seven
+  tests that built fake per-brick meshes now use the registry.
+- Measured in headless Chromium on the hollow pyramid (54,289 cubes, whole pyramid in view): draw calls 54,289 → 316,
+  JavaScript time per `render()` 386 ms → 2.2 ms, building the scene 1.4 s → 0.16 s, JS heap 819 MB → 29 MB, one pick
+  16 ms → 2.6 ms. The solid pyramid (2,135,445 cubes), impossible before, takes 680 draw calls, 5 ms of JavaScript
+  per frame, 9.7 s to build and 813 MB of heap. Frame times there are dominated by software rasterization (no GPU),
+  so they say nothing about a real GPU. In the Editor, the pyramid opens and a clicked brick glows exactly as before
+  (pixel-identical screenshot).
+- Not changed: every brick is drawn, including ones hidden inside a solid build, so a solid pyramid still sends about
+  25 million triangles per frame to the GPU; skipping bricks enclosed on all six sides is the natural next step.
+  Structure placements are still one mesh per brick.
