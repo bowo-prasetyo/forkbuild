@@ -388,6 +388,13 @@ means.
 - **Publish** — share it with everyone (see
   [Publishing & Forking](04-PublishingAndForking.md)).
 - **New** — start a fresh, empty creation.
+- **Export** — download the current creation as a JSON file, to keep a copy
+  or move it to another device. Files use a compact format that stores
+  bricks as a table.
+- **Import** — open an exported file as a new creation with its own
+  identity; nothing is kept until you **Save**. Files exported by earlier
+  versions still open (they are converted as they load), but ForkBuild 1.0.0
+  and older can't open files exported by this version.
 - **Recent** — reopen something you saved before. Once you've saved enough
   documents, a filter box appears so you can jump straight to one by name.
   Each entry also has a **Place** button — see

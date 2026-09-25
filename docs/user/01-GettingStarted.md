@@ -9,7 +9,11 @@ ForkBuild runs in any current web browser. Open the hosted URL, and you'll
 land on the **Home** screen. To run your own copy, serve the folder over HTTP
 (for example `python3 -m http.server 8000`, then open
 <http://localhost:8000/>): opening `index.html` straight from disk doesn't
-work, because browsers won't load its modules from a `file://` page.
+work, because browsers won't load its modules from a `file://` page. The
+default rendezvous server only serves the hosted site, so a copy of your own
+can't use it to find people; connect with invitations instead, or set up a
+rendezvous server of your own (see
+[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)).
 
 The bar at the top is always visible:
 
