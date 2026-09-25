@@ -1,7 +1,6 @@
 # ForkBuild 1.0 release notes
 
-*Draft for the 1.0 release. The app still reports version 0.9.703 until the
-release is tagged.*
+*Released 2026-09-25 as version 1.0.0.*
 
 ForkBuild is a browser-based building platform: build with bricks, publish
 what you make, fork other people's work like source code, and explore

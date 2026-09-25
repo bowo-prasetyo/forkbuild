@@ -10,7 +10,8 @@ each other directly over authenticated peer connections. The only server the
 default setup uses is a rendezvous server that helps peers find each other; see
 [docs/Privacy.md](docs/Privacy.md) for everything the app contacts.
 
-**Version 0.9.703.** Every milestone is recorded in
+**Version 1.0.0**, released 2026-09-25: see the
+[release notes](docs/ReleaseNotes-1.0.md). Every milestone is recorded in
 [docs/Roadmap.md](docs/Roadmap.md).
 
 See [docs/VISION.md](docs/VISION.md) for the longer-term aim ("Git for 3D
