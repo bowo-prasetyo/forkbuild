@@ -6,9 +6,10 @@ This page lists what it stores, and every server it can contact and when.
 
 ## What stays on your device
 
-Everything below lives in this browser's storage (`localStorage`, under keys
-starting with `forkbuild:`) and never leaves the device unless you publish,
-export or send it:
+Everything below lives in this browser's storage (the `forkbuild` IndexedDB
+database; browsers without IndexedDB use `localStorage`, under keys starting
+with `forkbuild:`) and never leaves the device unless you publish, export or
+send it:
 
 - your documents, crash-recovery copies of unsaved changes, and saved
   structures;

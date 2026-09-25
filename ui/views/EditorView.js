@@ -25,6 +25,7 @@ import { EditorActionContext } from '../../application/editor/EditorActionContex
 import { InputRouter } from '../../application/editor/InputRouter.js';
 import Toolbar from '../components/Toolbar.js';
 import { saveFailureMessage, autosaveFailureMessage } from '../components/saveFailureMessages.js';
+import { saveDocument } from '../components/saveDocument.js';
 import BuildLibraryPanel from '../components/BuildLibraryPanel.js';
 import EditingSidebar from '../components/EditingSidebar.js';
 import StructureInstancePanel from '../components/StructureInstancePanel.js';
@@ -853,12 +854,10 @@ export default {
                 }
                 if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
                     event.preventDefault();
-                    try {
-                        saveDocumentUseCase.execute(documentManager);
-                    } catch (error) {
+                    saveDocument(saveDocumentUseCase, documentManager).catch((error) => {
                         console.error('Save failed:', error);
                         feedback.show(saveFailureMessage(error), { durationMs: 10000 });
-                    }
+                    });
                     return;
                 }
                 // 4.1. '?' opens the Keyboard Shortcuts overlay.

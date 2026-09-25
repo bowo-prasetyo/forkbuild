@@ -262,6 +262,29 @@ World Encounters (ui/components/WorldEncounterCanvas.js, also mounted
 alone at `/live-world`) show decentralized publications met while
 walking; see "Publication presence across restarts".
 
+## Local storage: IndexedDB behind a synchronous provider
+
+Every store reaches this device's storage through StorageProvider, whose
+save/load/remove/list are synchronous, and in the browser through
+storage/LocalStorageProvider.js. That provider keeps JSON strings in a
+backend: window.localStorage by default, or the IndexedDB backend
+(storage/IndexedDbStorageBackend.js) that ui/boot.js opens before it
+imports ui/main.js, so nothing reads storage before it is ready.
+
+The IndexedDB backend reads every entry into memory when it opens and
+answers reads from that copy. Writes change the copy at once and are
+committed in the background, one transaction per task. flushLocalStorage()
+commits what is waiting with strict durability and resolves once
+everything is stored; the Editor's Save (ui/components/saveDocument.js)
+waits for it, so a full storage (StorageFullError) is still reported, and
+marks the document unsaved again if it fails. A failed background write
+stays in memory and is retried with the next commit. After each commit the
+written names go out on the `forkbuild-storage` BroadcastChannel and other
+tabs read those entries back from IndexedDB, leaving alone any they have
+written themselves and not yet stored. On open, `forkbuild:` entries still
+in localStorage are moved into IndexedDB. If IndexedDB is missing or does
+not open within 10 seconds, the session uses localStorage.
+
 ## Documents: save, autosave, publish and fork
 
 A Document moves through three kinds of storage, each with its own

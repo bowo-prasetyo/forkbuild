@@ -94,10 +94,12 @@ Your creation is stored in your browser, so it's still there when you come back.
 While you edit, ForkBuild also keeps a crash-recovery copy of unsaved changes,
 and offers to restore it if the page closes before you save.
 
-Browsers give each site only a few megabytes of storage. If ForkBuild's
-share fills up, saving and crash recovery stop with a message saying so;
-nothing you have open is lost. Use **Export** in the toolbar to keep a copy
-of the document as a file.
+Browsers limit how much each site may store, usually to a share of the
+disk. If ForkBuild's share fills up, saving and crash recovery stop with a
+message saying so; nothing you have open is lost. Use **Export** in the
+toolbar to keep a copy of the document as a file. The first time you save,
+some browsers ask whether ForkBuild may keep its data permanently; allowing
+it stops the browser from clearing it when the disk runs low.
 
 You don't need to be logged in to build. Logging in matters once you
 publish or work with other people.
