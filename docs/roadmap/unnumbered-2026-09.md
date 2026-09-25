@@ -533,3 +533,12 @@ not, contacted `forkbuild.metered.live`, and anyone could read the key and spend
   rendezvous server.
 - The top navigation's links no longer break across lines, and wrap as whole links on narrow windows.
 
+**TURN relay from Cloudflare.** Metered's free tier refuses to create credentials through its API (the rendezvous
+worker's `/turn-credentials` answered 400, "not available with the Free Tier"), so the worker gains Cloudflare
+Realtime TURN: with the `CLOUDFLARE_TURN_KEY_ID` and `CLOUDFLARE_TURN_API_TOKEN` secrets it asks
+`rtc.live.cloudflare.com` for ICE servers with an hour-long credential, dropping port-53 entries, which browsers
+block. Cloudflare is used when both providers are configured. Every provider now counts against a monthly allowance
+(`TURN_CREDENTIALS_PER_MONTH`, default 10,000); past it the endpoint answers 503 and the app connects without a relay.
+A failing provider's 502 names the step and status, with the key blanked; if Metered's credential listing fails, the
+new credential is used with Metered's standard relay addresses. `wrangler.toml` no longer sets `METERED_DOMAIN`.
+

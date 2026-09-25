@@ -82,9 +82,10 @@ over)
 - **Being discoverable** now needs your identity unlocked, because the
   rendezvous server only accepts signed entries.
 - **Operators of a rendezvous server:** redeploy `server/rendezvous-worker/`.
-  To offer a TURN relay, set `METERED_DOMAIN` and the `METERED_SECRET_KEY`
-  secret. If you used the Metered API key that earlier versions of the app
-  contained, rotate it: it was public.
+  To offer a TURN relay, store a Cloudflare Realtime TURN key as the
+  `CLOUDFLARE_TURN_KEY_ID` and `CLOUDFLARE_TURN_API_TOKEN` secrets (see its
+  README). If you used the Metered credential or API key that earlier
+  versions of the app contained, delete it in Metered: it was public.
 
 ## Known limitations
 
