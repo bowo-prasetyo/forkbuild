@@ -44,8 +44,10 @@
 // The key never reaches browsers, and the app asks for credentials only
 // when it starts a peer connection. At most TURN_CREDENTIALS_PER_MONTH
 // (default LIMITS.turnCredentialsPerMonth) are handed out per calendar
-// month, to bound the relay bill. Without a provider the endpoint answers
-// 404 and the app uses STUN alone.
+// month, to bound the relay bill; GET /turn-stats shows this month's count
+// (open to anyone: it holds no secrets), and a warning is logged at 80% of
+// the allowance and on every refusal past it. Without a provider the endpoint
+// answers 404 and the app uses STUN alone.
 //
 // What it does not do: prove that the publisher answers at the published
 // endpoint. Peers still authenticate each other when they connect
@@ -99,6 +101,8 @@ const SWEEP_INTERVAL_MS = 5 * 60 * 1000;
 
 const TURN_RATE_KEY_PREFIX = 'turn:';
 const TURN_MONTH_KEY_PREFIX = 'turnmonth:';
+// The share of the monthly allowance at which a warning is logged.
+const TURN_WARNING_FRACTION = 0.8;
 const HOUR_MS = 60 * 60 * 1000;
 const TURN_PROVIDER_TIMEOUT_MS = 5000;
 
@@ -294,8 +298,12 @@ export class RendezvousNode {
     }
 
     async fetch(request) {
-        if (new URL(request.url).pathname === '/turn-credentials') {
+        const { pathname } = new URL(request.url);
+        if (pathname === '/turn-credentials') {
             return this._handleTurnCredentials(request);
+        }
+        if (pathname === '/turn-stats') {
+            return this._handleTurnStats(request);
         }
         if (request.headers.get('Upgrade') !== 'websocket') {
             return new Response('RendezvousNode: expected a WebSocket upgrade request', { status: 426 });
@@ -495,17 +503,22 @@ export class RendezvousNode {
         }
         await this.ctx.storage.put(rateKey, { ...current, count: current.count + 1 });
 
-        const monthKey = TURN_MONTH_KEY_PREFIX + new Date(now).toISOString().slice(0, 7);
+        const month = new Date(now).toISOString().slice(0, 7);
+        const monthKey = TURN_MONTH_KEY_PREFIX + month;
         const issuedThisMonth = (await this.ctx.storage.get(monthKey)) || 0;
-        const configuredMonthly = Number.parseInt(this.env.TURN_CREDENTIALS_PER_MONTH, 10);
-        const monthlyLimit = Number.isFinite(configuredMonthly) && configuredMonthly >= 0 ? configuredMonthly : LIMITS.turnCredentialsPerMonth;
+        const monthlyLimit = this._monthlyTurnLimit();
         if (issuedThisMonth >= monthlyLimit) {
+            console.warn(`turn-credentials: refused, the monthly allowance is used up (${issuedThisMonth}/${monthlyLimit} in ${month}); raise TURN_CREDENTIALS_PER_MONTH to allow more`);
             return reply(503, { error: 'this rendezvous server\'s relay allowance for the month is used up' });
         }
 
         try {
             const iceServers = await provider.create();
-            await this.ctx.storage.put(monthKey, issuedThisMonth + 1);
+            const issued = issuedThisMonth + 1;
+            await this.ctx.storage.put(monthKey, issued);
+            if (issued === Math.ceil(monthlyLimit * TURN_WARNING_FRACTION)) {
+                console.warn(`turn-credentials: ${Math.round(TURN_WARNING_FRACTION * 100)}% of the monthly allowance used (${issued}/${monthlyLimit} in ${month})`);
+            }
             const expiresAt = new Date(now + LIMITS.turnCredentialLifetimeSeconds * 1000).toISOString();
             return reply(200, { iceServers, expiresAt });
         } catch (err) {
@@ -517,18 +530,43 @@ export class RendezvousNode {
         }
     }
 
+    _monthlyTurnLimit() {
+        const configured = Number.parseInt(this.env.TURN_CREDENTIALS_PER_MONTH, 10);
+        return Number.isFinite(configured) && configured >= 0 ? configured : LIMITS.turnCredentialsPerMonth;
+    }
+
+    // GET /turn-stats: this month's relay credential count against the
+    // allowance, for the operator. Only counts, nothing secret, so it is
+    // open to any caller (including a browser's address bar).
+    async _handleTurnStats(request, now = Date.now()) {
+        const month = new Date(now).toISOString().slice(0, 7);
+        const provider = this._turnProvider();
+        const body = {
+            month,
+            issued: (await this.ctx.storage.get(TURN_MONTH_KEY_PREFIX + month)) || 0,
+            limit: this._monthlyTurnLimit(),
+            provider: provider ? provider.name : null
+        };
+        return new Response(JSON.stringify(body), {
+            status: request.method === 'GET' ? 200 : 405,
+            headers: { 'content-type': 'application/json', 'cache-control': 'no-store', ...corsHeaders(request, this.env) }
+        });
+    }
+
     // The configured TURN provider, or null. Cloudflare wins when both are
     // configured.
     _turnProvider() {
         const env = this.env;
         if (env.CLOUDFLARE_TURN_KEY_ID && env.CLOUDFLARE_TURN_API_TOKEN) {
             return {
+                name: 'cloudflare',
                 secret: env.CLOUDFLARE_TURN_API_TOKEN,
                 create: () => this._createCloudflareTurnCredential(env.CLOUDFLARE_TURN_KEY_ID, env.CLOUDFLARE_TURN_API_TOKEN)
             };
         }
         if (env.METERED_DOMAIN && env.METERED_SECRET_KEY) {
             return {
+                name: 'metered',
                 secret: env.METERED_SECRET_KEY,
                 create: () => this._createTurnCredential(env.METERED_DOMAIN, env.METERED_SECRET_KEY)
             };
@@ -654,7 +692,13 @@ function corsHeaders(request, env) {
 // deployment, and forwards WebSocket upgrades to the Durable Object.
 export default {
     async fetch(request, env) {
-        const isTurnRequest = new URL(request.url).pathname === '/turn-credentials';
+        const { pathname } = new URL(request.url);
+        // The stats page skips the origin check below, so an operator can
+        // open it in a browser; it only shows counts.
+        if (pathname === '/turn-stats' && env.RENDEZVOUS_NODE) {
+            return env.RENDEZVOUS_NODE.get(env.RENDEZVOUS_NODE.idFromName('global')).fetch(request);
+        }
+        const isTurnRequest = pathname === '/turn-credentials';
         if (!isTurnRequest && request.headers.get('Upgrade') !== 'websocket') {
             return new Response(
                 'ForkBuild rendezvous worker is running.\n\n' +
