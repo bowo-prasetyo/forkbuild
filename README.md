@@ -4,9 +4,11 @@
 
 An open-source, browser-based, decentralized building platform. Creations are
 built from bricks, forked like source code, published through interchangeable
-storage and announcement providers, and explored in a shared 3D world. There is
-no central server: identities are key pairs held on your device, and people
-connect to each other directly over authenticated peer connections.
+storage and announcement providers, and explored in a shared 3D world. There are
+no accounts: identities are key pairs held on your device, and people connect to
+each other directly over authenticated peer connections. The only server the
+default setup uses is a rendezvous server that helps peers find each other; see
+[docs/Privacy.md](docs/Privacy.md) for everything the app contacts.
 
 **Version 0.9.703.** Every milestone is recorded in
 [docs/Roadmap.md](docs/Roadmap.md).
@@ -45,9 +47,10 @@ models").
   records its lineage, subject to the source's license and fork policy.
 - Repository and Author views with search, sorting, pagination and
   client-side thumbnails.
-- Decentralized publication: content on Arweave or IPFS, announcements over
-  Nostr or Arweave, and optional anchoring evidence on Bitcoin, Arweave or Base.
-  All of it is verified by content hash and signature, never taken on trust.
+- Decentralized publication (*experimental*, see below): content on Arweave or
+  IPFS, announcements over Nostr or Arweave, and optional anchoring evidence on
+  Bitcoin, Arweave or Base. All of it is verified by content hash and
+  signature, never taken on trust.
 
 **Identity, peers and social**
 - Ed25519 identities (did:key) held on the device, signed with the audited
@@ -62,6 +65,16 @@ models").
 - Avatar profiles, presence, gestures and per-audience visibility, all shared
   over authenticated peers.
 - Collaborative World editing with signed membership grants.
+
+**Experimental in 1.0**
+
+These areas work, but may change or be removed in a later version, and what
+they produce may not carry over. The app marks them with an **Experimental**
+banner:
+- the **Publications** page and its decentralized publication tooling;
+- external evidence and anchoring (Bitcoin, Arweave and Base), and their
+  Network Settings;
+- the Leaderboard, reconciliation and publisher snapshot claim pages.
 
 ## Quick Start
 
@@ -133,6 +146,16 @@ See [docs/Architecture.md](docs/Architecture.md) for the full description.
   [StructureLibrary](docs/StructureLibrary.md), [Publishing](docs/Publishing.md),
   [RendererLifecycle](docs/RendererLifecycle.md) and
   [CodingConventions](docs/CodingConventions.md).
+
+## Security, privacy and contributing
+
+- [SECURITY.md](SECURITY.md): how to report a vulnerability, and what is in
+  scope.
+- [docs/Privacy.md](docs/Privacy.md): what ForkBuild stores, and every server
+  it can contact.
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to set up, test and submit changes.
+- [docs/ReleaseNotes-1.0.md](docs/ReleaseNotes-1.0.md): what's in 1.0, what
+  changed on the way to it, and known limitations.
 
 ## License
 

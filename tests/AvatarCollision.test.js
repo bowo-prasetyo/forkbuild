@@ -19,7 +19,6 @@ import { LocalSpatialIndexProvider } from '../spatial/LocalSpatialIndexProvider.
 import { LocalWorldLayoutProvider } from '../world-layout/LocalWorldLayoutProvider.js';
 import { LocalPlacementRegistry } from '../placement/LocalPlacementRegistry.js';
 import { PlacePublicationUseCase } from '../application/placement/PlacePublicationUseCase.js';
-import { GridPlacementStrategy } from '../application/placement/InitialPlacementStrategy.js';
 import { PublishDocumentUseCase } from '../application/publication/PublishDocumentUseCase.js';
 import { LoadPublicationDocumentUseCase } from '../application/publication/LoadPublicationDocumentUseCase.js';
 import { CreateBrickRegistryUseCase } from '../application/editor/CreateBrickRegistryUseCase.js';
@@ -69,6 +68,8 @@ function buildAvatarStack(registry, username) {
 // everything a test needs, including the FULL decentralized stack
 // (worldLayoutProvider etc.) so a real WorldNavigationSession can
 // stream it in exactly like any other publication.
+const WALL_POSITION = new Position(0, 0, 0);
+
 function publishWallDocument(identityProvider, brickRegistry, title = 'Wall Plaza') {
     const storage = identityProvider._storage || new InMemoryStorageProvider();
     const contentStore = new LocalContentStore(storage);
@@ -81,7 +82,11 @@ function publishWallDocument(identityProvider, brickRegistry, title = 'Wall Plaz
     const placePublicationUseCase = new PlacePublicationUseCase(
         spatialIndexProvider, discoveryProvider, loadPublicationDocumentUseCase, brickRegistry, placementRegistry, identityProvider
     );
-    const publishDocumentUseCase = new PublishDocumentUseCase(publisher, identityProvider, placePublicationUseCase, new GridPlacementStrategy());
+    // A fixed spot rather than GridPlacementStrategy's hash of the (random)
+    // publication id: the procedural terrain, water and trees differ from
+    // place to place, and a random spot made the wall assertions fail on
+    // some runs.
+    const publishDocumentUseCase = new PublishDocumentUseCase(publisher, identityProvider, placePublicationUseCase, { computePosition: () => WALL_POSITION });
 
     const world = new World();
     const building = new Building({ creator: identityProvider.currentUser().username });
@@ -412,7 +417,7 @@ async function runTests() {
         assert(avatarPresenceSession.current.position.z < wallStack.worldPosition.z - 0.5,
             '41. WorldNavigationSession: a LOADED wall blocks the local avatar\'s own movement');
         assert(session._avatarMovementController.isCollided() === true,
-            '42. WorldNavigationSession: the controller reports the collision');
+            `42. WorldNavigationSession: the controller reports the collision (tree: ${session._avatarMovementController.isCollidedWithTree()}, wildlife: ${session._avatarMovementController.isCollidedWithWildlife()}, z: ${avatarPresenceSession.current.position.z}, wall z: ${wallStack.worldPosition.z})`);
     }
     {
         // The exact same wall, published and placed identically, but

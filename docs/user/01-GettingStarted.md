@@ -5,12 +5,15 @@ in about five minutes.
 
 ## Opening ForkBuild
 
-ForkBuild runs in any modern web browser. Open `index.html` (or the hosted
-URL), and you'll land on the **Home** screen.
+ForkBuild runs in any current web browser. Open the hosted URL, and you'll
+land on the **Home** screen. To run your own copy, serve the folder over HTTP
+(for example `python3 -m http.server 8000`, then open
+<http://localhost:8000/>): opening `index.html` straight from disk doesn't
+work, because browsers won't load its modules from a `file://` page.
 
 The bar at the top is always visible:
 
-`ForkBuild Home Editor Repository My Worlds My Avatar My Identities Peers Conversations Publications Network Settings About [Login]`
+`ForkBuild Home Editor Repository My Worlds My Avatar My Identities Peers Conversations Publications (Exp.) Network Settings About [Login]`
 
 - **Home** — the landing page
 - **Editor** — where you build
@@ -25,8 +28,8 @@ The bar at the top is always visible:
   [Peer Connections & Friends](07-PeerConnectionsAndFriends.md)
 - **Conversations** — your direct messages, see
   [Chat & Conversations](08-ChatAndConversations.md)
-- **Publications** — signed authorship/place-name claims and their
-  external evidence, see
+- **Publications** (*experimental*) — signed authorship/place-name claims
+  and their external evidence, see
   [Publications & External Evidence](09-PublicationsAndEvidence.md)
 - **Network Settings** — gateways, relays, providers, and peer-connection
   servers, see
@@ -88,6 +91,16 @@ Press **Ctrl+S** (or click **Save** in the toolbar). The **● Unsaved changes**
 indicator turns into **Saved**.
 
 Your creation is stored in your browser, so it's still there when you come back.
+While you edit, ForkBuild also keeps a crash-recovery copy of unsaved changes,
+and offers to restore it if the page closes before you save.
+
+Browsers give each site only a few megabytes of storage. If ForkBuild's
+share fills up, saving and crash recovery stop with a message saying so;
+nothing you have open is lost. Use **Export** in the toolbar to keep a copy
+of the document as a file.
+
+You don't need to be logged in to build. Logging in matters once you
+publish or work with other people.
 
 ## What's next?
 

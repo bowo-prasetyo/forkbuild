@@ -1,4 +1,5 @@
 import { StorageProvider } from './StorageProvider.js';
+import { StorageFullError, isStorageFullError } from './StorageFullError.js';
 
 const KEY_PREFIX = 'forkbuild:';
 
@@ -7,8 +8,14 @@ const KEY_PREFIX = 'forkbuild:';
 // — the page's localStorage may hold data from other scripts, and that
 // isn't ours to assume ownership of.
 export class LocalStorageProvider extends StorageProvider {
+    // Throws StorageFullError when the browser's quota is used up; the
+    // previous value under `name`, if any, is left as it was.
     save(name, data) {
-        window.localStorage.setItem(KEY_PREFIX + name, JSON.stringify(data));
+        try {
+            window.localStorage.setItem(KEY_PREFIX + name, JSON.stringify(data));
+        } catch (error) {
+            throw isStorageFullError(error) ? new StorageFullError(error) : error;
+        }
     }
 
     load(name) {

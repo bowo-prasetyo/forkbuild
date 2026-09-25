@@ -23,7 +23,8 @@ import { EditorEvent } from '../../core/events/EditorEvent.js';
 import { EditorActionRegistry, createStandardActions } from '../../application/editor/EditorActionRegistry.js';
 import { EditorActionContext } from '../../application/editor/EditorActionContext.js';
 import { InputRouter } from '../../application/editor/InputRouter.js';
-import Toolbar, { SAVE_FAILURE_MESSAGE } from '../components/Toolbar.js';
+import Toolbar from '../components/Toolbar.js';
+import { saveFailureMessage, autosaveFailureMessage } from '../components/saveFailureMessages.js';
 import BuildLibraryPanel from '../components/BuildLibraryPanel.js';
 import EditingSidebar from '../components/EditingSidebar.js';
 import StructureInstancePanel from '../components/StructureInstancePanel.js';
@@ -292,7 +293,21 @@ export default {
 
         // Watches this view's documentManager; started and stopped with the view so an
         // unmounted Editor never autosaves.
-        const autosaveScheduler = new AutosaveScheduler(autosaveDocumentUseCase, documentManager);
+        // A failed checkpoint (usually a full browser storage) is reported
+        // once, not after every edit, until a save succeeds again.
+        let autosaveFailureReported = false;
+        const autosaveScheduler = new AutosaveScheduler(autosaveDocumentUseCase, documentManager, {
+            onError: (error) => {
+                console.error('Autosave: could not write a recovery checkpoint', error);
+                if (!autosaveFailureReported) {
+                    autosaveFailureReported = true;
+                    feedback.show(autosaveFailureMessage(error), { durationMs: 10000 });
+                }
+            }
+        });
+        documentManager.onStateChanged((state) => {
+            if (!state.dirty) autosaveFailureReported = false;
+        });
         // Probes recovery once per open document (never per edit) and drives
         // RecoveryBanner.
         const recoveryStatus = ref(null);
@@ -415,8 +430,10 @@ export default {
         const feedbackMessage = ref('');
         const feedbackVisible = ref(false);
         let feedbackTimer = null;
+        // Failures that ask the user to act stay up longer than a routine
+        // "Saved".
         const feedback = {
-            show(message) {
+            show(message, { durationMs = 2500 } = {}) {
                 feedbackMessage.value = message;
                 feedbackVisible.value = true;
                 if (feedbackTimer) {
@@ -424,7 +441,7 @@ export default {
                 }
                 feedbackTimer = setTimeout(() => {
                     feedbackVisible.value = false;
-                }, 2500);
+                }, durationMs);
             }
         };
 
@@ -840,7 +857,7 @@ export default {
                         saveDocumentUseCase.execute(documentManager);
                     } catch (error) {
                         console.error('Save failed:', error);
-                        feedback.show(SAVE_FAILURE_MESSAGE);
+                        feedback.show(saveFailureMessage(error), { durationMs: 10000 });
                     }
                     return;
                 }

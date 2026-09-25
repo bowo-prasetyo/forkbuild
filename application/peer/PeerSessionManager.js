@@ -98,6 +98,7 @@ export class PeerSessionManager {
     // an ordinary 0.2.50 PeerInvitation. Returns once there is something
     // to display and copy — never partway through.
     async createInvitation({ ttlMs = DEFAULT_INVITATION_TTL_MS, expectedIdentityId = null } = {}) {
+        await this._prepareIceServers();
         const connection = this._peerConnectionProvider.createOffer({ ttlMs });
         const connectedPeer = this._connectToPeerUseCase.attach(connection, null, { expectedIdentityId });
         const offer = await waitForLocalSignal(connection, connectedPeer);
@@ -119,6 +120,7 @@ export class PeerSessionManager {
     async acceptInvitation(invitationInput, { expectedIdentityId = null } = {}) {
         const invitation = parseInvitation(invitationInput);
         const record = this._discoverPeersUseCase.importInvitation(invitation);
+        await this._prepareIceServers();
         const connectedPeer = this._connectToPeerUseCase.connect(record, { expectedIdentityId });
         const answer = await waitForLocalSignal(connectedPeer.connection, connectedPeer);
         return { connectedPeer, reply: JSON.stringify(answer.toJSON()) };
@@ -248,9 +250,20 @@ export class PeerSessionManager {
     // the connection and is reported through this class's own
     // onIdentityMismatch(), completely unmodified.
     async connectToDiscovered(discoveryRecord, { expectedIdentityId = null } = {}) {
+        await this._prepareIceServers();
         const connectedPeer = this._connectToPeerUseCase.connect(discoveryRecord, { expectedIdentityId });
         const answer = await waitForLocalSignal(connectedPeer.connection, connectedPeer);
         return { connectedPeer, reply: JSON.stringify(answer.toJSON()) };
+    }
+
+    // Lets the connection provider fetch TURN credentials just before a
+    // connection starts (peer/WebRtcPeerConnectionProvider.js#prepareIceServers).
+    // Providers without the hook (the in-process test provider) are used as
+    // they are, without an extra await.
+    async _prepareIceServers() {
+        if (typeof this._peerConnectionProvider.prepareIceServers === 'function') {
+            await this._peerConnectionProvider.prepareIceServers();
+        }
     }
 
     // Closing is the ONLY way a peer ever leaves the registry — see

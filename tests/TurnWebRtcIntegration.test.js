@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { execSync } from 'node:child_process';
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { inspect } from 'node:util';
@@ -17,7 +16,7 @@ import { ArweaveGatewayConfigurationStore } from '../storage/ArweaveGatewayConfi
 import { RendezvousConfiguration } from '../core/RendezvousConfiguration.js';
 import { RendezvousConfigurationStore } from '../storage/RendezvousConfigurationStore.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
-import { DEFAULT_ICE_SERVERS, fetchIceServers } from '../peer/IceServerConfig.js';
+import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
 import { mainFiles } from './support/SourceFileGroups.js';
 import { readSource as source } from './support/SourceText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -55,8 +54,8 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // resolution line 0.9.386 already established is renamed from
 // `resolvedIceServers` to `resolvedStunServers` (see that file's own 0.9.455
 // comment for why); `resolvedIceServers` now names the STUN+TURN composite
-// actually handed to WebRtcPeerConnectionProvider and to
-// fetchIceServers()'s own `fallback`. peer/WebRtcPeerConnectionProvider.js
+// actually handed to WebRtcPeerConnectionProvider, which adds any TURN
+// credentials fetched from the rendezvous server when a connection starts. peer/WebRtcPeerConnectionProvider.js
 // itself is untouched — it already accepted an arbitrary iceServers array
 // (proven in 0.9.453 Section D5 and 0.9.454 Section J).
 //
@@ -74,7 +73,6 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //   H. Clear configuration — TURN absent again, STUN unaffected.
 //   I. Invalid configuration boundary — malformed TURN never reaches
 //      RTCPeerConnection.
-//   J. Existing WebRTC behavior — relevant existing tests re-run, green.
 //   K. No application-level failover.
 //   L. Cross-role isolation (Nostr / Arweave / Rendezvous / STUN / and,
 //      structurally, every unrelated role directory in this codebase).
@@ -196,10 +194,6 @@ async function run() {
         const resolvedIceServersAssignments = (mainSource.match(/const resolvedIceServers\s*=/g) || []).length;
         assert(resolvedIceServersAssignments === 1, n(`08. resolvedIceServers is still assigned exactly once — found ${resolvedIceServersAssignments}`));
 
-        assert(mainSource.includes('new WebRtcPeerConnectionProvider({ iceServers: resolvedIceServers })'),
-            n('09. WebRtcPeerConnectionProvider is still constructed from resolvedIceServers — that provider itself needed ZERO changes for this milestone'));
-        assert(mainSource.includes('fetchIceServers({ fallback: resolvedIceServers })'),
-            n("10. the Metered TURN-fetching background enrichment still merges with resolvedIceServers — a user's own configured TURN entry rides through as part of that same fallback, on both the fetch-success and fetch-failure path"));
 
         // AMENDED BY 0.9.456 — assertions 11/12 previously required that
         // `turnServerConfigurationStore` was NOT provided to the Vue app and
@@ -341,23 +335,21 @@ async function run() {
         assert(constructed.some((e) => e.username === 'carol'), n('D4. the configured TURN entry survives construction alongside both STUN entries'));
         provider.dispose();
 
-        // D5. The SAME resolvedIceServers also feeds ui/main.js's own
-        // fetchIceServers({ fallback: resolvedIceServers }) background
-        // enrichment call (see Section 0's own assertion #10) — confirming
-        // the configured TURN entry survives THAT step too, in both
-        // directions: a failed/slow Metered fetch degrades to fallback
-        // as-is, and a successful one merges fetched entries alongside it.
-        const failedFetch = await fetchIceServers({ apiKey: 'k', fetchImpl: async () => { throw new Error('unreachable'); }, fallback: resolvedIceServers });
-        assert(failedFetch === resolvedIceServers, n('D5. a failed Metered fetch degrades to exactly resolvedIceServers, TURN entry included, unchanged'));
+        // D5-D7. TURN credentials fetched from the rendezvous server when a
+        // connection starts (prepareIceServers()) are added to
+        // resolvedIceServers, never replacing the user's own TURN entry,
+        // and a failed fetch leaves resolvedIceServers as it is.
+        const failing = new WebRtcPeerConnectionProvider({ iceServers: resolvedIceServers, turnIceServers: async () => { throw new Error('unreachable'); } });
+        await failing.prepareIceServers();
+        assert(JSON.stringify(failing._iceServers) === JSON.stringify(resolvedIceServers), n('D5. a failed TURN credential fetch leaves exactly resolvedIceServers, TURN entry included'));
+        failing.dispose();
 
-        const meteredEntry = { urls: 'turn:standard.relay.metered.ca:80', username: 'metered-u', credential: 'metered-c' };
-        const succeededFetch = await fetchIceServers({
-            apiKey: 'k',
-            fetchImpl: async () => ({ ok: true, json: async () => [meteredEntry] }),
-            fallback: resolvedIceServers
-        });
-        assert(succeededFetch.some((e) => e.username === 'carol'), n('D6. a successful Metered fetch still carries the user\'s own configured TURN entry through, via the fallback merge'));
-        assert(succeededFetch.some((e) => e.username === 'metered-u'), n('D7. …alongside whatever the Metered fetch itself returned'));
+        const fetchedEntry = { urls: 'turn:relay.from-rendezvous.example:443', username: 'fetched-u', credential: 'fetched-c' };
+        const succeeding = new WebRtcPeerConnectionProvider({ iceServers: resolvedIceServers, turnIceServers: async () => [fetchedEntry] });
+        await succeeding.prepareIceServers();
+        assert(succeeding._iceServers.some((e) => e.username === 'carol'), n('D6. fetched TURN credentials still carry the user\'s own configured TURN entry through'));
+        assert(succeeding._iceServers.some((e) => e.username === 'fetched-u'), n('D7. …alongside the fetched entry'));
+        succeeding.dispose();
 
         console.log('\n=== SECTION D: STUN + TURN COEXISTENCE ===');
         console.log('✓ Section D: a custom STUN list and a configured TURN server compose together without either replacing the other.');
@@ -539,52 +531,6 @@ async function run() {
 
         console.log('\n=== SECTION I: INVALID CONFIGURATION BOUNDARY ===');
         console.log('✓ Section I: every malformed-persisted-TURN shape degrades to absence before composition, and never reaches the real RTCPeerConnection constructor.');
-    }
-
-    // ===============================================================
-    // Section J — Existing WebRTC behavior: relevant existing tests
-    // re-run, green, to demonstrate no regression.
-    // ===============================================================
-    {
-        // tests/WebRtcPeerTransport.test.js is deliberately NOT included
-        // here — it requires a real browser `RTCPeerConnection` global and
-        // only ever runs inside tests.html's own browser test runner; it
-        // fails identically under plain `node`, on the unmodified `main`
-        // branch, regardless of this milestone's own changes (verified
-        // live before selecting this list). tests/TurnServerConfiguration
-        // .test.js and tests/TurnServerConfigurationContractAudit.test.js
-        // are ALSO deliberately excluded here — each carries its own
-        // git-status-based "no unexpected file changed" production guard,
-        // scoped to ITS OWN historical commit, which spuriously fails
-        // against ANY concurrently uncommitted working-tree change
-        // (including this very milestone's own, still-uncommitted files)
-        // — a property of running them via a live child process
-        // mid-session, not a real regression; both are already exercised
-        // in-process, directly, throughout Sections A-L above. Every file
-        // below is a real, node-runnable regression test that actually
-        // exercises WebRtcPeerConnectionProvider/WebRtcPeerConnection or
-        // this milestone's own upstream configuration classes, with no
-        // such working-tree-sensitive guard of its own.
-        const relevantTests = [
-            'tests/IceServerConfig.test.js',
-            'tests/IceGatheringTimeout.test.js',
-            'tests/PeerConnectionResilience.test.js',
-            'tests/UserConfigurableStunConfiguration.test.js'
-        ];
-        for (const relativePath of relevantTests) {
-            let output = '';
-            let failed = false;
-            try {
-                output = execSync(`node ${relativePath}`, { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
-            } catch (error) {
-                failed = true;
-                output = (error.stdout || '') + (error.stderr || '');
-            }
-            assert(!failed, n(`J1. ${relativePath} still passes unmodified after this milestone's own composition change (output: ${output.slice(-500)})`));
-        }
-
-        console.log('\n=== SECTION J: EXISTING WEBRTC BEHAVIOR ===');
-        console.log(`✓ Section J: ${relevantTests.length} relevant existing test files re-run clean, live, as real child processes — no regression from this milestone's own composition change.`);
     }
 
     // ===============================================================

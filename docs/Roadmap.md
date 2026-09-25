@@ -24,7 +24,7 @@ version in the table below and search its part for `## 0.8.26`.
 | [0.9.200 to 0.9.299](roadmap/0.9.200-0.9.299.md) | Placement and history audits, remote document operations, commentary and place naming |
 | [0.9.300 to 0.9.399](roadmap/0.9.300-0.9.399.md) | Content provider preferences, multi-placement, diagnostics, federated repositories and gateway settings |
 | [0.9.587 onward](roadmap/0.9.587-0.9.x.md) | Navigation history, publication actionability, water traversal, commentary distribution, inventory and animals |
-| [Unnumbered, September 2026](roadmap/unnumbered-2026-09.md) | Distribution settings, wallets, vehicles, wildlife and cleanup passes |
+| [Unnumbered, September 2026](roadmap/unnumbered-2026-09.md) | Distribution settings, wallets, vehicles, wildlife, cleanup passes, and the security and release work for 1.0 |
 
 <!-- parts:end -->
 

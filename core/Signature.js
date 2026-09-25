@@ -87,6 +87,11 @@ export const SignatureType = Object.freeze({
     // proves identity. See core/RendezvousPublicationEnvelope.js's
     // getRendezvousPublicationSigningDescriptor().
     RENDEZVOUS_PUBLICATION: 'rendezvous-publication',
+    // A REQUIRED signature over a request to withdraw one rendezvous
+    // publication. Rendezvous servers accept a REMOVE only with it, because
+    // anyone can LOOKUP a publication's id. See core/
+    // RendezvousPublicationEnvelope.js's getRendezvousRemovalSigningDescriptor().
+    RENDEZVOUS_REMOVAL: 'rendezvous-removal',
     // 0.2.67 — a REQUIRED signature (never optional, like PEER_AUTHENTICATION
     // and FRIENDSHIP above, and unlike the AVATAR_*/RENDEZVOUS_PUBLICATION
     // types), over a self-revocation record (core/

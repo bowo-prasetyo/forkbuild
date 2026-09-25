@@ -52,10 +52,9 @@
 // configuration shape remains genuinely underdetermined (credentials,
 // expiry, rotation) and is a separate product decision — this file
 // deliberately cannot be used to smuggle a TURN entry in under a STUN
-// label. `peer/IceServerConfig.js`'s own `fetchIceServers()` — the
-// TURN-fetching seam — is entirely unmodified by this file and this
-// milestone; see that file and `ui/main.js`'s own 0.9.386 comment for
-// how the two compose without either changing the other's behavior.
+// label. TURN credentials fetched from the rendezvous server
+// (`peer/IceServerConfig.js#createTurnCredentialSource`) are merged with
+// this list when a connection starts, never stored in it.
 //
 // VALIDATION IS DELIBERATELY MODEST — SHAPE ONLY, NEVER REACHABILITY,
 // exactly the same restraint `core/ArweaveGatewayConfiguration.js`'s own

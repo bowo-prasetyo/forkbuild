@@ -1,4 +1,9 @@
-import { getRendezvousPublicationSigningDescriptor } from '../core/RendezvousPublicationEnvelope.js';
+import { getRendezvousPublicationSigningDescriptor, getRendezvousRemovalSigningDescriptor } from '../core/RendezvousPublicationEnvelope.js';
+
+// The reference rendezvous server (server/rendezvous-worker/) now refuses
+// unsigned publications and removals, so on a real network an unsigned
+// publication fails with a message asking the user to unlock their
+// identity. peer/LocalRendezvousNetwork.js still accepts them.
 
 // 0.2.66 — the ONE place a peer/RendezvousPublication.js gains a real
 // Ed25519 signature before it ever reaches a peer/RendezvousTransport.js.
@@ -46,3 +51,26 @@ export function signRendezvousPublication(publication, identityProvider) {
     }
     return publication.withSignature(signature.toJSON());
 }
+
+// The proof a rendezvous REMOVE carries: `{ identityId, signature }`, the
+// signed-in identity's signature over withdrawing `publicationId`, or null
+// when this device cannot sign for `identityId` (not signed in, locked, or
+// a different identity). Without it a server refuses the REMOVE and the
+// publication simply expires.
+export function signRendezvousRemoval(publicationId, identityId, identityProvider) {
+    if (!identityProvider
+        || typeof identityProvider.signCanonical !== 'function'
+        || typeof identityProvider.getSigningIdentity !== 'function') {
+        return null;
+    }
+    try {
+        if (identityProvider.getSigningIdentity().id !== identityId) {
+            return null;
+        }
+        const signature = identityProvider.signCanonical(getRendezvousRemovalSigningDescriptor({ identityId, publicationId }));
+        return { identityId, signature: signature.toJSON() };
+    } catch {
+        return null;
+    }
+}
+

@@ -1,4 +1,5 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { saveFailureMessage } from './saveFailureMessages.js';
 
 // Save/New/dirty indicator/Recent Documents — all driven by
 // DocumentManager, LoadDocumentUseCase, and (as of 0.1.20C) EditorSession
@@ -28,9 +29,9 @@ const SEARCH_THRESHOLD = 8;
 // StorageProvider writes (document blob, then manifest — see
 // tests/DocumentSaveFailureHandlingBoundaryAudit.test.js Section B5) and
 // can throw raw, technical storage exceptions. Never shown to the user
-// verbatim — this stays deliberately generic and storage-agnostic.
-// Exported so EditorView.js's Ctrl+S save path shows the same message.
-export const SAVE_FAILURE_MESSAGE = 'Save failed — your changes are still here, but were not saved. Try again.';
+// verbatim; saveFailureMessage() turns it into a message (a full browser
+// storage gets its own, since trying again cannot help). EditorView.js's
+// Ctrl+S save path uses the same function.
 
 export default {
     name: 'Toolbar',
@@ -119,7 +120,7 @@ export default {
                 props.saveDocumentUseCase.execute(props.documentManager);
             } catch (error) {
                 console.error('Save failed:', error);
-                report(SAVE_FAILURE_MESSAGE);
+                props.feedback.show(saveFailureMessage(error), { durationMs: 10000 });
                 return;
             }
             report('Saved');

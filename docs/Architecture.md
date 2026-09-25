@@ -527,11 +527,23 @@ top of it.
 
 **Connections.** A peer connection authenticates a key, not an account.
 peer/WebRtcPeerConnectionProvider.js makes real WebRTC connections using
-the ICE servers from the STUN and TURN settings (peer/IceServerConfig.js).
+the ICE servers from the STUN and TURN settings (peer/IceServerConfig.js),
+plus TURN relay credentials that the rendezvous servers hand out
+(GET /turn-credentials, cached until shortly before they expire). Those are
+fetched only when a connection starts:
+application/peer/PeerSessionManager.js awaits the provider's
+prepareIceServers() before each createOffer()/connect(), so opening the app
+contacts no TURN service, and the provider key never reaches the browser.
 Peers find each other through rendezvous (peer/RendezvousDiscoveryProvider.js
 over peer/WebSocketRendezvousTransport.js, one per configured rendezvous
 URL; the reference server is server/rendezvous-worker/) or through a
 manual invitation (peer/PeerInvitation.js with an offer and answer). A
+rendezvous server accepts a publication only when it is signed by the
+identity it names (peer/RendezvousPublicationSigning.js), and a withdrawal
+only with that identity's signature over it (the `rendezvous-removal`
+signature type); it also refuses replays of older publications and limits
+message size, publication lifetime, request rate and connections per
+address (server/rendezvous-worker/README.md). A
 discovered candidate is only a hint; peer/PeerAuthenticationSession.js
 runs a challenge–response over the new connection, and a signature is
 bound to that one connection. application/peer/PeerSessionManager.js is the

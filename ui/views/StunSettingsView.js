@@ -39,7 +39,7 @@ import { DEFAULT_ICE_SERVERS } from '../../peer/IceServerConfig.js';
 //
 // THIS VIEW NEVER IMPORTS OR CONSTRUCTS `peer/WebRtcPeerConnectionProvider.js`,
 // NEVER CALLS `setIceServers()`, AND NEVER TOUCHES `peer/IceServerConfig.js`'s
-// OWN `fetchIceServers()`. `DEFAULT_ICE_SERVERS` is the one thing imported
+// OWN TURN credential source. `DEFAULT_ICE_SERVERS` is the one thing imported
 // from `peer/IceServerConfig.js` — a plain constant, consulted only to
 // LABEL the effective STUN list when no override is on file, never to
 // construct anything or open a connection. A change saved here only

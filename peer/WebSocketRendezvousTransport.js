@@ -34,14 +34,23 @@ import { createId } from '../core/createId.js';
 // peer/RendezvousConfig.js's own "configures their own" posture; nothing
 // above or below this comment changed to make that true.
 //
+// That server now also decides who may change which entry: it accepts a
+// PUBLISH only when the publication is signed by the identity it names
+// (peer/RendezvousPublicationSigning.js), and a REMOVE only with that
+// identity's signature over withdrawing the publication. It still proves
+// nothing about who answers at the published endpoint; that remains
+// peer/PeerAuthenticationSession.js's job.
+//
 // Wire protocol (JSON frames over one WebSocket connection, request/
 // response correlated by `requestId` — WebSocket itself has no built-in
 // request/response semantics, unlike HTTP):
 //
 //   Client -> Server:
-//     { v: 1, type: 'PUBLISH', requestId, publication }   // a RendezvousPublication.toJSON()
+//     { v: 1, type: 'PUBLISH', requestId, publication }   // a signed RendezvousPublication.toJSON()
 //     { v: 1, type: 'LOOKUP',  requestId, identityId }
-//     { v: 1, type: 'REMOVE',  requestId, publicationId }
+//     { v: 1, type: 'REMOVE',  requestId, identityId, publicationId, signature }
+//                                  // signature: core/RendezvousPublicationEnvelope.js's
+//                                  // getRendezvousRemovalSigningDescriptor(), signed by identityId
 //
 //   Server -> Client, exactly one response per request, in any order:
 //     { v: 1, type: 'OK',    requestId, result }   // publish(): the stored publication;
@@ -118,8 +127,16 @@ export class WebSocketRendezvousTransport extends RendezvousTransport {
         return publications;
     }
 
-    async remove(publicationId) {
-        return Boolean(await this._request('REMOVE', { publicationId }));
+    // `proof` is `{ identityId, signature }` from peer/
+    // RendezvousPublicationSigning.js#signRendezvousRemoval; servers refuse
+    // a REMOVE without it.
+    async remove(publicationId, proof = {}) {
+        const { identityId, signature } = proof;
+        return Boolean(await this._request('REMOVE', {
+            publicationId,
+            ...(identityId ? { identityId } : {}),
+            ...(signature ? { signature } : {})
+        }));
     }
 
     // Not part of peer/RendezvousTransport.js's own formal contract —

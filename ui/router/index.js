@@ -78,7 +78,7 @@ const routes = [
     // replica can browse and fork; this page lists signed
     // DecentralizedPublication envelopes (0.7.0) this replica has
     // cataloged (0.7.2), regardless of whether their content resolves.
-    { path: '/publications', name: 'publications', component: DecentralizedPublicationsView },
+    { path: '/publications', name: 'publications', component: DecentralizedPublicationsView, meta: { experimental: true } },
     // Network Settings hub — one top-nav entry point linking to every
     // /settings/* page below, each still its own route and component — see
     // ui/views/NetworkSettingsView.js's own header.
@@ -104,7 +104,7 @@ const routes = [
     // over; lists whichever of Bitcoin/Arweave this replica currently has a
     // registered publisher for (Base is never listed here — it keeps its
     // own separate wallet-guided anchoring flow).
-    { path: '/settings/anchor-provider', name: 'anchor-provider-settings', component: AnchorProviderSettingsView },
+    { path: '/settings/anchor-provider', name: 'anchor-provider-settings', component: AnchorProviderSettingsView, meta: { experimental: true } },
     // 0.9.366 — Arweave Gateway Settings UI. The one ordinary product path
     // to create/change/clear the persisted Arweave gateway retrieval
     // override (core/ArweaveGatewayConfiguration.js, storage/
@@ -137,7 +137,7 @@ const routes = [
     // BitcoinEsploraSettingsView.js's own header. Mirrors
     // /settings/arweave-gateway's own shape, one field instead of an
     // ordered list.
-    { path: '/settings/bitcoin-esplora', name: 'bitcoin-esplora-settings', component: BitcoinEsploraSettingsView },
+    { path: '/settings/bitcoin-esplora', name: 'bitcoin-esplora-settings', component: BitcoinEsploraSettingsView, meta: { experimental: true } },
     // 0.9.371 — Nostr Relay Settings UI. The one ordinary product path to
     // create/change/clear the persisted Nostr relay set
     // (core/NostrRelayConfiguration.js, storage/NostrRelayConfigurationStore.js,
@@ -193,7 +193,7 @@ const routes = [
     // Archive" step asks a person to paste. Deliberately still not its own
     // top-nav destination — the identical "contextual, not global"
     // navigation /chat/:identityId already uses.
-    { path: '/reconciliation-leaderboard', name: 'reconciliation-leaderboard', component: ReconciliationCandidateLeaderboardView },
+    { path: '/reconciliation-leaderboard', name: 'reconciliation-leaderboard', component: ReconciliationCandidateLeaderboardView, meta: { experimental: true } },
     // 0.8.192 — Reconciliation Candidate Leaderboard Evidence Export
     // Comparison UI. A second, independent workflow from
     // /reconciliation-leaderboard directly above: that page compares two
@@ -216,7 +216,7 @@ const routes = [
     // itself. This route's own registration, name, and component below are
     // unchanged by that milestone — only a caller was added, one hop below
     // /reconciliation-leaderboard, still never a top-nav destination.
-    { path: '/evidence-export-comparison', name: 'evidence-export-comparison', component: ReconciliationCandidateLeaderboardEvidenceExportComparisonView },
+    { path: '/evidence-export-comparison', name: 'evidence-export-comparison', component: ReconciliationCandidateLeaderboardEvidenceExportComparisonView, meta: { experimental: true } },
     // 0.9.408 — Reconciliation Workspace UI. The first user-facing surface
     // over application/leaderboard/snapshot/ReconcileClaimUseCase.js
     // (0.9.407, UNCHANGED) — see ui/views/ReconciliationWorkspaceView.js's
@@ -226,7 +226,7 @@ const routes = [
     // reconciliation page and never itself a top-nav destination — the
     // identical "contextual, not global" navigation shape this whole
     // reconciliation family already holds.
-    { path: '/reconciliation-workspace', name: 'reconciliation-workspace', component: ReconciliationWorkspaceView },
+    { path: '/reconciliation-workspace', name: 'reconciliation-workspace', component: ReconciliationWorkspaceView, meta: { experimental: true } },
     // 0.9.411 — Publisher Leaderboard Snapshot Claim Authoring & Export.
     // The producer-side counterpart to /reconciliation-workspace directly
     // above: that page consumes a pasted peer claim; this page authors,
@@ -239,7 +239,7 @@ const routes = [
     // itself a top-nav destination — the identical "contextual, not
     // global" navigation shape this whole reconciliation family already
     // holds.
-    { path: '/publisher-snapshot-claim', name: 'publisher-snapshot-claim', component: PublisherLeaderboardSnapshotClaimAuthoringView },
+    { path: '/publisher-snapshot-claim', name: 'publisher-snapshot-claim', component: PublisherLeaderboardSnapshotClaimAuthoringView, meta: { experimental: true } },
     // 0.9.417 — Publisher Performance Leaderboard UI. 0.9.416's own audit
     // (tests/PublisherPerformanceLeaderboardProductGapAudit.test.js)
     // proved application/leaderboard/PublisherRankingPolicy.js (0.8.112) and
@@ -255,7 +255,7 @@ const routes = [
     // /reconciliation-leaderboard itself (the two remain genuinely
     // distinct concepts — see 0.9.416's own Section A) and never a
     // top-nav destination.
-    { path: '/publisher-leaderboard', name: 'publisher-leaderboard', component: PublisherPerformanceLeaderboardView },
+    { path: '/publisher-leaderboard', name: 'publisher-leaderboard', component: PublisherPerformanceLeaderboardView, meta: { experimental: true } },
     // AMENDED — the four routes immediately above this comment
     // (/reconciliation-leaderboard, /reconciliation-workspace,
     // /publisher-snapshot-claim, /publisher-leaderboard) were each
@@ -268,7 +268,7 @@ const routes = [
     // moved with the links rather than staying behind. The four routes and
     // their components above are otherwise unchanged; only the caller
     // moved.
-    { path: '/leaderboard', name: 'leaderboard', component: LeaderboardHubView },
+    { path: '/leaderboard', name: 'leaderboard', component: LeaderboardHubView, meta: { experimental: true } },
     { path: '/about', name: 'about', component: AboutView }
 ];
 

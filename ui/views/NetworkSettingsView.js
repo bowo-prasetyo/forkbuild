@@ -28,7 +28,7 @@ export default {
                 </li>
                 <li>
                     <router-link to="/settings/anchor-provider" class="network-settings-link">
-                        <span class="network-settings-link-title">Proof / Anchoring Provider</span>
+                        <span class="network-settings-link-title">Proof / Anchoring Provider <span class="experimental-badge">Experimental</span></span>
                         <span class="form-hint form-hint--neutral">Preferred substrate — Bitcoin or Arweave — "Use Preferred Provider" anchors new evidence onto. Base keeps its own separate wallet-guided anchoring flow.</span>
                     </router-link>
                 </li>
@@ -49,7 +49,7 @@ export default {
                 </li>
                 <li>
                     <router-link to="/settings/bitcoin-esplora" class="network-settings-link">
-                        <span class="network-settings-link-title">Bitcoin Endpoint</span>
+                        <span class="network-settings-link-title">Bitcoin Endpoint <span class="experimental-badge">Experimental</span></span>
                         <span class="form-hint form-hint--neutral">Esplora-compatible endpoint used for Bitcoin anchor broadcasting, confirmation, funding lookups, and proof verification.</span>
                     </router-link>
                 </li>

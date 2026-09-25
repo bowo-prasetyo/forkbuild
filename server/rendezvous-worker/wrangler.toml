@@ -37,3 +37,8 @@ new_sqlite_classes = ["RendezvousNode"]
 # "empty means unrestricted" default posture one layer up.
 # [vars]
 # ALLOWED_ORIGINS = "https://your-forkbuild-deployment.example"
+#
+# Optional TURN relay credentials (see README.md): the Metered app domain
+# here, and the secret key as a secret, never in this file:
+#   wrangler secret put METERED_SECRET_KEY
+# METERED_DOMAIN = "yourapp.metered.live"

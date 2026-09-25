@@ -12,6 +12,42 @@ Once deployed, you'll have a `wss://…` URL to add to
 main app, which is what actually turns on **Be Discoverable** / **Find
 Someone** in ForkBuild's Peers panel.
 
+## What it enforces
+
+The server stores, for each identity, one short-lived entry saying where
+it can be reached. It doesn't need accounts: an identity's id is a
+`did:key`, which contains its public key, so the server checks every
+change against the id itself.
+
+- **Only an identity can change its own entry.** A PUBLISH must be signed
+  by the identity it names, and a REMOVE must carry that identity's
+  signature over withdrawing that one publication. The app signs both
+  automatically while the identity is signed in and unlocked; a locked
+  identity is told to unlock first.
+- **No replays.** A publication older than the stored one is refused, so
+  nobody can roll an identity back to an old endpoint, and a withdrawn
+  publication cannot be published again.
+- **Limits** (the `LIMITS` object in `worker.js`):
+
+  | Limit | Value |
+  | --- | --- |
+  | Message size | 32 KB; a larger frame closes the connection |
+  | Publication lifetime | at most 15 minutes (the app asks for 10) |
+  | Client clock ahead of the server | at most 5 minutes |
+  | Requests per connection | bursts of 120, then 2 per second |
+  | Connections per IP address | 16 |
+  | Identities stored at once | 100,000; set the `MAX_ENTRIES` variable to change it |
+
+What it cannot do is prove that whoever publishes an identity answers at
+the published endpoint. Peers still authenticate each other when they
+connect, so a misbehaving server can hide an identity but not
+impersonate one.
+
+For a public deployment, also consider Cloudflare's own rate limiting
+rules in front of the worker, and run more than one server:
+`peer/RendezvousConfig.js` accepts several URLs, and the app publishes to
+and looks up on all of them.
+
 ## Before you start: use the CLI, not the dashboard
 
 Unlike a stateless worker (e.g. the p2pcf tutorial's worker, or a
@@ -141,6 +177,37 @@ uses Cloudflare's Hibernatable WebSockets API specifically to avoid
 being charged for idle connection time. For a personal or small-group
 ForkBuild deployment, this should stay within the free tier; check
 Cloudflare's own current pricing page if you expect heavy traffic.
+
+## Optional: TURN relay credentials
+
+Some networks block direct peer connections; a TURN relay carries the
+traffic instead. The app asks its rendezvous server for relay credentials
+(`GET /turn-credentials`) when a peer connection starts. To offer them
+through a [Metered](https://www.metered.ca/) TURN account, store two
+settings on the worker:
+
+```
+wrangler secret put METERED_SECRET_KEY    # the account's Secret Key
+```
+
+and, in `wrangler.toml`'s `[vars]` (or as a dashboard variable),
+`METERED_DOMAIN = "yourapp.metered.live"`.
+
+The worker then creates a credential that expires after an hour for each
+request, and answers each IP address at most 20 times an hour. The secret
+key stays on the worker; browsers only ever see the short-lived
+credential. Without these settings the endpoint answers 404 and the app
+connects with STUN alone.
+
+If an older version of the app ever shipped your Metered API key, rotate
+it in the Metered dashboard: that key was public.
+
+## Upgrading an existing deployment
+
+Redeploy with `wrangler deploy`. Entries stored by the previous version
+keep working until they expire (at most minutes). Clients older than
+this version of the app still publish signed entries, but their REMOVE
+is unsigned and is refused; their entries simply expire instead.
 
 ## If you ever need to change or remove it
 

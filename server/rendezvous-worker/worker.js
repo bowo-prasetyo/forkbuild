@@ -1,87 +1,232 @@
-// 0.3.3 — a reference implementation of the rendezvous wire protocol
-// peer/WebSocketRendezvousTransport.js's own header already documents
-// (see that file, in the main ForkBuild repo, for the authoritative
-// spec this file implements). That file's header explicitly notes
-// "this class ships no reference server, only the CLIENT half of a
-// small wire protocol any server that wants to be found by this
-// codebase can implement" — this worker is exactly that: a small,
-// deployable SERVER half, deliberately as "stupid" as
-// peer/LocalRendezvousNetwork.js's own in-memory Map (see that file's
-// own header) — identityId maps to one current publication, expiring
-// on its own, nothing else. It authenticates NO ONE, verifies NO
-// signature, and never becomes an authority over who anyone is —
-// peer/PeerAuthenticationSession.js, back in the app itself, is still
-// the only thing that ever proves that. A malicious or merely buggy
-// deployment of this worker can only ever offer bad CANDIDATES; it can
-// never forge a successful connection, exactly like every other
-// rendezvous mechanism this app already tolerates being wrong.
+// The ForkBuild rendezvous server: a Cloudflare Worker plus one Durable
+// Object that keeps, for each identity, where it can currently be reached.
+// It implements the server half of the protocol documented in
+// peer/WebSocketRendezvousTransport.js (in the main ForkBuild repo); see
+// this folder's README.md for deployment.
 //
-// Deployment target: Cloudflare Workers + one Durable Object, chosen
-// for the same reason the p2pcf tutorial this was modeled after picked
-// Cloudflare — an always-on WebSocket endpoint with no server to
-// patch or restart, on (or very near) Cloudflare's free tier. See this
-// folder's own README.md for exactly how to deploy it and how to wire
-// the resulting wss:// URL into peer/RendezvousConfig.js.
-//
-// Wire protocol (verbatim from peer/WebSocketRendezvousTransport.js):
+// Wire protocol, one JSON object per WebSocket text frame:
 //
 //   Client -> Server:
-//     { v: 1, type: 'PUBLISH', requestId, publication }   // a RendezvousPublication.toJSON()
+//     { v: 1, type: 'PUBLISH', requestId, publication }
+//         a signed RendezvousPublication.toJSON()
 //     { v: 1, type: 'LOOKUP',  requestId, identityId }
-//     { v: 1, type: 'REMOVE',  requestId, publicationId }
+//     { v: 1, type: 'REMOVE',  requestId, identityId, publicationId, signature }
+//         signature: the identity's signature over a rendezvous-removal
+//         envelope naming that publication
 //
 //   Server -> Client, exactly one response per request, in any order:
 //     { v: 1, type: 'OK',    requestId, result }
 //     { v: 1, type: 'ERROR', requestId, message }
 //
-// This file is intentionally self-contained (no import of anything
-// from the main ForkBuild app) — it's deployed completely separately,
-// the same "operator configures their own, with its own credentials"
-// posture peer/IceServerConfig.js and peer/RendezvousConfig.js already
-// hold for TURN servers and rendezvous URLs alike. It re-derives the
-// tiny amount of RendezvousPublication shape-checking it needs rather
-// than importing core/ or peer/ directly.
+// What the server enforces:
+//
+// - Only an identity can publish or withdraw its own entry. An identity id
+//   is a did:key, which embeds its Ed25519 public key, so the server checks
+//   each signature against the id itself; it needs no accounts. Signatures
+//   use ForkBuild's canonical envelope (core/Signature.js) and are checked
+//   with the platform's WebCrypto Ed25519.
+// - A publication cannot be replayed to roll an identity back to an older
+//   entry, or to restore one it withdrew: the server refuses a publication
+//   published earlier than the stored one, and keeps a withdrawn entry as a
+//   tombstone until it would have expired.
+// - Limits (see LIMITS below): message size, publication lifetime, clock
+//   skew, requests per connection, connections per IP address, and the
+//   total number of stored identities.
+//
+// TURN credentials. GET /turn-credentials returns
+//   { iceServers, expiresAt }
+// with short-lived credentials for a Metered TURN relay, created with the
+// account secret key the operator stores as the METERED_SECRET_KEY secret
+// (and the app's domain as METERED_DOMAIN, e.g. "yourapp.metered.live").
+// The key never reaches browsers, and the app asks for credentials only
+// when it starts a peer connection. Without both settings the endpoint
+// answers 404 and the app uses STUN alone.
+//
+// What it does not do: prove that the publisher answers at the published
+// endpoint. Peers still authenticate each other when they connect
+// (peer/PeerAuthenticationSession.js); the server only decides who may
+// change which entry.
+//
+// This file imports nothing from the app, so it can be deployed on its
+// own.
 
 const PROTOCOL_VERSION = 1;
+const SIGNING_DOMAIN = 'forkbuild';
+const PUBLICATION_SIGNATURE_TYPE = 'rendezvous-publication';
+const REMOVAL_SIGNATURE_TYPE = 'rendezvous-removal';
 
-// One entry per identityHint, keyed with this prefix inside Durable
-// Object storage — mirrors peer/LocalRendezvousNetwork.js's own
-// `Map<identityHint, publication>`, just durable across this Durable
-// Object hibernating (see RendezvousNode's own header below for why
-// that matters).
+export const LIMITS = Object.freeze({
+    // Largest accepted frame. A publication carries a WebRTC offer, a few
+    // kilobytes at most.
+    maxMessageBytes: 32 * 1024,
+    // The app publishes for 10 minutes; anything asking to stay longer is
+    // refused, so no entry can outlive this.
+    maxPublicationLifetimeMs: 15 * 60 * 1000,
+    // How far a client's clock may run ahead of the server's.
+    maxClockSkewMs: 5 * 60 * 1000,
+    maxIdLength: 256,
+    // Token bucket per connection: bursts up to `requestBurst`, then
+    // `requestsPerSecond` on average. At startup the app looks up every
+    // Known Peer at once, hence the generous burst.
+    requestBurst: 120,
+    requestsPerSecond: 2,
+    maxConnectionsPerAddress: 16,
+    // Distinct identities stored at once (tombstones included). Can be
+    // overridden with the MAX_ENTRIES variable.
+    maxEntries: 100000,
+    // TURN credentials (GET /turn-credentials): each lasts this long, and
+    // one address may request this many per hour.
+    turnCredentialLifetimeSeconds: 60 * 60,
+    turnCredentialsPerAddressPerHour: 20
+});
+
+// One entry per identity, stored under this prefix:
+//   { publication, publishedAtMs, expiresAtMs, removed }
 const STORAGE_KEY_PREFIX = 'pub:';
+const ENTRY_COUNT_KEY = 'meta:entries';
 
-// How often the alarm sweeps expired entries out of storage. Not the
-// SAME thing as a publication's own expiresAt — LOOKUP and PUBLISH
-// already treat an expired entry as gone the instant they touch it
-// (see _handleLookup/_handlePublish below); this alarm only exists so
-// an identity that published once and never came back doesn't sit in
-// storage forever. Matches RendezvousPublication's own
-// DEFAULT_PUBLICATION_TTL_MS (5 minutes) in the main app, so a sweep
-// never runs meaningfully more often than publications actually
-// expire.
+// The alarm sweeps out entries nobody looked up after they expired.
 const SWEEP_INTERVAL_MS = 5 * 60 * 1000;
 
-// Minimal, deliberately shallow structural validation — NOT a
-// signature check (this server verifies no signature — see this
-// file's own header) and not a re-implementation of
-// peer/RendezvousPublication.js's own constructor rules. Just enough
-// to reject something that couldn't possibly be looked up later (no
-// identityHint to key it by, no publicationId to REMOVE it by, no
-// parseable expiresAt to prune it by).
-function isValidPublication(publication) {
-    return Boolean(
-        publication
-        && typeof publication === 'object'
-        && typeof publication.publicationId === 'string'
-        && publication.publicationId.length > 0
-        && publication.invitation
-        && typeof publication.invitation === 'object'
-        && typeof publication.invitation.identityHint === 'string'
-        && publication.invitation.identityHint.length > 0
-        && typeof publication.expiresAt === 'string'
-        && !Number.isNaN(Date.parse(publication.expiresAt))
-    );
+const TURN_RATE_KEY_PREFIX = 'turn:';
+const HOUR_MS = 60 * 60 * 1000;
+const TURN_PROVIDER_TIMEOUT_MS = 5000;
+
+// ------------------------------------------------------------------
+// Signatures
+// ------------------------------------------------------------------
+
+const B58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+function base58Decode(text) {
+    let num = 0n;
+    for (const ch of text) {
+        const index = B58_ALPHABET.indexOf(ch);
+        if (index === -1) return null;
+        num = num * 58n + BigInt(index);
+    }
+    const bytes = [];
+    while (num > 0n) {
+        bytes.unshift(Number(num % 256n));
+        num /= 256n;
+    }
+    for (const ch of text) {
+        if (ch !== '1') break;
+        bytes.unshift(0);
+    }
+    return new Uint8Array(bytes);
+}
+
+// did:key:z + base58btc(0xed 0x01 + 32-byte Ed25519 public key)
+export function didKeyToPublicKey(did) {
+    if (typeof did !== 'string' || !did.startsWith('did:key:z') || did.length > LIMITS.maxIdLength) {
+        return null;
+    }
+    const bytes = base58Decode(did.slice('did:key:z'.length));
+    if (!bytes || bytes.length !== 34 || bytes[0] !== 0xed || bytes[1] !== 0x01) {
+        return null;
+    }
+    return bytes.slice(2);
+}
+
+function hexToBytes(hex) {
+    if (typeof hex !== 'string' || hex.length % 2 !== 0 || !/^[0-9a-fA-F]*$/.test(hex)) {
+        return null;
+    }
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+    }
+    return bytes;
+}
+
+// The exact bytes the app signs (core/Signature.js#canonicalBytes).
+function canonicalBytes({ type, id, revision, payload }) {
+    return new TextEncoder().encode(JSON.stringify({ domain: SIGNING_DOMAIN, type, id, revision, payload }));
+}
+
+// True when `signature` (a core/Signature.js toJSON()) is `signer`'s valid
+// Ed25519 signature over `descriptor`.
+async function verifySignature(descriptor, signature, signer) {
+    if (!signature || typeof signature !== 'object'
+        || (signature.algorithm !== undefined && signature.algorithm !== 'Ed25519')
+        || signature.signer !== signer
+        || signature.domain !== `${SIGNING_DOMAIN}/${descriptor.type}`) {
+        return false;
+    }
+    const publicKey = didKeyToPublicKey(signer);
+    const signatureBytes = hexToBytes(signature.signature);
+    if (!publicKey || !signatureBytes || signatureBytes.length !== 64) {
+        return false;
+    }
+    try {
+        const key = await crypto.subtle.importKey('raw', publicKey, { name: 'Ed25519' }, false, ['verify']);
+        return await crypto.subtle.verify({ name: 'Ed25519' }, key, signatureBytes, canonicalBytes(descriptor));
+    } catch {
+        return false;
+    }
+}
+
+// Mirrors core/RendezvousPublicationEnvelope.js.
+function publicationDescriptor(publication) {
+    return {
+        type: PUBLICATION_SIGNATURE_TYPE,
+        id: publication.invitation.identityHint,
+        revision: publication.publicationId,
+        payload: {
+            publicationId: publication.publicationId,
+            identityHint: publication.invitation.identityHint,
+            invitation: publication.invitation,
+            publishedAt: publication.publishedAt,
+            expiresAt: publication.expiresAt
+        }
+    };
+}
+
+function removalDescriptor(identityId, publicationId) {
+    return {
+        type: REMOVAL_SIGNATURE_TYPE,
+        id: identityId,
+        revision: publicationId,
+        payload: { publicationId, identityHint: identityId }
+    };
+}
+
+// ------------------------------------------------------------------
+// Validation
+// ------------------------------------------------------------------
+
+function isShortString(value) {
+    return typeof value === 'string' && value.length > 0 && value.length <= LIMITS.maxIdLength;
+}
+
+function isIsoDate(value) {
+    return typeof value === 'string' && !Number.isNaN(Date.parse(value));
+}
+
+// Throws a message the client can show unless `publication` is well formed
+// and its times are within the limits. Returns its parsed times.
+function checkPublicationShape(publication, now) {
+    if (!publication || typeof publication !== 'object'
+        || !isShortString(publication.publicationId)
+        || !publication.invitation || typeof publication.invitation !== 'object'
+        || !isShortString(publication.invitation.identityHint)
+        || !isIsoDate(publication.publishedAt)
+        || !isIsoDate(publication.expiresAt)) {
+        throw new Error('PUBLISH: invalid publication');
+    }
+    const publishedAtMs = Date.parse(publication.publishedAt);
+    const expiresAtMs = Date.parse(publication.expiresAt);
+    if (expiresAtMs <= now) {
+        throw new Error('PUBLISH: the publication has already expired');
+    }
+    if (publishedAtMs > now + LIMITS.maxClockSkewMs) {
+        throw new Error('PUBLISH: the publication is dated in the future; check this device\'s clock');
+    }
+    if (expiresAtMs - Math.max(publishedAtMs, now - LIMITS.maxClockSkewMs) > LIMITS.maxPublicationLifetimeMs) {
+        throw new Error(`PUBLISH: a publication may last at most ${LIMITS.maxPublicationLifetimeMs / 60000} minutes`);
+    }
+    return { publishedAtMs, expiresAtMs };
 }
 
 function okResponse(requestId, result) {
@@ -92,36 +237,33 @@ function errorResponse(requestId, message) {
     return JSON.stringify({ v: PROTOCOL_VERSION, type: 'ERROR', requestId, message });
 }
 
-// The Durable Object holding ALL rendezvous state for this
-// deployment — a single global namespace, not partitioned by room or
-// anything else, because peer/RendezvousTransport.js's own contract
-// has no such concept: LOOKUP only ever works BY IDENTITY (see that
-// file's own header), so there is exactly one shared "where is X
-// reachable right now" pointer per identityId, worldwide. The default
-// export below always addresses the SAME instance (idFromName('global'))
-// so every WebSocket connection — from every browser, anywhere —
-// shares one Map. Fine at the scale this app is meant for; a
-// higher-traffic deployment could shard by identityId prefix later,
-// but that is not attempted here.
+function messageSize(raw) {
+    if (typeof raw === 'string') {
+        // Each UTF-16 unit encodes to at most 3 UTF-8 bytes, so a short
+        // string needs no encoding to know it is within the limit.
+        return raw.length * 3 <= LIMITS.maxMessageBytes ? raw.length : new TextEncoder().encode(raw).byteLength;
+    }
+    return raw.byteLength;
+}
+
+// ------------------------------------------------------------------
+// The Durable Object
+// ------------------------------------------------------------------
+
+// All rendezvous state for a deployment lives in one Durable Object
+// instance (the Worker below always addresses idFromName('global')),
+// because LOOKUP works by identity across every connection.
 //
-// Uses the Hibernatable WebSockets API (ctx.acceptWebSocket) rather
-// than holding sockets in a plain array, specifically because it lets
-// Cloudflare evict this object's in-memory JS state between messages
-// without dropping the underlying connections — see this repo's own
-// README.md for the cost reasoning. The consequence: nothing here may
-// live ONLY in a `this.` field across a hibernation cycle. All actual
-// state — every published RendezvousPublication — lives in
-// `this.ctx.storage`, never in a plain in-memory Map, precisely so a
-// LOOKUP after a hibernation cycle still sees a PUBLISH from before
-// it.
+// It uses hibernatable WebSockets (ctx.acceptWebSocket), so Cloudflare may
+// drop this object's memory between messages while keeping connections
+// open. Everything that must survive that lives in ctx.storage or in the
+// socket's own attachment and tags, never only in a `this.` field.
 export class RendezvousNode {
-    constructor(ctx, env) {
+    constructor(ctx, env = {}) {
         this.ctx = ctx;
         this.env = env;
-        // Arms the sweep alarm exactly once per Durable Object
-        // lifetime (getAlarm() returns non-null once one is already
-        // scheduled) — blockConcurrencyWhile so no request is handled
-        // against a not-yet-initialized alarm state.
+        const configuredMax = Number.parseInt(env.MAX_ENTRIES, 10);
+        this.maxEntries = Number.isFinite(configuredMax) && configuredMax > 0 ? configuredMax : LIMITS.maxEntries;
         this.ctx.blockConcurrencyWhile(async () => {
             const existing = await this.ctx.storage.getAlarm();
             if (existing === null) {
@@ -130,38 +272,46 @@ export class RendezvousNode {
         });
     }
 
-    // Called by the top-level Worker (see `export default` below) for
-    // every request it forwards here — always a WebSocket upgrade in
-    // practice, since that's the only kind of request the top-level
-    // handler ever forwards.
     async fetch(request) {
+        if (new URL(request.url).pathname === '/turn-credentials') {
+            return this._handleTurnCredentials(request);
+        }
         if (request.headers.get('Upgrade') !== 'websocket') {
             return new Response('RendezvousNode: expected a WebSocket upgrade request', { status: 426 });
         }
+        // Cloudflare sets CF-Connecting-IP; tagging each socket with it lets
+        // getWebSockets(address) count connections even after hibernation.
+        const address = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (this.ctx.getWebSockets(address).length >= LIMITS.maxConnectionsPerAddress) {
+            return new Response('Too many connections from this address', { status: 429 });
+        }
         const pair = new WebSocketPair();
         const [client, server] = Object.values(pair);
-        this.ctx.acceptWebSocket(server);
+        this.ctx.acceptWebSocket(server, [address]);
         return new Response(null, { status: 101, webSocket: client });
     }
 
-    // One call per inbound WebSocket text frame, from ANY currently
-    // connected client (there is no per-connection state to look up —
-    // every request carries everything it needs). A frame that isn't
-    // valid JSON, or has no requestId, is silently dropped — there is
-    // no requestId to reply against, exactly mirroring
-    // WebSocketRendezvousTransport._handleMessage()'s own "ignore
-    // anything it cannot correlate" posture on the client side.
+    // One call per inbound frame. A frame with no requestId gets no reply,
+    // since there is nothing to correlate it with.
     async webSocketMessage(ws, raw) {
+        if (messageSize(raw) > LIMITS.maxMessageBytes) {
+            try { ws.close(1009, 'message too large'); } catch { /* already closing */ }
+            return;
+        }
         let message;
         try {
             message = JSON.parse(typeof raw === 'string' ? raw : new TextDecoder().decode(raw));
         } catch {
             return;
         }
-        if (!message || typeof message !== 'object' || typeof message.requestId !== 'string' || !message.requestId) {
+        if (!message || typeof message !== 'object' || !isShortString(message.requestId)) {
             return;
         }
         const { type, requestId } = message;
+        if (!this._takeRequestToken(ws)) {
+            ws.send(errorResponse(requestId, 'rate limit exceeded; slow down'));
+            return;
+        }
         try {
             let result;
             switch (type) {
@@ -172,10 +322,10 @@ export class RendezvousNode {
                     result = await this._handleLookup(message.identityId);
                     break;
                 case 'REMOVE':
-                    result = await this._handleRemove(message.publicationId);
+                    result = await this._handleRemove(message);
                     break;
                 default:
-                    throw new Error(`unknown request type "${String(type)}"`);
+                    throw new Error(`unknown request type "${String(type).slice(0, 32)}"`);
             }
             ws.send(okResponse(requestId, result));
         } catch (err) {
@@ -187,36 +337,60 @@ export class RendezvousNode {
         try { ws.close(code, reason); } catch { /* already closing */ }
     }
 
-    async webSocketError() {
-        // Nothing per-connection to clean up — see this class's own
-        // header on why no state is ever attached to a specific
-        // socket in the first place.
+    async webSocketError() {}
+
+    // Token bucket kept in the socket's attachment, so it survives
+    // hibernation.
+    _takeRequestToken(ws, now = Date.now()) {
+        let state = null;
+        try { state = ws.deserializeAttachment(); } catch { /* none yet */ }
+        const last = state && typeof state.at === 'number' ? state.at : now;
+        const saved = state && typeof state.tokens === 'number' ? state.tokens : LIMITS.requestBurst;
+        const tokens = Math.min(LIMITS.requestBurst, saved + ((now - last) / 1000) * LIMITS.requestsPerSecond);
+        const allowed = tokens >= 1;
+        ws.serializeAttachment({ tokens: allowed ? tokens - 1 : tokens, at: now });
+        return allowed;
     }
 
-    // PUBLISH — replaces whatever this node last had stored for the
-    // SAME identityHint, exactly like peer/LocalRendezvousNetwork.js's
-    // own publish(): "a fresh publish() for the same identity simply
-    // overwrites whatever was there before, regardless of endpoint."
-    // Echoes the publication straight back, matching what
-    // WebSocketRendezvousTransport.publish() expects to re-parse.
-    async _handlePublish(publication) {
-        if (!isValidPublication(publication)) {
-            throw new Error('PUBLISH: invalid publication');
+    // PUBLISH replaces the identity's current entry. The publication must be
+    // signed by the identity it names, and may not be older than the entry
+    // it replaces (or be one the identity withdrew).
+    async _handlePublish(publication, now = Date.now()) {
+        const { publishedAtMs, expiresAtMs } = checkPublicationShape(publication, now);
+        const identityId = publication.invitation.identityHint;
+        if (!didKeyToPublicKey(identityId)) {
+            throw new Error('PUBLISH: identityHint is not a did:key identity');
         }
-        const key = STORAGE_KEY_PREFIX + publication.invitation.identityHint;
-        const expiresAtMs = Date.parse(publication.expiresAt);
-        await this.ctx.storage.put(key, { publication, expiresAtMs });
+        if (!publication.signature) {
+            throw new Error('PUBLISH: the publication must be signed by the identity it names; unlock your identity and try again');
+        }
+        if (!await verifySignature(publicationDescriptor(publication), publication.signature, identityId)) {
+            throw new Error('PUBLISH: the signature does not match the publication or its identity');
+        }
+
+        const key = STORAGE_KEY_PREFIX + identityId;
+        const existing = await this.ctx.storage.get(key);
+        const current = existing && existing.expiresAtMs > now ? existing : null;
+        if (current) {
+            if (publishedAtMs < current.publishedAtMs) {
+                throw new Error('PUBLISH: a newer publication for this identity is already stored');
+            }
+            if (current.removed && current.publication.publicationId === publication.publicationId) {
+                throw new Error('PUBLISH: this publication was withdrawn');
+            }
+        } else if (!existing && await this._entryCount() >= this.maxEntries) {
+            throw new Error('PUBLISH: this rendezvous server is full; try again later');
+        }
+
+        await this.ctx.storage.put(key, { publication, publishedAtMs, expiresAtMs, removed: false });
+        if (!existing) {
+            await this._adjustEntryCount(1);
+        }
         return publication;
     }
 
-    // LOOKUP — at most one entry, exactly like
-    // peer/LocalRendezvousNetwork.js's own lookup(): "identityHint ->
-    // one current publication." An expired entry is treated as gone
-    // (and opportunistically pruned right here, not just by the
-    // alarm) the same way LocalRendezvousNetwork's own
-    // _pruneExpired() runs before every lookup.
-    async _handleLookup(identityId) {
-        if (typeof identityId !== 'string' || !identityId) {
+    async _handleLookup(identityId, now = Date.now()) {
+        if (!isShortString(identityId)) {
             return [];
         }
         const key = STORAGE_KEY_PREFIX + identityId;
@@ -224,57 +398,145 @@ export class RendezvousNode {
         if (!entry) {
             return [];
         }
-        if (entry.expiresAtMs <= Date.now()) {
-            await this.ctx.storage.delete(key);
+        if (entry.expiresAtMs <= now) {
+            await this._deleteEntry(key);
             return [];
         }
-        return [entry.publication];
+        return entry.removed ? [] : [entry.publication];
     }
 
-    // REMOVE — by publicationId, not by identityHint (a caller
-    // withdrawing its OWN publication doesn't necessarily still know
-    // what it published under, only the publicationId it got back
-    // from publish()) — so this has to scan, exactly like
-    // peer/LocalRendezvousNetwork.js's own remove() does over its
-    // in-memory Map. The number of currently-live distinct identities
-    // is small at this app's intended scale, so an O(n) scan over
-    // Durable Object storage is a non-issue.
-    async _handleRemove(publicationId) {
-        if (typeof publicationId !== 'string' || !publicationId) {
+    // REMOVE withdraws one publication. It needs the identity's signature
+    // over that publicationId, so seeing a publication (anyone can LOOKUP
+    // it) is not enough to withdraw it. The entry stays as a tombstone
+    // until it expires, so the withdrawn publication cannot be published
+    // again.
+    async _handleRemove({ identityId, publicationId, signature } = {}, now = Date.now()) {
+        if (!isShortString(identityId) || !isShortString(publicationId)) {
+            throw new Error('REMOVE: identityId and publicationId are required');
+        }
+        if (!signature) {
+            throw new Error('REMOVE: the request must be signed by the identity it names');
+        }
+        if (!await verifySignature(removalDescriptor(identityId, publicationId), signature, identityId)) {
+            throw new Error('REMOVE: the signature does not match the request or its identity');
+        }
+        const key = STORAGE_KEY_PREFIX + identityId;
+        const entry = await this.ctx.storage.get(key);
+        if (!entry || entry.removed || entry.expiresAtMs <= now || entry.publication.publicationId !== publicationId) {
             return false;
         }
-        const entries = await this.ctx.storage.list({ prefix: STORAGE_KEY_PREFIX });
-        for (const [key, entry] of entries) {
-            if (entry && entry.publication && entry.publication.publicationId === publicationId) {
-                await this.ctx.storage.delete(key);
-                return true;
-            }
-        }
-        return false;
+        await this.ctx.storage.put(key, { ...entry, removed: true });
+        return true;
     }
 
-    // The janitor — nothing above ever depends on this running (both
-    // PUBLISH's overwrite and LOOKUP's read-time check already handle
-    // expiry correctly on their own), it only exists so an identity
-    // that published once and never returned doesn't sit in storage
-    // forever. Reschedules itself every time it runs.
+    async _entryCount() {
+        return (await this.ctx.storage.get(ENTRY_COUNT_KEY)) || 0;
+    }
+
+    async _adjustEntryCount(delta) {
+        await this.ctx.storage.put(ENTRY_COUNT_KEY, Math.max(0, (await this._entryCount()) + delta));
+    }
+
+    async _deleteEntry(key) {
+        if (await this.ctx.storage.delete(key)) {
+            await this._adjustEntryCount(-1);
+        }
+    }
+
+    // Deletes expired entries and tombstones, recounts what is left, and
+    // reschedules itself.
+    // GET /turn-credentials: creates a credential with the provider and
+    // returns the ICE servers that use it. Rate limited per address.
+    async _handleTurnCredentials(request, now = Date.now()) {
+        const headers = {
+            'content-type': 'application/json',
+            'cache-control': 'no-store',
+            ...corsHeaders(request, this.env)
+        };
+        const reply = (status, body) => new Response(JSON.stringify(body), { status, headers });
+        if (request.method === 'OPTIONS') {
+            return new Response(null, { status: 204, headers });
+        }
+        if (request.method !== 'GET') {
+            return reply(405, { error: 'use GET' });
+        }
+        const domain = this.env.METERED_DOMAIN;
+        const secretKey = this.env.METERED_SECRET_KEY;
+        if (!domain || !secretKey) {
+            return reply(404, { error: 'this rendezvous server offers no TURN relay' });
+        }
+
+        const address = request.headers.get('CF-Connecting-IP') || 'unknown';
+        const rateKey = TURN_RATE_KEY_PREFIX + address;
+        const rateWindow = await this.ctx.storage.get(rateKey);
+        const current = rateWindow && now - rateWindow.startedAt < HOUR_MS ? rateWindow : { startedAt: now, count: 0 };
+        if (current.count >= LIMITS.turnCredentialsPerAddressPerHour) {
+            return reply(429, { error: 'too many TURN credential requests; try again later' });
+        }
+        await this.ctx.storage.put(rateKey, { ...current, count: current.count + 1 });
+
+        try {
+            const iceServers = await this._createTurnCredential(domain, secretKey);
+            const expiresAt = new Date(now + LIMITS.turnCredentialLifetimeSeconds * 1000).toISOString();
+            return reply(200, { iceServers, expiresAt });
+        } catch {
+            return reply(502, { error: 'the TURN provider did not answer' });
+        }
+    }
+
+    // Metered's REST API: POST /api/v1/turn/credential (secret key) creates
+    // an expiring credential; GET /api/v1/turn/credentials with that
+    // credential's own apiKey returns its ICE servers, routed to the
+    // caller's region.
+    async _createTurnCredential(domain, secretKey) {
+        const fetchImpl = this.fetchImpl || globalThis.fetch;
+        const base = `https://${domain}/api/v1/turn`;
+        const created = await fetchImpl(`${base}/credential?secretKey=${encodeURIComponent(secretKey)}`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ expiryInSeconds: LIMITS.turnCredentialLifetimeSeconds, label: 'forkbuild' }),
+            signal: AbortSignal.timeout(TURN_PROVIDER_TIMEOUT_MS)
+        });
+        if (!created.ok) {
+            throw new Error(`TURN provider answered ${created.status}`);
+        }
+        const credential = await created.json();
+        if (!credential || typeof credential.apiKey !== 'string') {
+            throw new Error('TURN provider returned no credential');
+        }
+        const listed = await fetchImpl(`${base}/credentials?apiKey=${encodeURIComponent(credential.apiKey)}`, {
+            signal: AbortSignal.timeout(TURN_PROVIDER_TIMEOUT_MS)
+        });
+        const iceServers = listed.ok ? await listed.json() : null;
+        if (!Array.isArray(iceServers) || iceServers.length === 0) {
+            throw new Error('TURN provider returned no ICE servers');
+        }
+        return iceServers;
+    }
+
     async alarm() {
         const now = Date.now();
+        const rateWindows = await this.ctx.storage.list({ prefix: TURN_RATE_KEY_PREFIX });
+        for (const [key, rateWindow] of rateWindows) {
+            if (!rateWindow || now - rateWindow.startedAt >= HOUR_MS) {
+                await this.ctx.storage.delete(key);
+            }
+        }
         const entries = await this.ctx.storage.list({ prefix: STORAGE_KEY_PREFIX });
+        let remaining = 0;
         for (const [key, entry] of entries) {
             if (!entry || typeof entry.expiresAtMs !== 'number' || entry.expiresAtMs <= now) {
                 await this.ctx.storage.delete(key);
+            } else {
+                remaining++;
             }
         }
+        await this.ctx.storage.put(ENTRY_COUNT_KEY, remaining);
         await this.ctx.storage.setAlarm(Date.now() + SWEEP_INTERVAL_MS);
     }
 }
 
-// Comma-separated ALLOWED_ORIGINS, same optional-safety-net shape the
-// p2pcf worker tutorial this was modeled after already offers — unset
-// (the default) means "public, anyone may connect," exactly like a
-// fresh peer/RendezvousConfig.js deployment already defaults to no
-// restriction at all one layer up. Never required to exist.
+// Optional comma-separated ALLOWED_ORIGINS; unset allows any web origin.
 function parseAllowedOrigins(raw) {
     if (typeof raw !== 'string' || raw.trim() === '') {
         return null;
@@ -282,21 +544,29 @@ function parseAllowedOrigins(raw) {
     return raw.split(',').map((origin) => origin.trim()).filter(Boolean);
 }
 
-// The top-level Worker entry point — the part Cloudflare actually
-// routes HTTP(S)/WebSocket requests to. Its only two jobs: answer a
-// plain GET with a friendly "yes, I'm deployed" response (the same
-// "hit the URL to make sure it's working" check the p2pcf tutorial's
-// own README asks for), and forward every WebSocket upgrade to the
-// one shared RendezvousNode Durable Object instance.
+// The app runs on another origin, so /turn-credentials needs CORS. Allowed
+// origins are ALLOWED_ORIGINS when set, otherwise any.
+function corsHeaders(request, env) {
+    const allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
+    const origin = request.headers.get('Origin');
+    const allowed = allowedOrigins ? (allowedOrigins.includes(origin) ? origin : null) : '*';
+    return allowed
+        ? { 'access-control-allow-origin': allowed, 'access-control-allow-methods': 'GET, OPTIONS', vary: 'Origin' }
+        : {};
+}
+
+// The Worker entry point: answers a plain GET so an operator can check the
+// deployment, and forwards WebSocket upgrades to the Durable Object.
 export default {
     async fetch(request, env) {
-        if (request.headers.get('Upgrade') !== 'websocket') {
+        const isTurnRequest = new URL(request.url).pathname === '/turn-credentials';
+        if (!isTurnRequest && request.headers.get('Upgrade') !== 'websocket') {
             return new Response(
                 'ForkBuild rendezvous worker is running.\n\n' +
                 'This endpoint only understands WebSocket connections speaking the\n' +
                 'PUBLISH / LOOKUP / REMOVE protocol documented in\n' +
                 'peer/WebSocketRendezvousTransport.js (ForkBuild repo) and in this\n' +
-                'folder\'s own README.md — nothing to see here over plain HTTP.\n',
+                'folder\'s own README.md.\n',
                 { status: 200, headers: { 'content-type': 'text/plain; charset=utf-8' } }
             );
         }
@@ -311,13 +581,12 @@ export default {
 
         if (!env.RENDEZVOUS_NODE) {
             return new Response(
-                'RendezvousNode Durable Object binding "RENDEZVOUS_NODE" is not configured — see this folder\'s own README.md.',
+                'RendezvousNode Durable Object binding "RENDEZVOUS_NODE" is not configured; see this folder\'s README.md.',
                 { status: 500 }
             );
         }
 
         const id = env.RENDEZVOUS_NODE.idFromName('global');
-        const stub = env.RENDEZVOUS_NODE.get(id);
-        return stub.fetch(request);
+        return env.RENDEZVOUS_NODE.get(id).fetch(request);
     }
 };

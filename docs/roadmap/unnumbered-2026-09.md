@@ -458,3 +458,78 @@ it) could run code with access to every identity key the page unlocks.
   alive until the runner's timeout. The test now uses its fake WebSocket, and `tests/support/NodePreload.mjs`
   makes WebSocket and fetch to any host but this machine fail immediately in every Node test.
 
+**Rendezvous server: signed changes and limits.** The reference server in `server/rendezvous-worker/` authenticated
+no one: anyone could overwrite any identity's entry, withdraw it with a publication id anyone can look up, set an
+expiry decades away, and fill its storage.
+
+- PUBLISH now requires the publication to be signed by the identity it names. Identity ids are `did:key`s, so the
+  server verifies each signature against the id itself (WebCrypto Ed25519, over the same canonical envelope the app
+  signs) and needs no accounts. The app already signed publications whenever it could; a locked identity is now told
+  to unlock instead of publishing unsigned.
+- REMOVE carries the identity's signature over withdrawing that one publication: a new `rendezvous-removal` signature
+  type (`core/RendezvousPublicationEnvelope.js#getRendezvousRemovalSigningDescriptor`), produced by
+  `peer/RendezvousPublicationSigning.js#signRendezvousRemoval` and sent by `RendezvousDiscoveryProvider.unpublish()`.
+- The server refuses a publication older than the stored one (no rollback to an old endpoint) and keeps a withdrawn
+  entry as a tombstone until it expires (a withdrawn publication cannot be replayed).
+- Limits: 32 KB messages, publications lasting at most 15 minutes and dated at most 5 minutes ahead, 120-request
+  bursts then 2 per second per connection, 16 connections per IP address, and 100,000 stored identities
+  (`MAX_ENTRIES`). The entry count is kept in storage and recounted by the sweep alarm.
+- Tests: `server/rendezvous-worker/worker.test.js` now uses real Ed25519 identities and covers forgery, tampering,
+  replay, withdrawal, every limit and the connection cap; the new `tests/RendezvousWorkerInterop.test.js` runs the
+  app's own client classes against the worker through an in-memory WebSocket.
+- Not done here: the default server is still one personal `workers.dev` deployment. Running more than one server
+  (the app already publishes to and looks up on every configured URL) is an operations task for the release.
+
+**TURN credentials: no key in the app, and no request on page load.** `peer/IceServerConfig.js` held a Metered API
+key and `ui/main` fetched TURN credentials with it in the background on every page load: every visitor, signed in or
+not, contacted `forkbuild.metered.live`, and anyone could read the key and spend the account's relay quota.
+
+- The key and the Metered endpoint are gone from the app. The rendezvous worker gains `GET /turn-credentials`: with
+  `METERED_DOMAIN` and the `METERED_SECRET_KEY` secret set, it creates a Metered credential that expires after an
+  hour and returns its ICE servers (`{ iceServers, expiresAt }`), answering each IP address at most 20 times an hour.
+  Without those settings it answers 404.
+- The app asks for credentials only when a connection starts: `WebRtcPeerConnectionProvider` takes a `turnIceServers`
+  source and `prepareIceServers()`, which `PeerSessionManager` awaits before `createInvitation()`,
+  `acceptInvitation()` and `connectToDiscovered()`. The source (`createTurnCredentialSource()`) asks the configured
+  rendezvous servers (`wss://host` → `https://host/turn-credentials`), caches the credential until five minutes
+  before it expires (a failure for ten minutes), shares concurrent requests, and degrades to STUN (plus any user TURN
+  entry) within 5 seconds.
+- Tests: `tests/IceServerConfig.test.js` is rewritten for the new source and hook, including that constructing the
+  provider requests nothing; the worker tests cover the endpoint, its rate limit, CORS and that the secret key never
+  appears in a response. Source-text assertions on the old background fetch were removed, as was
+  `TurnWebRtcIntegration`'s Section J, which re-ran other test files as child processes.
+- Operator action: the old key was public in this repository's history, so it must be rotated in the Metered
+  dashboard, and the worker redeployed with the new settings.
+
+**Editing while signed out, and a full browser storage.**
+
+- Every brick placed while signed out (or with a locked identity) threw an uncaught error: the Editor's and World
+  View's command propagation handlers (`DocumentCommandPropagationUseCase`, `WorldCommandPropagationUseCase`) tried
+  to broadcast each local edit and threw because no identity could sign it. With no identity there is also no
+  authenticated peer to send to, so the handlers now skip broadcasting and the edit stays local.
+  `tests/SignedOutEditingPropagation.test.js` covers both, signed out and locked.
+- Full storage: `LocalStorageProvider.save()` turns each engine's quota error into `StorageFullError`
+  (`storage/StorageFullError.js`), whose message is fit to show (World View already shows error messages). The Editor's
+  save failure says storage is full and points to Export instead of "Try again", which cannot help
+  (`ui/components/saveFailureMessages.js`). The autosave timer no longer throws: `AutosaveScheduler` takes an
+  `onError`, and the Editor reports a paused crash recovery once until a save succeeds. These messages stay up for 10
+  seconds. `tests/StorageFullHandling.test.js` covers them; in Chromium, with storage filled, placing a brick and
+  pressing Ctrl+S showed both messages and no uncaught error.
+- Getting Started now explains the crash-recovery copy, the storage limit, and that building needs no login.- `tests/AvatarCollision.test.js` failed about one run in seven: its wall was placed at a hash of a random
+  publication id, so it landed on different procedural terrain, water and trees each run. It is now placed at a
+  fixed spot (0 failures in 30 runs).
+
+**Release preparation for 1.0.**
+
+- The advanced areas are marked **Experimental**: routes carry `meta: { experimental: true }`
+  (`/publications`, the leaderboard, reconciliation and publisher snapshot claim pages, and the anchoring and
+  Bitcoin settings), and `ui/components/ExperimentalBanner.js` is shown above each of them. The Publications link
+  and the two settings rows carry an Experimental badge. Nothing was removed.
+- New documents: `SECURITY.md` (private reporting through GitHub, scope), `CONTRIBUTING.md`, `docs/Privacy.md`
+  (what is stored, and every server the app can contact and when) and `docs/ReleaseNotes-1.0.md` (a draft: the app
+  still reports 0.9.703 until the release is tagged).
+- Getting Started no longer says to open `index.html` from disk, and marks Publications experimental; the README
+  lists the experimental areas and no longer says there is no central server, since the default setup uses a
+  rendezvous server.
+- The top navigation's links no longer break across lines, and wrap as whole links on narrow windows.
+
