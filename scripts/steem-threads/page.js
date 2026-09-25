@@ -96,9 +96,11 @@ createButton.addEventListener('click', async () => {
     stopButton.disabled = false;
     let done = 0;
     let countdown = null;
+    let current = null;
+    const rpc = createSteemRpcClient({ nodes: [settings.node] });
     try {
         await createSteemDiscoveryThreads({
-            rpc: createSteemRpcClient({ nodes: [settings.node] }),
+            rpc,
             broadcast: broadcaster.broadcast,
             account: settings.account,
             targets,
@@ -106,6 +108,7 @@ createButton.addEventListener('click', async () => {
             onProgress(event) {
                 clearInterval(countdown);
                 const name = event.target.permlink;
+                current = name;
                 if (event.type === 'waiting') {
                     const tick = () => setStatus(`${done} of ${targets.length} created. Next: ${name} in ${formatWait(event.until - Date.now())} (the chain allows one root post every 5 minutes).`);
                     tick();
@@ -117,6 +120,7 @@ createButton.addEventListener('click', async () => {
                     renderState(name, { text: 'broadcast, waiting for it to appear', kind: 'missing' });
                 } else if (event.type === 'created' || event.type === 'exists') {
                     done += 1;
+                    current = null;
                     renderState(name, describeCheck(event.check));
                 }
             }
@@ -124,7 +128,14 @@ createButton.addEventListener('click', async () => {
         setStatus(`Done: ${done} of ${targets.length} threads created or already present.`, 'ok');
     } catch (error) {
         const stopped = running.signal.aborted;
-        setStatus(stopped ? `Stopped after ${done} of ${targets.length}. Check again before continuing.` : `Stopped: ${error.message}. Check again before continuing.`, stopped ? undefined : 'bad');
+        if (current) renderState(current, { text: stopped ? 'not posted' : 'not posted (see above)', kind: 'problem' });
+        if (stopped) {
+            setStatus(`Stopped after ${done} of ${targets.length}. Check again before continuing.`);
+        } else {
+            const reason = error.message.replace(/\.+$/, '');
+            const advice = isKeyError(error) ? await keyAdvice(rpc, settings.account) : '';
+            setStatus(`Stopped: ${reason}. ${advice}Check again before continuing.`, 'bad');
+        }
     } finally {
         clearInterval(countdown);
         running = null;
@@ -140,6 +151,24 @@ stopButton.addEventListener('click', () => running?.abort(new DOMException('Stop
 window.addEventListener('beforeunload', (event) => {
     if (running) event.preventDefault();
 });
+
+function isKeyError(error) {
+    return error.name === 'SteemBroadcastError' && /\bkey\b/i.test(error.message);
+}
+
+// Keychain's key error means the key it holds for this account is not one
+// of the account's posting keys on the chain. Name those keys, so the one
+// in Keychain can be compared with them.
+async function keyAdvice(rpc, account) {
+    let keys = [];
+    try {
+        keys = (await rpc.getAccount(account))?.posting?.key_auths?.map(([key]) => key) ?? [];
+    } catch {
+        // The advice below still helps without the keys.
+    }
+    const named = keys.length > 0 ? `The chain's posting public key for @${account} is ${keys.join(' or ')}. ` : '';
+    return `${named}Keychain must hold the matching posting private key: in Keychain, remove @${account} and add it again with its posting private key (or its master password). An owner, active or memo key does not work here. `;
+}
 
 function readSettings() {
     const account = $('account').value.trim();
