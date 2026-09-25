@@ -1,0 +1,31 @@
+{
+  "description": "Written by the pre-WebCrypto KeyEncryption (PBKDF2-HMAC-SHA512, 600 iterations, SHA512-CTR + HMAC-SHA512). Kept so older stored keys and exported identity files are proven to still open.",
+  "passphrase": "correct horse battery staple",
+  "seedHex": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+  "publicKey": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+  "identityId": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+  "storedRecord": {
+    "kdf": "PBKDF2-HMAC-SHA512",
+    "iterations": 600,
+    "salt": "3543e5b99fb976532aa697780047c56b",
+    "nonce": "bc7a0e4c9f4403c4117c225d71163aae",
+    "ciphertext": "27231239cd053c63c212418a337f968fc42cda6cc2a307f60c1ff4b51a630f4a",
+    "tag": "e4db150bbf33904f6f354f4ce715bdc57eba297ad25dcebd1df8c8dd019c2b30"
+  },
+  "exportPackage": {
+    "formatVersion": 1,
+    "identityId": "did:key:z6MktwupdmLXVVqTzCw4i46r4uGyosGXRnR3XjN4Zq7oMMsw",
+    "publicKey": "d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a",
+    "algorithm": "Ed25519",
+    "label": "Legacy Alice",
+    "encryptedPrivateKey": {
+      "kdf": "PBKDF2-HMAC-SHA512",
+      "iterations": 600,
+      "salt": "fb49f2af4e4db130a7d131b66b6a0b2e",
+      "nonce": "92f20c53d01830a60492135b28871262",
+      "ciphertext": "70f0cc40e89dda19fe82f04fef94a5672899ac3cbae59b52797f14f5b9718460",
+      "tag": "79811e091ef96959ec2f057aaf027a1ba13e73436d31fcf6ea1d665f2b8917df"
+    },
+    "createdAt": "2026-09-01T00:00:00.000Z"
+  }
+}

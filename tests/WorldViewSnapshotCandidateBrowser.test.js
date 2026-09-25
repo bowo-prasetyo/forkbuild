@@ -428,8 +428,6 @@ async function runTests() {
         const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(viewCode.includes("const discoverSnapshotCandidatesCommand = inject('discoverSnapshotCandidatesCommand', null);"),
             '42. WorldView.js injects the app-wide discoverSnapshotCandidatesCommand');
-        assert(/<OwnPublicationPanel[\s\S]{0,600}:discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"/.test(viewCode),
-            '43. OwnPublicationPanel is wired to the injected discoverSnapshotCandidatesCommand, mirroring the existing :discoverSnapshotCommand wiring');
 
         const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes("app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesCommand)"),

@@ -1,4 +1,6 @@
 import { ref, computed, inject } from 'vue';
+import NewPassphraseFields from './NewPassphraseFields.js';
+import { evaluateNewPassphrase } from '../../application/identity/NewPassphrasePolicy.js';
 
 // 0.2.46: identity-first login. Previously this modal took a typed
 // username and silently derived a signing key from it — "logging back
@@ -16,9 +18,9 @@ import { ref, computed, inject } from 'vue';
 // passphrase prompt (`unlockingId`) instead of calling authenticate()
 // directly, and a wrong passphrase shows the provider's own
 // remaining-attempts/lockout message rather than a generic failure.
-// Creating a new identity gained an optional passphrase field: leaving
-// it blank creates exactly the unprotected identity 0.2.46 always
-// created; filling it in protects the key from the moment it's born.
+// Creating a new identity asks for a passphrase by default (see
+// NewPassphraseFields.js); an unprotected identity takes an explicit
+// opt-out.
 export default {
     name: 'LoginModal',
     props: {
@@ -29,11 +31,17 @@ export default {
         unlockIdentityId: { type: String, default: null }
     },
     emits: ['close'],
+    components: { NewPassphraseFields },
     setup(props, { emit }) {
         const identityUseCase = inject('identityUseCase');
         const identities = ref(identityUseCase.listIdentities());
         const newLabel = ref('');
         const newPassphrase = ref('');
+        const newPassphraseConfirmation = ref('');
+        const allowUnprotected = ref(false);
+        const createAttempted = ref(false);
+        const creating = ref(false);
+        const createError = ref('');
 
         const unlockingId = ref(props.unlockIdentityId);
         const unlockPassphrase = ref('');
@@ -48,14 +56,14 @@ export default {
             return identityId.slice(-10);
         }
 
-        function logInAs(identity) {
+        async function logInAs(identity) {
             if (identity.isProtected) {
                 unlockingId.value = identity.identityId;
                 unlockPassphrase.value = '';
                 unlockError.value = '';
                 return;
             }
-            identityUseCase.authenticate(identity.identityId);
+            await identityUseCase.authenticate(identity.identityId);
             emit('close');
         }
 
@@ -72,7 +80,7 @@ export default {
             unlocking.value = true;
             unlockError.value = '';
             try {
-                identityUseCase.authenticate(unlockingId.value, unlockPassphrase.value);
+                await identityUseCase.authenticate(unlockingId.value, unlockPassphrase.value);
                 emit('close');
             } catch (e) {
                 unlockError.value = e.message.replace(/^LocalIdentityProvider:\s*/, '');
@@ -81,19 +89,34 @@ export default {
             }
         }
 
-        function createAndLogIn() {
+        async function createAndLogIn() {
             const label = newLabel.value.trim();
-            if (!label) {
+            createAttempted.value = true;
+            createError.value = '';
+            const evaluation = evaluateNewPassphrase({
+                passphrase: newPassphrase.value,
+                confirmation: newPassphraseConfirmation.value,
+                allowUnprotected: allowUnprotected.value
+            });
+            if (!label || !evaluation.ok || creating.value) {
                 return;
             }
-            const passphrase = newPassphrase.value || null;
-            const identity = identityUseCase.createIdentity(label, passphrase);
-            identityUseCase.authenticate(identity.identityId, passphrase);
-            emit('close');
+            const passphrase = evaluation.protect ? newPassphrase.value : null;
+            creating.value = true;
+            try {
+                const identity = await identityUseCase.createIdentity(label, passphrase);
+                await identityUseCase.authenticate(identity.identityId, passphrase);
+                emit('close');
+            } catch (e) {
+                createError.value = e.message.replace(/^LocalIdentityProvider:\s*/, '');
+            } finally {
+                creating.value = false;
+            }
         }
 
         return {
-            sortedIdentities, newLabel, newPassphrase, shortId, logInAs, createAndLogIn,
+            sortedIdentities, newLabel, newPassphrase, newPassphraseConfirmation, allowUnprotected,
+            createAttempted, creating, createError, shortId, logInAs, createAndLogIn,
             unlockingId, unlockPassphrase, unlockError, unlocking, cancelUnlock, confirmUnlock
         };
     },
@@ -156,16 +179,19 @@ export default {
                     class="modal-input"
                     @keydown.enter="createAndLogIn"
                 />
-                <input
-                    v-model="newPassphrase"
-                    type="password"
-                    placeholder="Protect with a passphrase (optional)"
-                    class="modal-input"
-                    @keydown.enter="createAndLogIn"
+                <NewPassphraseFields
+                    v-model:passphrase="newPassphrase"
+                    v-model:confirmation="newPassphraseConfirmation"
+                    v-model:allow-unprotected="allowUnprotected"
+                    :show-hint="createAttempted"
+                    @submit="createAndLogIn"
                 />
+                <p v-if="createError" class="identity-unlock-error">{{ createError }}</p>
                 <div class="modal-actions">
                     <button class="modal-btn modal-btn--secondary" @click="$emit('close')">Cancel</button>
-                    <button class="modal-btn modal-btn--primary" @click="createAndLogIn">Create &amp; Log In</button>
+                    <button class="modal-btn modal-btn--primary" :disabled="creating" @click="createAndLogIn">
+                        {{ creating ? 'Creating…' : 'Create & Log In' }}
+                    </button>
                 </div>
             </div>
         </div>

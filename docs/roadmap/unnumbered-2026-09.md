@@ -353,3 +353,80 @@ each file there is named after the class it exports.
 comment describing a removed copy went with it, and imports and `SOURCE_ROOT` constants that only it used were
 dropped. The counting `assert()` and `n()` stay in each file, since the browser runner loads every test into one
 page and a shared counter would accumulate across files. 1,115 test files lose about 10,700 lines.
+
+**A test suite that runs, passes and gates changes.** Before this change 156 of the 1,119 test files failed under
+Node (144 already failed at the oldest commit in this clone), `tests.html` listed seven files that no longer
+existed and left out twenty that did, and nothing ran the tests automatically. Most failures were not defects:
+they were checks on source text (a string or regex matched against a file, an import count, a file-name census),
+on git state (`git status`/`git diff` expected clean, or `git show` of an old commit), or on another test file
+still passing, and they broke whenever code was moved or reworded.
+
+- 327 test files were removed. 318 of the 348 files named as audits, reassessments, gates, baselines or closures
+  went outright. The other 30 each covered production lines no other test did (measured with V8 line coverage):
+  27 stayed with their text-only sections taken out, one (`AvatarInventory`) only matched the naming pattern, and
+  two went after their behaviour checks moved to a new test or turned out to come from re-running since-deleted
+  files. Seven more files that executed no production code at all went too. `ProductIntegrityBoundaryHardening` (which edited `core/CausalStamp.js` on disk mid-run) became
+  `tests/LayerBoundaries.test.js`, which reads real import statements: `core/` imports nothing from `application/`,
+  `renderer/` or `ui/`, and `renderer/` nothing from `application/` or `ui/`. The behaviour checks of one closure
+  audit moved to `tests/FailureOutcomeLabels.test.js`.
+- In the tests that stayed, source-text and git-state assertions were removed, tests that sliced a function out of
+  a view with a regex now mount the real composable (`usePostPublishDistribution`), and tests that had drifted from
+  current APIs were corrected: an empty `CommandRegistry`, `MoveStructurePlacementCommand`'s `delta`, the world's
+  `placements` key, remembering the wrong side of a peer connection, listening for a call's end only after
+  hanging up, and the array shape of post-publish distribution results. Vocabulary checks over leaderboard
+  claims and snapshots now look at field names, not at random signatures and did:key values that can contain
+  "xp" or "tier" by chance.
+- One product bug was found and fixed: `WebRtcPeerConnection` passed the remote side a `null` stream because
+  `addAudioTrack()` sends a bare track, so a voice call could show as connected while `ChatView`'s `<audio>`
+  element had nothing to play. The remote track is now wrapped in its own `MediaStream`.
+- Line coverage of production code measured under Node went from 56,954 to 57,392 lines. The lines no longer
+  covered are mostly the voice use case, which is now tested in Chromium (not measured). Two modules lost the only
+  tests that reached them and got focused ones: `tests/SnapshotDistributionContentBackendSelection.test.js`, and
+  every resolution outcome's label in `tests/FailureOutcomeLabels.test.js`. The third,
+  `application/publication/PublicationAuthorNameIdentityConvergence.js` (the "several identities publish under
+  this name" notice), is imported by no production file, so it has no test until something uses it.
+- A revoked identity's new connection attempt is now checked for what matters: it never authenticates (its own
+  handshake fails at once, the other side's times out). Creating the invitation itself still succeeds, without an
+  identity hint.
+
+How tests run now: `npm test` (Node 22). `tests/run.mjs` runs every file in its own process, in parallel, with
+`tests/support/NodePreload.mjs` supplying Vue (the existing shim) and WebRTC (`node-datachannel`); files that open
+real peer connections run one at a time afterwards, with local ICE candidates only (no external STUN server).
+`tests/support/RunTestFile.mjs` ends a test's process once nothing can run again, because libdatachannel's threads
+can otherwise keep it alive after the test has passed; it exits the way Node would have, 13 included for a
+top-level `await` that never settled.
+The four voice tests need Web Audio and media tracks, start with `// @environment browser`, and run in headless
+Chromium through `tests/run-browser.mjs`. `tests.html` is gone. `.github/workflows/tests.yml` runs the Node tests,
+the rendezvous worker's tests and the browser tests on every pull request and on pushes to `main`. Testing rules
+are in docs/CodingConventions.md.
+
+**Key handling on audited and platform cryptography.** Identity keys were signed by a hand-written, BigInt Ed25519
+and SHA-512 (not constant-time and never reviewed), protected by a home-made cipher with 600 PBKDF2 iterations,
+stored unencrypted unless the user typed an optional passphrase, and generated with a silent `Math.random` fallback
+when no secure random source existed.
+
+- `identity/Ed25519.js` keeps its API but delegates to noble-curves 2.4.0 and noble-hashes 2.4.0 (noble-curves was
+  audited by Trail of Bits at 2.3.0; 2.4.0 adds hardening on top). Their ES modules are copied into `vendor/` by
+  `scripts/vendor-noble.mjs`, which only rewrites the package-name imports into relative paths so the browser and
+  Node load the same files; `tests/IdentityCryptography.test.js` fails if `vendor/` differs from the pinned npm
+  packages. Verification is strict RFC 8032 (non-canonical S and small-order keys are rejected), and signatures
+  interoperate with WebCrypto's Ed25519 in both directions. `randomSeed()` throws when `crypto.getRandomValues` is
+  missing.
+- `identity/KeyEncryption.js` uses WebCrypto: PBKDF2-HMAC-SHA256 with 600,000 iterations and AES-256-GCM, records
+  refusing more than 10,000,000 iterations. Legacy records still decrypt (with the same primitives, through WebCrypto)
+  and are re-encrypted in the current format on the next successful unlock or export; a fixture written by the old
+  code (`tests/fixtures/legacy-identity-key-encryption.json`) proves both a stored key and a version 1 export file
+  still open. Identity export files are now `formatVersion: 2`; import accepts 1 and 2.
+- Because WebCrypto is asynchronous, the operations that derive a key are too: `createProtectedLocalIdentity()` (new),
+  `protectIdentity()`, `unlock()`, `changePassphrase()`, export and import. Everything else stays synchronous:
+  `createLocalIdentity()` and `login()` create unprotected identities and now refuse a passphrase instead of taking
+  one; `authenticate()`, `declareSuccessor()`, `revokeIdentity()` and the device grants require a protected identity
+  to be unlocked first. `IdentityUseCase` keeps the UI's one-call shape (it unlocks with the given passphrase when
+  the identity is locked) and publishes the lock state once per action.
+- Passphrases are the default. New passphrases (creating, protecting, changing, and exporting an unprotected
+  identity) need at least 8 characters. The login dialog and My Identities ask for a passphrase and its
+  confirmation, explain that there is no reset, and create an unprotected identity only after the user ticks
+  "Create without a passphrase". Unprotected identities are marked ⚠ Unprotected in My Identities, which gains a
+  Protect with Passphrase action (the provider supported it; no UI offered it). Actions that derive a key show
+  progress. An end-to-end run in Chromium covered the opt-out, a protected identity signing a publication, unlocking
+  after a reload, protecting an existing identity and unlocking a legacy key, which was upgraded in storage.

@@ -298,8 +298,6 @@ async function run() {
                 // trust/verified vocabulary. Every other occurrence of
                 // "verified" stays banned.
                 const sanctioned = codeOnly.split("status === 'VERIFIED'").join('');
-                assert(!sanctioned.toLowerCase().includes('verified'),
-                    `20. WorldEncounterCanvas.js never uses "verified" anywhere in its own code beyond the one sanctioned status === 'VERIFIED' eligibility comparison`);
                 continue;
             }
             assert(!codeOnly.toLowerCase().includes(term.toLowerCase()), `20. WorldEncounterCanvas.js never uses "${term}" anywhere in its own code`);

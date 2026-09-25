@@ -41,8 +41,10 @@ stored on this device**. The Log In dialog lists every identity this browser
 already holds; click one to use it, or create a new one:
 
 1. Type a **display name** — this is what other people will see.
-2. Optionally, type a **passphrase** to protect it. Leave it blank and
-   you'll never be asked for a passphrase on this device.
+2. Type a **passphrase** of at least 8 characters, twice. It encrypts your
+   key on this device, and there is no reset, so choose one you'll keep.
+   (To skip it, tick **Create without a passphrase**; the key is then stored
+   unencrypted in this browser.)
 3. Click **Create & Log In**.
 
 That's it — you're now signed in, and everything you build, publish, or send

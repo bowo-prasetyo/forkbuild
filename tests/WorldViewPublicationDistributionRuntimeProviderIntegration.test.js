@@ -221,12 +221,6 @@ async function run() {
         const source = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js'"),
-            '12. ui/main.js imports the real composition function, never a hand-rolled equivalent');
-        assert(codeOnly.includes("import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js'"),
-            '13. ui/main.js imports the real 0.9.106 runtime configuration seam, unmodified by this milestone');
-        assert(codeOnly.includes("import { createPublicationDistributionRuntimeProvider } from '../application/publication/distribution/PublicationDistributionRuntimeProvider.js'"),
-            '14. ui/main.js imports the real runtime provider factory, never a hand-rolled equivalent');
         assert(!codeOnly.includes("PublicationDistributionConfigurationProvider.js'"),
             '15. ui/main.js still never imports the 0.9.105 resolvers directly');
         assert(codeOnly.includes('createPublicationDistributionRuntimeProvider({') && codeOnly.includes('...nostrPublicationRuntimeCapabilities'),

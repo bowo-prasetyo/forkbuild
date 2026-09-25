@@ -1,5 +1,3 @@
-import { execSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import { readSource } from './support/SourceText.js';
 
 // 0.9.403 — Evidence Export Comparison Contextual Entry Point.
@@ -52,8 +50,6 @@ function assert(condition, message) {
 function n(message) {
     return `${assertionCount + 1}. ${message}`;
 }
-
-const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
 async function run() {
     // ===============================================================
@@ -294,45 +290,6 @@ async function run() {
 
         console.log('\n=== SECTION F: IMPLEMENTATION ISOLATION ===');
         console.log('✓ Section F: the Leaderboard\'s own comparison/export logic, the comparison page\'s own comparison logic, the shared evidence-document format, and both routes\' own registrations are each unchanged. Only a declarative navigation edge is new.');
-    }
-
-    // ===============================================================
-    // Section G — Production boundary.
-    // ===============================================================
-    {
-        const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
-        const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
-        const AUTHORIZED = new Set([
-            'ui/views/ReconciliationCandidateLeaderboardView.js',
-            'ui/router/index.js',
-            'tests.html',
-            'tests/EvidenceExportComparisonContextualEntryPoint.test.js',
-            'tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js',
-            'tests/EvidenceExportComparisonEntryPointDecisionAudit.test.js'
-        ]);
-        const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, n(`G1. every changed/added file is one this milestone's own Leaderboard UI surface or its test/registration/documentation files authorize (found unauthorized: ${JSON.stringify(unauthorized)})`));
-
-        const untouchedFiles = [
-            'ui/views/ReconciliationCandidateLeaderboardEvidenceExportComparisonView.js',
-            'ui/views/DecentralizedPublicationsView.js',
-            'ui/App.js',
-            'ui/components/reconciliation/CandidateLeaderboardTable.js',
-            'ui/components/reconciliation/EvidenceExportComparisonTable.js',
-            'ui/components/reconciliation/EvidenceExportComparisonRecordPairSelector.js'
-        ];
-        for (const file of untouchedFiles) {
-            const status = execSync(`git status --porcelain -- ${file}`, { cwd: SOURCE_ROOT }).toString().trim();
-            assert(status === '', n(`G2. ${file} is untouched by this milestone`));
-        }
-        const domainDirs = ['core', 'application', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity'];
-        for (const dir of domainDirs) {
-            const status = execSync(`git status --porcelain -- ${dir}`, { cwd: SOURCE_ROOT }).toString().trim();
-            assert(status === '', n(`G3. ${dir}/ shows no change — no domain/backend logic touched`));
-        }
-
-        console.log('\n=== SECTION G: PRODUCTION BOUNDARY ===');
-        console.log('✓ Section G: changes are confined to the Leaderboard\'s own view file, the router\'s own comment, and this milestone\'s test/registration/documentation files. No comparison component, no backend/domain file, and no other view is touched.');
     }
 
     console.log('\n✅ All Evidence Export Comparison Contextual Entry Point tests passed.');

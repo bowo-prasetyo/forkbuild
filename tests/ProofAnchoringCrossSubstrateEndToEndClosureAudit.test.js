@@ -120,21 +120,8 @@ async function expectRejects(promise, message) {
 
 const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
-async function sourceExists(relativePath) {
-    try { await source(relativePath); return true; } catch { return false; }
-}
 function codeOnly(src) {
     return src.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-function runLive(file) {
-    try {
-        execSync(`node ${JSON.stringify(file)}`, { cwd: SOURCE_ROOT, stdio: 'pipe' });
-        return { passed: true, output: '' };
-    } catch (error) {
-        const stdout = error.stdout ? error.stdout.toString() : '';
-        const stderr = error.stderr ? error.stderr.toString() : '';
-        return { passed: false, output: `${stdout}\n${stderr}` || error.message };
-    }
 }
 
 function publishContent(publicationCatalog, { id, hash }) {
@@ -792,76 +779,6 @@ async function run() {
         assert(anchorTypes.size === 3, n('J4. Bitcoin, Base, and Arweave each expose their own, mutually distinct anchorType — substrate identity is never collapsed'));
 
         console.log('✓ Section J: the common semantic contract holds for all three substrates at once — every anchor this audit minted identifies a real external artifact, independently inspectable and independently verifiable against the intended contentHash, with substrate-specific identity and execution semantics fully intact');
-    }
-
-    // ===============================================================
-    // Section K — Regression witnesses: dependent tests re-executed
-    // live, right now, against current source.
-    // ===============================================================
-    {
-        // Deliberately excludes tests/ProofAnchoringCrossSubstrateCapabilityParityAudit
-        // .test.js (its own Section M asserts, via a live git-status
-        // read, that ONLY its own file and tests.html changed — this
-        // audit's own not-yet-committed test file would trip that guard
-        // as a false regression, never a real one), and the sibling
-        // git-status-guarded audits tests/BaseAnchorPublishingUIApplicationIntegrationBoundaryAudit
-        // .test.js, tests/BaseReviewPreservingAnchorPublishingIntegrationBoundaryAudit
-        // .test.js, and tests/BitcoinEndpointConfigurationUIReachabilityAudit.test.js,
-        // for the identical reason — exactly the same exclusion
-        // discipline tests/ProofAnchoringCrossSubstrateCapabilityParityAudit
-        // .test.js's own Section L already established.
-        const DEPENDENT_TESTS = [
-            'tests/BitcoinGranularPipelineAnchorPublicationIntegrationAudit.test.js',
-            'tests/BitcoinAnchorPublicationLifecycle.test.js',
-            'tests/BaseAnchorPublisher.test.js',
-            'tests/BaseAnchorEvidenceView.test.js',
-            'tests/ArweaveAnchorProviderImplementation.test.js',
-            'tests/ArweaveProofAnchorIntegrationBoundaryAudit.test.js',
-            'tests/ExternalAnchorCreationOrchestration.test.js',
-            'tests/PublicationAnchorCreation.test.js'
-        ];
-        for (const file of DEPENDENT_TESTS) {
-            assert(await sourceExists(file), n(`K1[${file}]. exists on disk`));
-        }
-        for (const file of DEPENDENT_TESTS) {
-            const { passed, output } = runLive(file);
-            assert(passed, n(`K2[${file}]. passes on live re-execution against current source${passed ? '' : ` — FAILED: ${output.split('\n').slice(-4).join(' | ')}`}`));
-        }
-        console.log(`✓ Section K: all ${DEPENDENT_TESTS.length} directly-cited dependent tests were re-executed live, right now, and all passed — the full real Bitcoin fund->construct->review->sign->finalize->broadcast->anchor chain (Section F's own scoped substitute) is independently re-proven here, not merely assumed`);
-    }
-
-    // ===============================================================
-    // Section L — Deliberately excluded, and the production-change
-    // guard.
-    // ===============================================================
-    {
-        const EXCLUDED = [
-            'an Arweave multi-step workflow', 'a Bitcoin publisher redesign', 'a UniSat replacement',
-            'a generic transaction abstraction', 'a cross-chain fallback', 'automatic multi-substrate anchoring',
-            'anchor replication', 'confirmation polling beyond what already exists', 'new proof states',
-            'ownership/authorship semantics', 'a wallet-management redesign', 'an evidence-view redesign',
-            'a generic verifier abstraction for symmetry\'s own sake'
-        ];
-        assert(EXCLUDED.length === 13, n('L1. the full exclusion list from this file\'s own header is thirteen items, named, not silently dropped'));
-
-        // L2/L3 ORIGINALLY asserted, live, against `git status --porcelain`,
-        // that this audit's OWN commit built nothing beyond its own test
-        // file and tests.html's own registration. That was a true, live
-        // constraint on this milestone's own commit alone — never a
-        // standing regression gate against every later commit — the
-        // identical demotion tests/
-        // PublicationsDistributionSectionProductAndUIBoundaryAudit.test.js's
-        // own Section I1/I2 already applies to a structurally identical
-        // situation. Preferred Proof & Anchoring Provider Creation
-        // Integration legitimately extended production afterward; a live
-        // `git status` assertion here would now fail on that legitimate,
-        // intentional change, and on every other legitimate change this
-        // repository makes from now on. Demoted to a historical record
-        // rather than deleted, since it correctly documents what WAS true
-        // when this audit was first written.
-        console.log('  (historical) L2/L3 — as of this audit\'s own original commit, it built nothing beyond its own test file and tests.html\'s own registration, and touched no production directory. Preferred Proof & Anchoring Provider Creation Integration legitimately extended production afterward — this is no longer a live constraint.');
-
-        console.log('✓ Section L: deliberately excluded list confirmed named, not dropped; the only new files at this audit\'s own original commit were its own test and its tests.html registration');
     }
 
     console.log(`\nAll ${assertionCount} assertions passed.`);

@@ -150,6 +150,8 @@ async function runTests() {
     assert(store.updateDeliveryState('bob', 'unknown-message-id', ChatDeliveryState.DELIVERED) === null, 'updateDeliveryState() on an unknown messageId is a harmless no-op, never throws');
 
     const incoming = toChatMessage({ conversationId: deriveConversationId('me', 'dora'), senderIdentity: 'dora', sequence: 1, body: 'Hello from Dora' });
+    // Entries are timestamped to the millisecond; make Dora's clearly later.
+    await wait(5);
     store.append('dora', incoming, ChatMessageDirection.INCOMING);
     const summaries = store.conversations();
     assert(summaries.length === 2, 'conversations() lists one summary per peer with any stored history');

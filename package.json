@@ -1,0 +1,24 @@
+{
+  "name": "forkbuild",
+  "version": "0.9.703",
+  "private": true,
+  "description": "Build. Fork. Share. Evolve. A browser-based, decentralized building platform.",
+  "license": "MPL-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "npm run test:node && npm run test:worker && npm run test:browser",
+    "test:node": "node tests/run.mjs",
+    "test:browser": "node tests/run-browser.mjs",
+    "test:worker": "node server/rendezvous-worker/worker.test.js"
+  },
+  "devDependencies": {
+    "@noble/curves": "2.4.0",
+    "@noble/hashes": "2.4.0",
+    "node-datachannel": "^0.33.4",
+    "playwright-core": "^1.63.0",
+    "three": "0.160.0"
+  }
+}

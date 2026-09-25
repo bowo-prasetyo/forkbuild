@@ -68,7 +68,7 @@ function normalizeHex(hex) {
 // record) — three distinct, never-confused failure reasons, matching
 // this codebase's habit of telling refusal reasons apart rather than
 // collapsing them into one generic error.
-export function recoverIdentity({ package: pkg, passphrase, existingIdentities = [] } = {}) {
+export async function recoverIdentity({ package: pkg, passphrase, existingIdentities = [] } = {}) {
     IdentityImport.validatePackage(pkg);
 
     const existingEntry = existingIdentities.find((entry) => entry.identityId === pkg.identityId);
@@ -82,7 +82,7 @@ export function recoverIdentity({ package: pkg, passphrase, existingIdentities =
     // Decrypting (and therefore the passphrase itself) is only ever
     // attempted once we know this isn't a no-op — an ALREADY_EXISTS
     // import never has to get the passphrase right at all.
-    const seedBytes = KeyEncryption.decrypt(pkg.encryptedPrivateKey, passphrase);
+    const seedBytes = await KeyEncryption.decrypt(pkg.encryptedPrivateKey, passphrase);
 
     const derivedPublicKey = Ed25519.bytesToHex(Ed25519.seedToKeyPair(seedBytes).publicKey);
     if (normalizeHex(derivedPublicKey) !== normalizeHex(pkg.publicKey)) {

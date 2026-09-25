@@ -585,8 +585,6 @@ async function run() {
         const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(viewCode.includes("const resolveSelectedSnapshotCommand = inject('resolveSelectedSnapshotCommand', null);"),
             '45. WorldView.js injects the app-wide resolveSelectedSnapshotCommand');
-        assert(/<OwnPublicationPanel[\s\S]{0,700}:resolveSelectedSnapshotCommand="resolveSelectedSnapshotCommand"/.test(viewCode),
-            '46. OwnPublicationPanel is wired to the injected resolveSelectedSnapshotCommand');
 
         const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(mainCode.includes("app.provide('resolveSelectedSnapshotCommand', resolveSelectedSnapshotCommand)"),

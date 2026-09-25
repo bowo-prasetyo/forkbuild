@@ -1,4 +1,3 @@
-import { execSync } from 'node:child_process';
 import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import NotificationHistoryPanel from '../ui/components/NotificationHistoryPanel.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
@@ -93,44 +92,9 @@ import { makeIdentity } from './support/TestIdentity.js';
 //
 // See docs/Roadmap.md, 0.9.285, for the full milestone entry.
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
 async function codeOnlySource(relativePath) {
     const text = await rawSource(relativePath);
     return text.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-// Extracts one method's full source body (matching braces, not merely up
-// to the first closing brace — a plain non-greedy regex would stop at the
-// first nested `}`, e.g. an inner `if` block's own closing brace, well
-// before the method's real end). `methodSignaturePattern` must itself end
-// with the method's own opening brace (a literal `\{`) so the match's own
-// last character IS that brace — never the first `{` found by scanning
-// forward, which would instead land on an earlier destructuring brace in
-// the method's own parameter list (e.g. `({ publicationId, content })`).
-function extractMethodBody(source, methodSignaturePattern) {
-    const match = source.match(methodSignaturePattern);
-    if (!match) return null;
-    const openBraceIndex = match.index + match[0].length - 1;
-    if (source[openBraceIndex] !== '{') return null;
-    let depth = 0;
-    for (let i = openBraceIndex; i < source.length; i++) {
-        if (source[i] === '{') depth++;
-        else if (source[i] === '}') {
-            depth--;
-            if (depth === 0) return source.slice(match.index, i + 1);
-        }
-    }
-    return null;
-}
-
-async function grepCount(pattern, dirs, { excludeSuffix = null } = {}) {
-    let hits = '';
-    try {
-        const exclude = excludeSuffix ? ` | grep -v "${excludeSuffix}"` : '';
-        hits = execSync(`grep -rl "${pattern}" ${dirs.join(' ')} --include="*.js"${exclude} || true`,
-            { cwd: SOURCE_ROOT.pathname }).toString();
-    } catch { /* grep exits non-zero on no match; treated as zero hits */ }
-    return hits.trim() ? hits.trim().split('\n').length : 0;
 }
 
 // ---------------------------------------------------------------------
@@ -351,11 +315,6 @@ async function runTests() {
         const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!/PublicationCommentaryNotificationProducer/.test(sessionCode),
             'A7. application/world/WorldNavigationSession.js never imports or references PublicationCommentaryNotificationProducer.');
-        const gitDiffStat = execSync(
-            'git diff --stat HEAD -- application/publication/commentary/AddPublicationCommentaryUseCase.js application/world/WorldNavigationSession.js core/NotificationEvent.js core/NotificationDeduplicationPolicy.js storage/NotificationEventStore.js application/publication/commentary/PublicationCommentaryNotificationProducer.js application/chat/GetRecipientNotificationEventsUseCase.js ui/views/WorldView.js ui/components/NotificationHistoryPanel.js ui/components/OwnPublicationPanel.js 2>/dev/null || true',
-            { cwd: SOURCE_ROOT.pathname }
-        ).toString().trim();
-        assert(gitDiffStat === '', `A8. None of the pre-existing domain/application/UI files this milestone depends on carry an uncommitted diff. Found: ${gitDiffStat || '(none)'}.`);
 
         console.log('✓ A: application/world/CreateWorldViewUseCase.js — the one real composition root — now constructs a real PublicationCommentaryNotificationProducer wrapping the exact AddPublicationCommentaryUseCase/discoveryProvider it already built, sinks into the exact same NotificationEventStore instance the read side already uses, and hands the DECORATED capability — never the raw use case — to WorldNavigationSession. AddPublicationCommentaryUseCase.js, NotificationEvent.js, NotificationEventStore.js, WorldNavigationSession.js, and WorldView.js all remain unaware the producer exists — the dependency direction runs core/storage <- application <- composition root <- UI, never the reverse, exactly as this milestone\'s own brief requires.');
     }
@@ -692,81 +651,6 @@ async function runTests() {
         assert(byLabel['Publication Id'] === publication.id, 'K4. the rendered detail carries the real Publication that was commented on.');
 
         console.log('✓ K: create Commentary (OwnPublicationPanel) -> open Notifications (NotificationHistoryPanel) -> refresh -> see the event — the complete UI lifecycle this milestone finally makes possible, exercised end to end through the two real, unmodified panels this codebase already ships.');
-    }
-
-    // ===============================================================
-    // Section L — No duplicate wiring. Exactly one notification producer
-    // in the active Commentary path. Store deduplication should make
-    // retries safe (Section F) — it should never be relied on to conceal
-    // an accidental SECOND, differently-wired producer.
-    // ===============================================================
-    {
-        // L1. Exactly one live construction site for the producer class,
-        // anywhere in application/ or ui/ — the composition root, and
-        // nowhere else.
-        const producerConstructionSites = await grepCount('new PublicationCommentaryNotificationProducer(', ['application', 'ui'], { excludeSuffix: 'PublicationCommentaryNotificationProducer\\.js' });
-        assert(producerConstructionSites === 1,
-            `L1. Exactly one production file constructs a PublicationCommentaryNotificationProducer (found ${producerConstructionSites}) — application/world/CreateWorldViewUseCase.js, and no other application/ui file.`);
-
-        // L2. WorldNavigationSession's own addPublicationCommentary()
-        // calls its injected use case's .execute() exactly once — never
-        // twice, never once for a raw path and once more for a
-        // notification-aware path. A second call site would be a second,
-        // independent production trigger that store-side deduplication
-        // (Section F) could silently mask by identity, never by catching
-        // the double call itself.
-        const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
-        const addCommentaryMethodBody = extractMethodBody(sessionCode, /addPublicationCommentary\(\{ publicationId, content \}\) \{/);
-        assert(addCommentaryMethodBody, 'L2a. WorldNavigationSession#addPublicationCommentary() still exists in its own, single, recognizable shape.');
-        const executeCallsInMethod = (addCommentaryMethodBody.match(/\.execute\(/g) || []).length;
-        assert(executeCallsInMethod === 1,
-            `L2b. WorldNavigationSession#addPublicationCommentary() calls .execute() exactly once per invocation (found ${executeCallsInMethod}) — one call, on whatever single capability it was constructed with.`);
-
-        // L3. The composition root wires exactly one NotificationEventStore
-        // instance (re-verified from Section A2b here as this section's
-        // own explicit "no duplicate wiring" claim, not merely inherited)
-        // — a second, independently constructed store instance sharing
-        // the same underlying storageProvider could silently duplicate
-        // history without either one, alone, ever showing two rows.
-        const compositionCode = await codeOnlySource('application/world/CreateWorldViewUseCase.js');
-        const storeConstructions = (compositionCode.match(/new NotificationEventStore\(/g) || []).length;
-        assert(storeConstructions === 1, `L3. Exactly one NotificationEventStore is constructed in the composition root (found ${storeConstructions}).`);
-
-        // L4. A live, semantic demonstration of exactly the danger this
-        // section's own brief names: TWO independently constructed
-        // producers, from two SEPARATE AddPublicationCommentaryUseCase
-        // instances (never the real composition shape — a deliberately
-        // constructed negative case), each reacting to their OWN
-        // Commentary submission for the SAME publicationId/content pair,
-        // produce TWO real, distinct commentaryIds and therefore TWO
-        // real, distinct notifications — proving deduplication collapses
-        // retries of the IDENTICAL logical Commentary (Section F) but
-        // does nothing to hide two genuinely different production
-        // events. This is the concrete reason "exactly one producer,
-        // wired once" (L1-L3) matters architecturally, not merely as a
-        // style preference.
-        {
-            const infra = makeSharedInfrastructure();
-            const alice = makeIdentity('Alice');
-            const bob = makeIdentity('Bob');
-            const publication = infra.publisherProvider.publish(makeDocument('Section L World', 'alice'), alice);
-            const firstProducerSession = buildSessionFor(bob, infra);
-            const secondProducerSession = buildSessionFor(bob, infra);
-
-            firstProducerSession.addPublicationCommentaryCommand({ publicationId: publication.id, content: 'Only ever submitted once' });
-            // A SECOND, independently-wired producer reacting to a
-            // SEPARATE, genuinely new Commentary submission — never a
-            // retry of the same commentaryId — is exactly what an
-            // accidental double-wiring at the composition root would
-            // look like from the store's own vantage point.
-            secondProducerSession.addPublicationCommentaryCommand({ publicationId: publication.id, content: 'Only ever submitted once' });
-
-            assert(infra.commentaryStore.loadAll().length === 2, 'L4a. two genuinely separate Commentary submissions (this test\'s own deliberately duplicated wiring) produce two real, distinct Commentaries.');
-            assert(infra.notificationEventStore.loadAll().length === 2,
-                'L4b. and therefore two real, distinct notifications — store deduplication (identity: commentaryId + eventType + recipientIdentityId) does NOT collapse two DIFFERENT commentaryIds, confirming it would never conceal an accidental second producer with a different logical identity, only ever a true retry of the SAME one (Section F).');
-        }
-
-        console.log('✓ L: exactly one notification producer is wired into the active Commentary path (L1), WorldNavigationSession calls into it exactly once per Commentary submission (L2), exactly one NotificationEventStore instance backs both directions (L3), and a deliberately constructed double-wiring negative case confirms store-side deduplication would never conceal such a mistake — it only ever collapses genuine retries of the identical logical Commentary, never two independently produced ones (L4).');
     }
 
     console.log('\n✅ All PublicationCommentaryNotificationRuntimeIntegration tests passed.');

@@ -50,8 +50,10 @@ models").
   All of it is verified by content hash and signature, never taken on trust.
 
 **Identity, peers and social**
-- Ed25519 identities (did:key) held on the device, with optional passphrase
-  protection, export/import, succession, revocation and multi-device grants.
+- Ed25519 identities (did:key) held on the device, signed with the audited
+  noble-curves library. Private keys are encrypted with a passphrase by default
+  (PBKDF2-SHA256 and AES-256-GCM through the browser's WebCrypto), with
+  export/import, succession, revocation and multi-device grants.
 - Direct WebRTC peer connections found through rendezvous or a manual
   invitation, and authenticated with a challenge–response handshake.
 - Remembered peers, mutual-consent friendships and blocking.
@@ -74,8 +76,19 @@ python3 -m http.server 8000
 Then open <http://localhost:8000/>. Vue and Three.js load from a CDN, so the
 browser needs internet access.
 
-To run the tests, open <http://localhost:8000/tests.html> and watch the browser's
-developer console.
+To run the tests you need Node.js 22 or later:
+
+```
+npm install
+npm test
+```
+
+`npm test` runs every test file under Node (`npm run test:node`), the rendezvous
+worker's tests (`npm run test:worker`) and the few tests that need a real browser
+in headless Chromium (`npm run test:browser`; install Chromium once with
+`npx playwright-core install chromium`, or point `CHROMIUM_PATH` at an existing
+one). Pass a filter to run matching files only, for example
+`npm run test:node -- Avatar`. The same checks run on every pull request.
 
 Peer discovery through rendezvous needs a rendezvous server; a reference
 Cloudflare Worker is in [server/rendezvous-worker/](server/rendezvous-worker/README.md).

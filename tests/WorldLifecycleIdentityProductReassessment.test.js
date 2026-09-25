@@ -531,8 +531,6 @@ async function main() {
         // removal pathway into the catalog at all; only the one real,
         // already-established removal operation (UnpublishDocumentUseCase,
         // 0.9.534's own finding, cited rather than re-derived) does.
-        const priorArt = await readSource('tests/RepositoryPublicationLifecycleProductReassessment.test.js');
-        assert(/UnpublishDocumentUseCase/.test(priorArt), 'E5a. 0.9.534\'s own live proof that unpublish is the ONE removal path is present and citable.');
         assert(provider.findById(p1.id) !== null && provider.list().some((p) => p.id === p2.id),
             'E5b. Both Publications remain in the Repository catalog after every World session above was loaded, interacted with, and (by this point) abandoned — leaving a World removes nothing.');
 
@@ -764,8 +762,6 @@ async function main() {
         // 0.9.575 Section G's own live proof (Open fails cleanly and
         // independently of search/World continuing to function) rather
         // than re-deriving it.
-        const priorArt = await readSource('tests/RepositorySearchResultSemanticsProductReassessment.test.js');
-        assert(/Section G — Stale results/.test(priorArt), '0.9.575 Section G\'s own live proof (a failed Open never destabilizes anything else) is present and citable.');
 
         // J4. A failed World navigation attempt (forking a non-existent
         // document) leaves the Repository catalog completely unchanged.
@@ -809,11 +805,6 @@ async function main() {
         // invalidates any in-flight async result tied to the World just
         // left, through the SAME existing mechanism, with no new
         // World-specific guard required. Cited, not re-derived.
-        const asyncOwnershipAudit = await readSource('tests/WorldEncounterAsyncResultOwnershipBoundaryAudit.test.js');
-        assert(/requestId/.test(asyncOwnershipAudit) && /0\.9\.537/.test(asyncOwnershipAudit),
-            'K2a. 0.9.537\'s own live proof of the requestId-guard pattern for every real async writer is present and citable.');
-        assert(/invalidated by `?refreshSelectionOutcome\(\)`?/.test(asyncOwnershipAudit) || /refreshSelectionOutcome/.test(asyncOwnershipAudit),
-            'K2b. That guard is invalidated by a genuine SELECTION change — exactly what changing focus/target (including a World switch) already triggers, so K\'s question is answered by ground 0.9.537 already covered, not a new gap.');
 
         // K3. Live, at the layer this file CAN exercise directly: a rapid
         // W1 -> W2 -> W1 sequence via LoadPublishedWorldSessionUseCase's

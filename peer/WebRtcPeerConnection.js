@@ -147,8 +147,13 @@ export class WebRtcPeerConnection extends PeerConnection {
         // this class received, exactly like onMessage() only ever
         // delivers what arrived, never an echo of what was sent.
         this._peerConnection.addEventListener('track', (event) => {
+            // addAudioTrack() sends a bare track with no stream, so the
+            // remote event carries none; wrap it so callers always get a
+            // playable stream (an <audio> element needs one as srcObject).
+            const stream = event.streams[0]
+                || (typeof MediaStream === 'function' ? new MediaStream([event.track]) : null);
             for (const listener of this._trackListeners) {
-                listener(event.track, event.streams[0] || null);
+                listener(event.track, stream);
             }
         });
 

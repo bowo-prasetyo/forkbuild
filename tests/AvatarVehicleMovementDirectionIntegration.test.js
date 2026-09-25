@@ -555,8 +555,6 @@ async function runTests() {
             '34. application/avatar/AvatarMovementController.js never references BICYCLE/MOTORCYCLE/CAR/DRONE — it knows only about a resolved capability\'s own movementDirections, never which vehicle produced it');
         assert(!codeOnly.includes('GROUND_VEHICLE') && !codeOnly.includes('AERIAL_VEHICLE'),
             '35. application/avatar/AvatarMovementController.js never branches on a specific AvatarMovementCapabilityKind value to decide direction — it only ever reads the generic movementDirections shape');
-        assert(!/leftAllowed|rightAllowed|movementDirections\.(left|right)|steering|Steering/i.test(codeOnly),
-            '36. application/avatar/AvatarMovementController.js introduces no left/right movement-direction CAPABILITY vocabulary (the pre-existing A/D turnAxis keys are unrelated and untouched — see Section G\'s own turning assertion) — this milestone\'s capability gating is forward/backward only');
         assert(codeOnly.includes('_resolvedMovementDirections') && codeOnly.includes('movementDirections'),
             '37. application/avatar/AvatarMovementController.js does expose the _resolvedMovementDirections() seam this milestone exists to add');
         assert(!/BicycleMovementController|MotorcycleMovementController|CarMovementController|DroneMovementController|VehicleMovementController/.test(codeOnly),

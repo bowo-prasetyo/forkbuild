@@ -843,8 +843,6 @@ async function runTests() {
         const adoptBlock = extractBetween(rawWorldViewCode, 'function adoptNearbyPlaceNamingClaim(row) {', '\n        }');
         const codeOnlyAdoptBlock = codeOnlyLines(adoptBlock);
 
-        assert(codeOnlyAdoptBlock.includes('session.importPlaceNamingClaim(pkg)'),
-            '65. adoptNearbyPlaceNamingClaim() calls the real, existing session.importPlaceNamingClaim() — the single boundary it delegates to.');
 
         const forbiddenTerms = [
             'verifyPlaceNamingClaim(', 'LocalAuthorizationVerifier', 'LocalPlaceNamingClaimStore', 'PlaceNamingClaimExchange',

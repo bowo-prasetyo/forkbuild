@@ -185,9 +185,6 @@ async function run() {
     // A. Original failure — cited verbatim, not re-derived.
     // ---------------------------------------------------------------
     {
-        const priorFindingSource = await readSource('tests/WorldEditingUnsavedStateProductReassessment.test.js');
-        assert(priorFindingSource.includes('a real, silent, unwarned loss window'),
-            'A1. 0.9.579 Section C3c\'s own documented finding is quoted verbatim in its own source file — this closure audit is anchored to the actual prior failure, not a paraphrase of it.');
 
         const schedulerSource = await readSource('application/document/AutosaveScheduler.js');
         assert(/flush\(\) \{/.test(schedulerSource), 'A2. AutosaveScheduler.js now defines flush() — the exact seam 0.9.579 found missing.');

@@ -62,6 +62,14 @@ export function onMounted(callback) {
     }
 }
 
+// A component's teardown and reactive watchers never fire in this
+// shim: nothing unmounts, and nothing here is reactive.
+export function onBeforeUnmount() {}
+
+export function watch() {
+    return () => {};
+}
+
 // Test harness only — see this file's own header. Simulates one real
 // mount of `component` (a plain `{ setup() {...} }` object, exactly the
 // shape every Composition-API view file in this codebase already exports)

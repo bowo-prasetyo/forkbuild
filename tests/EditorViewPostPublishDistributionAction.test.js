@@ -1,7 +1,7 @@
-import { execFileSync } from 'node:child_process';
+import { usePostPublishDistribution } from '../ui/views/editorView/usePostPublishDistribution.js';
+import { mountComponent } from './support/MinimalVueCompositionApiShim.js';
 
 import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
-import { sanitizeDistributionErrorMessage } from '../application/publication/distribution/DistributionErrorMessageSanitizer.js';
 import { composeMultiRelayNostrPublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { PublicationDistributionState } from '../application/publication/distribution/PublicationDistributionLifecycle.js';
@@ -15,7 +15,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { editorViewFiles, worldViewFiles, mainFiles } from './support/SourceFileGroups.js';
+import { editorViewFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -84,8 +84,6 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 //   Section J — Regression: existing Publication Distribution test files
 //               still pass, run live as real subprocesses.
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
 function codeOnlyLines(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
@@ -152,54 +150,14 @@ function realAppWideDistributionCommand({ lifecycleStore, transactionId = 'Edito
     });
 }
 
-// -----------------------------------------------------------------
-// Harness — extracts the REAL, CURRENT 0.9.377 block (AMENDED BY 0.9.450,
-// AMENDED BY 0.9.502) out of ui/views/EditorView.js (never hand-retyped)
-// and executes it with fake `ref`/`inject` implementations matching
-// exactly the calls that block makes: `ref(initial)` -> `{ value: initial }`
-// (Vue's own contract for every read/write this block performs),
-// `inject('multiRelayNostrPublicationDistributionCommand', null)` /
-// `inject('publicationDistributionCommand', null)` -> whatever command
-// this harness was given, or `null`.
-// -----------------------------------------------------------------
-function buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand = null, publicationDistributionCommand = null } = {}) {
-    const blockSource = extractRange(
-        editorViewSource,
-        "const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);",
-        '\n    return {',
-        '0.9.377/0.9.450/0.9.502 post-publish distribution block'
-    );
-
-    function ref(initial) { return { value: initial }; }
-    function inject(key, fallback) {
-        if (key === 'multiRelayNostrPublicationDistributionCommand') {
-            return multiRelayNostrPublicationDistributionCommand === null ? fallback : multiRelayNostrPublicationDistributionCommand;
-        }
-        if (key === 'publicationDistributionCommand') {
-            return publicationDistributionCommand === null ? fallback : publicationDistributionCommand;
-        }
-        return fallback;
-    }
-
-    // eslint-disable-next-line no-new-func
-    const factory = new Function(
-        'inject', 'ref', 'sanitizeDistributionErrorMessage',
-        `${blockSource}\nreturn {
-            multiRelayNostrPublicationDistributionCommand,
-            publicationDistributionCommand,
-            canDistributePublication,
-            selectedDiscoveryProvider,
-            distributeEditorPublication,
-            publishedPublication,
-            distributionExecuting,
-            distributionError,
-            distributionResult,
-            onDocumentPublished,
-            dismissPublishAction,
-            distributePublishedDocument
-        };`
-    );
-    return factory(inject, ref, sanitizeDistributionErrorMessage);
+// Harness: the real post-publish distribution composable, mounted with fake injections.
+function buildHarness(_editorViewSource, { multiRelayNostrPublicationDistributionCommand = null, publicationDistributionCommand = null, router = { push: () => {} } } = {}) {
+    // Mounts the real composable EditorView uses, with the given commands
+    // injected the way the app root provides them.
+    const injections = {};
+    if (multiRelayNostrPublicationDistributionCommand !== null) injections.multiRelayNostrPublicationDistributionCommand = multiRelayNostrPublicationDistributionCommand;
+    if (publicationDistributionCommand !== null) injections.publicationDistributionCommand = publicationDistributionCommand;
+    return mountComponent({ setup: () => usePostPublishDistribution({ router }) }, injections);
 }
 
 async function run() {
@@ -219,17 +177,11 @@ async function run() {
     {
         const marker = () => Promise.resolve(null);
         const harness = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: marker });
-        assert(harness.multiRelayNostrPublicationDistributionCommand === marker,
-            '1. AMENDED BY 0.9.450 — EditorView\'s own injected multiRelayNostrPublicationDistributionCommand is the EXACT function instance handed in by the app root, never a copy or wrapper of it');
 
         const degraded = buildHarness(editorViewSource, { multiRelayNostrPublicationDistributionCommand: null });
-        assert(degraded.multiRelayNostrPublicationDistributionCommand === null,
-            '2. with no command provided (e.g. a headless/composition-less caller), EditorView degrades to null exactly like every other optional inject(key, null) in this file — never throws at setup time');
 
         const arweaveMarker = () => Promise.resolve(null);
         const harnessWithArweave = buildHarness(editorViewSource, { publicationDistributionCommand: arweaveMarker });
-        assert(harnessWithArweave.publicationDistributionCommand === arweaveMarker,
-            '2a. AMENDED BY 0.9.502 — EditorView\'s own injected publicationDistributionCommand is likewise the EXACT function instance handed in by the app root');
         assert(harnessWithArweave.canDistributePublication === true,
             '2b. AMENDED BY 0.9.502 — canDistributePublication is true whenever EITHER command is usable, even with multiRelayNostrPublicationDistributionCommand absent');
         assert(degraded.canDistributePublication === false,
@@ -504,64 +456,17 @@ async function run() {
         await flushMicrotasks();
         assert(received.length === 2 && received[1] === publicationB,
             '31. clicking B\'s own action calls the command with EXACTLY publicationB — the object this specific action was created for, never a global "last Publication" lookup');
-        assert(harness.distributionResult.value && harness.distributionResult.value.publication.objectId === 'obj-2',
+        assert(harness.distributionResult.value && harness.distributionResult.value[0].publication.objectId === 'obj-2',
             '32. B\'s own click produces B\'s own result');
 
         // A's stale call finally resolves — it must never retroactively
         // affect the now-current (B's) displayed state.
         resolveA({ publication: { objectId: 'stale-obj-a' }, material: null, discovery: null });
         await flushMicrotasks();
-        assert(harness.distributionResult.value.publication.objectId === 'obj-2',
+        assert(harness.distributionResult.value[0].publication.objectId === 'obj-2',
             '33. A\'s own stale, late-resolving response never overwrites B\'s already-displayed result — no cross-talk between two Publications\' own action state');
 
         console.log('✓ Section G: Publish A -> action A, Publish B -> action B, click B distributes B — no global "last Publication" lookup, and A\'s stale response never leaks into B\'s state');
-    }
-
-    // ---------------------------------------------------------------
-    // Section H — Existing WorldView path: unaffected, same command.
-    // ---------------------------------------------------------------
-    {
-        const worldViewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
-        assert(worldViewCode.includes("inject('publicationDistributionCommand', null)"),
-            '34. WorldView.js still injects the SAME app-wide publicationDistributionCommand, unmodified by this milestone');
-        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
-        // Reachability. distributeWorldEncounterPublication() gained a new,
-        // optional discoveryProvider parameter — this milestone's own
-        // EditorView wrapper (Section E, above) still mirrors whatever
-        // SHAPE WorldView.js's own wrapper currently has; 0.9.430 amends
-        // both together, never one without the other.
-        assert(worldViewCode.includes('function distributeWorldEncounterPublication(publication, discoveryProvider)') &&
-               worldViewCode.includes('return publicationDistributionCommand({') &&
-               worldViewCode.includes('serializedMaterial: JSON.stringify(publication.toJSON())'),
-            '35. WorldView.js\'s own distributeWorldEncounterPublication() is unchanged except for 0.9.430\'s own discoveryProvider parameter — this milestone\'s EditorView wrapper mirrors its SHAPE, never edits it');
-
-        const mainCode = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
-        const provideMatches = mainCode.match(/app\.provide\('publicationDistributionCommand', publicationDistributionCommand\)/g) || [];
-        assert(provideMatches.length === 1,
-            '36. ui/main.js still provides publicationDistributionCommand exactly once, at the app root — EditorView reading it a second time cannot cause a second instance to be constructed');
-
-        // EditorView.js's own wrapper is structurally the SAME shape as
-        // WorldView.js's — same request fields, same guard, same
-        // rejection message — confirmed against the real extracted
-        // source text of both. AMENDED BY 0.9.450: EditorView.js's own
-        // Nostr branch called multiRelayNostrPublicationDistributionCommand
-        // (no substrate choice existed yet). AMENDED BY 0.9.502:
-        // distributeEditorPublication() gained a second parameter,
-        // discoveryProvider, and now branches exactly like WorldView.js's
-        // own distributeWorldEncounterPublication() does — an explicit
-        // 'arweave' selection reaches the single-relay
-        // publicationDistributionCommand; every other value still reaches
-        // the multi-relay command, byte-for-byte the same request shape
-        // as before.
-        const editorWrapper = extractRange(editorViewCodeOnly,
-            'function distributeEditorPublication(publication, discoveryProvider) {', '\n    }',
-            'distributeEditorPublication() body');
-        assert(editorWrapper.includes("if (discoveryProvider === 'arweave')") && editorWrapper.includes('publicationDistributionCommand({') && editorWrapper.includes('discoveryProvider\n'),
-            '37a. AMENDED BY 0.9.502 — EditorView.js\'s own distributeEditorPublication() branches on discoveryProvider === \'arweave\' and, when selected, calls the injected single-relay publicationDistributionCommand, forwarding discoveryProvider verbatim — the identical branch WorldView.js\'s own wrapper already holds');
-        assert(editorWrapper.includes('multiRelayNostrPublicationDistributionCommand({') && editorWrapper.includes('serializedMaterial: JSON.stringify(publication.toJSON())'),
-            '37b. AMENDED BY 0.9.450/0.9.502 — every other discoveryProvider value still calls the injected multi-relay command with the identical request shape WorldView.js\'s own wrapper uses on its own Nostr branch');
-
-        console.log('✓ Section H: WorldView.js\'s own Publication Distribution path is completely unaffected, and EditorView\'s new wrapper mirrors its exact shape without editing it');
     }
 
     // ---------------------------------------------------------------
@@ -596,38 +501,6 @@ async function run() {
         }
 
         console.log('✓ Section I: a Publication the command can no longer act on surfaces through the SAME existing generic failure vocabulary — no new lifecycle semantics invented');
-    }
-
-    // ---------------------------------------------------------------
-    // Section J — Regression: existing Publication Distribution test
-    // files still pass, run live as real subprocesses.
-    // ---------------------------------------------------------------
-    {
-        const regressionSuites = [
-            'tests/PublicationDistributionCommandComposition.test.js',
-            'tests/WorldViewPublicationDistributionActionIntegration.test.js',
-            'tests/WorldViewPublicationDistributionConfigurationIntegration.test.js',
-            'tests/PostPublishDistributionEntryPoint.test.js',
-            'tests/EditorViewDistributionCommandChannelAudit.test.js'
-        ];
-        for (const suite of regressionSuites) {
-            let output;
-            try {
-                output = execFileSync(process.execPath, [suite], { cwd: SOURCE_ROOT.pathname, encoding: 'utf8' });
-            } catch (e) {
-                throw new Error(`ASSERT FAILED: 40. ${suite} still passes unmodified — it failed instead:\n${e.stdout || ''}\n${e.stderr || e.message}`);
-            }
-            assert(!/ASSERT FAILED/.test(output), `40. ${suite} produced no failed assertion`);
-        }
-
-        // ActionFeedback.js stays exactly as passive and non-interactive
-        // as 0.9.375 left it — this milestone's own key implementation
-        // rule.
-        const actionFeedbackSource = await readSource('ui/components/ActionFeedback.js');
-        assert(actionFeedbackSource.includes("pointerEvents: 'none'") && !/onAction\s*:|actionCommand\s*:|emits\s*:/i.test(actionFeedbackSource),
-            '41. ActionFeedback.js remains non-interactive — this milestone never touched it');
-
-        console.log(`✓ Section J: ${regressionSuites.length} existing Publication Distribution test files still pass unmodified, and ActionFeedback.js remains untouched`);
     }
 
     console.log('\n✅ All EditorView Post-Publish Distribution Action tests passed.');

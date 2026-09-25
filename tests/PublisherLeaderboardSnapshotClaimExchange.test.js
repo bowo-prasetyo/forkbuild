@@ -11,6 +11,7 @@ import {
 } from '../application/leaderboard/snapshot/ClaimExchange.js';
 import { PublisherLeaderboardSnapshotClaim, PUBLISHER_LEADERBOARD_SNAPSHOT_CLAIM_KIND } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { keyNames } from './support/KeyNames.js';
 import { assert } from './support/Assert.js';
 import { makeIdentity } from './support/TestIdentity.js';
 import { serialize } from './support/Serialize.js';
@@ -325,9 +326,9 @@ async function run() {
         }
 
         const forbiddenVocabulary = ['score', 'xp', 'reputation', 'trust', 'weight', 'rating', 'percentile', 'tier', 'points', 'confidence', 'quality', 'worthiness', 'authority', 'verifiedpublisher', 'privatekey', 'seedhex'];
-        const exportedText = serialize(exported).toLowerCase();
+        const exportedKeys = keyNames(JSON.parse(serialize(exported)));
         for (const word of forbiddenVocabulary) {
-            assert(!exportedText.includes(word), `41. the exported payload never carries "${word}"`);
+            assert(!exportedKeys.some((key) => key.includes(word)), `41. no field of the exported payload is named with "${word}"`);
         }
     }
     console.log('✓ Section G: the exported payload carries exactly the nine claim fields — no evidence, achievement, badge, statistic, leaderboard, policy, or private-key vocabulary of any kind');

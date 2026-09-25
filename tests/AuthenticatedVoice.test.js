@@ -1,3 +1,4 @@
+// @environment browser — needs Web Audio and media tracks over a real RTCPeerConnection.
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { WebRtcPeerConnectionProvider } from '../peer/WebRtcPeerConnectionProvider.js';
@@ -301,11 +302,13 @@ let flagshipCleanup;
     assert(bobVoice.isMuted() === false, "muting alice's own outgoing audio never affects bob's own local mute state — purely local, never transmitted");
     aliceVoice.setMuted(false);
 
-    aliceVoice.endCall(callId);
-    await Promise.all([
+    // Listen before hanging up: endCall() ends the local call synchronously.
+    const bothEnded = Promise.all([
         waitForCallState(aliceVoice, callId, [VoiceSessionState.ENDED]),
         waitForCallState(bobVoice, callId, [VoiceSessionState.ENDED])
     ]);
+    aliceVoice.endCall(callId);
+    await bothEnded;
     await wait(50);
     assert(aliceVoice.getActiveCall() === null, "alice's own call resets to IDLE (no active call) after ENDED");
     assert(bobVoice.getActiveCall() === null, "bob's own call resets to IDLE (no active call) after ENDED");
@@ -467,11 +470,13 @@ let flagshipCleanup;
     ]);
     assert(aliceVoice.getActiveCall().state === VoiceSessionState.ACTIVE, 'setup: the call is genuinely active before the block');
 
-    alicePeerBlock.block(aliceConnectedPeer.remoteIdentity);
-    await Promise.all([
+    // Listen before blocking: blocking ends the local call synchronously.
+    const bothEndedByBlock = Promise.all([
         waitForCallState(aliceVoice, callId, [VoiceSessionState.ENDED]),
         waitForCallState(bobVoice, callId, [VoiceSessionState.ENDED])
     ]);
+    alicePeerBlock.block(aliceConnectedPeer.remoteIdentity);
+    await bothEndedByBlock;
     await wait(50);
     assert(aliceVoice.getActiveCall() === null, "blocking bob mid-call terminates alice's own call IMMEDIATELY — never waiting for bob to hang up or for the connection to drop");
     assert(bobVoice.getActiveCall() === null, "bob's own call is torn down too, via the SAME reliable END control signal every ordinary hangup uses");

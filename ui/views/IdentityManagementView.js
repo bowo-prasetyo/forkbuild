@@ -1,4 +1,6 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount, inject } from 'vue';
+import NewPassphraseFields from '../components/NewPassphraseFields.js';
+import { evaluateNewPassphrase } from '../../application/identity/NewPassphrasePolicy.js';
 
 // 0.2.48 — Identity Management: a dedicated view for what LoginModal was
 // deliberately never meant to grow into. LoginModal answers "which
@@ -27,6 +29,7 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, inject } from 'vue
 // validation needs no secret" property.
 export default {
     name: 'IdentityManagementView',
+    components: { NewPassphraseFields },
     // A plain `autofocus` attribute only works on page load, not on an
     // input Vue inserts later, which is how every form here appears.
     directives: {
@@ -82,7 +85,11 @@ export default {
         // fields, cleared on every open and close so a typed passphrase
         // never outlives the form it was typed into.
         const openForm = ref(null); // { kind, identityId }
-        const form = reactive({ passphrase: '', newPassphrase: '', successorIdentityId: '', reason: '', error: '' });
+        // busy: an action is waiting on key derivation, which takes a moment.
+        const form = reactive({
+            passphrase: '', newPassphrase: '', newPassphraseConfirmation: '', successorIdentityId: '', reason: '',
+            error: '', attempted: false, busy: false
+        });
         const exportedJson = ref('');
         const exportDownloadHref = computed(() => 'data:application/json;charset=utf-8,' + encodeURIComponent(exportedJson.value));
 
@@ -100,10 +107,29 @@ export default {
             openForm.value = null;
             form.passphrase = '';
             form.newPassphrase = '';
+            form.newPassphraseConfirmation = '';
             form.successorIdentityId = '';
             form.reason = '';
             form.error = '';
+            form.attempted = false;
+            form.busy = false;
             exportedJson.value = '';
+        }
+
+        // Runs one form action, showing progress and any error on the form.
+        async function runFormAction(action) {
+            if (form.busy) {
+                return;
+            }
+            form.busy = true;
+            form.error = '';
+            try {
+                await action();
+            } catch (e) {
+                form.error = displayError(e);
+            } finally {
+                form.busy = false;
+            }
         }
 
         // --- lock / unlock -------------------------------------------------
@@ -111,12 +137,10 @@ export default {
             if (!form.passphrase) {
                 return;
             }
-            try {
-                identityUseCase.unlock(openForm.value.identityId, form.passphrase);
+            return runFormAction(async () => {
+                await identityUseCase.unlock(openForm.value.identityId, form.passphrase);
                 closeForm();
-            } catch (e) {
-                form.error = displayError(e);
-            }
+            });
         }
         function lockIdentity(identity) {
             identityUseCase.lock(identity.identityId);
@@ -127,14 +151,25 @@ export default {
             if (!form.passphrase) {
                 return;
             }
-            form.error = '';
-            try {
-                const pkg = identityUseCase.exportIdentity(openForm.value.identityId, form.passphrase);
+            return runFormAction(async () => {
+                const pkg = await identityUseCase.exportIdentity(openForm.value.identityId, form.passphrase);
                 exportedJson.value = JSON.stringify(pkg, null, 2);
                 form.passphrase = '';
-            } catch (e) {
-                form.error = displayError(e);
+            });
+        }
+
+        function confirmProtect() {
+            form.attempted = true;
+            const evaluation = evaluateNewPassphrase({
+                passphrase: form.newPassphrase, confirmation: form.newPassphraseConfirmation, offerUnprotected: false
+            });
+            if (!evaluation.ok) {
+                return;
             }
+            return runFormAction(async () => {
+                await identityUseCase.protectIdentity(openForm.value.identityId, form.newPassphrase);
+                closeForm();
+            });
         }
         function exportFileName(identity) {
             const safeLabel = identity.label.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'identity';
@@ -145,15 +180,37 @@ export default {
         // createIdentity() publishes no event, so the list is re-read here.
         const newLabel = ref('');
         const newPassphrase = ref('');
-        function createIdentity() {
+        const newPassphraseConfirmation = ref('');
+        const allowUnprotected = ref(false);
+        const createAttempted = ref(false);
+        const creating = ref(false);
+        const createError = ref('');
+        async function createIdentity() {
             const label = newLabel.value.trim();
-            if (!label) {
+            createAttempted.value = true;
+            createError.value = '';
+            const evaluation = evaluateNewPassphrase({
+                passphrase: newPassphrase.value,
+                confirmation: newPassphraseConfirmation.value,
+                allowUnprotected: allowUnprotected.value
+            });
+            if (!label || !evaluation.ok || creating.value) {
                 return;
             }
-            identityUseCase.createIdentity(label, newPassphrase.value || null);
-            newLabel.value = '';
-            newPassphrase.value = '';
-            refresh();
+            creating.value = true;
+            try {
+                await identityUseCase.createIdentity(label, evaluation.protect ? newPassphrase.value : null);
+                newLabel.value = '';
+                newPassphrase.value = '';
+                newPassphraseConfirmation.value = '';
+                allowUnprotected.value = false;
+                createAttempted.value = false;
+                refresh();
+            } catch (e) {
+                createError.value = displayError(e);
+            } finally {
+                creating.value = false;
+            }
         }
 
         // --- import ------------------------------------------------------------
@@ -208,7 +265,11 @@ export default {
         }
 
         // importIdentity() publishes no event, so the list is re-read here.
-        function confirmImport() {
+        const importing = ref(false);
+        async function confirmImport() {
+            if (importing.value) {
+                return;
+            }
             importError.value = '';
             importResult.value = null;
             const pkg = parsedImport.value;
@@ -216,8 +277,9 @@ export default {
                 importError.value = 'That is not valid JSON — paste the exported identity file\'s contents exactly.';
                 return;
             }
+            importing.value = true;
             try {
-                const result = identityUseCase.importIdentity(pkg, importPassphrase.value, importLabel.value.trim() || null);
+                const result = await identityUseCase.importIdentity(pkg, importPassphrase.value, importLabel.value.trim() || null);
                 importResult.value = result;
                 if (result.status === 'IMPORTED') {
                     importText.value = '';
@@ -227,6 +289,8 @@ export default {
                 refresh();
             } catch (e) {
                 importError.value = displayError(e);
+            } finally {
+                importing.value = false;
             }
         }
 
@@ -238,15 +302,17 @@ export default {
         // Each of these publishes IdentityChanged, which already runs
         // refresh() through the subscriptions below.
         function confirmChangePassphrase() {
-            if (!form.passphrase || !form.newPassphrase) {
+            form.attempted = true;
+            const evaluation = evaluateNewPassphrase({
+                passphrase: form.newPassphrase, confirmation: form.newPassphraseConfirmation, offerUnprotected: false
+            });
+            if (!form.passphrase || !evaluation.ok) {
                 return;
             }
-            try {
-                identityUseCase.changePassphrase(openForm.value.identityId, form.passphrase, form.newPassphrase);
+            return runFormAction(async () => {
+                await identityUseCase.changePassphrase(openForm.value.identityId, form.passphrase, form.newPassphrase);
                 closeForm();
-            } catch (e) {
-                form.error = displayError(e);
-            }
+            });
         }
 
         function confirmDeclareSuccessor() {
@@ -254,21 +320,19 @@ export default {
             if (!successorIdentityId) {
                 return;
             }
-            try {
-                const record = identityUseCase.declareSuccessor(openForm.value.identityId, successorIdentityId, form.passphrase || null);
+            return runFormAction(async () => {
+                const record = await identityUseCase.declareSuccessor(openForm.value.identityId, successorIdentityId, form.passphrase || null);
                 if (identityLifecyclePropagationUseCase) {
                     identityLifecyclePropagationUseCase.broadcastSuccession(record);
                 }
                 closeForm();
-            } catch (e) {
-                form.error = displayError(e);
-            }
+            });
         }
 
         function confirmRevoke() {
-            try {
+            return runFormAction(async () => {
                 const revokedId = openForm.value.identityId;
-                const record = identityUseCase.revokeIdentity(revokedId, {
+                const record = await identityUseCase.revokeIdentity(revokedId, {
                     passphrase: form.passphrase || null,
                     reason: form.reason.trim() || null,
                     successorIdentityId: form.successorIdentityId.trim() || null
@@ -285,9 +349,7 @@ export default {
                     }
                 }
                 closeForm();
-            } catch (e) {
-                form.error = displayError(e);
-            }
+            });
         }
 
         let unsubscribeUser = null;
@@ -309,9 +371,10 @@ export default {
             form, isFormOpen, openFormFor, closeForm,
             confirmUnlock, lockIdentity,
             exportedJson, exportDownloadHref, exportFileName, confirmExport,
-            confirmChangePassphrase, confirmDeclareSuccessor, confirmRevoke,
-            newLabel, newPassphrase, createIdentity,
-            showImportForm, importText, importLabel, importPassphrase, importError, importResult,
+            confirmProtect, confirmChangePassphrase, confirmDeclareSuccessor, confirmRevoke,
+            newLabel, newPassphrase, newPassphraseConfirmation, allowUnprotected, createAttempted, creating, createError,
+            createIdentity,
+            showImportForm, importText, importLabel, importPassphrase, importError, importResult, importing,
             importPreview, onImportFileChosen, confirmImport, dismissImportResult
         };
     },
@@ -343,7 +406,7 @@ export default {
                     <p class="identity-mgmt-status">
                         {{ isCurrentSession(identity) ? 'Authenticated' : 'Not signed in' }}
                         <template v-if="identity.isProtected"> · {{ isUnlocked(identity) ? 'Unlocked' : 'Locked' }}</template>
-                        <template v-else> · Unprotected</template>
+                        <template v-else> · <span class="identity-unprotected-badge" title="The private key is stored unencrypted in this browser">⚠ Unprotected</span></template>
                         <template v-if="identity.lifecycleState === 'REVOKED'"> · <span class="identity-revoked-badge">⚠ Revoked</span></template>
                     </p>
                     <p v-if="identity.successorIdentityId" class="form-hint form-hint--neutral">
@@ -357,7 +420,7 @@ export default {
                         <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                         <div class="modal-actions">
                             <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
-                            <button class="modal-btn modal-btn--primary" @click="confirmUnlock">Unlock</button>
+                            <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmUnlock">{{ form.busy ? 'Unlocking…' : 'Unlock' }}</button>
                         </div>
                     </div>
 
@@ -372,7 +435,7 @@ export default {
                             <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                             <div class="modal-actions">
                                 <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
-                                <button class="modal-btn modal-btn--primary" @click="confirmExport">Export</button>
+                                <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmExport">{{ form.busy ? 'Encrypting…' : 'Export' }}</button>
                             </div>
                         </template>
                         <template v-else>
@@ -391,11 +454,26 @@ export default {
                     <div v-else-if="isFormOpen('changePassphrase', identity)" class="identity-unlock-form">
                         <p class="identity-unlock-label">Changing the passphrase never changes the identity itself — its identityId, public key, and every signature it has ever produced stay exactly as valid as before.</p>
                         <input v-model="form.passphrase" type="password" placeholder="Current passphrase" class="modal-input" autocomplete="new-password" v-focus />
-                        <input v-model="form.newPassphrase" type="password" placeholder="New passphrase" class="modal-input" autocomplete="new-password" @keydown.enter="confirmChangePassphrase" @keydown.escape="closeForm" />
+                        <NewPassphraseFields v-model:passphrase="form.newPassphrase" v-model:confirmation="form.newPassphraseConfirmation"
+                                             :offer-unprotected="false" :show-hint="form.attempted" @submit="confirmChangePassphrase" />
                         <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                         <div class="modal-actions">
                             <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
-                            <button class="modal-btn modal-btn--primary" @click="confirmChangePassphrase">Change Passphrase</button>
+                            <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmChangePassphrase">{{ form.busy ? 'Changing…' : 'Change Passphrase' }}</button>
+                        </div>
+                    </div>
+
+                    <div v-else-if="isFormOpen('protect', identity)" class="identity-unlock-form">
+                        <p class="identity-unlock-label">
+                            Protecting {{ identity.label }} encrypts its private key with a passphrase. The identity itself —
+                            its identityId, public key and signatures — does not change. It will be locked until you unlock it.
+                        </p>
+                        <NewPassphraseFields v-model:passphrase="form.newPassphrase" v-model:confirmation="form.newPassphraseConfirmation"
+                                             :offer-unprotected="false" :show-hint="form.attempted" @submit="confirmProtect" />
+                        <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
+                        <div class="modal-actions">
+                            <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
+                            <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmProtect">{{ form.busy ? 'Protecting…' : 'Protect Identity' }}</button>
                         </div>
                     </div>
 
@@ -408,7 +486,7 @@ export default {
                         <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                         <div class="modal-actions">
                             <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
-                            <button class="modal-btn modal-btn--primary" @click="confirmDeclareSuccessor">Declare Successor</button>
+                            <button class="modal-btn modal-btn--primary" :disabled="form.busy" @click="confirmDeclareSuccessor">Declare Successor</button>
                         </div>
                     </div>
 
@@ -424,7 +502,7 @@ export default {
                         <p v-if="form.error" class="identity-unlock-error">{{ form.error }}</p>
                         <div class="modal-actions">
                             <button class="modal-btn modal-btn--secondary" @click="closeForm">Cancel</button>
-                            <button class="modal-btn modal-btn--danger" @click="confirmRevoke">Revoke Identity</button>
+                            <button class="modal-btn modal-btn--danger" :disabled="form.busy" @click="confirmRevoke">Revoke Identity</button>
                         </div>
                     </div>
 
@@ -433,6 +511,7 @@ export default {
                         <button v-else-if="identity.isProtected" class="action-btn action-btn--secondary" @click="openFormFor('unlock', identity)">Unlock</button>
                         <button class="action-btn action-btn--secondary" @click="openFormFor('export', identity)">Export Identity</button>
                         <button v-if="identity.isProtected" class="action-btn action-btn--secondary" @click="openFormFor('changePassphrase', identity)">Change Passphrase</button>
+                        <button v-else-if="identity.lifecycleState !== 'REVOKED'" class="action-btn action-btn--primary" @click="openFormFor('protect', identity)">Protect with Passphrase</button>
                         <template v-if="identity.lifecycleState !== 'REVOKED'">
                             <button class="action-btn action-btn--secondary" @click="openFormFor('declareSuccessor', identity)">Declare Successor</button>
                             <button class="action-btn action-btn--danger" @click="openFormFor('revoke', identity)">Revoke</button>
@@ -445,8 +524,10 @@ export default {
             <div class="identity-mgmt-form">
                 <h2>Create New Identity</h2>
                 <input v-model="newLabel" type="text" placeholder="Display name" class="modal-input" autocomplete="off" @keydown.enter="createIdentity" />
-                <input v-model="newPassphrase" type="password" placeholder="Protect with a passphrase (optional)" class="modal-input" autocomplete="new-password" @keydown.enter="createIdentity" />
-                <button class="action-btn action-btn--primary" @click="createIdentity">Create Identity</button>
+                <NewPassphraseFields v-model:passphrase="newPassphrase" v-model:confirmation="newPassphraseConfirmation"
+                                     v-model:allow-unprotected="allowUnprotected" :show-hint="createAttempted" @submit="createIdentity" />
+                <p v-if="createError" class="identity-unlock-error">{{ createError }}</p>
+                <button class="action-btn action-btn--primary" :disabled="creating" @click="createIdentity">{{ creating ? 'Creating…' : 'Create Identity' }}</button>
             </div>
 
             <div class="identity-mgmt-form">
@@ -487,7 +568,7 @@ export default {
 
                     <div class="modal-actions">
                         <button class="modal-btn modal-btn--secondary" @click="showImportForm = false">Cancel</button>
-                        <button class="modal-btn modal-btn--primary" @click="confirmImport">Import</button>
+                        <button class="modal-btn modal-btn--primary" :disabled="importing" @click="confirmImport">{{ importing ? 'Importing…' : 'Import' }}</button>
                     </div>
                 </template>
             </div>

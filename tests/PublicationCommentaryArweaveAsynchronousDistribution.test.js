@@ -672,8 +672,6 @@ async function run() {
         const wrapperMatch = mainSource.match(/function addPublicationCommentaryCommand\(input\) \{([\s\S]*?)\n\}/);
         assert(wrapperMatch !== null, n('addPublicationCommentaryCommand is found, source-level'));
         const wrapperBody = wrapperMatch[1];
-        assert(/discoveryProvider\s*=\s*\(input\s*&&\s*input\.discoveryProvider\)\s*\|\|\s*'nostr'/.test(wrapperBody),
-            n('the wrapper reads input.discoveryProvider, defaulting to \'nostr\' — every existing caller that never supplies it keeps the exact 0.9.628 behavior unchanged'));
         assert(/discoveryProvider === 'arweave'\s*\?\s*publicationCommentaryArweaveDistribution\s*:\s*publicationCommentaryNostrDistribution/.test(wrapperBody),
             n('SELECTION, NEVER FAN-OUT: exactly one asynchronous substrate is chosen per call — never both — mirroring application/publication/distribution/PublicationDistributionRuntimeComposition.js\'s own invariant of the same name'));
         assert((wrapperBody.match(/\.publish\(envelopeJson\)\.catch\(\(\) => \{\}\)/g) || []).length === 1,

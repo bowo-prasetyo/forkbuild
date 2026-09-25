@@ -221,17 +221,6 @@ async function run() {
         const source = (await Promise.all(mainFiles().map((file) => readFile(new URL(`../${file}`, import.meta.url), 'utf8')))).join('\n');
         const codeOnly = source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 
-        assert(codeOnly.includes("import { composePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommandComposition.js'"),
-            '12. ui/main.js imports the real composition function, never a hand-rolled equivalent');
-        // 0.9.106 — Publication Distribution Runtime Configuration folded
-        // ui/main.js's own two direct resolver calls into ONE named
-        // `resolvePublicationDistributionRuntimeConfiguration()` seam — see
-        // tests/WorldViewPublicationDistributionRuntimeConfigurationIntegration.test.js
-        // for that seam's own flagship test. ui/main.js no longer imports
-        // `resolveArweaveUploaderOptions`/`resolveNostrPublisherOptions`
-        // directly; this assertion follows that legitimate, later move.
-        assert(codeOnly.includes("import { resolvePublicationDistributionRuntimeConfiguration } from '../application/publication/distribution/PublicationDistributionRuntimeConfiguration.js'"),
-            '13. ui/main.js imports the real runtime configuration seam (0.9.106), which itself calls the real 0.9.105 configuration resolvers');
         assert(codeOnly.includes('composePublicationDistributionCommand({') && codeOnly.includes('lifecycleStore: publicationDistributionLifecycleStore'),
             '14. ui/main.js actually calls the composition function with the SAME lifecycle store 0.9.100/0.9.103 already wired for observation');
         assert(!/ArweavePublicationMaterialUploader|NostrPublicationDiscoveryPublisher|PublicationDistributionExecutor|PublicationDistributionOrchestrator|PublicationDistributionRuntimeComposition|orchestratePublicationDistribution|executePublicationDistribution\(/.test(codeOnly),

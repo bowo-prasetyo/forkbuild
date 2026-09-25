@@ -1,5 +1,6 @@
 import * as Ed25519 from './Ed25519.js';
-import { CURRENT_FORMAT_VERSION } from './IdentityExport.js';
+import { SUPPORTED_FORMAT_VERSIONS } from './IdentityExport.js';
+import * as KeyEncryption from './KeyEncryption.js';
 
 // Strict, side-effect-free validation of a portable identity package
 // (0.2.48), deliberately kept separate from identity/IdentityRecovery.js:
@@ -41,16 +42,29 @@ function validateEncryptedPrivateKey(record) {
     if (!record || typeof record !== 'object') {
         throw new IdentityPackageError('IdentityImport: encryptedPrivateKey is missing or not an object');
     }
-    for (const field of ['salt', 'nonce', 'ciphertext', 'tag']) {
+    if (typeof record.kdf !== 'string' || !record.kdf) {
+        throw new IdentityPackageError('IdentityImport: encryptedPrivateKey.kdf is missing');
+    }
+    // The current format carries its GCM tag inside the ciphertext; the
+    // legacy format has a separate HMAC tag.
+    let hexFields;
+    if (record.kdf === KeyEncryption.KDF) {
+        if (record.cipher !== KeyEncryption.CIPHER) {
+            throw new IdentityPackageError(`IdentityImport: unsupported encryptedPrivateKey.cipher ${record.cipher}`);
+        }
+        hexFields = ['salt', 'nonce', 'ciphertext'];
+    } else if (record.kdf === 'PBKDF2-HMAC-SHA512') {
+        hexFields = ['salt', 'nonce', 'ciphertext', 'tag'];
+    } else {
+        throw new IdentityPackageError(`IdentityImport: unsupported encryptedPrivateKey.kdf ${record.kdf}`);
+    }
+    for (const field of hexFields) {
         if (!isNonEmptyHex(record[field])) {
             throw new IdentityPackageError(`IdentityImport: encryptedPrivateKey.${field} is missing or not valid hex`);
         }
     }
-    if (typeof record.kdf !== 'string' || !record.kdf) {
-        throw new IdentityPackageError('IdentityImport: encryptedPrivateKey.kdf is missing');
-    }
-    if (!Number.isInteger(record.iterations) || record.iterations <= 0) {
-        throw new IdentityPackageError('IdentityImport: encryptedPrivateKey.iterations must be a positive integer');
+    if (!Number.isInteger(record.iterations) || record.iterations <= 0 || record.iterations > KeyEncryption.MAX_ITERATIONS) {
+        throw new IdentityPackageError(`IdentityImport: encryptedPrivateKey.iterations must be a whole number from 1 to ${KeyEncryption.MAX_ITERATIONS}`);
     }
 }
 
@@ -61,7 +75,7 @@ export function validatePackage(pkg) {
     if (!pkg || typeof pkg !== 'object') {
         throw new IdentityPackageError('IdentityImport: package is missing or not an object');
     }
-    if (pkg.formatVersion !== CURRENT_FORMAT_VERSION) {
+    if (!SUPPORTED_FORMAT_VERSIONS.includes(pkg.formatVersion)) {
         throw new IdentityPackageError(`IdentityImport: unsupported format version ${pkg.formatVersion}`);
     }
     if (typeof pkg.identityId !== 'string' || !pkg.identityId.startsWith('did:key:z')) {

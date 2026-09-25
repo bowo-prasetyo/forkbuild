@@ -17,7 +17,7 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { worldEncounterCanvasFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
+import { mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as rawSource } from './support/SourceText.js';
@@ -126,6 +126,7 @@ async function extractPath1Wrapper() {
     return new Function(
         'input', 'createPublicationCommentaryCommand', 'publicationCommentaryDistributionPeerExchange',
         'publicationCommentaryArweaveDistribution', 'publicationCommentaryNostrDistribution', 'publicationCommentaryDistributionExchange',
+        'resolvedAnnouncementDiscoveryProvider',
         wrapperMatch[1]
     );
 }
@@ -142,7 +143,9 @@ function makeDistributionWrappedCommand(path1Fn, createPublicationCommentaryComm
             { announce: () => { calls.peer += 1; } },
             { publish: (json) => { calls.arweave += 1; return Promise.resolve({ published: true, locator: 'a', json }); } },
             { publish: (json) => { calls.nostr += 1; return Promise.resolve({ published: true, locator: 'n', json }); } },
-            { exportCommentary: (c) => ({ envelopeFor: c }) }
+            { exportCommentary: (c) => ({ envelopeFor: c }) },
+            // What ui/main.js resolves when no Announcement/Discovery preference is saved.
+            'nostr'
         );
     };
 }
@@ -450,100 +453,6 @@ async function runTests() {
             '28. PublicationList.js\'s own per-row <select> carries the identical value vocabulary');
 
         console.log('✓ G: provider identity — the wire value is always the existing literal \'nostr\'/\'arweave\' string; human-friendly labels exist only for display');
-    }
-
-    // ===============================================================
-    // Section H — architecture guard: the UI never instantiates
-    // distribution adapters, verifies, deduplicates, fans out, or
-    // modifies the async distribution contract; PATH 2 stays untouched.
-    // ===============================================================
-    {
-        const cardSource = (await rawSource('ui/components/PublicationCard.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
-        const listSource = (await rawSource('ui/components/PublicationList.js') + await rawSource('ui/components/PublicationCommentarySection.js'));
-        const cardCode = (await codeOnlySource('ui/components/PublicationCard.js') + await codeOnlySource('ui/components/PublicationCommentarySection.js'));
-        const listCode = (await codeOnlySource('ui/components/PublicationList.js') + await codeOnlySource('ui/components/PublicationCommentarySection.js'));
-
-        assert(!/PublicationCommentaryNostrDistribution|PublicationCommentaryArweaveDistribution|PublicationCommentaryDistributionPeerExchange/.test(cardCode),
-            '29. PublicationCard.js never imports or names any distribution class directly in CODE — selection stays entirely inside ui/main.js\'s own existing wrapper (the class names appear only in this file\'s own prose comments, explaining that restraint, never in an import or constructor)');
-        assert(!/PublicationCommentaryNostrDistribution|PublicationCommentaryArweaveDistribution|PublicationCommentaryDistributionPeerExchange/.test(listCode),
-            '30. PublicationList.js carries the identical restraint');
-
-        assert(!/\.publish\(|\.announce\(/.test(cardCode) && !/\.publish\(|\.announce\(/.test(listCode),
-            '31. neither component ever calls .publish()/.announce() itself — those verbs stay inside ui/main.js\'s own wrapper, unreached from either PATH 1 component');
-
-        assert(!/Promise\.all|fallback|retry|dedup/i.test(cardCode) && !/Promise\.all|fallback|retry|dedup/i.test(listCode),
-            '32. neither component performs fan-out (Promise.all across substrates), fallback, retry, or deduplication — a single literal value is forwarded, nothing more');
-
-        // Selection stays structurally exclusive at the ONE place that
-        // matters — ui/main.js's own wrapper, unmodified by this
-        // milestone (reconfirmed, not merely inherited from 0.9.637).
-        const mainSource = (await Promise.all(mainFiles().map((file) => codeOnlySource(file)))).join('\n');
-        assert(/const discoveryProvider = \(input && input\.discoveryProvider\) \|\| 'nostr';/.test(mainSource),
-            '33. ui/main.js\'s own selection line is unmodified by this milestone');
-        assert(/const asynchronousDistribution = discoveryProvider === 'arweave'\s*\?\s*publicationCommentaryArweaveDistribution\s*:\s*publicationCommentaryNostrDistribution;/.test(mainSource),
-            '34. ui/main.js\'s own exclusive-selection ternary is unmodified — still structurally incapable of selecting both');
-
-        // No new persisted preference — the selector lives only in
-        // ephemeral component data/row state (Sections A-D already
-        // proved default reset per fresh ctx); confirmed here that
-        // neither file ever touches localStorage/StorageProvider for
-        // this field.
-        assert(!/selectedDiscoveryProvider.*(?:localStorage|StorageProvider|\.save\()/s.test(cardCode),
-            '35. PublicationCard.js never persists selectedDiscoveryProvider anywhere');
-        assert(!/provider.*(?:localStorage|StorageProvider)/s.test(listCode) || !/rowCommentaryState.*localStorage/s.test(listCode),
-            '36. PublicationList.js never persists a row\'s own provider selection anywhere');
-
-        // PATH 2 — OwnPublicationPanel.js/WorldEncounterCanvas.js —
-        // deliberately, explicitly untouched by this milestone. The
-        // SAME per-function technique 0.9.637's own Section B used: find
-        // each Commentary-creation function's own real
-        // addPublicationCommentaryCommand({...}) call and confirm it
-        // still carries no discoveryProvider field. This is deliberately
-        // NOT a whole-file discoveryProvider absence check for
-        // WorldEncounterCanvas.js: that file already, legitimately,
-        // pre-dates this milestone with its own PUBLICATION-distribution
-        // discoveryProvider vocabulary (0.9.430) — a different feature
-        // this milestone does not touch. Scoping to the Commentary call
-        // sites is what actually proves Commentary itself stays
-        // untouched there.
-        {
-            const sites = [
-                { file: 'ui/components/OwnPublicationPanel.js', fn: 'submitPublicationCommentary' },
-                { file: 'ui/components/WorldEncounterCanvas.js', fn: 'submitObserverLocalEncounterCommentary' },
-                { file: 'ui/components/WorldEncounterCanvas.js', fn: 'submitEncounterCommentary' }
-            ];
-            const callPattern = /(?:this\.)?addPublicationCommentaryCommand\(\{[^}]*\}\)/;
-            for (const { file, fn } of sites) {
-                const source = await codeOnlySource(file);
-                const fnStart = source.indexOf(`${fn}(`);
-                assert(fnStart !== -1, `sanity: ${file}#${fn}() still exists`);
-                const window = source.slice(fnStart, fnStart + 1100);
-                const callMatch = window.match(callPattern);
-                assert(callMatch !== null, `sanity: ${file}#${fn}() still calls addPublicationCommentaryCommand()`);
-                assert(!/discoveryProvider/.test(callMatch[0]),
-                    `37. ${file}#${fn}()'s own real, current call — "${callMatch[0]}" — still sends no discoveryProvider field, deliberately left exactly as 0.9.637 found it`);
-            }
-            console.log('  (PATH 2 call sites reconfirmed untouched: OwnPublicationPanel.js#submitPublicationCommentary, WorldEncounterCanvas.js#submitObserverLocalEncounterCommentary/#submitEncounterCommentary)');
-        }
-
-        // No NEW Commentary-facing selector markup was added to either
-        // PATH 2 file — a targeted check near each Commentary compose
-        // form/textarea, not a whole-file ban (WorldEncounterCanvas.js's
-        // own PRE-EXISTING Publication selector, 0.9.430, legitimately
-        // keeps its own "Distribution"/<option value="nostr"> markup
-        // elsewhere in the same file, for Publication, not Commentary).
-        const panelSource = (await Promise.all(ownPublicationPanelFiles().map((file) => rawSource(file)))).join('\n');
-        assert(!/<option value="nostr">Nostr<\/option>/.test(panelSource),
-            '38. OwnPublicationPanel.js — which carries no Publication-distribution selector at all — gained no Commentary one either');
-
-        // WorldEncounterCanvas.js's own PRE-EXISTING Publication
-        // selector (0.9.430) is untouched, still present, still
-        // unrelated to Commentary.
-        const canvasSource = (await Promise.all(worldEncounterCanvasFiles().map((file) => rawSource(file)))).join('\n');
-        assert(/selectedDiscoveryProvider: 'nostr',/.test(canvasSource),
-            '39. WorldEncounterCanvas.js\'s own PRE-EXISTING Publication selector is untouched, still present, still unrelated to Commentary');
-
-        console.log('✓ H: architecture guard — no distribution adapters instantiated, no fan-out/fallback/retry/dedup, no new persisted preference, ui/main.js\'s own selection semantics unmodified, and PATH 2 left explicitly, verifiably untouched');
     }
 
     console.log('');

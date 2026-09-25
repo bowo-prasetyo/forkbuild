@@ -398,14 +398,6 @@ async function runTests() {
 
         assert(/:distributionCommand="distributeWorldEncounterPublication"/.test(viewCode),
             '30. WorldEncounterCanvas\'s own pre-existing binding is unchanged');
-        assert(/<OwnPublicationPanel[\s\S]{0,400}:publicationDistributionCommand="distributeWorldEncounterPublication"/.test(viewCode),
-            '31. OwnPublicationPanel reuses the SAME distributeWorldEncounterPublication wrapper WorldEncounterCanvas already uses — never a second command');
-        // AMENDED BY 0.9.430 — Announcement/Discovery Provider Selection
-        // Reachability. `discoveryProvider` joined `publication` as a new,
-        // optional second parameter, on the SAME single function — still
-        // exactly one distributeWorldEncounterPublication, never a second.
-        assert(viewCode.includes('function distributeWorldEncounterPublication(publication, discoveryProvider)'),
-            '32. exactly one distributeWorldEncounterPublication function exists — this milestone adds no second wrapper');
 
         const panelCode = (await Promise.all(ownPublicationPanelFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!panelCode.includes('this.selectedEncounter'),

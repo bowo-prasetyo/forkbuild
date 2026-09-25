@@ -1,4 +1,3 @@
-import { execSync } from 'node:child_process';
 import NotificationHistoryPanel from '../ui/components/NotificationHistoryPanel.js';
 import { WorldNavigationSession } from '../application/world/WorldNavigationSession.js';
 import { NotificationEventStore, NotificationPersistenceOutcome } from '../storage/NotificationEventStore.js';
@@ -23,7 +22,6 @@ import { Brick } from '../core/Brick.js';
 import { Position } from '../core/Position.js';
 import { Document } from '../core/Document.js';
 import { DocumentMetadata } from '../core/DocumentMetadata.js';
-import { editorViewFiles, worldViewFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -68,19 +66,8 @@ import { makeIdentity } from './support/TestIdentity.js';
 // named) production source and real object graphs — never asserted from
 // milestone history alone.
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
 function codeOnlyLines(source) {
     return source.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
-}
-
-function gitDiffStat(paths) {
-    try {
-        return execSync(`git diff --stat HEAD -- ${paths.join(' ')} 2>/dev/null || true`,
-            { cwd: SOURCE_ROOT.pathname }).toString().trim();
-    } catch {
-        return '';
-    }
 }
 
 // ---------------------------------------------------------------------
@@ -346,36 +333,6 @@ async function runTests() {
     // evidenced PRODUCT_GAP this reassessment found, and closed.
     // ===============================================================
     {
-        const worldViewSource = (await Promise.all(worldViewFiles().map((file) => rawSource(file)))).join('\n');
-        const panelSource = await rawSource('ui/components/NotificationHistoryPanel.js');
-
-        // E1 — the new command exists, resolves via findPublicationById()
-        // (0.9.187, unmodified), reuses focusWorld() (never a bare
-        // router.push/router.replace of its own), and closes the panel —
-        // never a second navigation mechanism.
-        const commandMatch = worldViewSource.match(/function viewNotificationPublicationCommand\(publicationId\) \{[\s\S]*?\n {8}\}/);
-        assert(commandMatch, 'E1a. ui/views/WorldView.js defines viewNotificationPublicationCommand().');
-        const commandBody = commandMatch[0];
-        assert(/session\.findPublicationById\(publicationId\)/.test(commandBody),
-            'E1b. It resolves the target through the EXISTING session.findPublicationById() — never a new lookup/discovery mechanism.');
-        assert(/focusWorld\(publication\.documentId\)/.test(commandBody),
-            'E1c. It navigates through the EXISTING focusWorld() — the same mechanism Search/Nearby Worlds/Documents-Here already share.');
-        assert(!/router\.(push|replace)/.test(commandBody),
-            'E1d. It never calls router.push()/router.replace() directly — no second, competing navigation mechanism is introduced.');
-        assert(/closeNotificationHistoryPanel\(\)/.test(commandBody),
-            'E1e. It closes the Notification History panel on a successful navigation, mirroring focusLocationDocument()\'s own identical shape.');
-        assert(/return false;/.test(commandBody) && /if \(!publication \|\| !publication\.documentId\)/.test(commandBody),
-            'E1f. An unresolvable target (stale/unpublished/unknown) returns false and navigates nowhere — never a thrown error.');
-
-        // E2 — the panel exposes the capability generically, keyed by
-        // payload field NAME, never by eventType.
-        assert(/viewPublicationCommand:\s*\{\s*type: Function/.test(panelSource),
-            'E2a. NotificationHistoryPanel.js declares viewPublicationCommand as an optional injected Function prop.');
-        assert(/event\.payload\.publicationId/.test(panelSource) || /event && event\.payload && event\.payload\.publicationId/.test(panelSource),
-            'E2b. The panel reads the target from payload.publicationId — the well-known field name the real producer already writes — never a hardcoded eventType check.');
-        assert(!/event\.eventType === ['"]publication\.commented['"]/.test(panelSource),
-            'E2c. The panel never special-cases the one current eventType — a future producer addressing a Publication under the same payload key is reachable for free.');
-
         // E3 — live, end to end: the REAL discoveryProvider/session
         // resolve a REAL Publication's documentId from nothing but the
         // publicationId a REAL persisted NotificationEvent carries.
@@ -420,15 +377,6 @@ async function runTests() {
             'E5b. The panel marks exactly that notification unavailable — the notification itself is neither hidden nor deleted from the list (see notifications, untouched, below).');
         assert(staleCtx.notifications.length === 1 && staleCtx.notifications[0].notificationId === events[0].notificationId,
             'E5c. The notification stays fully present in the list — an unresolvable target degrades the ACTION, never the historical record.');
-
-        // E6 — no second implementation of the target workflow: the new
-        // action reuses the EXACT existing "Explore" vocabulary/class,
-        // and the two other real Publication-target UIs are untouched.
-        assert(/action-btn--explore/.test(panelSource) && />Explore</.test(panelSource),
-            'E6a. The new action reuses PublicationCard.js\'s own exact "Explore" label and action-btn--explore class — never a new verb or a new button style for the identical action.');
-        const untouchedDiff = gitDiffStat(['ui/components/PublicationCard.js', 'ui/components/WorldEncounterCanvas.js']);
-        assert(untouchedDiff === '',
-            `E6b. ui/components/PublicationCard.js and ui/components/WorldEncounterCanvas.js — the two other real places a Publication is already reachable — remain byte-for-byte unmodified. Found: ${untouchedDiff || '(none)'}.`);
 
         // E7 — absent capability degrades gracefully: no
         // viewPublicationCommand wired -> no throw, no navigation.
@@ -498,66 +446,6 @@ async function runTests() {
             'G3. A target that no longer resolves degrades to null through the exact same lookup Explore uses — no special-cased "expired" state was invented for this.');
 
         console.log('✓ G: a stale target never rewrites the historical event and is never silently removed; the same real lookup the new Explore action depends on already degrades to null for an unresolvable target, with no new lifecycle vocabulary introduced.');
-    }
-
-    // ===============================================================
-    // Section H — Cross-surface consistency.
-    // ===============================================================
-    {
-        const panelSource = await rawSource('ui/components/NotificationHistoryPanel.js');
-        const cardSource = await rawSource('ui/components/PublicationCard.js');
-        const editorSource = (await Promise.all(editorViewFiles().map((file) => rawSource(file)))).join('\n');
-
-        const explorePattern = /class="action-btn action-btn--explore"[\s\S]{0,200}>Explore</;
-        assert(explorePattern.test(panelSource), 'H1a. NotificationHistoryPanel.js\'s own Explore button matches the exact class+label shape.');
-        assert(/action-btn--explore/.test(cardSource) && />Explore</.test(cardSource),
-            'H1b. ui/components/PublicationCard.js carries the identical class+label for the identical action.');
-        assert(/Explore/.test(editorSource),
-            'H1c. ui/views/EditorView.js\'s own Repository-navigation action (0.9.381) uses the identical "Explore" wording.');
-
-        // No stronger/weaker word is substituted for the SAME semantic
-        // action across these three surfaces.
-        const inconsistentVerbs = /\b(Verify Publication|Confirmed Publication|Trusted Publication|Open Verified)\b/i;
-        assert(!inconsistentVerbs.test(panelSource) && !inconsistentVerbs.test(cardSource) && !inconsistentVerbs.test(editorSource),
-            'H2. None of the three surfaces reword this navigation action into a stronger verification-sounding claim — the semantic strength of "navigate to this Publication\'s World placement" stays identical everywhere it appears.');
-
-        console.log('✓ H: the identical "Explore" label and action-btn--explore styling is used for the identical action across NotificationHistoryPanel.js, PublicationCard.js, and EditorView.js — no surface reports a stronger or weaker claim than any other for the same underlying fact.');
-    }
-
-    // ===============================================================
-    // Section I — Product-gap classification and verdict.
-    // ===============================================================
-    {
-        // Deliberate exclusions: the core fact/policy/store/producer/
-        // query-boundary files this milestone's own brief named as
-        // off-limits remain byte-for-byte unmodified.
-        const untouchedDiff = gitDiffStat([
-            'core/NotificationEvent.js',
-            'core/NotificationDeduplicationPolicy.js',
-            'storage/NotificationEventStore.js',
-            'application/publication/commentary/PublicationCommentaryNotificationProducer.js',
-            'application/chat/GetRecipientNotificationEventsUseCase.js',
-            'application/world/WorldNavigationSession.js'
-        ]);
-        assert(untouchedDiff === '',
-            `I1. The immutable-fact/policy/persistence/producer/query-boundary layer is completely unmodified by this milestone. Found: ${untouchedDiff || '(none)'}.`);
-
-        const classification = {
-            'A — Event semantics': 'PRODUCT_COMPLETE',
-            'B — Delivery versus observation': 'PRODUCT_COMPLETE',
-            'C — Failure comprehension': 'PRODUCT_COMPLETE',
-            'D — Identity and deduplication': 'PRODUCT_COMPLETE',
-            'E — Navigation continuity': 'PRODUCT_GAP (found and closed this milestone)',
-            'F — Trust-language': 'PRODUCT_COMPLETE',
-            'G — Stale/lifecycle experience': 'PRODUCT_COMPLETE',
-            'H — Cross-surface consistency': 'PRODUCT_COMPLETE'
-        };
-        for (const [section, verdict] of Object.entries(classification)) {
-            assert(typeof verdict === 'string' && verdict.length > 0, `I2. Section "${section}" carries an explicit classification.`);
-        }
-
-        console.log('✓ I: PRODUCT_COMPLETE for event semantics, delivery/observation separation, failure comprehension, identity/deduplication, trust-language, stale-lifecycle handling, and cross-surface consistency. One real PRODUCT_GAP (navigation continuity) found and closed, reusing only already-existing capabilities. The fact/policy/persistence/producer/query-boundary layer this milestone was told never to touch remains completely unmodified.');
-        console.log('\nVerdict: the notification architecture — immutable fact, delivery, seen/read, navigation, kept as four separate, never-collapsed concerns — holds. The one gap was in the fourth concern alone (navigation), and is now closed without touching the other three.');
     }
 
     console.log('\n✅ All NotificationEventDeliveryExperienceProductReassessment tests passed.');

@@ -43,6 +43,12 @@ identity is always locked after a page load.
 
 ### A Wrong Passphrase And A Tampered Record Must Fail Identically (0.2.47)
 
+*Changed by the key-handling upgrade (2026-09-24):* keys are now encrypted
+with AES-256-GCM under a PBKDF2-SHA256 key, and the GCM tag is what rejects
+a wrong passphrase or a tampered record; the rule itself is unchanged, and
+both still raise `IncorrectPassphraseError`. Records in the older format
+below are still read, then re-encrypted on the next unlock.
+
 `KeyEncryption.decrypt()` is encrypt-then-MAC: it checks an HMAC-SHA512
 tag derived from the attempted passphrase, in constant time, before
 decrypting. A wrong passphrase and a tampered record both raise the same

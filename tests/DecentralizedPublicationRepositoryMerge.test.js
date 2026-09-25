@@ -1,4 +1,3 @@
-import { execSync } from 'node:child_process';
 
 import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -110,15 +109,8 @@ function assertThrows(fn, expectedMessageSubstring, message) {
     assert(actual.includes(expectedMessageSubstring), `${message} (threw "${actual}", expected to include "${expectedMessageSubstring}")`);
 }
 
-const SOURCE_ROOT = new URL('../', import.meta.url);
-
 function countOccurrences(source, pattern) {
     return (source.match(pattern) || []).length;
-}
-
-function gitDiffFiles(paths) {
-    const out = execSync(`git diff --name-only HEAD -- ${paths.join(' ')}`, { cwd: SOURCE_ROOT.pathname }).toString().trim();
-    return out ? out.split('\n') : [];
 }
 
 function wait(ms = 20) {

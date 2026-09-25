@@ -38,6 +38,17 @@ function assertThrows(fn, expectedType, message) {
     }
 }
 
+async function assertRejects(fn, expectedType, message) {
+    try {
+        await fn();
+        assert(false, message);
+    } catch (e) {
+        if (expectedType && !(e instanceof expectedType)) {
+            assert(false, `${message}: expected ${expectedType.name}, got ${e.constructor.name} (${e.message})`);
+        }
+    }
+}
+
 function descriptorFor(id) {
     return { type: SignatureType.PLACEMENT_RECORD, id, revision: 1, payload: { a: 1 } };
 }
@@ -54,13 +65,14 @@ function descriptorFor(id) {
 {
     // Device A
     const deviceA = new LocalIdentityProvider(new InMemoryStorageProvider(), { pbkdf2Iterations: TEST_ITERATIONS });
-    const alice = deviceA.createLocalIdentity('Alice', 'hunter2');
-    deviceA.authenticate(alice.identityId, 'hunter2');
+    const alice = await deviceA.createProtectedLocalIdentity('Alice', 'hunter2-long');
+    await deviceA.unlock(alice.identityId, 'hunter2-long');
+    deviceA.authenticate(alice.identityId);
     const signatureFromA = deviceA.signCanonical(descriptorFor('p1'));
     assert(signatureFromA.signer === alice.identityId, 'Device A signs as Alice before export');
 
-    const pkg = deviceA.exportLocalIdentity(alice.identityId, 'hunter2');
-    assert(pkg.formatVersion === 1, 'export package carries a format version');
+    const pkg = await deviceA.exportLocalIdentity(alice.identityId, 'hunter2-long');
+    assert(pkg.formatVersion === 2, 'export package carries the current format version');
     assert(pkg.identityId === alice.identityId, 'export package carries the exact identityId');
     assert(pkg.publicKey === alice.publicKey, 'export package carries the exact publicKey');
     assert(!('seed' in pkg), 'the package never carries a plaintext seed field');
@@ -70,7 +82,7 @@ function descriptorFor(id) {
     const deviceB = new LocalIdentityProvider(new InMemoryStorageProvider(), { pbkdf2Iterations: TEST_ITERATIONS });
     assert(deviceB.listLocalIdentities().length === 0, 'Device B starts with no identities at all');
 
-    const importResult = deviceB.importLocalIdentity(pkg, 'hunter2');
+    const importResult = await deviceB.importLocalIdentity(pkg, 'hunter2-long');
     assert(importResult.status === 'IMPORTED', 'a genuinely new identity reports IMPORTED');
     const importedAlice = importResult.identity;
     assert(importedAlice instanceof LocalIdentity, 'importLocalIdentity returns a real LocalIdentity');
@@ -86,7 +98,9 @@ function descriptorFor(id) {
     const resultA = verifier.verifyDescriptor(descriptorFor('p1'), signatureFromA, deviceA.getSigningIdentity().toJSON());
     assert(resultA.valid === true, 'the signature produced on Device A still verifies on its own terms');
 
-    deviceB.authenticate(alice.identityId, 'hunter2');
+    await deviceB.unlock(alice.identityId, 'hunter2-long');
+
+    deviceB.authenticate(alice.identityId);
     const signatureFromB = deviceB.signCanonical(descriptorFor('p2'));
     assert(signatureFromB.signer === alice.identityId, 'Device B signs as the SAME identityId after unlocking');
 
@@ -108,16 +122,17 @@ function descriptorFor(id) {
 // ---------------------------------------------------------------------
 {
     const device = new LocalIdentityProvider(new InMemoryStorageProvider(), { pbkdf2Iterations: TEST_ITERATIONS });
-    const bob = device.createLocalIdentity('Bob', 'bobs-secret');
-    device.authenticate(bob.identityId, 'bobs-secret');
+    const bob = await device.createProtectedLocalIdentity('Bob', 'bobs-secret');
+    await device.unlock(bob.identityId, 'bobs-secret');
+    device.authenticate(bob.identityId);
     assert(device.isUnlocked(bob.identityId) === true, 'Bob is unlocked after authenticating');
 
-    assertThrows(() => device.exportLocalIdentity(bob.identityId, 'wrong-pass'), Error,
+    await assertRejects(() => device.exportLocalIdentity(bob.identityId, 'wrong-pass'), Error,
         'exporting with the wrong passphrase fails even though the vault is currently unlocked');
-    assertThrows(() => device.exportLocalIdentity(bob.identityId, null), Error,
+    await assertRejects(() => device.exportLocalIdentity(bob.identityId, null), Error,
         'exporting with no passphrase at all is refused outright');
 
-    const pkg = device.exportLocalIdentity(bob.identityId, 'bobs-secret');
+    const pkg = await device.exportLocalIdentity(bob.identityId, 'bobs-secret');
     assert(pkg.identityId === bob.identityId, 'the correct passphrase, re-entered, succeeds');
     console.log('✓ export re-demands the passphrase; an unlocked vault grants no shortcut');
 }
@@ -132,29 +147,29 @@ function descriptorFor(id) {
     const device = new LocalIdentityProvider(new InMemoryStorageProvider(), {
         pbkdf2Iterations: TEST_ITERATIONS, maxUnlockAttempts: 3, unlockCooldownMs: 5000, now: () => fakeNow
     });
-    const alice = device.createLocalIdentity('Alice', 'alice-pass');
-    const messageOf = (fn) => { try { fn(); return null; } catch (e) { return e.message; } };
+    const alice = await device.createProtectedLocalIdentity('Alice', 'alice-pass');
+    const messageOf = async (fn) => { try { await fn(); return null; } catch (e) { return e.message; } };
 
-    assert(/incorrect passphrase \(2 attempt\(s\) remaining/.test(messageOf(() => device.exportLocalIdentity(alice.identityId, 'guess-1'))),
+    assert(/incorrect passphrase \(2 attempt\(s\) remaining/.test(await messageOf(() => device.exportLocalIdentity(alice.identityId, 'guess-1'))),
         'a wrong export passphrase is counted and reports the attempts left, like unlock()');
-    assert(/incorrect passphrase \(1 attempt\(s\) remaining/.test(messageOf(() => device.unlock(alice.identityId, 'guess-2'))),
+    assert(/incorrect passphrase \(1 attempt\(s\) remaining/.test(await messageOf(() => device.unlock(alice.identityId, 'guess-2'))),
         'unlock() draws on the same budget export just used');
-    assert(/temporarily locked out/.test(messageOf(() => device.exportLocalIdentity(alice.identityId, 'guess-3'))),
+    assert(/temporarily locked out/.test(await messageOf(() => device.exportLocalIdentity(alice.identityId, 'guess-3'))),
         'the attempt that exhausts the budget can be an export');
-    assert(/too many failed unlock attempts/.test(messageOf(() => device.exportLocalIdentity(alice.identityId, 'alice-pass'))),
+    assert(/too many failed unlock attempts/.test(await messageOf(() => device.exportLocalIdentity(alice.identityId, 'alice-pass'))),
         'during the cooldown even the correct passphrase cannot export');
-    assert(/too many failed unlock attempts/.test(messageOf(() => device.unlock(alice.identityId, 'alice-pass'))),
+    assert(/too many failed unlock attempts/.test(await messageOf(() => device.unlock(alice.identityId, 'alice-pass'))),
         'and cannot unlock either — one lockout per identity, whichever path triggered it');
 
     fakeNow = new Date(fakeNow.getTime() + 5001);
-    assert(device.exportLocalIdentity(alice.identityId, 'alice-pass').identityId === alice.identityId,
+    assert((await device.exportLocalIdentity(alice.identityId, 'alice-pass')).identityId === alice.identityId,
         'after the cooldown the correct passphrase exports');
-    assert(/incorrect passphrase \(2 attempt\(s\) remaining/.test(messageOf(() => device.exportLocalIdentity(alice.identityId, 'guess-4'))),
+    assert(/incorrect passphrase \(2 attempt\(s\) remaining/.test(await messageOf(() => device.exportLocalIdentity(alice.identityId, 'guess-4'))),
         'a successful export resets the count, exactly like a successful unlock');
 
     const bob = device.createLocalIdentity('Bob');
-    for (const exportPassphrase of ['one', 'two', 'three', 'four']) {
-        assert(device.exportLocalIdentity(bob.identityId, exportPassphrase).identityId === bob.identityId,
+    for (const exportPassphrase of ['export-one', 'export-two', 'export-three', 'export-four']) {
+        assert((await device.exportLocalIdentity(bob.identityId, exportPassphrase)).identityId === bob.identityId,
             'an unprotected identity exports under any chosen passphrase — nothing is decrypted, so nothing is counted');
     }
     console.log('✓ export shares the unlock attempt budget and cooldown; unprotected exports are never counted');
@@ -171,9 +186,9 @@ function descriptorFor(id) {
     const carol = deviceA.createLocalIdentity('Carol'); // no passphrase
     assert(carol.isProtected === false, 'Carol is unprotected on Device A');
 
-    const pkg = deviceA.exportLocalIdentity(carol.identityId, 'fresh-export-pass');
+    const pkg = await deviceA.exportLocalIdentity(carol.identityId, 'fresh-export-pass');
     const deviceB = new LocalIdentityProvider(new InMemoryStorageProvider(), { pbkdf2Iterations: TEST_ITERATIONS });
-    const { identity: importedCarol } = deviceB.importLocalIdentity(pkg, 'fresh-export-pass');
+    const { identity: importedCarol } = await deviceB.importLocalIdentity(pkg, 'fresh-export-pass');
     assert(importedCarol.isProtected === true,
         'the imported copy is ALWAYS protected on the new device, even though the source was unprotected');
     assert(deviceB.vaultLock(carol.identityId).state === VaultLockState.LOCKED, 'and starts LOCKED like any protected identity');
@@ -187,19 +202,19 @@ function descriptorFor(id) {
 // ---------------------------------------------------------------------
 {
     const deviceA = new LocalIdentityProvider(new InMemoryStorageProvider(), { pbkdf2Iterations: TEST_ITERATIONS });
-    const dave = deviceA.createLocalIdentity('Dave', 'dave-pass');
-    const pkg = deviceA.exportLocalIdentity(dave.identityId, 'dave-pass');
+    const dave = await deviceA.createProtectedLocalIdentity('Dave', 'dave-pass');
+    const pkg = await deviceA.exportLocalIdentity(dave.identityId, 'dave-pass');
 
     const deviceB = new LocalIdentityProvider(new InMemoryStorageProvider(), { pbkdf2Iterations: TEST_ITERATIONS });
-    const first = deviceB.importLocalIdentity(pkg, 'dave-pass', { label: 'Dave' });
+    const first = await deviceB.importLocalIdentity(pkg, 'dave-pass', { label: 'Dave' });
     assert(first.status === 'IMPORTED', 'first import creates the identity');
     assert(deviceB.listLocalIdentities().length === 1, 'exactly one identity after the first import');
 
-    const second = deviceB.importLocalIdentity(pkg, 'dave-pass');
+    const second = await deviceB.importLocalIdentity(pkg, 'dave-pass');
     assert(second.status === 'ALREADY_EXISTS', 'importing the same package again reports ALREADY_EXISTS');
     assert(deviceB.listLocalIdentities().length === 1, 'duplicate import never creates a second copy');
 
-    const withWrongPassphrase = deviceB.importLocalIdentity(pkg, 'totally-wrong-passphrase');
+    const withWrongPassphrase = await deviceB.importLocalIdentity(pkg, 'totally-wrong-passphrase');
     assert(withWrongPassphrase.status === 'ALREADY_EXISTS',
         'ALREADY_EXISTS is decided before decryption is even attempted — a wrong passphrase does not block a no-op');
     assert(deviceB.listLocalIdentities().length === 1, 'still exactly one identity');
@@ -217,8 +232,8 @@ function descriptorFor(id) {
 // ---------------------------------------------------------------------
 {
     const device = new LocalIdentityProvider(new InMemoryStorageProvider(), { pbkdf2Iterations: TEST_ITERATIONS });
-    const eve = device.createLocalIdentity('Eve', 'eve-pass');
-    const pkg = device.exportLocalIdentity(eve.identityId, 'eve-pass');
+    const eve = await device.createProtectedLocalIdentity('Eve', 'eve-pass');
+    const pkg = await device.exportLocalIdentity(eve.identityId, 'eve-pass');
 
     const conflictingEntry = {
         identityId: pkg.identityId,
@@ -228,7 +243,7 @@ function descriptorFor(id) {
         createdAt: new Date().toISOString(),
         protected: true
     };
-    assertThrows(
+    await assertRejects(
         () => IdentityRecovery.recoverIdentity({ package: pkg, passphrase: 'eve-pass', existingIdentities: [conflictingEntry] }),
         IdentityConflictError,
         'same identityId, different publicKey -> rejected as a conflict, never silently resolved either way'
@@ -243,23 +258,23 @@ function descriptorFor(id) {
 // ---------------------------------------------------------------------
 {
     const device = new LocalIdentityProvider(new InMemoryStorageProvider(), { pbkdf2Iterations: TEST_ITERATIONS });
-    const frank = device.createLocalIdentity('Frank', 'frank-pass');
-    const goodPkg = device.exportLocalIdentity(frank.identityId, 'frank-pass');
+    const frank = await device.createProtectedLocalIdentity('Frank', 'frank-pass');
+    const goodPkg = await device.exportLocalIdentity(frank.identityId, 'frank-pass');
 
     const importer = new LocalIdentityProvider(new InMemoryStorageProvider(), { pbkdf2Iterations: TEST_ITERATIONS });
 
-    assertThrows(() => importer.importLocalIdentity(null, 'frank-pass'), IdentityPackageError, 'null package rejected');
-    assertThrows(() => importer.importLocalIdentity({ ...goodPkg, formatVersion: 99 }, 'frank-pass'), IdentityPackageError,
+    await assertRejects(() => importer.importLocalIdentity(null, 'frank-pass'), IdentityPackageError, 'null package rejected');
+    await assertRejects(() => importer.importLocalIdentity({ ...goodPkg, formatVersion: 99 }, 'frank-pass'), IdentityPackageError,
         'unknown format version rejected');
-    assertThrows(() => importer.importLocalIdentity({ ...goodPkg, identityId: 'did:key:zNotReal' }, 'frank-pass'), IdentityPackageError,
+    await assertRejects(() => importer.importLocalIdentity({ ...goodPkg, identityId: 'did:key:zNotReal' }, 'frank-pass'), IdentityPackageError,
         'identityId not matching publicKey is rejected — tamper detected without needing the passphrase at all');
-    assertThrows(() => importer.importLocalIdentity({ ...goodPkg, publicKey: 'not-hex' }, 'frank-pass'), IdentityPackageError,
+    await assertRejects(() => importer.importLocalIdentity({ ...goodPkg, publicKey: 'not-hex' }, 'frank-pass'), IdentityPackageError,
         'malformed publicKey rejected');
-    assertThrows(() => importer.importLocalIdentity({ ...goodPkg, algorithm: 'RSA' }, 'frank-pass'), IdentityPackageError,
+    await assertRejects(() => importer.importLocalIdentity({ ...goodPkg, algorithm: 'RSA' }, 'frank-pass'), IdentityPackageError,
         'unsupported algorithm rejected');
-    assertThrows(() => importer.importLocalIdentity({ ...goodPkg, encryptedPrivateKey: { ...goodPkg.encryptedPrivateKey, tag: undefined } }, 'frank-pass'),
+    await assertRejects(() => importer.importLocalIdentity({ ...goodPkg, encryptedPrivateKey: { ...goodPkg.encryptedPrivateKey, salt: undefined } }, 'frank-pass'),
         IdentityPackageError, 'malformed encryptedPrivateKey rejected');
-    assertThrows(() => importer.importLocalIdentity({ ...goodPkg, createdAt: 'not-a-date' }, 'frank-pass'), IdentityPackageError,
+    await assertRejects(() => importer.importLocalIdentity({ ...goodPkg, createdAt: 'not-a-date' }, 'frank-pass'), IdentityPackageError,
         'invalid createdAt rejected');
 
     const tamperedCiphertext = {
@@ -270,17 +285,17 @@ function descriptorFor(id) {
                 + (goodPkg.encryptedPrivateKey.ciphertext.slice(-2) === '00' ? '11' : '00')
         }
     };
-    assertThrows(() => importer.importLocalIdentity(tamperedCiphertext, 'frank-pass'), IncorrectPassphraseError,
+    await assertRejects(() => importer.importLocalIdentity(tamperedCiphertext, 'frank-pass'), IncorrectPassphraseError,
         'a tampered ciphertext is caught by the MAC, reported the same as a wrong passphrase, never silently accepted');
 
-    assertThrows(() => importer.importLocalIdentity(goodPkg, 'definitely-wrong'), IncorrectPassphraseError,
+    await assertRejects(() => importer.importLocalIdentity(goodPkg, 'definitely-wrong'), IncorrectPassphraseError,
         'a wrong passphrase on an otherwise well-formed package is refused');
 
     assert(importer.listLocalIdentities().length === 0,
         'not one of the failures above left ANY identity behind — every failure path persists nothing');
 
     // And the well-formed package with the right passphrase still works.
-    const ok = importer.importLocalIdentity(goodPkg, 'frank-pass');
+    const ok = await importer.importLocalIdentity(goodPkg, 'frank-pass');
     assert(ok.status === 'IMPORTED' && importer.listLocalIdentities().length === 1,
         'the same package succeeds once given its real passphrase, proving the failures above were about the input, not the pipeline');
     console.log('✓ malformed/tampered packages and wrong passphrases are all rejected, never leaving a partial identity');
@@ -293,8 +308,8 @@ function descriptorFor(id) {
 // ---------------------------------------------------------------------
 {
     const device = new LocalIdentityProvider(new InMemoryStorageProvider(), { pbkdf2Iterations: TEST_ITERATIONS });
-    const grace = device.createLocalIdentity('Grace', 'grace-pass');
-    const pkg = device.exportLocalIdentity(grace.identityId, 'grace-pass');
+    const grace = await device.createProtectedLocalIdentity('Grace', 'grace-pass');
+    const pkg = await device.exportLocalIdentity(grace.identityId, 'grace-pass');
 
     IdentityImport.validatePackage(pkg); // does not throw
     assertThrows(() => IdentityImport.validatePackage({ ...pkg, publicKey: Ed25519.bytesToHex(Ed25519.randomSeed()) }),
@@ -314,16 +329,16 @@ function descriptorFor(id) {
     const worldStateBefore = storage.load('world-state:demo');
 
     const device = new LocalIdentityProvider(storage, { pbkdf2Iterations: TEST_ITERATIONS });
-    const henry = device.createLocalIdentity('Henry', 'henry-pass');
-    const untouchedBystander = device.createLocalIdentity('Bystander', 'bystander-pass');
+    const henry = await device.createProtectedLocalIdentity('Henry', 'henry-pass');
+    const untouchedBystander = await device.createProtectedLocalIdentity('Bystander', 'bystander-pass');
     const bystanderSnapshotBefore = JSON.stringify(storage.load('local-identity-key:' + untouchedBystander.identityId));
 
-    const pkg = device.exportLocalIdentity(henry.identityId, 'henry-pass');
+    const pkg = await device.exportLocalIdentity(henry.identityId, 'henry-pass');
 
     // A grab-bag of operations, several deliberately failing.
-    try { device.importLocalIdentity({ ...pkg, formatVersion: 0 }, 'henry-pass'); } catch (e) { /* expected */ }
-    try { device.importLocalIdentity(pkg, 'wrong-passphrase'); } catch (e) { /* expected */ }
-    device.importLocalIdentity(pkg, 'henry-pass'); // ALREADY_EXISTS on the SAME device — Henry is already here
+    try { await device.importLocalIdentity({ ...pkg, formatVersion: 0 }, 'henry-pass'); } catch (e) { /* expected */ }
+    try { await device.importLocalIdentity(pkg, 'wrong-passphrase'); } catch (e) { /* expected */ }
+    await device.importLocalIdentity(pkg, 'henry-pass'); // ALREADY_EXISTS on the SAME device — Henry is already here
 
     const worldStateAfter = storage.load('world-state:demo');
     assert(JSON.stringify(worldStateAfter) === JSON.stringify(worldStateBefore),

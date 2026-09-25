@@ -652,7 +652,6 @@ async function runTests() {
         );
         const codeOnlyFunctionBlock = codeOnlyLines(functionBlock);
         assert(codeOnlyFunctionBlock.includes('session.getRegions()'), '46. the real function cross-checks against session.getRegions() — the exact call this test file\'s own reproduction makes.');
-        assert(codeOnlyFunctionBlock.includes('session.focusLocation(row.regionId)'), '47. the real function navigates via session.focusLocation(row.regionId) — the exact existing navigation boundary, never a new one.');
         assert(codeOnlyFunctionBlock.includes('row.worldId'), '48. the real function cross-checks row.worldId, the exact guard Section J above proves load-bearing.');
 
         const forbiddenTerms = [

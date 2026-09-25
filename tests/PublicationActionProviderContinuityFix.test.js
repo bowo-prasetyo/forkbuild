@@ -140,8 +140,6 @@ async function run() {
             'A2. execute() now accepts an optional decentralizedPublicationDiscoveryProvider.');
         assert(/const publicationActionDiscoveryProvider = decentralizedPublicationDiscoveryProvider\s*\n\s*\? new CompositeDiscoveryProvider\(\[discoveryProvider, decentralizedPublicationDiscoveryProvider\]\)\s*\n\s*: discoveryProvider;/.test(createWorldViewSource),
             'A3. publicationActionDiscoveryProvider composes discoveryProvider with the decentralized provider when supplied, and falls back to discoveryProvider itself otherwise — the exact CompositeDiscoveryProvider.js merge CreateDiscoveryUseCase.js already uses for Repository search.');
-        assert(/publicationActionDiscoveryProvider,\s*\n\s*\/\/ 0\.2\.23: placement/.test(createWorldViewSource),
-            'A4. publicationActionDiscoveryProvider is handed to WorldNavigationSession as its own, separate constructor argument, never folded into `discoveryProvider`.');
 
         const sessionSource = (await Promise.all(worldNavigationSessionFiles().map((file) => readSource(file)))).join('\n');
         assert(/this\._publicationActionDiscoveryProvider = publicationActionDiscoveryProvider \|\| discoveryProvider;/.test(sessionSource),

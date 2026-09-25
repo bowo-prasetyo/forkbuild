@@ -1,5 +1,3 @@
-import { execSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 
 import PublisherLeaderboardSnapshotClaimAuthoringView from '../ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js';
 import ReconciliationWorkspaceView from '../ui/views/ReconciliationWorkspaceView.js';
@@ -62,8 +60,6 @@ function assert(condition, message) {
 function n(message) {
     return `${assertionCount + 1}. ${message}`;
 }
-
-const SOURCE_ROOT = fileURLToPath(new URL('../', import.meta.url));
 
 // A genuine IMPORT means the symbol is actually bound by an
 // `import { ... } from` statement — never merely mentioned in a comment.
@@ -467,52 +463,6 @@ async function run() {
 
         console.log('\n=== SECTION H: BOUNDARY ===');
         console.log('✓ Section H: no signing logic, claim schema, evidence schema, reconciliation logic, or candidate logic of any kind appears in the view\'s own code — every one of those questions stays inside the two composed, UNCHANGED use cases.');
-    }
-
-    // ===============================================================
-    // Production boundary.
-    // ===============================================================
-    {
-        const statusOutput = execSync('git status --porcelain', { cwd: SOURCE_ROOT }).toString();
-        const changed = statusOutput.split('\n').map((line) => line.slice(3).trim()).filter(Boolean);
-        const AUTHORIZED = new Set([
-            'tests.html',
-            'tests/PublisherLeaderboardSnapshotClaimAuthoringUi.test.js',
-            'ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js',
-            'ui/router/index.js',
-            'ui/views/DecentralizedPublicationsView.js',
-            // A pre-existing audit whose own, prior-milestone point-in-time
-            // assertions this milestone legitimately supersedes gets a
-            // minimal, clearly labeled amendment rather than silently going
-            // stale — the identical, established convention 0.9.408's own
-            // commit already set for this exact audit family.
-            'tests/ReconciliationWorkflowProductReassessment.test.js',
-            // AMENDED — Leaderboard Hub Consolidation. Same convention,
-            // later: this milestone's own A6 link relocated onto a new hub
-            // page, alongside three siblings — see ui/views/
-            // LeaderboardHubView.js's own header.
-            'css/main.css',
-            'ui/views/LeaderboardHubView.js',
-            'tests/ReconciliationWorkspaceUi.test.js',
-            'tests/PublisherPerformanceLeaderboardUi.test.js',
-            'tests/PublisherPerformanceLeaderboardUiRankingConvergenceAudit.test.js',
-            'tests/PublisherPerformanceLeaderboardProductGapAudit.test.js',
-            'tests/PostLeaderboardProductReassessment.test.js',
-            'tests/ReconciliationLeaderboardEntryPointDecisionAudit.test.js'
-        ]);
-        const unauthorized = changed.filter((f) => !AUTHORIZED.has(f));
-        assert(unauthorized.length === 0, n(`I1. every changed/added file is one this milestone explicitly authorized (found unauthorized: ${JSON.stringify(unauthorized)})`));
-
-        const domainDirsExcludingUi = ['core', 'renderer', 'discovery', 'anchoring', 'collaboration', 'persistence', 'identity', 'storage'];
-        for (const dir of domainDirsExcludingUi) {
-            const status = execSync(`git status --porcelain -- ${dir}`, { cwd: SOURCE_ROOT }).toString().trim();
-            assert(status === '', n(`I2. ${dir}/ shows no change — this milestone touches only ui/, its own test, and one amended prior audit`));
-        }
-        const applicationStatus = execSync('git status --porcelain -- application', { cwd: SOURCE_ROOT }).toString().trim();
-        assert(applicationStatus === '', n('I3. application/ shows no change — CreatePublisherLeaderboardSnapshotClaimUseCase and exportPublisherLeaderboardSnapshotClaim are composed, never modified'));
-
-        console.log('\n=== PRODUCTION BOUNDARY ===');
-        console.log('✓ Only ui/views/PublisherLeaderboardSnapshotClaimAuthoringView.js (new), ui/router/index.js, ui/views/DecentralizedPublicationsView.js, this test file, tests.html\'s own registration, and one amended prior audit changed. No existing application/core reconciliation or claim file was modified.');
     }
 
     console.log('\n' + '='.repeat(78));

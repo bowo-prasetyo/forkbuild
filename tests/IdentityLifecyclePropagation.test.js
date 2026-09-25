@@ -186,8 +186,8 @@ async function runTests() {
     const charlieStorage = new InMemoryStorageProvider();
     const bobRelationships = new PeerRelationshipUseCase(bobStorage, bobDevice);
     const charlieRelationships = new PeerRelationshipUseCase(charlieStorage, charlieDevice);
-    bobRelationships.rememberPeer(aliceBobPeer.remoteIdentity);
-    charlieRelationships.rememberPeer(aliceCharliePeer.remoteIdentity);
+    bobRelationships.rememberPeer(bobPeer.remoteIdentity);
+    charlieRelationships.rememberPeer(charliePeer.remoteIdentity);
 
     const aliceLifecycle = new IdentityLifecyclePropagationUseCase(new InMemoryStorageProvider(), aliceDevice, {
         peerMessageBus: new PeerMessageBus(),
@@ -237,20 +237,27 @@ async function runTests() {
     await wait(200);
     assert(bobLifecycle.listRemoteLifecycle().filter((r) => r.identityId === alice.identityId).length === 1, 'a duplicate revocation broadcast never creates a second entry');
 
-    // 3. A fresh connection attempt with the now-revoked identity fails
-    //    cleanly on Alice's own side, before Bob or Charlie are ever
-    //    involved — she has no way to even produce a HELLO (see
-    //    identity/LocalIdentityProvider.js#_requireAuthenticatedIdentity(),
-    //    unchanged since 0.2.67).
-    let revokedAttemptThrew = false;
-    try {
-        await aliceSessions.createInvitation();
-    } catch (e) {
-        revokedAttemptThrew = true;
-        assert(e.message.includes('revoked'), `failure names the revocation, got: ${e.message}`);
+    // 3. A fresh connection attempt with the now-revoked identity never
+    //    authenticates: creating the invitation still works (it only
+    //    omits the identity hint), but the handshake's proof step must
+    //    sign through identity/LocalIdentityProvider.js's
+    //    _requireAuthenticatedIdentity(), which refuses a revoked identity.
+    {
+        const { invitation, connectedPeer: revokedInviter } = await aliceSessions.createInvitation();
+        assert(invitation.identityHint === null, 'an invitation from a revoked identity carries no identity hint');
+        const { connectedPeer: bobSide, reply } = await bobSessions.acceptInvitation(JSON.stringify(invitation.toJSON()));
+        await aliceSessions.completeConnection(revokedInviter.connectionId, reply);
+        const settled = [PeerLifecycleState.AUTHENTICATED, PeerLifecycleState.FAILED, PeerLifecycleState.CLOSED];
+        // Alice's side fails as soon as it tries to sign; Bob's side gives
+        // up at PeerAuthenticationSession's 20-second handshake timeout.
+        const [aliceOutcome, bobOutcome] = await Promise.all([
+            waitForState(revokedInviter, settled),
+            waitForState(bobSide, settled, 25000)
+        ]);
+        assert(aliceOutcome === PeerLifecycleState.FAILED, `the revoked side fails its own handshake (got ${aliceOutcome})`);
+        assert(bobOutcome !== PeerLifecycleState.AUTHENTICATED, `the other side never authenticates the revoked identity (got ${bobOutcome})`);
     }
-    assert(revokedAttemptThrew, "Alice's revoked identity cannot even start a new connection attempt");
-    console.log('✓ FLAGSHIP: a fresh connection attempt using the revoked identity is rejected before it can even begin');
+    console.log('✓ FLAGSHIP: a fresh connection attempt using the revoked identity never authenticates');
 
     // 4. The identity Alice rotated TO is completely independent —
     //    authenticates fresh, connects to Bob normally, and Bob's
