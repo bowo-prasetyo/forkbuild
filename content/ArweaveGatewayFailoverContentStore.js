@@ -99,6 +99,9 @@ export class ArweaveGatewayFailoverContentStore extends ContentStore {
 
     get storage() { return 'ar'; }
 
+    // put() uses the first gateway's store; so does its limit.
+    get maxContentBytes() { return this._stores[0].maxContentBytes; }
+
     // put(bytes) -> Promise<ContentReference>. Targets ONLY the first
     // configured gateway — see this file's own header, "write stays
     // single-gateway."

@@ -1,4 +1,6 @@
 import { isNonEmptyString } from '../../utils/typeGuards.js';
+import { byteLength } from '../../utils/responseSize.js';
+import { ContentTooLargeError } from '../../content/ContentStore.js';
 
 // 0.9.136 — Snapshot Distribution Command.
 //
@@ -274,6 +276,16 @@ export function executeSnapshotDistributionCommand({
 // "Collaborator contract violations are caught at the start, not
 // discovered mid-sequence."
 async function runSnapshotDistribution({ bytes, contentStore, discoveryPublisher, publicationId, claimedPosition }) {
+    // A build larger than the chosen storage accepts (Arweave's single
+    // transaction) is refused before anything is signed or uploaded, with
+    // a message pointing to IPFS, which takes any size.
+    const maxContentBytes = contentStore.maxContentBytes;
+    if (Number.isFinite(maxContentBytes)) {
+        const contentBytes = byteLength(typeof bytes === 'string' ? bytes : new TextDecoder().decode(bytes));
+        if (contentBytes > maxContentBytes) {
+            throw new ContentTooLargeError(contentBytes, maxContentBytes, contentStore.storage === 'ar' ? 'Arweave' : String(contentStore.storage));
+        }
+    }
     const contentReference = await contentStore.put(bytes);
 
     const announcement = await discoveryPublisher.publish({

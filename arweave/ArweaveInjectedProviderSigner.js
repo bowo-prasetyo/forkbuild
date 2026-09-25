@@ -391,7 +391,8 @@ export function createArweaveInjectedProviderSigner({
         return { id: signed.id, transaction };
     }
 
-    return Object.freeze({ sign });
+    // maxDataBytes: the largest material sign() accepts.
+    return Object.freeze({ sign, maxDataBytes: MAX_SINGLE_CHUNK_BYTES });
 }
 
 createArweaveInjectedProviderSigner.DEFAULT_GATEWAY_URL = DEFAULT_GATEWAY_URL;

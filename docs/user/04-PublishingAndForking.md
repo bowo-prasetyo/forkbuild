@@ -55,6 +55,13 @@ The Publication's result appears in its own section:
 | **Discovery** | The announcement id, or "Not yet announced" if it didn't complete — one row per relay when several are configured. |
 | **Repository** | An **Explore** button that jumps straight to this publication's page in World View — shown whenever the publication carries somewhere to explore, which in practice is always. |
 
+**Large builds.** Arweave storage takes a Snapshot of up to 256 KB, about
+two thousand bricks. For anything larger, choose IPFS storage (a local
+IPFS node or remote pinning), which has no size limit; if you choose
+Arweave anyway, the Snapshot section says how large the build is and asks
+you to pick IPFS, and nothing is uploaded. Peers you're connected to can
+fetch builds of up to 64 MB straight from you, with no storage needed.
+
 The Snapshot's own result — a **Content hash**, a **Locator**,
 and an **Announcement** id, or "No announcement" for a placement that
 succeeded without one — is entirely separate, since Snapshots are placed

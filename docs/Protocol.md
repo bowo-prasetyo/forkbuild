@@ -237,6 +237,28 @@ reads `payload`.
 | `forkbuild:world-encounter-material` | application/worldEncounter/PeerWorldEncounterMaterialSource.js | encounter content |
 | `forkbuild:commentary-distribution` | core/PublicationCommentaryDistributionEnvelope.js | see "Publication Commentary Distribution" |
 
+### Large content in parts
+
+`forkbuild:content` and `forkbuild:snapshot-content-transfer` send
+content that does not fit one message (their RESPONSE takes at most
+48 KiB) as `RESPONSE_PART` messages instead
+(application/peer/ChunkedPeerTransfer.js). Each carries the same fields
+that name the content as a RESPONSE (`hash`, or `publicationId` and
+`contentHash`) plus:
+
+    { transferId, index, count, totalLength, part }
+
+`part` is a slice of the content's text whose JSON-escaped length is at
+most 60 KiB, so the message fits MAX_PEER_MESSAGE_BYTES; the parts of one
+`transferId`, joined in `index` order, are `totalLength` characters long.
+A transfer is at most 64 MiB (8,192 parts). The sender waits while the
+data channel's send buffer holds more than 1 MiB. The receiver accepts
+parts only for content it requested in the last five minutes, holds at
+most two transfers at once, drops a transfer idle for 30 s, and checks the
+joined content exactly like a RESPONSE (for `forkbuild:content`, also that
+`totalLength` matches the catalogued size). Content that fits is still
+one RESPONSE, and a peer that predates `RESPONSE_PART` ignores it.
+
 Each protocol owns its own replay, ordering and deduplication rules.
 Unless noted, a message carries no signature of its own and relies on
 the authenticated session; signed records are verified on arrival

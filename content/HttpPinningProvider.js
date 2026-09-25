@@ -1,5 +1,7 @@
 import { PinningProvider } from './PinningProvider.js';
 import { ContentUnavailableError } from './IpfsContentStore.js';
+import { uploadTimeoutMs } from '../utils/uploadTimeout.js';
+import { byteLength } from '../utils/responseSize.js';
 
 const DEFAULT_TIMEOUT_MS = 15000; // an upload is expected to take longer than a gateway GET
 const DEFAULT_CID_FIELD = 'cid';
@@ -107,7 +109,7 @@ export class HttpPinningProvider extends PinningProvider {
         }
 
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), this._timeoutMs);
+        const timer = setTimeout(() => controller.abort(), uploadTimeoutMs(this._timeoutMs, byteLength(text)));
         let response;
         try {
             response = await this._fetch(this._endpoint, { method: 'POST', headers, body: form, signal: controller.signal });

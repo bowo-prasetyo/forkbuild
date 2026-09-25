@@ -2,12 +2,16 @@ import { EventBus } from '../../core/events/EventBus.js';
 import { ContentReference } from '../../core/ContentReference.js';
 import {
     PeerContentMessageKind,
+    MAX_CONTENT_BYTES,
     toContentRequestMessage,
     toContentResponseMessage,
+    toContentResponsePartMessage,
     isValidPeerContentMessage
 } from './PeerContentProtocol.js';
+import { PartAssembler, OutstandingRequests, sendInParts } from './ChunkedPeerTransfer.js';
 
 const CONTENT_RECEIVED_EVENT = 'PeerContentExchangeReceived';
+const TRANSFER_PROGRESS_EVENT = 'PeerContentExchangeTransferProgress';
 
 // 0.7.4 — Peer Content Retrieval.
 //
@@ -80,6 +84,14 @@ export class PeerContentExchange {
         this._catalog = publicationCatalog;
         this._protocol = protocol;
         this._eventBus = new EventBus();
+        // Content too large for one RESPONSE arrives in parts
+        // (ChunkedPeerTransfer.js), accepted only for hashes this side
+        // requested.
+        this._assembler = new PartAssembler();
+        this._outstanding = new OutstandingRequests();
+        // connectionId|hash of part transfers being sent: a peer repeating
+        // a REQUEST never starts a second copy of the same transfer.
+        this._sending = new Set();
 
         for (const peer of this._registry.list()) {
             this._bus.attach(peer);
@@ -107,6 +119,7 @@ export class PeerContentExchange {
         }
         const message = toContentRequestMessage(hash);
         this._bus.send(peer, this._protocol, message);
+        this._outstanding.add(hash);
     }
 
     // Fires with `{ hash }` every time an incoming RESPONSE is verified
@@ -118,6 +131,14 @@ export class PeerContentExchange {
     // to a bad ANNOUNCE.
     onContentReceived(callback) {
         const subscription = this._eventBus.subscribe(CONTENT_RECEIVED_EVENT, callback);
+        return () => subscription.unsubscribe();
+    }
+
+    // callback({ hash, receivedLength, totalLength }) for each part of a
+    // content arriving in parts, so a caller waiting for it can tell a
+    // slow transfer from one that stopped. Returns an unsubscribe function.
+    onTransferProgress(callback) {
+        const subscription = this._eventBus.subscribe(TRANSFER_PROGRESS_EVENT, callback);
         return () => subscription.unsubscribe();
     }
 
@@ -145,6 +166,10 @@ export class PeerContentExchange {
             this._handleRequest(payload, meta);
             return;
         }
+        if (payload.kind === PeerContentMessageKind.RESPONSE_PART) {
+            this._handlePart(payload, meta);
+            return;
+        }
         this._handleResponse(payload);
     }
 
@@ -155,7 +180,7 @@ export class PeerContentExchange {
     // side already checked" discipline this codebase applies throughout.
     // Silently does nothing — no reply at all — if the hash is unknown,
     // if this replica's own ContentStore does not actually have the
-    // bytes, or if replying would exceed MAX_CONTENT_BYTES; see
+    // bytes, or if they exceed ChunkedPeerTransfer.js's MAX_TRANSFER_LENGTH; see
     // application/peer/PeerContentProtocol.js's own header on why "not found"
     // is never a message this protocol sends.
     async _handleRequest({ hash }, meta) {
@@ -172,17 +197,59 @@ export class PeerContentExchange {
         if (bytes === null || bytes === undefined) {
             return;
         }
-        let message;
-        try {
-            message = toContentResponseMessage(hash, bytes);
-        } catch {
+        // One RESPONSE when the content fits a message (what every peer
+        // understands); otherwise parts. A send failure here is either
+        // the message being too large once JSON-escaped, which parts
+        // handle, or the peer having gone away, which sendInParts() also
+        // notices, never crashing the bus over the race.
+        if (typeof bytes === 'string' && bytes.length > 0 && bytes.length <= MAX_CONTENT_BYTES) {
+            try {
+                this._bus.send(meta.connectedPeer, this._protocol, toContentResponseMessage(hash, bytes));
+                return;
+            } catch {
+                // fall through to parts
+            }
+        }
+        if (typeof bytes !== 'string' || bytes.length === 0) {
             return;
         }
+        const sendingKey = `${meta.connectedPeer && meta.connectedPeer.connectionId}|${hash}`;
+        if (this._sending.has(sendingKey)) {
+            return;
+        }
+        this._sending.add(sendingKey);
         try {
-            this._bus.send(meta.connectedPeer, this._protocol, message);
-        } catch {
-            // The requesting peer may have disconnected between REQUEST
-            // and RESPONSE — never crash the bus over a race like that.
+            await sendInParts(this._bus, meta.connectedPeer, this._protocol, bytes,
+                (fields) => toContentResponsePartMessage(hash, fields));
+        } finally {
+            this._sending.delete(sendingKey);
+        }
+    }
+
+    // A part of a content arriving in parts. Accepted only while this side
+    // is waiting for that hash (see request()), and only when its declared
+    // length matches the size the catalog's reference records, if any;
+    // the joined content then goes through _handleResponse() exactly like
+    // a single RESPONSE, hash check included.
+    _handlePart(message, meta) {
+        const { hash } = message;
+        if (!this._outstanding.has(hash)) {
+            return;
+        }
+        const publications = this._catalog.findByContentHash(hash);
+        if (!publications.length) {
+            return;
+        }
+        const expectedSize = publications[0].contentReference && publications[0].contentReference.size;
+        if (Number.isInteger(expectedSize) && expectedSize > 0 && expectedSize !== message.totalLength) {
+            return;
+        }
+        const senderKey = (meta && meta.connectedPeer && meta.connectedPeer.connectionId) || 'unknown';
+        const result = this._assembler.accept(`${senderKey}|${hash}`, message);
+        if (result.status === 'progress') {
+            this._eventBus.publish(TRANSFER_PROGRESS_EVENT, { hash, receivedLength: result.receivedLength, totalLength: result.totalLength });
+        } else if (result.status === 'complete') {
+            this._handleResponse({ hash, bytes: result.text });
         }
     }
 
@@ -221,6 +288,7 @@ export class PeerContentExchange {
         } catch {
             return;
         }
+        this._outstanding.delete(hash);
         this._eventBus.publish(CONTENT_RECEIVED_EVENT, { hash });
     }
 }

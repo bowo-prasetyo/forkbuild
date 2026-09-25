@@ -1,3 +1,5 @@
+import { isValidTransferPart } from '../../peer/ChunkedPeerTransfer.js';
+
 // 0.8.37 — Explicit Peer Snapshot Content Transfer.
 //
 // The WIRE shape carried over peer/PeerMessageBus.js under application/
@@ -64,9 +66,13 @@
 // questions — and, for the ONE question that actually matters (does
 // `content` verify?), application/snapshot/materialization/StoreSnapshotContentUseCase.js's own
 // question, asked one layer up, never here.
+// RESPONSE_PART carries one part of a snapshot too large for a single
+// RESPONSE (application/peer/ChunkedPeerTransfer.js); older peers ignore
+// it.
 export const PeerSnapshotContentMessageKind = Object.freeze({
     REQUEST: 'REQUEST',
-    RESPONSE: 'RESPONSE'
+    RESPONSE: 'RESPONSE',
+    RESPONSE_PART: 'RESPONSE_PART'
 });
 
 // Identical ceiling to application/peer/PeerContentProtocol.js's own
@@ -127,6 +133,14 @@ export function toSnapshotContentResponseMessage(publicationId, contentHash, con
 // malicious or buggy peer that ignores toSnapshotContentResponseMessage()'s
 // own ceiling and hand-crafts an oversized RESPONSE is rejected right
 // here, never trusted merely because it arrived.
+export function toSnapshotContentResponsePartMessage(publicationId, contentHash, { transferId, index, count, totalLength, part }) {
+    const message = { kind: PeerSnapshotContentMessageKind.RESPONSE_PART, publicationId, contentHash, transferId, index, count, totalLength, part };
+    if (!isValidPublicationId(publicationId) || !isValidContentHash(contentHash) || !isValidTransferPart(message)) {
+        throw new Error('toSnapshotContentResponsePartMessage: a valid publicationId, contentHash and transfer part are required');
+    }
+    return message;
+}
+
 export function isValidPeerSnapshotContentMessage(value) {
     if (!value || typeof value !== 'object') {
         return false;
@@ -140,6 +154,11 @@ export function isValidPeerSnapshotContentMessage(value) {
             && typeof value.content === 'string'
             && value.content.length > 0
             && value.content.length <= MAX_SNAPSHOT_CONTENT_BYTES;
+    }
+    if (value.kind === PeerSnapshotContentMessageKind.RESPONSE_PART) {
+        return isValidPublicationId(value.publicationId)
+            && isValidContentHash(value.contentHash)
+            && isValidTransferPart(value);
     }
     return false;
 }

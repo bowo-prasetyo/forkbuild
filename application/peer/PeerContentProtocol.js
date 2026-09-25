@@ -1,3 +1,5 @@
+import { isValidTransferPart } from './ChunkedPeerTransfer.js';
+
 // 0.7.4 — Peer Content Retrieval.
 //
 // The WIRE shape carried over peer/PeerMessageBus.js under this file's own
@@ -50,9 +52,16 @@
 // hash to what it claims. Both of those are application/
 // PeerContentExchange.js's own ingestion-boundary questions, asked one
 // layer up — this module only ever describes the wrapper.
+//
+// RESPONSE_PART — one part of content too large for a single RESPONSE
+// (application/peer/ChunkedPeerTransfer.js): the hash plus that module's
+// part fields. A peer that predates it ignores the kind, as for any
+// message it does not recognize, so a large content simply never arrives
+// from or at such a peer — as before this kind existed.
 export const PeerContentMessageKind = Object.freeze({
     REQUEST: 'REQUEST',
-    RESPONSE: 'RESPONSE'
+    RESPONSE: 'RESPONSE',
+    RESPONSE_PART: 'RESPONSE_PART'
 });
 
 export const MAX_CONTENT_BYTES = 48 * 1024;
@@ -91,6 +100,14 @@ export function toContentResponseMessage(hash, bytes) {
     return { kind: PeerContentMessageKind.RESPONSE, hash, bytes };
 }
 
+export function toContentResponsePartMessage(hash, { transferId, index, count, totalLength, part }) {
+    const message = { kind: PeerContentMessageKind.RESPONSE_PART, hash, transferId, index, count, totalLength, part };
+    if (!isValidContentHash(hash) || !isValidTransferPart(message)) {
+        throw new Error('toContentResponsePartMessage: a valid content hash and transfer part are required');
+    }
+    return message;
+}
+
 // The RECEIVING side's own half of the oversized-content defense — a
 // malicious or buggy peer that ignores toContentResponseMessage()'s own
 // ceiling and hand-crafts an oversized RESPONSE is rejected right here,
@@ -111,6 +128,9 @@ export function isValidPeerContentMessage(value) {
             && typeof value.bytes === 'string'
             && value.bytes.length > 0
             && value.bytes.length <= MAX_CONTENT_BYTES;
+    }
+    if (value.kind === PeerContentMessageKind.RESPONSE_PART) {
+        return isValidContentHash(value.hash) && isValidTransferPart(value);
     }
     return false;
 }

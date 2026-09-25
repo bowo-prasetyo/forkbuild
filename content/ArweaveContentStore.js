@@ -234,6 +234,12 @@ export class ArweaveContentStore extends ContentStore {
     // stay unconnected.
     get storage() { return 'ar'; }
 
+    // What the signer can put in one transaction (the injected wallet
+    // signer signs single-chunk transactions only, 256 KiB).
+    get maxContentBytes() {
+        return Number.isFinite(this._signer.maxDataBytes) ? this._signer.maxDataBytes : Infinity;
+    }
+
     // put(bytes) -> Promise<ContentReference>. Never returns null; either
     // resolves with a real ContentReference or throws — see this file's
     // own header, "put() never returns null or a fake ContentReference."

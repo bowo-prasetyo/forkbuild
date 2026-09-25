@@ -2,12 +2,16 @@ import { EventBus } from '../../../core/events/EventBus.js';
 import { ContentReference } from '../../../core/ContentReference.js';
 import {
     PeerSnapshotContentMessageKind,
+    MAX_SNAPSHOT_CONTENT_BYTES,
     toSnapshotContentRequestMessage,
     toSnapshotContentResponseMessage,
+    toSnapshotContentResponsePartMessage,
     isValidPeerSnapshotContentMessage
 } from './PeerSnapshotContentProtocol.js';
+import { PartAssembler, OutstandingRequests, sendInParts } from '../../peer/ChunkedPeerTransfer.js';
 
 const CONTENT_RECEIVED_EVENT = 'PublicationSnapshotContentPeerExchangeReceived';
+const TRANSFER_PROGRESS_EVENT = 'PublicationSnapshotContentPeerExchangeTransferProgress';
 
 // 0.8.37 — Explicit Peer Snapshot Content Transfer.
 //
@@ -95,6 +99,14 @@ export class PublicationSnapshotContentPeerExchange {
         this._registry = connectedPeerRegistry;
         this._protocol = protocol;
         this._eventBus = new EventBus();
+        // A snapshot too large for one RESPONSE arrives in parts
+        // (application/peer/ChunkedPeerTransfer.js), accepted only for a
+        // contentHash this side requested.
+        this._assembler = new PartAssembler();
+        this._outstanding = new OutstandingRequests();
+        // connectionId|contentHash of part transfers being sent: a repeated
+        // REQUEST never starts a second copy of the same transfer.
+        this._sending = new Set();
 
         for (const peer of this._registry.list()) {
             this._bus.attach(peer);
@@ -117,6 +129,7 @@ export class PublicationSnapshotContentPeerExchange {
     request(peer, { publicationId, contentHash } = {}) {
         const message = toSnapshotContentRequestMessage(publicationId, contentHash);
         this._bus.send(peer, this._protocol, message);
+        this._outstanding.add(contentHash);
     }
 
     // Fires with `{ publicationId, contentHash, bytes }` for every
@@ -132,6 +145,14 @@ export class PublicationSnapshotContentPeerExchange {
     // does with the (verified, idempotent) result.
     onContentReceived(callback) {
         const subscription = this._eventBus.subscribe(CONTENT_RECEIVED_EVENT, callback);
+        return () => subscription.unsubscribe();
+    }
+
+    // callback({ publicationId, contentHash, receivedLength, totalLength })
+    // for each part of a snapshot arriving in parts. Returns an
+    // unsubscribe function.
+    onTransferProgress(callback) {
+        const subscription = this._eventBus.subscribe(TRANSFER_PROGRESS_EVENT, callback);
         return () => subscription.unsubscribe();
     }
 
@@ -156,6 +177,10 @@ export class PublicationSnapshotContentPeerExchange {
         }
         if (payload.kind === PeerSnapshotContentMessageKind.REQUEST) {
             this._handleRequest(payload, meta);
+            return;
+        }
+        if (payload.kind === PeerSnapshotContentMessageKind.RESPONSE_PART) {
+            this._handlePart(payload, meta);
             return;
         }
         this._handleResponse(payload);
@@ -193,20 +218,49 @@ export class PublicationSnapshotContentPeerExchange {
         } catch {
             return;
         }
-        if (bytes === null || bytes === undefined) {
+        if (typeof bytes !== 'string' || bytes.length === 0) {
             return;
         }
-        let message;
-        try {
-            message = toSnapshotContentResponseMessage(publicationId, contentHash, bytes);
-        } catch {
+        // One RESPONSE when the snapshot fits a message; otherwise parts.
+        // A failed single send is the message being too large once
+        // JSON-escaped (parts handle it) or the peer having gone away
+        // (sendInParts() notices), never a crash of the bus.
+        if (bytes.length <= MAX_SNAPSHOT_CONTENT_BYTES) {
+            try {
+                this._bus.send(meta.connectedPeer, this._protocol, toSnapshotContentResponseMessage(publicationId, contentHash, bytes));
+                return;
+            } catch {
+                // fall through to parts
+            }
+        }
+        const sendingKey = `${meta.connectedPeer && meta.connectedPeer.connectionId}|${contentHash}`;
+        if (this._sending.has(sendingKey)) {
             return;
         }
+        this._sending.add(sendingKey);
         try {
-            this._bus.send(meta.connectedPeer, this._protocol, message);
-        } catch {
-            // The requesting peer may have disconnected between REQUEST
-            // and RESPONSE — never crash the bus over a race like that.
+            await sendInParts(this._bus, meta.connectedPeer, this._protocol, bytes,
+                (fields) => toSnapshotContentResponsePartMessage(publicationId, contentHash, fields));
+        } finally {
+            this._sending.delete(sendingKey);
+        }
+    }
+
+    // A part of a snapshot arriving in parts, accepted only while this side
+    // waits for that contentHash. The joined snapshot is handed on exactly
+    // like a single RESPONSE (see _handleResponse()).
+    _handlePart(message, meta) {
+        const { publicationId, contentHash } = message;
+        if (!this._outstanding.has(contentHash)) {
+            return;
+        }
+        const senderKey = (meta && meta.connectedPeer && meta.connectedPeer.connectionId) || 'unknown';
+        const result = this._assembler.accept(`${senderKey}|${contentHash}`, message);
+        if (result.status === 'progress') {
+            this._eventBus.publish(TRANSFER_PROGRESS_EVENT, { publicationId, contentHash, receivedLength: result.receivedLength, totalLength: result.totalLength });
+        } else if (result.status === 'complete') {
+            this._outstanding.delete(contentHash);
+            this._handleResponse({ publicationId, contentHash, content: result.text });
         }
     }
 

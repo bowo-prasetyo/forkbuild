@@ -41,6 +41,14 @@ export class PeerConnection {
         throw new Error('PeerConnection.send() must be implemented by a subclass');
     }
 
+    // Bytes handed to send() and not yet transmitted. A protocol sending
+    // many messages in a row (application/peer/ChunkedPeerTransfer.js)
+    // waits while this is high. A transport with no send buffer of its
+    // own reports 0.
+    get bufferedAmount() {
+        return 0;
+    }
+
     // Returns an unsubscribe function, the same shape every EventBus
     // subscription in this codebase already returns.
     onMessage(callback) {

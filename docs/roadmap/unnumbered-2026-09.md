@@ -616,3 +616,36 @@ material for every chunk and one geometry per definition.
 - Not changed: every brick is drawn, including ones hidden inside a solid build, so a solid pyramid still sends about
   25 million triangles per frame to the GPU; skipping bricks enclosed on all six sides is the natural next step.
   Structure placements are still one mesh per brick.
+
+## Sharing large builds (unnumbered, 2026-09-25)
+
+**Large content moves between peers in parts, and large Snapshots are routed to IPFS.** A build's bytes leave a
+device three ways: the peer `forkbuild:content` protocol (publication content by hash), the peer
+`forkbuild:snapshot-content-transfer` protocol (Snapshot materialization), and Snapshot distribution to Arweave or
+IPFS. The two peer protocols refused anything over 48 KB (about 350 bricks), and Arweave took at most 256 KiB. The
+other 48 KB limits (World Encounter material, publication material, discovery envelopes) apply to the signed
+publication record, never to a build, so they stay.
+
+- `application/peer/ChunkedPeerTransfer.js`: content too large for one RESPONSE goes as `RESPONSE_PART` messages, each
+  part's JSON-escaped text at most 60 KiB, so every message fits the 64 KiB peer message limit whatever the content
+  escapes to. The sender pauses while the data channel holds more than 1 MiB (`PeerConnection#bufferedAmount`, new). The
+  receiver (`PartAssembler`) takes parts in any order, ignores duplicates, and accepts parts only for content it
+  requested (`OutstandingRequests`), at most 64 MiB per transfer and two transfers at once, dropping one idle for 30 s;
+  the joined content is hash-checked exactly like a RESPONSE. Content that fits is still one RESPONSE, and older peers
+  ignore the new kind. See docs/Protocol.md, "Large content in parts".
+- Both exchanges report `onTransferProgress()`, and `PeerContentRetrievalCoordinator` and
+  `MaterializeSnapshotFromPeerUseCase` restart their 8 s wait on each part, so the timeout bounds silence rather than
+  the whole transfer.
+- `ContentStore#maxContentBytes` (Infinity unless a store sets one): the Arweave stores take it from the signer's new
+  `maxDataBytes` (the injected wallet signer signs single-chunk transactions, 256 KiB). `executeSnapshotDistributionCommand`
+  refuses a larger build before anything is signed or uploaded, with `ContentTooLargeError`: "This build is 7.4 MB, more
+  than the 256 KB Arweave storage accepts. Choose IPFS storage to distribute it." IPFS has no limit.
+- IPFS uploads (local node, remote pinning) get one more second of timeout per 128 KiB (`utils/uploadTimeout.js`), so
+  a multi-megabyte upload over a slow connection is not cut off; smaller uploads keep their timeouts.
+- Tests: `tests/ChunkedPeerTransfer.test.js` (splitting, validation, reassembly bounds, send-buffer waiting, both
+  exchanges over an authenticated connection, unsolicited and forged parts, timeouts restarting on progress, Arweave
+  refusal and store limits) and `tests/ChunkedPeerTransferWebRtc.test.js`: the hollow 233-base pyramid (54,289 bricks,
+  7.4 MB) crosses a real WebRTC data channel in 141 parts in 0.4 s (on one machine), send buffer peaking at 330 KiB, and
+  arrives verified.
+- Not changed: Arweave storage still means one single-chunk transaction; multi-chunk Arweave uploads (and bundling) are
+  unimplemented, so large builds go to IPFS or directly to peers.

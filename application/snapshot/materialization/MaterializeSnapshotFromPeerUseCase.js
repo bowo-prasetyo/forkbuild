@@ -179,11 +179,22 @@ export class MaterializeSnapshotFromPeerUseCase {
                 unsubscribe();
                 resolve(bytes);
             };
-            const unsubscribe = this._exchange.onContentReceived(({ contentHash: receivedHash, bytes }) => {
+            const unsubscribeReceived = this._exchange.onContentReceived(({ contentHash: receivedHash, bytes }) => {
                 if (receivedHash === contentHash) {
                     finish(bytes);
                 }
             });
+            // A snapshot arriving in parts restarts the wait with each part,
+            // so the timeout bounds silence, not the whole transfer.
+            const unsubscribeProgress = typeof this._exchange.onTransferProgress === 'function'
+                ? this._exchange.onTransferProgress(({ contentHash: progressHash }) => {
+                    if (progressHash === contentHash && !settled) {
+                        clearTimeout(timer);
+                        timer = setTimeout(() => finish(null), this._timeoutMs);
+                    }
+                })
+                : () => {};
+            const unsubscribe = () => { unsubscribeReceived(); unsubscribeProgress(); };
             timer = setTimeout(() => finish(null), this._timeoutMs);
             try {
                 this._exchange.request(peer, { publicationId, contentHash });

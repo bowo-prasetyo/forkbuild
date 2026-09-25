@@ -122,11 +122,22 @@ export class PeerContentRetrievalCoordinator {
                 unsubscribe();
                 resolve(result);
             };
-            const unsubscribe = this._exchange.onContentReceived(({ hash: receivedHash }) => {
+            const unsubscribeReceived = this._exchange.onContentReceived(({ hash: receivedHash }) => {
                 if (receivedHash === hash) {
                     finish(true);
                 }
             });
+            // Content arriving in parts restarts the wait with each part,
+            // so `timeoutMs` bounds silence, not the whole transfer.
+            const unsubscribeProgress = typeof this._exchange.onTransferProgress === 'function'
+                ? this._exchange.onTransferProgress(({ hash: progressHash }) => {
+                    if (progressHash === hash && !settled) {
+                        clearTimeout(timer);
+                        timer = setTimeout(() => finish(false), timeoutMs);
+                    }
+                })
+                : () => {};
+            const unsubscribe = () => { unsubscribeReceived(); unsubscribeProgress(); };
             timer = setTimeout(() => finish(false), timeoutMs);
             try {
                 this._exchange.request(peer, hash);
