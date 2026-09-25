@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Steem Discovery Threads</title>
+    <link rel="stylesheet" href="page.css">
+    <script type="module" src="page.js"></script>
+</head>
+<body>
+<main>
+    <h1>Steem discovery threads</h1>
+    <p class="lead">
+        Creates the monthly root posts that ForkBuild's Steem announcements reply to
+        (<code>docs/Protocol.md</code>, "Proposed: Steem Announcement Substrate").
+        Posts are signed by Steem Keychain; this page never sees a key.
+    </p>
+
+    <form id="settings">
+        <label>Thread account
+            <input id="account" name="account" required autocomplete="off" spellcheck="false">
+        </label>
+        <label>API node
+            <input id="node" name="node" type="url" required spellcheck="false">
+        </label>
+        <label>First month
+            <input id="start" name="start" type="month" required>
+        </label>
+        <label>Months
+            <input id="months" name="months" type="number" min="1" max="36" required>
+        </label>
+        <fieldset>
+            <legend>Families</legend>
+            <div id="families"></div>
+        </fieldset>
+        <div class="actions">
+            <button id="check" type="submit">Check threads</button>
+            <button id="create" type="button" disabled>Create missing threads</button>
+            <button id="stop" type="button" disabled>Stop</button>
+        </div>
+    </form>
+
+    <p id="status" role="status"></p>
+
+    <table id="threads" hidden>
+        <thead><tr><th>Month</th><th>Family</th><th>Permlink</th><th>State</th></tr></thead>
+        <tbody></tbody>
+    </table>
+
+    <details id="preview" hidden>
+        <summary>Operations for the first missing thread</summary>
+        <pre></pre>
+    </details>
+
+    <section class="notes">
+        <h2>Before you start</h2>
+        <ul>
+            <li>Import the thread account's <strong>posting</strong> key into Steem Keychain. Keychain asks you to
+                approve each post.</li>
+            <li>The chain accepts one root post per account every 5 minutes, so the page waits between posts.
+                Keep this tab open until it finishes: 13 months of 4 families is about 4½ hours.</li>
+            <li>If a run stops, check again and create again: threads that exist are skipped.</li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>
