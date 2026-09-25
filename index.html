@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Content Security Policy: see docs/Deployment.md. The sha256 value is the hash of the
+         import map below; tests/ContentSecurityPolicy.test.js fails if they drift apart. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-1Yauk+MBJJXMGtEunLNkm2IMuBHncM/1loYKdwVuAa4='; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob:; connect-src 'self' https: wss: http://127.0.0.1:* http://localhost:*; worker-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
     <title>ForkBuild</title>
     <link rel="stylesheet" href="css/main.css">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -10,11 +13,11 @@
     <script type="importmap">
     {
         "imports": {
-            "vue": "https://cdn.jsdelivr.net/npm/vue@3.4.31/dist/vue.esm-browser.js",
-            "vue-router": "https://cdn.jsdelivr.net/npm/vue-router@4.4.5/dist/vue-router.esm-browser.js",
-            "@vue/devtools-api": "https://cdn.jsdelivr.net/npm/@vue/devtools-api@8.2.1/+esm",
-            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            "vue": "./vendor/vue/dist/vue.esm-browser.prod.js",
+            "vue-router": "./vendor/vue-router/dist/vue-router.esm-browser.js",
+            "@vue/devtools-api": "./vendor/vue-devtools-api/lib/esm/index.js",
+            "three": "./vendor/three/build/three.module.js",
+            "three/addons/": "./vendor/three/examples/jsm/"
         }
     }
     </script>

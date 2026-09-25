@@ -73,8 +73,10 @@ example:
 python3 -m http.server 8000
 ```
 
-Then open <http://localhost:8000/>. Vue and Three.js load from a CDN, so the
-browser needs internet access.
+Then open <http://localhost:8000/>. Every script, including Vue and Three.js,
+is served from the repository's own `vendor/` folder, so the app loads without
+internet access (its network features still need it). To host it, see
+[docs/Deployment.md](docs/Deployment.md).
 
 To run the tests you need Node.js 22 or later:
 
@@ -118,6 +120,8 @@ See [docs/Architecture.md](docs/Architecture.md) for the full description.
   today.
 - [docs/Principles.md](docs/Principles.md): the design rules the code keeps.
 - [docs/Protocol.md](docs/Protocol.md): current serialized and wire formats.
+- [docs/Deployment.md](docs/Deployment.md): hosting requirements, the
+  vendored libraries and the Content Security Policy.
 - [docs/CapabilityMatrix.md](docs/CapabilityMatrix.md): what each surface
   (Editor, World View, published world) may do.
 - [docs/Roadmap.md](docs/Roadmap.md): every milestone and why it was made.

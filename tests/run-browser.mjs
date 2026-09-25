@@ -31,7 +31,7 @@ const MIME_TYPES = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.json
 const RUNNER_PAGE = `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <script type="importmap">
-{ "imports": { "three": "/node_modules/three/build/three.module.js", "three/addons/": "/node_modules/three/examples/jsm/" } }
+{ "imports": { "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }
 </script>
 </head><body></body></html>`;
 

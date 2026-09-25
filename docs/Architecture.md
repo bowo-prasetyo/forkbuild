@@ -424,7 +424,7 @@ Hashes establish what an object is; signatures establish who authorized
 it. identity/Ed25519.js wraps Ed25519 signing (RFC 8032, verified strictly:
 non-canonical signatures and small-order keys are rejected) and SHA-512 from
 the audited noble-curves and noble-hashes libraries, which are copied into
-vendor/ by scripts/vendor-noble.mjs (a test fails if vendor/ ever differs from
+vendor/ by scripts/vendor.mjs (a test fails if vendor/ ever differs from
 the pinned npm packages). It has no fallback random source: without
 crypto.getRandomValues no key is created. identity/SigningIdentity.js is a public-key identity
 (did:key). core/Signature.js signs a canonical envelope
@@ -937,6 +937,18 @@ Peers, Chat and Conversations, Publications (`/publications`), the
 settings pages under `/settings/…`, the leaderboard and reconciliation
 views, and About. Views reach application/ through injected services;
 the two composables in ui/composables/ share the settings-form logic.
+
+index.html loads the app as ES modules with no build step. Its import map
+resolves `vue`, `vue-router`, `@vue/devtools-api`, `three` and
+`three/addons/` to copies in vendor/, which scripts/vendor.mjs makes from
+the exact versions pinned in package.json (tests/VendoredLibraries.test.js
+fails if vendor/ drifts), so every script comes from the app's own origin.
+Vue is the full build because component templates are strings compiled in
+the browser. A Content Security Policy in index.html allows scripts only
+from the app's origin plus the import map by hash, with `'unsafe-eval'`
+for that template compiler; tests/ContentSecurityPolicy.test.js keeps the
+hash and the restrictive directives in step. docs/Deployment.md explains
+the policy and the headers a host should add.
 
 ## Directories without a section of their own
 

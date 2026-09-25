@@ -22,6 +22,9 @@ venv/
 dist/
 build/
 target/
+# vendor/ is committed as-is (see scripts/vendor.mjs), including its dist/ and build/ folders
+!vendor/**/dist/
+!vendor/**/build/
 coverage/
 htmlcov/
 .mypy_cache/

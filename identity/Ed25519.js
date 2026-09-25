@@ -1,7 +1,7 @@
 // Ed25519 signatures (RFC 8032) and SHA-512 for the trust layer, plus the
 // byte and did:key encodings identities use. The cryptography itself is the
 // audited noble-curves / noble-hashes code in vendor/ (copied from npm by
-// scripts/vendor-noble.mjs); nothing in this file implements a primitive.
+// scripts/vendor.mjs); nothing in this file implements a primitive.
 // Signing stays synchronous, so signCanonical() callers are unchanged.
 //
 // This is the cryptographic floor of the project: content hashes
