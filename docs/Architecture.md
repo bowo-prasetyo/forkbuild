@@ -587,7 +587,11 @@ identity it names (peer/RendezvousPublicationSigning.js), and a withdrawal
 only with that identity's signature over it (the `rendezvous-removal`
 signature type); it also refuses replays of older publications and limits
 message size, publication lifetime, request rate and connections per
-address (server/rendezvous-worker/README.md). A
+address (server/rendezvous-worker/README.md). The reference deployment
+also accepts connections only from the sites listed in its
+`ALLOWED_ORIGINS` (the GitHub Pages site), caps relay credentials at
+`TURN_CREDENTIALS_PER_MONTH`, and reports this month's count at
+GET /turn-stats. A
 discovered candidate is only a hint; peer/PeerAuthenticationSession.js
 runs a challenge–response over the new connection, and a signature is
 bound to that one connection. application/peer/PeerSessionManager.js is the
@@ -600,7 +604,13 @@ peer/PeerMessageBus.js, which routes by a protocol id
 (`forkbuild:chat`, `forkbuild:avatar-presence`, …; the full list is in
 docs/Protocol.md, "Peer messages") and never
 interprets the payload. Replay and ordering rules belong to each
-protocol, not to the bus.
+protocol, not to the bus. A message is at most 64 KiB, so
+`forkbuild:content` and `forkbuild:snapshot-content-transfer` send larger
+content in parts through application/peer/ChunkedPeerTransfer.js, pausing
+while the channel's send buffer (`PeerConnection#bufferedAmount`) is full;
+their 8 s waits restart on each part (`onTransferProgress()`), so a
+timeout bounds silence rather than the whole transfer (docs/Protocol.md,
+"Large content in parts").
 
 **Relationships.** Three separate kinds of local state:
 
@@ -865,6 +875,12 @@ Publication) or `ui/components/EditorDistributionDialog.js` (the Editor's post-p
 (Storage, Remote Pinning draft, Announcement/Discovery) feeds both legs. The combined "Distribute" action runs
 Snapshot and Publication one after the other, because both may sign through the same wallet extension. Every
 injected-wallet adapter (Nostr NIP-07, Arweave, UniSat, EIP-1193) has a 120-second approval timeout.
+
+A store may limit how large one item can be (`ContentStore#maxContentBytes`, Infinity unless set). The Arweave stores
+take it from the signer's `maxDataBytes`: the injected wallet signs single-chunk transactions, 256 KiB. Snapshot
+distribution checks it before anything is signed or uploaded and refuses a larger build with `ContentTooLargeError`,
+which tells the user to choose IPFS. IPFS has no limit; its uploads (local node and remote pinning) get one more second
+of timeout per 128 KiB (`utils/uploadTimeout.js`).
 
 ## Network endpoint configuration
 

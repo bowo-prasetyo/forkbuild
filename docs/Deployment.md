@@ -44,6 +44,14 @@ rendezvous server for TURN relay credentials; the TURN provider's key lives
 only on that server (see `server/rendezvous-worker/README.md`). Most of these
 can be changed under **Network Settings**.
 
+**The default rendezvous server serves only the GitHub Pages site.** The
+reference deployment (`peer/RendezvousConfig.js`) accepts connections only
+from `https://bowo-prasetyo.github.io` (`ALLOWED_ORIGINS` in
+`server/rendezvous-worker/wrangler.toml`). A copy served from anywhere else,
+including `http://localhost`, is refused, so finding peers there needs your
+own rendezvous server (set it in `peer/RendezvousConfig.js` or under
+**Network Settings**) or invitations; everything else works.
+
 ## Content Security Policy
 
 `index.html` carries a Content Security Policy in a `<meta>` tag, so it
