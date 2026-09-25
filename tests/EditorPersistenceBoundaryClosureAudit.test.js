@@ -1,3 +1,4 @@
+import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -500,8 +501,8 @@ async function run() {
         assert(JSON.stringify(publisher.loadSnapshot(p1.id)) === JSON.stringify(p1SnapshotAtPublish),
             'G1. P1\'s stored snapshot remains byte-for-byte identical after a flushed edit AND after a second Publication (P2) is created — one Publication\'s existence never mutates another\'s.');
         assert(publisher.verifySnapshot(p1.id, p1.contentHash) === true, 'G2. P1\'s contentHash verification independently reconfirms this.');
-        assert(p1SnapshotAtPublish.world.buildings[0].bricks.length === 1, 'sanity — P1 captured the pre-edit content (one brick).');
-        assert(p2Snapshot.world.buildings[0].bricks.length === 2, 'G3. P2 correctly captures the later content (two bricks) — the two Publications are genuinely independent snapshots, neither a mutation of the other.');
+        assert(storedBricks(p1SnapshotAtPublish).length === 1, 'sanity — P1 captured the pre-edit content (one brick).');
+        assert(storedBricks(p2Snapshot).length === 2, 'G3. P2 correctly captures the later content (two bricks) — the two Publications are genuinely independent snapshots, neither a mutation of the other.');
         assert(p1.id !== p2.id, 'G4. P1 and P2 are distinct Publication identities.');
 
         scheduler.stop();
@@ -786,7 +787,7 @@ async function run() {
         assert(!stack.recoveryStore.exists(id), 'M3. The explicit Save superseded/removed the checkpoint it was built from (Section F4\'s own guarantee, reconfirmed end to end).');
         const p1 = publishDocumentUseCase.execute({ document: recovered });
         const p1Snapshot = publisher.loadSnapshot(p1.id);
-        assert(p1Snapshot.world.buildings[0].bricks.length === 2,
+        assert(storedBricks(p1Snapshot).length === 2,
             'M4. P1 correctly captures exactly the recovered content — the trailing edit that only ever existed inside a flush()-written checkpoint is now permanently, immutably published.');
 
         // Edit again, and THIS TIME wait for the ORDINARY debounce
@@ -812,7 +813,7 @@ async function run() {
         const p2Snapshot = publisher.loadSnapshot(p2.id);
 
         assert(JSON.stringify(publisher.loadSnapshot(p1.id)) === JSON.stringify(p1Snapshot), 'M5. P1 remains byte-for-byte unchanged after the second edit/autosave/Save/Publish cycle.');
-        assert(p2Snapshot.world.buildings[0].bricks.length === 3, 'M6. P2 correctly captures all three bricks (original + both edits).');
+        assert(storedBricks(p2Snapshot).length === 3, 'M6. P2 correctly captures all three bricks (original + both edits).');
         assert(p1.id !== p2.id, 'M7. P1 and P2 are distinct Publications.');
 
         console.log('✓ M. FLAGSHIP II: Create -> Edit -> leave immediately (never Saved) -> exit flush -> re-enter -> recover -> Save -> Publish P1 [closing the loop 0.9.580\'s own flagship left open] -> Edit again -> ORDINARY timer-fired autosave (no flush) -> leave -> Save -> Publish P2: both Publications independently immutable, and the fix coexists correctly with the untouched pre-existing autosave path throughout.');

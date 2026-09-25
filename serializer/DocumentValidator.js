@@ -1,6 +1,7 @@
 import { ValidationResult } from './ValidationResult.js';
 import { PROTOCOL_VERSION } from '../core/protocolVersion.js';
 import { DOCUMENT_SCHEMA_VERSION } from '../core/documentSchema.js';
+import { brickTableErrors } from '../core/BrickTable.js';
 
 // Pure structural validation of a document JSON envelope. No Vue, no
 // Three.js, no EditorSession, no WorldNavigationSession, no browser
@@ -99,8 +100,14 @@ export const DocumentValidator = Object.freeze({
         if (typeof building.id !== 'string' || building.id.length === 0) {
             errors.push(`${prefix}.id must be a non-empty string`);
         }
+        // Schema 2 carries a brickTable; a pre-schema-2 envelope that has
+        // not been migrated (validated directly) still carries bricks.
+        if (building.brickTable !== undefined) {
+            errors.push(...brickTableErrors(building.brickTable, `${prefix}.brickTable`));
+            return;
+        }
         if (!Array.isArray(building.bricks)) {
-            errors.push(`${prefix}.bricks must be an array`);
+            errors.push(`${prefix}.brickTable must be an object`);
             return;
         }
         for (let j = 0; j < building.bricks.length; j++) {

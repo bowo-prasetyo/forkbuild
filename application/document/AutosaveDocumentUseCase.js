@@ -35,8 +35,14 @@ export class AutosaveDocumentUseCase {
         }
         const documentId = document.world.id;
         const savedRevision = this._readSavedRevision(documentId);
-        const existing = this._recoveryStore.load(documentId);
-        const recoveryRevision = existing && Number.isFinite(existing.revision) ? existing.revision : 0;
+        // Only the revision is needed, never the (possibly large) checkpoint.
+        let recoveryRevision;
+        if (typeof this._recoveryStore.loadRevision === 'function') {
+            recoveryRevision = this._recoveryStore.loadRevision(documentId);
+        } else {
+            const existing = this._recoveryStore.load(documentId);
+            recoveryRevision = existing && Number.isFinite(existing.revision) ? existing.revision : 0;
+        }
         const revision = DocumentRevision.nextRevision(savedRevision, recoveryRevision);
 
         const serialized = this._documentSerializer.serialize(document);

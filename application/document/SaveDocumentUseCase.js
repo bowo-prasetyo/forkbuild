@@ -80,7 +80,13 @@ export class SaveDocumentUseCase {
     }
 
     _readRecoveryRevision(documentId) {
-        if (!this._recoveryStore || !this._recoveryStore.exists(documentId)) {
+        if (!this._recoveryStore) {
+            return 0;
+        }
+        if (typeof this._recoveryStore.loadRevision === 'function') {
+            return this._recoveryStore.loadRevision(documentId);
+        }
+        if (!this._recoveryStore.exists(documentId)) {
             return 0;
         }
         const checkpoint = this._recoveryStore.load(documentId);

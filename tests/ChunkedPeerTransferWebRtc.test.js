@@ -17,10 +17,11 @@ import { DocumentSerializer } from '../serializer/DocumentSerializer.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
-// The hollow Great Pyramid (233 × 233 base, 54,289 bricks, about 7.4 MB
-// serialized) moves from one peer to another over a real WebRTC data
-// channel, in parts (application/peer/ChunkedPeerTransfer.js), and arrives
-// verified. Before parts existed, content over 48 KB could not be sent.
+// The hollow Great Pyramid (233 × 233 base, 54,289 bricks, about 1.8 MB
+// serialized; 7.4 MB before document schema 2) moves from one peer to
+// another over a real WebRTC data channel, in parts
+// (application/peer/ChunkedPeerTransfer.js), and arrives verified. Before
+// parts existed, content over 48 KB could not be sent.
 
 function makeIdentity(label) {
     const provider = new LocalIdentityProvider(new InMemoryStorageProvider());
@@ -77,7 +78,7 @@ await waitFor(() => alicePeer.getLifecycleState() === PeerLifecycleState.AUTHENT
     && bobPeer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED, 'both peers to authenticate');
 
 const text = hollowPyramidText(233);
-assert(text.length > 7 * 1000 * 1000, `setup: the hollow pyramid is ${(text.length / 1e6).toFixed(1)} MB`);
+assert(text.length > 1.5 * 1000 * 1000, `setup: the hollow pyramid is ${(text.length / 1e6).toFixed(1)} MB`);
 
 const aliceStore = new LocalContentStore(new InMemoryStorageProvider());
 const bobStore = new LocalContentStore(new InMemoryStorageProvider());
@@ -103,7 +104,7 @@ clearInterval(sampler);
 
 assert(result.retrieved === true, 'the hollow pyramid is retrieved over WebRTC within the default 8 s per-silence timeout');
 assert(await bobStore.get(reference) === text, '...and stored, byte for byte, verified against its hash');
-assert(parts > 100, `...in ${parts + 1} parts`);
+assert(parts > 20, `...in ${parts + 1} parts`);
 assert(peakBuffered <= 2 * 1024 * 1024, `the sender kept its send buffer bounded (peak ${(peakBuffered / 1024).toFixed(0)} KiB)`);
 console.log(`✓ a ${(text.length / 1e6).toFixed(1)} MB build crossed a real WebRTC data channel in ${parts + 1} parts, ${seconds.toFixed(1)} s, peak send buffer ${(peakBuffered / 1024).toFixed(0)} KiB`);
 

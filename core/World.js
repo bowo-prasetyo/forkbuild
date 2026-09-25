@@ -372,11 +372,12 @@ export class World {
         return Array.from(this._animalDecorations.values());
     }
 
-    toJSON() {
+    // compactBricks: see Building#toJSON().
+    toJSON({ compactBricks = false } = {}) {
         return {
             id: this._id,
             metadata: this._metadata,
-            buildings: this.getBuildings().map((building) => building.toJSON()),
+            buildings: this.getBuildings().map((building) => building.toJSON({ compactBricks })),
             groups: this.getGroups().map((group) => group.toJSON()),
             placements: this.getStructurePlacements().map((placement) => placement.toJSON()),
             landmarks: this.getWorldLandmarks().map((landmark) => landmark.toJSON()),

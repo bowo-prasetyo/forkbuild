@@ -1,3 +1,4 @@
+import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
 import { World } from '../core/World.js';
 import { Building } from '../core/Building.js';
 import { Brick } from '../core/Brick.js';
@@ -620,7 +621,7 @@ async function runTests() {
     
     // Count actual building operations (bricks + placements)
     const parsedAfter = JSON.parse(worldJsonAfter);
-    const brickCount = parsedAfter.world.buildings[0].bricks.length;
+    const brickCount = storedBricks(parsedAfter).length;
     const placementCount = parsedAfter.world.placements ? parsedAfter.world.placements.length : 0;
     
     assert(brickCount === 2, '36. World has exactly the bricks that were placed');

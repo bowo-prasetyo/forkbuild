@@ -296,6 +296,15 @@ operation (docs/Principles.md, "Save is not Publish"):
 | Autosave | AutosaveDocumentUseCase, run by AutosaveScheduler | `recovery:{documentId}` (persistence/LocalRecoveryStore.js) | a recovery checkpoint only; never cleans the dirty flag or publishes |
 | Publish | PublishDocumentUseCase → PublisherProvider | `snapshot:{publicationId}`, and a Publication record in `forkbuild-publications` | an immutable snapshot |
 
+Stored, published and exported documents use document schema 2, which
+keeps each building's bricks as one table (core/BrickTable.js: palettes of
+definitions and colors, the ids, and six numbers per brick) rather than
+one object per brick; Building/World/Document `toJSON()` write it when
+asked for `compactBricks`, and `Building.fromJSON()` reads either form.
+New bricks get 12-character ids (`createBrickId()`). Together these make
+a large build about a fifth of its former size, and serializing,
+hashing and parsing it several times faster.
+
 Every document that enters the domain goes through the same pipeline:
 parse → DocumentSchemaMigrator.migrate() (bring the envelope to
 DOCUMENT_SCHEMA_VERSION through registered, pure migrations) →

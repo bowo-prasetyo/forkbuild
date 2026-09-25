@@ -649,3 +649,35 @@ publication record, never to a build, so they stay.
   arrives verified.
 - Not changed: Arweave storage still means one single-chunk transaction; multi-chunk Arweave uploads (and bundling) are
   unimplemented, so large builds go to IPFS or directly to peers.
+
+## Compact document format (unnumbered, 2026-09-25)
+
+**Document schema 2 stores bricks as a table, and new bricks get short ids.** Of the 136 bytes a brick took in a
+stored or published document, 36 were its UUID and most of the rest repeated property names. The hollow 233-base
+pyramid was 7.49 MB.
+
+- `core/BrickTable.js`: each building's bricks are one `brickTable`: `definitions` and `colors` palettes in first-use
+  order, `ids`, and six numbers per brick (definition index, x, y, z, rotation, color index or 0). Bricks keep their
+  order, so the form is canonical and content hashes stay meaningful. `Building`/`World#toJSON({ compactBricks })`
+  write it and `Document#toJSON()` asks for it; `Building.fromJSON()` reads either form; `World#toJSON()` without the
+  option is unchanged for in-memory uses (forking, command history).
+- `DOCUMENT_SCHEMA_VERSION` is 2. The schema 1 → 2 migration turns each `bricks` array into a table and changes
+  nothing else, ids included; schema 0 documents migrate through it too. `DocumentValidator` checks the table, naming
+  the brick and field at fault. A published schema 1 snapshot keeps its bytes and still verifies. An app older than
+  this one refuses schema 2 documents as newer than it supports.
+- `createBrickId()`: new bricks, and a fork's copied bricks, get 12 random characters from `[0-9A-Za-z]` (71 bits;
+  about a one-in-a-billion chance of any collision in a two-million-brick document) instead of a 36-character UUID.
+- Hollow pyramid: 7.49 MB → 3.09 MB for an existing document (UUIDs kept), 1.79 MB built new (4.2× smaller); the solid
+  pyramid 290 MB → 70 MB. Serializing it takes 7 ms instead of about 85, stringifying 10 ms instead of 80.
+- Autosave and Save no longer parse the previous checkpoint to learn its revision: `LocalRecoveryStore` keeps a small
+  `recovery-info:{documentId}` record (`RecoveryStore#loadRevision()`), and falls back to the checkpoint for ones
+  written before it. Save no longer parses the checkpoint twice. An autosave of the hollow pyramid (median of repeated
+  runs, storage writing JSON text) takes 28 ms for a new build and 37 ms for one with UUIDs, instead of 119–135 ms.
+- Tests: `tests/CompactDocumentFormat.test.js` (codec, validation, short ids, canonical round trip, schema 0/1
+  migration with UUIDs and groups, old snapshots verifying, forks, sizes, revision reads); twelve tests that read
+  stored bricks directly now go through `tests/support/StoredDocumentBricks.js`, and the historical fixtures gain
+  `SCHEMA_1_DOCUMENT` next to a schema 2 `CURRENT_DOCUMENT`. In the browser, a schema 1 document written the old way
+  opens in the Editor and is saved back as schema 2.
+- Not done: autosave still writes the whole document. At hollow-pyramid scale that is now cheap; a change-only
+  checkpoint (a base plus a journal of brick changes, compacted from time to time) would matter only near the solid
+  pyramid's scale, where saving, loading and memory are all limits anyway.

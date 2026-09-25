@@ -1,3 +1,4 @@
+import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
 import { Brick } from '../core/Brick.js';
 import { Building } from '../core/Building.js';
 import { Document } from '../core/Document.js';
@@ -272,7 +273,7 @@ function buildStack(storage) {
     const serialized = stack.serializer.serialize(doc);
     const goodHash = computeContentHash(JSON.stringify(serialized));
     const corrupted = JSON.parse(JSON.stringify(serialized));
-    corrupted.world.buildings[0].bricks[0].position.x = 'NOT-A-NUMBER';
+    corruptFirstBrickPosition(corrupted);
     stack.recoveryStore.save(id, {
         documentId: id, revision: 5, savedAt: new Date().toISOString(),
         contentHash: goodHash, document: corrupted

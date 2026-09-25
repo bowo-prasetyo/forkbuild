@@ -36,7 +36,9 @@ export class Document {
     toJSON() {
         return {
             schemaVersion: DOCUMENT_SCHEMA_VERSION,
-            world: this._world.toJSON(),
+            // Schema 2 stores each building's bricks as a table
+            // (core/BrickTable.js).
+            world: this._world.toJSON({ compactBricks: true }),
             metadata: this._metadata.toJSON()
         };
     }

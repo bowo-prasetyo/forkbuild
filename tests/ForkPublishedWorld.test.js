@@ -1,3 +1,4 @@
+import { storedBricks, corruptFirstBrickPosition } from './support/StoredDocumentBricks.js';
 import { Brick } from '../core/Brick.js';
 import { Building } from '../core/Building.js';
 import { Document } from '../core/Document.js';
@@ -208,7 +209,7 @@ function createTestDocument(brickCount = 3, title = 'Alice Castle') {
     // Verify fork document was saved at its own key.
     const forkDocStored = storage.load(forked.world.id);
     assert(forkDocStored !== null, 'fork document saved at its own key');
-    assert(forkDocStored.world.buildings[0].bricks.length === 4, 'fork has 4 bricks');
+    assert(storedBricks(forkDocStored).length === 4, 'fork has 4 bricks');
 
     console.log('✓ Saving the fork does NOT modify the source document');
 }
@@ -505,8 +506,8 @@ function createTestDocument(brickCount = 3, title = 'Alice Castle') {
     assert(JSON.stringify(snap1) !== JSON.stringify(snap2), 'snapshots differ');
 
     // Verify P2 has more bricks than P1.
-    const p1Bricks = snap1.world.buildings[0].bricks.length;
-    const p2Bricks = snap2.world.buildings[0].bricks.length;
+    const p1Bricks = storedBricks(snap1).length;
+    const p2Bricks = storedBricks(snap2).length;
     assert(p2Bricks === p1Bricks + 1, 'P2 has one more brick than P1');
 
     console.log('✓ FLAGSHIP: full lifecycle (publish → place → inspect → fork → edit → verify → publish → coexist)');

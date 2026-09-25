@@ -56,7 +56,7 @@ The Publication's result appears in its own section:
 | **Repository** | An **Explore** button that jumps straight to this publication's page in World View — shown whenever the publication carries somewhere to explore, which in practice is always. |
 
 **Large builds.** Arweave storage takes a Snapshot of up to 256 KB, about
-two thousand bricks. For anything larger, choose IPFS storage (a local
+eight thousand bricks. For anything larger, choose IPFS storage (a local
 IPFS node or remote pinning), which has no size limit; if you choose
 Arweave anyway, the Snapshot section says how large the build is and asks
 you to pick IPFS, and nothing is uploaded. Peers you're connected to can
