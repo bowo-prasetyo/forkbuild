@@ -155,18 +155,28 @@ wraps every URL in `DEFAULT_RENDEZVOUS_URLS` with a
 `WebSocketRendezvousTransport` and a `RendezvousDiscoveryProvider`
 automatically (see that file's own comments).
 
-## Optional: restrict which sites may use it
+## Restrict which sites may use it
 
-By default, anyone who has this worker's URL can use it (the same
-default `peer/RendezvousConfig.js` itself uses one layer up — "empty
-means unrestricted"). To restrict it to your own ForkBuild
-deployment's origin, set an environment variable:
+The `ALLOWED_ORIGINS` variable lists the web origins (comma-separated) whose
+pages may open a rendezvous connection or ask for TURN credentials; a
+request from any other origin gets `403 Origin not allowed`. `/turn-stats`
+and the plain status page skip the check. When the variable is unset or
+empty, any origin may connect.
 
-- **Dashboard:** your worker → **Settings → Variables → Add variable**
-  → `ALLOWED_ORIGINS` = `https://your-forkbuild-site.example` (comma-
-  separate multiple origins).
-- **Wrangler:** uncomment and edit the `[vars]` block at the bottom of
-  `wrangler.toml`, then `wrangler deploy` again.
+The `wrangler.toml` in this folder sets it to the GitHub Pages site,
+`https://bowo-prasetyo.github.io`, so a deployment made with Wrangler
+refuses every other origin, including `http://localhost` during
+development. Before you deploy your own copy:
+
+- **Wrangler:** edit `ALLOWED_ORIGINS` under `[vars]` in `wrangler.toml` to
+  your own site's origin (add `http://localhost:8000` too if you test
+  locally), or delete the line to allow any origin, then `wrangler deploy`.
+- **Dashboard:** the dashboard does not read `wrangler.toml`, so nothing is
+  restricted until you add it: your worker → **Settings → Variables → Add
+  variable** → `ALLOWED_ORIGINS` = `https://your-forkbuild-site.example`.
+
+An origin is scheme, host and port, with no path or trailing slash
+(`https://bowo-prasetyo.github.io`, not `…github.io/forkbuild/`).
 
 ## Cost
 
@@ -184,9 +194,9 @@ Some networks block direct peer connections; a TURN relay carries the
 traffic instead. The app asks its rendezvous server for relay credentials
 (`GET /turn-credentials`) when a peer connection starts. The worker creates
 credentials that expire after an hour, answers each IP address at most 20
-times an hour, and hands out at most 10,000 a month (set
-`TURN_CREDENTIALS_PER_MONTH` to change that; past it, the app connects
-without a relay). The long-term key stays on the worker; browsers only see
+times an hour, and hands out at most `TURN_CREDENTIALS_PER_MONTH` a month
+(10,000 when unset; this folder's `wrangler.toml` sets 1,000). Past it, the
+app connects without a relay. The long-term key stays on the worker; browsers only see
 the short-lived credential. Without a provider the endpoint answers 404 and
 the app connects with STUN alone.
 
