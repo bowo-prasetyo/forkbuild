@@ -88,6 +88,16 @@ Press **Ctrl+S** (or click **Save** in the toolbar). The **● Unsaved changes**
 indicator turns into **Saved**.
 
 Your creation is stored in your browser, so it's still there when you come back.
+While you edit, ForkBuild also keeps a crash-recovery copy of unsaved changes,
+and offers to restore it if the page closes before you save.
+
+Browsers give each site only a few megabytes of storage. If ForkBuild's
+share fills up, saving and crash recovery stop with a message saying so;
+nothing you have open is lost. Use **Export** in the toolbar to keep a copy
+of the document as a file.
+
+You don't need to be logged in to build. Logging in matters once you
+publish or work with other people.
 
 ## What's next?
 

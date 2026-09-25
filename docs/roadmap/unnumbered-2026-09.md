@@ -501,3 +501,21 @@ not, contacted `forkbuild.metered.live`, and anyone could read the key and spend
 - Operator action: the old key was public in this repository's history, so it must be rotated in the Metered
   dashboard, and the worker redeployed with the new settings.
 
+**Editing while signed out, and a full browser storage.**
+
+- Every brick placed while signed out (or with a locked identity) threw an uncaught error: the Editor's and World
+  View's command propagation handlers (`DocumentCommandPropagationUseCase`, `WorldCommandPropagationUseCase`) tried
+  to broadcast each local edit and threw because no identity could sign it. With no identity there is also no
+  authenticated peer to send to, so the handlers now skip broadcasting and the edit stays local.
+  `tests/SignedOutEditingPropagation.test.js` covers both, signed out and locked.
+- Full storage: `LocalStorageProvider.save()` turns each engine's quota error into `StorageFullError`
+  (`storage/StorageFullError.js`), whose message is fit to show (World View already shows error messages). The Editor's
+  save failure says storage is full and points to Export instead of "Try again", which cannot help
+  (`ui/components/saveFailureMessages.js`). The autosave timer no longer throws: `AutosaveScheduler` takes an
+  `onError`, and the Editor reports a paused crash recovery once until a save succeeds. These messages stay up for 10
+  seconds. `tests/StorageFullHandling.test.js` covers them; in Chromium, with storage filled, placing a brick and
+  pressing Ctrl+S showed both messages and no uncaught error.
+- Getting Started now explains the crash-recovery copy, the storage limit, and that building needs no login.- `tests/AvatarCollision.test.js` failed about one run in seven: its wall was placed at a hash of a random
+  publication id, so it landed on different procedural terrain, water and trees each run. It is now placed at a
+  fixed spot (0 failures in 30 runs).
+

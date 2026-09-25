@@ -261,6 +261,12 @@ export class DocumentCommandPropagationUseCase {
             // "what this replica had already applied when it authored
             // this one." The very first command in a fresh history has
             // none: `[]`, a genesis operation.
+            // Editing while signed out (or locked) is allowed: with no
+            // identity to author the operation there is no authenticated
+            // peer to send it to either, so the edit stays local.
+            if (!resolveSigningIdentityId(this._identityProvider)) {
+                return;
+            }
             const executed = commandHistory.getExecutedCommands();
             const precedingCommand = executed.length >= 2 ? executed[executed.length - 2] : null;
             const causalPredecessors = precedingCommand ? [precedingCommand.id] : [];

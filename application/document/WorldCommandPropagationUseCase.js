@@ -339,6 +339,12 @@ export class WorldCommandPropagationUseCase {
             throw new Error('WorldCommandPropagationUseCase.attachCommandHistory(): a real CommandHistory is required');
         }
         const subscription = commandHistory.eventBus.subscribe(CommandHistoryEvent.COMMAND_EXECUTED, ({ command }) => {
+            // Editing while signed out (or locked) is allowed: with no
+            // identity to author the operation there is no authenticated
+            // peer to send it to either, so the edit stays local.
+            if (!resolveSigningIdentityId(this._identityProvider)) {
+                return;
+            }
             this.broadcastCommand({ worldDocumentId, command });
         });
         return () => subscription.unsubscribe();

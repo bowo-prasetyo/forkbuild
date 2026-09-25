@@ -18,8 +18,13 @@ export class AutosaveScheduler {
         const {
             delay = DEFAULT_AUTOSAVE_DELAY_MS,
             setTimeoutFn = null,
-            clearTimeoutFn = null
+            clearTimeoutFn = null,
+            // Called with the error when a timed checkpoint fails (a full
+            // browser storage, most likely). The timer runs outside any
+            // caller, so without this the error would go uncaught.
+            onError = null
         } = options;
+        this._onError = typeof onError === 'function' ? onError : null;
         this._autosaveDocumentUseCase = autosaveDocumentUseCase;
         this._documentManager = documentManager;
         this._delay = delay;
@@ -46,8 +51,17 @@ export class AutosaveScheduler {
         this.cancel();
         this._timer = this._setTimeout(() => {
             this._timer = null;
-            if (this._documentManager.state.dirty) {
+            if (!this._documentManager.state.dirty) {
+                return;
+            }
+            try {
                 this._autosaveDocumentUseCase.execute(this._documentManager);
+            } catch (error) {
+                if (this._onError) {
+                    this._onError(error);
+                } else {
+                    console.error('Autosave: could not write a recovery checkpoint', error);
+                }
             }
         }, this._delay);
     }
