@@ -3,7 +3,7 @@ import { PeerDiscoveryRecord } from './PeerDiscoveryRecord.js';
 import { PeerDiscoverySource } from './PeerDiscoverySource.js';
 import { PeerInvitation } from './PeerInvitation.js';
 import { RendezvousPublication } from './RendezvousPublication.js';
-import { signRendezvousPublication } from './RendezvousPublicationSigning.js';
+import { signRendezvousPublication, signRendezvousRemoval } from './RendezvousPublicationSigning.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 // 0.2.65 — Distributed Peer Rendezvous.
@@ -93,6 +93,7 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
         this._records = new Map(); // peerDiscoveryId -> PeerDiscoveryRecord, this device's own local cache
         this._discoveredListeners = new Set();
         this._ownPublicationId = null; // this node's own most recent PUBLISH, for a bare unpublish() call
+        this._ownIdentityHint = null; // ...and the identity it was published for, which signs its REMOVE
     }
 
     // Out-of-band import path — identical in every respect to peer/
@@ -140,6 +141,7 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
         publication = signRendezvousPublication(publication, this._identityProvider);
         const stored = await this._transport.publish(publication);
         this._ownPublicationId = publication.publicationId;
+        this._ownIdentityHint = publication.identityHint;
         return stored;
     }
 
@@ -148,16 +150,31 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
     // on its own — an active withdrawal and a natural lapse are two
     // different acts (see this file's own header). Defaults to this
     // node's own last publish() when called with no argument. Async — see
-    // this file's own header.
+    // this file's own header. The request carries the publishing identity's
+    // signature (see peer/RendezvousPublicationSigning.js#signRendezvousRemoval):
+    // a rendezvous server refuses an unsigned REMOVE.
     async unpublish(publicationId = this._ownPublicationId) {
         if (!publicationId) {
             return false;
         }
-        const removed = await this._transport.remove(publicationId);
+        const identityId = publicationId === this._ownPublicationId ? this._ownIdentityHint : this._signedInIdentityId();
+        const proof = identityId ? signRendezvousRemoval(publicationId, identityId, this._identityProvider) : null;
+        const removed = await this._transport.remove(publicationId, proof || undefined);
         if (publicationId === this._ownPublicationId) {
             this._ownPublicationId = null;
+            this._ownIdentityHint = null;
         }
         return removed;
+    }
+
+    _signedInIdentityId() {
+        try {
+            return this._identityProvider && typeof this._identityProvider.getSigningIdentity === 'function'
+                ? this._identityProvider.getSigningIdentity().id
+                : null;
+        } catch {
+            return null;
+        }
     }
 
     list() {

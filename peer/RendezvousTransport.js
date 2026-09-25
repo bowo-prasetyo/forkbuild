@@ -60,7 +60,10 @@ export class RendezvousTransport {
     // Withdraws one publication by its own publicationId. Resolves to true
     // if something was actually removed. Never implied by mere expiry —
     // see peer/RendezvousDiscoveryProvider.js#unpublish.
-    async remove(publicationId) {
+    // `proof` ({ identityId, signature }, see peer/
+    // RendezvousPublicationSigning.js#signRendezvousRemoval) is optional
+    // here; a networked server requires it.
+    async remove(publicationId, proof) {
         throw new Error('RendezvousTransport.remove() must be implemented by a subclass');
     }
 }

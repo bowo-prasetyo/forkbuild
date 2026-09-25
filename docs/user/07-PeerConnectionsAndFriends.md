@@ -35,7 +35,10 @@ information through some channel you already trust (chat, email, in person):
   attempt — republish to be found again. The button reads **Stop Being
   Discoverable** while your publication is still waiting for someone to
   answer it; it flips back to **Be Discoverable** on its own once someone
-  connects, or once the offer closes or its invitation expires. That state
+  connects, or once the offer closes or its invitation expires. Your
+  identity must be unlocked to publish: the rendezvous server only accepts
+  a publication signed by the identity it names, so nobody else can
+  publish or withdraw one for you. That state
   is kept app-wide, so leaving the Peers page and coming back doesn't
   reset it. Opening this panel also shows
   **Your Identity** — your full ID, with a **Copy** button — which is what

@@ -45,3 +45,16 @@ export function getRendezvousPublicationSigningDescriptor(publication) {
         }
     };
 }
+
+// The envelope a rendezvous REMOVE is signed over: identity `identityId`
+// withdraws its publication `publicationId`. Publication ids are fresh for
+// every PUBLISH, so a removal signature can only ever withdraw that one
+// publication.
+export function getRendezvousRemovalSigningDescriptor({ identityId, publicationId }) {
+    return {
+        type: SignatureType.RENDEZVOUS_REMOVAL,
+        id: identityId,
+        revision: publicationId,
+        payload: { publicationId, identityHint: identityId }
+    };
+}

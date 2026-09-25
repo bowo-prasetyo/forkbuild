@@ -458,3 +458,25 @@ it) could run code with access to every identity key the page unlocks.
   alive until the runner's timeout. The test now uses its fake WebSocket, and `tests/support/NodePreload.mjs`
   makes WebSocket and fetch to any host but this machine fail immediately in every Node test.
 
+**Rendezvous server: signed changes and limits.** The reference server in `server/rendezvous-worker/` authenticated
+no one: anyone could overwrite any identity's entry, withdraw it with a publication id anyone can look up, set an
+expiry decades away, and fill its storage.
+
+- PUBLISH now requires the publication to be signed by the identity it names. Identity ids are `did:key`s, so the
+  server verifies each signature against the id itself (WebCrypto Ed25519, over the same canonical envelope the app
+  signs) and needs no accounts. The app already signed publications whenever it could; a locked identity is now told
+  to unlock instead of publishing unsigned.
+- REMOVE carries the identity's signature over withdrawing that one publication: a new `rendezvous-removal` signature
+  type (`core/RendezvousPublicationEnvelope.js#getRendezvousRemovalSigningDescriptor`), produced by
+  `peer/RendezvousPublicationSigning.js#signRendezvousRemoval` and sent by `RendezvousDiscoveryProvider.unpublish()`.
+- The server refuses a publication older than the stored one (no rollback to an old endpoint) and keeps a withdrawn
+  entry as a tombstone until it expires (a withdrawn publication cannot be replayed).
+- Limits: 32 KB messages, publications lasting at most 15 minutes and dated at most 5 minutes ahead, 120-request
+  bursts then 2 per second per connection, 16 connections per IP address, and 100,000 stored identities
+  (`MAX_ENTRIES`). The entry count is kept in storage and recounted by the sweep alarm.
+- Tests: `server/rendezvous-worker/worker.test.js` now uses real Ed25519 identities and covers forgery, tampering,
+  replay, withdrawal, every limit and the connection cap; the new `tests/RendezvousWorkerInterop.test.js` runs the
+  app's own client classes against the worker through an in-memory WebSocket.
+- Not done here: the default server is still one personal `workers.dev` deployment. Running more than one server
+  (the app already publishes to and looks up on every configured URL) is an operations task for the release.
+
