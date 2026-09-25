@@ -15,6 +15,11 @@ There is no build step and no application server. The rendezvous server in
 - **A current browser** with import maps, ES modules and WebCrypto: recent
   Chrome, Edge, Firefox or Safari.
 
+**GitHub Pages:** the repository's empty `.nojekyll` file must be published
+with it. Without it, Pages runs Jekyll, which leaves out every file whose
+name starts with `_` (such as `vendor/noble-hashes/_md.js`), and the app
+shows a blank page.
+
 ## Everything is served from your own origin
 
 The page loads no scripts, styles or fonts from anywhere else. The
