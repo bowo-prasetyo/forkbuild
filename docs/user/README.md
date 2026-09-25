@@ -34,7 +34,7 @@ top-level [docs/](..) folder.
    friends-only messaging, offline delivery, read receipts, and voice
    calls.
 9. **[Publications & External Evidence](09-PublicationsAndEvidence.md)** —
-   the technical, optional layer: signed authorship and place-name
+   *experimental in 1.0*. The technical, optional layer: signed authorship and place-name
    claims, commentary, local snapshots, external evidence and the
    Bitcoin/Base anchor pipelines, snapshot placements, Network Settings,
    IPFS publishing, the observation archive, references, achievements,

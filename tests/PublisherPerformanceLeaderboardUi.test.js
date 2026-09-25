@@ -151,7 +151,7 @@ async function run() {
         leaderboardHubSource = await readSource('ui/views/LeaderboardHubView.js');
 
         assert(
-            /\{ path: '\/publisher-leaderboard', name: 'publisher-leaderboard', component: PublisherPerformanceLeaderboardView \}/.test(routerSource),
+            /\{ path: '\/publisher-leaderboard', name: 'publisher-leaderboard', component: PublisherPerformanceLeaderboardView(, meta: \{[^}]*\})? \}/.test(routerSource),
             n('A1. /publisher-leaderboard is a real, registered route, pointed at PublisherPerformanceLeaderboardView')
         );
         assert(
@@ -359,7 +359,7 @@ async function run() {
         // /reconciliation-leaderboard remains separately, independently
         // reachable — this milestone did not fold it away or replace it.
         assert(
-            /\{ path: '\/reconciliation-leaderboard', name: 'reconciliation-leaderboard', component: ReconciliationCandidateLeaderboardView \}/.test(routerSource),
+            /\{ path: '\/reconciliation-leaderboard', name: 'reconciliation-leaderboard', component: ReconciliationCandidateLeaderboardView(, meta: \{[^}]*\})? \}/.test(routerSource),
             n('H5. /reconciliation-leaderboard is still a real, independently registered route, unchanged by this milestone')
         );
         // AMENDED — Leaderboard Hub Consolidation. This link moved to the

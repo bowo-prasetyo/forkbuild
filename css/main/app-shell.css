@@ -106,3 +106,42 @@ html, body {
     border-radius: 4px;
     font-weight: 600;
 }
+
+/* Areas marked experimental for 1.0 (ui/components/ExperimentalBanner.js). */
+.experimental-badge {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    border: 1px solid #b08a2e;
+    color: #e0b85a;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    vertical-align: middle;
+}
+
+.experimental-banner {
+    flex: none;
+    margin: 0;
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid #b08a2e;
+    background: #2a2415;
+    color: #e8dcc0;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.app-nav {
+    flex-wrap: wrap;
+}
+
+.app-nav-link {
+    white-space: nowrap;
+}
+
+.experimental-badge--nav {
+    margin-left: 0.3rem;
+    padding: 0 0.3rem;
+    font-size: 0.62rem;
+}

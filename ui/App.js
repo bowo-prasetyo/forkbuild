@@ -1,10 +1,11 @@
 import { provide } from 'vue';
 import UserWidget from './components/UserWidget.js';
+import ExperimentalBanner from './components/ExperimentalBanner.js';
 import { CreatePreviewUseCase } from '../application/editor/CreatePreviewUseCase.js';
 
 export default {
     name: 'App',
-    components: { UserWidget },
+    components: { UserWidget, ExperimentalBanner },
     // 0.2.32: one app-wide PreviewService, provided here (same
     // provide/inject convention LoginModal's identityUseCase already
     // uses) so its cache and generation queue survive navigating
@@ -28,7 +29,7 @@ export default {
 	                    <router-link to="/identity" class="app-nav-link">My Identities</router-link>
 	                    <router-link to="/peers" class="app-nav-link">Peers</router-link>
 	                    <router-link to="/conversations" class="app-nav-link">Conversations</router-link>
-	                    <router-link to="/publications" class="app-nav-link">Publications</router-link>
+	                    <router-link to="/publications" class="app-nav-link">Publications<span class="experimental-badge experimental-badge--nav" title="Experimental: may change or be removed in a later version">Exp.</span></router-link>
 	                    <router-link to="/settings" class="app-nav-link">Network Settings</router-link>
 	                    <router-link to="/about" class="app-nav-link">About</router-link>
 	                </nav>
@@ -36,6 +37,7 @@ export default {
                 </div>
             </header>
 
+            <ExperimentalBanner v-if="$route.meta.experimental" />
             <main class="app-content">
                 <router-view />
             </main>

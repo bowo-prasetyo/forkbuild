@@ -1,5 +1,14 @@
 # 09 — Publications & External Evidence
 
+> **Experimental in ForkBuild 1.0.** Everything on this page (the
+> Publications page, external evidence and anchoring, the Bitcoin and
+> Base pipelines, the observation archive, achievements and the
+> Leaderboard pages) works, but may change or be removed in a later
+> version, and what it produces may not carry over. The app marks these
+> screens with an **Experimental** banner. Building, saving, publishing
+> to the Repository, forking, identities and peers are the stable core
+> and don't depend on anything here.
+
 This guide covers the **Publications** page — a different, more technical
 layer than the Repository you already know from
 [Publishing & Forking](04-PublishingAndForking.md). Where the Repository is

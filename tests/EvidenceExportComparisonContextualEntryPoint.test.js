@@ -61,11 +61,11 @@ async function run() {
     {
         routerSource = await readSource('ui/router/index.js');
         assert(
-            /\{ path: '\/reconciliation-leaderboard', name: 'reconciliation-leaderboard', component: ReconciliationCandidateLeaderboardView \}/.test(routerSource),
+            /\{ path: '\/reconciliation-leaderboard', name: 'reconciliation-leaderboard', component: ReconciliationCandidateLeaderboardView(, meta: \{[^}]*\})? \}/.test(routerSource),
             n('A1. /reconciliation-leaderboard is still registered as a real route, wired to its real component')
         );
         assert(
-            /\{ path: '\/evidence-export-comparison', name: 'evidence-export-comparison', component: ReconciliationCandidateLeaderboardEvidenceExportComparisonView \}/.test(routerSource),
+            /\{ path: '\/evidence-export-comparison', name: 'evidence-export-comparison', component: ReconciliationCandidateLeaderboardEvidenceExportComparisonView(, meta: \{[^}]*\})? \}/.test(routerSource),
             n('A2. /evidence-export-comparison is still registered as a real route, wired to its real component')
         );
 
@@ -142,7 +142,7 @@ async function run() {
             n('C1. the entry point\'s own `to` attribute is the exact literal string "/evidence-export-comparison" — not a computed path, not a similarly named route, not a typo')
         );
         assert(
-            /\{ path: '\/evidence-export-comparison', name: 'evidence-export-comparison', component: ReconciliationCandidateLeaderboardEvidenceExportComparisonView \}/.test(routerSource),
+            /\{ path: '\/evidence-export-comparison', name: 'evidence-export-comparison', component: ReconciliationCandidateLeaderboardEvidenceExportComparisonView(, meta: \{[^}]*\})? \}/.test(routerSource),
             n('C2. that exact literal path is registered in the router as a real route resolving to the real Evidence Export Comparison component — the link does not merely look right, it resolves')
         );
         assert(

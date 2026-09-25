@@ -519,3 +519,17 @@ not, contacted `forkbuild.metered.live`, and anyone could read the key and spend
   publication id, so it landed on different procedural terrain, water and trees each run. It is now placed at a
   fixed spot (0 failures in 30 runs).
 
+**Release preparation for 1.0.**
+
+- The advanced areas are marked **Experimental**: routes carry `meta: { experimental: true }`
+  (`/publications`, the leaderboard, reconciliation and publisher snapshot claim pages, and the anchoring and
+  Bitcoin settings), and `ui/components/ExperimentalBanner.js` is shown above each of them. The Publications link
+  and the two settings rows carry an Experimental badge. Nothing was removed.
+- New documents: `SECURITY.md` (private reporting through GitHub, scope), `CONTRIBUTING.md`, `docs/Privacy.md`
+  (what is stored, and every server the app can contact and when) and `docs/ReleaseNotes-1.0.md` (a draft: the app
+  still reports 0.9.703 until the release is tagged).
+- Getting Started no longer says to open `index.html` from disk, and marks Publications experimental; the README
+  lists the experimental areas and no longer says there is no central server, since the default setup uses a
+  rendezvous server.
+- The top navigation's links no longer break across lines, and wrap as whole links on narrow windows.
+
