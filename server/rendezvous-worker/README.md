@@ -204,8 +204,19 @@ the app connects with STUN alone.
    `iceServers` and an `expiresAt` an hour away.
 
 Cloudflare currently includes 1,000 GB of relay traffic a month, then
-charges per GB; check its current pricing, and set a billing notification
-in the dashboard.
+charges per GB; check its current pricing, and set a budget alert
+(**Manage Account → Alerts**).
+
+**Watching the allowance.** Open `https://<your-worker>/turn-stats` in a
+browser to see this month's count, e.g.
+`{"month":"2026-09","issued":37,"limit":1000,"provider":"cloudflare"}`
+(counts only, so it is open to anyone). The worker logs a warning when 80%
+of `TURN_CREDENTIALS_PER_MONTH` is used and on every request refused past
+it; `wrangler.toml` turns on log retention, so they can be searched under
+**Workers & Pages → forkbuild-rendezvous → Logs**. If the count is heading
+past the allowance and the relay traffic (GB) under **Realtime → TURN
+Server** is well within the free allowance, raise
+`TURN_CREDENTIALS_PER_MONTH` and run `wrangler deploy`.
 
 **Metered.** Creating credentials through Metered's API needs a paid or
 trial plan. Set `METERED_DOMAIN = "yourapp.metered.live"` under `[vars]` in

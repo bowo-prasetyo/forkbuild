@@ -49,3 +49,9 @@ ALLOWED_ORIGINS = "https://bowo-prasetyo.github.io"
 # A cautious starting allowance for TURN relay credentials; raise it as
 # usage shows what is needed.
 TURN_CREDENTIALS_PER_MONTH = "1000"
+
+# Keeps the worker's logs, including the relay allowance warnings (80% used,
+# and each refusal past it), searchable under Workers & Pages →
+# forkbuild-rendezvous → Logs in the Cloudflare dashboard.
+[observability]
+enabled = true

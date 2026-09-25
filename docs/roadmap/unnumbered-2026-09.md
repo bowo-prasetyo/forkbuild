@@ -545,3 +545,8 @@ new credential is used with Metered's standard relay addresses. `wrangler.toml` 
 **1.0.0 (2026-09-25).** The version moves from 0.9.703 to 1.0.0 (`core/version.js`, shown on the About page, and
 `package.json`), and `docs/ReleaseNotes-1.0.md` is no longer a draft. The release is tagged `v1.0.0`.
 
+**Watching the relay allowance.** The rendezvous worker gains `GET /turn-stats` (this month's credential count, the
+allowance and the provider; counts only, so it skips the origin check and opens in a browser), logs a warning at 80%
+of `TURN_CREDENTIALS_PER_MONTH` and on every request refused past it, and `wrangler.toml` enables `[observability]`
+so those logs are kept and searchable in the Cloudflare dashboard.
+

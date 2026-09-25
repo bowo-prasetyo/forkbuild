@@ -1,4 +1,4 @@
-import { RendezvousNode, LIMITS } from './worker.js';
+import worker, { RendezvousNode, LIMITS } from './worker.js';
 
 // Runs RendezvousNode against small fakes of the two Cloudflare surfaces it
 // uses: Durable Object storage and hibernatable WebSockets. Identities and
@@ -413,6 +413,43 @@ const MINUTE = 60 * 1000;
     const failure = await (await rejecting.fetch(request('192.0.2.5'))).json();
     assert(/Cloudflare answered 401/.test(failure.detail) && !failure.detail.includes('api-token-value'), 'a rejected token is reported without echoing it');
     console.log('✓ Cloudflare TURN credentials, port 53 filtering and the monthly allowance');
+}
+
+// GET /turn-stats shows the month's count; warnings are logged at 80% of the
+// allowance and on each refusal past it.
+{
+    const env = { CLOUDFLARE_TURN_KEY_ID: 'key-id', CLOUDFLARE_TURN_API_TOKEN: 'api-token-value', TURN_CREDENTIALS_PER_MONTH: '5', ALLOWED_ORIGINS: 'https://app.test' };
+    const node = new RendezvousNode(fakeDurableObjectState(), env);
+    node.fetchImpl = async () => Response.json({ iceServers: [{ urls: ['turn:turn.cloudflare.com:3478'], username: 'u', credential: 'c' }] });
+    const stats = async () => (await node.fetch(new Request('https://rendezvous.test/turn-stats'))).json();
+
+    const before = await stats();
+    assert(before.issued === 0 && before.limit === 5 && before.provider === 'cloudflare' && /^\d{4}-\d{2}$/.test(before.month),
+        'the stats page reports this month, the count, the allowance and the provider');
+    assert(!JSON.stringify(before).includes('api-token-value'), '...and nothing secret');
+
+    const warnings = [];
+    const originalWarn = console.warn;
+    console.warn = (message) => warnings.push(message);
+    try {
+        for (let i = 1; i <= 6; i++) {
+            await node.fetch(new Request('https://rendezvous.test/turn-credentials', { headers: { 'CF-Connecting-IP': `198.51.100.${i}` } }));
+        }
+    } finally {
+        console.warn = originalWarn;
+    }
+    assert((await stats()).issued === 5, 'the count follows every credential handed out');
+    assert(warnings.length === 2 && /80% of the monthly allowance used \(4\/5/.test(warnings[0]), `a warning is logged when 80% is reached (got ${JSON.stringify(warnings)})`);
+    assert(/refused, the monthly allowance is used up \(5\/5/.test(warnings[1]) && /TURN_CREDENTIALS_PER_MONTH/.test(warnings[1]), '...and one for each refusal past the allowance, naming the setting to raise');
+
+    // The Worker entry point serves the stats page without the origin check,
+    // so it opens in a browser's address bar; other requests still need it.
+    const workerEnv = { ...env, RENDEZVOUS_NODE: { idFromName: () => 'global', get: () => node } };
+    const direct = await worker.fetch(new Request('https://rendezvous.test/turn-stats'), workerEnv);
+    assert(direct.status === 200 && (await direct.json()).issued === 5, 'the stats page opens without an Origin header');
+    const credentials = await worker.fetch(new Request('https://rendezvous.test/turn-credentials'), workerEnv);
+    assert(credentials.status === 403, 'relay credentials still require an allowed origin');
+    console.log('✓ /turn-stats reports the monthly count, and the allowance logs warnings');
 }
 
 console.log('✅ All ForkBuild Rendezvous Worker tests passed.');
