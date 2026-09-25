@@ -729,3 +729,22 @@ announcements a durable, ordered and timestamped place at no per-post fee.
 - "Discovery thread", not "anchor", because PublicationAnchor already means anchoring evidence.
 - `docs/Publishing.md` points to the proposal.
 - Not done: no code yet. The `@forkbuild` account exists; its threads have not been created.
+
+## Steem discovery thread page (unnumbered, 2026-09-25)
+
+**An operator page that creates the monthly Steem discovery threads.** The threads must exist before anyone can
+announce, at least twelve months ahead. Posting 52 of them by hand, five minutes apart, each with votes off in the
+same transaction, is error-prone, and steemit.com's editor cannot turn votes off at all.
+
+- `core/SteemDiscoveryThread.js`: families, `YYYY-MM` periods, permlinks, the thread post and its `comment` +
+  `comment_options` operations, and `checkSteemDiscoveryThreadContent()` for what `get_content` returns (author,
+  root post, category, declined payout, votes and curation off, replies on, metadata). The app will reuse it when
+  announcing and reading are built.
+- `steem/SteemRpcClient.js` (condenser_api calls with API node failover; a chain error is never retried on another
+  node) and `steem/SteemKeychainBroadcaster.js` (Keychain holds the key; ForkBuild never sees it).
+- `scripts/steem-threads/`: check, preview the operations, and create the missing threads. It waits for the chain's
+  root-post interval from the account's `last_root_post` and from its own last post, re-checks each thread just
+  before posting, confirms each on the chain, and stops at the first refusal, unconfirmed post or wrong thread.
+- Tests: `tests/SteemDiscoveryThread.test.js`, `tests/SteemRpcClient.test.js`, `tests/SteemKeychainBroadcaster.test.js`
+  and `tests/SteemThreadCreation.test.js` (a fake chain and clock: pacing, skipping, stopping). The page was also
+  driven in Chromium against a mocked API node and a fake Keychain.

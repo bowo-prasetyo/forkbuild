@@ -76,8 +76,9 @@ local stores), serializer/, publisher/, discovery/, identity/, peer/,
 presence/, collaboration/, replication/, placement/, spatial/,
 world-layout/, content/ (content stores), anchoring/ (Bitcoin, Arweave
 and Base anchoring), base/ (Base/EVM transactions), nostr/ and arweave/
-(injected-wallet signers and the relay client), and server/ (the
-reference rendezvous worker).
+(injected-wallet signers and the relay client), steem/ (the Steem API
+client and Keychain broadcaster), and server/ (the reference rendezvous
+worker).
 
 ## Dependency direction
 
@@ -1044,5 +1045,7 @@ the policy and the headers a host should add.
 | `base/` | Base (EVM) wallet connection, transaction planning, signing, broadcast and inclusion observation | `docs/Roadmap.md`, the Base milestones from "0.8.90 — Explicit Base Network & Account Observation" through 0.8.101 |
 | `content/` | `ContentStore` implementations: local, Arweave, IPFS (Kubo, gateway, remote pinning) and the gateway-failover wrappers | `docs/Roadmap.md` 0.7.0 onward; "Distribution" and "Network endpoint configuration" above |
 | `nostr/`, `arweave/` | Injected-wallet signers (NIP-07, Arweave) and the Nostr relay query client | "Distribution: independent choices, one dialog" above |
+| `steem/` | The Steem JSON-RPC client (API node failover) and the Steem Keychain broadcaster, used so far only by `scripts/steem-threads/` | `docs/Protocol.md`, "Proposed: Steem Announcement Substrate" |
+| `scripts/steem-threads/` | An operator page that creates the monthly Steem discovery threads; not part of the app | `docs/Protocol.md`, "Proposed: Steem Announcement Substrate" |
 | `server/rendezvous-worker/` | Reference rendezvous server (Cloudflare Worker) for `peer/WebSocketRendezvousTransport.js` | `server/rendezvous-worker/README.md` |
 | `utils/` | Small shared helpers (e.g. `sortOptionsByLabel.js`) | `docs/CodingConventions.md` |

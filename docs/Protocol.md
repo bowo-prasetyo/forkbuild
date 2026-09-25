@@ -449,7 +449,8 @@ unreachable" all surface as `ContentUnavailableError`, and are never reported as
 
 ## Proposed: Steem Announcement Substrate
 
-**Status: proposed, not implemented.** Nothing below exists in code yet. When built, it ships as Experimental
+**Status: proposed, not implemented.** Only the discovery threads exist in code so far (see below); announcing
+and reading are not built yet. When built, it ships as Experimental
 alongside the other decentralized publication tooling, and this section is edited to describe what was built.
 
 Steem would be a third Announcement/Discovery substrate next to Nostr and Arweave. It carries the same envelopes as
@@ -504,6 +505,12 @@ A discovery thread post is broadcast by the thread account as one transaction:
 turns replies off on a current or future thread. Turning them off is the operator's one lever: it stops new
 announcements on that thread, but cannot remove existing ones, since the chain refuses to delete a post that has
 replies.
+
+`core/SteemDiscoveryThread.js` names and describes threads (permlinks, periods, the post and its operations, and the
+checks a thread must pass). `scripts/steem-threads/index.html` is the operator page that creates them: served with
+the app (`python3 -m http.server`) and opened in a browser with Steem Keychain, it checks which threads exist, shows
+the operations, and creates the missing ones five minutes apart, confirming each on the chain. It stops at the first
+refusal, a thread that does not appear, or a thread that comes out wrong, and never edits an existing thread.
 
 ### Announcing
 
