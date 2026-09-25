@@ -144,7 +144,7 @@ The three identity layers hold exactly as designed: document identity
 stable per creation, publication identity fresh per publish, blockchain
 identity (future) a third layer again.
 
-## Current State: Publishing vs. Distribution (as of 2026-09-23)
+## Current State: Publishing vs. Distribution (as of 2026-09-25)
 
 The sections above describe the local publishing core, which is still how
 every Publication starts: `PublishDocumentUseCase` → `LocalPublisherProvider`,
@@ -167,7 +167,11 @@ choices, one dialog"):
 
 - **Storage** for the bytes: Arweave, IPFS (Local Kubo, at the configured IPFS
   Node URL), or IPFS (Remote Pinning, any Pinata-compatible service; the
-  credential is kept in tab memory only).
+  credential is kept in tab memory only). Arweave takes at most 256 KB per
+  item (one single-chunk transaction), so a larger build is refused before
+  anything is signed, with a message pointing to IPFS; IPFS has no limit.
+  Connected peers exchange content of any size (up to 64 MiB), in parts
+  when it does not fit one message.
 - **Announcement/Discovery** substrate: Nostr (every configured relay) or
   Arweave (a tagged transaction). Each action uses one of them, never both.
 - **Proof/Anchoring**, optional and separate: Bitcoin, Arweave, or Base (Base

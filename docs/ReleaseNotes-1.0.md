@@ -86,11 +86,30 @@ over)
   README). If you used the Metered credential or API key that earlier
   versions of the app contained, delete it in Metered: it was public.
 
+## Since 1.0.0 (not yet released)
+
+- **Storage:** data is kept in an IndexedDB database instead of
+  `localStorage`, so it is no longer limited to a few megabytes; existing
+  data moves over on first start. Published content and snapshots stay on
+  disk until they are needed instead of being held in memory.
+- **Large builds:** bricks are drawn as instanced meshes, a few hundred draw
+  calls for tens of thousands of bricks instead of one each.
+- **Document schema 2:** stored and published documents keep bricks as a
+  compact table, and new bricks get 12-character ids, making a large build
+  about a fifth of its former size. Schema 1 documents are upgraded when
+  opened, and published schema 1 snapshots still verify; version 1.0.0
+  cannot open schema 2 documents.
+- **Sharing large builds:** peers send content too large for one message in
+  parts. Arweave takes at most 256 KB per build, and a larger one is refused
+  before anything is signed, pointing to IPFS.
+- **Rendezvous server:** the default server accepts only the GitHub Pages
+  site, and reports its relay credential allowance at `/turn-stats`.
+
 ## Known limitations
 
-- **Storage:** everything is kept in the browser's own storage, a few
-  megabytes per site. Export documents and identities you want to keep;
-  clearing the site's data deletes them.
+- **Storage:** everything is kept in the browser's own storage (in 1.0.0,
+  `localStorage`, a few megabytes per site; see above). Export documents and
+  identities you want to keep; clearing the site's data deletes them.
 - **`'unsafe-eval'`:** the security policy still allows it, because Vue
   compiles the app's templates in the browser. Removing it needs a build step.
 - **One rendezvous server** runs by default. If it is down, use invitations

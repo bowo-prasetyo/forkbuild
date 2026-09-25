@@ -62,5 +62,7 @@ documents to any of these servers.
 A deployment decides the defaults above: its rendezvous server
 (`peer/RendezvousConfig.js`), whether that server offers a TURN relay
 (`server/rendezvous-worker/README.md`), and the other defaults under
-**Network Settings**. If you host ForkBuild for others, update this page to
-name your servers.
+**Network Settings**. The default rendezvous server accepts only the
+official site's origin, so a copy hosted elsewhere needs its own (see
+[docs/Deployment.md](Deployment.md)). If you host ForkBuild for others,
+update this page to name your servers.

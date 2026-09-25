@@ -30,11 +30,10 @@ class_name = "RendezvousNode"
 tag = "v1"
 new_sqlite_classes = ["RendezvousNode"]
 
-# Optional — see worker.js's own parseAllowedOrigins() and this
-# folder's README.md. Uncomment and edit to restrict which web origins
-# may open a rendezvous connection at all. Leave commented out (the
-# default) to allow any origin, matching peer/RendezvousConfig.js's own
-# "empty means unrestricted" default posture one layer up.
+# ALLOWED_ORIGINS below restricts which web origins may open a rendezvous
+# connection or ask for TURN credentials (see README.md, "Restrict which
+# sites may use it"). Change it to your own site before deploying a copy,
+# or delete it to allow any origin.
 #
 # TURN relay credentials (see README.md) come from Cloudflare Realtime TURN,
 # whose key is stored as secrets, never in this file:

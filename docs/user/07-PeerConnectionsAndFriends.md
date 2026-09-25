@@ -38,7 +38,10 @@ information through some channel you already trust (chat, email, in person):
   connects, or once the offer closes or its invitation expires. Your
   identity must be unlocked to publish: the rendezvous server only accepts
   a publication signed by the identity it names, so nobody else can
-  publish or withdraw one for you. That state
+  publish or withdraw one for you. The default rendezvous server only
+  answers the hosted ForkBuild site; if you run ForkBuild from your own
+  address (including `localhost`), use invitations or add your own server
+  under **Rendezvous Servers** in **Network Settings**. That state
   is kept app-wide, so leaving the Peers page and coming back doesn't
   reset it. Opening this panel also shows
   **Your Identity** — your full ID, with a **Copy** button — which is what
@@ -82,7 +85,9 @@ connections — but some networks (a symmetric NAT, a restrictive corporate
 firewall) never expose a path STUN alone can find. If your rendezvous
 server offers a TURN relay, ForkBuild asks it for short-lived relay
 credentials when you start a connection (never just for opening the app)
-and uses them automatically. To use a relay of your own, open **TURN
+and uses them automatically. The server hands out a limited number of
+relay credentials each month; once they run out, connections are still
+tried, just without a relay, until the next month. To use a relay of your own, open **TURN
 Server** from **Network Settings** in the top bar
 (`/settings/turn-server`) and configure your own TURN relay: a server
 that actually forwards the connection's data when a direct path can't be
