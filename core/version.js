@@ -6,7 +6,7 @@
 // tracks milestone progress and does not imply a protocol change, and
 // vice versa.
 export const VERSION = {
-    major: 0,
-    minor: 9,
-    patch: 703
+    major: 1,
+    minor: 0,
+    patch: 0
 };

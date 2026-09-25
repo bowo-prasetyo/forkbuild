@@ -542,3 +542,6 @@ block. Cloudflare is used when both providers are configured. Every provider now
 A failing provider's 502 names the step and status, with the key blanked; if Metered's credential listing fails, the
 new credential is used with Metered's standard relay addresses. `wrangler.toml` no longer sets `METERED_DOMAIN`.
 
+**1.0.0 (2026-09-25).** The version moves from 0.9.703 to 1.0.0 (`core/version.js`, shown on the About page, and
+`package.json`), and `docs/ReleaseNotes-1.0.md` is no longer a draft. The release is tagged `v1.0.0`.
+
