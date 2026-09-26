@@ -836,3 +836,23 @@ account. The same run showed Steem Keychain works inside the app despite its con
 - Tests: `tests/SteemAnnouncer.test.js` runs on a fake clock and checks the queue order and gap, waiting out a recent
   post from another device, not waiting for a quiet account, one retry after a refusal and no second, and a failed
   announcement not blocking the queue.
+
+## Steem content storage proposed (unnumbered, 2026-09-26)
+
+**A written proposal for Steem as a third Content substrate, before any code.** IPFS content stays available only
+while someone pins it, and Arweave charges per upload. Every Steem full node keeps the whole block log, and uploading
+costs only Resource Credits, which regenerate. The 64 KiB transaction limit, one Keychain approval per transaction and
+the 3-second reply interval make it suitable for small builds only.
+
+- `docs/Protocol.md`, "Proposed: Steem Content Storage": a `'steem'` ContentStore stores content as a manifest (a
+  direct reply to a new monthly content thread, `@forkbuild/forkbuild-content-<YYYY-MM>`) and, when it doesn't fit
+  inline, parts of at most 48 KiB replying to the manifest. Content is encoded as `utf8` or `gzip-base64`, whichever
+  is shorter. The locator is `steem://<uploader>/<manifest permlink>`.
+- Content threads keep large bodies out of Steem feeds and away from the discovery threads, whose readers fetch every
+  direct reply's body.
+- Part SHA-256 hashes only catch wrong or edited parts early. Trust still comes from `contentHash` and the signed
+  Publication, as for every other store.
+- An upload is at most 20 parts; larger builds get `ContentTooLargeError` pointing to IPFS or Arweave. Decompression
+  stops at the manifest's `size`, so a small upload can't expand without bound.
+- Suggested order: the inline case first (one approval), then parts with progress and resuming, then an RC estimate
+  and measured compression ratios.

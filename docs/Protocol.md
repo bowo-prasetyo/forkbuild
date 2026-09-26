@@ -617,6 +617,167 @@ declined signature are each refused with their own message, never reported as pu
 The same format works on Hive by pointing at Hive API nodes and a Hive thread account. If Hive is added, it is a
 separate substrate choice, never merged with Steem results.
 
+## Proposed: Steem Content Storage
+
+**Status: proposed, not built.**
+
+Steem would be a third Content substrate next to IPFS and Arweave: a `ContentStore` whose `storage` is `'steem'`,
+holding a Snapshot's bytes in Steem comments. Storing content is a separate role from announcing it. A Snapshot
+stored on Steem can be announced on Nostr, Arweave or Steem, and one stored on IPFS can be announced on Steem, as
+today. The chain is only a carrier: a reader loads the bytes only after they match `contentHash`, exactly as it does
+for bytes from any other store, so Steem never has to be trusted.
+
+Why Steem: every full node keeps the whole block log, so content stays available without anyone pinning it, as IPFS
+needs, and without a per-upload fee, as Arweave charges. Uploading costs Resource Credits (RC), which regenerate.
+
+Why only small builds: a transaction is at most 64 KiB, a comment body is text, and every transaction needs its own
+Keychain approval and must wait out the 3-second reply interval. A build that needs many transactions is slow and
+tedious to upload, and uses a lot of RC. The store therefore sets a size limit, and larger builds go to IPFS or
+Arweave (see "Limits" below).
+
+### Content threads
+
+Content is kept out of Steem feeds and away from the discovery threads by a fifth thread family, created by the
+thread account with the same operator page, post shape and rules as the other four:
+
+    permlink:  forkbuild-content-<YYYY-MM>          (UTC month)
+
+| Family | Content thread (September 2026) | Carries |
+|--------|---------------------------------|---------|
+| Content | `@forkbuild/forkbuild-content-2026-09` | content manifests (direct replies) and their parts (replies to a manifest) |
+
+No reader lists a content thread; a locator names a manifest directly. The thread exists so that content has a
+parent that is not a feed and not a discovery thread. Discovery thread readers fetch every direct reply with its
+body, so large content there would slow down every reader. As with the other families, the uploader checks the
+current month's content thread with `get_content` first, and refuses if it is missing, closed or can't be checked.
+
+### Format
+
+Content is stored as one **manifest**, a direct reply to the current month's content thread, and, when the encoded
+content does not fit in the manifest, one or more **parts**, each a direct reply to the manifest. Every transaction
+is a `comment` and a `comment_options` that declines payout, exactly as for announcements (see "Announcing" above).
+
+Encoding. The uploader encodes the content in one of two ways and uses whichever is shorter:
+
+- `utf8`: the content text as it is (canonical JSON for a Snapshot);
+- `gzip-base64`: the content's UTF-8 bytes compressed with gzip (the browser's `CompressionStream`), then base64.
+
+Neither encoding can start with `@@ `, which API nodes read as an edit patch rather than a body. The encoded text is
+split into parts of at most 48 KiB each, leaving room within the 64 KiB transaction limit for the rest of the
+operations. When the whole encoded text fits in one part, it goes into the manifest's own body and there are no
+parts (the "inline" case: one transaction, one approval).
+
+A manifest:
+
+    ['comment', {
+      parent_author: 'forkbuild', parent_permlink: 'forkbuild-content-2026-09',
+      author: <uploader's Steem account>,
+      permlink: 'forkbuild-c-<base36 ms timestamp>-<8 random [a-z0-9]>',
+      title: '',
+      body: <inline: the encoded content; with parts: one human-readable line>,
+      json_metadata: JSON.stringify({ app: 'forkbuild/<app version>',
+        forkbuild: { version: 1, content: {
+          contentHash, algorithm,              // as in the ContentReference (algorithm 'fnv1a-32' today)
+          mediaType, size,                     // size: the content's length in UTF-8 bytes
+          encoding,                            // 'utf8' or 'gzip-base64'
+          encodedLength,                       // characters of encoded text, across all parts
+          parts: [ { permlink, length, sha256 } ]   // in order; [] when inline
+        } } })
+    }]
+    ['comment_options', { author, permlink, max_accepted_payout: '0.000 SBD', ... }]
+
+A part:
+
+    ['comment', {
+      parent_author: <uploader>, parent_permlink: <manifest permlink>,
+      author: <uploader>,
+      permlink: '<manifest permlink>-p<index>',          // index from 0
+      title: '',
+      body: <this part's slice of the encoded text>,
+      json_metadata: JSON.stringify({ app: 'forkbuild/<app version>',
+        forkbuild: { version: 1, part: { index, count } } })
+    }]
+    ['comment_options', { ... payout declined ... }]
+
+`sha256` is the SHA-256 (WebCrypto) of the part's body as hex, and `length` is its length in characters. Part
+permlinks and hashes are known before anything is posted, so the manifest is posted first and lists every part.
+
+The part hashes only let a reader find a wrong or edited part quickly. They are not a security boundary: anyone can
+write a manifest, so what makes content trustworthy is the same as for every other store, `contentHash` and the
+signed Publication that names it. The final check is as strong as `contentHash`'s algorithm (`fnv1a-32` today).
+
+The locator, used as the `ContentReference`'s `uri` and the Snapshot envelope's `locator`:
+
+    steem://<uploader>/<manifest permlink>
+
+### Uploading
+
+`put(bytes)` on the Steem store:
+
+1. Encodes the content, plans the parts and checks the limits below, before any network call.
+2. Checks the current month's content thread.
+3. Posts the manifest, then each part in order, through the same queue as `application/steem/SteemAnnouncer.js`, so
+   posts from one account are at least 4.5 seconds apart and content and announcements never collide. Each
+   transaction is signed through Steem Keychain with the posting key; ForkBuild never holds a Steem key. Several
+   parts can't share a transaction, since the limit is per transaction.
+4. Returns `ContentReference{ hash, algorithm, mediaType, size, uri: steem://…, storage: 'steem' }` only after the
+   node has accepted every part.
+
+The UI shows progress ("part 3 of 8") because each part needs its own approval. If a part fails (declined, out of
+RC, node unreachable), `put()` fails with an error that names the manifest, and nothing is announced. Retrying the
+same content with the same account resumes it: the store reads the manifest and its replies, and posts only the
+parts that are missing or wrong. A manifest whose parts never all arrive stays on the chain as an incomplete upload;
+readers report it as unavailable.
+
+Before posting, the store estimates the RC the upload needs and warns when the account appears to have too little,
+if the API node answers `rc_api.find_rc_accounts`. Otherwise, a refusal for lack of RC is reported as its own error.
+
+### Reading
+
+The Steem store's `get(reference)` for a `steem://` locator:
+
+1. `condenser_api.get_content(uploader, permlink)`. A manifest that doesn't exist, isn't a direct reply to a
+   `forkbuild-content-<YYYY-MM>` thread of a configured thread account, or whose `json_metadata` lacks
+   `forkbuild.version === 1` or a well-formed `content`, is unavailable.
+2. The manifest's `contentHash` must equal the requested one; otherwise the locator is for different content.
+3. Parts are fetched with one `get_content_replies(uploader, permlink)`, falling back to `get_content` for any part
+   it didn't return. A part is accepted only when its author is the manifest's author, its permlink is the one the
+   manifest lists, and its parent is the manifest. Anyone can reply to a manifest; other replies are ignored.
+4. Each part's `length` and `sha256` must match. The parts are joined in order, and the result must be
+   `encodedLength` characters long.
+5. `gzip-base64` is decoded and decompressed with the browser's `DecompressionStream`, stopping as soon as the output
+   exceeds `size` or the store's decoded limit, so a small upload can't expand without bound. The result must be
+   exactly `size` bytes.
+6. The content is verified against `contentHash` by the existing path, as for bytes from any other store.
+
+A missing part, a failed check or an unreachable node is a `ContentUnavailableError`, never "absent". The reader
+uses the API nodes from Network Settings → Steem, as the announcement readers do. Votes, payout, reputation and
+front-end muting are ignored. An edit to a manifest or part after upload makes the content unavailable (checks 4 or
+6 fail) rather than changing it. Verified bytes are kept locally like any other published copy, so a later edit or
+node outage doesn't lose a copy already loaded.
+
+### Limits
+
+- A part is at most 48 KiB of encoded text, and the operations of one transaction are checked against the 64 KiB
+  limit before signing, as for announcements.
+- An upload is at most 20 parts (960 KiB of encoded text, about 720 KiB compressed). `maxContentBytes` can't be
+  known before compressing, so the store compresses first and throws `ContentTooLargeError` pointing to IPFS or
+  Arweave when the encoded text would need more parts.
+- The decoded content is at most 64 MiB, the same bound as a peer transfer.
+
+### Scope and order of work
+
+The first version stores Snapshot bytes only. Publication material (the signed claim the Arweave uploader also
+places) could use the same format later. Suggested order:
+
+1. The inline case: a manifest with no parts, the `'steem'` store, and the content thread family. This covers small
+   builds with one approval.
+2. Parts, the progress display, and resuming an incomplete upload.
+3. The RC estimate, and measuring real compression ratios on typical builds to confirm the part size and part limit.
+
+Where it's chosen: the Content Provider settings page and the content choice in the Distribute dialogs would offer
+Steem next to IPFS and Arweave. It ships as Experimental, like the Steem announcement substrate.
+
 ## Vehicles, animals and inventory
 
 ### Deterministic Animal Identity (0.9.700)
