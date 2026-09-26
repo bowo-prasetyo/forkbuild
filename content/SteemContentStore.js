@@ -238,7 +238,7 @@ export class SteemContentStore extends ContentStore {
         try {
             post = await this._rpc.getContent(location.author, location.permlink);
         } catch (error) {
-            throw new ContentUnavailableError(`Couldn't read ${where} from Steem: ${error.message}`);
+            throw Object.assign(new ContentUnavailableError(`Couldn't read ${where} from Steem: ${error.message}`), { cause: error });
         }
         const { manifest, problem } = describeSteemContentManifest(post, { threadAccounts: this._threadAccounts });
         if (!manifest) throw new ContentUnavailableError(`${where} can't be loaded: ${problem}.`);
@@ -255,7 +255,7 @@ export class SteemContentStore extends ContentStore {
             try {
                 posts = await this._readParts(manifest);
             } catch (error) {
-                throw new ContentUnavailableError(`Couldn't read the parts of ${where} from Steem: ${error.message}`);
+                throw Object.assign(new ContentUnavailableError(`Couldn't read the parts of ${where} from Steem: ${error.message}`), { cause: error });
             }
             const bodies = [];
             for (let index = 0; index < manifest.parts.length; index++) {

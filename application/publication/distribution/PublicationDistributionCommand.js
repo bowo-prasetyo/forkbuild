@@ -365,6 +365,7 @@ export function executePublicationDistributionCommand({
     nostrPublisherOptions,
     arweaveAnnouncementPublisherOptions,
     steemPublicationDiscoveryPublisher,
+    steemMaterialStore,
     lifecycleStore
 } = {}) {
     if (!lifecycleStore || typeof lifecycleStore.get !== 'function' || typeof lifecycleStore.set !== 'function') {
@@ -381,7 +382,8 @@ export function executePublicationDistributionCommand({
         discoveryProvider,
         nostrPublisherOptions,
         arweaveAnnouncementPublisherOptions,
-        steemPublicationDiscoveryPublisher
+        steemPublicationDiscoveryPublisher,
+        steemMaterialStore
     });
 
     return distribution.then((result) => {
@@ -423,6 +425,7 @@ export function executeMultiRelayNostrPublicationDistributionCommand({
     arweaveUploaderOptions,
     nostrRelayUrls,
     nostrPublisherOptions,
+    steemMaterialStore,
     lifecycleStore
 } = {}) {
     if (!lifecycleStore || typeof lifecycleStore.get !== 'function' || typeof lifecycleStore.set !== 'function') {
@@ -437,7 +440,8 @@ export function executeMultiRelayNostrPublicationDistributionCommand({
         remotePinningProviderOptions,
         arweaveUploaderOptions,
         nostrRelayUrls,
-        nostrPublisherOptions
+        nostrPublisherOptions,
+        steemMaterialStore
     });
 
     return distribution.then((results) => {

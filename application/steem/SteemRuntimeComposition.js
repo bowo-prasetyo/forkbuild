@@ -10,6 +10,7 @@ import { SteemSnapshotDiscoveryPublisher } from './SteemSnapshotDiscoveryPublish
 import { SteemPlaceNamingDiscoveryPublisher } from './SteemPlaceNamingDiscoveryPublisher.js';
 import { PublicationCommentarySteemDistribution } from './PublicationCommentarySteemDistribution.js';
 import { SteemContentStore } from '../../content/SteemContentStore.js';
+import { SteemWorldEncounterMaterialResolver } from '../worldEncounter/SteemWorldEncounterMaterialResolver.js';
 import { createSteemResourceCreditEstimator } from './SteemResourceCreditEstimator.js';
 import { SteemAnchorPublisher } from '../../anchoring/SteemAnchorPublisher.js';
 import { SteemProofVerifier } from '../../anchoring/SteemProofVerifier.js';
@@ -23,7 +24,9 @@ import { SteemAnchorFinalityObserver } from '../../anchoring/SteemAnchorFinality
 // `getBroadcaster()` at the moment it announces, so a Keychain that
 // appears after load, or an account set later, is picked up. The content
 // store remembers unfinished uploads in `contentUploads` and reports upload
-// progress to `contentUploadProgress`, when given. The anchor publisher,
+// progress to `contentUploadProgress`, when given; it stores Snapshots and
+// Signed Claims, and the publication material resolver reads Signed Claims
+// back for World discovery. The anchor publisher,
 // proof verifier, evidence view and finality observer are for the `steem`
 // anchor type; the verifier asks each configured API node separately.
 export function composeSteemRuntime({
@@ -63,6 +66,7 @@ export function composeSteemRuntime({
             estimator: createSteemResourceCreditEstimator({ rpc }),
             progress: contentUploadProgress
         }),
+        publicationMaterialResolver: new SteemWorldEncounterMaterialResolver({ rpc, threadAccounts: [...configuration.threadAccounts] }),
         anchorPublisher: new SteemAnchorPublisher({ poster: announcer, rpc }),
         proofVerifier: new SteemProofVerifier({ nodes: [...configuration.apiNodes], fetchImpl }),
         anchorEvidenceView: new SteemAnchorEvidenceView(),

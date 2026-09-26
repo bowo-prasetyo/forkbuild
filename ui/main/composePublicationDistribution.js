@@ -36,7 +36,8 @@ export function composePublicationDistribution({
         ipfsNodeOptions,
         nostrPublisherOptions,
         arweaveAnnouncementPublisherOptions,
-        steemPublicationDiscoveryPublisher: steemRuntime ? steemRuntime.publicationDiscoveryPublisher : null
+        steemPublicationDiscoveryPublisher: steemRuntime ? steemRuntime.publicationDiscoveryPublisher : null,
+        steemMaterialStore: steemRuntime ? steemRuntime.contentStore : null
     });
 
     const multiRelayNostrPublicationDistributionCommand = composeMultiRelayNostrPublicationDistributionCommand({
@@ -44,7 +45,8 @@ export function composePublicationDistribution({
         arweaveUploaderOptions,
         ipfsNodeOptions,
         nostrRelayUrls: resolvedNostrRelayUrls,
-        nostrPublisherOptions
+        nostrPublisherOptions,
+        steemMaterialStore: steemRuntime ? steemRuntime.contentStore : null
     });
 
     // Snapshots use their own 'forkbuild-snapshot' tag, a separate discovery

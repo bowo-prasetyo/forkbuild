@@ -261,7 +261,8 @@ export function orchestratePublicationDistribution({
     discoveryProvider,
     nostrPublisherOptions,
     arweaveAnnouncementPublisherOptions,
-    steemPublicationDiscoveryPublisher
+    steemPublicationDiscoveryPublisher,
+    steemMaterialStore
 } = {}) {
     const runtime = composePublicationDistributionRuntime({
         arweaveUploaderOptions,
@@ -271,7 +272,8 @@ export function orchestratePublicationDistribution({
         discoveryProvider,
         nostrPublisherOptions,
         arweaveAnnouncementPublisherOptions,
-        steemPublicationDiscoveryPublisher
+        steemPublicationDiscoveryPublisher,
+        steemMaterialStore
     });
 
     return executePublicationDistribution({

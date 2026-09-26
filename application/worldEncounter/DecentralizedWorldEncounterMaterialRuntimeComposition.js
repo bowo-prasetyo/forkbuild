@@ -1,6 +1,7 @@
 import { ArweaveWorldEncounterMaterialResolver } from './ArweaveWorldEncounterMaterialResolver.js';
 import { ArweaveGatewayFailoverWorldEncounterMaterialResolver } from './ArweaveGatewayFailoverWorldEncounterMaterialResolver.js';
 import { DecentralizedWorldEncounterMaterialSource } from './DecentralizedWorldEncounterMaterialSource.js';
+import { STEEM_CONTENT_URI_PREFIX } from '../../core/SteemContentManifest.js';
 
 // 0.9.36 — Decentralized World Encounter Material Runtime Composition.
 //
@@ -228,8 +229,17 @@ function buildArweaveWorldEncounterMaterialResolver({ gatewayUrls, ...options })
 // "local and peer are forwarded verbatim, never constructed here";
 // `arweaveResolverOptions` is forwarded to
 // `composeArweaveDecentralizedWorldEncounterMaterialSource()` unchanged to
-// build the `decentralized` slot.
-export function composeWorldEncounterMaterialSources({ local, peer, arweaveResolverOptions } = {}) {
-    const { decentralized } = composeArweaveDecentralizedWorldEncounterMaterialSource(arweaveResolverOptions);
-    return Object.freeze({ local, peer, decentralized });
+// build the `decentralized` slot. `steemMaterialResolver` (a
+// SteemWorldEncounterMaterialResolver, or null) adds Signed Claims stored on
+// Steem: a `steem://` uri goes to it, and every other uri to Arweave.
+export function composeWorldEncounterMaterialSources({ local, peer, arweaveResolverOptions, steemMaterialResolver = null } = {}) {
+    if (!steemMaterialResolver) {
+        const { decentralized } = composeArweaveDecentralizedWorldEncounterMaterialSource(arweaveResolverOptions);
+        return Object.freeze({ local, peer, decentralized });
+    }
+    const arweaveResolver = buildArweaveWorldEncounterMaterialResolver(arweaveResolverOptions ?? {});
+    const retrieveByUri = (uri) => (typeof uri === 'string' && uri.startsWith(STEEM_CONTENT_URI_PREFIX)
+        ? steemMaterialResolver.retrieveByUri(uri)
+        : arweaveResolver.retrieveByUri(uri));
+    return Object.freeze({ local, peer, decentralized: new DecentralizedWorldEncounterMaterialSource(retrieveByUri) });
 }

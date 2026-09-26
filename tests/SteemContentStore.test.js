@@ -27,7 +27,6 @@ import { executeSnapshotDistributionCommand } from '../application/snapshot/Snap
 import { DecentralizedSnapshotResolver } from '../application/snapshot/DecentralizedSnapshotResolver.js';
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
-import { composePublicationMaterialUploader } from '../application/publication/distribution/PublicationMaterialUploaderComposition.js';
 import { SteemContentUploadStore } from '../storage/SteemContentUploadStore.js';
 import { describeSteemContentUploadProgress } from '../application/steem/SteemContentUploadProgressText.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
@@ -463,19 +462,12 @@ function incompressibleText(characters) {
     console.log('✓ distributing to Steem and resolving it');
 }
 
-// The runtime builds a content store, and Signed Claims are refused on Steem
-// storage with a reason.
+// The runtime builds a content store; Signed Claims on Steem are covered by
+// SteemPublicationMaterial.test.js.
 {
     const runtime = composeSteemRuntime({ fetchImpl: async () => { throw new Error('no network in tests'); } });
     assert(runtime.contentStore instanceof SteemContentStore && runtime.contentStore.storage === 'steem', 'the Steem runtime includes the content store');
-    let caught = null;
-    try {
-        composePublicationMaterialUploader({ materialStorage: 'steem' });
-    } catch (error) {
-        caught = error;
-    }
-    assert(caught?.message === 'Steem storage holds Snapshots only for now. Choose Arweave or IPFS storage to distribute the Signed Claim.', `Signed Claim material on Steem is refused with a reason (got ${caught?.message})`);
-    console.log('✓ composition, and Signed Claims stay off Steem storage');
+    console.log('✓ composition');
 }
 
 console.log('\n✅ All SteemContentStore tests passed.');

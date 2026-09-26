@@ -2127,8 +2127,8 @@ and you're told so. A comment is always saved on this device first; its
 form warns you before posting if no account is set or Keychain is
 missing.
 
-**Storing a Snapshot on Steem.** Choose **Steem (Snapshots only)** as the
-storage in a Distribute dialog, or **Steem** on the Publications page. The
+**Storing on Steem.** Choose **Steem** as the storage in a Distribute
+dialog, or on the Publications page. The
 Snapshot is compressed and stored as replies to this month's content
 thread (such as `@forkbuild/forkbuild-content-2026-10`). It then needs no
 pinning and no upload fee.
@@ -2152,10 +2152,12 @@ pinning and no upload fee.
   ForkBuild makes only the missing posts. Nothing is announced until every
   post is stored.
 
-Steem storage holds Snapshots only: if you distribute a Signed Claim with
-Steem chosen, the claim is refused with a reason, and the Snapshot is
-still stored. As with every storage, what is loaded back is checked
-against the Snapshot's content hash.
+The Signed Claim can be stored on Steem too. It is small, so it takes one
+post in the same content thread (one more Keychain approval), and when you
+distribute both from one click the Snapshot goes first. Anyone who finds
+the Publication's announcement reads the claim back from Steem, and its
+signature is checked exactly as for a claim from Arweave. As with every
+storage, a Snapshot loaded back is checked against its content hash.
 
 Open **Steem** (`/settings/steem`) to set **Your Steem account** under
 **Posting** (it applies at once), or to change where it reads from:

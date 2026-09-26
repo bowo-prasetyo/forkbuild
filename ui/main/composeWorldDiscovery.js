@@ -115,7 +115,8 @@ export function composeWorldDiscovery({
         local: new LocalWorldEncounterMaterialSource(new LocalStorageProvider()),
         peer: worldEncounterMaterialPeerSource,
         verifier: worldEncounterMaterialVerifier,
-        arweaveResolverOptions: { gatewayUrls: resolvedArweaveGatewayUrls }
+        arweaveResolverOptions: { gatewayUrls: resolvedArweaveGatewayUrls },
+        steemMaterialResolver: steemRuntime ? steemRuntime.publicationMaterialResolver : null
     });
     const worldDiscoveryLeadRegistry = decentralizedWorldEncounterMaterialDiscoveryRuntime.registry;
     const worldEncounterMaterialSources = decentralizedWorldEncounterMaterialDiscoveryRuntime.materialSources;

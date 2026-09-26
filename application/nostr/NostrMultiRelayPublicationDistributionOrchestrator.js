@@ -142,13 +142,15 @@ export function orchestrateMultiRelayNostrPublicationDistribution({
     ipfsNodeOptions,
     remotePinningProviderOptions,
     nostrRelayUrls,
-    nostrPublisherOptions = {}
+    nostrPublisherOptions = {},
+    steemMaterialStore = null
 } = {}) {
     const uploader = composePublicationMaterialUploader({
         materialStorage,
         arweaveUploaderOptions,
         ipfsNodeOptions,
-        remotePinningProviderOptions
+        remotePinningProviderOptions,
+        steemMaterialStore
     });
     const multiRelayPublisher = new NostrMultiRelayPublicationDiscoveryPublisher({
         relayUrls: nostrRelayUrls,

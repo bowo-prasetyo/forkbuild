@@ -110,7 +110,7 @@ import { executePublicationDistributionCommand, executeMultiRelayNostrPublicatio
 // so it can only ever come from a caller's own `request`, never from this
 // composition root. Both therefore reach `executePublicationDistributionCommand()`
 // purely through `...request`'s own existing, unmodified spread.
-export function composePublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions, steemPublicationDiscoveryPublisher = null } = {}) {
+export function composePublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions, steemPublicationDiscoveryPublisher = null, steemMaterialStore = null } = {}) {
     return (request) => executePublicationDistributionCommand({
         ...request,
         arweaveUploaderOptions,
@@ -118,6 +118,7 @@ export function composePublicationDistributionCommand({ lifecycleStore, arweaveU
         nostrPublisherOptions,
         arweaveAnnouncementPublisherOptions,
         steemPublicationDiscoveryPublisher,
+        steemMaterialStore,
         lifecycleStore
     });
 }
@@ -167,13 +168,14 @@ export function composePublicationDistributionCommand({ lifecycleStore, arweaveU
 // `remotePinningProviderOptions` are, for the identical reasons documented
 // there, left to reach `executeMultiRelayNostrPublicationDistributionCommand()`
 // purely through `...request`.
-export function composeMultiRelayNostrPublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrRelayUrls, nostrPublisherOptions } = {}) {
+export function composeMultiRelayNostrPublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrRelayUrls, nostrPublisherOptions, steemMaterialStore = null } = {}) {
     return (request) => executeMultiRelayNostrPublicationDistributionCommand({
         ...request,
         arweaveUploaderOptions,
         ipfsNodeOptions,
         nostrRelayUrls,
         nostrPublisherOptions,
+        steemMaterialStore,
         lifecycleStore
     });
 }
