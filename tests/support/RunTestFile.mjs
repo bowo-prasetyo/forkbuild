@@ -4,10 +4,15 @@
 //
 // libdatachannel's native threads can keep a process alive after every
 // connection has closed and the test has finished; its own cleanup can
-// deadlock. So once nothing can run again (no JavaScript handles or timers
-// left and no open peer connection), this exits the way Node itself would
-// have: with the test's own exit status, or 13 if the file's top-level
-// await never settled.
+// deadlock. So once the test has finished and nothing can run again (no
+// JavaScript handles or timers left and no open peer connection), this
+// exits the way Node itself would have, with the test's own exit status.
+//
+// It never ends a test that is still running: work such as a
+// CompressionStream's gzip isn't an active resource, so "no resources"
+// doesn't mean "stuck". A file whose top-level await can never settle is
+// left to Node, which exits with 13 when nothing is left to run, or to
+// run.mjs's timeout.
 import { pathToFileURL } from 'node:url';
 
 const connections = globalThis[Symbol.for('forkbuild.tests.peerConnections')] || new Set();
@@ -27,12 +32,12 @@ function testResources() {
 }
 
 const idleCheck = setInterval(() => {
-    if (testResources().length > 0) return;
+    if (!settled || testResources().length > 0) return;
     for (const ref of connections) {
         const connection = ref.deref();
         if (connection && connection.connectionState !== 'closed') return;
     }
-    process.exit(settled ? (process.exitCode ?? 0) : 13);
+    process.exit(process.exitCode ?? 0);
 }, 1000);
 idleCheck.unref();
 
