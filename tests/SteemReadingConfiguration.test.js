@@ -1,7 +1,7 @@
 import { SteemReadingConfiguration, DEFAULT_STEEM_API_NODES, DEFAULT_STEEM_EARLIEST_PERIOD } from '../core/SteemReadingConfiguration.js';
 import { SteemReadingConfigurationStore } from '../storage/SteemReadingConfigurationStore.js';
 import { SetSteemReadingConfigurationUseCase } from '../application/settings/SetSteemReadingConfigurationUseCase.js';
-import { composeSteemReadingRuntime } from '../application/steem/SteemReadingRuntimeComposition.js';
+import { composeSteemRuntime } from '../application/steem/SteemRuntimeComposition.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
@@ -68,7 +68,7 @@ function throwsWith(fn, text) {
         requests.push({ url, body });
         return { ok: true, status: 200, json: async () => ({ jsonrpc: '2.0', id: body.id, result: [] }) };
     };
-    const runtime = composeSteemReadingRuntime({
+    const runtime = composeSteemRuntime({
         configuration: new SteemReadingConfiguration({ apiNodes: ['https://api.example.org'], threadAccounts: ['forkbuild'], earliestPeriod: '2026-09' }),
         fetchImpl
     });
@@ -77,6 +77,6 @@ function throwsWith(fn, text) {
     assert(requests.length > 0 && requests.every((r) => r.url === 'https://api.example.org' && r.body.method === 'condenser_api.get_content_replies'), 'replies are read from the configured node');
     assert(requests[0].body.params[0] === 'forkbuild' && requests[0].body.params[1] === 'forkbuild-snapshot-2026-09', `the first thread read is September's (got ${requests[0].body.params})`);
     assert(runtime.publicationDiscoveryQueryService.origin === 'dweb:steem:forkbuild', 'the publication service is composed');
-    assert(composeSteemReadingRuntime({ fetchImpl: null }) === null, 'without fetch there is no Steem reading');
+    assert(composeSteemRuntime({ fetchImpl: null }) === null, 'without fetch there is no Steem reading');
     console.log('✓ the composed runtime');
 }

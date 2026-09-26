@@ -364,6 +364,7 @@ export function executePublicationDistributionCommand({
     discoveryProvider,
     nostrPublisherOptions,
     arweaveAnnouncementPublisherOptions,
+    steemPublicationDiscoveryPublisher,
     lifecycleStore
 } = {}) {
     if (!lifecycleStore || typeof lifecycleStore.get !== 'function' || typeof lifecycleStore.set !== 'function') {
@@ -379,7 +380,8 @@ export function executePublicationDistributionCommand({
         arweaveUploaderOptions,
         discoveryProvider,
         nostrPublisherOptions,
-        arweaveAnnouncementPublisherOptions
+        arweaveAnnouncementPublisherOptions,
+        steemPublicationDiscoveryPublisher
     });
 
     return distribution.then((result) => {

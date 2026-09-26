@@ -793,3 +793,32 @@ announcing from the app comes next.
   settings page saved, refused an `http://` node, and linked from Network Settings.
 - Not done: announcing to Steem from the Distribute dialog and commentary posting; nothing has been read from the
   real chain yet, since this environment can't reach a Steem node.
+
+## Announcing on Steem (unnumbered, 2026-09-26)
+
+**Publications, Snapshots, Place Naming claims and Commentary can now be announced on Steem**, completing the
+substrate: Steem is the third choice, next to Nostr and Arweave, wherever an announcement substrate is chosen.
+
+- `core/SteemDiscoveryAnnouncement.js` builds the reply and its `comment_options` (payout declined, votes on, shared
+  with the threads through `steemDeclinedPayoutOptions()`), the reply permlink, and a size bound.
+- `application/steem/SteemAnnouncer.js` announces as the device's saved account (`core/SteemAnnouncingConfiguration.js`,
+  Network Settings → Steem → Posting), through Steem Keychain looked up at announce time. It checks the current
+  month's thread exists and accepts replies (once per thread), refuses an announcement over 64 KiB, and reports
+  what it broadcast with status "accepted". Every refusal has its own message: no account, no Keychain, a missing or
+  closed thread, an unreachable node, too large, or a declined signature.
+- One publisher per family with the existing Nostr/Arweave shapes: `SteemPublicationDiscoveryPublisher`,
+  `SteemSnapshotDiscoveryPublisher`, `SteemPlaceNamingDiscoveryPublisher`, and
+  `PublicationCommentarySteemDistribution#publish()`. `SteemReadingRuntimeComposition` became `SteemRuntimeComposition`.
+- Wiring: the publication runtime, orchestrator and command pass a Steem publisher through for `'steem'`; the
+  snapshot publisher resolver, place naming runtime and commentary wrapper select Steem; the Editor and World View
+  Distribute dialogs, the Publications page and the commentary form offer Steem, and route it like Arweave (one
+  publisher, not a relay fan-out); the Announcement / Discovery default accepts `'steem'`. The commentary form warns
+  before posting to Steem when no account is set or Keychain is missing, since a comment's distribution runs after
+  the local save and its failure is otherwise silent.
+- Tests: `tests/SteemAnnouncer.test.js` (operations, the announcer's refusals, a round trip where each family's
+  publisher posts and its reader reads it back, the account setting, and the composition branches). Four older tests
+  that pin the two-choice selects and commentary selection now expect Steem. In Chromium the app's own
+  `resolveSnapshotDiscoveryPublisher('steem')` refused without an account, then, with one saved, broadcast through a
+  fake Keychain to `@forkbuild/forkbuild-snapshot-2026-09` with payout declined.
+- Not done: tracking when an announcement becomes irreversible; nothing has been announced on the real chain from
+  this environment, which can't reach a Steem node.

@@ -7,13 +7,25 @@ import {
     DEFAULT_STEEM_THREAD_ACCOUNTS
 } from '../../core/SteemReadingConfiguration.js';
 
-// Where Steem announcements are read from. Saved settings apply the next
-// time the app loads, like the other network settings.
+// Where Steem announcements are read from (applies on the next load, like
+// the other network settings), and the account this device posts as
+// (applies at once: it's read each time something is announced).
 export default {
     name: 'SteemReadingSettingsView',
     setup() {
         const store = inject('steemReadingConfigurationStore', null);
         const useCase = inject('setSteemReadingConfigurationUseCase', null);
+        const accountStore = inject('steemAnnouncingConfigurationStore', null);
+        const accountUseCase = inject('setSteemAnnouncingConfigurationUseCase', null);
+        const accountInput = ref('');
+        const accountForm = useEndpointSettingsForm({
+            store: accountStore,
+            useCase: accountUseCase,
+            buildRequest: () => (accountInput.value.trim() ? { account: accountInput.value } : null),
+            fillInputs: (configuration) => {
+                accountInput.value = configuration ? configuration.account : '';
+            }
+        });
 
         const apiNodesInput = ref('');
         const threadAccountsInput = ref('');
@@ -45,7 +57,10 @@ export default {
             defaultThreadAccounts: DEFAULT_STEEM_THREAD_ACCOUNTS.map((account) => `@${account}`).join(', '),
             defaultEarliestPeriod: DEFAULT_STEEM_EARLIEST_PERIOD,
             saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
-            save: form.save, useDefaults: form.clear
+            save: form.save, useDefaults: form.clear,
+            accountInput, savedAccount: accountForm.configuration, accountSaveError: accountForm.saveError,
+            accountSaveStatus: accountForm.saveStatus, accountClearStatus: accountForm.clearStatus,
+            saveAccount: accountForm.save, clearAccount: accountForm.clear
         };
     },
     template: `
@@ -80,6 +95,27 @@ export default {
 
                 <button class="action-btn action-btn--primary" @click="save">Save</button>
                 <button class="action-btn" @click="useDefaults">Use Defaults</button>
+            </div>
+
+            <h2>Posting</h2>
+            <p class="form-hint form-hint--neutral">
+                To announce on Steem, choose Steem in a Distribute dialog or when posting a comment. Posts are replies
+                to this month's discovery thread, signed by Steem Keychain with your account's posting key; ForkBuild
+                never sees the key. Payout is declined on every post.
+            </p>
+            <p v-if="savedAccount" class="form-hint form-hint--neutral">Posting as @{{ savedAccount.account }}.</p>
+            <p v-else class="form-hint form-hint--neutral">No account set, so nothing can be posted to Steem.</p>
+
+            <div class="steem-reading-settings-form">
+                <label class="form-label" for="steem-account">Your Steem account</label>
+                <input id="steem-account" v-model="accountInput" type="text" class="form-input" placeholder="yourname" autocomplete="off" spellcheck="false">
+
+                <p v-if="accountSaveError" class="form-hint">{{ accountSaveError }}</p>
+                <p v-if="accountSaveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
+                <p v-if="accountClearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared.</p>
+
+                <button class="action-btn action-btn--primary" @click="saveAccount" :disabled="!accountInput.trim()">Save Account</button>
+                <button class="action-btn" @click="clearAccount">Clear</button>
             </div>
         </section>
     `

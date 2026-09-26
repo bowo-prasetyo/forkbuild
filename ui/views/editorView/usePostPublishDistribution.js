@@ -75,7 +75,7 @@ export function usePostPublishDistribution({
             }
             : undefined;
 
-        if (discoveryProvider === 'arweave') {
+        if (discoveryProvider === 'arweave' || discoveryProvider === 'steem') {
             if (!publicationDistributionCommand) {
                 return Promise.reject(new Error('Publication distribution is not available.'));
             }

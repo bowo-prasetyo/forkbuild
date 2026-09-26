@@ -21,7 +21,7 @@ export function composeSnapshotDiscovery({
     publicationSnapshotPlacementCatalog, publicationSnapshotPlacementResolutionStoreRegistry,
     roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
-    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemReadingRuntime = null
+    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime = null
 }) {
     // Seeds the Content/Snapshot pickers from the saved CONTENT preference, never
     // overriding a pick. 'remote-pinning' is added to the eligible list because that
@@ -40,7 +40,8 @@ export function composeSnapshotDiscovery({
     const { discoveryPublisher: placeNamingDiscoveryPublisher } = composePlaceNamingPublicationRuntime({
         discoveryProvider: resolvedAnnouncementDiscoveryProvider,
         nostrPlaceNamingDiscoveryPublisherOptions: { publishImpl: nostrHostPublisher },
-        arweavePlaceNamingDiscoveryPublisherOptions: { gatewayUrl: resolvedArweaveGatewayUrl, uploadTaggedTransaction: arweaveAnnouncementUploadTaggedTransaction }
+        arweavePlaceNamingDiscoveryPublisherOptions: { gatewayUrl: resolvedArweaveGatewayUrl, uploadTaggedTransaction: arweaveAnnouncementUploadTaggedTransaction },
+        steemPlaceNamingDiscoveryPublisher: steemRuntime ? steemRuntime.placeNamingDiscoveryPublisher : null
     });
     const publishPlaceNamingClaimToNostrCommand = (claim) => Promise.resolve().then(() => {
         if (!placeNamingDiscoveryPublisher) {
@@ -69,7 +70,7 @@ export function composeSnapshotDiscovery({
     const { queryService: snapshotCandidateDiscoveryQueryService } = composeSnapshotCandidateDiscoveryRuntime({
         nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService,
         arweaveSnapshotDiscoveryQueryService,
-        steemSnapshotDiscoveryQueryService: steemReadingRuntime ? steemReadingRuntime.snapshotDiscoveryQueryService : null,
+        steemSnapshotDiscoveryQueryService: steemRuntime ? steemRuntime.snapshotDiscoveryQueryService : null,
         placementCatalog: publicationSnapshotPlacementCatalog
     });
 
@@ -101,7 +102,7 @@ export function composeSnapshotDiscovery({
                 ? new NostrMultiRelayPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrls: resolvedNostrRelayUrls })
                 : new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrls[0] })]
             : []),
-        ...(steemReadingRuntime ? [steemReadingRuntime.placeNamingDiscoverySource] : [])
+        ...(steemRuntime ? [steemRuntime.placeNamingDiscoverySource] : [])
     ];
     const { queryService: placeNamingDiscoveryQueryService } = composePlaceNamingDiscoveryRuntime({ sources: placeNamingDiscoverySources });
 

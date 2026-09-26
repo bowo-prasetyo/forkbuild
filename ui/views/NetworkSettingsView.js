@@ -71,7 +71,7 @@ export default {
                 <li>
                     <router-link to="/settings/steem" class="network-settings-link">
                         <span class="network-settings-link-title">Steem</span>
-                        <span class="form-hint form-hint--neutral">API nodes and discovery threads this replica reads Steem announcements from.</span>
+                        <span class="form-hint form-hint--neutral">Where this replica reads Steem announcements from, and the account it posts as.</span>
                     </router-link>
                 </li>
                 <li>

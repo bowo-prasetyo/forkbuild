@@ -97,16 +97,22 @@ export function steemDiscoveryThreadOperations(post) {
             body: post.body,
             json_metadata: JSON.stringify(post.jsonMetadata)
         }],
-        ['comment_options', {
-            author: post.account,
-            permlink: post.permlink,
-            max_accepted_payout: STEEM_DECLINED_PAYOUT,
-            percent_steem_dollars: 10000,
-            allow_votes: true,
-            allow_curation_rewards: true,
-            extensions: []
-        }]
+        steemDeclinedPayoutOptions(post.account, post.permlink)
     ];
+}
+
+// The `comment_options` every ForkBuild post on Steem carries, threads and
+// announcements alike: payout declined, votes and curation left on.
+export function steemDeclinedPayoutOptions(author, permlink) {
+    return ['comment_options', {
+        author,
+        permlink,
+        max_accepted_payout: STEEM_DECLINED_PAYOUT,
+        percent_steem_dollars: 10000,
+        allow_votes: true,
+        allow_curation_rewards: true,
+        extensions: []
+    }];
 }
 
 // Checks what `condenser_api.get_content` returned for a thread. A missing

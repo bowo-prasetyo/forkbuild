@@ -1,0 +1,46 @@
+import { SteemReadingConfiguration } from '../../core/SteemReadingConfiguration.js';
+import { createSteemRpcClient } from '../../steem/SteemRpcClient.js';
+import { createSteemDiscoveryThreadReader } from './SteemDiscoveryThreadReader.js';
+import { createSteemAnnouncer } from './SteemAnnouncer.js';
+import { SteemPublicationDiscoveryQueryService } from './SteemPublicationDiscoveryQueryService.js';
+import { SteemSnapshotDiscoveryQueryService } from './SteemSnapshotDiscoveryQueryService.js';
+import { SteemPlaceNamingDiscoverySource } from './SteemPlaceNamingDiscoverySource.js';
+import { SteemPublicationDiscoveryPublisher } from './SteemPublicationDiscoveryPublisher.js';
+import { SteemSnapshotDiscoveryPublisher } from './SteemSnapshotDiscoveryPublisher.js';
+import { SteemPlaceNamingDiscoveryPublisher } from './SteemPlaceNamingDiscoveryPublisher.js';
+import { PublicationCommentarySteemDistribution } from './PublicationCommentarySteemDistribution.js';
+
+// One thread reader and one announcer, and each family's reader and
+// publisher over them, from the saved Steem settings (or the defaults).
+// Reading needs no Steem account; announcing asks `getAccount()` and
+// `getBroadcaster()` at the moment it announces, so a Keychain that
+// appears after load, or an account set later, is picked up.
+export function composeSteemRuntime({
+    configuration = new SteemReadingConfiguration(),
+    fetchImpl = globalThis.fetch,
+    getAccount = () => null,
+    getBroadcaster = () => undefined,
+    appVersion = null
+} = {}) {
+    if (typeof fetchImpl !== 'function') return null;
+    const rpc = createSteemRpcClient({ nodes: [...configuration.apiNodes], fetchImpl });
+    const reader = createSteemDiscoveryThreadReader({
+        rpc,
+        threadAccounts: [...configuration.threadAccounts],
+        earliestPeriod: configuration.earliestPeriod
+    });
+    // Announcements go to the first thread account's threads.
+    const announcer = createSteemAnnouncer({ rpc, getAccount, getBroadcaster, threadAccount: configuration.threadAccounts[0], appVersion });
+    return Object.freeze({
+        configuration,
+        reader,
+        announcer,
+        publicationDiscoveryQueryService: new SteemPublicationDiscoveryQueryService({ reader }),
+        snapshotDiscoveryQueryService: new SteemSnapshotDiscoveryQueryService({ reader }),
+        placeNamingDiscoverySource: new SteemPlaceNamingDiscoverySource({ reader }),
+        publicationDiscoveryPublisher: new SteemPublicationDiscoveryPublisher({ announcer }),
+        snapshotDiscoveryPublisher: new SteemSnapshotDiscoveryPublisher({ announcer }),
+        placeNamingDiscoveryPublisher: new SteemPlaceNamingDiscoveryPublisher({ announcer }),
+        commentaryDistribution: new PublicationCommentarySteemDistribution({ reader, announcer })
+    });
+}

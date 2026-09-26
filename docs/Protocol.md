@@ -449,9 +449,8 @@ unreachable" all surface as `ContentUnavailableError`, and are never reported as
 
 ## Proposed: Steem Announcement Substrate
 
-**Status: partly built, Experimental.** The discovery threads exist on the chain (from 2026-09) and reading is
-built (see "Reading"); announcing is not built yet. It ships as Experimental alongside the other decentralized
-publication tooling, and this section is edited as each part is built.
+**Status: built, Experimental.** The discovery threads exist on the chain (from 2026-09), and the app reads and
+announces all four families. It ships as Experimental alongside the other decentralized publication tooling.
 
 Steem would be a third Announcement/Discovery substrate next to Nostr and Arweave. It carries the same envelopes as
 they do, unchanged, and is only a transport: every candidate is verified by content hash and ForkBuild signature
@@ -522,7 +521,7 @@ its options:
       author: <announcer's Steem account>,
       permlink: 'forkbuild-<base36 ms timestamp>-<8 random [a-z0-9]>',
       title: '',
-      body: <one or two human-readable lines; never empty, the chain rejects an empty body>,
+      body: <one human-readable line naming the family; never empty, the chain rejects an empty body>,
       json_metadata: JSON.stringify({ app: 'forkbuild/<app version>',
         forkbuild: { version: 1, family: 'snapshot', envelope: <the family's envelope object> } })
     }]
@@ -541,12 +540,25 @@ its options:
 - The transaction is signed with the announcer's posting key through Steem Keychain
   (`steem_keychain.requestBroadcast(account, operations, 'Posting', callback)`), the injected signer that plays the
   part NIP-07 plays for Nostr. ForkBuild never holds a Steem key.
-- The announcer checks the signed transaction against the chain's 64 KiB transaction size limit before broadcasting,
-  and refuses an oversized one rather than truncating the envelope.
-- If the current month's thread does not exist, announcing fails with a clear error. It never falls back to
-  another thread, so a reader always knows where to look.
+- The announcer's account is a per-device setting (Network Settings → Steem, `core/SteemAnnouncingConfiguration.js`,
+  stored under `steem-announcing-configuration`), because Keychain doesn't tell a page which accounts it holds. It
+  and Keychain are looked up each time something is announced, so an account set later, or an extension that
+  injects itself after load, is picked up without a reload.
+- Announcements go to the first configured thread account's threads.
+- The announcer checks the operations' JSON size, an upper bound on the signed transaction's binary size, against
+  the chain's 64 KiB limit before broadcasting, and refuses an oversized one rather than truncating the envelope.
+- Before the first announcement to a thread, the announcer reads it with `get_content`. If the current month's
+  thread does not exist, or no longer accepts replies, or can't be checked, announcing fails with a clear error. It
+  never falls back to another thread, so a reader always knows where to look.
 - The one-substrate rule holds: each action announces on exactly one of Nostr, Arweave or Steem, never on several,
   and a network failure never undoes the local write.
+- Where it's chosen: the Distribute dialogs (Editor and World View), the Publications page, the commentary form, and
+  the saved Announcement / Discovery default all offer Steem. Publications and Snapshots report the reply as
+  `@author/permlink` and its thread as the relay; Commentary, like the other carriers, is fire-and-forget after the
+  local save, so its form warns before posting when no account is set or Keychain is missing.
+- Code: `application/steem/SteemAnnouncer.js`, with one publisher per family beside the readers
+  (`SteemPublicationDiscoveryPublisher`, `SteemSnapshotDiscoveryPublisher`, `SteemPlaceNamingDiscoveryPublisher`,
+  and `PublicationCommentarySteemDistribution#publish()`), composed in `SteemRuntimeComposition.js`.
 
 ### Reading
 
@@ -584,7 +596,7 @@ Where reading is configured: Network Settings → Steem (`/settings/steem`, `cor
 stored under `steem-reading-configuration`) holds the API nodes, thread accounts and first month; a change applies
 the next time the app loads. The code is `application/steem/`: `SteemDiscoveryThreadReader.js` reads threads, and
 one adapter per family presents what it finds in that family's existing shape
-(`SteemReadingRuntimeComposition.js` builds them).
+(`SteemRuntimeComposition.js` builds them).
 
 ### Status
 
@@ -593,9 +605,10 @@ no thread could be read, the snapshot search reports "unavailable", place naming
 caller names Steem as unreachable, and publication discovery finds no leads; none of them reports that nothing was
 announced.
 
-Announcing: a broadcast the node accepted means "accepted", not "irreversible". Once the block holding the transaction is at
-or below the chain's `last_irreversible_block_num`, it is "irreversible". A missing thread, a reply not yet visible
-and an unreachable node all surface as `ContentUnavailableError`, and are never reported as "absent."
+Announcing: a broadcast the node accepted is reported with status "accepted", not "irreversible"; the block becomes
+irreversible about a minute later (at or below the chain's `last_irreversible_block_num`), which the app doesn't yet
+track. A missing or closed thread, an unreachable node, no account, no Keychain, an oversized announcement and a
+declined signature are each refused with their own message, never reported as published.
 
 The same format works on Hive by pointing at Hive API nodes and a Hive thread account. If Hive is added, it is a
 separate substrate choice, never merged with Steem results.

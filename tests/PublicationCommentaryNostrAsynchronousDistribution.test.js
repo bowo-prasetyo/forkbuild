@@ -479,8 +479,8 @@ async function run() {
         assert(wrapperBody.includes('asynchronousDistribution.publish(envelopeJson).catch(() => {})'),
             n('the asynchronous-substrate publish call (Nostr or Arweave, per 0.9.631\'s own selection) is fire-and-forget with its own rejection handler — never awaited inline, so a slow or unreachable relay/gateway can never block a Commentary submission'));
         assert(wrapperBody.includes("? publicationCommentaryArweaveDistribution\n        : publicationCommentaryNostrDistribution;")
-            || /publicationCommentaryArweaveDistribution[\s\S]{0,80}publicationCommentaryNostrDistribution/.test(wrapperBody),
-            n('0.9.631: the wrapper selects between the two asynchronous substrates rather than fanning out to both — the identical "selection, never fan-out" invariant application/publication/distribution/PublicationDistributionRuntimeComposition.js already holds, extended here to Commentary'));
+            || /publicationCommentaryArweaveDistribution[\s\S]{0,160}publicationCommentaryNostrDistribution/.test(wrapperBody),
+            n('0.9.631: the wrapper selects one asynchronous substrate (Nostr, Arweave or Steem) rather than fanning out — the identical "selection, never fan-out" invariant application/publication/distribution/PublicationDistributionRuntimeComposition.js already holds, extended here to Commentary'));
 
         console.log('✓ I (source): create → persist → announce → Nostr publish, confirmed by source order.');
     }

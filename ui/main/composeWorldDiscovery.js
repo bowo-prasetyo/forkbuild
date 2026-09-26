@@ -11,7 +11,10 @@ import { SetNostrRelayConfigurationUseCase } from '../../application/settings/Se
 import { SteemReadingConfiguration } from '../../core/SteemReadingConfiguration.js';
 import { SteemReadingConfigurationStore } from '../../storage/SteemReadingConfigurationStore.js';
 import { SetSteemReadingConfigurationUseCase } from '../../application/settings/SetSteemReadingConfigurationUseCase.js';
-import { composeSteemReadingRuntime } from '../../application/steem/SteemReadingRuntimeComposition.js';
+import { composeSteemRuntime } from '../../application/steem/SteemRuntimeComposition.js';
+import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncingConfigurationStore.js';
+import { SetSteemAnnouncingConfigurationUseCase } from '../../application/settings/SetSteemAnnouncingConfigurationUseCase.js';
+import { createSteemKeychainBroadcaster } from '../../steem/SteemKeychainBroadcaster.js';
 import { LocalWorldEncounterMaterialSource } from '../../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { PeerWorldEncounterMaterialSource } from '../../application/worldEncounter/PeerWorldEncounterMaterialSource.js';
 import { composeWorldEncounterMaterialVerifier } from '../../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
@@ -78,11 +81,17 @@ export function composeWorldDiscovery({
 
     // Steem announcements are read with the saved settings, or the defaults
     // (api.steemit.com, @forkbuild's threads from 2026-09). Changes apply on
-    // the next load, like the other network settings.
+    // the next load, like the other network settings. Announcing reads the
+    // saved account and looks for Steem Keychain each time, since an
+    // extension can inject itself after the page loads.
     const steemReadingConfigurationStore = new SteemReadingConfigurationStore(new LocalStorageProvider());
     const setSteemReadingConfigurationUseCase = new SetSteemReadingConfigurationUseCase({ steemReadingConfigurationStore });
-    const steemReadingRuntime = composeSteemReadingRuntime({
-        configuration: steemReadingConfigurationStore.get() || new SteemReadingConfiguration()
+    const steemAnnouncingConfigurationStore = new SteemAnnouncingConfigurationStore(new LocalStorageProvider());
+    const setSteemAnnouncingConfigurationUseCase = new SetSteemAnnouncingConfigurationUseCase({ steemAnnouncingConfigurationStore });
+    const steemRuntime = composeSteemRuntime({
+        configuration: steemReadingConfigurationStore.get() || new SteemReadingConfiguration(),
+        getAccount: () => steemAnnouncingConfigurationStore.get()?.account ?? null,
+        getBroadcaster: () => createSteemKeychainBroadcaster({ keychain: globalThis.steem_keychain })
     });
 
     const nostrRelayQueryClient = createNostrRelayQueryClient({});
@@ -91,7 +100,7 @@ export function composeWorldDiscovery({
             nostrQueryImpl: nostrRelayQueryClient,
             nostrRelayUrls: resolvedNostrRelayUrls
         }),
-        steem: steemReadingRuntime ? steemReadingRuntime.publicationDiscoveryQueryService : null
+        steem: steemRuntime ? steemRuntime.publicationDiscoveryQueryService : null
     };
     const decentralizedWorldEncounterMaterialDiscoveryRuntime = composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
         discoveryServices: decentralizedWorldDiscoveryServices,
@@ -150,6 +159,7 @@ export function composeWorldDiscovery({
         setNostrRelayConfigurationUseCase, nostrRelayQueryClient, worldDiscoveryLeadRegistry,
         worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand,
         worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
-        steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemReadingRuntime
+        steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
+        steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase
     };
 }
