@@ -916,3 +916,21 @@ and an upload the account can't afford is refused before anything is posted.** T
   node) and `tests/SteemContentStoreBrowser.test.js` (a build in parts with Chromium's compression and WebCrypto).
 - Not done: comparing the RC estimate with a live node, which this environment can't reach; the content threads
   still have to be created on the chain before anything can be stored.
+
+## Steem anchoring proposed (unnumbered, 2026-09-26)
+
+**A written proposal for Steem as a fourth Proof/Anchoring choice, before any code.** A Steem block is irreversible
+within about a minute and its time follows a fixed 3-second schedule, and anchoring costs Resource Credits rather
+than a fee. The timestamp is backed by about 21 elected witnesses rather than proof of work, so Steem is proposed
+as an addition to Bitcoin anchoring, never a replacement.
+
+- `docs/Protocol.md`, "Proposed: Steem Anchoring": anchor type `steem`, a `custom_json` with id `forkbuild-anchor`
+  carrying the Publication's own `contentHash` (a `custom_json` can't be edited or deleted, unlike a post), signed
+  through Steem Keychain. The proof is `{ blockNum, trxId, chain }` and nothing else. The verifier reads the
+  operation from its block, never from `get_content`, treats a block that isn't irreversible yet as unavailable,
+  and asks at least two API nodes. The evidence view shows the block's own time and witness.
+- It sets out what Steem is weaker at (witness collusion, the 2020 takeover and Hive fork, no light client, few API
+  nodes) and says the UI must describe it as "attested by Steem witnesses".
+- `docs/Publishing.md` points to the proposal.
+- Not done: no code yet. Order of work: the verifier and its evidence view, then the publisher, then tracking
+  irreversibility, then optionally keeping block evidence and batching.

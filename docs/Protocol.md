@@ -393,7 +393,8 @@ A DecentralizedPublication says where a copy of a signed object's bytes
 can be found; the bytes are always checked against
 `contentReference.hash`. A PublicationAnchor claims that external
 evidence (Bitcoin, Arweave or Base) exists for a publication; verifying
-that evidence is a separate step.
+that evidence is a separate step. Steem is proposed as a fourth anchor
+type; see "Proposed: Steem Anchoring" below.
 
 Announcements on Nostr (a `t` tag) and Arweave (a matching transaction
 tag) are grouped into families, and a reader only queries its own:
@@ -822,6 +823,115 @@ only)** next to IPFS and Arweave; the Publications page's Content choice and the
 storage holds Snapshots only: a Signed Claim distributed with Steem chosen is refused with "Steem storage holds
 Snapshots only for now. Choose Arweave or IPFS storage to distribute the Signed Claim.", while the Snapshot is still
 stored. It ships as Experimental, like the Steem announcement substrate.
+
+## Proposed: Steem Anchoring
+
+**Status: proposed, not built.** No code yet.
+
+Steem would be a fourth Proof/Anchoring choice next to Bitcoin, Arweave and Base: an anchor type `steem` whose
+evidence is the Publication's `contentHash` in an irreversible Steem block. As with the other anchor types, the
+anchor claims only that the anchoring identity recorded this hash where `locator` says (`core/PublicationAnchor.js`).
+Checking that claim against the chain is a separate step, done by a `ProofVerifier`. Steem anchoring is separate
+from the Steem announcement substrate and from Steem content storage. An anchor is not an announcement, and none of
+the three needs either of the others.
+
+Why Steem: a block is produced every 3 seconds, on a fixed witness schedule, and becomes irreversible when more than
+two thirds of the witnesses have built on it, about a minute later. Bitcoin takes about an hour for six
+confirmations, and a Bitcoin block's own timestamp may be off by up to about two hours. Anchoring costs Resource
+Credits, which regenerate, not a fee per anchor as on Bitcoin, Arweave and Base.
+
+### What it is weaker at
+
+Steem anchoring is offered next to Bitcoin anchoring, never instead of it. The UI and user guide say so plainly
+("attested by Steem witnesses"), never "secured like Bitcoin".
+
+- **Who backs the timestamp.** Bitcoin's history is protected by proof of work, so rewriting it costs energy. Steem's
+  is signed by about 21 witnesses elected by stake. Enough of them colluding could sign a different history. This has
+  nearly happened: in 2020 exchange-held stake voted in new witnesses, which led to the Hive fork, and the chain has
+  frozen accounts by soft fork. Many nodes keep copies of the block log, so rewriting
+  history would be noticed. Blocks from before the Hive fork (20 March 2020) are also kept on Hive.
+- **Checking an anchor years later.** A Bitcoin anchor can be checked with block headers alone, and Bitcoin is very
+  likely to last longer than this project. Steem has no light client and few public API nodes, and the verifier
+  trusts whichever node answers, though it asks more than one (see "Verifying" below). `BitcoinOpReturnProofVerifier`
+  also trusts a single Esplora API today, so the two are closer in practice than in principle.
+- **Edits and deletions.** A post's body can be edited, and a post with no votes or replies can be deleted, so
+  `get_content` shows what a post says now, not what was broadcast. For that reason the anchor is a `custom_json`
+  operation, which can't be edited, and the verifier reads it from its block, never from `get_content`.
+
+### Anchoring
+
+One transaction of one operation, signed with the anchoring account's posting key through Steem Keychain
+(`steem_keychain.requestCustomJson(account, 'forkbuild-anchor', 'Posting', json, message, callback)`). ForkBuild never
+holds a Steem key.
+
+    ['custom_json', {
+      required_auths: [],
+      required_posting_auths: [<anchoring Steem account>],
+      id: 'forkbuild-anchor',
+      json: JSON.stringify({ version: 1, publicationId, contentHash })
+    }]
+
+- `contentHash` is the Publication's own, as raw text. It is never hashed again and never re-encoded, the same rule
+  `BitcoinOpReturnProofVerifier` and `BaseProofVerifier` follow. `publicationId` is there only so a person reading
+  the chain can tell what the operation is about; the verifier matches on `contentHash`.
+- A `custom_json` never shows in Steem feeds, needs no discovery thread, and doesn't count against the 3-second
+  reply interval. It still goes through the same queue as announcements and content, so posts from one account
+  never race each other.
+- The anchoring account is the Steem account from Network Settings → Steem. The Steem account never becomes a
+  ForkBuild identity: `anchorIdentity` and the anchor's signature stay the ForkBuild identity's, as for every other
+  anchor type.
+- After the node accepts the broadcast, the publisher finds the block the transaction landed in (the broadcast
+  result, or `condenser_api.get_transaction` when the node offers it) and returns:
+
+      { published: true, locator: 'steem:<trxId>', proof: { blockNum, trxId, chain: 'steem' } }
+
+  As `ArweaveAnchorPublisher` does, the publisher never invents `anchoredAt`. It reports "accepted" until the block
+  is irreversible, never "anchored".
+- Several Publications could share one operation later (a Merkle root, as OpenTimestamps does), so one Keychain
+  approval would cover many anchors. The first version anchors one Publication per operation.
+
+### Verifying
+
+`SteemProofVerifier` (`anchorType` `'steem'`) checks `{ blockNum, trxId, chain }`, and nothing else, against
+`{ contentHash }`:
+
+1. `chain` must be `'steem'`. Hive would be a separate anchor type with its own verifier, never mixed with Steem
+   results, as for announcements.
+2. `condenser_api.get_dynamic_global_properties`: if `blockNum` is above `last_irreversible_block_num`, the result
+   is unavailable ("not yet irreversible"), never a rejection. That matches an unconfirmed Bitcoin transaction.
+3. `condenser_api.get_block(blockNum)`: a node that can't be reached, or returns no block, gives unavailable. A
+   block whose `transaction_ids` doesn't include `trxId` is a definite rejection, since an irreversible block never
+   changes.
+4. The transaction at that position must contain a `custom_json` with `id` `'forkbuild-anchor'`, whose `json` parses
+   to `version: 1` and whose `contentHash` equals the anchor's. Anything else is a definite rejection.
+5. The verifier asks at least two of the configured API nodes, and accepts only when they agree on the block's id
+   and transaction. If nodes disagree, the result is unavailable and names the disagreement. If only one node
+   answers, the verifier accepts and says that one node was asked.
+6. The block's own `timestamp` (UTC) and `witness` are shown in the anchor evidence view as "recorded in Steem block
+   N at T by witness W". The UI shows that time, read from the block, not the anchor's `anchoredAt`, which is only a
+   report (see `core/PublicationAnchor.js`).
+
+Votes, reputation, payout and front-end muting play no part. `ProofVerifier#verify()` returns only valid,
+invalid or unavailable, so showing the block's time needs either an evidence view that reads the block itself
+(like `ArweaveAnchorEvidenceView`) or an optional `recordedAt` field in a valid result. The evidence view is the
+smaller change and is preferred.
+
+### Keeping evidence
+
+A Steem anchor may also store the evidence it was checked against: the signed block header (previous id,
+timestamp, witness, transaction Merkle root, witness signature) and the transaction. A later reader can then check
+offline that the transaction is in the block and that the block was signed by the named witness's key, and needs
+the network only to check that the witness was scheduled and that the block is on the chain. This is optional and
+comes after the first version.
+
+### Order of work
+
+1. `SteemProofVerifier` with a fake node in tests, and its evidence view. Anchors made by hand can be checked
+   before anything publishes them.
+2. `SteemAnchorPublisher` through Keychain, registered in the Proof/Anchoring choice as **Steem (Experimental)**,
+   with the user guide explaining the trust difference from Bitcoin.
+3. Tracking irreversibility after publishing, so the app reports "anchored" once the block is final.
+4. Optional: keeping block evidence, and batching several Publications into one operation.
 
 ## Vehicles, animals and inventory
 
