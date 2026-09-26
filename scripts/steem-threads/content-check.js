@@ -7,6 +7,8 @@ import { createSteemAnnouncer } from '../../application/steem/SteemAnnouncer.js'
 import { createSteemResourceCreditEstimator } from '../../application/steem/SteemResourceCreditEstimator.js';
 import { describeSteemContentUploadProgress } from '../../application/steem/SteemContentUploadProgressText.js';
 import { readSteemContentCheck, steemContentCheckText, storeSteemContentCheck } from './SteemContentCheck.js';
+import { DEFAULT_STEEM_IMAGE_HOST, createSteemKeychainImageSigner } from '../../steem/SteemImageUpload.js';
+import { runSteemImageUploadCheck, steemImageCheckPicture } from './SteemImageUploadCheck.js';
 
 const $ = (id) => document.getElementById(id);
 const form = $('settings');
@@ -19,6 +21,7 @@ let running = false;
 
 $('threadAccount').value = STEEM_DISCOVERY_THREAD_ACCOUNT;
 $('nodes').value = DEFAULT_STEEM_API_NODES.join('\n');
+$('imageHost').value = DEFAULT_STEEM_IMAGE_HOST;
 
 form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -72,6 +75,60 @@ readButton.addEventListener('click', async () => {
         setBusy(false);
     }
 });
+
+$('imageSettings').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const account = $('account').value.trim();
+    const host = $('imageHost').value.trim();
+    const status = $('imageStatus');
+    const show = (text, kind) => {
+        status.textContent = text;
+        status.className = kind ? `state-${kind}` : '';
+    };
+    if (!isSteemAccountName(account)) return show(`Enter your Steem account above first ("${account}" is not a Steem account name).`, 'bad');
+    if (!/^https:\/\//.test(host)) return show('The image host must be an https:// URL.', 'bad');
+    const signer = createSteemKeychainImageSigner({ keychain: window.steem_keychain });
+    if (!signer) return show('Steem Keychain was not found. Install it, unlock it, and reload this page.', 'bad');
+    const button = $('uploadImage');
+    button.disabled = true;
+    $('imagePreview').hidden = true;
+    try {
+        show('Drawing a test image…');
+        const bytes = await steemImageCheckPicture();
+        const result = await runSteemImageUploadCheck({
+            account, host, signer, bytes,
+            loadImage: (url) => new Promise((resolve) => {
+                const image = $('imagePreview').querySelector('img');
+                image.onload = () => resolve(true);
+                image.onerror = () => resolve(false);
+                image.src = url;
+                $('imagePreview').hidden = false;
+            }),
+            onStep: (text) => show(text)
+        });
+        renderImageRows(result.rows);
+        show(result.message, result.ok ? 'ok' : 'bad');
+    } catch (error) {
+        show(`The check stopped: ${error.message}`, 'bad');
+    } finally {
+        button.disabled = false;
+    }
+});
+
+function renderImageRows(rows) {
+    const table = $('imageResults');
+    table.tBodies[0].replaceChildren(...rows.map(([label, value]) => {
+        const row = document.createElement('tr');
+        const name = document.createElement('td');
+        name.className = 'label';
+        name.textContent = label;
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.append(name, cell);
+        return row;
+    }));
+    table.hidden = rows.length === 0;
+}
 
 window.addEventListener('beforeunload', (event) => {
     if (running) event.preventDefault();

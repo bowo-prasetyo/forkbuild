@@ -103,3 +103,7 @@ pre {
     border-radius: 6px;
     font-size: 13px;
 }
+
+#imagePreview img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+td.label { font-weight: 600; white-space: nowrap; }
+td { overflow-wrap: anywhere; }
