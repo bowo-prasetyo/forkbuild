@@ -1053,4 +1053,7 @@ Resource Credits and the transaction limit count `body` and `json_metadata` the 
 - Tests: `tests/SteemContentStore.test.js` (the version 2 format, notices, tampering with the data, version 1 manifests
   and uploads in parts, not resuming a version 1 upload) and `tests/SteemContentCheck.test.js` (the test content, and
   reading it back from a good node, one that cuts `json_metadata` short, and one that is down).
-- Not done: running the check against live API nodes, which this environment can't reach.
+- Checked on the live chain (2026-09-26): the chain accepted the three test posts, and `https://api.steemit.com`, the
+  default API node, returned all 86,110 characters unchanged
+  (`steem://forkbuild/forkbuild-c-mui7cxxx-aj71p6ic#17b12eb5`). Other API nodes have not been checked yet; the page
+  can read that same test content from any node added later.
