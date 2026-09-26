@@ -89,8 +89,9 @@ database" rule. For Commentary, this design adds only the sync cursors
   at most 2,000 records of one kind. When a new record would go past
   that, the record least recently seen is removed first. It can always
   be discovered again.
-- **Deferred to Phase 5:** a cap per announcing identity (for signed
-  kinds), and keeping records from followed identities longer.
+- **Per author.** Phase 5 adds a cap per Place Naming author for records
+  from peers. Keeping records from followed identities longer is not
+  built.
 
 ## Storage
 
@@ -213,13 +214,16 @@ it came from. Phase 1 already keeps every lead those searches find.
 
 **Built.**
 
-`AnnouncementSyncScheduler` runs the Phase 3 sync on a timer, whether or
-not World View is open. `ui/main/composeAnnouncementSync.js` wires it to
-the same relays, Arweave gateway and Steem reader discovery already
-uses.
+`BackgroundAnnouncementSync` runs the Phase 3 sync on a timer.
+`ui/main/composeAnnouncementSync.js` wires it to the same relays, Arweave
+gateway and Steem reader discovery already uses.
 
 - **When it runs.**
-  - First, 10 seconds after the app opens.
+  - It starts the first time World View opens in a session, and keeps
+    running after World View closes. It does not start when the app
+    opens, because docs/Privacy.md promises that opening the app
+    contacts no server except the site it is served from.
+  - First, 10 seconds after it starts.
   - Then every 5 minutes, or every 30 seconds while any endpoint is still
     behind (a head not caught up, or a backfill not finished).
   - Nothing runs while the tab is hidden.
@@ -245,23 +249,39 @@ uses.
 
 ## Phase 5: peers share their index
 
-**Planned.**
+**Built.**
 
-Peer-to-peer then becomes the fastest way a new device fills its index:
-one connection to a friend gives it everything that friend has seen.
+Peer-to-peer is now the fastest way a new device fills its index: one
+connection to a friend gives it everything that friend has seen.
 
-- **A new peer protocol,** `forkbuild:announcement-index`. After
-  connecting, each side sends a SUMMARY: the kinds and tags it holds, and
-  a count and newest time for each. The other side sends a REQUEST for
-  the tags where it is behind. RESPONSE messages carry records,
-  up to 64 KiB each, sent as several messages when needed.
-- **Every received record is checked** exactly as a record from a
-  substrate is, and recorded with the origin `peer:<identityId>`. A peer
-  can never remove or overwrite a record.
+- **Protocol.** `forkbuild:announcement-index`
+  (`AnnouncementIndexPeerProtocol.js`, `AnnouncementIndexPeerExchange.js`):
+  1. When a peer authenticates, each side sends a SUMMARY: for each tag it
+     holds, the kind, the tag, the record count and a digest of the
+     record keys. It lists at most 300 tags, largest first, within one
+     message.
+  2. For each tag whose digest differs, the other side sends a REQUEST.
+     There are at most 50 REQUESTs per summary.
+  3. The answer is one or more RESPONSE messages, each under 48 KiB of
+     payloads. Both sides end up holding the union.
+- **Kinds shared.** Only Snapshot candidates and Place Naming claims.
+  - A Publication lead's origin names the relay set it came from, which a
+    peer cannot vouch for.
+  - Commentary already has its own peer protocol.
+- **Checks.** Every received record goes through the same checks as a
+  record from a substrate, and is recorded with the origin
+  `peer:<identityId>`. A peer can add records, never remove or change one.
 - **Limits.**
-  - At most one exchange in progress per peer.
-  - A per-peer cap on records accepted per hour.
-  - For signed kinds, a cap per announcing identity.
+  - A RESPONSE is accepted only for a tag this device asked that peer for
+    in the last five minutes.
+  - Each peer may add at most 20,000 records an hour.
+  - A Place Naming author may hold at most 100 claims per region tag,
+    counting what is already stored.
+- **World View.** It hears about new peer records, grouped over one
+  second, through the same signal as a finished sync, and shows them.
+- **Privacy.** A connected peer learns which tags this device holds. For
+  Place Naming, those tags name the World regions this device has
+  searched.
 
 ## Phase 6: narrower tags
 

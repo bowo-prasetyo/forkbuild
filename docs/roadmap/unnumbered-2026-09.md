@@ -1333,11 +1333,11 @@ background scheduler).
 
 ## Announcement Index: background sync (unnumbered, 2026-09-26)
 
-**The Announcement Index now fills itself in the background**, whether or not World View is open. This is Phase 4
-of docs/AnnouncementIndex.md. Until now, discovery searched only when World View's player had moved 100 units,
+**The Announcement Index now fills itself in the background**, from the first time World View opens in a session,
+and keeps doing so after it closes. This is Phase 4 of docs/AnnouncementIndex.md. Until now, discovery searched only when World View's player had moved 100 units,
 when a Commentary section opened, or when **Discover** was clicked.
 
-- `application/announcementIndex/AnnouncementSyncScheduler.js` runs the Phase 3 sync 10 s after startup, then
+- `application/announcementIndex/BackgroundAnnouncementSync.js` runs the Phase 3 sync 10 s after it starts, then
   every 5 minutes, or every 30 s while an endpoint is still behind. It skips runs while the tab is hidden, and runs
   targets one after another. The Snapshot and Commentary tags are synced every run. Place Naming region tags take
   turns, ten per run.
@@ -1349,13 +1349,41 @@ when a Commentary section opened, or when **Discover** was clicked.
   identity's Publications is announced even when no Commentary section is open.
 - World View subscribes: after each run it re-hands indexed Snapshots to automatic placement, and replaces its
   nearby Place Naming claims with the index's (`PlaceNamingDiscoveryMonitor#seed(…, { replace: true })`).
-- Checked in Chromium on the real app: on the Home page, about 10 s after load, the sync queried Arweave GraphQL
-  for the Snapshot and Commentary tags, newest first.
+- It starts when World View first opens, not when the app opens: docs/Privacy.md promises that opening the app
+  contacts nothing but the site it is served from.
+- Checked in Chromium on the real app: the Home page made no sync request; about 10 s after World View opened,
+  the sync queried Arweave GraphQL for the Snapshot and Commentary tags, newest first.
 - Two older tests that match source text now allow for the sync: `tests/PublicationCommentaryNostrAsynchronousDistribution.test.js` counts five notification bridge call sites, not four. World View listens through `onSynced()`, so `tests/WorldViewPublicationDistributionIntegration.test.js`'s ban on `.subscribe(` in World View still holds.
-- Tests: `tests/AnnouncementSyncScheduler.test.js` covers:
+- Tests: `tests/BackgroundAnnouncementSync.test.js` covers:
   - the first-run delay, the catch-up and regular intervals, and stop;
   - hidden tabs, and `runNow()` joining a run in progress;
   - rotation;
   - a failing run still being rescheduled, and a broken listener not stopping the others;
   - watched tags and their write throttle;
   - replacing seeded claims.
+
+## Announcement Index: peers share their index (unnumbered, 2026-09-26)
+
+**Connected peers now share their Announcement Indexes**, so one connection gives a new device every Snapshot and
+Place Naming claim its peer has discovered. This is Phase 5 of docs/AnnouncementIndex.md.
+
+- New peer protocol `forkbuild:announcement-index` (docs/Protocol.md, "Announcement Index exchange").
+  - When a peer authenticates, each side sends a SUMMARY: kind, tag, count and a digest of the record keys per
+    tag, at most 300 tags within one message.
+  - The other side REQUESTs each tag whose digest differs, at most 50 per summary. RESPONSEs carry the payloads,
+    split to fit peer messages.
+- Only Snapshot candidates and Place Naming claims are shared. A Publication lead's origin cannot be vouched for
+  by a peer, and Commentary has its own protocol.
+- Received records pass the index's usual checks and carry the origin `peer:<identityId>`.
+  - A RESPONSE counts only for a tag requested from that peer in the last five minutes.
+  - A peer may add at most 20,000 records an hour.
+  - A Place Naming author may hold at most 100 claims per region tag.
+- `composeAnnouncementSync()` now also builds the exchange, and gives World View one `announcementIndexChanges`
+  signal for both finished syncs and peer records (grouped over one second).
+- docs/Privacy.md: connected peers learn which tags this device holds, including the World regions it has searched
+  for Place Naming.
+- Tests: `tests/AnnouncementIndexPeerExchange.test.js` covers:
+  - two devices on the real in-memory peer network exchanging both ways, without Publication leads;
+  - identical indexes sending only summaries;
+  - a misbehaving peer, where unrequested, expired, over-author-cap and over-hourly-cap records are all refused;
+  - responses split to fit peer messages.

@@ -119,6 +119,11 @@ export class AnnouncementIndex {
             .map((record) => clone(record.payload));
     }
 
+    // The keys of the records stored under (kind, tag).
+    keys(kind, tag) {
+        return this._load(kind, tag).map((record) => record.key);
+    }
+
     // Every tag holding records of this kind.
     tags(kind) {
         const prefix = `${STORAGE_PREFIX}${kind}:`;

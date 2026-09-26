@@ -270,6 +270,31 @@ reads `payload`.
 | `forkbuild:snapshot-content-transfer` | application/snapshot/materialization/PublicationSnapshotContentPeerExchange.js | Snapshot bytes |
 | `forkbuild:world-encounter-material` | application/worldEncounter/PeerWorldEncounterMaterialSource.js | encounter content |
 | `forkbuild:commentary-distribution` | core/PublicationCommentaryDistributionEnvelope.js | see "Publication Commentary Distribution" |
+| `forkbuild:announcement-index` | application/announcementIndex/AnnouncementIndexPeerProtocol.js | see "Announcement Index exchange" |
+
+### Announcement Index exchange
+
+Peers share the Snapshot candidates and Place Naming claims each has
+discovered (docs/AnnouncementIndex.md, "Phase 5"). Three payloads:
+
+    SUMMARY   { kind: 'summary', entries: [{ kind, tag, count, digest }] }
+    REQUEST   { kind: 'request', recordKind, tag }
+    RESPONSE  { kind: 'response', recordKind, tag, payloads: [...] }
+
+- `kind` / `recordKind` is `snapshot` or `place-naming`.
+- `digest` is `<count>:<FNV-1a of the sorted record keys>`.
+- Each side sends a SUMMARY once a connection authenticates, of at most
+  300 entries and 48 KiB.
+- The receiver REQUESTs each tag whose digest differs from its own, at
+  most 50 per SUMMARY.
+- RESPONSE payloads are the same shapes the index stores: a Snapshot
+  candidate, or a Place Naming discovery envelope. They are split so
+  each message carries at most 48 KiB of payloads.
+- A RESPONSE is ignored unless it answers a REQUEST sent to that peer
+  within five minutes.
+- Payloads are checked like any other discovery result. The signatures
+  on Place Naming claims are verified where they are used, as for claims
+  from a substrate.
 
 ### Large content in parts
 

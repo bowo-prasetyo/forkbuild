@@ -32,6 +32,9 @@ is no other copy and no way to recover it.
   address (a direct connection needs it; a TURN relay hides it from the peer
   but not from the relay). Connected peers can see your avatar and presence
   according to its visibility setting, and your friends can message you.
+  They also receive the Snapshot and Place Naming announcements your device
+  has discovered, so they learn which World regions you have searched for
+  place names (docs/AnnouncementIndex.md).
 
 ## Servers ForkBuild contacts
 

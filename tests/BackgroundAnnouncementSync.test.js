@@ -1,4 +1,4 @@
-import { AnnouncementSyncScheduler } from '../application/announcementIndex/AnnouncementSyncScheduler.js';
+import { BackgroundAnnouncementSync } from '../application/announcementIndex/BackgroundAnnouncementSync.js';
 import { AnnouncementIndex } from '../application/announcementIndex/AnnouncementIndex.js';
 import { AnnouncementKind } from '../application/announcementIndex/AnnouncementKinds.js';
 import { RecordingDiscoverySource } from '../application/announcementIndex/IndexedDiscoverySources.js';
@@ -47,7 +47,7 @@ async function run() {
         const timers = fakeTimers();
         let isBehind = true;
         const sync = fakeSync({ behind: () => isBehind });
-        const scheduler = new AnnouncementSyncScheduler({
+        const scheduler = new BackgroundAnnouncementSync({
             sync, targets: () => ({ core: [target('snapshot'), target('commentary')], rotating: [] }),
             firstDelayMs: 10, intervalMs: 1000, catchUpIntervalMs: 50,
             setTimer: timers.setTimer, clearTimer: timers.clearTimer
@@ -78,7 +78,7 @@ async function run() {
         const timers = fakeTimers();
         const sync = fakeSync();
         let active = false;
-        const scheduler = new AnnouncementSyncScheduler({
+        const scheduler = new BackgroundAnnouncementSync({
             sync, targets: () => ({ core: [target('snapshot')], rotating: [] }),
             firstDelayMs: 10, intervalMs: 1000, isActive: () => active,
             setTimer: timers.setTimer, clearTimer: timers.clearTimer
@@ -100,7 +100,7 @@ async function run() {
         const timers = fakeTimers();
         const sync = fakeSync();
         const rotating = ['r1', 'r2', 'r3', 'r4', 'r5'].map(target);
-        const scheduler = new AnnouncementSyncScheduler({
+        const scheduler = new BackgroundAnnouncementSync({
             sync, targets: () => ({ core: [target('core')], rotating }),
             maxRotatingTargetsPerRun: 2, setTimer: timers.setTimer, clearTimer: timers.clearTimer
         });
@@ -115,7 +115,7 @@ async function run() {
     // Section D: a failing sync ends the run, not the schedule.
     {
         const timers = fakeTimers();
-        const scheduler = new AnnouncementSyncScheduler({
+        const scheduler = new BackgroundAnnouncementSync({
             sync: { sync: async () => { throw new Error('unexpected'); } },
             targets: () => ({ core: [target('core')], rotating: [] }),
             intervalMs: 1000, setTimer: timers.setTimer, clearTimer: timers.clearTimer
@@ -166,10 +166,10 @@ async function run() {
         console.log('✓ Section F: a background sync refreshes the claims on screen');
     }
 
-    console.log('\nAll AnnouncementSyncScheduler tests passed.');
+    console.log('\nAll BackgroundAnnouncementSync tests passed.');
 }
 
 run().catch((error) => {
-    console.error('AnnouncementSyncScheduler.test.js FAILED:', error);
+    console.error('BackgroundAnnouncementSync.test.js FAILED:', error);
     process.exitCode = 1;
 });

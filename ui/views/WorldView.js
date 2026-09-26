@@ -220,7 +220,8 @@ export default {
         // earlier searches found before the network answers (docs/AnnouncementIndex.md).
         const discoverIndexedSnapshotCandidatesCommand = inject('discoverIndexedSnapshotCandidatesCommand', null);
         const indexedPlaceNamingDiscoveryQueryService = inject('indexedPlaceNamingDiscoveryQueryService', null);
-        const announcementSyncScheduler = inject('announcementSyncScheduler', null);
+        const announcementIndexChanges = inject('announcementIndexChanges', null);
+        const startAnnouncementSync = inject('startAnnouncementSync', null);
         const publishPlaceNamingClaimToNostrCommand = inject('publishPlaceNamingClaimToNostrCommand', null);
         const resolveSelectedSnapshotCommand = inject('resolveSelectedSnapshotCommand', null);
         const materializeSelectedSnapshotCommand = inject('materializeSelectedSnapshotCommand', null);
@@ -453,10 +454,10 @@ export default {
             }
         }
 
-        // What a background sync adds to the index shows here without waiting for
-        // the player to move.
-        const unsubscribeAnnouncementSync = announcementSyncScheduler
-            ? announcementSyncScheduler.onSynced(() => {
+        // What a background sync or a peer adds to the index shows here without
+        // waiting for the player to move.
+        const unsubscribeAnnouncementIndexChanges = announcementIndexChanges
+            ? announcementIndexChanges.onChanged(() => {
                 if (discoveryPrimedFromIndex && spatialContext.value) {
                     primeDiscoveryFromIndex(spatialContext.value, { replace: true });
                 }
@@ -868,6 +869,10 @@ export default {
         });
 
         onMounted(() => {
+            // Idempotent: the background sync keeps running after this view closes.
+            if (startAnnouncementSync) {
+                startAnnouncementSync();
+            }
             allPublications.value = listPublicationsUseCase.execute();
             session.start(viewport.value);
             session.navigateToDocument(initialDocumentId);
@@ -934,7 +939,7 @@ export default {
             // sees a dead session at its registration checkpoint.
             automaticCascadeSessionActive = false;
             placeNamingDiscoveryPresentationActive = false;
-            unsubscribeAnnouncementSync();
+            unsubscribeAnnouncementIndexChanges();
             if (placeNamingDiscoveryMonitor) {
                 placeNamingDiscoveryMonitor.dispose();
             }

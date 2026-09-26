@@ -11,7 +11,7 @@ export const DEFAULT_MAX_ROTATING_TARGETS_PER_RUN = 10;
 // behind, the next run comes sooner; once everything has caught up, runs
 // fall back to the regular interval. Nothing runs while `isActive()` is false
 // (a hidden tab).
-export class AnnouncementSyncScheduler {
+export class BackgroundAnnouncementSync {
     // targets(): { core: target[], rotating: target[] }, asked afresh each run
     // so newly searched tags join. A single endpoint failing is part of a
     // normal run's summary, never an error of the run.
@@ -26,8 +26,8 @@ export class AnnouncementSyncScheduler {
         setTimer = (callback, ms) => setTimeout(callback, ms),
         clearTimer = (handle) => clearTimeout(handle)
     }) {
-        if (!sync || typeof sync.sync !== 'function') throw new Error('AnnouncementSyncScheduler: an AnnouncementSync is required');
-        if (typeof targets !== 'function') throw new Error('AnnouncementSyncScheduler: a targets() function is required');
+        if (!sync || typeof sync.sync !== 'function') throw new Error('BackgroundAnnouncementSync: an AnnouncementSync is required');
+        if (typeof targets !== 'function') throw new Error('BackgroundAnnouncementSync: a targets() function is required');
         this._sync = sync;
         this._targets = targets;
         this._firstDelayMs = firstDelayMs;

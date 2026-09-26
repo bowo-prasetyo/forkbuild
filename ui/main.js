@@ -465,12 +465,15 @@ const refreshPublicationCommentaryCommand = composeRefreshPublicationCommentaryC
 });
 app.provide('refreshPublicationCommentaryCommand', refreshPublicationCommentaryCommand);
 
-const { announcementSyncScheduler } = composeAnnouncementSync({
+const { backgroundAnnouncementSync, announcementIndexChanges } = composeAnnouncementSync({
     announcementIndex, nostrRelayQueryClient, resolvedNostrRelayUrls, resolvedArweaveGatewayUrl, steemRuntime,
-    publicationCommentaryDistributionExchange, publicationCommentaryRemoteNotificationBridge
+    publicationCommentaryDistributionExchange, publicationCommentaryRemoteNotificationBridge,
+    peerMessageBus, connectedPeerRegistry: peerSessionManager.registry
 });
-announcementSyncScheduler.start();
-app.provide('announcementSyncScheduler', announcementSyncScheduler);
+app.provide('announcementIndexChanges', announcementIndexChanges);
+// Opening the app contacts no server but its own site (docs/Privacy.md), so the
+// background sync starts the first time World View, the discovery feature, opens.
+app.provide('startAnnouncementSync', () => backgroundAnnouncementSync.start());
 
 const {
     arweaveAnnouncementUploadTaggedTransaction, publicationDistributionCommand,

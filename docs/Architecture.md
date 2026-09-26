@@ -315,8 +315,17 @@ recorded, and the index answers beside them, so an announcement that has
 left a substrate's newest page is still found. World View shows what the
 index holds before the network answers. The index holds pointers and
 claims only; parsing, signature checks and resolving still happen on
-whatever it returns. docs/AnnouncementIndex.md has the full design and
-the phases still to come.
+whatever it returns.
+
+- **Sync cursors.** They page each Nostr relay and the Arweave GraphQL
+  endpoint until every announcement under a tag has been read, a few
+  pages per run.
+- **Background sync.** `BackgroundAnnouncementSync` runs the sync in the
+  background, once World View has opened in the session.
+- **Peers.** The `forkbuild:announcement-index` peer protocol shares
+  Snapshot and Place Naming records between connected peers.
+
+docs/AnnouncementIndex.md has the full design.
 
 ## Documents: save, autosave, publish and fork
 

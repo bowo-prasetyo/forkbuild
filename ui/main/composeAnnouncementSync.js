@@ -2,18 +2,24 @@ import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
 import { AnnouncementKind } from '../../application/announcementIndex/AnnouncementKinds.js';
 import { AnnouncementSync } from '../../application/announcementIndex/AnnouncementSync.js';
 import { AnnouncementSyncCursorStore } from '../../application/announcementIndex/AnnouncementSyncCursorStore.js';
-import { AnnouncementSyncScheduler } from '../../application/announcementIndex/AnnouncementSyncScheduler.js';
+import { BackgroundAnnouncementSync } from '../../application/announcementIndex/BackgroundAnnouncementSync.js';
 import { snapshotSyncTarget, placeNamingSyncTarget, commentarySyncTarget } from '../../application/announcementIndex/AnnouncementSyncTargets.js';
+import { AnnouncementIndexPeerExchange } from '../../application/announcementIndex/AnnouncementIndexPeerExchange.js';
 
-// Composition root: the background sync that keeps the Announcement Index
-// complete (docs/AnnouncementIndex.md, "Phase 4"). It reads the same relays
-// and Arweave gateway discovery already uses, and runs only while the tab is
-// visible. Imported Commentary goes through the same notification bridge as
-// every other remote Commentary, so a new comment on one of this identity's
-// own Publications is announced whichever way it arrived.
+// Records from peers arrive in bursts, one RESPONSE at a time.
+const PEER_CHANGE_DEBOUNCE_MS = 1000;
+
+// Composition root: the background sync and the peer exchange that keep the
+// Announcement Index complete (docs/AnnouncementIndex.md, "Phase 4" and
+// "Phase 5"). The sync reads the same relays and Arweave gateway discovery
+// already uses, and runs only while the tab is visible. Imported Commentary
+// goes through the same notification bridge as every other remote Commentary,
+// so a new comment on one of this identity's own Publications is announced
+// whichever way it arrived.
 export function composeAnnouncementSync({
     announcementIndex, nostrRelayQueryClient, resolvedNostrRelayUrls, resolvedArweaveGatewayUrl,
-    steemRuntime = null, publicationCommentaryDistributionExchange, publicationCommentaryRemoteNotificationBridge
+    steemRuntime = null, publicationCommentaryDistributionExchange, publicationCommentaryRemoteNotificationBridge,
+    peerMessageBus, connectedPeerRegistry
 }) {
     const sync = new AnnouncementSync({
         cursorStore: new AnnouncementSyncCursorStore({ storage: new LocalStorageProvider() }),
@@ -35,7 +41,7 @@ export function composeAnnouncementSync({
         commentarySyncTarget({ importCommentaryEnvelope, steemDistribution: steemRuntime ? steemRuntime.commentaryDistribution : null })
     ];
 
-    const announcementSyncScheduler = new AnnouncementSyncScheduler({
+    const backgroundAnnouncementSync = new BackgroundAnnouncementSync({
         sync,
         targets: () => ({
             core: coreTargets,
@@ -46,5 +52,38 @@ export function composeAnnouncementSync({
         isActive: () => typeof document === 'undefined' || document.visibilityState !== 'hidden'
     });
 
-    return { announcementSyncScheduler };
+    // One signal for "the index holds more than before", whether from a sync
+    // run or from a peer, so World View can show it without searching again.
+    const changeListeners = new Set();
+    const notifyChanged = () => {
+        for (const listener of changeListeners) {
+            try {
+                listener();
+            } catch {
+                // One listener failing never stops the others.
+            }
+        }
+    };
+    backgroundAnnouncementSync.onSynced(notifyChanged);
+    let peerChangeTimer = null;
+    const announcementIndexPeerExchange = new AnnouncementIndexPeerExchange({
+        index: announcementIndex,
+        peerMessageBus,
+        connectedPeerRegistry,
+        onRecordsReceived: () => {
+            if (peerChangeTimer !== null) return;
+            peerChangeTimer = setTimeout(() => {
+                peerChangeTimer = null;
+                notifyChanged();
+            }, PEER_CHANGE_DEBOUNCE_MS);
+        }
+    });
+    const announcementIndexChanges = Object.freeze({
+        onChanged(listener) {
+            changeListeners.add(listener);
+            return () => changeListeners.delete(listener);
+        }
+    });
+
+    return { backgroundAnnouncementSync, announcementIndexPeerExchange, announcementIndexChanges };
 }
