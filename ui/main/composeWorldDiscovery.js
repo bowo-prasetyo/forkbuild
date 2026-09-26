@@ -15,6 +15,8 @@ import { composeSteemRuntime } from '../../application/steem/SteemRuntimeComposi
 import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncingConfigurationStore.js';
 import { SetSteemAnnouncingConfigurationUseCase } from '../../application/settings/SetSteemAnnouncingConfigurationUseCase.js';
 import { createSteemKeychainBroadcaster } from '../../steem/SteemKeychainBroadcaster.js';
+import { SteemContentUploadStore } from '../../storage/SteemContentUploadStore.js';
+import { shallowRef } from 'vue';
 import { LocalWorldEncounterMaterialSource } from '../../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { PeerWorldEncounterMaterialSource } from '../../application/worldEncounter/PeerWorldEncounterMaterialSource.js';
 import { composeWorldEncounterMaterialVerifier } from '../../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
@@ -88,10 +90,16 @@ export function composeWorldDiscovery({
     const setSteemReadingConfigurationUseCase = new SetSteemReadingConfigurationUseCase({ steemReadingConfigurationStore });
     const steemAnnouncingConfigurationStore = new SteemAnnouncingConfigurationStore(new LocalStorageProvider());
     const setSteemAnnouncingConfigurationUseCase = new SetSteemAnnouncingConfigurationUseCase({ steemAnnouncingConfigurationStore });
+    // The Steem content store's latest upload progress, shown by the
+    // Distribute dialogs and the Publications page while it stores a
+    // Snapshot; unfinished uploads are remembered so a retry resumes them.
+    const steemContentUploadProgress = shallowRef(null);
     const steemRuntime = composeSteemRuntime({
         configuration: steemReadingConfigurationStore.get() || new SteemReadingConfiguration(),
         getAccount: () => steemAnnouncingConfigurationStore.get()?.account ?? null,
-        getBroadcaster: () => createSteemKeychainBroadcaster({ keychain: globalThis.steem_keychain })
+        getBroadcaster: () => createSteemKeychainBroadcaster({ keychain: globalThis.steem_keychain }),
+        contentUploads: new SteemContentUploadStore(new LocalStorageProvider()),
+        contentUploadProgress: { report: (state) => { steemContentUploadProgress.value = state; } }
     });
 
     const nostrRelayQueryClient = createNostrRelayQueryClient({});
@@ -160,6 +168,6 @@ export function composeWorldDiscovery({
         worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand,
         worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
         steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
-        steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase
+        steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress
     };
 }

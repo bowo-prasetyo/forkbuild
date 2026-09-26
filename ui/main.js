@@ -315,7 +315,7 @@ const {
     worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand,
     worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
     steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
-    steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase
+    steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress
 } = composeWorldDiscovery({
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
     ipfsNodeConfigurationStore
@@ -327,6 +327,7 @@ if (steemRuntime) {
     publicationSnapshotPlacementResolutionStoreRegistry.register(steemRuntime.contentStore);
 }
 app.provide('worldDiscoverySourceRegistry', worldDiscoveryRuntime.registry);
+app.provide('steemContentUploadProgress', steemContentUploadProgress);
 app.provide('arweaveGatewayConfigurationStore', arweaveGatewayConfigurationStore);
 app.provide('setArweaveGatewayConfigurationUseCase', setArweaveGatewayConfigurationUseCase);
 app.provide('ipfsGatewayConfigurationStore', ipfsGatewayConfigurationStore);

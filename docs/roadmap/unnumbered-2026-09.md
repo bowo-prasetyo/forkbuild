@@ -884,3 +884,35 @@ built yet.
   storage and a Steem announcement resolved through `DecentralizedSnapshotResolver`).
 - Not done: parts, progress and resuming; the RC estimate; content threads have not been created on the chain yet,
   so storing fails with a clear message until the operator page creates them.
+
+## Steem content storage in parts, with progress, resuming and a Resource Credits check (unnumbered, 2026-09-26)
+
+**Builds too large for one Steem post are stored as a manifest and up to 20 parts, an interrupted upload resumes,
+and an upload the account can't afford is refused before anything is posted.** This finishes the order of work in
+`docs/Protocol.md`, "Proposed: Steem Content Storage", which is now marked built.
+
+- Parts: `core/SteemContentManifest.js` builds and checks parts (replies to the manifest at
+  `<manifest permlink>-p<index>`), splits `gzip-base64` text into 48 KiB slices, and refuses manifests with more than
+  20 parts, other part permlinks, or lengths that don't add up. `SteemContentStore.put()` posts the manifest (listing
+  every part's length and SHA-256) and then each part through `SteemAnnouncer.postContentPart()`; `get()` reads the
+  parts with one `get_content_replies`, checks author, parent, permlink, length and SHA-256, and joins them.
+- Progress: `put(bytes, { onProgress })` reports each accepted post; `ui/main.js` provides the latest report as
+  `steemContentUploadProgress`, and the Editor and World View Distribute dialogs and the Publications page show it
+  (`describeSteemContentUploadProgress()`). A render check in Chromium caught that Options API components receive the
+  injected ref already unwrapped.
+- Resuming: `storage/SteemContentUploadStore.js` remembers an upload whose manifest is posted, per account and content
+  hash. Storing the same content again reads the manifest back and posts only missing parts, editing any changed part
+  without `comment_options`; a manifest that no longer matches starts a fresh upload. A failed part throws
+  `SteemContentUploadIncompleteError`, saying how many posts are stored.
+- Resource Credits: `core/SteemResourceCredits.js` implements the chain's rc plugin (packed transaction size, resource
+  usage for `comment` and `comment_options`, the price curve, and manabar regeneration) in BigInt, from the steemit/steem
+  source. `application/steem/SteemResourceCreditEstimator.js` reads the account and prices from `rc_api` and
+  `condenser_api`. Too few RC throws `SteemResourceCreditsError` before posting; no estimate lets the upload go ahead;
+  the chain's own refusal is reported as running out of Resource Credits.
+- The Distribute dialogs' label is now "Steem (Snapshots only)", since parts hold up to about 30,000 bricks.
+- Tests: `tests/SteemContentStore.test.js` (parts, progress events, missing, edited and impostor parts, resuming after
+  a declined part, fixing a changed part, a stale record, the RC refusal before and during an upload),
+  `tests/SteemResourceCredits.test.js` (hand-computed sizes, usage and costs, regeneration, the estimator over a fake
+  node) and `tests/SteemContentStoreBrowser.test.js` (a build in parts with Chromium's compression and WebCrypto).
+- Not done: comparing the RC estimate with a live node, which this environment can't reach; the content threads
+  still have to be created on the chain before anything can be stored.

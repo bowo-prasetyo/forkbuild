@@ -619,11 +619,11 @@ separate substrate choice, never merged with Steem results.
 
 ## Proposed: Steem Content Storage
 
-**Status: the inline case is built, Experimental; parts are not built yet.** A manifest that lists parts is refused
-when read ("stored in parts, which this version of ForkBuild can't read yet"), and content that doesn't fit one post
-is refused when stored. Code: `core/SteemContentManifest.js` (the format and the locator),
-`content/SteemContentStore.js` (encoding, `put()` and `get()`), and `postContent()` in
-`application/steem/SteemAnnouncer.js`; `composeSteemRuntime()` builds the store and `ui/main.js` registers it for
+**Status: built, Experimental.** Code: `core/SteemContentManifest.js` (the manifest, part and locator formats),
+`core/SteemResourceCredits.js` (the RC cost formula), `content/SteemContentStore.js` (encoding, `put()` with parts,
+resuming and the RC check, and `get()`), `storage/SteemContentUploadStore.js` (unfinished uploads),
+`application/steem/SteemResourceCreditEstimator.js` (asking a node), and `postContent()` and `postContentPart()` in
+`application/steem/SteemAnnouncer.js`. `composeSteemRuntime()` builds the store, and `ui/main.js` registers it for
 Snapshot storage and resolution.
 
 Steem would be a third Content substrate next to IPFS and Arweave: a `ContentStore` whose `storage` is `'steem'`,
@@ -720,25 +720,55 @@ The locator, used as the `ContentReference`'s `uri` and the Snapshot envelope's 
 
 ### Uploading
 
-`put(bytes)` on the Steem store:
+`put(bytes, { onProgress })` on the Steem store:
 
-1. Encodes the content, plans the parts and checks the limits below, before any network call.
-2. Checks the current month's content thread.
-3. Posts the manifest, then each part in order, through the same queue as `application/steem/SteemAnnouncer.js`, so
-   posts from one account are at least 4.5 seconds apart and content and announcements never collide. Each
-   transaction is signed through Steem Keychain with the posting key; ForkBuild never holds a Steem key. Several
-   parts can't share a transaction, since the limit is per transaction.
-4. Returns `ContentReference{ hash, algorithm, mediaType, size, uri: steem://…, storage: 'steem' }` only after the
-   node has accepted every part.
+1. Encodes the content and plans the parts, before any network call. Content that fits one post is inline; otherwise
+   it is always `gzip-base64`, split into parts, and each part's SHA-256 is computed. More than 20 parts is refused
+   (see "Limits").
+2. Looks for an unfinished upload of the same content by the same account (below).
+3. Estimates the Resource Credits the posts need and refuses before posting if the account has too few (below).
+4. Posts the manifest, then each part in order, through the same queue as `application/steem/SteemAnnouncer.js`, so
+   posts from one account are at least 4.5 seconds apart and content and announcements never collide. The manifest
+   post checks the current month's content thread first. Each transaction is signed through Steem Keychain with the
+   posting key; ForkBuild never holds a Steem key. Several parts can't share a transaction, since the limit is per
+   transaction.
+5. Returns `ContentReference{ hash, algorithm, mediaType, size, uri: steem://…, storage: 'steem' }` only after the
+   node has accepted every post.
 
-The UI shows progress ("part 3 of 8") because each part needs its own approval. If a part fails (declined, out of
-RC, node unreachable), `put()` fails with an error that names the manifest, and nothing is announced. Retrying the
-same content with the same account resumes it: the store reads the manifest and its replies, and posts only the
-parts that are missing or wrong. A manifest whose parts never all arrive stays on the chain as an incomplete upload;
+Progress. `put()` reports `{ phase, done, total, resumed, resourceCredits }` to its `onProgress` and to the store's
+`progress` sink: phase `'checking'`, then `'posting'` after each accepted post, then `'stored'` or `'failed'`. `total`
+counts the manifest and every part; `done` starts at what an earlier attempt already stored. The app keeps the
+latest report in one shared value (`steemContentUploadProgress`, provided by `ui/main.js`), and the Editor and World
+View Distribute dialogs and the Publications page show it while their Snapshot is being distributed:
+"Storing on Steem: 3 of 9 posts made. Approve each post in Steem Keychain." (`describeSteemContentUploadProgress()`).
+One shared value is enough because posts from the app are made one at a time.
+
+Resuming. Once the manifest of an upload with parts is accepted, the store records `{ author, permlink, contentHash }`
+in local storage (`steem-content-upload:<author>:<contentHash>`), and removes the record when every part is stored.
+If a part fails (declined, out of RC, node unreachable), `put()` throws `SteemContentUploadIncompleteError`, naming
+how many posts are stored and saying to distribute again with the same account; nothing is announced. Storing the
+same content again with the same account reads the recorded manifest back from the chain. If it still describes the
+same content, encoding and parts (lengths and SHA-256), the store posts only the parts that are missing, and edits
+any part whose body differs (a `comment` alone, without `comment_options`, since the post already exists and its
+payout is already declined). If the manifest is gone or doesn't match, for example because the compressor produced
+different bytes, the record is dropped and the upload starts over. The chain stays the source of truth: the record
+only says where to look. A manifest whose parts never all arrive stays on the chain as an incomplete upload, and
 readers report it as unavailable.
 
-Before posting, the store estimates the RC the upload needs and warns when the account appears to have too little,
-if the API node answers `rc_api.find_rc_accounts`. Otherwise, a refusal for lack of RC is reported as its own error.
+Resource Credits. Before posting, the store asks the API node for `rc_api.find_rc_accounts`,
+`rc_api.get_resource_params`, `rc_api.get_resource_pool` and `condenser_api.get_dynamic_global_properties`, and
+computes what the planned transactions cost exactly as the chain's rc plugin does (steemit/steem,
+`libraries/plugins/rc`): per transaction, history bytes are its packed size; state bytes are `35 × 174` plus
+`174` per packed byte plus, per comment, `201 × 10000` plus `10000` per permlink byte and `20000` per parent permlink
+byte; execution time is `114100` per comment and `13200` per `comment_options`. Each resource costs
+`((rc_regen × coeff_a >> shift) + 1) × count / (coeff_b + max(pool, 0)) + 1`, where `rc_regen` is the total vesting
+shares divided by `144000`, and an account's RC regenerates linearly to `max_rc` over five days. If the total is more
+than the account has, `put()` throws `SteemResourceCreditsError` ("needs about 40% of your account's Resource
+Credits, and it has 12% right now…") before anything is posted. If the node can't answer (no `rc_api`, unreachable,
+an unknown account), the upload goes ahead, and a refusal from the chain ("has … RC, needs … RC") is reported as
+running out of Resource Credits rather than as a raw error. The estimate's shares are also shown in the progress line.
+The formula follows the chain's source; it has not yet been compared with a live node from the development
+environment, which can't reach one.
 
 ### Reading
 
@@ -748,9 +778,11 @@ The Steem store's `get(reference)` for a `steem://` locator:
    `forkbuild-content-<YYYY-MM>` thread of a configured thread account, or whose `json_metadata` lacks
    `forkbuild.version === 1` or a well-formed `content`, is unavailable.
 2. The manifest's `contentHash` must equal the requested one; otherwise the locator is for different content.
-3. Parts are fetched with one `get_content_replies(uploader, permlink)`, falling back to `get_content` for any part
-   it didn't return. A part is accepted only when its author is the manifest's author, its permlink is the one the
-   manifest lists, and its parent is the manifest. Anyone can reply to a manifest; other replies are ignored.
+3. A manifest may list at most 20 parts, whose permlinks must be `<manifest permlink>-p<index>` and whose lengths
+   must add up to `encodedLength`. Parts are fetched with one `get_content_replies(uploader, permlink)`, falling back
+   to `get_content` for any part it didn't return. A part is accepted only when its author is the manifest's author,
+   its permlink is the one the manifest lists, and its parent is the manifest. Anyone can reply to a manifest; other
+   replies are ignored.
 4. Each part's `length` and `sha256` must match. The parts are joined in order, and the result must be
    `encodedLength` characters long.
 5. `gzip-base64` is decoded and decompressed with the browser's `DecompressionStream`, stopping as soon as the output
@@ -766,35 +798,30 @@ node outage doesn't lose a copy already loaded.
 
 ### Limits
 
-- A part is at most 48 KiB of encoded text, escaped as above, and the operations of one transaction are checked
-  against the 64 KiB limit before signing, as for announcements. With the inline case only, that is the whole limit:
-  `put()` throws `SteemContentTooLargeError` (a `ContentTooLargeError`) pointing to IPFS or Arweave before anything
-  is posted.
+- A part (or an inline manifest body) is at most 48 KiB of encoded text, escaped as above, and the operations of one
+  transaction are checked against the 64 KiB limit before signing, as for announcements.
+- An upload is at most 20 parts (960 KiB of encoded text, about 720 KiB compressed), so at most 21 posts and 21
+  Keychain approvals. `maxContentBytes` can't be known before compressing, so the store compresses first and throws
+  `SteemContentTooLargeError` (a `ContentTooLargeError`) pointing to IPFS or Arweave before anything is posted.
 - Measured compression (gzip, then base64) is about 1.6 times on typical builds, because every brick's UUID is
   random and doesn't compress: the whole village structure library (315 bricks) encodes to 6.5 KB, and a plain
-  2,000-brick block to 35 KB. One post therefore holds a build of about 2,500 bricks. Builds with short brick ids
-  compress much better.
-- An upload is at most 20 parts (960 KiB of encoded text, about 720 KiB compressed). `maxContentBytes` can't be
-  known before compressing, so the store compresses first and throws `ContentTooLargeError` pointing to IPFS or
-  Arweave when the encoded text would need more parts.
+  2,000-brick block to 35 KB. One post therefore holds a build of about 2,500 bricks, and 20 parts about 30,000.
+  Builds with short brick ids compress much better.
 - The decoded content is at most 64 MiB, the same bound as a peer transfer.
 
-### Scope and order of work
+### Scope
 
-The first version stores Snapshot bytes only. Publication material (the signed claim the Arweave uploader also
-places) could use the same format later. Suggested order:
+Steem storage holds Snapshot bytes only. Publication material (the signed claim the Arweave uploader also places)
+could use the same format later. The work was done in the order the proposal suggested: the inline case, then parts
+with progress and resuming, then the Resource Credits estimate. Still open: comparing the RC estimate with a live
+node, and measuring compression on more real builds to confirm the part size and part limit.
 
-1. The inline case: a manifest with no parts, the `'steem'` store, and the content thread family. This covers small
-   builds with one approval. **Built.**
-2. Parts, the progress display, and resuming an incomplete upload.
-3. The RC estimate, and measuring compression ratios on more real builds to confirm the part size and part limit.
-
-Where it's chosen: the Storage choice in the Editor and World View Distribute dialogs offers **Steem (small
-Snapshots only)** next to IPFS and Arweave; the Publications page's Content choice and the Content Provider settings
-page offer **Steem**. The Distribute dialogs share one Storage choice between the Snapshot and the Signed Claim, and
-Steem storage holds Snapshots only: a Signed Claim distributed with Steem chosen is refused with "Steem storage
-holds Snapshots only for now. Choose Arweave or IPFS storage to distribute the Signed Claim.", while the Snapshot is
-still stored. It ships as Experimental, like the Steem announcement substrate.
+Where it's chosen: the Storage choice in the Editor and World View Distribute dialogs offers **Steem (Snapshots
+only)** next to IPFS and Arweave; the Publications page's Content choice and the Content Provider settings page offer
+**Steem**. The Distribute dialogs share one Storage choice between the Snapshot and the Signed Claim, and Steem
+storage holds Snapshots only: a Signed Claim distributed with Steem chosen is refused with "Steem storage holds
+Snapshots only for now. Choose Arweave or IPFS storage to distribute the Signed Claim.", while the Snapshot is still
+stored. It ships as Experimental, like the Steem announcement substrate.
 
 ## Vehicles, animals and inventory
 

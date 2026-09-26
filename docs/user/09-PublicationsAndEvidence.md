@@ -2103,17 +2103,35 @@ and you're told so. A comment is always saved on this device first; its
 form warns you before posting if no account is set or Keychain is
 missing.
 
-**Storing a Snapshot on Steem.** Choose **Steem (small Snapshots only)**
-as the storage in a Distribute dialog or on the Publications page. The
-Snapshot is compressed and stored in one reply to this month's content
-thread (such as `@forkbuild/forkbuild-content-2026-10`), which Keychain
-asks you to approve like any other post. It then needs no pinning and no
-upload fee. One post holds about 48 KB after compression, which is roughly
-2,500 bricks; a larger build is refused before anything is posted, with a
-suggestion to use IPFS or Arweave. Steem storage holds Snapshots only: if
-you distribute a Signed Claim with Steem chosen, the claim is refused with
-a reason, and the Snapshot is still stored. As with every storage, what
-is loaded back is checked against the Snapshot's content hash.
+**Storing a Snapshot on Steem.** Choose **Steem (Snapshots only)** as the
+storage in a Distribute dialog, or **Steem** on the Publications page. The
+Snapshot is compressed and stored as replies to this month's content
+thread (such as `@forkbuild/forkbuild-content-2026-10`). It then needs no
+pinning and no upload fee.
+
+- **How many posts.** A build of up to about 2,500 bricks fits in one
+  post. A larger one is stored as one post that lists the others, plus up
+  to 20 more posts of about 48 KB each: up to about 30,000 bricks in all.
+  A build too large even for that is refused before anything is posted,
+  with a suggestion to use IPFS or Arweave.
+- **Approving.** Keychain asks you to approve each post, and posts are at
+  least 4.5 seconds apart. While this runs, the dialog shows how many
+  posts are done, for example "Storing on Steem: 3 of 9 posts made".
+- **Resource Credits.** Posting uses your account's Resource Credits,
+  which refill over five days. Before posting, ForkBuild works out what
+  the upload needs; if your account doesn't have enough, nothing is posted
+  and you're told how much it needs and how much you have. The progress
+  line shows the share it uses.
+- **If it stops part-way.** If you decline a post, run out of Resource
+  Credits, or lose the connection, the message says how many posts are
+  stored. Distribute the same build again with the same Steem account and
+  ForkBuild makes only the missing posts. Nothing is announced until every
+  post is stored.
+
+Steem storage holds Snapshots only: if you distribute a Signed Claim with
+Steem chosen, the claim is refused with a reason, and the Snapshot is
+still stored. As with every storage, what is loaded back is checked
+against the Snapshot's content hash.
 
 Open **Steem** (`/settings/steem`) to set **Your Steem account** under
 **Posting** (it applies at once), or to change where it reads from:

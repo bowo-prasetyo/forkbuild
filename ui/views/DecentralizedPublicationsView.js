@@ -760,7 +760,7 @@ export default {
             publicationDistributionLifecycleStore, distributeEntryPublication, distributeEntrySnapshot,
             distributePublicationForEntry, discoveryDistributionButtonLabel, distributeSnapshot,
             snapshotDistributionButtonLabel, discoveryObservationsView,
-            discoveryDistributionConfigurationRoute, snapshotDistributionConfigurationRoute
+            discoveryDistributionConfigurationRoute, snapshotDistributionConfigurationRoute, steemUploadProgressText
         } = usePublicationDistribution({
             publicationContentStore
         });
@@ -859,7 +859,7 @@ export default {
             distributePublicationForEntry, discoveryDistributionButtonLabel,
             distributeSnapshot, snapshotDistributionButtonLabel,
             discoveryObservationsView, discoveryDistributionConfigurationRoute, snapshotDistributionConfigurationRoute,
-            toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific, inspectionKnowledge,
+            steemUploadProgressText, toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific, inspectionKnowledge,
             evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel,
             describeKnownPlacementCount, togglePlacements, resolvePlacement, placementBadgeClass, placementLifecycleNote,
             togglePlacementInspect, placementInspectionExpanded, placementInspectionDetail, placementInspectionTypeSpecific,
