@@ -19,7 +19,7 @@ const onSteem = { material: { state: 'PRESENT', uri: 'steem://forkbuild/forkbuil
 // The link.
 {
     assert(publicationShareUrl(onSteem.material) === URL, 'a claim on Steem gives the view link');
-    for (const material of [{ uri: 'ar://TX1' }, { uri: 'ipfs://bafy' }, { uri: 'steem://Not An Account/x' }, { uri: null }, null]) {
+    for (const material of [{ uri: 'ar://TX1' }, { uri: 'ipfs://bafy' }, { uri: 'steem://Not An Account/x' }, { uri: 'https://example.org/x' }, { uri: null }, null]) {
         assert(publicationShareUrl(material) === null, `${JSON.stringify(material)} gives no link`);
     }
     assert(publicationShareUrl(onSteem.material, 'https://example.org/app/') === 'https://example.org/app/#/view/steem/forkbuild/forkbuild-c-muiesncy-wkg6k1nb', 'the app address can be given');
@@ -34,7 +34,8 @@ const onSteem = { material: { state: 'PRESENT', uri: 'steem://forkbuild/forkbuil
     assert(share.available && share.url === URL && share.title === 'Twin House With Rabbits' && share.text === 'Twin House With Rabbits, built with ForkBuild', `a Steem claim can be shared (got ${JSON.stringify(share)})`);
     assert(describePublicationShare({ lifecycle: onSteem }).text === 'A build, built with ForkBuild', 'an untitled build still reads');
     const elsewhere = describePublicationShare({ lifecycle: { material: { state: 'PRESENT', uri: 'ar://TX1', storage: 'ar' } } });
-    assert(elsewhere.available === false && elsewhere.reason.includes('Steem storage'), 'a claim stored elsewhere says how to get a link');
+    assert(elsewhere.available === false && elsewhere.reason.includes('Steem, Arweave or IPFS storage'), 'a claim no link can reach says how to get one');
+    assert(share.note === null, 'a Steem claim needs no note');
     console.log('✓ what to offer');
 }
 

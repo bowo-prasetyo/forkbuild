@@ -4,7 +4,7 @@ import EditorView from '../views/EditorView.js';
 import RepositoryView from '../views/RepositoryView.js';
 import RecentWorldsView from '../views/RecentWorldsView.js';
 import AboutView from '../views/AboutView.js';
-import SteemPublicationLinkView from '../views/SteemPublicationLinkView.js';
+import PublicationLinkView from '../views/PublicationLinkView.js';
 import AuthorView from '../views/AuthorView.js';
 import WorldView from '../views/WorldView.js';
 import LiveWorldView from '../views/LiveWorldView.js';
@@ -51,9 +51,12 @@ const routes = [
     // is the one canonical, user-facing World surface from this
     // milestone forward.
     { path: '/world/:documentId', name: 'world', component: WorldView },
-    // The "see it in 3D" link in the notice of a Signed Claim stored on
-    // Steem: opens World View on that Publication once it checks out.
-    { path: '/view/steem/:author/:permlink', name: 'steem-publication-link', component: SteemPublicationLinkView },
+    // A link to a Publication, naming where its Signed Claim is stored: the
+    // "see it in 3D" link on a Steem post, or one shared with Share. Opens
+    // World View on that Publication once it checks out.
+    { path: '/view/steem/:author/:permlink', name: 'steem-publication-link', component: PublicationLinkView },
+    { path: '/view/ar/:id', name: 'arweave-publication-link', component: PublicationLinkView },
+    { path: '/view/ipfs/:cid', name: 'ipfs-publication-link', component: PublicationLinkView },
     // 0.9.15 — Mount Live World View. Superseded as a top-nav, user-
     // facing destination by 0.9.17 above (`WorldEncounterCanvas` now
     // lives inside `/world/:documentId` itself) — kept registered,

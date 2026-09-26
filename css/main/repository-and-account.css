@@ -632,19 +632,19 @@
 }
 
 /* The landing page for a "see it in 3D" link on a Steem post. */
-.steem-publication-link-view {
+.publication-link-view {
     padding: 2rem 1rem 3rem;
     max-width: 720px;
     margin: 0 auto;
     width: 100%;
 }
 
-.steem-publication-link-message {
+.publication-link-message {
     margin: 0 0 1rem;
     color: #e74c3c;
 }
 
-.steem-publication-link-actions {
+.publication-link-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;

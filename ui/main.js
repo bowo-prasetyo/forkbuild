@@ -38,7 +38,7 @@ import { composeWorldDiscovery } from './main/composeWorldDiscovery.js';
 import { composeInjectedWalletServices } from './main/composeInjectedWalletServices.js';
 import { composePublicationDistribution } from './main/composePublicationDistribution.js';
 import { composeSnapshotDiscovery } from './main/composeSnapshotDiscovery.js';
-import { openSteemPublicationLink } from '../application/steem/OpenSteemPublicationLink.js';
+import { openPublicationLink } from '../application/publication/OpenPublicationLink.js';
 
 const {
     identityProvider, identityUseCase, createPublicationCommentaryCommand, getPublicationCommentariesCommand,
@@ -317,7 +317,7 @@ const {
     worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
     steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
     steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress,
-    publicationDistributionLifecycleRestorer
+    publicationDistributionLifecycleRestorer, retrievePublicationClaim
 } = composeWorldDiscovery({
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
     ipfsNodeConfigurationStore, publicationContentStore
@@ -499,24 +499,21 @@ app.provide('placeNamingDiscoveryQueryService', placeNamingDiscoveryQueryService
 app.provide('resolveSelectedSnapshotCommand', resolveSelectedSnapshotCommand);
 app.provide('materializeSelectedSnapshotCommand', materializeSelectedSnapshotCommand);
 
-// The "see it in 3D" link on a Signed Claim stored on Steem
-// (ui/views/SteemPublicationLinkView.js): the claim is read from Steem and
-// verified, its build found by content hash, and the Publication admitted as
-// World discovery admits one.
-app.provide('openSteemPublicationLink', steemRuntime
-    ? ({ author, permlink }) => openSteemPublicationLink({
-        author,
-        permlink,
-        retrieveClaim: steemRuntime.publicationMaterialResolver.retrieveByUri,
-        verifier: worldEncounterMaterialVerifier,
-        hasLocalContent: async (reference) => publicationContentStore.has(reference),
-        findSnapshotCandidates: discoverSnapshotCandidatesWithOutcomeCommand,
-        resolveSnapshotCandidate: resolveSelectedSnapshotCommand,
-        storeSnapshotContent: (request) => storeSnapshotContentUseCase.execute(request),
-        discoveryProvider: decentralizedPublicationDiscoveryProvider,
-        admissionLog: worldEncounterPublicationAdmissionLog
-    })
-    : null);
+// A link to a Publication (ui/views/PublicationLinkView.js: the "see
+// it in 3D" link on a Steem post, or one shared with Share): the Signed Claim
+// is read from Steem, Arweave or IPFS and verified, its build found by content
+// hash, and the Publication admitted as World discovery admits one.
+app.provide('openPublicationLink', ({ locator }) => openPublicationLink({
+    locator,
+    retrieveClaim: retrievePublicationClaim,
+    verifier: worldEncounterMaterialVerifier,
+    hasLocalContent: async (reference) => publicationContentStore.has(reference),
+    findSnapshotCandidates: discoverSnapshotCandidatesWithOutcomeCommand,
+    resolveSnapshotCandidate: resolveSelectedSnapshotCommand,
+    storeSnapshotContent: (request) => storeSnapshotContentUseCase.execute(request),
+    discoveryProvider: decentralizedPublicationDiscoveryProvider,
+    admissionLog: worldEncounterPublicationAdmissionLog
+}));
 
 app.use(router);
 app.mount('#app');

@@ -900,10 +900,15 @@ content manifest, changed parts, oversized content, or content that isn't a JSON
 node that can't be reached rejects. It never checks the claim's signature; the material verifier does, as for every
 substrate.
 
-Opening the link (`application/steem/OpenSteemPublicationLink.js`, route `/view/steem/:author/:permlink`,
-`ui/views/SteemPublicationLinkView.js`), for a visitor who may have nothing of ForkBuild's on their device:
+Opening the link (`application/publication/OpenPublicationLink.js`; routes `/view/steem/:author/:permlink`,
+`/view/ar/:id` and `/view/ipfs/:cid`, all `ui/views/PublicationLinkView.js`), for a visitor who may have nothing of
+ForkBuild's on their device:
 
-1. The claim is read with the resolver above and turned into a `Publication`.
+1. The claim is read where its locator says it is stored (`application/publication/PublicationClaimRetriever.js`):
+   `steem://` with the resolver above, `ar://<id>` (43 base64url characters) with the Arweave material resolver over
+   the configured gateways, `ipfs://<cid>` (a bare CID) with `IpfsWorldEncounterMaterialResolver` over the configured
+   IPFS gateways (48 KiB at most, a JSON object; a gateway can't tell "not on IPFS" from "unreachable", so a miss
+   reads as unreachable). It is turned into a `Publication`.
 2. It is verified with the same identity and signature verifier as World discovery; a claim that is unsigned or
    whose signature fails is not shown.
 3. Its Snapshot is found by the Publication's content hash: already on the device; else at the claim's own locator
@@ -918,7 +923,10 @@ Opening the link (`application/steem/OpenSteemPublicationLink.js`, route `/view/
 
 Sharing. The same link is what the app offers to share (`core/ForkBuildAppLinks.js` `publicationShareUrl()`,
 `application/publication/PublicationShareLink.js`, `ui/components/PublicationShareLink.js`): it is derived from a
-Publication's distribution record (`material.uri` when it is a `steem://` locator), so it needs no network call. Every
+Publication's distribution record (`material.uri`, a `steem://`, `ar://` or `ipfs://` locator; `core/ForkBuildAppLinks.js`
+`publicationViewUrl()` makes the link and `publicationClaimLocatorFromViewPath()` reads it back), so it needs no
+network call. Share adds a note for an Arweave claim (a new upload can take minutes to reach the gateways) and for
+one on the builder's own IPFS node (reachable only while that node is online). Every
 Publication's record is saved to local storage when it changes (`PublicationDistributionLifecyclePersistenceBridge
 #observeAll()` over the store's `subscribeAll()`), and restored on demand for Publications that startup doesn't
 restore (startup restores catalogued Publications only). Share uses the

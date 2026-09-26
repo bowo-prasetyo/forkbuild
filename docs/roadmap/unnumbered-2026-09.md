@@ -1187,3 +1187,33 @@ nothing to restore. The earlier check in Chromium had written the record by hand
 - Tests: `tests/PublicationShareLink.test.js` (a Publication no one watched is distributed, its record is saved, and
   after a reload the share link comes back; a failing listener doesn't stop the others). It fails without the change.
 - Publications distributed before this change have no saved record; distributing them again saves one.
+
+## Share links for claims on Arweave and IPFS (unnumbered, 2026-09-26)
+
+**Share… and Copy link now work for a Publication whose Signed Claim is stored on Arweave or IPFS, not only
+Steem.** The links are `#/view/ar/<transaction id>` and `#/view/ipfs/<cid>`, next to `#/view/steem/<author>/<permlink>`,
+and open the same way: the claim is read and verified, the build found by content hash and checked, and World View
+opened on it.
+
+- `core/ForkBuildAppLinks.js`: `describePublicationClaimLocator()`, `publicationViewUrl()` and
+  `publicationClaimLocatorFromViewPath()` turn a claim's locator into a link and back, accepting only an Arweave id of
+  43 base64url characters and a bare CID, so nothing odd reaches a link or a gateway.
+- `application/publication/OpenPublicationLink.js` (moved from `application/steem/`, which keeps
+  `openSteemPublicationLink()` as a thin wrapper) takes a claim locator on any of the three networks; its messages
+  name the network, and an Arweave claim not found yet says a new upload can take a few minutes.
+- `application/publication/PublicationClaimRetriever.js` picks the reader by network: the Steem resolver, the Arweave
+  material resolver over the configured gateways, and the new `IpfsWorldEncounterMaterialResolver` over the
+  configured IPFS gateways (48 KiB at most, a JSON object). `composePublicationClaimRetriever()` builds it for
+  `ui/main/composeWorldDiscovery.js`, which keeps the UI from naming concrete resolvers.
+- `ui/views/PublicationLinkView.js` (renamed from `SteemPublicationLinkView.js`) serves all three routes and offers
+  Try again when a network or search couldn't be reached, the build wasn't found, or an Arweave or IPFS claim isn't
+  there yet. Share adds a note for Arweave (minutes after distributing) and for the builder's own IPFS node (only
+  while it's online); none for Steem or a remote pinning service.
+- Checked in Chromium on the real app, in fresh browsers: an Arweave link and an IPFS link (claims served as
+  arweave.net and ipfs.io would, the Snapshot announced on a fake Steem chain) each opened World View on the build;
+  a missing Arweave claim showed the "few minutes" message with Try again.
+- Tests: `tests/PublicationLinkNetworks.test.js` (the links both ways and what they refuse, Share's notes, the IPFS
+  reader and its refusals, the retriever, and opening Arweave and IPFS links through the real Arweave resolver and
+  IPFS gateway store with a really signed Publication, including a claim not there yet and a network down).
+- Also fixed in the user guide: the "Share with friends" paragraph had been inserted into the middle of "Sharing a
+  link on Steem".
