@@ -1990,8 +1990,9 @@ per line, so you can add, remove or reorder from there rather than
 retyping them. **Save** stays disabled until you change something, so the
 defaults are never saved as if they were your own choice — that way you
 keep getting any improved defaults a later version ships. **Reset to
-Defaults** removes your saved list and goes back to the defaults. (TURN
-has no default server, so its page offers **Clear** instead; the IPFS
+Defaults** removes your saved list and goes back to the defaults. (The
+TURN Server page holds only a relay of your own — the default relay comes
+from the rendezvous servers — so it offers **Clear** instead; the IPFS
 Node setting on the Content Provider page keeps its **Use Deployment
 Default** button for its single local node.)
 

@@ -1250,7 +1250,10 @@ configured more by hand. The Bitcoin endpoint could not hold more than one serve
   `api.steemit.com`, `api.justyy.com`. The singular `DEFAULT_*_URL` constants stay, as each list's first entry, for
   the paths that take one endpoint (Arweave publishing and anchoring, single-relay Place Naming discovery).
 - Deliberately unchanged: STUN (`peer/IceServerConfig.js` records why ICE entries are added one tested at a time), TURN
-  (no free public relays remain) and Rendezvous (our own server). Steem stays at two nodes because
+  and Rendezvous. The default TURN relay already comes from the rendezvous servers (`GET /turn-credentials` on
+  `server/rendezvous-worker/`, short-lived credentials fetched when a connection starts); the TURN Server page is only
+  for a relay of one's own, so a built-in default there would mean publishing a credential. Its page now says so,
+  instead of claiming there is no default relay. Rendezvous is our own server. Steem stays at two nodes because
   `SteemProofVerifier` needs every answering node to agree, so each extra node is one more that can hold a proof
   back as unavailable.
 - Bitcoin: `BitcoinEsploraConfiguration` takes `apiUrls` (a saved single `apiUrl` still loads), and
