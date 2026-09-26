@@ -113,7 +113,8 @@ export function humanizeContentKind(contentKind) {
 export const STORAGE_TYPE_LABELS = {
     local: 'Local',
     ipfs: 'IPFS',
-    ar: 'Arweave'
+    ar: 'Arweave',
+    steem: 'Steem'
 };
 
 export function humanizeStorageType(storage) {

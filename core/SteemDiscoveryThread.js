@@ -1,13 +1,18 @@
 import { isPlainObject } from '../utils/typeGuards.js';
 
 // Steem discovery threads: the monthly root posts that announcements reply
-// to (docs/Protocol.md, "Proposed: Steem Announcement Substrate"). This file
-// only names and describes them; it never talks to the network.
+// to (docs/Protocol.md, "Proposed: Steem Announcement Substrate"), and the
+// content threads that stored content replies to ("Proposed: Steem Content
+// Storage"). This file only names and describes them; it never talks to the
+// network.
 
 export const STEEM_DISCOVERY_THREAD_ACCOUNT = 'forkbuild';
 export const STEEM_DISCOVERY_THREAD_CATEGORY = 'forkbuild';
 export const STEEM_DISCOVERY_THREAD_VERSION = 1;
-export const STEEM_DISCOVERY_FAMILIES = Object.freeze(['publication', 'snapshot', 'place-naming', 'commentary']);
+// 'content' threads hold stored content rather than announcements, but are
+// named, created and checked the same way.
+export const STEEM_CONTENT_FAMILY = 'content';
+export const STEEM_DISCOVERY_FAMILIES = Object.freeze(['publication', 'snapshot', 'place-naming', 'commentary', STEEM_CONTENT_FAMILY]);
 // The chain accepts one root post per account in this interval.
 export const STEEM_ROOT_POST_INTERVAL_MS = 5 * 60 * 1000;
 export const STEEM_DECLINED_PAYOUT = '0.000 SBD';
@@ -23,7 +28,8 @@ const FAMILY_TEXT = Object.freeze({
     publication: { label: 'publication', announces: 'where a signed ForkBuild publication can be found' },
     snapshot: { label: 'snapshot', announces: "where a published snapshot's content is stored, and its content hash" },
     'place-naming': { label: 'place naming', announces: 'a signed claim naming a region of a ForkBuild world' },
-    commentary: { label: 'commentary', announces: 'a signed comment on a ForkBuild publication' }
+    commentary: { label: 'commentary', announces: 'a signed comment on a ForkBuild publication' },
+    content: { label: 'content', stores: "the content of a published ForkBuild snapshot" }
 });
 
 export function isSteemDiscoveryFamily(family) {
@@ -67,14 +73,16 @@ export function steemDiscoveryThreadPermlink(family, period) {
 export function describeSteemDiscoveryThreadPost({ account = STEEM_DISCOVERY_THREAD_ACCOUNT, family, period }) {
     requireAccount(account);
     const permlink = steemDiscoveryThreadPermlink(family, period);
-    const { label, announces } = FAMILY_TEXT[family];
+    const text = FAMILY_TEXT[family];
     return Object.freeze({
         account,
         family,
         period,
         permlink,
-        title: `ForkBuild ${label} announcements, ${period}`,
-        body: threadBody({ account, family, period, label, announces }),
+        title: text.stores ? `ForkBuild ${text.label} storage, ${period}` : `ForkBuild ${text.label} announcements, ${period}`,
+        body: text.stores
+            ? contentThreadBody({ account, family, period, stores: text.stores })
+            : threadBody({ account, family, period, label: text.label, announces: text.announces }),
         jsonMetadata: Object.freeze({
             tags: [STEEM_DISCOVERY_THREAD_CATEGORY],
             forkbuild: { thread: { version: STEEM_DISCOVERY_THREAD_VERSION, family, period } }
@@ -146,6 +154,24 @@ function threadBody({ account, family, period, label, announces }) {
         "- **Nothing is trusted because it's posted here.** ForkBuild accepts an announcement only if its content hash and ForkBuild signature check out. The Steem account that posted a reply isn't treated as the author.",
         "- **No rewards.** This thread and every announcement decline payout. Votes don't change whether ForkBuild accepts an announcement.",
         "- **Replying.** Reply here only through the ForkBuild app. The app ignores replies to replies, and ignores anything it can't verify.",
+        '',
+        `A new thread opens each month: \`@${account}/forkbuild-${family}-YYYY-MM\`.`,
+        '',
+        `Protocol: ${PROTOCOL_URL}`,
+        `Project: ${PROJECT_URL}`
+    ].join('\n');
+}
+
+function contentThreadBody({ account, family, period, stores }) {
+    return [
+        `This is a **ForkBuild content thread** for ${period} (UTC).`,
+        '',
+        `Each direct reply to this post stores ${stores}, so that the ForkBuild app can load it from Steem. People normally won't need to read them.`,
+        '',
+        "- **What a reply contains.** The reply text is the content itself, often compressed. Its `json_metadata`, under `forkbuild`, describes the content and its content hash.",
+        "- **Nothing is trusted because it's posted here.** ForkBuild loads content only if it matches the content hash of a signed publication. The Steem account that posted a reply isn't treated as the author.",
+        "- **No rewards.** This thread and every reply to it decline payout. Votes don't change whether ForkBuild accepts content.",
+        "- **Replying.** Reply here only through the ForkBuild app. The app ignores anything it can't verify.",
         '',
         `A new thread opens each month: \`@${account}/forkbuild-${family}-YYYY-MM\`.`,
         '',

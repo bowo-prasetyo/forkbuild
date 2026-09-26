@@ -2103,6 +2103,18 @@ and you're told so. A comment is always saved on this device first; its
 form warns you before posting if no account is set or Keychain is
 missing.
 
+**Storing a Snapshot on Steem.** Choose **Steem (small Snapshots only)**
+as the storage in a Distribute dialog or on the Publications page. The
+Snapshot is compressed and stored in one reply to this month's content
+thread (such as `@forkbuild/forkbuild-content-2026-10`), which Keychain
+asks you to approve like any other post. It then needs no pinning and no
+upload fee. One post holds about 48 KB after compression, which is roughly
+2,500 bricks; a larger build is refused before anything is posted, with a
+suggestion to use IPFS or Arweave. Steem storage holds Snapshots only: if
+you distribute a Signed Claim with Steem chosen, the claim is refused with
+a reason, and the Snapshot is still stored. As with every storage, what
+is loaded back is checked against the Snapshot's content hash.
+
 Open **Steem** (`/settings/steem`) to set **Your Steem account** under
 **Posting** (it applies at once), or to change where it reads from:
 

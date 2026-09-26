@@ -128,9 +128,9 @@ export function usePublicationDistribution({
     // The Settings route for the entry's chosen Content backend; IPFS uses
     // /settings/content-provider (there is no IPFS-only settings view).
     function snapshotDistributionConfigurationRoute(entry) {
-        return entry.snapshotDistributionStorage === 'ar'
-            ? '/settings/arweave-gateway'
-            : '/settings/content-provider';
+        if (entry.snapshotDistributionStorage === 'ar') return '/settings/arweave-gateway';
+        if (entry.snapshotDistributionStorage === 'steem') return '/settings/steem';
+        return '/settings/content-provider';
     }
 
     return {

@@ -86,7 +86,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                             {{ snapshotDistributionButtonLabel(entry) }}
                                         </button>
                                         <router-link :to="snapshotDistributionConfigurationRoute(entry)" class="action-btn action-btn--secondary">
-                                            Configure {{ entry.snapshotDistributionStorage === 'ar' ? 'Arweave' : 'IPFS' }}
+                                            Configure {{ humanizeStorageType(entry.snapshotDistributionStorage) }}
                                         </router-link>
                                         <router-link to="/settings/nostr-relay" class="action-btn action-btn--secondary">Configure Nostr</router-link>
                                     </div>

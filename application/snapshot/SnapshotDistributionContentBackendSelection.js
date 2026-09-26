@@ -31,7 +31,9 @@
 // could ever resolve. SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES is the
 // one place that product decision lives: a fixed, closed allowlist, never
 // derived from whatever a registry happens to have registered.
-export const SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES = Object.freeze(['ipfs', 'ar']);
+// 'steem' holds small builds only (docs/Protocol.md, "Proposed: Steem Content
+// Storage"); its store refuses larger ones itself.
+export const SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES = Object.freeze(['ipfs', 'ar', 'steem']);
 
 function isKeyedRegistry(registry) {
     return Boolean(registry) && typeof registry.get === 'function' && typeof registry.has === 'function';

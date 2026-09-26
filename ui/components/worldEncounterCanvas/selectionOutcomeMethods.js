@@ -27,7 +27,8 @@ export function resolvedEncounterSelectionsEqual(previousResolvedSelection, next
 // shortHash() convention without importing from another view.
 const CONTENT_URI_SCHEME_LABELS = {
     ar: 'Arweave',
-    ipfs: 'IPFS'
+    ipfs: 'IPFS',
+    steem: 'Steem'
 };
 
 function shortIdentityId(identityId) {

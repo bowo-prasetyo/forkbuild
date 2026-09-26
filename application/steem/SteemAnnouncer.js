@@ -1,4 +1,5 @@
 import {
+    STEEM_CONTENT_FAMILY,
     STEEM_DISCOVERY_THREAD_ACCOUNT,
     isSteemAccountName,
     steemDiscoveryPeriodOf,
@@ -10,12 +11,15 @@ import {
     steemDiscoveryAnnouncementPermlink,
     steemOperationsByteLength
 } from '../../core/SteemDiscoveryAnnouncement.js';
+import { steemContentManifestOperations, steemContentManifestPermlink } from '../../core/SteemContentManifest.js';
 import { parseSteemTime } from '../../steem/SteemRpcClient.js';
 
 // Posts one family's envelope as a reply to the current month's discovery
 // thread, signed through Steem Keychain (docs/Protocol.md, "Proposed: Steem
-// Announcement Substrate", "Announcing"). Every refusal is an Error with a
-// message a person can act on; nothing is sent elsewhere.
+// Announcement Substrate", "Announcing"). It also posts stored content to
+// the current month's content thread ("Proposed: Steem Content Storage"),
+// in the same queue, since the reply interval is per account. Every refusal
+// is an Error with a message a person can act on; nothing is sent elsewhere.
 
 const SUFFIX_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789';
 // The chain accepts one comment per account in this interval
@@ -52,7 +56,6 @@ export function createSteemAnnouncer({
     // A thread, once seen open, stays open for the session: only its owner
     // can close it, and the chain would then refuse the reply anyway.
     const openThreads = new Set();
-    // One announcement at a time, whoever calls: the interval is per account.
     let queue = Promise.resolve();
     let lastBroadcastAt = -Infinity;
 
@@ -88,19 +91,21 @@ export function createSteemAnnouncer({
         }
     }
 
-    async function requireOpenThread(threadPermlink) {
+    async function requireOpenThread(family, threadPermlink) {
         if (openThreads.has(threadPermlink)) return;
+        const kind = family === STEEM_CONTENT_FAMILY ? 'content' : 'discovery';
+        const action = family === STEEM_CONTENT_FAMILY ? 'stored' : 'announced';
         let content;
         try {
             content = await rpc.getContent(threadAccount, threadPermlink);
         } catch (error) {
-            throw new SteemAnnouncementError(`Couldn't check this month's Steem discovery thread: ${error.message}`);
+            throw new SteemAnnouncementError(`Couldn't check this month's Steem ${kind} thread: ${error.message}`);
         }
         if (!content || !content.author) {
-            throw new SteemAnnouncementError(`This month's Steem discovery thread @${threadAccount}/${threadPermlink} doesn't exist yet, so nothing can be announced on Steem until it is created.`);
+            throw new SteemAnnouncementError(`This month's Steem ${kind} thread @${threadAccount}/${threadPermlink} doesn't exist yet, so nothing can be ${action} on Steem until it is created.`);
         }
         if (content.allow_replies !== true) {
-            throw new SteemAnnouncementError(`The Steem discovery thread @${threadAccount}/${threadPermlink} no longer accepts replies.`);
+            throw new SteemAnnouncementError(`The Steem ${kind} thread @${threadAccount}/${threadPermlink} no longer accepts replies.`);
         }
         openThreads.add(threadPermlink);
     }
@@ -108,15 +113,36 @@ export function createSteemAnnouncer({
     // Resolves to what was broadcast. "accepted" means an API node took the
     // transaction; it is not yet irreversible.
     function announce(family, envelope) {
-        const run = queue.then(() => announceNow(family, envelope));
+        return enqueue(() => postReply({
+            family,
+            what: 'announcement',
+            permlinkFor: (timeMs) => steemDiscoveryAnnouncementPermlink(timeMs, randomSuffix()),
+            operationsFor: ({ author, threadPermlink, permlink }) => steemDiscoveryAnnouncementOperations({ author, threadAccount, threadPermlink, family, envelope, permlink, appVersion })
+        }));
+    }
+
+    // Posts a content manifest whose body is `body` (the inline case).
+    // Resolves like announce().
+    function postContent({ content, body }) {
+        return enqueue(() => postReply({
+            family: STEEM_CONTENT_FAMILY,
+            what: 'content',
+            permlinkFor: (timeMs) => steemContentManifestPermlink(timeMs, randomSuffix()),
+            operationsFor: ({ author, threadPermlink, permlink }) => steemContentManifestOperations({ author, threadAccount, threadPermlink, permlink, content, body, appVersion })
+        }));
+    }
+
+    // One post at a time, whoever calls: the interval is per account.
+    function enqueue(task) {
+        const run = queue.then(task);
         queue = run.catch(() => {});
         return run;
     }
 
-    async function announceNow(family, envelope) {
+    async function postReply({ family, what, permlinkFor, operationsFor }) {
         const author = getAccount();
         if (!isSteemAccountName(author)) {
-            throw new SteemAnnouncementError('Set your Steem account in Network Settings → Steem before announcing on Steem.');
+            throw new SteemAnnouncementError('Set your Steem account in Network Settings → Steem before posting on Steem.');
         }
         const broadcaster = getBroadcaster();
         if (!broadcaster) {
@@ -124,13 +150,13 @@ export function createSteemAnnouncer({
         }
         const period = steemDiscoveryPeriodOf(now());
         const threadPermlink = steemDiscoveryThreadPermlink(family, period);
-        await requireOpenThread(threadPermlink);
+        await requireOpenThread(family, threadPermlink);
 
-        const permlink = steemDiscoveryAnnouncementPermlink(now().getTime(), randomSuffix());
-        const operations = steemDiscoveryAnnouncementOperations({ author, threadAccount, threadPermlink, family, envelope, permlink, appVersion });
+        const permlink = permlinkFor(now().getTime());
+        const operations = operationsFor({ author, threadPermlink, permlink });
         const size = steemOperationsByteLength(operations);
         if (size > STEEM_MAX_TRANSACTION_BYTES) {
-            throw new SteemAnnouncementError(`This announcement is ${size} bytes, over Steem's ${STEEM_MAX_TRANSACTION_BYTES}-byte transaction limit.`);
+            throw new SteemAnnouncementError(`This ${what} is ${size} bytes, over Steem's ${STEEM_MAX_TRANSACTION_BYTES}-byte transaction limit.`);
         }
 
         const { transactionId } = await broadcastPacing(broadcaster, author, operations);
@@ -148,7 +174,7 @@ export function createSteemAnnouncer({
         });
     }
 
-    return Object.freeze({ announce, threadAccount });
+    return Object.freeze({ announce, postContent, threadAccount });
 }
 
 function defaultRandomSuffix() {
