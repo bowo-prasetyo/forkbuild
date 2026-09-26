@@ -8,6 +8,10 @@ import { SetIpfsNodeConfigurationUseCase } from '../../application/settings/SetI
 import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
 import { NostrRelayConfigurationStore } from '../../storage/NostrRelayConfigurationStore.js';
 import { SetNostrRelayConfigurationUseCase } from '../../application/settings/SetNostrRelayConfigurationUseCase.js';
+import { SteemReadingConfiguration } from '../../core/SteemReadingConfiguration.js';
+import { SteemReadingConfigurationStore } from '../../storage/SteemReadingConfigurationStore.js';
+import { SetSteemReadingConfigurationUseCase } from '../../application/settings/SetSteemReadingConfigurationUseCase.js';
+import { composeSteemReadingRuntime } from '../../application/steem/SteemReadingRuntimeComposition.js';
 import { LocalWorldEncounterMaterialSource } from '../../application/worldEncounter/LocalWorldEncounterMaterialSource.js';
 import { PeerWorldEncounterMaterialSource } from '../../application/worldEncounter/PeerWorldEncounterMaterialSource.js';
 import { composeWorldEncounterMaterialVerifier } from '../../application/worldEncounter/WorldEncounterMaterialVerifierRuntimeComposition.js';
@@ -72,11 +76,23 @@ export function composeWorldDiscovery({
 
 
 
-    const nostrRelayQueryClient = createNostrRelayQueryClient({});
-    const decentralizedWorldDiscoveryServices = composeDecentralizedWorldEncounterMaterialDiscoveryServices({
-        nostrQueryImpl: nostrRelayQueryClient,
-        nostrRelayUrls: resolvedNostrRelayUrls
+    // Steem announcements are read with the saved settings, or the defaults
+    // (api.steemit.com, @forkbuild's threads from 2026-09). Changes apply on
+    // the next load, like the other network settings.
+    const steemReadingConfigurationStore = new SteemReadingConfigurationStore(new LocalStorageProvider());
+    const setSteemReadingConfigurationUseCase = new SetSteemReadingConfigurationUseCase({ steemReadingConfigurationStore });
+    const steemReadingRuntime = composeSteemReadingRuntime({
+        configuration: steemReadingConfigurationStore.get() || new SteemReadingConfiguration()
     });
+
+    const nostrRelayQueryClient = createNostrRelayQueryClient({});
+    const decentralizedWorldDiscoveryServices = {
+        ...composeDecentralizedWorldEncounterMaterialDiscoveryServices({
+            nostrQueryImpl: nostrRelayQueryClient,
+            nostrRelayUrls: resolvedNostrRelayUrls
+        }),
+        steem: steemReadingRuntime ? steemReadingRuntime.publicationDiscoveryQueryService : null
+    };
     const decentralizedWorldEncounterMaterialDiscoveryRuntime = composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
         discoveryServices: decentralizedWorldDiscoveryServices,
         local: new LocalWorldEncounterMaterialSource(new LocalStorageProvider()),
@@ -133,6 +149,7 @@ export function composeWorldDiscovery({
         setIpfsNodeConfigurationUseCase, nostrRelayConfigurationStore, resolvedNostrRelayUrls,
         setNostrRelayConfigurationUseCase, nostrRelayQueryClient, worldDiscoveryLeadRegistry,
         worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand,
-        worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore
+        worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
+        steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemReadingRuntime
     };
 }

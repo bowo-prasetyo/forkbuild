@@ -21,7 +21,7 @@ export function composeSnapshotDiscovery({
     publicationSnapshotPlacementCatalog, publicationSnapshotPlacementResolutionStoreRegistry,
     roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
-    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes
+    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemReadingRuntime = null
 }) {
     // Seeds the Content/Snapshot pickers from the saved CONTENT preference, never
     // overriding a pick. 'remote-pinning' is added to the eligible list because that
@@ -69,6 +69,7 @@ export function composeSnapshotDiscovery({
     const { queryService: snapshotCandidateDiscoveryQueryService } = composeSnapshotCandidateDiscoveryRuntime({
         nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService,
         arweaveSnapshotDiscoveryQueryService,
+        steemSnapshotDiscoveryQueryService: steemReadingRuntime ? steemReadingRuntime.snapshotDiscoveryQueryService : null,
         placementCatalog: publicationSnapshotPlacementCatalog
     });
 
@@ -94,11 +95,14 @@ export function composeSnapshotDiscovery({
     // Only the transport half: WorldView composes the rest, since only its session
     // knows the World layout. With no relay client, `sources` is an empty but
     // usable roster rather than a throw.
-    const placeNamingDiscoverySources = nostrRelayQueryClient
-        ? [resolvedNostrRelayUrls.length > 1
-            ? new NostrMultiRelayPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrls: resolvedNostrRelayUrls })
-            : new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrls[0] })]
-        : [];
+    const placeNamingDiscoverySources = [
+        ...(nostrRelayQueryClient
+            ? [resolvedNostrRelayUrls.length > 1
+                ? new NostrMultiRelayPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrls: resolvedNostrRelayUrls })
+                : new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrls[0] })]
+            : []),
+        ...(steemReadingRuntime ? [steemReadingRuntime.placeNamingDiscoverySource] : [])
+    ];
     const { queryService: placeNamingDiscoveryQueryService } = composePlaceNamingDiscoveryRuntime({ sources: placeNamingDiscoverySources });
 
     // Resolves exactly the selected candidate via resolveCandidate(), through the

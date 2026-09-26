@@ -1,7 +1,9 @@
+import { DEFAULT_STEEM_API_NODES } from '../core/SteemReadingConfiguration.js';
+
 // A minimal Steem JSON-RPC client: the few condenser_api calls ForkBuild
 // needs, tried against each configured API node in turn.
 
-export const DEFAULT_STEEM_API_NODES = Object.freeze(['https://api.steemit.com']);
+export { DEFAULT_STEEM_API_NODES };
 const DEFAULT_TIMEOUT_MS = 10000;
 
 // The node answered, and the chain refused the call. Every node serves the
@@ -48,6 +50,8 @@ export function createSteemRpcClient({ nodes = DEFAULT_STEEM_API_NODES, fetchImp
     return Object.freeze({
         call,
         getContent: (author, permlink) => call('condenser_api.get_content', [author, permlink]),
+        // Every direct reply at once; the API has no paging.
+        getContentReplies: (author, permlink) => call('condenser_api.get_content_replies', [author, permlink]),
         async getAccount(name) {
             const accounts = await call('condenser_api.get_accounts', [[name]]);
             return Array.isArray(accounts) && accounts.length > 0 ? accounts[0] : null;

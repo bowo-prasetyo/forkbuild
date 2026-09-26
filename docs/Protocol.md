@@ -449,9 +449,9 @@ unreachable" all surface as `ContentUnavailableError`, and are never reported as
 
 ## Proposed: Steem Announcement Substrate
 
-**Status: proposed, not implemented.** Only the discovery threads exist in code so far (see below); announcing
-and reading are not built yet. When built, it ships as Experimental
-alongside the other decentralized publication tooling, and this section is edited to describe what was built.
+**Status: partly built, Experimental.** The discovery threads exist on the chain (from 2026-09) and reading is
+built (see "Reading"); announcing is not built yet. It ships as Experimental alongside the other decentralized
+publication tooling, and this section is edited as each part is built.
 
 Steem would be a third Announcement/Discovery substrate next to Nostr and Arweave. It carries the same envelopes as
 they do, unchanged, and is only a transport: every candidate is verified by content hash and ForkBuild signature
@@ -553,7 +553,9 @@ its options:
 1. **Thread set.** Readers read every configured thread account (default `['forkbuild']`). A community can add its
    own thread account if `@forkbuild` becomes unavailable or stops accepting replies, just as relays are
    configured for Nostr. For each account and family, readers read every month from the configured earliest period
-   up to the current UTC month.
+   (default `2026-09`) up to the current UTC month, at most the 36 most recent months. Earlier months' replies are
+   cached for 10 minutes, since announcers only reply to the current month's thread; the current month is cached
+   for 30 seconds, enough to absorb a burst such as place naming asking region by region.
 2. **API nodes.** Readers use a configured list of API nodes (default `https://api.steemit.com`) and try them in
    order. Every node serves the same chain, so the first node that answers is enough.
 3. **Fetch.** `condenser_api.get_content_replies(threadAccount, threadPermlink)`. A thread that doesn't exist yields
@@ -561,20 +563,37 @@ its options:
 4. **Direct replies only.** Readers accept a reply only when its `parent_author` and `parent_permlink` name the
    thread. They ignore nested replies, which are conversation, not announcements.
 5. **Parse defensively.** Anyone can reply, so readers skip a reply whose `json_metadata` is not JSON, lacks
-   `forkbuild.version === 1`, names a `family` other than the thread's, or has no `envelope`. Readers process at
-   most 2,000 replies per thread and say when they stopped early.
-6. **Verify.** Each envelope goes through the family's existing verifier, exactly as one from Nostr or Arweave does.
-   Readers deduplicate by the envelope's own identifier (for example `commentaryId` or `objectId`), never by Steem
-   author and permlink.
+   `forkbuild.version === 1`, names a `family` other than the thread's, or has no `envelope`. Readers keep the
+   newest 2,000 replies of a thread and report the thread as truncated.
+6. **Verify.** Each envelope goes through the family's existing path, exactly as one from Nostr or Arweave does,
+   and is deduplicated there by its own identifier (for example `commentaryId` or `objectId`), never by Steem
+   author and permlink:
+   - publications become leads in the World discovery registry (origin `dweb:steem:<thread accounts>`), resolved
+     and verified like any other lead;
+   - snapshots join the snapshot candidate search, whose bytes are checked against `contentHash` when resolved;
+   - place naming envelopes are kept only when their `worldId` and `regionId` derive the requested region's tag,
+     then parsed and verified by the place naming query;
+   - commentary is imported by the commentary exchange on "Check for new comments", filtered by `publicationId`.
 7. **Ignore Steem signals.** Votes, payout, reputation and front-end muting never affect whether a candidate is
    accepted.
 8. **Edits.** A reply can be edited, and `get_content_replies` returns only its current version. Readers take that
    version as the candidate. An edit can only replace one signed envelope with another, because anything unsigned
    or altered fails verification. Earlier versions stay in the chain's history, but readers don't scan it.
 
+Where reading is configured: Network Settings → Steem (`/settings/steem`, `core/SteemReadingConfiguration.js`,
+stored under `steem-reading-configuration`) holds the API nodes, thread accounts and first month; a change applies
+the next time the app loads. The code is `application/steem/`: `SteemDiscoveryThreadReader.js` reads threads, and
+one adapter per family presents what it finds in that family's existing shape
+(`SteemReadingRuntimeComposition.js` builds them).
+
 ### Status
 
-A broadcast the node accepted means "accepted", not "irreversible". Once the block holding the transaction is at
+Reading: a thread that can't be read is counted as unavailable, and one failed thread never hides the others. When
+no thread could be read, the snapshot search reports "unavailable", place naming and commentary reject so the
+caller names Steem as unreachable, and publication discovery finds no leads; none of them reports that nothing was
+announced.
+
+Announcing: a broadcast the node accepted means "accepted", not "irreversible". Once the block holding the transaction is at
 or below the chain's `last_irreversible_block_num`, it is "irreversible". A missing thread, a reply not yet visible
 and an unreachable node all surface as `ContentUnavailableError`, and are never reported as "absent."
 

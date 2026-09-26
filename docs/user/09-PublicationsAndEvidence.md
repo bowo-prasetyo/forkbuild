@@ -1946,6 +1946,7 @@ network-related settings page ForkBuild has:
 | **IPFS Gateway** | `/settings/ipfs-gateway` | Gateway(s) for reading IPFS content — [below](#ipfs-gateway) |
 | **Bitcoin Endpoint** | `/settings/bitcoin-esplora` | The Esplora-compatible API Bitcoin anchoring uses — [below](#bitcoin-endpoint) |
 | **Nostr Relays** | `/settings/nostr-relay` | Every relay this app publishes to and discovers from — [below](#nostr-relays) |
+| **Steem** *(experimental)* | `/settings/steem` | Where this app reads Steem announcements — [below](#steem) |
 | **STUN Servers** / **TURN Server** | `/settings/stun`, `/settings/turn-server` | See [TURN: relaying peer connections that can't find a direct path](07-PeerConnectionsAndFriends.md#turn-relaying-peer-connections-that-cant-find-a-direct-path) |
 | **Rendezvous Servers** | `/settings/rendezvous` | See [Peer Connections & Friends](07-PeerConnectionsAndFriends.md) |
 
@@ -2078,6 +2079,36 @@ row per relay.)
 
 Like the other pages here, a change only takes effect on the next app
 load.
+
+### Steem
+
+*Experimental.* ForkBuild also **reads** announcements from the Steem
+blockchain: Publications, Snapshots, Place Naming claims and Commentary
+that people post as replies to monthly "discovery threads" such as
+[`@forkbuild/forkbuild-snapshot-2026-09`](https://steemit.com/forkbuild/@forkbuild/forkbuild-snapshot-2026-09).
+Reading needs no Steem account. Whatever is found is verified exactly
+like an announcement from Nostr or Arweave, and votes, payouts and
+reputation on Steem never affect it. Announcing to Steem from ForkBuild
+isn't available yet.
+
+Open **Steem** (`/settings/steem`) to change where it reads from:
+
+- **API nodes**, one `https://` URL per line (default
+  `https://api.steemit.com`). Unlike Nostr relays these are tried **in
+  order**, and the first one that answers is used, since every node
+  serves the same chain.
+- **Thread accounts**, one per line (default `forkbuild`): whose
+  discovery threads are read. Add another account if a community runs its
+  own threads.
+- **First month to read** (default September 2026, when the first threads
+  were posted). ForkBuild reads every month from there to now, up to the
+  last 36 months.
+
+**Save** rejects the whole attempt if any line isn't valid, and **Use
+Defaults** goes back to the settings above. Like the other pages here, a
+change only takes effect on the next app load. When no Steem node can be
+reached, "Check for new comments" and snapshot discovery name Steem as
+unavailable rather than reporting that nothing was found.
 
 ## IPFS Publishing
 

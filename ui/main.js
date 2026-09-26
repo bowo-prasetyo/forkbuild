@@ -7,6 +7,7 @@ import { NostrMultiRelayPublicationCommentaryDistribution } from '../application
 import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js';
 import { PublicationCommentaryArweaveDistribution } from '../application/publication/commentary/PublicationCommentaryArweaveDistribution.js';
 import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';
+import { DiscoverPublicationCommentaryUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryUseCase.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { CreatePublicationResolverUseCase } from '../application/publication/CreatePublicationResolverUseCase.js';
 import { CreatePublicationPeerExchangeUseCase } from '../application/publication/CreatePublicationPeerExchangeUseCase.js';
@@ -309,7 +310,8 @@ const {
     setIpfsNodeConfigurationUseCase, nostrRelayConfigurationStore, resolvedNostrRelayUrls,
     setNostrRelayConfigurationUseCase, nostrRelayQueryClient, worldDiscoveryLeadRegistry,
     worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand,
-    worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore
+    worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
+    steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemReadingRuntime
 } = composeWorldDiscovery({
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
     ipfsNodeConfigurationStore
@@ -323,6 +325,8 @@ app.provide('ipfsNodeConfigurationStore', ipfsNodeConfigurationStore);
 app.provide('setIpfsNodeConfigurationUseCase', setIpfsNodeConfigurationUseCase);
 app.provide('nostrRelayConfigurationStore', nostrRelayConfigurationStore);
 app.provide('setNostrRelayConfigurationUseCase', setNostrRelayConfigurationUseCase);
+app.provide('steemReadingConfigurationStore', steemReadingConfigurationStore);
+app.provide('setSteemReadingConfigurationUseCase', setSteemReadingConfigurationUseCase);
 app.provide('iceServerConfigurationStore', iceServerConfigurationStore);
 app.provide('setIceServerConfigurationUseCase', setIceServerConfigurationUseCase);
 app.provide('turnServerConfigurationStore', turnServerConfigurationStore);
@@ -402,10 +406,28 @@ function discoverPublicationCommentaryFromArweaveCommand(publicationId) {
 }
 app.provide('discoverPublicationCommentaryFromArweaveCommand', discoverPublicationCommentaryFromArweaveCommand);
 
+// Reading only: Steem commentary is found and verified like the others, but
+// posting to Steem is not built yet.
+const discoverPublicationCommentaryFromSteemUseCase = steemReadingRuntime
+    ? new DiscoverPublicationCommentaryUseCase(steemReadingRuntime.commentaryDistribution, publicationCommentaryDistributionExchange)
+    : null;
+function discoverPublicationCommentaryFromSteemCommand(publicationId) {
+    return discoverPublicationCommentaryFromSteemUseCase.execute({ publicationId }).then((results) => {
+        for (const result of results) {
+            try {
+                publicationCommentaryRemoteNotificationBridge.handleCommentaryReceived(result);
+            } catch {
+            }
+        }
+        return results;
+    });
+}
+
 const refreshPublicationCommentaryCommand = composeRefreshPublicationCommentaryCommand({
     sources: [
         { name: 'Nostr', discover: discoverPublicationCommentaryFromNostrCommand },
-        { name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand }
+        { name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand },
+        ...(discoverPublicationCommentaryFromSteemUseCase ? [{ name: 'Steem', discover: discoverPublicationCommentaryFromSteemCommand }] : [])
     ]
 });
 app.provide('refreshPublicationCommentaryCommand', refreshPublicationCommentaryCommand);
@@ -436,7 +458,7 @@ const {
     publicationSnapshotPlacementCatalog, publicationSnapshotPlacementResolutionStoreRegistry,
     roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
-    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes
+    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemReadingRuntime
 });
 app.provide('defaultContentDistributionProvider', resolvedContentDistributionProvider);
 app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNostrCommand);

@@ -69,6 +69,12 @@ export default {
                     </router-link>
                 </li>
                 <li>
+                    <router-link to="/settings/steem" class="network-settings-link">
+                        <span class="network-settings-link-title">Steem</span>
+                        <span class="form-hint form-hint--neutral">API nodes and discovery threads this replica reads Steem announcements from.</span>
+                    </router-link>
+                </li>
+                <li>
                     <router-link to="/settings/stun" class="network-settings-link">
                         <span class="network-settings-link-title">STUN Servers</span>
                         <span class="form-hint form-hint--neutral">Servers used for peer-to-peer connection negotiation.</span>

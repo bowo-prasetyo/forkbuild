@@ -765,3 +765,31 @@ Keychain before anything was broadcast. Keychain cannot sign options that turn v
 - The thread page links the repository's favicon.
 - Also learned: a test post was upvoted within minutes, after which the chain refused to change its options
   (`comment.abs_rshares == 0`). Sending the options in the post's own transaction, as the page does, is required.
+
+## Reading Steem announcements (unnumbered, 2026-09-26)
+
+**ForkBuild now reads Publications, Snapshots, Place Naming claims and Commentary from the Steem discovery threads.**
+The four September 2026 threads exist on the chain, so readers can find announcements as soon as anyone replies;
+announcing from the app comes next.
+
+- `core/SteemDiscoveryAnnouncement.js`: reads one reply's shape (direct reply to the thread, `forkbuild.version` 1,
+  the thread's family, an object envelope) and nothing more; the envelope is checked by its family.
+- `application/steem/SteemDiscoveryThreadReader.js`: reads one family from every thread account's monthly threads,
+  from the first configured month (default 2026-09) to now, at most 36 months, four requests at a time. It keeps
+  the newest 2,000 replies per thread, caches earlier months for 10 minutes and the current month for 30 seconds, and reports found, empty or
+  unavailable; one failed thread never hides the others. `steem/SteemRpcClient.js` gains `getContentReplies()`.
+- One adapter per family, each matching the existing Nostr/Arweave shape: `SteemPublicationDiscoveryQueryService`
+  (leads for the World discovery registry), `SteemSnapshotDiscoveryQueryService` (joins the snapshot candidate
+  search, with `searchWithOutcome()`), `SteemPlaceNamingDiscoverySource` (one thread for all regions, so it keeps only
+  envelopes whose world and region derive the requested tag) and `PublicationCommentarySteemDistribution` (read by
+  a new substrate-neutral `DiscoverPublicationCommentaryUseCase` and added to "Check for new comments").
+- Settings: `core/SteemReadingConfiguration.js`, `storage/SteemReadingConfigurationStore.js`,
+  `SetSteemReadingConfigurationUseCase` and Network Settings → Steem (`/settings/steem`): API nodes, thread
+  accounts, first month. The commentary status line now lists three unreachable networks as "Nostr, Arweave or
+  Steem".
+- Tests: `tests/SteemDiscoveryThreadReader.test.js`, `tests/SteemAnnouncementReaders.test.js` (each adapter, and each
+  through the real composite service it feeds) and `tests/SteemReadingConfiguration.test.js`. Two older tests that
+  count commentary wiring in `ui/main.js` now expect the Steem source. The app was loaded in Chromium, and the
+  settings page saved, refused an `http://` node, and linked from Network Settings.
+- Not done: announcing to Steem from the Distribute dialog and commentary posting; nothing has been read from the
+  real chain yet, since this environment can't reach a Steem node.
