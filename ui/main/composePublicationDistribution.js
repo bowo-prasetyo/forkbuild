@@ -13,7 +13,7 @@ export function composePublicationDistribution({
     resolvedIpfsNodeApiUrl, snapshotPlacementStoreRegistry, resolvedAnnouncementDiscoveryProvider,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, PUBLICATION_DISCOVERY_TAG,
     publicationDistributionLifecycleStore, arweaveHostSigner, nostrHostPublisher,
-    nostrPublicationRuntimeCapabilities
+    nostrPublicationRuntimeCapabilities, steemRuntime = null
 }) {
     const arweavePublicationRuntimeCapabilities = createArweavePublicationDistributionRuntimeAdapter({ signer: arweaveHostSigner });
     const arweaveAnnouncementUploadTaggedTransaction = createArweaveTaggedTransactionUpload({
@@ -35,7 +35,8 @@ export function composePublicationDistribution({
         arweaveUploaderOptions,
         ipfsNodeOptions,
         nostrPublisherOptions,
-        arweaveAnnouncementPublisherOptions
+        arweaveAnnouncementPublisherOptions,
+        steemPublicationDiscoveryPublisher: steemRuntime ? steemRuntime.publicationDiscoveryPublisher : null
     });
 
     const multiRelayNostrPublicationDistributionCommand = composeMultiRelayNostrPublicationDistributionCommand({
@@ -61,8 +62,12 @@ export function composePublicationDistribution({
         arweaveSnapshotDiscoveryPublisherOptions: { discoveryTag: 'forkbuild-snapshot', gatewayUrl: resolvedArweaveGatewayUrl, uploadTaggedTransaction: arweaveAnnouncementUploadTaggedTransaction }
     });
     // Picks one of the two instances above, defaulting to the saved preference.
-    const resolveSnapshotDiscoveryPublisher = (discoveryProvider = resolvedAnnouncementDiscoveryProvider) =>
-        (discoveryProvider === 'arweave' ? arweaveSnapshotDiscoveryPublisher : nostrSnapshotDiscoveryPublisher);
+    const steemSnapshotDiscoveryPublisher = steemRuntime ? steemRuntime.snapshotDiscoveryPublisher : null;
+    const resolveSnapshotDiscoveryPublisher = (discoveryProvider = resolvedAnnouncementDiscoveryProvider) => {
+        if (discoveryProvider === 'arweave') return arweaveSnapshotDiscoveryPublisher;
+        if (discoveryProvider === 'steem') return steemSnapshotDiscoveryPublisher;
+        return nostrSnapshotDiscoveryPublisher;
+    };
     const snapshotDistributionCommand = (bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider) => executeSnapshotDistributionCommand({
         bytes,
         contentStore: resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage),

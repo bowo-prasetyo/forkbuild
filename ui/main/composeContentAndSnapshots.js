@@ -111,7 +111,7 @@ export function composeContentAndSnapshots({
     // unknown values fall back to 'nostr'.
     const announcementDiscoveryProviderPreference = roleProviderPreferenceStore.get(RoleProviderRole.ANNOUNCEMENT_AND_DISCOVERY);
     const resolvedAnnouncementDiscoveryProvider = (announcementDiscoveryProviderPreference
-        && (announcementDiscoveryProviderPreference.providerKey === 'nostr' || announcementDiscoveryProviderPreference.providerKey === 'arweave'))
+        && ['nostr', 'arweave', 'steem'].includes(announcementDiscoveryProviderPreference.providerKey))
         ? announcementDiscoveryProviderPreference.providerKey
         : 'nostr';
 

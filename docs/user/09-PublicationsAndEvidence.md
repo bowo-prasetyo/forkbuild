@@ -1940,12 +1940,13 @@ network-related settings page ForkBuild has:
 | Page | Route | What it sets |
 |---|---|---|
 | **Content Provider** | `/settings/content-provider` | Where **Use Preferred Provider** places new Content, plus the IPFS node new IPFS placements go to — see [Using a preferred provider](#using-a-preferred-provider) above |
-| **Announcement / Discovery Provider** | `/settings/announcement-discovery-provider` | The default substrate — Nostr or Arweave — for announcing and discovering — see [below](#announcement--discovery-provider) |
+| **Announcement / Discovery Provider** | `/settings/announcement-discovery-provider` | The default substrate — Nostr, Arweave or Steem — for announcing and discovering — see [below](#announcement--discovery-provider) |
 | **Proof / Anchoring Provider** | `/settings/anchor-provider` | Where the Publication Center's anchoring **Use Preferred Provider** button anchors — see [Anchoring on a preferred provider](#anchoring-on-a-preferred-provider) above |
 | **Arweave Gateway** | `/settings/arweave-gateway` | Gateway(s) for reading Arweave content — [below](#arweave-gateway) |
 | **IPFS Gateway** | `/settings/ipfs-gateway` | Gateway(s) for reading IPFS content — [below](#ipfs-gateway) |
 | **Bitcoin Endpoint** | `/settings/bitcoin-esplora` | The Esplora-compatible API Bitcoin anchoring uses — [below](#bitcoin-endpoint) |
 | **Nostr Relays** | `/settings/nostr-relay` | Every relay this app publishes to and discovers from — [below](#nostr-relays) |
+| **Steem** *(experimental)* | `/settings/steem` | Where this app reads Steem announcements — [below](#steem) |
 | **STUN Servers** / **TURN Server** | `/settings/stun`, `/settings/turn-server` | See [TURN: relaying peer connections that can't find a direct path](07-PeerConnectionsAndFriends.md#turn-relaying-peer-connections-that-cant-find-a-direct-path) |
 | **Rendezvous Servers** | `/settings/rendezvous` | See [Peer Connections & Friends](07-PeerConnectionsAndFriends.md) |
 
@@ -1961,8 +1962,9 @@ list of choices, they're shown in alphabetical order.
 ### Announcement / Discovery Provider
 
 Open **Announcement / Discovery Provider**
-(`/settings/announcement-discovery-provider`) to choose, with a pair of
-radio buttons, the default substrate — **Arweave** or **Nostr** — used to
+(`/settings/announcement-discovery-provider`) to choose, with radio
+buttons, the default substrate — **Arweave**, **Nostr** or **Steem**
+(experimental, [below](#steem)) — used to
 announce and discover Publications, Snapshots, Place Naming claims, and
 Commentary. It's only a default: every control that offers its own
 explicit choice (the Repository's per-card and per-row Distribution
@@ -2078,6 +2080,48 @@ row per relay.)
 
 Like the other pages here, a change only takes effect on the next app
 load.
+
+### Steem
+
+*Experimental.* ForkBuild can announce and discover over the Steem
+blockchain too: Publications, Snapshots, Place Naming claims and Commentary
+are posted as replies to monthly "discovery threads" such as
+[`@forkbuild/forkbuild-snapshot-2026-09`](https://steemit.com/forkbuild/@forkbuild/forkbuild-snapshot-2026-09).
+Reading needs no Steem account. Whatever is found is verified exactly
+like an announcement from Nostr or Arweave, and votes, payouts and
+reputation on Steem never affect it.
+
+**Posting to Steem.** Choose **Steem** in a Distribute dialog, on the
+Publications page, or next to **Post Comment** (or make it your default
+under Announcement / Discovery Provider). You need the
+Steem Keychain browser
+extension holding your account's **posting** key, and your account name
+saved on the Steem page below; ForkBuild never sees the key. Each post is
+a reply to this month's thread with payout declined, and Keychain asks you
+to approve it. If this month's thread doesn't exist yet, nothing is posted
+and you're told so. A comment is always saved on this device first; its
+form warns you before posting if no account is set or Keychain is
+missing.
+
+Open **Steem** (`/settings/steem`) to set **Your Steem account** under
+**Posting** (it applies at once), or to change where it reads from:
+
+- **API nodes**, one `https://` URL per line (default
+  `https://api.steemit.com`). Unlike Nostr relays these are tried **in
+  order**, and the first one that answers is used, since every node
+  serves the same chain.
+- **Thread accounts**, one per line (default `forkbuild`): whose
+  discovery threads are read. Add another account if a community runs its
+  own threads.
+- **First month to read** (default September 2026, when the first threads
+  were posted). ForkBuild reads every month from there to now, up to the
+  last 36 months.
+
+**Save** rejects the whole attempt if any line isn't valid, and **Use
+Defaults** goes back to the settings above. Like the other pages here, a
+change only takes effect on the next app load. When no Steem node can be
+reached, "Check for new comments" and snapshot discovery name Steem as
+unavailable rather than reporting that nothing was found.
 
 ## IPFS Publishing
 

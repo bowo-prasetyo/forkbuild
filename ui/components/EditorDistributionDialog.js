@@ -168,6 +168,7 @@ export default {
                         <select v-model="discoveryProviderModel" class="form-select editor-distribution-dialog-provider-select" :disabled="anyExecuting">
                             <option value="arweave">Arweave</option>
                             <option value="nostr">Nostr</option>
+                            <option value="steem">Steem</option>
                         </select>
                     </label>
                 </div>

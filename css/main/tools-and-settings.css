@@ -404,7 +404,7 @@
 
 /* Announcement / Discovery Provider / Proof / Anchoring Provider / Arweave
    Gateway / IPFS Gateway / Bitcoin Endpoint / Nostr Relays / STUN Servers /
-   TURN Server / Rendezvous Servers — the other Network Settings pages, same
+   TURN Server / Rendezvous Servers / Steem — the other Network Settings pages, same
    card language as .content-provider-settings-view above. */
 .announcement-discovery-provider-settings-view,
 .anchor-provider-settings-view,
@@ -412,6 +412,7 @@
 .ipfs-gateway-settings-view,
 .bitcoin-esplora-settings-view,
 .nostr-relay-settings-view,
+.steem-reading-settings-view,
 .stun-settings-view,
 .turn-server-settings-view,
 .rendezvous-settings-view {
@@ -427,6 +428,7 @@
 .ipfs-gateway-settings-form,
 .bitcoin-esplora-settings-form,
 .nostr-relay-settings-form,
+.steem-reading-settings-form,
 .stun-settings-form,
 .turn-server-settings-form,
 .rendezvous-settings-form,
@@ -442,6 +444,7 @@
 .ipfs-gateway-settings-form :is(.form-input, .form-textarea),
 .bitcoin-esplora-settings-form :is(.form-input, .form-textarea),
 .nostr-relay-settings-form :is(.form-input, .form-textarea),
+.steem-reading-settings-form :is(.form-input, .form-textarea),
 .stun-settings-form :is(.form-input, .form-textarea),
 .turn-server-settings-form :is(.form-input, .form-textarea),
 .rendezvous-settings-form :is(.form-input, .form-textarea),

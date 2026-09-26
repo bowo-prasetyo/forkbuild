@@ -440,7 +440,7 @@ export default {
                 // objects; the durable record is
                 // publicationDistributionLifecycleStore's.
                 discoveryDistributionProvider: resolveSavedProviderDefault(
-                    defaultAnnouncementDiscoveryProvider, ['nostr', 'arweave'], 'nostr'
+                    defaultAnnouncementDiscoveryProvider, ['nostr', 'arweave', 'steem'], 'nostr'
                 ),
                 discoveryDistributionAttempt: null,
                 // The entry's own Content backend. Seeded from the saved

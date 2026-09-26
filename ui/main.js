@@ -7,6 +7,7 @@ import { NostrMultiRelayPublicationCommentaryDistribution } from '../application
 import { DiscoverPublicationCommentaryFromNostrUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromNostrUseCase.js';
 import { PublicationCommentaryArweaveDistribution } from '../application/publication/commentary/PublicationCommentaryArweaveDistribution.js';
 import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';
+import { DiscoverPublicationCommentaryUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryUseCase.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
 import { CreatePublicationResolverUseCase } from '../application/publication/CreatePublicationResolverUseCase.js';
 import { CreatePublicationPeerExchangeUseCase } from '../application/publication/CreatePublicationPeerExchangeUseCase.js';
@@ -106,11 +107,14 @@ const {
 let publicationCommentaryNostrDistribution = null;
 // Same, for Arweave.
 let publicationCommentaryArweaveDistribution = null;
+// Same, for Steem.
+let publicationCommentarySteemDistribution = null;
 
 // Creates the comment locally first, then distributes it: a WebRTC announce,
-// plus at most one asynchronous substrate (Nostr or Arweave, from
-// input.discoveryProvider or the saved preference), never both. Distribution
-// failures are swallowed; they never undo or fail the local create.
+// plus at most one asynchronous substrate (Nostr, Arweave or Steem, from
+// input.discoveryProvider or the saved preference), never several.
+// Distribution failures are swallowed; they never undo or fail the local
+// create.
 function addPublicationCommentaryCommand(input) {
     const result = createPublicationCommentaryCommand(input);
     try {
@@ -121,7 +125,7 @@ function addPublicationCommentaryCommand(input) {
     const discoveryProvider = (input && input.discoveryProvider) || resolvedAnnouncementDiscoveryProvider;
     const asynchronousDistribution = discoveryProvider === 'arweave'
         ? publicationCommentaryArweaveDistribution
-        : publicationCommentaryNostrDistribution;
+        : (discoveryProvider === 'steem' ? publicationCommentarySteemDistribution : publicationCommentaryNostrDistribution);
     if (asynchronousDistribution) {
         try {
             const envelopeJson = publicationCommentaryDistributionExchange.exportCommentary(result.commentary);
@@ -309,7 +313,9 @@ const {
     setIpfsNodeConfigurationUseCase, nostrRelayConfigurationStore, resolvedNostrRelayUrls,
     setNostrRelayConfigurationUseCase, nostrRelayQueryClient, worldDiscoveryLeadRegistry,
     worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand,
-    worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore
+    worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
+    steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
+    steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase
 } = composeWorldDiscovery({
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
     ipfsNodeConfigurationStore
@@ -323,6 +329,10 @@ app.provide('ipfsNodeConfigurationStore', ipfsNodeConfigurationStore);
 app.provide('setIpfsNodeConfigurationUseCase', setIpfsNodeConfigurationUseCase);
 app.provide('nostrRelayConfigurationStore', nostrRelayConfigurationStore);
 app.provide('setNostrRelayConfigurationUseCase', setNostrRelayConfigurationUseCase);
+app.provide('steemReadingConfigurationStore', steemReadingConfigurationStore);
+app.provide('setSteemReadingConfigurationUseCase', setSteemReadingConfigurationUseCase);
+app.provide('steemAnnouncingConfigurationStore', steemAnnouncingConfigurationStore);
+app.provide('setSteemAnnouncingConfigurationUseCase', setSteemAnnouncingConfigurationUseCase);
 app.provide('iceServerConfigurationStore', iceServerConfigurationStore);
 app.provide('setIceServerConfigurationUseCase', setIceServerConfigurationUseCase);
 app.provide('turnServerConfigurationStore', turnServerConfigurationStore);
@@ -402,10 +412,30 @@ function discoverPublicationCommentaryFromArweaveCommand(publicationId) {
 }
 app.provide('discoverPublicationCommentaryFromArweaveCommand', discoverPublicationCommentaryFromArweaveCommand);
 
+// Assigning this enables the Steem publish path of
+// addPublicationCommentaryCommand when a caller selects 'steem'.
+publicationCommentarySteemDistribution = steemRuntime ? steemRuntime.commentaryDistribution : null;
+
+const discoverPublicationCommentaryFromSteemUseCase = steemRuntime
+    ? new DiscoverPublicationCommentaryUseCase(steemRuntime.commentaryDistribution, publicationCommentaryDistributionExchange)
+    : null;
+function discoverPublicationCommentaryFromSteemCommand(publicationId) {
+    return discoverPublicationCommentaryFromSteemUseCase.execute({ publicationId }).then((results) => {
+        for (const result of results) {
+            try {
+                publicationCommentaryRemoteNotificationBridge.handleCommentaryReceived(result);
+            } catch {
+            }
+        }
+        return results;
+    });
+}
+
 const refreshPublicationCommentaryCommand = composeRefreshPublicationCommentaryCommand({
     sources: [
         { name: 'Nostr', discover: discoverPublicationCommentaryFromNostrCommand },
-        { name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand }
+        { name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand },
+        ...(discoverPublicationCommentaryFromSteemUseCase ? [{ name: 'Steem', discover: discoverPublicationCommentaryFromSteemCommand }] : [])
     ]
 });
 app.provide('refreshPublicationCommentaryCommand', refreshPublicationCommentaryCommand);
@@ -418,7 +448,7 @@ const {
     resolvedIpfsNodeApiUrl, snapshotPlacementStoreRegistry, resolvedAnnouncementDiscoveryProvider,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, PUBLICATION_DISCOVERY_TAG,
     publicationDistributionLifecycleStore, arweaveHostSigner, nostrHostPublisher,
-    nostrPublicationRuntimeCapabilities
+    nostrPublicationRuntimeCapabilities, steemRuntime
 });
 app.provide('publicationDistributionCommand', publicationDistributionCommand);
 app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPublicationDistributionCommand);
@@ -436,7 +466,7 @@ const {
     publicationSnapshotPlacementCatalog, publicationSnapshotPlacementResolutionStoreRegistry,
     roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
-    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes
+    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime
 });
 app.provide('defaultContentDistributionProvider', resolvedContentDistributionProvider);
 app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNostrCommand);

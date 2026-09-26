@@ -36,7 +36,7 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 // Both keys already title-case to "Nostr"/"Arweave" through
 // describeRoleProviderPreferenceSettings()'s own label fallback, so no
 // label map is needed here.
-const AVAILABLE_PROVIDER_KEYS = ['nostr', 'arweave'];
+const AVAILABLE_PROVIDER_KEYS = ['nostr', 'arweave', 'steem'];
 
 export default {
     name: 'AnnouncementDiscoveryProviderSettingsView',
@@ -63,7 +63,7 @@ export default {
         <section class="announcement-discovery-provider-settings-view">
             <h1>Announcement / Discovery Provider</h1>
             <p class="form-hint form-hint--neutral">
-                Choose the default decentralized substrate — Nostr or Arweave — used to announce and discover Publications, Snapshots, Place Naming claims, and Commentary. A page or control offering its own explicit choice still overrides this default for that one action.
+                Choose the default decentralized substrate — Nostr, Arweave or Steem — used to announce and discover Publications, Snapshots, Place Naming claims, and Commentary. A page or control offering its own explicit choice still overrides this default for that one action.
             </p>
             <p class="form-hint form-hint--neutral">
                 Saving here takes effect the next time this app loads — it never changes an announcement already in flight.

@@ -110,13 +110,14 @@ import { executePublicationDistributionCommand, executeMultiRelayNostrPublicatio
 // so it can only ever come from a caller's own `request`, never from this
 // composition root. Both therefore reach `executePublicationDistributionCommand()`
 // purely through `...request`'s own existing, unmodified spread.
-export function composePublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions } = {}) {
+export function composePublicationDistributionCommand({ lifecycleStore, arweaveUploaderOptions, ipfsNodeOptions, nostrPublisherOptions, arweaveAnnouncementPublisherOptions, steemPublicationDiscoveryPublisher = null } = {}) {
     return (request) => executePublicationDistributionCommand({
         ...request,
         arweaveUploaderOptions,
         ipfsNodeOptions,
         nostrPublisherOptions,
         arweaveAnnouncementPublisherOptions,
+        steemPublicationDiscoveryPublisher,
         lifecycleStore
     });
 }

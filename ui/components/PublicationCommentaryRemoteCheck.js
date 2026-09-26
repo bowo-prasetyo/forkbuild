@@ -21,6 +21,11 @@
 // none were found on the networks that answered, never that none exist.
 // A network that could not be reached is named, and the comments stored
 // on this device stay on screen either way.
+// "Nostr", "Nostr and Arweave", "Nostr, Arweave and Steem".
+function joinNames(names, conjunction) {
+    return names.length <= 2 ? names.join(` ${conjunction} `) : `${names.slice(0, -1).join(', ')} ${conjunction} ${names[names.length - 1]}`;
+}
+
 export default {
     name: 'PublicationCommentaryRemoteCheck',
     inject: {
@@ -48,12 +53,12 @@ export default {
             }
             const reached = outcome.checked.filter((name) => !outcome.failed.includes(name));
             if (reached.length === 0 && outcome.failed.length > 0) {
-                return `Couldn't reach ${outcome.failed.join(' or ')} — showing comments stored on this device.`;
+                return `Couldn't reach ${joinNames(outcome.failed, 'or')} — showing comments stored on this device.`;
             }
             const found = outcome.newCount === 0
                 ? 'No new comments found'
                 : `Found ${outcome.newCount} new ${outcome.newCount === 1 ? 'comment' : 'comments'}`;
-            const unreachable = outcome.failed.length > 0 ? ` · ${outcome.failed.join(' and ')} unavailable` : '';
+            const unreachable = outcome.failed.length > 0 ? ` · ${joinNames(outcome.failed, 'and')} unavailable` : '';
             return `${found}${unreachable}.`;
         }
     },

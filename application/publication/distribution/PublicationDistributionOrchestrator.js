@@ -260,7 +260,8 @@ export function orchestratePublicationDistribution({
     arweaveUploaderOptions,
     discoveryProvider,
     nostrPublisherOptions,
-    arweaveAnnouncementPublisherOptions
+    arweaveAnnouncementPublisherOptions,
+    steemPublicationDiscoveryPublisher
 } = {}) {
     const runtime = composePublicationDistributionRuntime({
         arweaveUploaderOptions,
@@ -269,7 +270,8 @@ export function orchestratePublicationDistribution({
         remotePinningProviderOptions,
         discoveryProvider,
         nostrPublisherOptions,
-        arweaveAnnouncementPublisherOptions
+        arweaveAnnouncementPublisherOptions,
+        steemPublicationDiscoveryPublisher
     });
 
     return executePublicationDistribution({

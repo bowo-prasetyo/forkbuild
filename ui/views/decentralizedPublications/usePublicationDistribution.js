@@ -37,7 +37,8 @@ export function usePublicationDistribution({
     // multi-relay command, which resolves to one result per relay (the
     // result isn't rendered here).
     function distributeEntryPublication(entry, discoveryProviderChoice) {
-        if (discoveryProviderChoice === 'arweave') {
+        // Nostr fans out to every relay; Arweave and Steem each have one publisher.
+        if (discoveryProviderChoice === 'arweave' || discoveryProviderChoice === 'steem') {
             if (!publicationDistributionCommand) {
                 return Promise.reject(new Error('Publication distribution is not available.'));
             }
@@ -119,9 +120,9 @@ export function usePublicationDistribution({
     // The Settings route for the entry's chosen Announcement/Discovery
     // substrate.
     function discoveryDistributionConfigurationRoute(entry) {
-        return entry.discoveryDistributionProvider === 'arweave'
-            ? '/settings/arweave-gateway'
-            : '/settings/nostr-relay';
+        if (entry.discoveryDistributionProvider === 'arweave') return '/settings/arweave-gateway';
+        if (entry.discoveryDistributionProvider === 'steem') return '/settings/steem';
+        return '/settings/nostr-relay';
     }
 
     // The Settings route for the entry's chosen Content backend; IPFS uses

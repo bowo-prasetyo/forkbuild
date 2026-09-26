@@ -163,6 +163,7 @@ import { LocalSnapshotCandidateDiscoveryQueryService } from './LocalSnapshotCand
 export function composeSnapshotCandidateDiscoveryRuntime({
     nostrSnapshotDiscoveryQueryService = null,
     arweaveSnapshotDiscoveryQueryService = null,
+    steemSnapshotDiscoveryQueryService = null,
     placementCatalog
 } = {}) {
     const sources = [];
@@ -171,6 +172,9 @@ export function composeSnapshotCandidateDiscoveryRuntime({
     }
     if (isSearchableSource(arweaveSnapshotDiscoveryQueryService)) {
         sources.push(arweaveSnapshotDiscoveryQueryService);
+    }
+    if (isSearchableSource(steemSnapshotDiscoveryQueryService)) {
+        sources.push(steemSnapshotDiscoveryQueryService);
     }
     sources.push(new LocalSnapshotCandidateDiscoveryQueryService(placementCatalog));
 

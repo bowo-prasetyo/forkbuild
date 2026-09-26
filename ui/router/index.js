@@ -21,6 +21,7 @@ import ArweaveGatewaySettingsView from '../views/ArweaveGatewaySettingsView.js';
 import IpfsGatewaySettingsView from '../views/IpfsGatewaySettingsView.js';
 import BitcoinEsploraSettingsView from '../views/BitcoinEsploraSettingsView.js';
 import NostrRelaySettingsView from '../views/NostrRelaySettingsView.js';
+import SteemReadingSettingsView from '../views/SteemReadingSettingsView.js';
 import StunSettingsView from '../views/StunSettingsView.js';
 import TurnServerSettingsView from '../views/TurnServerSettingsView.js';
 import RendezvousSettingsView from '../views/RendezvousSettingsView.js';
@@ -153,6 +154,7 @@ const routes = [
     // only — removed; see core/NostrRelayConfiguration.js's own header,
     // "unified," for the full rationale and what changed.
     { path: '/settings/nostr-relay', name: 'nostr-relay-settings', component: NostrRelaySettingsView },
+    { path: '/settings/steem', name: 'steem-reading-settings', component: SteemReadingSettingsView },
     // 0.9.386 — STUN Settings UI. The one ordinary product path to
     // create/change/clear the persisted STUN server configuration
     // override (core/IceServerConfiguration.js, storage/

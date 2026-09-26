@@ -223,8 +223,8 @@ async function run() {
         const discoveryProviderSelectMatch = dialogSource.match(/<select\s+v-model="discoveryProviderModel"[\s\S]*?<\/select>/);
         assert(discoveryProviderSelectMatch !== null, n('A4a. the discoveryProviderModel <select> element is isolable'));
         const optionMatches = (discoveryProviderSelectMatch ? discoveryProviderSelectMatch[0] : '').match(/<option value="[^"]*">/g) || [];
-        assert(optionMatches.length === 2,
-            n(`A4. exactly two <option> elements exist inside the selectedDiscoveryProvider <select> (found ${optionMatches.length}) — the currently supported choices, no more, no fewer`));
+        assert(optionMatches.length === 3,
+            n(`A4. exactly three <option> elements (Arweave, Nostr, Steem) exist inside the selectedDiscoveryProvider <select> (found ${optionMatches.length}) — the currently supported choices, no more, no fewer`));
 
         // AMENDED BY 0.9.667 — Role Provider Preference As Dropdown
         // Default. selectedDiscoveryProvider no longer hardcodes 'nostr'
@@ -265,7 +265,7 @@ async function run() {
             && /v-if="canDistributeSnapshot \|\| canDistributePublication"[\s\S]{0,200}editor-post-publish-distribute-trigger/.test(editorSource),
             n('A6. AMENDED — exactly one substrate control, in the shared settings block above both sections, reachable only through the capability-gated Distribute trigger'));
 
-        console.log('✓ Section A: EditorView.js\'s own post-publish overlay exposes exactly the two currently supported Announcement/Discovery substrates, Nostr and Arweave, defaulting to Nostr');
+        console.log('✓ Section A: EditorView.js\'s own post-publish overlay exposes exactly the three currently supported Announcement/Discovery substrates, Arweave, Nostr and Steem, defaulting to Nostr');
     }
 
     // ===============================================================

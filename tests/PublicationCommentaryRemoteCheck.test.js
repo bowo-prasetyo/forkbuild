@@ -309,6 +309,8 @@ async function run() {
             '35. an unreachable network is named alongside the result from the other');
         assert(status({ newCount: 0, checked: ['Nostr', 'Arweave'], failed: ['Nostr', 'Arweave'] }) === 'Couldn\'t reach Nostr or Arweave — showing comments stored on this device.',
             '36. when no network answers, the status says so and points at the local comments still shown');
+        assert(status({ newCount: 0, checked: ['Nostr', 'Arweave', 'Steem'], failed: ['Nostr', 'Arweave', 'Steem'] }) === 'Couldn\'t reach Nostr, Arweave or Steem — showing comments stored on this device.',
+            '36b. three unreachable networks read as a list');
 
         console.log('✓ Section G: the status line describes every outcome honestly');
     }
@@ -319,8 +321,8 @@ async function run() {
     {
         const read = (path) => readFile(new URL('../' + path, import.meta.url), 'utf8');
         const mainSource = (await Promise.all(mainFiles().map((file) => read(file)))).join('\n');
-        assert(/composeRefreshPublicationCommentaryCommand\(\{\s*sources: \[\s*\{ name: 'Nostr', discover: discoverPublicationCommentaryFromNostrCommand \},\s*\{ name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand \}\s*\]\s*\}\)/.test(mainSource),
-            '37. main.js composes the refresh command from BOTH existing discovery commands — they are no longer unreached');
+        assert(/composeRefreshPublicationCommentaryCommand\(\{\s*sources: \[\s*\{ name: 'Nostr', discover: discoverPublicationCommentaryFromNostrCommand \},\s*\{ name: 'Arweave', discover: discoverPublicationCommentaryFromArweaveCommand \},\s*\.\.\.\(discoverPublicationCommentaryFromSteemUseCase \? \[\{ name: 'Steem', discover: discoverPublicationCommentaryFromSteemCommand \}\] : \[\]\)\s*\]\s*\}\)/.test(mainSource),
+            '37. main.js composes the refresh command from the Nostr, Arweave and (when reading is available) Steem discovery commands');
         assert(mainSource.includes("app.provide('refreshPublicationCommentaryCommand', refreshPublicationCommentaryCommand);"), '38. main.js provides it app-wide');
 
         const sections = [

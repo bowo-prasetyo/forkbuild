@@ -1,6 +1,7 @@
 import PublicationCommentaryRemoteCheck from './PublicationCommentaryRemoteCheck.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { createId } from '../../core/createId.js';
+import { describeSteemAnnouncingUnreadiness } from '../../application/steem/SteemAnnouncingReadiness.js';
 
 // The Repository catalog's Commentary section for ONE Publication — the
 // single implementation both of the catalog's views mount:
@@ -56,7 +57,9 @@ export default {
         // 0.9.667 — this replica's saved ANNOUNCEMENT_AND_DISCOVERY
         // preference, resolved once at boot by ui/main.js; seeds
         // `selectedDiscoveryProvider` below.
-        defaultAnnouncementDiscoveryProvider: { default: null }
+        defaultAnnouncementDiscoveryProvider: { default: null },
+        // The account this device posts to Steem as, when set.
+        steemAnnouncingConfigurationStore: { default: null }
     },
     props: {
         publication: { type: Object, required: true }
@@ -91,13 +94,23 @@ export default {
         },
         // Human-friendly label only — never the value sent to the command.
         lastCommentaryDistributionProviderLabel() {
-            return this.lastCommentaryDistributionProvider === 'arweave' ? 'Arweave' : 'Nostr';
+            return { arweave: 'Arweave', steem: 'Steem' }[this.lastCommentaryDistributionProvider] || 'Nostr';
         }
     },
     mounted() {
         this.refreshCommentaries();
     },
     methods: {
+        // A Steem post that can't be signed fails silently after the local
+        // save, so say why before posting. Checked on each render, since
+        // Keychain can appear after load.
+        steemUnreadiness() {
+            if (this.selectedDiscoveryProvider !== 'steem') return null;
+            return describeSteemAnnouncingUnreadiness({
+                account: this.steemAnnouncingConfigurationStore?.get()?.account ?? null,
+                keychain: globalThis.steem_keychain
+            });
+        },
         // The only writer of `commentaries`/`commentaryError` from a
         // read. A FAILED read leaves `commentaries` exactly as it was and
         // only sets `commentaryError`.
@@ -191,8 +204,10 @@ export default {
                     >
                         <option value="arweave">Arweave</option>
                         <option value="nostr">Nostr</option>
+                        <option value="steem">Steem</option>
                     </select>
                 </label>
+                <p v-if="steemUnreadiness()" class="form-hint publication-commentary-steem-hint">{{ steemUnreadiness() }}</p>
                 <button
                     type="submit"
                     class="action-btn publication-commentary-submit-action"

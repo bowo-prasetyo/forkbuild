@@ -28,6 +28,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                                 :disabled="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.distributing">
                                             <option value="arweave">Arweave</option>
                                             <option value="nostr">Nostr</option>
+                                            <option value="steem">Steem</option>
                                         </select>
                                     </label>
                                     <div class="identity-mgmt-actions">
@@ -40,7 +41,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                              substrate; says nothing about
                                              whether it is reachable. -->
                                         <router-link :to="discoveryDistributionConfigurationRoute(entry)" class="action-btn action-btn--secondary">
-                                            Configure {{ entry.discoveryDistributionProvider === 'arweave' ? 'Arweave' : 'Nostr' }}
+                                            Configure {{ entry.discoveryDistributionProvider === 'arweave' ? 'Arweave' : (entry.discoveryDistributionProvider === 'steem' ? 'Steem' : 'Nostr') }}
                                         </router-link>
                                     </div>
                                     <p v-if="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.error" class="form-hint form-hint--neutral">
