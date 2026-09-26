@@ -166,8 +166,11 @@ async function keyAdvice(rpc, account) {
     } catch {
         // The advice below still helps without the keys.
     }
-    const named = keys.length > 0 ? `The chain's posting public key for @${account} is ${keys.join(' or ')}. ` : '';
-    return `${named}Keychain must hold the matching posting private key: in Keychain, remove @${account} and add it again with its posting private key (or its master password). An owner, active or memo key does not work here. `;
+    const expected = keys.length > 0 ? ` (the chain lists ${keys.join(' or ')})` : '';
+    return `Keychain signs with the posting private key it stores for @${account}; this page never sees or sends a key. `
+        + `That stored key does not match the account's posting public key${expected}. `
+        + `In Keychain, compare the posting public key it shows for @${account} with that one; if they differ, remove the account and add it again with its posting private key or master password. `
+        + 'If they match, check that Keychain is connected to a Steem RPC node, not a Hive one. ';
 }
 
 function readSettings() {
