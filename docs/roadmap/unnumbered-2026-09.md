@@ -1084,3 +1084,25 @@ link went to the project on GitHub; someone reading Steemit gains far more from 
   `LoadPublishedWorldSessionUseCase`, reopening without a search, and each reason a link doesn't open).
 - Not done: the World View panel calls any shown Publication "My Publication" and offers Unpublish and Distribute,
   including one that came from someone else; that predates this change.
+
+## A check for putting images on Steem posts (unnumbered, 2026-09-26)
+
+**Before notices on Steem get a build's thumbnail, a check confirms images can be uploaded from ForkBuild's own
+site.** A notice with a picture, the title and the description would draw far more readers into World View, but
+Steem front ends only show images from an image host, and uploading to one from `bowo-prasetyo.github.io` depends on
+two things that can't be tested without the live services: that Steem Keychain signs image bytes as the host
+expects, and that the host accepts uploads from this site.
+
+- `steem/SteemImageUpload.js`: `steemImageSigningPayload()` (the "ImageSigningChallenge" prefix and the image bytes,
+  as a Buffer in JSON, the form Keychain signs), `createSteemKeychainImageSigner()` over Keychain's
+  `requestSignBuffer`, and `uploadSteemImage()`, which posts the image to `<host>/<account>/<signature>` and
+  resolves to the address the host returns, or rejects with a `SteemImageUploadError` naming the step (signing or
+  upload) and the host's answer. A blocked or unreachable upload says the host may not accept uploads from this site.
+- `scripts/steem-threads/content-check.html` gains an image upload check (`SteemImageUploadCheck.js`): it draws a
+  320×200 test picture, the size of ForkBuild's thumbnails, has Keychain sign it (one approval, nothing posted on the
+  chain), uploads it, checks that the returned address loads, and shows each step.
+- Checked in Chromium with a stand-in Keychain and image host: the picture is drawn, Keychain is asked to sign the
+  prefix and the PNG (9,464 bytes for a 9,443-byte image), the upload goes to `/<account>/<signature>` as form data,
+  and the preview loads; also at phone width.
+- Tests: `tests/SteemImageUpload.test.js` (the payload, the signer, uploading and each way it fails, and the check).
+- Not done: running the check against the live Steem Keychain and steemitimages.com; then the notice itself.

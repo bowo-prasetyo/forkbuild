@@ -843,6 +843,14 @@ that needs a manifest and two near-full parts through the real `SteemContentStor
 listed node on its own (`get_content` and `get_content_replies`), reporting per node whether it came back unchanged
 (`scripts/steem-threads/SteemContentCheck.js`).
 
+Images for notices (proposed). Steem front ends don't show `data:` images, so a picture on a post has to live on an
+image host. `steem/SteemImageUpload.js` uploads one the way Steemit's editor does: Steem Keychain's
+`requestSignBuffer` signs "ImageSigningChallenge" followed by the image bytes with the posting key, and the image is
+posted as the multipart field `file` to `<host>/<account>/<signature>` (host `https://steemitimages.com` by default),
+which answers `{ url }`. The same operator page's image upload check (`SteemImageUploadCheck.js`) draws a 320×200
+test image, signs and uploads it, and checks that the returned address loads, to confirm this works from ForkBuild's
+own site before notices use it.
+
 ### Scope
 
 Steem storage holds a Snapshot's bytes and a Publication's Signed Claim (the material the Arweave and IPFS uploaders

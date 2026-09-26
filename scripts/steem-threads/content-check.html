@@ -44,6 +44,25 @@
         <tbody></tbody>
     </table>
 
+    <h2>Image upload check</h2>
+    <p class="lead">
+        Checks that a picture can be put on a Steem post from this site: Steem Keychain signs a small test image
+        with your posting key, and the image host stores it and returns its address. Nothing is posted on the chain.
+    </p>
+    <form id="imageSettings">
+        <label>Image host
+            <input id="imageHost" name="imageHost" type="url" required spellcheck="false">
+        </label>
+        <div class="actions">
+            <button id="uploadImage" type="submit">Upload a test image</button>
+        </div>
+    </form>
+    <p id="imageStatus" role="status"></p>
+    <table id="imageResults" hidden>
+        <tbody></tbody>
+    </table>
+    <p id="imagePreview" hidden><img alt="The uploaded test image, as the image host serves it" width="320" height="200"></p>
+
     <section class="notes">
         <h2>What it does</h2>
         <ul>
@@ -52,6 +71,8 @@
             <li>It uses some of your account's Resource Credits, and it needs this month's content thread.</li>
             <li>Reading back needs no account. Add every node ForkBuild users are likely to read from, and read
                 again later from a node that was down.</li>
+            <li>The image check uses "Your Steem account" above. Keychain asks you to approve signing the image;
+                the image then stays on the image host.</li>
         </ul>
     </section>
 </main>
