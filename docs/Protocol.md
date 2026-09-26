@@ -710,7 +710,8 @@ notice then reads:
 and `json_metadata.image` lists the picture, so front ends can show a preview. Text the user wrote goes through
 `steemNoticeText()` first: one line; links, control and direction-override characters removed; HTML and Markdown
 characters escaped; `@` and `#` followed by a zero-width space so they neither notify an account nor add a tag; at
-most 100 characters for the title, 40 for the author and 300 for the description. A picture address must be an https
+most 100 characters for the title, 40 for the author and 300 for the description. A description that says the same
+as the title (ignoring case, spacing and punctuation) is left out. A picture address must be an https
 URL with nothing that could end the Markdown early. Every part is optional and found on its own: a build not on this
 device leaves the title and author; a picture that can't be drawn or uploaded, or whose signing is declined, leaves
 the words; a hook that fails leaves the plain link notice. The claim is posted in every case. The picture costs one
