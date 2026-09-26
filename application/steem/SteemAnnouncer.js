@@ -122,17 +122,17 @@ export function createSteemAnnouncer({
         }));
     }
 
-    // Posts a content manifest: `body` is the encoded content when it is
+    // Posts a content manifest: `data` is the encoded content when it is
     // inline, and ignored when `content.parts` lists parts (`{ length,
     // sha256 }` each; their permlinks follow from the manifest's). Resolves
     // like announce().
-    function postContent({ content, body }) {
+    function postContent({ content, data }) {
         return enqueue(() => postReply({
             family: STEEM_CONTENT_FAMILY,
             what: 'content',
             permlinkFor: (timeMs) => steemContentManifestPermlink(timeMs, randomSuffix()),
             operationsFor: ({ author, threadPermlink, permlink }) => steemContentManifestOperations({
-                author, threadAccount, threadPermlink, permlink, body, appVersion,
+                author, threadAccount, threadPermlink, permlink, data, appVersion,
                 content: { ...content, parts: content.parts.map((part, index) => ({ ...part, permlink: steemContentPartPermlink(permlink, index) })) }
             })
         }));
@@ -140,9 +140,9 @@ export function createSteemAnnouncer({
 
     // Posts part `index` of `count` as a reply to the manifest, which must be
     // the current account's. `edit` replaces a part already on the chain.
-    function postContentPart({ manifestPermlink, index, count, body, edit = false }) {
+    function postContentPart({ manifestPermlink, index, count, data, edit = false }) {
         return enqueue(() => withPoster(async ({ author, broadcaster }) => {
-            const operations = steemContentPartOperations({ author, manifestPermlink, index, count, body, appVersion, withOptions: !edit });
+            const operations = steemContentPartOperations({ author, manifestPermlink, index, count, data, appVersion, withOptions: !edit });
             return broadcastChecked({ author, broadcaster, operations, what: `content part ${index + 1} of ${count}`, parentUrlPath: `@${author}/${manifestPermlink}` });
         }));
     }

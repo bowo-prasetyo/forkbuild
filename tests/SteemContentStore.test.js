@@ -113,6 +113,18 @@ function snapshotText(bricks) {
     return JSON.stringify({ schemaVersion: 2, title: 'A small house', bricks: { definitions: ['brick-2x4'], colors: ['#c0392b'], ids: values.map((_, i) => `b${i}`).filter((_, i) => i % 6 === 0), values } });
 }
 
+// The encoded text a version 2 post carries, and a copy of the post with it
+// changed.
+function dataOf(post) {
+    return JSON.parse(post.json_metadata).forkbuild.data;
+}
+
+function withData(post, change) {
+    const metadata = JSON.parse(post.json_metadata);
+    metadata.forkbuild.data = change(metadata.forkbuild.data);
+    return { ...post, json_metadata: JSON.stringify(metadata) };
+}
+
 // Text that gzip can't shrink.
 function incompressibleText(characters) {
     let seed = 12345;
@@ -148,17 +160,20 @@ function incompressibleText(characters) {
 // The manifest's operations, and reading them back.
 {
     const content = { contentHash: 'abcd0123', algorithm: 'fnv1a-32', mediaType: 'application/json', size: 5, encoding: 'utf8', encodedLength: 5, parts: [] };
-    const ops = steemContentManifestOperations({ author: 'alice', threadAccount: 'forkbuild', threadPermlink: CONTENT_THREAD, permlink: 'forkbuild-c-x-abcd1234', content, body: 'hello', appVersion: '1.0.0' });
+    const ops = steemContentManifestOperations({ author: 'alice', threadAccount: 'forkbuild', threadPermlink: CONTENT_THREAD, permlink: 'forkbuild-c-x-abcd1234', content, data: 'hello', appVersion: '1.0.0' });
     const [[kind, comment], [optionsKind, options]] = ops;
     assert(kind === 'comment' && optionsKind === 'comment_options', 'a comment and its options');
-    assert(comment.parent_author === 'forkbuild' && comment.parent_permlink === CONTENT_THREAD && comment.body === 'hello', 'a reply to the content thread whose body is the content');
+    assert(comment.parent_author === 'forkbuild' && comment.parent_permlink === CONTENT_THREAD, 'a reply to the content thread');
+    assert(comment.body.startsWith('Data stored by ForkBuild. It is read by the ForkBuild app, not meant to be read here, and its payout is declined.') && comment.body.includes('](https://github.com/bowo-prasetyo/forkbuild/'),
+        `the body is a notice for people, with a link (got ${comment.body})`);
     assert(options.max_accepted_payout === '0.000 SBD', 'payout is declined');
     const metadata = JSON.parse(comment.json_metadata);
-    assert(metadata.app === 'forkbuild/1.0.0' && metadata.forkbuild.version === 1 && metadata.forkbuild.content.contentHash === 'abcd0123', 'the metadata describes the content');
+    assert(metadata.app === 'forkbuild/1.0.0' && metadata.forkbuild.version === 2 && metadata.forkbuild.content.contentHash === 'abcd0123' && metadata.forkbuild.data === 'hello',
+        'the metadata describes the content and carries it');
 
     const threadAccounts = ['forkbuild'];
     const { manifest } = describeSteemContentManifest(comment, { threadAccounts });
-    assert(manifest && manifest.inline && manifest.body === 'hello' && manifest.encoding === 'utf8' && manifest.size === 5, 'a post made from the operations reads back');
+    assert(manifest && manifest.inline && manifest.version === 2 && manifest.data === 'hello' && manifest.encoding === 'utf8' && manifest.size === 5, 'a post made from the operations reads back');
 
     const cases = [
         [{ author: '' }, 'does not exist'],
@@ -166,12 +181,20 @@ function incompressibleText(characters) {
         [{ parent_permlink: 'forkbuild-snapshot-2026-10' }, 'not a reply to a ForkBuild content thread'],
         [{ json_metadata: 'not json' }, 'does not describe ForkBuild content'],
         [{ json_metadata: JSON.stringify({ forkbuild: { version: 1, content: { ...content, encoding: 'zip' } } }) }, 'unknown encoding'],
-        [{ body: 'hello, edited' }, 'changed since the content was stored']
+        [{ json_metadata: withData(comment, () => 'hello, edited').json_metadata }, 'changed since the content was stored'],
+        [{ json_metadata: withData(comment, () => undefined).json_metadata }, 'changed since the content was stored'],
+        [{ json_metadata: JSON.stringify({ forkbuild: { version: 3, content } }) }, 'does not describe ForkBuild content']
     ];
     for (const [override, expected] of cases) {
         const { manifest: none, problem } = describeSteemContentManifest({ ...comment, ...override }, { threadAccounts });
         assert(none === null && problem.includes(expected), `${JSON.stringify(override)} reports "${expected}" (got ${problem})`);
     }
+
+    // Version 1 posts, which kept the content in the body, are still read.
+    const legacy = { ...comment, body: 'hello', json_metadata: JSON.stringify({ forkbuild: { version: 1, content } }) };
+    const legacyRead = describeSteemContentManifest(legacy, { threadAccounts }).manifest;
+    assert(legacyRead && legacyRead.version === 1 && legacyRead.data === 'hello', 'a version 1 manifest reads its content from the body');
+    assert(describeSteemContentManifest({ ...legacy, body: 'hello, edited' }, { threadAccounts }).problem.includes('changed since'), 'an edited version 1 body is refused');
 
     const sha = 'a'.repeat(64);
     const withParts = (parts, extra = {}) => steemContentManifestOperations({
@@ -180,9 +203,10 @@ function incompressibleText(characters) {
     })[0][1];
     const twoParts = [{ permlink: 'forkbuild-c-x-abcd1234-p0', length: 3, sha256: sha }, { permlink: 'forkbuild-c-x-abcd1234-p1', length: 2, sha256: sha }];
     const partsComment = withParts(twoParts);
-    assert(partsComment.body.includes('continued in the replies'), 'a manifest with parts says so in its body');
+    assert(partsComment.body.startsWith('Data stored by ForkBuild, continued in 2 replies below.'), `a manifest with parts says so in its body (got ${partsComment.body})`);
+    assert(!('data' in JSON.parse(partsComment.json_metadata).forkbuild), 'a manifest with parts carries no data itself');
     const read = describeSteemContentManifest(partsComment, { threadAccounts }).manifest;
-    assert(read && read.inline === false && read.body === null && read.parts.length === 2, 'a manifest with parts is described, not inline');
+    assert(read && read.inline === false && read.data === null && read.parts.length === 2, 'a manifest with parts is described, not inline');
     const partCases = [
         [withParts([{ ...twoParts[0], permlink: 'forkbuild-c-x-abcd1234-p9' }, twoParts[1]]), 'not replies ForkBuild would have made'],
         [withParts(twoParts, { encodedLength: 6 }), "don't add up"],
@@ -278,7 +302,7 @@ function incompressibleText(characters) {
 
     const [, comment] = chain.broadcasts[0].operations[0];
     const key = `alice/${comment.permlink}`;
-    chain.posts.set(key, { ...chain.posts.get(key), body: `${comment.body}A` });
+    chain.posts.set(key, withData(chain.posts.get(key), (data) => `${data}A`));
     await expectUnavailable(reference, 'changed since', 'an edited manifest');
     assert(await store.has(reference) === false, 'has() is false rather than throwing');
 
@@ -306,7 +330,7 @@ function incompressibleText(characters) {
     assert(manifest.parent_permlink === CONTENT_THREAD && parts.every((p, i) => p.parent_author === 'alice' && p.parent_permlink === manifest.permlink && p.permlink === `${manifest.permlink}-p${i}`),
         'the manifest replies to the content thread and each part replies to the manifest');
     const listed = JSON.parse(manifest.json_metadata).forkbuild.content;
-    assert(listed.encoding === 'gzip-base64' && listed.parts.length === parts.length && listed.parts.every((p, i) => p.permlink === parts[i].permlink && p.length === parts[i].body.length),
+    assert(listed.encoding === 'gzip-base64' && listed.parts.length === parts.length && listed.parts.every((p, i) => p.permlink === parts[i].permlink && p.length === dataOf(parts[i]).length),
         'the manifest lists every part before they are posted');
     assert(chain.broadcasts.every((b) => b.operations.length === 2 && b.operations[1][1].max_accepted_payout === '0.000 SBD'), 'every post declines payout');
     assert(clock.sleeps.length === parts.length && clock.sleeps.every((ms) => ms === 4500), `each post waits out the reply interval (sleeps ${clock.sleeps})`);
@@ -325,10 +349,10 @@ function incompressibleText(characters) {
     };
     const partKey = `alice/${parts[1].permlink}`;
     const original = chain.posts.get(partKey);
-    const flipped = original.body.slice(0, -1) + (original.body.endsWith('A') ? 'B' : 'A');
-    chain.posts.set(partKey, { ...original, body: flipped });
+    assert(original.body.startsWith(`Part 2 of ${parts.length} of data stored by ForkBuild.`), `a part's body is a notice (got ${original.body})`);
+    chain.posts.set(partKey, withData(original, (data) => data.slice(0, -1) + (data.endsWith('A') ? 'B' : 'A')));
     await expectUnavailable(`part 2 of ${parts.length} has been changed`, 'an edited part of the same length fails its hash');
-    chain.posts.set(partKey, { ...original, body: `${original.body}x` });
+    chain.posts.set(partKey, withData(original, (data) => `${data}x`));
     await expectUnavailable(`part 2 of ${parts.length} has been changed`, 'an edited part of another length fails its length');
     chain.posts.delete(partKey);
     await expectUnavailable(`part 2 of ${parts.length} is missing. The upload may not have finished`, 'a missing part');
@@ -369,7 +393,7 @@ function incompressibleText(characters) {
     // A changed part is fixed with an edit, without options.
     uploads.save({ author: 'alice', permlink: manifest.permlink, contentHash: hash });
     const partKey = `alice/${manifest.permlink}-p1`;
-    chain.posts.set(partKey, { ...chain.posts.get(partKey), body: 'changed' });
+    chain.posts.set(partKey, withData(chain.posts.get(partKey), () => 'changed'));
     const beforeEdit = chain.broadcasts.length;
     await store.put(text);
     const edits = chain.broadcasts.slice(beforeEdit);
@@ -460,6 +484,37 @@ function incompressibleText(characters) {
     const resolution = await resolver.resolveCandidate({ contentHash: envelope.contentHash, locator: envelope.locator, storage: envelope.storage }, { storeRegistry: registry });
     assert(resolution.outcome === DecentralizedSnapshotResolutionOutcome.RESOLVED && resolution.bytes === text, `the announced candidate resolves and verifies (got ${resolution.outcome}: ${resolution.reason})`);
     console.log('✓ distributing to Steem and resolving it');
+}
+
+// Uploads made in version 1, with the content in the bodies, still read
+// back; an unfinished version 1 upload is started afresh in version 2
+// rather than finished in a mix of the two.
+{
+    const chain = fakeChain();
+    const uploads = new SteemContentUploadStore(new InMemoryStorageProvider());
+    const store = storeFor(chain, { uploads });
+    const text = incompressibleText(STEEM_CONTENT_PART_MAX_BYTES * 2);
+    const reference = await store.put(text);
+    const toVersion1 = (post) => {
+        const metadata = JSON.parse(post.json_metadata);
+        const { data, ...rest } = metadata.forkbuild;
+        return { ...post, body: data ?? 'ForkBuild content, continued in the replies below. Read by the ForkBuild app.', json_metadata: JSON.stringify({ ...metadata, forkbuild: { ...rest, version: 1 } }) };
+    };
+    const posted = chain.broadcasts.map((b) => b.operations[0][1]);
+    for (const post of posted) chain.posts.set(`alice/${post.permlink}`, toVersion1(chain.posts.get(`alice/${post.permlink}`)));
+    assert(await store.get(reference) === text, 'a version 1 upload in parts reads back');
+    const partKey = `alice/${posted[1].permlink}`;
+    const part = chain.posts.get(partKey);
+    chain.posts.set(partKey, { ...part, body: `${part.body.slice(0, -1)}${part.body.endsWith('A') ? 'B' : 'A'}` });
+    assert((await rejection(store.get(reference)))?.message.includes('has been changed'), 'an edited version 1 part is refused');
+    chain.posts.set(partKey, part);
+
+    uploads.save({ author: 'alice', permlink: posted[0].permlink, contentHash: reference.hash });
+    const before = chain.broadcasts.length;
+    const fresh = await store.put(text);
+    assert(chain.broadcasts.length - before === posted.length && fresh.uri !== reference.uri, 'an unfinished version 1 upload is not resumed; a fresh version 2 upload is made');
+    assert(JSON.parse(chain.posts.get(fresh.uri.replace('steem://', '')).json_metadata).forkbuild.version === 2, 'the fresh upload is version 2');
+    console.log('✓ reading version 1 uploads');
 }
 
 // The runtime builds a content store; Signed Claims on Steem are covered by

@@ -1030,3 +1030,27 @@ manifest in the content thread, and its signature is what makes it trustworthy, 
 - Not done: World discovery only links an announced claim to a Publication already known on this device when that
   Publication's `contentReference.uri` equals the announced uri; that is how discovery works for every substrate,
   and it is unchanged here.
+
+## Steem content in json_metadata, with a notice in the body (unnumbered, 2026-09-26)
+
+**Content stored on Steem now travels in each post's `json_metadata`, and the body is a one-line notice for people.**
+On Steemit, stored content showed up as screens of base64, or as "comment pruned due to size". The ForkBuild app
+reads the posts, not people, so the body now says what the post is: "Data stored by ForkBuild. It is read by the
+ForkBuild app, not meant to be read here, and its payout is declined." with a link to `docs/Protocol.md`.
+Resource Credits and the transaction limit count `body` and `json_metadata` the same way, so this costs nothing.
+
+- Format version 2 (`core/SteemContentManifest.js`): `forkbuild.data` carries an inline manifest's encoded text and
+  each part's slice; `steemContentNotice()` writes the body, which never repeats user-written text.
+  `steemContentManifestOperations()` and `steemContentPartOperations()` take `data` instead of `body`, and so do the
+  announcer's `postContent()` and `postContentPart()`. `steemContentPartData()` reads a part in its manifest's version.
+- Version 1 posts, including everything stored before this change, still read. An unfinished version 1 upload is
+  started afresh rather than finished in version 2. A part whose `json_metadata` is missing or cut short is reported
+  as carrying no ForkBuild data, rather than as edited.
+- `scripts/steem-threads/content-check.html` checks the one thing this depends on: that API nodes return a near-48 KiB
+  `json_metadata` in full. It stores random test content (a manifest and two near-full parts, three Keychain
+  approvals) through the real `SteemContentStore` and reads it back from each listed node on its own
+  (`SteemContentCheck.js`). The shared operator page stylesheet now honours `hidden` on tables.
+- Tests: `tests/SteemContentStore.test.js` (the version 2 format, notices, tampering with the data, version 1 manifests
+  and uploads in parts, not resuming a version 1 upload) and `tests/SteemContentCheck.test.js` (the test content, and
+  reading it back from a good node, one that cuts `json_metadata` short, and one that is down).
+- Not done: running the check against live API nodes, which this environment can't reach.

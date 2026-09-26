@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Steem Content Check</title>
+    <link rel="stylesheet" href="page.css">
+    <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+    <script type="module" src="content-check.js"></script>
+</head>
+<body>
+<main>
+    <h1>Steem content storage check</h1>
+    <p class="lead">
+        Checks that Steem API nodes return content stored the way ForkBuild stores it: in each post's
+        <code>json_metadata</code>, close to 48 KB per post (<code>docs/Protocol.md</code>, "Proposed: Steem
+        Content Storage"). It stores test content in this month's content thread, then reads it back from each
+        node on its own. Posts are signed by Steem Keychain; this page never sees a key.
+    </p>
+
+    <form id="settings">
+        <label>Your Steem account
+            <input id="account" name="account" required autocomplete="off" spellcheck="false">
+        </label>
+        <label>Thread account
+            <input id="threadAccount" name="threadAccount" required autocomplete="off" spellcheck="false">
+        </label>
+        <label class="wide">API nodes to read from, one per line (the first one is also used to post)
+            <textarea id="nodes" name="nodes" rows="4" required spellcheck="false"></textarea>
+        </label>
+        <label class="wide">Stored test content (filled in after storing; paste one to check it again)
+            <input id="locator" name="locator" autocomplete="off" spellcheck="false" placeholder="steem://account/permlink#contenthash">
+        </label>
+        <div class="actions">
+            <button id="store" type="submit">Store test content</button>
+            <button id="read" type="button">Read back from each node</button>
+        </div>
+    </form>
+
+    <p id="status" role="status"></p>
+
+    <table id="results" hidden>
+        <thead><tr><th>API node</th><th>Result</th></tr></thead>
+        <tbody></tbody>
+    </table>
+
+    <section class="notes">
+        <h2>What it does</h2>
+        <ul>
+            <li>Storing makes three posts (a manifest and two parts, about 48 KB each) with payout declined, so
+                Keychain asks you to approve three times. They stay on the chain, like any stored content.</li>
+            <li>It uses some of your account's Resource Credits, and it needs this month's content thread.</li>
+            <li>Reading back needs no account. Add every node ForkBuild users are likely to read from, and read
+                again later from a node that was down.</li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>

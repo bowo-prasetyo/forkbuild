@@ -2131,7 +2131,10 @@ missing.
 dialog, or on the Publications page. The
 Snapshot is compressed and stored as replies to this month's content
 thread (such as `@forkbuild/forkbuild-content-2026-10`). It then needs no
-pinning and no upload fee.
+pinning and no upload fee. The data goes in each post's metadata, and the
+post itself shows a one-line note saying it holds data for ForkBuild, so
+people browsing Steem don't see pages of encoded text. Posts stored before
+this change, with the data in the post text, still load.
 
 - **How many posts.** A build of up to about 2,500 bricks fits in one
   post. A larger one is stored as one post that lists the others, plus up

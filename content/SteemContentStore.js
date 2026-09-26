@@ -7,6 +7,7 @@ import { STEEM_RC_REFUSAL } from '../core/SteemResourceCredits.js';
 import {
     STEEM_CONTENT_MAX_PARTS,
     STEEM_CONTENT_PART_MAX_BYTES,
+    STEEM_CONTENT_MANIFEST_VERSION,
     STEEM_CONTENT_STORAGE,
     describeSteemContentManifest,
     parseSteemContentLocator,
@@ -15,6 +16,7 @@ import {
     steemContentLocator,
     steemContentManifestOperations,
     steemContentManifestPermlink,
+    steemContentPartData,
     steemContentPartOperations,
     steemContentPartPermlink,
     steemContentPartProblem
@@ -137,10 +139,10 @@ export class SteemContentStore extends ContentStore {
             const transactions = [
                 ...(resume ? [] : [steemContentManifestOperations({
                     author, threadAccount: this._threadAccounts[0], threadPermlink: ESTIMATE_THREAD_PERMLINK, permlink: ESTIMATE_MANIFEST_PERMLINK,
-                    content: manifestContent(plan, ESTIMATE_MANIFEST_PERMLINK), body: plan.inline ? plan.encoded : ''
+                    content: manifestContent(plan, ESTIMATE_MANIFEST_PERMLINK), data: plan.inline ? plan.encoded : undefined
                 })]),
                 ...pendingParts.map(({ index, edit }) => steemContentPartOperations({
-                    author, manifestPermlink: ESTIMATE_MANIFEST_PERMLINK, index, count: plan.slices.length, body: plan.slices[index], withOptions: !edit
+                    author, manifestPermlink: ESTIMATE_MANIFEST_PERMLINK, index, count: plan.slices.length, data: plan.slices[index], withOptions: !edit
                 }))
             ];
             const estimate = await this._estimator.estimate(author, transactions).catch(() => null);
@@ -162,7 +164,7 @@ export class SteemContentStore extends ContentStore {
             if (!resume) {
                 const manifest = await this._announcer.postContent({
                     content: { ...manifestContent(plan, null), parts: plan.parts },
-                    body: plan.inline ? plan.encoded : ''
+                    data: plan.inline ? plan.encoded : undefined
                 });
                 manifestAuthor = manifest.author;
                 manifestPermlink = manifest.permlink;
@@ -173,7 +175,7 @@ export class SteemContentStore extends ContentStore {
                 report({ ...state, done: posted });
             }
             for (const { index, edit } of pendingParts) {
-                await this._announcer.postContentPart({ manifestPermlink, index, count: plan.slices.length, body: plan.slices[index], edit });
+                await this._announcer.postContentPart({ manifestPermlink, index, count: plan.slices.length, data: plan.slices[index], edit });
                 posted += 1;
                 report({ ...state, done: posted });
             }
@@ -204,6 +206,7 @@ export class SteemContentStore extends ContentStore {
             const { manifest } = describeSteemContentManifest(post, { threadAccounts: this._threadAccounts });
             const matches = manifest
                 && manifest.author === author
+                && manifest.version === STEEM_CONTENT_MANIFEST_VERSION
                 && manifest.contentHash === plan.contentHash
                 && manifest.encoding === plan.encoding
                 && manifest.parts.length === plan.parts.length
@@ -216,7 +219,7 @@ export class SteemContentStore extends ContentStore {
             const pendingParts = [];
             manifest.parts.forEach((_, index) => {
                 const partPost = posts[index];
-                if (steemContentPartProblem(partPost, manifest, index) === null && partPost.body === plan.slices[index]) return;
+                if (steemContentPartProblem(partPost, manifest, index) === null && steemContentPartData(partPost, manifest.version) === plan.slices[index]) return;
                 pendingParts.push({ index, edit: Boolean(partPost?.author) });
             });
             return { author, permlink: manifest.permlink, pendingParts };
@@ -249,7 +252,7 @@ export class SteemContentStore extends ContentStore {
             throw new ContentUnavailableError(`${where} says its content is ${manifest.size} bytes, more than ForkBuild loads.`);
         }
 
-        let encoded = manifest.body;
+        let encoded = manifest.data;
         if (!manifest.inline) {
             let posts;
             try {
@@ -261,10 +264,11 @@ export class SteemContentStore extends ContentStore {
             for (let index = 0; index < manifest.parts.length; index++) {
                 const partProblem = steemContentPartProblem(posts[index], manifest, index);
                 if (partProblem) throw new ContentUnavailableError(`${where} can't be loaded: ${partProblem}. The upload may not have finished.`);
-                if (await sha256Hex(posts[index].body) !== manifest.parts[index].sha256) {
+                const data = steemContentPartData(posts[index], manifest.version);
+                if (await sha256Hex(data) !== manifest.parts[index].sha256) {
                     throw new ContentUnavailableError(`${where} can't be loaded: part ${index + 1} of ${manifest.parts.length} has been changed since the content was stored.`);
                 }
-                bodies.push(posts[index].body);
+                bodies.push(data);
             }
             encoded = bodies.join('');
             if (encoded.length !== manifest.encodedLength) {
