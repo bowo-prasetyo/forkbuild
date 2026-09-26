@@ -11,6 +11,9 @@ import { SteemPlaceNamingDiscoveryPublisher } from './SteemPlaceNamingDiscoveryP
 import { PublicationCommentarySteemDistribution } from './PublicationCommentarySteemDistribution.js';
 import { SteemContentStore } from '../../content/SteemContentStore.js';
 import { createSteemResourceCreditEstimator } from './SteemResourceCreditEstimator.js';
+import { SteemAnchorPublisher } from '../../anchoring/SteemAnchorPublisher.js';
+import { SteemProofVerifier } from '../../anchoring/SteemProofVerifier.js';
+import { SteemAnchorEvidenceView } from '../../anchoring/SteemAnchorEvidenceView.js';
 
 // One thread reader and one announcer, each family's reader and publisher
 // over them, and the Steem content store, from the saved Steem settings (or
@@ -19,7 +22,9 @@ import { createSteemResourceCreditEstimator } from './SteemResourceCreditEstimat
 // `getBroadcaster()` at the moment it announces, so a Keychain that
 // appears after load, or an account set later, is picked up. The content
 // store remembers unfinished uploads in `contentUploads` and reports upload
-// progress to `contentUploadProgress`, when given.
+// progress to `contentUploadProgress`, when given. The anchor publisher,
+// proof verifier and evidence view are for the `steem` anchor type; the
+// verifier asks each configured API node separately.
 export function composeSteemRuntime({
     configuration = new SteemReadingConfiguration(),
     fetchImpl = globalThis.fetch,
@@ -56,6 +61,9 @@ export function composeSteemRuntime({
             uploads: contentUploads,
             estimator: createSteemResourceCreditEstimator({ rpc }),
             progress: contentUploadProgress
-        })
+        }),
+        anchorPublisher: new SteemAnchorPublisher({ poster: announcer, rpc }),
+        proofVerifier: new SteemProofVerifier({ nodes: [...configuration.apiNodes], fetchImpl }),
+        anchorEvidenceView: new SteemAnchorEvidenceView()
     });
 }

@@ -934,3 +934,36 @@ as an addition to Bitcoin anchoring, never a replacement.
 - `docs/Publishing.md` points to the proposal.
 - Not done: no code yet. Order of work: the verifier and its evidence view, then the publisher, then tracking
   irreversibility, then optionally keeping block evidence and batching.
+
+## Steem anchor verifier and publisher (unnumbered, 2026-09-26)
+
+**Steem is a fourth, Experimental Proof/Anchoring choice: "Create Steem Anchor" broadcasts a custom_json carrying the
+Publication's contentHash through Steem Keychain, and "Verify Evidence" checks it in its irreversible block.** This
+is steps 1 and 2 of `docs/Protocol.md`, "Proposed: Steem Anchoring".
+
+- `core/SteemAnchor.js`: the `forkbuild-anchor` custom_json (`{ version: 1, contentHash }`, nothing else), the
+  `{ blockNum, trxId, chain: 'steem' }` proof, the `steem:<trxId>` locator, and finding an anchor in a transaction
+  (condenser and appbase operation shapes).
+- `anchoring/SteemProofVerifier.js`: asks each configured API node (at most three) separately for the last
+  irreversible block and the block. Not yet irreversible, no answer, a node without the block and nodes that
+  disagree are unavailable; a node returning another block number is left out; only an irreversible block the
+  answering nodes agree on and that lacks the transaction or anchor is a rejection. The operation is read from the
+  block, never from `get_content`.
+- `anchoring/SteemAnchorPublisher.js`: broadcasts through the announcer's new `postAnchor()` (same queue, no reply
+  interval wait), then confirms the block Keychain names, or reads the blocks since the broadcast to find the
+  transaction by account and contentHash. Failures are unavailable with a reason, never thrown.
+- `anchoring/SteemAnchorEvidenceView.js`: block, transaction, "Attested by: Steem witnesses (elected by stake, not
+  proof of work)", and a SteemWorld block link.
+- `SteemRpcClient` gains `getBlock()` and `getDynamicGlobalProperties()`. `composeSteemRuntime()` builds the three
+  anchor services, and `ui/main.js` registers them, so the Publications page and the Proof/Anchoring settings page
+  offer Steem (labelled as Experimental and weaker than Bitcoin). The user guide explains the difference.
+- Changed from the proposal: Keychain's `requestBroadcast` rather than `requestCustomJson`, reusing the existing
+  broadcaster; no `publicationId` in the operation, since a publisher is given only the contentHash; the verifier
+  accepts a single answering node (the default configuration has one), and compares nodes when more are configured;
+  the block's time and witness are returned by the verifier but not shown in the app yet.
+- Tests: `tests/SteemAnchoring.test.js` (the format, the verifier's valid, rejected and unavailable cases over a fake
+  chain with several nodes, the publisher with and without a block number from Keychain, failures, the evidence
+  view, and an anchor created through `CreateExternalPublicationAnchorUseCase` and verified VALID by another replica
+  once its block is irreversible).
+- Not done: tracking irreversibility after publishing, showing the block's time, keeping block evidence, batching;
+  not yet tried against a live node or a real Keychain from this environment.

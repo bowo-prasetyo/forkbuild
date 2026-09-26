@@ -175,9 +175,10 @@ choices, one dialog"):
 - **Announcement/Discovery** substrate: Nostr (every configured relay) or
   Arweave (a tagged transaction). Each action uses one of them, never both.
 - **Proof/Anchoring**, optional and separate: Bitcoin, Arweave, or Base (Base
-  only through its own reviewed-transaction button). Steem is proposed as a
-  weaker, faster and cheaper addition, never a replacement for Bitcoin; see
-  `docs/Protocol.md`, "Proposed: Steem Anchoring".
+  only through its own reviewed-transaction button), or Steem (Experimental:
+  faster and cheaper, but attested by Steem witnesses rather than proof of
+  work, so an addition to Bitcoin, never a replacement; see
+  `docs/Protocol.md`, "Proposed: Steem Anchoring").
 
 The saved Content, Announcement/Discovery and Proof/Anchoring preferences
 (Network Settings) seed every picker's first value and power the "Use

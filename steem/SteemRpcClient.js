@@ -52,6 +52,9 @@ export function createSteemRpcClient({ nodes = DEFAULT_STEEM_API_NODES, fetchImp
         getContent: (author, permlink) => call('condenser_api.get_content', [author, permlink]),
         // Every direct reply at once; the API has no paging.
         getContentReplies: (author, permlink) => call('condenser_api.get_content_replies', [author, permlink]),
+        // null for a block the node doesn't have (yet).
+        getBlock: async (blockNum) => (await call('condenser_api.get_block', [blockNum])) ?? null,
+        getDynamicGlobalProperties: () => call('condenser_api.get_dynamic_global_properties', []),
         async getAccount(name) {
             const accounts = await call('condenser_api.get_accounts', [[name]]);
             return Array.isArray(accounts) && accounts.length > 0 ? accounts[0] : null;

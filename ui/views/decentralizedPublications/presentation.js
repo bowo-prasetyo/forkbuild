@@ -127,7 +127,8 @@ export function humanizeStorageType(storage) {
 export const ANCHOR_TYPE_LABELS = {
     'bitcoin-op-return': 'Bitcoin',
     base: 'Base',
-    arweave: 'Arweave'
+    arweave: 'Arweave',
+    steem: 'Steem'
 };
 
 export function humanizeAnchorType(anchorType) {

@@ -322,9 +322,14 @@ const {
 });
 // Small Snapshots stored in a Steem post, created and resolved like the
 // Arweave store (docs/Protocol.md, "Proposed: Steem Content Storage").
+// Steem anchors are created, verified and described like Arweave ones
+// ("Proposed: Steem Anchoring").
 if (steemRuntime) {
     snapshotPlacementStoreRegistry.register(steemRuntime.contentStore);
     publicationSnapshotPlacementResolutionStoreRegistry.register(steemRuntime.contentStore);
+    externalAnchorPublisherRegistry.register(steemRuntime.anchorPublisher);
+    externalAnchorProofVerifierRegistry.register(steemRuntime.proofVerifier);
+    externalAnchorEvidenceViewRegistry.register(steemRuntime.anchorEvidenceView);
 }
 app.provide('worldDiscoverySourceRegistry', worldDiscoveryRuntime.registry);
 app.provide('steemContentUploadProgress', steemContentUploadProgress);

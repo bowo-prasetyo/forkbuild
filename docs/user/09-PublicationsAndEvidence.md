@@ -21,7 +21,7 @@ independent kinds of optional depth you can attach to a claim:
 - [**Local Snapshot**](#local-snapshot) — what your own device holds for a
   claim's content, and how to bring those bytes in.
 - [**External Evidence**](#external-evidence) — independent records (such
-  as a Bitcoin, Base, or Arweave transaction) that a claim existed at a
+  as a Bitcoin, Base, Arweave or Steem transaction) that a claim existed at a
   certain time, including two wallet-driven pipelines:
   [Bitcoin](#the-bitcoin-anchor-pipeline) and [Base](#the-base-anchor-pipeline).
 - [**Snapshot Placements**](#snapshot-placements) — signed pointers to where
@@ -612,9 +612,10 @@ available or well-formed.
 ### Creating evidence
 
 You'll see a card per type of evidence this device can create —
-**Bitcoin** and **Arweave** — each with its own button:
+**Bitcoin**, **Arweave** and **Steem** — each with its own button:
 
-- **Create Bitcoin Anchor** / **Create Arweave Anchor** records a claim
+- **Create Bitcoin Anchor** / **Create Arweave Anchor** / **Create Steem
+  Anchor** records a claim
   that this publication's content hash was written into a real transaction
   on that network. Clicking it always produces one of three outcomes:
   - **Anchor created** — the recording succeeded, and the new anchor
@@ -625,9 +626,19 @@ You'll see a card per type of evidence this device can create —
     always ends here, because this one-click button has no Bitcoin wallet
     behind it — use [The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline)
     instead. **Create Arweave Anchor** needs an Arweave wallet extension
-    (such as Wander).
+    (such as Wander). **Create Steem Anchor** needs the Steem Keychain
+    extension and your Steem account set in Network Settings → Steem.
 - Clicking again after a success offers **Create Another … Anchor** — a
   second, fully independent anchor, never a replacement for the first.
+
+**Steem anchors are Experimental, and weaker than Bitcoin ones.** A Steem
+anchor costs no fee (only Resource Credits, which regenerate), and its
+block becomes final about a minute later, so **Verify Evidence** shows
+**Verification unavailable** for that first minute. But a Steem block is signed by
+about 21 witnesses elected by stake, not secured by proof of work: enough
+of them acting together could rewrite history. The evidence card says so
+("Attested by Steem witnesses"). Use a Steem anchor as quick, free extra
+evidence next to a Bitcoin anchor, not instead of one.
 
 Base anchors are created differently — see
 [Creating a Base anchor in one step](#creating-a-base-anchor-in-one-step).
