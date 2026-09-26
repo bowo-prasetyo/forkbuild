@@ -92,6 +92,8 @@ export const outcomeAndMaterialPanelsTemplate = `<div v-if="selectedEncounter &&
                 :can-distribute-publication="Boolean(distributionCommand)"
                 :can-distribute-snapshot="Boolean(snapshotDistributionCommand)"
                 :has-subject="Boolean(distributablePublication)"
+                :publication-id="distributablePublication ? distributablePublication.id : null"
+                :publication-title="distributablePublication ? distributablePublication.title : null"
                 :distribution-executing="distributionExecuting"
                 :distribution-error="distributionError"
                 :show-distribution-lifecycle="Boolean(distributionLifecycleStore)"

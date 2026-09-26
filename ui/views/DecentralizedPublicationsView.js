@@ -4,6 +4,7 @@ import { resolveSavedProviderDefault } from '../../application/settings/SavedPro
 import { PublicationResolutionOutcome } from '../../application/publication/PublicationResolutionOutcome.js';
 import { resolvePublicationView, describePublicationOutcome, describeRetrieval } from '../../application/publication/PublicationResolutionView.js';
 import { Publication } from '../../publisher/Publication.js';
+import PublicationShareLink from '../components/PublicationShareLink.js';
 import { publicationEvidenceView, describeKnownEvidenceCount } from '../../application/publication/evidence/PublicationEvidenceView.js';
 import { derivePublicationEvidenceConvergence } from '../../application/publication/evidence/PublicationEvidenceConvergence.js';
 import { publicationEvidenceConvergenceView } from '../../application/publication/evidence/PublicationEvidenceConvergenceView.js';
@@ -98,6 +99,7 @@ import { placementsTabTemplate } from './decentralizedPublications/templates/pla
 
 export default {
     name: 'DecentralizedPublicationsView',
+    components: { PublicationShareLink },
     setup() {
         // Groups the page-level tool cards into three tabs. Presentation only:
         // panels use v-show, so no card state changes.

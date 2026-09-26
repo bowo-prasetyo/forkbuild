@@ -1143,3 +1143,27 @@ it in 3D" link.** A picture and a few words draw far more Steemit readers into W
   only repeats the title is now left out.
 - Checked live on a device that had never opened ForkBuild: the notice's link showed the loading page, then World View
   with the build, fetched from Steem and checked on the way.
+
+## Share and Copy link for a distributed Publication (unnumbered, 2026-09-26)
+
+**A Publication whose Signed Claim is on Steem now offers Share… and Copy link, so a builder can send friends the
+link that opens the build in 3D on any device.** The `#/world/<documentId>` address works only in a browser that
+already has the build; the `#/view/steem/…` link works anywhere, so it is the one to share.
+
+- `publicationShareUrl(material)` (`core/ForkBuildAppLinks.js`) turns a distribution's `steem://` material locator
+  into the view link. `application/publication/PublicationShareLink.js`: `describePublicationShare()` (nothing
+  before a distribution; the link, title and text for a Steem claim; a reason to distribute with Steem storage for a
+  claim elsewhere), `sharePublicationLink()` (the Web Share API, falling back to the clipboard; closing the sheet
+  is not an error) and `copyPublicationShareLink()`.
+- `ui/components/PublicationShareLink.js` follows the Publication's distribution record, so it appears as soon as a
+  distribution finishes. It is shown in World View's publication panel, in the Editor and World View Distribute
+  dialogs' results (which now take `publicationId` and `publicationTitle`), and on the Publications page.
+- Found while building it: startup restores distribution records only for Publications in the catalog, so a build
+  published from the Editor lost its record in memory after a reload. The component restores its Publication's
+  record on demand through `publicationDistributionLifecycleRestorer`, now provided by `ui/main.js`.
+- Checked in Chromium on the real app: a build opened from its Steem link, given a Steem distribution record and
+  reloaded, shows Share… and Copy link in World View's panel; Copy link copied the link and Share passed the title,
+  text and link to the share sheet (both stubbed).
+- Tests: `tests/PublicationShareLink.test.js` (the link, what is offered, a real distribution command making the
+  link available, and sharing, cancelling, falling back and copying).
+- Not done: links for claims stored on Arweave or IPFS.

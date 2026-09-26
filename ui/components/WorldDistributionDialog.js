@@ -1,5 +1,6 @@
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 import { describeSteemContentUploadProgress } from '../../application/steem/SteemContentUploadProgressText.js';
+import PublicationShareLink from './PublicationShareLink.js';
 
 // Steem holds both the Snapshot and the Signed Claim (docs/Protocol.md,
 // "Proposed: Steem Content Storage").
@@ -89,9 +90,14 @@ const STORAGE_OPTION_LABELS = {
 // a Publication-only dialog offers all three Material storages.
 export default {
     name: 'WorldDistributionDialog',
+    components: { PublicationShareLink },
     // Steem storage reports each post while it stores a Snapshot.
     inject: { steemContentUploadProgress: { default: null } },
     props: {
+        // The Publication being distributed, for its share link; the id also
+        // comes from a distribution result.
+        publicationId: { type: String, default: null },
+        publicationTitle: { type: String, default: null },
         canDistributePublication: { type: Boolean, default: false },
         canDistributeSnapshot: { type: Boolean, default: false },
         hasSubject: { type: Boolean, default: false },
@@ -264,6 +270,11 @@ export default {
                             <dd>{{ relayResult.discovery ? relayResult.discovery.id : 'Not yet announced' }}</dd>
                         </template>
                     </dl>
+                    <PublicationShareLink
+                        v-if="!distributionError && (publicationId || (distributionResult && distributionResult.length))"
+                        :publication-id="publicationId || distributionResult[0].publication.objectId"
+                        :title="publicationTitle"
+                    />
                 </div>
 
                 <div v-if="canDistributeSnapshot" class="world-distribution-dialog-section world-distribution-dialog-snapshot-section">

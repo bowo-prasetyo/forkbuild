@@ -650,3 +650,29 @@
     gap: 0.5rem;
     margin-bottom: 1.5rem;
 }
+
+/* Share and Copy link for a distributed Publication. */
+.publication-share-link {
+    margin: 0.75rem 0;
+}
+
+.publication-share-link-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.publication-share-link-feedback {
+    color: #909090;
+}
+
+.publication-share-link-url {
+    width: 100%;
+    box-sizing: border-box;
+    font: inherit;
+    font-size: 0.85em;
+    padding: 0.35rem 0.5rem;
+    margin-bottom: 0.35rem;
+}

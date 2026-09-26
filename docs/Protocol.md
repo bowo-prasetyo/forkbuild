@@ -916,6 +916,13 @@ Opening the link (`application/steem/OpenSteemPublicationLink.js`, route `/view/
    durable World Encounter admission log, and the view opens `/world/<documentId>`. World View then loads it like
    any discovered Publication, at its placement or deterministic grid position.
 
+Sharing. The same link is what the app offers to share (`core/ForkBuildAppLinks.js` `publicationShareUrl()`,
+`application/publication/PublicationShareLink.js`, `ui/components/PublicationShareLink.js`): it is derived from a
+Publication's distribution record (`material.uri` when it is a `steem://` locator), so it needs no network call, and
+the record is restored from local storage on demand for Publications that startup doesn't restore. Share uses the
+Web Share API where the browser offers it, otherwise the clipboard, otherwise the link is shown to copy by hand. It
+is a permalink to the post: it works on any device, and opens whatever validly signed claim that post holds.
+
 Anything that stops it (a link naming no post, a post that isn't a claim, Steem unreachable, a failed signature, a
 build that isn't announced anywhere or doesn't match) is shown with a reason; "Try again" is offered when Steem or
 the search was unreachable or the build wasn't found. Nothing is admitted without its build.

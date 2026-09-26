@@ -1,4 +1,5 @@
 import { isSteemAccountName } from './SteemDiscoveryThread.js';
+import { parseSteemContentLocator } from './SteemContentManifest.js';
 
 // Links into the published ForkBuild app, for text written where ForkBuild
 // isn't running, such as the notice on a Steem post. Written into posts that
@@ -17,4 +18,12 @@ export function steemPublicationViewPath(author, permlink) {
 
 export function steemPublicationViewUrl(author, permlink, appUrl = FORKBUILD_APP_URL) {
     return `${appUrl}#${steemPublicationViewPath(author, permlink)}`;
+}
+
+// The link to share a Publication: its view in the app, when its Signed Claim
+// is stored where that view can read it (Steem, for now). `material` is a
+// distribution's material section (`{ uri, storage }`); null otherwise.
+export function publicationShareUrl(material, appUrl = FORKBUILD_APP_URL) {
+    const location = parseSteemContentLocator(material?.uri);
+    return location ? steemPublicationViewUrl(location.author, location.permlink, appUrl) : null;
 }

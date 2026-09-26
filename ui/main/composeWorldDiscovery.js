@@ -178,6 +178,7 @@ export function composeWorldDiscovery({
         worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand,
         worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
         steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
-        steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress
+        steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress,
+        publicationDistributionLifecycleRestorer
     };
 }
