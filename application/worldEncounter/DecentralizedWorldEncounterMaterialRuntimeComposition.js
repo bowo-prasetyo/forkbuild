@@ -207,7 +207,7 @@ export function composeArweaveDecentralizedWorldEncounterMaterialSource(resolver
 // zero/one configured gateway, or the new
 // ArweaveGatewayFailoverWorldEncounterMaterialResolver for two or more —
 // see this function's own caller, above, for the full rationale.
-function buildArweaveWorldEncounterMaterialResolver({ gatewayUrls, ...options }) {
+export function buildArweaveWorldEncounterMaterialResolver({ gatewayUrls, ...options }) {
     if (Array.isArray(gatewayUrls) && gatewayUrls.length > 1) {
         return new ArweaveGatewayFailoverWorldEncounterMaterialResolver({ ...options, gatewayUrls });
     }

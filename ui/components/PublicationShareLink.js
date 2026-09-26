@@ -69,6 +69,7 @@ export default {
                 <input class="publication-share-link-url" readonly :value="share.url" aria-label="Link to share" @focus="$event.target.select()">
                 <p class="form-hint form-hint--neutral">
                     Anyone can open this link on any device to see the build in 3D, once its Snapshot has been distributed too.
+                    <template v-if="share.note"> {{ share.note }}</template>
                 </p>
             </template>
             <p v-else class="form-hint form-hint--neutral">{{ share.reason }}</p>

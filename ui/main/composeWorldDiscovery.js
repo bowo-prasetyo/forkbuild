@@ -13,6 +13,8 @@ import { SteemReadingConfigurationStore } from '../../storage/SteemReadingConfig
 import { SetSteemReadingConfigurationUseCase } from '../../application/settings/SetSteemReadingConfigurationUseCase.js';
 import { composeSteemRuntime } from '../../application/steem/SteemRuntimeComposition.js';
 import { composeSteemPublicationNoticeDescriber } from '../../application/steem/SteemPublicationNoticeComposition.js';
+import { composePublicationClaimRetriever } from '../../application/publication/PublicationClaimRetriever.js';
+import { DEFAULT_IPFS_GATEWAY_URL } from '../../core/IpfsGatewayConfiguration.js';
 import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncingConfigurationStore.js';
 import { SetSteemAnnouncingConfigurationUseCase } from '../../application/settings/SetSteemAnnouncingConfigurationUseCase.js';
 import { createSteemKeychainBroadcaster } from '../../steem/SteemKeychainBroadcaster.js';
@@ -147,6 +149,15 @@ export function composeWorldDiscovery({
     // Shared with createPublicationDistributionRuntimeProvider() below. Passed to
     // the canvas as the Discovery-tag field's initial value, never baked into the
     // command, so the field stays editable per call.
+    // Reads a Signed Claim named by a link (#/view/steem|ar|ipfs/…) from where
+    // it is stored, through the configured Arweave and IPFS gateways.
+    const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: [DEFAULT_IPFS_GATEWAY_URL] }).gatewayUrls;
+    const retrievePublicationClaim = composePublicationClaimRetriever({
+        steemResolver: steemRuntime ? steemRuntime.publicationMaterialResolver : null,
+        arweaveGatewayUrls: resolvedArweaveGatewayUrls,
+        ipfsGatewayUrls: resolvedIpfsGatewayUrls
+    });
+
     const PUBLICATION_DISCOVERY_TAG = 'forkbuild-publication';
 
     // The one distribution lifecycle store: restored from what this replica
@@ -180,6 +191,6 @@ export function composeWorldDiscovery({
         worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
         steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
         steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress,
-        publicationDistributionLifecycleRestorer
+        publicationDistributionLifecycleRestorer, retrievePublicationClaim
     };
 }
