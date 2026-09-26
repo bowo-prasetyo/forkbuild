@@ -182,6 +182,28 @@ async function run() {
         console.log('✓ Section I: architecture sweep confirms no cross-substrate import, no registry consultation, and no UI dependency');
     }
 
+    // ===============================================================
+    // Section J — several endpoints round-trip; an older single-apiUrl
+    // save still reads back.
+    // ===============================================================
+    {
+        const storage = new InMemoryStorageProvider();
+        const store = new BitcoinEsploraConfigurationStore(storage);
+        store.save(new BitcoinEsploraConfiguration({ apiUrls: ['https://a.example/api', 'https://b.example/api'] }));
+        const loaded = new BitcoinEsploraConfigurationStore(storage).get();
+        assert(JSON.stringify(loaded.apiUrls) === JSON.stringify(['https://a.example/api', 'https://b.example/api']), 'J1. a list of endpoints round-trips in order');
+
+        const legacy = new InMemoryStorageProvider();
+        legacy.save('bitcoin-esplora-configuration', { apiUrl: 'https://legacy.example/api' });
+        const legacyLoaded = new BitcoinEsploraConfigurationStore(legacy).get();
+        assert(JSON.stringify(legacyLoaded.apiUrls) === JSON.stringify(['https://legacy.example/api']), 'J2. a save from before lists existed reads back as a one-entry list');
+
+        const partlyBad = new InMemoryStorageProvider();
+        partlyBad.save('bitcoin-esplora-configuration', { apiUrls: ['https://a.example/api', 'not-a-url'] });
+        assert(new BitcoinEsploraConfigurationStore(partlyBad).get() === null, 'J3. a stored list with an invalid entry degrades to null, never a partial list');
+        console.log('✓ Section J: endpoint lists persist in order, and single-endpoint saves from earlier versions still load');
+    }
+
     console.log('\n✅ All User-Configurable Bitcoin Esplora Endpoint Configuration Persistence tests passed.');
 }
 

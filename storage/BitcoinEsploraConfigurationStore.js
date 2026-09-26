@@ -39,10 +39,13 @@ export class BitcoinEsploraConfigurationStore {
         if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
             return null;
         }
-        if (!isValidBitcoinEsploraApiUrl(raw.apiUrl)) {
-            return null;
+        if (Array.isArray(raw.apiUrls) && raw.apiUrls.length > 0 && raw.apiUrls.every(isValidBitcoinEsploraApiUrl)) {
+            return new BitcoinEsploraConfiguration({ apiUrls: raw.apiUrls });
         }
-        return new BitcoinEsploraConfiguration({ apiUrl: raw.apiUrl });
+        if (isValidBitcoinEsploraApiUrl(raw.apiUrl)) {
+            return new BitcoinEsploraConfiguration({ apiUrl: raw.apiUrl });
+        }
+        return null;
     }
 
     // The one way back to "no override, use the deployment default" — see

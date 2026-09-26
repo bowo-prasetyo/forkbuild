@@ -1,5 +1,5 @@
 
-import { BitcoinEsploraConfiguration, isValidBitcoinEsploraApiUrl, DEFAULT_BITCOIN_ESPLORA_API_URL } from '../core/BitcoinEsploraConfiguration.js';
+import { BitcoinEsploraConfiguration, isValidBitcoinEsploraApiUrl, DEFAULT_BITCOIN_ESPLORA_API_URL, DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../core/BitcoinEsploraConfiguration.js';
 import { assert } from './support/Assert.js';
 import { readSource as source } from './support/SourceText.js';
 
@@ -21,7 +21,8 @@ import { readSource as source } from './support/SourceText.js';
 // Section G: DEFAULT_BITCOIN_ESPLORA_API_URL — a plain exported constant,
 //            never silently substituted by the constructor itself
 // Section H: architecture sweep — no persistence, no network, no ui/, no
-//            extra fields, no list/failover shape
+//            extra fields
+// Section I: several endpoints, in the order they are tried
 
 function expectThrows(fn, message) {
     let threw = false;
@@ -116,7 +117,7 @@ async function run() {
     {
         const config = new BitcoinEsploraConfiguration({ apiUrl: 'https://my-esplora-host.example/api' });
         const json = config.toJSON();
-        assert(JSON.stringify(json) === JSON.stringify({ apiUrl: 'https://my-esplora-host.example/api' }), 'F1. toJSON() returns exactly { apiUrl }');
+        assert(JSON.stringify(json) === JSON.stringify({ apiUrls: ['https://my-esplora-host.example/api'] }), 'F1. toJSON() returns exactly { apiUrls }, the list shape even for one endpoint');
         assert(Object.keys(json).length === 1, 'F2. toJSON() carries exactly one field');
         console.log('✓ Section F: toJSON() is a plain, single-field data shape');
     }
@@ -142,8 +143,29 @@ async function run() {
         assert(!/from\s*['"][^'"]*ui\//.test(configExecutable), 'H3. no import from ui/ — this is a pure core/ value object');
         assert(!/timeout|retry|healthCheck|priority/i.test(configExecutable), 'H4. none of the speculative fields appear');
         assert(!/InfrastructureEndpointConfiguration/.test(configExecutable), 'H5. no generic InfrastructureEndpointConfiguration abstraction');
-        assert(!/apiUrls\b/.test(configExecutable), 'H6. no ordered-list/failover shape — this endpoint backs one conceptual role, one field, never a list');
-        console.log('✓ Section H: architecture sweep confirms no persistence, no network call, no ui/ dependency, no speculative fields, and no list/failover shape');
+        console.log('✓ Section H: architecture sweep confirms no persistence, no network call, no ui/ dependency, and no speculative fields');
+    }
+
+    // ===============================================================
+    // Section I — several endpoints, in the order they are tried.
+    // ===============================================================
+    {
+        const config = new BitcoinEsploraConfiguration({ apiUrls: ['https://a.example/api/', ' https://b.example/api '] });
+        assert(JSON.stringify(config.apiUrls) === JSON.stringify(['https://a.example/api', 'https://b.example/api']),
+            'I1. apiUrls keeps the order given, each entry trimmed and normalized');
+        assert(config.apiUrl === 'https://a.example/api', 'I2. apiUrl is the first entry');
+        assert(Object.isFrozen(config.apiUrls), 'I3. the list is frozen');
+        assert(JSON.stringify(config.toJSON()) === JSON.stringify({ apiUrls: ['https://a.example/api', 'https://b.example/api'] }), 'I4. toJSON() carries the whole list');
+        assert(!config.equals(new BitcoinEsploraConfiguration({ apiUrls: ['https://b.example/api', 'https://a.example/api'] })), 'I5. order matters for equality');
+        assert(config.equals(new BitcoinEsploraConfiguration({ apiUrls: ['https://a.example/api', 'https://b.example/api'] })), 'I6. same list, same order: equal');
+        expectThrows(() => new BitcoinEsploraConfiguration({ apiUrls: [] }), 'I7. an empty list is refused');
+        expectThrows(() => new BitcoinEsploraConfiguration({ apiUrls: ['https://a.example/api', 'not-a-url'] }), 'I8. one invalid entry refuses the whole list');
+        expectThrows(() => new BitcoinEsploraConfiguration({ apiUrl: 'https://a.example/api', apiUrls: ['https://b.example/api'] }), 'I9. apiUrl and apiUrls together are refused');
+        assert(DEFAULT_BITCOIN_ESPLORA_API_URLS[0] === DEFAULT_BITCOIN_ESPLORA_API_URL && DEFAULT_BITCOIN_ESPLORA_API_URLS.length >= 2,
+            'I10. the default list starts with DEFAULT_BITCOIN_ESPLORA_API_URL and holds a second endpoint to fail over to');
+        assert(new BitcoinEsploraConfiguration({ apiUrls: [...DEFAULT_BITCOIN_ESPLORA_API_URLS] }).apiUrls.length === DEFAULT_BITCOIN_ESPLORA_API_URLS.length,
+            'I11. every default endpoint is itself valid');
+        console.log('✓ Section I: several endpoints construct, keep their order, serialize as a list, and the defaults are valid');
     }
 
     console.log('\n✅ All User-Configurable Bitcoin Esplora Endpoint Configuration Boundary tests passed.');

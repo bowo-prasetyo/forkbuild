@@ -44,7 +44,7 @@ const {
     identityProvider, identityUseCase, createPublicationCommentaryCommand, getPublicationCommentariesCommand,
     iceServerConfigurationStore, turnServerConfigurationStore, setTurnServerConfigurationUseCase,
     setIceServerConfigurationUseCase, rendezvousConfigurationStore, setRendezvousConfigurationUseCase,
-    bitcoinEsploraConfigurationStore, resolvedBitcoinEsploraApiUrl, setBitcoinEsploraConfigurationUseCase,
+    bitcoinEsploraConfigurationStore, resolvedBitcoinEsploraApiUrls, setBitcoinEsploraConfigurationUseCase,
     peerSessionManager, peerRelationshipUseCase, peerReconnectionUseCase, findPeerUseCase, peerMessageBus,
     peerBlockUseCase, deviceAuthorizationUseCase, friendRelationshipUseCase,
     identityLifecyclePropagationUseCase, chatUseCase, peerPresenceUseCase, deviceConversationSyncUseCase,
@@ -209,7 +209,7 @@ const {
     bitcoinAnchorBroadcastCoordinator, bitcoinAnchorPublicationCoordinator,
     bitcoinAnchorConfirmationCoordinator
 } = composeAnchoring({
-    identityProvider, resolvedBitcoinEsploraApiUrl, publicationCatalog, publicationAnchorCatalog,
+    identityProvider, resolvedBitcoinEsploraApiUrls, publicationCatalog, publicationAnchorCatalog,
     anchorKnowledgeStore, roleProviderPreferenceStore
 });
 

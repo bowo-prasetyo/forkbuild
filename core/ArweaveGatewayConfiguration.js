@@ -1,4 +1,17 @@
-const DEFAULT_ARWEAVE_GATEWAY_URL = 'https://arweave.net';
+// The deployment default gateways, in the order reads try them. The first
+// stays https://arweave.net: it is also DEFAULT_ARWEAVE_GATEWAY_URL, the one
+// gateway the single-gateway paths (Arweave Anchor publish/verify, the
+// announcement publishers) use. The others are ar.io network gateways run
+// by other operators, there so a read still succeeds when arweave.net is
+// down or blocked.
+// Content read through any of them is checked against our own content hash
+// (content/ArweaveContentStore.js), so a gateway cannot substitute bytes.
+const DEFAULT_ARWEAVE_GATEWAY_URLS = Object.freeze([
+    'https://arweave.net',
+    'https://ardrive.net',
+    'https://permagate.io'
+]);
+const DEFAULT_ARWEAVE_GATEWAY_URL = DEFAULT_ARWEAVE_GATEWAY_URLS[0];
 
 // 0.9.364 — User-Configurable Arweave Gateway Configuration Boundary.
 //
@@ -241,4 +254,4 @@ export class ArweaveGatewayConfiguration {
 // ArweaveGatewayConfiguration consults THIS constant — never lets an
 // adapter's own internal default silently do the job, so "what is the
 // current effective default" stays answerable by reading exactly one file.
-export { DEFAULT_ARWEAVE_GATEWAY_URL };
+export { DEFAULT_ARWEAVE_GATEWAY_URL, DEFAULT_ARWEAVE_GATEWAY_URLS };

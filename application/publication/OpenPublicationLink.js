@@ -48,7 +48,7 @@ const NOT_FOUND_HINTS = Object.freeze({
 const UNREACHABLE_HINTS = Object.freeze({
     steem: '',
     arweave: '',
-    ipfs: ' A gateway can take a while to find content kept on someone\'s own IPFS node, so try again. If it keeps failing, add another gateway in Network Settings (for example https://ipfs.io or https://dweb.link) so there is one to fall back to.'
+    ipfs: ' A gateway can take a while to find content kept on someone\'s own IPFS node, so try again. If it keeps failing, add another gateway in Network Settings (for example your pinning service\'s own gateway) so there is one more to fall back to.'
 });
 const CANDIDATE_STORAGE_ORDER = ['steem', 'ar', 'ipfs'];
 

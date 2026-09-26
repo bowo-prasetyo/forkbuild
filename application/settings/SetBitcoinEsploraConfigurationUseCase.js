@@ -15,8 +15,10 @@ export class SetBitcoinEsploraConfigurationUseCase {
         this._store = bitcoinEsploraConfigurationStore;
     }
 
-    execute({ apiUrl } = {}) {
-        const configuration = new BitcoinEsploraConfiguration({ apiUrl });
+    // Takes either `apiUrls` (the settings page's list) or a single `apiUrl`;
+    // core/BitcoinEsploraConfiguration.js rejects both or neither.
+    execute({ apiUrl, apiUrls } = {}) {
+        const configuration = new BitcoinEsploraConfiguration(apiUrls !== undefined ? { apiUrls } : { apiUrl });
         this._store.save(configuration);
         return configuration;
     }

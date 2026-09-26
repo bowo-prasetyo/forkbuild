@@ -1236,3 +1236,36 @@ configured, there was nothing to fall back to.
 - Checked in Chromium on the real app: a gateway answering after 8 s (which the 5 s limit cut off) now opens World
   View; one that never answers shows the new message after 30 s, with Try again.
 - Tests: `tests/PublicationLinkNetworks.test.js` (the timeout message, and the advice on IPFS but not on Arweave).
+
+## Free public servers as Network Settings defaults, and Reset to Defaults (unnumbered, 2026-09-26)
+
+**Every list-shaped Network Settings page now defaults to several free public servers, and every one offers the same
+Reset to Defaults.** Most defaults were a single server (arweave.net, ipfs.io, relay.damus.io, blockstream.info,
+api.steemit.com), so the failover and fan-out code already in place had nothing to fall back to unless a person
+configured more by hand. The Bitcoin endpoint could not hold more than one server at all.
+
+- New default lists, each next to its value object: Arweave `arweave.net`, `ardrive.net`, `permagate.io`; IPFS
+  `ipfs.io`, `dweb.link`, `4everland.io`, `ipfs.filebase.io` (from the IPFS project's public-gateway-checker list);
+  Bitcoin `blockstream.info/api`, `mempool.space/api`; Nostr `relay.damus.io`, `nos.lol`, `relay.primal.net`; Steem
+  `api.steemit.com`, `api.justyy.com`. The singular `DEFAULT_*_URL` constants stay, as each list's first entry, for
+  the paths that take one endpoint (Arweave publishing and anchoring, single-relay Place Naming discovery).
+- Deliberately unchanged: STUN (`peer/IceServerConfig.js` records why ICE entries are added one tested at a time), TURN
+  (no free public relays remain) and Rendezvous (our own server). Steem stays at two nodes because
+  `SteemProofVerifier` needs every answering node to agree, so each extra node is one more that can hold a proof
+  back as unavailable.
+- Bitcoin: `BitcoinEsploraConfiguration` takes `apiUrls` (a saved single `apiUrl` still loads), and
+  `anchoring/BitcoinEsploraFailover.js` wraps each Esplora adapter. Reads and broadcasts move to the next endpoint
+  only when one is unreachable; a definite answer, including a broadcast rejection, is never retried elsewhere.
+- `ui/composables/useEndpointListSettings.js` gives the Arweave, IPFS, Bitcoin, Nostr, STUN and Rendezvous pages one
+  shape: the servers in effect are listed; the text box starts from them; Save is disabled until it changes, so the
+  defaults are never saved as a preference and later default updates still reach people who never changed anything;
+  **Reset to Defaults** (formerly "Use Deployment Default" or "Use Defaults" on most pages) clears the store. The
+  Steem page, with its three fields, follows the same Save rule and button.
+- `scripts/check-network-defaults.mjs` checks every default still answers and allows CORS from the site's origin.
+  It could not be run from the sandbox this was built in (outbound traffic to these hosts is blocked there); DNS
+  showed `ar-io.net` no longer resolves, so `ardrive.net` took its place.
+- The IPFS share-link advice no longer suggests adding ipfs.io or dweb.link, which are now defaults.
+- Tests: `tests/BitcoinEsploraFailover.test.js` (each wrapper's failover and when it stops, and the use cases building
+  a wrapper only for two or more endpoints); `tests/NetworkSettingsSharedForms.test.js` (every list page starts from
+  its defaults, won't save them unchanged, and Reset refills them); `tests/SteemReadingSettingsView.test.js` (the same
+  for the Steem page); Bitcoin configuration and persistence tests for the list shape.

@@ -552,9 +552,9 @@ async function run() {
         const ArweaveGatewaySettingsView = (await import('../ui/views/ArweaveGatewaySettingsView.js')).default;
         const { splitNonEmptyLines } = await import('../utils/splitNonEmptyLines.js');
 
-        const viewSource = await source('ui/views/ArweaveGatewaySettingsView.js');
-        assert(/splitNonEmptyLines\(gatewayUrlInput\.value\)/.test(viewSource),
-            'H1. sanity — the view builds its gatewayUrls from splitNonEmptyLines(gatewayUrlInput.value), the one shared line parser exercised below');
+        const listSettingsSource = await source('ui/composables/useEndpointListSettings.js');
+        assert(/splitNonEmptyLines\(input\.value\)/.test(listSettingsSource),
+            'H1. sanity — the view\'s shared list settings build its gatewayUrls from splitNonEmptyLines(input.value), the one shared line parser exercised below');
 
         // H2. The line parser: line order preserved, empty lines never
         // become endpoints, whitespace is trimmed, and a single line

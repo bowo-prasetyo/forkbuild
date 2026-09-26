@@ -1,4 +1,14 @@
-const DEFAULT_NOSTR_RELAY_URL = 'wss://relay.damus.io';
+// The deployment default relays. Publishing fans out to all of them and
+// discovery queries all of them, so an event published by one replica is
+// still found by another when any one relay is down. Each is a long-running
+// free relay that accepts writes without payment, NIP-42 auth or proof of
+// work. Kept to three: every extra relay is another socket per publish.
+const DEFAULT_NOSTR_RELAY_URLS = Object.freeze([
+    'wss://relay.damus.io',
+    'wss://nos.lol',
+    'wss://relay.primal.net'
+]);
+const DEFAULT_NOSTR_RELAY_URL = DEFAULT_NOSTR_RELAY_URLS[0];
 
 // 0.9.369 — Nostr Relay Configuration Boundary.
 //
@@ -245,4 +255,4 @@ export class NostrRelayConfiguration {
 // NostrRelayConfiguration consults THIS constant — never lets a consumer's
 // own internal default silently do the job, so "what is the current
 // effective default" stays answerable by reading exactly one file.
-export { DEFAULT_NOSTR_RELAY_URL };
+export { DEFAULT_NOSTR_RELAY_URL, DEFAULT_NOSTR_RELAY_URLS };

@@ -1,4 +1,5 @@
 import { BitcoinEsploraTransactionBroadcaster } from '../../../anchoring/BitcoinEsploraTransactionBroadcaster.js';
+import { BitcoinEsploraTransactionBroadcasterFailover } from '../../../anchoring/BitcoinEsploraFailover.js';
 
 // 0.8.52 — Bitcoin Anchor Transaction Broadcasting.
 //
@@ -10,10 +11,13 @@ import { BitcoinEsploraTransactionBroadcaster } from '../../../anchoring/Bitcoin
 // straight into application/anchoring/bitcoin/CreateBitcoinAnchorTransactionBroadcasterUseCase.js's
 // own `broadcaster` option.
 export class CreateBitcoinEsploraTransactionBroadcasterUseCase {
-    execute({ apiUrl, fetchImpl, timeoutMs } = {}) {
-        const bitcoinEsploraTransactionBroadcaster = new BitcoinEsploraTransactionBroadcaster({
-            apiUrl, fetchImpl, timeoutMs
-        });
+    // `apiUrls` (two or more endpoints, in order) builds the failover
+    // wrapper from anchoring/BitcoinEsploraFailover.js; otherwise one
+    // adapter on `apiUrl` (or `apiUrls`' only entry).
+    execute({ apiUrl, apiUrls, fetchImpl, timeoutMs } = {}) {
+        const bitcoinEsploraTransactionBroadcaster = Array.isArray(apiUrls) && apiUrls.length > 1
+            ? new BitcoinEsploraTransactionBroadcasterFailover({ apiUrls, fetchImpl, timeoutMs })
+            : new BitcoinEsploraTransactionBroadcaster({ apiUrl: Array.isArray(apiUrls) && apiUrls.length === 1 ? apiUrls[0] : apiUrl, fetchImpl, timeoutMs });
 
         return { bitcoinEsploraTransactionBroadcaster };
     }

@@ -1777,8 +1777,8 @@ accepted these bytes just now.
 > pointed **IPFS Node** on the Content Provider settings page) — without
 > one running there, you'll see **No placement was created**. **Resolve
 > Snapshot** and **Materialize Snapshot**, just below, are different: they
-> reach a public IPFS gateway (`https://ipfs.io`, unless you've overridden
-> it — see [IPFS Gateway](#ipfs-gateway) below) instead, whether or not you
+> reach public IPFS gateways (`https://ipfs.io` and the other defaults,
+> unless you've changed them — see [IPFS Gateway](#ipfs-gateway) below) instead, whether or not you
 > have a node of your own running. That means you can resolve and
 > materialize an `ipfs` placement someone *else* created — theirs or a
 > peer's — without ever installing or running IPFS software yourself; only
@@ -1977,11 +1977,28 @@ network-related settings page ForkBuild has:
 Each page keeps its own route and its own **Save** button — saving one
 never saves another — and they all behave the same way: a **Save** that
 fails shows a plain error and leaves whatever was saved before untouched,
-a successful one shows "Saved.", and the endpoint pages (gateways,
-Bitcoin Endpoint, Nostr Relays, IPFS Node, STUN, TURN, Rendezvous) also
-offer **Use Deployment Default**, which clears your override and shows
-"Cleared — now using the deployment default." Wherever a page offers a
-list of choices, they're shown in alphabetical order.
+and a successful one shows "Saved." Wherever a page offers a list of
+choices, they're shown in alphabetical order.
+
+The pages that hold a list of servers (Arweave Gateway, IPFS Gateway,
+Bitcoin Endpoint, Nostr Relays, Steem, STUN, Rendezvous) come with
+**several free public servers as defaults**, so a read, lookup or
+announcement still works when one of them is down. Each such page lists
+the servers in effect ("Using the default …" or "Using your saved …"),
+and with nothing saved its text box starts out holding the defaults, one
+per line, so you can add, remove or reorder from there rather than
+retyping them. **Save** stays disabled until you change something, so the
+defaults are never saved as if they were your own choice — that way you
+keep getting any improved defaults a later version ships. **Reset to
+Defaults** removes your saved list and goes back to the defaults. (TURN
+has no default server, so its page offers **Clear** instead; the IPFS
+Node setting on the Content Provider page keeps its **Use Deployment
+Default** button for its single local node.)
+
+The defaults are public services run by third parties. Each server you
+use sees your IP address and what this app asks it for; content read
+through a gateway is checked against its own content hash, so a gateway
+can't substitute different bytes.
 
 ### Announcement / Discovery Provider
 
@@ -2000,12 +2017,12 @@ loads; it never changes an announcement already in flight.
 ### Arweave Gateway
 
 Open **Arweave Gateway** from **Network Settings** (`/settings/arweave-gateway`). It
-shows whichever gateway(s) are currently in effect — either "No override
-configured. Currently using the deployment default: `https://arweave.net`"
-or, once you've saved one or more, "Current override(s): `<your URLs>`" —
-enter one `http://` or `https://` URL per line, in the order you want them
-tried, and click **Save**, or click **Use Deployment Default** to go back
-to having no override at all. **Save** rejects anything that isn't a valid
+lists whichever gateways are currently in effect — the defaults,
+`https://arweave.net`, `https://ardrive.net` and `https://permagate.io`,
+until you save your own — with one `http://` or `https://` URL per line
+in the text box, in the order you want them tried. Edit the list and
+click **Save**, or click **Reset to Defaults** to go back to the
+defaults. **Save** rejects anything that isn't a valid
 absolute `http:`/`https:` URL with a plain error message and leaves
 whatever was previously on file completely untouched; it never checks that
 a URL actually serves Arweave content, so a syntactically valid but wrong
@@ -2038,8 +2055,9 @@ started with until you reload.
 
 Open **IPFS Gateway** from **Network Settings** (`/settings/ipfs-gateway`).
 It works just like Arweave Gateway above — one gateway URL per line, tried
-in order, with the same display, buttons, and shape-only validation —
-against the deployment default, `https://ipfs.io`. IPFS content is
+in order, with the same display, buttons, and shape-only validation. The
+defaults are `https://ipfs.io`, `https://dweb.link`, `https://4everland.io`
+and `https://ipfs.filebase.io`. IPFS content is
 addressed by its own content id, so any gateway that has it returns the
 exact same bytes.
 
@@ -2048,19 +2066,15 @@ where your own content gets pinned or published. It's consulted wherever
 this device reaches a public IPFS gateway rather than a local node:
 resolving or materializing an `ipfs` Snapshot Placement (see the note on
 [Snapshot Placements](#snapshot-placements) above) and the **Verify IPFS
-Content** check in [IPFS Publishing](#ipfs-publishing) below. The
-deployment default exists specifically because the built-in one,
-`https://ipfs.io`, is known to sit behind a bot-detection check that
-blocks ordinary programmatic requests for some people — if a **Verify**
-or **Resolve** keeps failing with "Failed to fetch" even though the
-content is genuinely retrievable (for example, through your own pinning
-provider's gateway, like `https://gateway.pinata.cloud`), adding that
-gateway here, either instead of or ahead of the default, is the fix.
-Listing a second gateway also gives you a plain resilience benefit
-independent of that bot-detection wall: if your own top choice ever goes
-down, a read falls through to the next one automatically instead of
-failing outright. Like every other Network Settings page, a change here
-only takes effect on the next app load.
+Content** check in [IPFS Publishing](#ipfs-publishing) below. Some public
+gateways, `https://ipfs.io` among them, sit behind a bot-detection check
+that blocks ordinary programmatic requests for some people; the other
+defaults are run by different operators, so a read falls through to them.
+If a **Verify** or **Resolve** still keeps failing with "Failed to fetch"
+even though the content is genuinely retrievable (for example, through
+your own pinning provider's gateway, like `https://gateway.pinata.cloud`),
+add that gateway here, ahead of the others. Like every other Network
+Settings page, a change here only takes effect on the next app load.
 
 ### Bitcoin Endpoint
 
@@ -2069,11 +2083,13 @@ anchoring at a different Esplora-compatible API — the service used to
 broadcast Bitcoin anchor transactions, observe their confirmation, look
 up wallet funding, and verify an anchor's OP_RETURN proof (see
 [The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) above). It
-takes a single `http://` or `https://` URL (placeholder
-`https://blockstream.info/api`), with the same "Current override" / "No
-override configured" display and **Save** / **Use Deployment Default**
-buttons as the gateway pages. It affects Bitcoin anchoring only, never
-any other substrate.
+takes one `http://` or `https://` URL per line, tried in order, with the
+same display and **Save** / **Reset to Defaults** buttons as the gateway
+pages. The defaults are `https://blockstream.info/api` and
+`https://mempool.space/api`. Each lookup goes to the first endpoint that
+answers; a broadcast goes to the next endpoint only if the one before is
+unreachable, never after an endpoint has rejected the transaction. It
+affects Bitcoin anchoring only, never any other substrate.
 
 ### Nostr Relays
 
@@ -2081,14 +2097,13 @@ Open **Nostr Relays** (`/settings/nostr-relay`) to set the relays used
 **everywhere** ForkBuild publishes or discovers over Nostr — Publications,
 Snapshots, Place Naming claims, and Commentary.
 
-Type one `ws://` or `wss://` relay URL per line (placeholder
-`wss://relay.damus.io`) and click **Save** to replace the whole set at
-once; **Save** rejects the whole attempt if any line isn't a valid
-absolute `ws:`/`wss:` URL, and never checks that a relay is actually
-reachable or speaks Nostr. With nothing saved, the page shows "No override
-configured. Currently using the deployment default: `wss://relay.damus.io`";
-once you've saved, it shows "Current override(s): `<your relays>`".
-**Use Deployment Default** goes back to having no override.
+The defaults are `wss://relay.damus.io`, `wss://nos.lol` and
+`wss://relay.primal.net`. Edit the list, one `ws://` or `wss://` relay URL
+per line, and click **Save** to replace the whole set at once; **Save**
+rejects the whole attempt if any line isn't a valid absolute
+`ws:`/`wss:` URL, and never checks that a relay is actually reachable or
+speaks Nostr. The page lists the relays in effect, and **Reset to
+Defaults** goes back to the defaults.
 
 **Every relay you list is an equal, independent target — never a
 priority order, and never failover.** Announcing something fans out to
@@ -2196,14 +2211,15 @@ share this link instead.
   service or Arweave keeps it available when your computer is off.
 - Friends read Arweave and IPFS through the gateways set in their own
   Network Settings. For IPFS, a gateway gets up to 30 seconds to find the
-  claim; if it keeps failing, adding a second gateway (for example
-  `https://ipfs.io` or `https://dweb.link`) gives it one to fall back to.
+  claim; the default list already has several gateways to fall back to,
+  and adding your pinning provider's own gateway gives it one more.
 
 Open **Steem** (`/settings/steem`) to set **Your Steem account** under
 **Posting** (it applies at once), or to change where it reads from:
 
-- **API nodes**, one `https://` URL per line (default
-  `https://api.steemit.com`). Unlike Nostr relays these are tried **in
+- **API nodes**, one `https://` URL per line (defaults
+  `https://api.steemit.com` and `https://api.justyy.com`). Unlike Nostr
+  relays these are tried **in
   order**, and the first one that answers is used, since every node
   serves the same chain.
 - **Thread accounts**, one per line (default `forkbuild`): whose
@@ -2213,8 +2229,8 @@ Open **Steem** (`/settings/steem`) to set **Your Steem account** under
   were posted). ForkBuild reads every month from there to now, up to the
   last 36 months.
 
-**Save** rejects the whole attempt if any line isn't valid, and **Use
-Defaults** goes back to the settings above. Like the other pages here, a
+**Save** rejects the whole attempt if any line isn't valid, and **Reset
+to Defaults** goes back to the settings above. Like the other pages here, a
 change only takes effect on the next app load. When no Steem node can be
 reached, "Check for new comments" and snapshot discovery name Steem as
 unavailable rather than reporting that nothing was found.
@@ -2316,8 +2332,8 @@ retrieval** box appears with a **Verify IPFS Content** button (**Verify
 Again** afterward). This is an entirely independent check: it goes back
 to the exact record the most recent successful publish produced, fetches
 whatever bytes are presently retrievable at that locator through a
-public IPFS gateway — your [IPFS Gateway](#ipfs-gateway) override if you've
-set one, `https://ipfs.io` otherwise — and compares them against the
+public IPFS gateway — the ones on your [IPFS Gateway](#ipfs-gateway) page,
+tried in order — and compares them against the
 recorded content hash — never assumed just because publishing itself
 reported success.
 

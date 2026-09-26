@@ -1,4 +1,16 @@
-const DEFAULT_IPFS_GATEWAY_URL = 'https://ipfs.io';
+// The deployment default gateways, in the order reads try them — all from
+// the IPFS project's public-gateway-checker list. ipfs.io stays first (and
+// stays DEFAULT_IPFS_GATEWAY_URL, below); the others are run by different
+// operators, so one outage or bot-detection wall doesn't stop reads. Content
+// read through any of them is checked against our own content hash, so a
+// gateway cannot substitute bytes.
+const DEFAULT_IPFS_GATEWAY_URLS = Object.freeze([
+    'https://ipfs.io',
+    'https://dweb.link',
+    'https://4everland.io',
+    'https://ipfs.filebase.io'
+]);
+const DEFAULT_IPFS_GATEWAY_URL = DEFAULT_IPFS_GATEWAY_URLS[0];
 
 // 0.9.665 — User-Configurable IPFS Gateway Configuration Boundary.
 //
@@ -156,4 +168,4 @@ export class IpfsGatewayConfiguration {
 // for the many existing tests and call sites that key on that exact
 // string. A person who hits the bot-detection wall uses the new settings
 // page to point at a reachable gateway instead.
-export { DEFAULT_IPFS_GATEWAY_URL };
+export { DEFAULT_IPFS_GATEWAY_URL, DEFAULT_IPFS_GATEWAY_URLS };

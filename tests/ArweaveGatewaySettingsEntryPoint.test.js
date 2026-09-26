@@ -35,7 +35,7 @@ import { readSource as source } from './support/SourceText.js';
 //               previously on file.
 //   Section C — replacement: gateway-A -> gateway-B replaces, never
 //               accumulates a second entry.
-//   Section D — clear: "Use Deployment Default" restores genuine absence,
+//   Section D — clear: "Reset to Defaults" restores genuine absence,
 //               never a saved copy of the default.
 //   Section E — explicit default: entering the default URL by hand still
 //               leaves a real, distinct saved entry — never silently
@@ -48,7 +48,7 @@ import { readSource as source } from './support/SourceText.js';
 //   Section H — write-path isolation: a settings-saved override never
 //               reaches Snapshot distribution's own POST.
 //   Section I — view template sweep: display state (no-override vs.
-//               override), Save/Use Deployment Default wiring, and the
+//               override), Save/Reset to Defaults wiring, and the
 //               deliberately-excluded feature list.
 //   Section J — architecture sweep of the new use case file.
 //
@@ -127,7 +127,7 @@ async function run() {
             '10. the view writes the configuration through the injected use case, never ArweaveGatewayConfigurationStore.save() directly');
         assert(!/new ArweaveGatewayConfiguration\(/.test(viewExecutable),
             '11. the view never constructs an ArweaveGatewayConfiguration itself — validation and construction stay inside the use case');
-        assert(viewExecutable.includes("import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfiguration.js';"),
+        assert(viewExecutable.includes("import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../../core/ArweaveGatewayConfiguration.js';"),
             '12. the ONE thing the view imports from core/ArweaveGatewayConfiguration.js is the plain default constant, for display only');
         assert(!/ArweaveContentStore|ArweaveWorldEncounterMaterialResolver/.test(viewExecutable),
             '13. the view never imports or constructs a retrieval adapter, and never even names one — it only ever talks to the injected store/use case seam');
@@ -196,7 +196,7 @@ async function run() {
     console.log('✓ Section C: replacing a saved gateway never accumulates a second entry');
 
     // ===============================================================
-    // Section D — clear: "Use Deployment Default" restores genuine
+    // Section D — clear: "Reset to Defaults" restores genuine
     // absence, never a saved copy of the default.
     // ===============================================================
     {
@@ -207,7 +207,7 @@ async function run() {
         setUseCase.execute({ gatewayUrls: ['https://my-gateway.example'] });
         assert(store.get() !== null, '26. a configuration is on file before clearing');
 
-        // "Use Deployment Default" — the view calls store.clear() directly,
+        // "Reset to Defaults" — the view calls store.clear() directly,
         // never setUseCase.execute({ gatewayUrls: [DEFAULT_ARWEAVE_GATEWAY_URL] }).
         store.clear();
         assert(store.get() === null, '27. clear() restores genuine absence — get() is a real null');
@@ -216,7 +216,7 @@ async function run() {
         const effective = (store.get() || { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL }).gatewayUrl;
         assert(effective === DEFAULT_ARWEAVE_GATEWAY_URL, '29. after clearing, the effective gateway falls back to the deployment default');
     }
-    console.log('✓ Section D: "Use Deployment Default" clears to genuine absence, never persisting a copy of the default URL');
+    console.log('✓ Section D: "Reset to Defaults" clears to genuine absence, never persisting a copy of the default URL');
 
     // ===============================================================
     // Section E — explicit default: entering the default URL by hand
@@ -358,9 +358,9 @@ async function run() {
 
         // Display state.
         assert(/v-if="hasOverride"/.test(viewSource), '46. the template branches on whether an override is on file');
-        assert(/No override configured/.test(viewSource) && /deploymentDefaultGatewayUrl/.test(viewSource),
+        assert(/Using the default/.test(viewSource) && /effectiveEntries/.test(viewSource),
             '47. the no-override state displays the effective deployment default as informational text');
-        assert(/Current override/.test(viewSource), '48. the override state displays the current, actually-saved gatewayUrl');
+        assert(/Using your saved/.test(viewSource), '48. the override state displays the current, actually-saved gatewayUrl');
 
         // Opening the page never writes anything: load() only calls
         // store.get(), never store.save()/setArweaveGatewayConfigurationUseCase.execute()
@@ -374,20 +374,20 @@ async function run() {
         assert(!/execute\(|\.save\(|\.clear\(/.test(loadFnMatch[0]),
             '50. load() never calls the use case, store.save(), or store.clear() — merely opening the page persists nothing');
 
-        // Save / Use Deployment Default wiring.
+        // Save / Reset to Defaults wiring.
         assert(/@click="save"/.test(viewSource), '51. a Save action is wired');
-        assert(/@click="useDeploymentDefault"/.test(viewSource), '52. a Use Deployment Default action is wired');
-        const useDeploymentDefaultFnMatch = /useDeploymentDefault: form\.clear\b/.test(viewSource)
+        assert(/@click="resetToDefaults"/.test(viewSource), '52. a Reset to Defaults action is wired');
+        const resetToDefaultsFnMatch = /resetToDefaults: form\.clear\b/.test(await source('ui/composables/useEndpointListSettings.js'))
             && formSource.match(/function clear\(\)\s*\{[\s\S]*?\n\s{4}\}/);
-        assert(useDeploymentDefaultFnMatch, '53. Use Deployment Default is wired to the shared clear() function');
-        assert(/store\.clear\(\)/.test(useDeploymentDefaultFnMatch[0]),
-            '54. Use Deployment Default calls store.clear()');
-        assert(!/DEFAULT_ARWEAVE_GATEWAY_URL/.test(useDeploymentDefaultFnMatch[0]),
-            '55. Use Deployment Default never saves { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL } — it only ever clears');
-        const saveFnMatch = /\bsave: form\.save\b/.test(viewSource)
+        assert(resetToDefaultsFnMatch, '53. Reset to Defaults is wired to the shared clear() function');
+        assert(/store\.clear\(\)/.test(resetToDefaultsFnMatch[0]),
+            '54. Reset to Defaults calls store.clear()');
+        assert(!/DEFAULT_ARWEAVE_GATEWAY_URL/.test(resetToDefaultsFnMatch[0]),
+            '55. Reset to Defaults never saves { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL } — it only ever clears');
+        const saveFnMatch = /\bsave: form\.save\b/.test(await source('ui/composables/useEndpointListSettings.js'))
             && formSource.match(/function save\(\)\s*\{[\s\S]*?\n\s{4}\}/);
         assert(saveFnMatch, '56. a save() function exists');
-        assert(/useCase\.execute\(/.test(saveFnMatch[0]) && /useCase: setArweaveGatewayConfigurationUseCase\b/.test(viewSource),
+        assert(/useCase\.execute\(/.test(saveFnMatch[0]) && /useCase: inject\('setArweaveGatewayConfigurationUseCase'/.test(viewSource),
             '57. save() goes through the injected use case, never a direct store.save()');
         assert(!/store\.save\(/.test(saveFnMatch[0]),
             '58. save() never calls store.save() directly, bypassing the use case');
@@ -412,7 +412,7 @@ async function run() {
             assert(!templateText.includes(term), `60 ('${term}'). the deliberately-excluded feature vocabulary never appears in what the view actually renders`);
         }
 
-        console.log('✓ Section I: the view template shows the correct no-override/override states without ever mutating on load, wires Save through the use case and Use Deployment Default through store.clear() only, and carries none of the deliberately-excluded feature vocabulary');
+        console.log('✓ Section I: the view template shows the correct no-override/override states without ever mutating on load, wires Save through the use case and Reset to Defaults through store.clear() only, and carries none of the deliberately-excluded feature vocabulary');
     }
 
     // ===============================================================

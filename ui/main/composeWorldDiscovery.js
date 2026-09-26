@@ -1,11 +1,11 @@
 import { SetArweaveGatewayConfigurationUseCase } from '../../application/settings/SetArweaveGatewayConfigurationUseCase.js';
 import { bootstrapWorldDiscoveryRuntime } from '../../application/discovery/WorldDiscoveryRuntimeBootstrap.js';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
-import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfiguration.js';
+import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../../core/ArweaveGatewayConfiguration.js';
 import { ArweaveGatewayConfigurationStore } from '../../storage/ArweaveGatewayConfigurationStore.js';
 import { SetIpfsGatewayConfigurationUseCase } from '../../application/settings/SetIpfsGatewayConfigurationUseCase.js';
 import { SetIpfsNodeConfigurationUseCase } from '../../application/settings/SetIpfsNodeConfigurationUseCase.js';
-import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';
+import { DEFAULT_NOSTR_RELAY_URLS } from '../../core/NostrRelayConfiguration.js';
 import { NostrRelayConfigurationStore } from '../../storage/NostrRelayConfigurationStore.js';
 import { SetNostrRelayConfigurationUseCase } from '../../application/settings/SetNostrRelayConfigurationUseCase.js';
 import { SteemReadingConfiguration } from '../../core/SteemReadingConfiguration.js';
@@ -14,7 +14,7 @@ import { SetSteemReadingConfigurationUseCase } from '../../application/settings/
 import { composeSteemRuntime } from '../../application/steem/SteemRuntimeComposition.js';
 import { composeSteemPublicationNoticeDescriber } from '../../application/steem/SteemPublicationNoticeComposition.js';
 import { composePublicationClaimRetriever } from '../../application/publication/PublicationClaimRetriever.js';
-import { DEFAULT_IPFS_GATEWAY_URL } from '../../core/IpfsGatewayConfiguration.js';
+import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/IpfsGatewayConfiguration.js';
 import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncingConfigurationStore.js';
 import { SetSteemAnnouncingConfigurationUseCase } from '../../application/settings/SetSteemAnnouncingConfigurationUseCase.js';
 import { createSteemKeychainBroadcaster } from '../../steem/SteemKeychainBroadcaster.js';
@@ -55,16 +55,16 @@ export function composeWorldDiscovery({
     const worldEncounterMaterialPeerSource = new PeerWorldEncounterMaterialSource(peerMessageBus, peerSessionManager.registry);
     const { verifier: worldEncounterMaterialVerifier } = composeWorldEncounterMaterialVerifier();
 
-    // A saved gateway list overrides DEFAULT_ARWEAVE_GATEWAY_URL; the default is
+    // A saved gateway list overrides DEFAULT_ARWEAVE_GATEWAY_URLS; the default is
     // never saved as if it were a preference. It applies only to reading published
     // content, never to where this replica writes. nostrRelayQueryClient may be
     // undefined where no WebSocket exists; discovery then degrades to no Nostr.
     const arweaveGatewayConfigurationStore = new ArweaveGatewayConfigurationStore(new LocalStorageProvider());
-    const resolvedArweaveGatewayUrl = (arweaveGatewayConfigurationStore.get() || { gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL }).gatewayUrl;
-    // Every configured gateway in priority order, used only by the two retrieval
-    // sites (World Encounter material and Snapshot retrieval). Arweave Anchor's
-    // publish/verify pair keeps using the single first gateway.
-    const resolvedArweaveGatewayUrls = (arweaveGatewayConfigurationStore.get() || { gatewayUrls: [DEFAULT_ARWEAVE_GATEWAY_URL] }).gatewayUrls;
+    // Every configured gateway in priority order, used only by the retrieval
+    // sites (World Encounter material, Snapshot and Signed Claim retrieval).
+    // Arweave Anchor's publish/verify pair keeps using the single first gateway.
+    const resolvedArweaveGatewayUrls = (arweaveGatewayConfigurationStore.get() || { gatewayUrls: DEFAULT_ARWEAVE_GATEWAY_URLS }).gatewayUrls;
+    const resolvedArweaveGatewayUrl = resolvedArweaveGatewayUrls[0];
     const setArweaveGatewayConfigurationUseCase = new SetArweaveGatewayConfigurationUseCase({ arweaveGatewayConfigurationStore });
 
     const setIpfsGatewayConfigurationUseCase = new SetIpfsGatewayConfigurationUseCase({ ipfsGatewayConfigurationStore });
@@ -73,10 +73,10 @@ export function composeWorldDiscovery({
 
     // The one Nostr relay set for the whole app: discovery, Place Naming, Snapshot
     // and Publication announcement, and Commentary all use it. A saved list
-    // overrides DEFAULT_NOSTR_RELAY_URL. Publishing fans out to every relay; it
+    // overrides DEFAULT_NOSTR_RELAY_URLS. Publishing fans out to every relay; it
     // never fails over in order.
     const nostrRelayConfigurationStore = new NostrRelayConfigurationStore(new LocalStorageProvider());
-    const resolvedNostrRelayUrls = (nostrRelayConfigurationStore.get() || { relayUrls: [DEFAULT_NOSTR_RELAY_URL] }).relayUrls;
+    const resolvedNostrRelayUrls = (nostrRelayConfigurationStore.get() || { relayUrls: DEFAULT_NOSTR_RELAY_URLS }).relayUrls;
     const resolvedNostrRelayUrl = resolvedNostrRelayUrls[0];
     const setNostrRelayConfigurationUseCase = new SetNostrRelayConfigurationUseCase({ nostrRelayConfigurationStore });
 
@@ -151,7 +151,7 @@ export function composeWorldDiscovery({
     // command, so the field stays editable per call.
     // Reads a Signed Claim named by a link (#/view/steem|ar|ipfs/…) from where
     // it is stored, through the configured Arweave and IPFS gateways.
-    const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: [DEFAULT_IPFS_GATEWAY_URL] }).gatewayUrls;
+    const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: DEFAULT_IPFS_GATEWAY_URLS }).gatewayUrls;
     const retrievePublicationClaim = composePublicationClaimRetriever({
         steemResolver: steemRuntime ? steemRuntime.publicationMaterialResolver : null,
         arweaveGatewayUrls: resolvedArweaveGatewayUrls,

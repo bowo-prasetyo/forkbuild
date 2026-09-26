@@ -1,4 +1,12 @@
-const DEFAULT_BITCOIN_ESPLORA_API_URL = 'https://blockstream.info/api';
+// The deployment default endpoints, in the order they are tried. Both are
+// public Esplora instances run by different operators. Reads fall over to
+// the next when one is unreachable, and a broadcast goes to the first that
+// answers (anchoring/BitcoinEsploraFailover.js).
+const DEFAULT_BITCOIN_ESPLORA_API_URLS = Object.freeze([
+    'https://blockstream.info/api',
+    'https://mempool.space/api'
+]);
+const DEFAULT_BITCOIN_ESPLORA_API_URL = DEFAULT_BITCOIN_ESPLORA_API_URLS[0];
 
 // User-Configurable Bitcoin Esplora Endpoint Configuration Boundary.
 //
@@ -14,9 +22,9 @@ const DEFAULT_BITCOIN_ESPLORA_API_URL = 'https://blockstream.info/api';
 // This file is that shape, mirroring core/ArweaveGatewayConfiguration.js's
 // own "a value object, never a default-injecting one" boundary exactly, one
 // field, since that audit's own Section E already found this endpoint
-// serves one conceptual role (one URL, three read roles and one write role)
-// rather than a read/write pair — a settings page needs exactly one field,
-// never a list.
+// serves one conceptual role (three read roles and one write role) rather
+// than a read/write pair — a settings page needs exactly one field, which
+// may hold several endpoints tried in order.
 //
 // A VALUE OBJECT, NEVER A DEFAULT-INJECTING ONE. This class validates and
 // normalizes exactly the `apiUrl` it is given — it never substitutes
@@ -49,28 +57,48 @@ export function isValidBitcoinEsploraApiUrl(value) {
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
 }
 
+// Several endpoints may be configured, in priority order, the same shape
+// core/IpfsGatewayConfiguration.js holds: exactly one of `apiUrl` (a single
+// string) or `apiUrls` (a non-empty array). `apiUrl` stays the first entry,
+// so every caller that only wants one endpoint keeps working unchanged.
 export class BitcoinEsploraConfiguration {
-    constructor({ apiUrl } = {}) {
-        if (!isValidBitcoinEsploraApiUrl(apiUrl)) {
-            throw new Error(`BitcoinEsploraConfiguration: invalid apiUrl "${apiUrl}"`);
+    constructor({ apiUrl, apiUrls } = {}) {
+        if (apiUrl !== undefined && apiUrls !== undefined) {
+            throw new Error('BitcoinEsploraConfiguration: pass exactly one of apiUrl or apiUrls, never both');
         }
-        this._apiUrl = apiUrl.trim().replace(/\/+$/, '');
+        const candidates = apiUrls !== undefined ? apiUrls : [apiUrl];
+        if (!Array.isArray(candidates) || candidates.length === 0) {
+            throw new Error('BitcoinEsploraConfiguration: apiUrls must be a non-empty array');
+        }
+        this._apiUrls = Object.freeze(candidates.map((url) => {
+            if (!isValidBitcoinEsploraApiUrl(url)) {
+                throw new Error(`BitcoinEsploraConfiguration: invalid apiUrl "${url}"`);
+            }
+            return url.trim().replace(/\/+$/, '');
+        }));
         Object.freeze(this);
     }
 
-    get apiUrl() { return this._apiUrl; }
+    // The first configured endpoint.
+    get apiUrl() { return this._apiUrls[0]; }
 
-    // Value equality, never identity — the same convention core/
-    // ArweaveGatewayConfiguration.js's own `equals()` already holds.
+    // Every configured endpoint, in the order they are tried.
+    get apiUrls() { return this._apiUrls; }
+
+    // Value equality, never identity. Order matters: it is the failover
+    // order.
     equals(other) {
-        return other instanceof BitcoinEsploraConfiguration && other._apiUrl === this._apiUrl;
+        return other instanceof BitcoinEsploraConfiguration &&
+            other._apiUrls.length === this._apiUrls.length &&
+            other._apiUrls.every((url, index) => url === this._apiUrls[index]);
     }
 
     // Plain-data convenience for storage/BitcoinEsploraConfigurationStore.js
     // — this class itself never calls it, and never reads or writes any
-    // storage key on its own.
+    // storage key on its own. Always the list shape; the store reads a
+    // legacy single-`apiUrl` payload back as a one-entry list.
     toJSON() {
-        return { apiUrl: this._apiUrl };
+        return { apiUrls: [...this._apiUrls] };
     }
 }
 
@@ -80,4 +108,4 @@ export class BitcoinEsploraConfiguration {
 // per-file "no cross-import of a sibling's own constant" restraint core/
 // ArweaveGatewayConfiguration.js's own header already holds). A caller with
 // no persisted BitcoinEsploraConfiguration consults THIS constant.
-export { DEFAULT_BITCOIN_ESPLORA_API_URL };
+export { DEFAULT_BITCOIN_ESPLORA_API_URL, DEFAULT_BITCOIN_ESPLORA_API_URLS };

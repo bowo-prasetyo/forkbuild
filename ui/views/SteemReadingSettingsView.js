@@ -1,4 +1,4 @@
-import { ref, inject } from 'vue';
+import { ref, computed, inject } from 'vue';
 import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
 import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
 import {
@@ -9,7 +9,10 @@ import {
 
 // Where Steem announcements are read from (applies on the next load, like
 // the other network settings), and the account this device posts as
-// (applies at once: it's read each time something is announced).
+// (applies at once: it's read each time something is announced). As on the
+// other list pages (ui/composables/useEndpointListSettings.js), the fields
+// start from what is in effect and Save does nothing until one changes, so
+// the defaults are never saved as a preference.
 export default {
     name: 'SteemReadingSettingsView',
     setup() {
@@ -35,6 +38,7 @@ export default {
             store,
             useCase,
             buildRequest: () => {
+                if (unchanged.value) return null;
                 const apiNodes = splitNonEmptyLines(apiNodesInput.value);
                 const threadAccounts = splitNonEmptyLines(threadAccountsInput.value);
                 return {
@@ -50,14 +54,24 @@ export default {
             }
         });
 
+        // The fields still hold exactly what is in effect.
+        const unchanged = computed(() => {
+            const effective = form.configuration.value || {
+                apiNodes: DEFAULT_STEEM_API_NODES, threadAccounts: DEFAULT_STEEM_THREAD_ACCOUNTS, earliestPeriod: DEFAULT_STEEM_EARLIEST_PERIOD
+            };
+            return splitNonEmptyLines(apiNodesInput.value).join('\n') === effective.apiNodes.join('\n')
+                && splitNonEmptyLines(threadAccountsInput.value).join('\n') === effective.threadAccounts.join('\n')
+                && (earliestPeriodInput.value || DEFAULT_STEEM_EARLIEST_PERIOD) === effective.earliestPeriod;
+        });
+
         return {
-            hasOverride: form.hasConfiguration, configuration: form.configuration,
+            hasOverride: form.hasConfiguration, configuration: form.configuration, unchanged,
             apiNodesInput, threadAccountsInput, earliestPeriodInput,
             defaultApiNodes: DEFAULT_STEEM_API_NODES.join(', '),
             defaultThreadAccounts: DEFAULT_STEEM_THREAD_ACCOUNTS.map((account) => `@${account}`).join(', '),
             defaultEarliestPeriod: DEFAULT_STEEM_EARLIEST_PERIOD,
             saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
-            save: form.save, useDefaults: form.clear,
+            save: form.save, resetToDefaults: form.clear,
             accountInput, savedAccount: accountForm.configuration, accountSaveError: accountForm.saveError,
             accountSaveStatus: accountForm.saveStatus, accountClearStatus: accountForm.clearStatus,
             saveAccount: accountForm.save, clearAccount: accountForm.clear
@@ -91,10 +105,10 @@ export default {
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved. Reload the app to use it.</p>
-                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared. The defaults apply after a reload.</p>
+                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Reset. The defaults apply after a reload.</p>
 
-                <button class="action-btn action-btn--primary" @click="save">Save</button>
-                <button class="action-btn" @click="useDefaults">Use Defaults</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="unchanged">Save</button>
+                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">Reset to Defaults</button>
             </div>
 
             <h2>Posting</h2>

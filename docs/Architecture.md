@@ -896,12 +896,21 @@ under one key, a `Set*ConfigurationUseCase`, and a settings view built on `ui/co
 (`useRoleProviderPreferenceForm.js` for the three preference pages). `ui/main.js` resolves each value once at
 startup and falls back to the deployment default.
 
+The list-shaped settings default to several free public servers, declared next to their value object
+(`DEFAULT_ARWEAVE_GATEWAY_URLS`, `DEFAULT_IPFS_GATEWAY_URLS`, `DEFAULT_BITCOIN_ESPLORA_API_URLS`,
+`DEFAULT_NOSTR_RELAY_URLS`, `DEFAULT_STEEM_API_NODES`; `DEFAULT_ICE_SERVERS` and `DEFAULT_RENDEZVOUS_URLS` in `peer/`).
+The singular `DEFAULT_*_URL` constants are each list's first entry, used by the paths that take one endpoint. A saved
+list replaces the defaults; it is never merged with them. Their pages use `ui/composables/useEndpointListSettings.js`:
+the textarea starts from the list in effect, Save is disabled while it is unchanged (so the defaults are never saved
+as a preference), and Reset to Defaults clears the store. `node scripts/check-network-defaults.mjs` checks that every
+default still answers and allows CORS.
+
 | Setting | Route | Store key | Shape |
 |---------|-------|-----------|-------|
 | Arweave Gateway | `/settings/arweave-gateway` | `arweave-gateway-configuration` | ordered `gatewayUrls`, read failover |
 | IPFS Gateway | `/settings/ipfs-gateway` | `ipfs-gateway-configuration` | ordered `gatewayUrls`, read failover (0.9.665/0.9.666) |
 | IPFS Node (Kubo API) | on `/settings/content-provider` | `ipfs-node-configuration` | `apiUrl` for the IPFS write path |
-| Bitcoin Endpoint (Esplora) | `/settings/bitcoin-esplora` | `bitcoin-esplora-configuration` | one base URL, used for broadcast, confirmation, funding and proof checks |
+| Bitcoin Endpoint (Esplora) | `/settings/bitcoin-esplora` | `bitcoin-esplora-configuration` | ordered `apiUrls` for broadcast, confirmation, funding and proof checks; failover (`anchoring/BitcoinEsploraFailover.js`) |
 | Nostr Relays | `/settings/nostr-relay` | `nostr-relay-configuration` | `relayUrls`, one set for every Nostr feature, fan-out |
 | STUN / TURN / Rendezvous | `/settings/stun`, `/settings/turn-server`, `/settings/rendezvous` | `ice-server-configuration`, `turn-server-configuration`, `rendezvous-configuration` | as before |
 | Content / Announcement / Proof preferences | `/settings/content-provider`, `/settings/announcement-discovery-provider`, `/settings/anchor-provider` | `role-provider-preference:by-role` | one provider key per role |

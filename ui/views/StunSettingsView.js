@@ -1,6 +1,5 @@
-import { ref, computed, inject } from 'vue';
-import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
-import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
+import { inject } from 'vue';
+import { useEndpointListSettings } from '../composables/useEndpointListSettings.js';
 import { DEFAULT_ICE_SERVERS } from '../../peer/IceServerConfig.js';
 
 // 0.9.386 — STUN Settings UI.
@@ -65,10 +64,11 @@ import { DEFAULT_ICE_SERVERS } from '../../peer/IceServerConfig.js';
 //
 // OPENING THIS PAGE NEVER WRITES ANYTHING. The shared `load()` (ui/composables/
 // useEndpointSettingsForm.js) only ever reads
-// `store.get()`; when it returns `null`, the textarea stays empty and the
-// deployment defaults are shown purely as informational text
-// (`effectiveServers`) — merely visiting this page can never turn "no
-// override" into a persisted, explicit default. That is this milestone's
+// `store.get()`; when it returns `null`, the textarea starts from the
+// deployment defaults and Save stays disabled until it differs (ui/
+// composables/useEndpointListSettings.js) — merely visiting this page, or
+// pressing Save on it unchanged, can never turn "no override" into a
+// persisted, explicit default. That is this milestone's
 // own "absence stays meaningful" rule, held here at the one place that
 // could otherwise quietly violate it.
 //
@@ -89,39 +89,14 @@ import { DEFAULT_ICE_SERVERS } from '../../peer/IceServerConfig.js';
 export default {
     name: 'StunSettingsView',
     setup() {
-        const store = inject('iceServerConfigurationStore', null);
-        const setIceServerConfigurationUseCase = inject('setIceServerConfigurationUseCase', null);
-
-        // One STUN URL per line; blank lines ignored, order preserved.
-        const serversInput = ref('');
-
-        const form = useEndpointSettingsForm({
-            store,
-            useCase: setIceServerConfigurationUseCase,
-            buildRequest: () => {
-                const servers = splitNonEmptyLines(serversInput.value).map((urls) => ({ urls }));
-                return servers.length > 0 ? { servers } : null;
-            },
-            fillInputs: (configuration) => {
-                serversInput.value = configuration
-                    ? configuration.servers.map((server) => server.urls).join('\n')
-                    : '';
-            }
+        const settings = useEndpointListSettings({
+            store: inject('iceServerConfigurationStore', null),
+            useCase: inject('setIceServerConfigurationUseCase', null),
+            defaults: DEFAULT_ICE_SERVERS.map((server) => server.urls),
+            entriesOf: (configuration) => configuration.servers.map((server) => server.urls),
+            toRequest: (urls) => ({ servers: urls.map((url) => ({ urls: url })) })
         });
-
-        // The STUN servers actually in effect right now: the stored
-        // override when one exists, otherwise the deployment defaults —
-        // never a merge of the two, mirroring ui/main.js's own
-        // `resolvedIceServers` resolution exactly.
-        const effectiveServers = computed(() => (
-            form.configuration.value ? form.configuration.value.servers : DEFAULT_ICE_SERVERS
-        ));
-
-        return {
-            hasOverride: form.hasConfiguration, effectiveServers, serversInput,
-            saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
-            save: form.save, resetToDefaults: form.clear
-        };
+        return { ...settings, serversInput: settings.input };
     },
     template: `
         <section class="stun-settings-view">
@@ -130,14 +105,10 @@ export default {
                 STUN servers used for NAT traversal when establishing peer connections. This setting affects connection setup only; it does not change peer identity, authentication, or any existing connection.
             </p>
 
-            <p v-if="hasOverride" class="form-hint form-hint--neutral">
-                Current override:
-            </p>
-            <p v-else class="form-hint form-hint--neutral">
-                No override configured. Currently using the deployment defaults:
-            </p>
-            <ul class="stun-settings-server-list">
-                <li v-for="server in effectiveServers" :key="server.urls">{{ server.urls }}</li>
+            <p v-if="hasOverride" class="form-hint form-hint--neutral">Using your saved servers:</p>
+            <p v-else class="form-hint form-hint--neutral">Using the default servers:</p>
+            <ul class="endpoint-settings-list">
+                <li v-for="url in effectiveEntries" :key="url">{{ url }}</li>
             </ul>
 
             <div class="stun-settings-form">
@@ -151,10 +122,10 @@ export default {
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
-                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — now using the deployment defaults.</p>
+                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Reset — now using the default servers.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="!serversInput.trim()">Save</button>
-                <button class="action-btn" @click="resetToDefaults">Reset to Defaults</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">Save</button>
+                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">Reset to Defaults</button>
             </div>
         </section>
     `

@@ -35,7 +35,7 @@ import { PeerMessageBus } from '../../peer/PeerMessageBus.js';
 import { CreateSiblingReadStateStoreUseCase } from '../../application/chat/CreateSiblingReadStateStoreUseCase.js';
 import { DeviceConversationSyncUseCase } from '../../application/chat/DeviceConversationSyncUseCase.js';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
-import { DEFAULT_BITCOIN_ESPLORA_API_URL } from '../../core/BitcoinEsploraConfiguration.js';
+import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../../core/BitcoinEsploraConfiguration.js';
 import { BitcoinEsploraConfigurationStore } from '../../storage/BitcoinEsploraConfigurationStore.js';
 import { SetBitcoinEsploraConfigurationUseCase } from '../../application/settings/SetBitcoinEsploraConfigurationUseCase.js';
 
@@ -77,9 +77,11 @@ export function composeIdentityAndPeers() {
         turnIceServers: createTurnCredentialSource({ rendezvousUrls: resolvedRendezvousUrls })
     });
     const setRendezvousConfigurationUseCase = new SetRendezvousConfigurationUseCase({ rendezvousConfigurationStore });
-    // Resolved early: the Bitcoin Esplora consumers below need it.
+    // Resolved early: the Bitcoin Esplora consumers below need it. A saved list
+    // overrides DEFAULT_BITCOIN_ESPLORA_API_URLS; each consumer tries the
+    // endpoints in order.
     const bitcoinEsploraConfigurationStore = new BitcoinEsploraConfigurationStore(new LocalStorageProvider());
-    const resolvedBitcoinEsploraApiUrl = (bitcoinEsploraConfigurationStore.get() || { apiUrl: DEFAULT_BITCOIN_ESPLORA_API_URL }).apiUrl;
+    const resolvedBitcoinEsploraApiUrls = (bitcoinEsploraConfigurationStore.get() || { apiUrls: DEFAULT_BITCOIN_ESPLORA_API_URLS }).apiUrls;
     const setBitcoinEsploraConfigurationUseCase = new SetBitcoinEsploraConfigurationUseCase({ bitcoinEsploraConfigurationStore });
     const discoveryBootstrap = new DiscoveryBootstrap({
         bootstrapProviders: resolvedRendezvousUrls.map((url) => new RendezvousDiscoveryProvider({
@@ -177,7 +179,7 @@ export function composeIdentityAndPeers() {
         identityProvider, identityUseCase, createPublicationCommentaryCommand,
         getPublicationCommentariesCommand, iceServerConfigurationStore, turnServerConfigurationStore,
         setTurnServerConfigurationUseCase, setIceServerConfigurationUseCase, rendezvousConfigurationStore,
-        setRendezvousConfigurationUseCase, bitcoinEsploraConfigurationStore, resolvedBitcoinEsploraApiUrl,
+        setRendezvousConfigurationUseCase, bitcoinEsploraConfigurationStore, resolvedBitcoinEsploraApiUrls,
         setBitcoinEsploraConfigurationUseCase, peerSessionManager, peerRelationshipUseCase,
         peerReconnectionUseCase, findPeerUseCase, peerMessageBus, peerBlockUseCase, deviceAuthorizationUseCase,
         friendRelationshipUseCase, identityLifecyclePropagationUseCase, chatUseCase, peerPresenceUseCase,

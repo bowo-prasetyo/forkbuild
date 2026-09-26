@@ -46,10 +46,10 @@ import { CreatePreferredPublicationAnchorCreationCoordinatorUseCase } from '../.
 // Bitcoin (PSBT build, review, sign, finalize, broadcast, confirm) and Base
 // (plan, sign, finalize, broadcast, inclusion) pipelines and their wallets.
 export function composeAnchoring({
-    identityProvider, resolvedBitcoinEsploraApiUrl, publicationCatalog, publicationAnchorCatalog,
+    identityProvider, resolvedBitcoinEsploraApiUrls, publicationCatalog, publicationAnchorCatalog,
     anchorKnowledgeStore, roleProviderPreferenceStore
 }) {
-    const { bitcoinProofVerifier } = new CreateBitcoinAnchorProofVerifierUseCase().execute({ apiUrl: resolvedBitcoinEsploraApiUrl });
+    const { bitcoinProofVerifier } = new CreateBitcoinAnchorProofVerifierUseCase().execute({ apiUrls: resolvedBitcoinEsploraApiUrls });
     // Captured so the Arweave wiring below can register a second proof verifier
     // into the same registry.
     const { externalAnchorVerifier, proofVerifierRegistry: externalAnchorProofVerifierRegistry } = new CreateExternalAnchorVerifierUseCase().execute({
@@ -104,7 +104,7 @@ export function composeAnchoring({
         evidenceViews: [bitcoinAnchorEvidenceView]
     });
 
-    const { bitcoinEsploraTransactionConfirmationObserver } = new CreateBitcoinEsploraTransactionConfirmationObserverUseCase().execute({ apiUrl: resolvedBitcoinEsploraApiUrl });
+    const { bitcoinEsploraTransactionConfirmationObserver } = new CreateBitcoinEsploraTransactionConfirmationObserverUseCase().execute({ apiUrls: resolvedBitcoinEsploraApiUrls });
     const { bitcoinAnchorConfirmationObserver } = new CreateBitcoinAnchorConfirmationObserverUseCase().execute({
         confirmationSource: bitcoinEsploraTransactionConfirmationObserver
     });
@@ -122,7 +122,7 @@ export function composeAnchoring({
         provider: bitcoinInjectedProviderWalletAdapter
     });
 
-    const { bitcoinEsploraWalletFundingSource } = new CreateBitcoinEsploraWalletFundingSourceUseCase().execute({ apiUrl: resolvedBitcoinEsploraApiUrl });
+    const { bitcoinEsploraWalletFundingSource } = new CreateBitcoinEsploraWalletFundingSourceUseCase().execute({ apiUrls: resolvedBitcoinEsploraApiUrls });
     const { bitcoinWalletFundingObserver } = new CreateBitcoinWalletFundingObserverUseCase().execute({
         fundingSource: bitcoinEsploraWalletFundingSource
     });
@@ -196,7 +196,7 @@ export function composeAnchoring({
         bitcoinAnchorSignedPsbtFinalizer
     });
 
-    const { bitcoinEsploraTransactionBroadcaster } = new CreateBitcoinEsploraTransactionBroadcasterUseCase().execute({ apiUrl: resolvedBitcoinEsploraApiUrl });
+    const { bitcoinEsploraTransactionBroadcaster } = new CreateBitcoinEsploraTransactionBroadcasterUseCase().execute({ apiUrls: resolvedBitcoinEsploraApiUrls });
     const { bitcoinAnchorTransactionBroadcaster } = new CreateBitcoinAnchorTransactionBroadcasterUseCase().execute({
         broadcaster: bitcoinEsploraTransactionBroadcaster
     });

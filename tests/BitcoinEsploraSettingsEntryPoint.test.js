@@ -26,7 +26,7 @@ import { readSource as source } from './support/SourceText.js';
 //               previously on file.
 //   Section C — replacement: endpoint-A -> endpoint-B replaces, never
 //               accumulates a second entry.
-//   Section D — clear: "Use Deployment Default" restores genuine absence.
+//   Section D — clear: "Reset to Defaults" restores genuine absence.
 //   Section E — restart: a brand-new store/use-case pair, over the SAME
 //               underlying storage, observes what an earlier instance saved.
 //   Section F — convergence: saving through the settings entry point
@@ -78,7 +78,7 @@ async function run() {
         const storeConstructions = (mainSource.match(/new BitcoinEsploraConfigurationStore\(/g) || []).length;
         assert(storeConstructions === 1, `5. ui/main.js still constructs exactly one BitcoinEsploraConfigurationStore instance — found ${storeConstructions}`);
 
-        // The resolved apiUrl actually reaches all four real Esplora
+        // The resolved endpoint list actually reaches all four real Esplora
         // construction sites — never left unused after being resolved.
         const consumers = [
             'CreateBitcoinAnchorProofVerifierUseCase',
@@ -87,8 +87,8 @@ async function run() {
             'CreateBitcoinEsploraTransactionBroadcasterUseCase'
         ];
         for (const useCase of consumers) {
-            const pattern = new RegExp(`new ${useCase}\\(\\)\\.execute\\(\\{\\s*apiUrl:\\s*resolvedBitcoinEsploraApiUrl\\s*\\}\\)`);
-            assert(pattern.test(mainSource), `6[${useCase}]. its own .execute() call passes { apiUrl: resolvedBitcoinEsploraApiUrl }`);
+            const pattern = new RegExp(`new ${useCase}\\(\\)\\.execute\\(\\{\\s*apiUrls:\\s*resolvedBitcoinEsploraApiUrls\\s*\\}\\)`);
+            assert(pattern.test(mainSource), `6[${useCase}]. its own .execute() call passes { apiUrls: resolvedBitcoinEsploraApiUrls }`);
         }
 
         const routerSource = await source('ui/router/index.js');
@@ -108,7 +108,7 @@ async function run() {
             '11. the view writes the configuration through the injected use case, never BitcoinEsploraConfigurationStore.save() directly');
         assert(!/new BitcoinEsploraConfiguration\(/.test(viewExecutable),
             '12. the view never constructs a BitcoinEsploraConfiguration itself');
-        assert(viewExecutable.includes("import { DEFAULT_BITCOIN_ESPLORA_API_URL } from '../../core/BitcoinEsploraConfiguration.js';"),
+        assert(viewExecutable.includes("import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../../core/BitcoinEsploraConfiguration.js';"),
             '13. the ONE thing the view imports from core/BitcoinEsploraConfiguration.js is the plain default constant, for display only');
         assert(!/BitcoinEsploraTransactionBroadcaster|BitcoinEsploraTransactionConfirmationObserver|BitcoinEsploraWalletFundingSource|BitcoinOpReturnProofVerifier/.test(viewExecutable),
             '14. the view never imports or constructs a real Bitcoin Esplora adapter');
@@ -185,7 +185,7 @@ async function run() {
         const effective = (store.get() || { apiUrl: DEFAULT_BITCOIN_ESPLORA_API_URL }).apiUrl;
         assert(effective === DEFAULT_BITCOIN_ESPLORA_API_URL, '29. after clearing, the effective endpoint falls back to the deployment default');
     }
-    console.log('✓ Section D: "Use Deployment Default" clears to genuine absence, never persisting a copy of the default URL');
+    console.log('✓ Section D: "Reset to Defaults" clears to genuine absence, never persisting a copy of the default URL');
 
     // ===============================================================
     // Section E — restart.
@@ -247,9 +247,9 @@ async function run() {
         const viewSource = await source('ui/views/BitcoinEsploraSettingsView.js');
 
         assert(/v-if="hasOverride"/.test(viewSource), '36. the template branches on whether an override is on file');
-        assert(/No override configured/.test(viewSource) && /deploymentDefaultApiUrl/.test(viewSource),
+        assert(/Using the default/.test(viewSource) && /effectiveEntries/.test(viewSource),
             '37. the no-override state displays the effective deployment default as informational text');
-        assert(/Current override/.test(viewSource), '38. the override state displays the current, actually-saved apiUrl');
+        assert(/Using your saved/.test(viewSource), '38. the override state displays the current, actually-saved apiUrl');
 
         // load()/save()/clear() are the shared endpoint-settings form's own
         // (ui/composables/useEndpointSettingsForm.js); the view wires its
@@ -261,20 +261,20 @@ async function run() {
             '40. load() never calls the use case, store.save(), or store.clear() — merely opening the page persists nothing');
 
         assert(/@click="save"/.test(viewSource), '41. a Save action is wired');
-        assert(/@click="useDeploymentDefault"/.test(viewSource), '42. a Use Deployment Default action is wired');
-        const useDeploymentDefaultFnMatch = /useDeploymentDefault: form\.clear\b/.test(viewSource)
+        assert(/@click="resetToDefaults"/.test(viewSource), '42. a Reset to Defaults action is wired');
+        const resetToDefaultsFnMatch = /resetToDefaults: form\.clear\b/.test(await source('ui/composables/useEndpointListSettings.js'))
             && formSource.match(/function clear\(\)\s*\{[\s\S]*?\n\s{4}\}/);
-        assert(useDeploymentDefaultFnMatch, '43. Use Deployment Default is wired to the shared clear() function');
-        assert(/store\.clear\(\)/.test(useDeploymentDefaultFnMatch[0]), '44. Use Deployment Default calls store.clear()');
-        assert(!/DEFAULT_BITCOIN_ESPLORA_API_URL/.test(useDeploymentDefaultFnMatch[0]),
-            '45. Use Deployment Default never saves { apiUrl: DEFAULT_BITCOIN_ESPLORA_API_URL } — it only ever clears');
-        const saveFnMatch = /\bsave: form\.save\b/.test(viewSource)
+        assert(resetToDefaultsFnMatch, '43. Reset to Defaults is wired to the shared clear() function');
+        assert(/store\.clear\(\)/.test(resetToDefaultsFnMatch[0]), '44. Reset to Defaults calls store.clear()');
+        assert(!/DEFAULT_BITCOIN_ESPLORA_API_URL/.test(resetToDefaultsFnMatch[0]),
+            '45. Reset to Defaults never saves { apiUrl: DEFAULT_BITCOIN_ESPLORA_API_URL } — it only ever clears');
+        const saveFnMatch = /\bsave: form\.save\b/.test(await source('ui/composables/useEndpointListSettings.js'))
             && formSource.match(/function save\(\)\s*\{[\s\S]*?\n\s{4}\}/);
         assert(saveFnMatch, '46. a save() function exists');
-        assert(/useCase\.execute\(/.test(saveFnMatch[0]) && /useCase: setBitcoinEsploraConfigurationUseCase\b/.test(viewSource), '47. save() goes through the injected use case, never a direct store.save()');
+        assert(/useCase\.execute\(/.test(saveFnMatch[0]) && /useCase: inject\('setBitcoinEsploraConfigurationUseCase'/.test(viewSource), '47. save() goes through the injected use case, never a direct store.save()');
         assert(!/store\.save\(/.test(saveFnMatch[0]), '48. save() never calls store.save() directly, bypassing the use case');
 
-        console.log('✓ Section G: the view template shows the correct no-override/override states without ever mutating on load, and wires Save/Use Deployment Default correctly');
+        console.log('✓ Section G: the view template shows the correct no-override/override states without ever mutating on load, and wires Save/Reset to Defaults correctly');
     }
 
     // ===============================================================

@@ -4,7 +4,15 @@ import { STEEM_DISCOVERY_THREAD_ACCOUNT, isSteemAccountName, isSteemDiscoveryPer
 // first answer wins), the accounts whose discovery threads are read, and
 // the first month read.
 
-export const DEFAULT_STEEM_API_NODES = Object.freeze(['https://api.steemit.com']);
+// api.steemit.com first, then a long-running community node run by a
+// different operator: reads fall over to it when api.steemit.com doesn't
+// answer. Kept to two because anchoring/SteemProofVerifier.js asks every
+// node and needs all that answer to agree, so each extra node is one more
+// that can report a block as missing.
+export const DEFAULT_STEEM_API_NODES = Object.freeze([
+    'https://api.steemit.com',
+    'https://api.justyy.com'
+]);
 export const DEFAULT_STEEM_THREAD_ACCOUNTS = Object.freeze([STEEM_DISCOVERY_THREAD_ACCOUNT]);
 // The first month with discovery threads on the chain.
 export const DEFAULT_STEEM_EARLIEST_PERIOD = '2026-09';

@@ -20,6 +20,12 @@ import { SetRendezvousConfigurationUseCase } from '../application/settings/SetRe
 import { SetRoleProviderPreferenceUseCase } from '../application/settings/SetRoleProviderPreferenceUseCase.js';
 import { RoleProviderRole } from '../core/RoleProviderRole.js';
 import { splitNonEmptyLines } from '../utils/splitNonEmptyLines.js';
+import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../core/ArweaveGatewayConfiguration.js';
+import { DEFAULT_IPFS_GATEWAY_URLS } from '../core/IpfsGatewayConfiguration.js';
+import { DEFAULT_BITCOIN_ESPLORA_API_URLS } from '../core/BitcoinEsploraConfiguration.js';
+import { DEFAULT_NOSTR_RELAY_URLS } from '../core/NostrRelayConfiguration.js';
+import { DEFAULT_ICE_SERVERS } from '../peer/IceServerConfig.js';
+import { DEFAULT_RENDEZVOUS_URLS } from '../peer/RendezvousConfig.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
 // Network Settings — shared form behavior.
@@ -56,8 +62,9 @@ const ENDPOINT_PAGES = [
         label: 'Arweave Gateway', view: 'ArweaveGatewaySettingsView.js',
         storeKey: 'arweaveGatewayConfigurationStore', useCaseKey: 'setArweaveGatewayConfigurationUseCase',
         Store: ArweaveGatewayConfigurationStore, UseCase: SetArweaveGatewayConfigurationUseCase, useCaseArg: 'arweaveGatewayConfigurationStore',
-        hasKey: 'hasOverride', clearKey: 'useDeploymentDefault',
+        hasKey: 'hasOverride', clearKey: 'resetToDefaults',
         inputs: ['gatewayUrlInput'],
+        defaults: { gatewayUrlInput: DEFAULT_ARWEAVE_GATEWAY_URLS.join('\n') },
         valid: { gatewayUrlInput: '  https://a.example/ \n\n https://b.example ' },
         saved: { gatewayUrlInput: 'https://a.example\nhttps://b.example' },
         invalid: { gatewayUrlInput: 'not-a-url' }
@@ -66,8 +73,9 @@ const ENDPOINT_PAGES = [
         label: 'IPFS Gateway', view: 'IpfsGatewaySettingsView.js',
         storeKey: 'ipfsGatewayConfigurationStore', useCaseKey: 'setIpfsGatewayConfigurationUseCase',
         Store: IpfsGatewayConfigurationStore, UseCase: SetIpfsGatewayConfigurationUseCase, useCaseArg: 'ipfsGatewayConfigurationStore',
-        hasKey: 'hasOverride', clearKey: 'useDeploymentDefault',
+        hasKey: 'hasOverride', clearKey: 'resetToDefaults',
         inputs: ['gatewayUrlInput'],
+        defaults: { gatewayUrlInput: DEFAULT_IPFS_GATEWAY_URLS.join('\n') },
         valid: { gatewayUrlInput: 'https://gateway.pinata.cloud\nhttps://ipfs.io' },
         saved: { gatewayUrlInput: 'https://gateway.pinata.cloud\nhttps://ipfs.io' },
         invalid: { gatewayUrlInput: 'ftp://not-http.example' }
@@ -87,18 +95,20 @@ const ENDPOINT_PAGES = [
         label: 'Bitcoin Endpoint', view: 'BitcoinEsploraSettingsView.js',
         storeKey: 'bitcoinEsploraConfigurationStore', useCaseKey: 'setBitcoinEsploraConfigurationUseCase',
         Store: BitcoinEsploraConfigurationStore, UseCase: SetBitcoinEsploraConfigurationUseCase, useCaseArg: 'bitcoinEsploraConfigurationStore',
-        hasKey: 'hasOverride', clearKey: 'useDeploymentDefault',
+        hasKey: 'hasOverride', clearKey: 'resetToDefaults',
         inputs: ['apiUrlInput'],
-        valid: { apiUrlInput: ' https://mempool.example/api/ ' },
-        saved: { apiUrlInput: 'https://mempool.example/api' },
+        defaults: { apiUrlInput: DEFAULT_BITCOIN_ESPLORA_API_URLS.join('\n') },
+        valid: { apiUrlInput: ' https://mempool.example/api/ \nhttps://esplora-b.example/api' },
+        saved: { apiUrlInput: 'https://mempool.example/api\nhttps://esplora-b.example/api' },
         invalid: { apiUrlInput: 'nope' }
     },
     {
         label: 'Nostr Relays', view: 'NostrRelaySettingsView.js',
         storeKey: 'nostrRelayConfigurationStore', useCaseKey: 'setNostrRelayConfigurationUseCase',
         Store: NostrRelayConfigurationStore, UseCase: SetNostrRelayConfigurationUseCase, useCaseArg: 'nostrRelayConfigurationStore',
-        hasKey: 'hasOverride', clearKey: 'useDeploymentDefault',
+        hasKey: 'hasOverride', clearKey: 'resetToDefaults',
         inputs: ['relayUrlInput'],
+        defaults: { relayUrlInput: DEFAULT_NOSTR_RELAY_URLS.join('\n') },
         valid: { relayUrlInput: 'wss://relay-a.example\n\nwss://relay-b.example' },
         saved: { relayUrlInput: 'wss://relay-a.example\nwss://relay-b.example' },
         invalid: { relayUrlInput: 'https://not-a-relay.example' }
@@ -109,6 +119,7 @@ const ENDPOINT_PAGES = [
         Store: IceServerConfigurationStore, UseCase: SetIceServerConfigurationUseCase, useCaseArg: 'iceServerConfigurationStore',
         hasKey: 'hasOverride', clearKey: 'resetToDefaults',
         inputs: ['serversInput'],
+        defaults: { serversInput: DEFAULT_ICE_SERVERS.map((server) => server.urls).join('\n') },
         valid: { serversInput: 'stun:stun.a.example:3478\n  stun:stun.b.example:3478  ' },
         saved: { serversInput: 'stun:stun.a.example:3478\nstun:stun.b.example:3478' },
         invalid: { serversInput: 'https://not-stun.example' }
@@ -132,6 +143,7 @@ const ENDPOINT_PAGES = [
         Store: RendezvousConfigurationStore, UseCase: SetRendezvousConfigurationUseCase, useCaseArg: 'rendezvousConfigurationStore',
         hasKey: 'hasOverride', clearKey: 'resetToDefaults',
         inputs: ['urlsInput'],
+        defaults: { urlsInput: DEFAULT_RENDEZVOUS_URLS.join('\n') },
         valid: { urlsInput: 'wss://rendezvous-a.example\nwss://rendezvous-b.example' },
         saved: { urlsInput: 'wss://rendezvous-a.example\nwss://rendezvous-b.example' },
         invalid: { urlsInput: 'not-a-url' }
@@ -143,6 +155,11 @@ function inputsOf(view, page) {
 }
 function setInputs(view, values) {
     for (const [key, value] of Object.entries(values)) view[key].value = value;
+}
+// What the inputs show with nothing on file: the defaults, one per line, on
+// the list pages; empty on the others.
+function defaultInputs(page) {
+    return page.defaults || Object.fromEntries(page.inputs.map((key) => [key, '']));
 }
 function sameInputs(view, page, expected) {
     return page.inputs.every((key) => view[key].value === expected[key]);
@@ -179,12 +196,20 @@ async function run() {
         // B1. Nothing on file.
         let view = mount();
         assert(view[page.hasKey].value === false, `B1 (${L}). nothing on file -> no configuration shown`);
-        assert(page.inputs.every((key) => view[key].value === ''), `B1 (${L}). nothing on file -> every input is empty`);
+        assert(sameInputs(view, page, defaultInputs(page)),
+            `B1 (${L}). nothing on file -> the inputs show the defaults (or are empty with none) — found ${JSON.stringify(inputsOf(view, page))}`);
         assert(view[status.saveStatus].value === 'idle' && view[status.clearStatus].value === 'idle', `B1 (${L}). statuses start idle`);
 
-        // B2. Saving an empty form.
+        // B2. Saving the untouched form: the defaults are never saved as if
+        // they were a choice, and an empty form saves nothing.
         view[saveKey]();
-        assert(store.get() === null, `B2 (${L}). saving an empty form persists nothing`);
+        assert(store.get() === null, `B2 (${L}). saving the untouched form persists nothing`);
+        if (page.defaults) {
+            assert(view.canSave.value === false, `B2 (${L}). Save is disabled while the input matches the defaults`);
+            setInputs(view, Object.fromEntries(page.inputs.map((key) => [key, ''])));
+            view[saveKey]();
+            assert(store.get() === null, `B2 (${L}). saving an emptied form persists nothing either`);
+        }
         if (page.emptyIsRefused) {
             assert(typeof view[status.saveError].value === 'string' && view[status.saveStatus].value === 'idle',
                 `B2 (${L}). an empty form is refused by the use case, with its message shown`);
@@ -217,7 +242,7 @@ async function run() {
         // B6. Clear.
         view[page.clearKey]();
         assert(store.get() === null, `B6 (${L}). clear removes the stored configuration`);
-        assert(view[page.hasKey].value === false && page.inputs.every((key) => view[key].value === ''), `B6 (${L}). clear empties the page`);
+        assert(view[page.hasKey].value === false && sameInputs(view, page, defaultInputs(page)), `B6 (${L}). clear shows the defaults again (or empties the page)`);
         assert(view[status.clearStatus].value === 'cleared' && view[status.saveError].value === null && view[status.saveStatus].value === 'idle',
             `B6 (${L}). clear reports cleared and resets the save state`);
 
@@ -225,6 +250,15 @@ async function run() {
         setInputs(view, page.valid);
         view[saveKey]();
         assert(view[status.clearStatus].value === 'idle' && view[status.saveStatus].value === 'saved', `B7 (${L}). a later save replaces the "cleared" note`);
+
+        // B7b. Saving again without changing anything does nothing new.
+        if (page.defaults) {
+            const onFile = JSON.stringify(store.get());
+            view.saveStatus.value = 'idle';
+            view[saveKey]();
+            assert(view.canSave.value === false && view.saveStatus.value === 'idle' && JSON.stringify(store.get()) === onFile,
+                `B7b (${L}). Save is disabled and a no-op while the input matches what is saved`);
+        }
 
         // B8. Nothing injected — the page stays inert rather than throwing.
         const orphan = mountComponent(Component, {});

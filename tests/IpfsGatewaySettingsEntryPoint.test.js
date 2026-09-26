@@ -88,7 +88,7 @@ async function run() {
             '10. the view writes the configuration through the injected use case, never IpfsGatewayConfigurationStore.save() directly');
         assert(!/new IpfsGatewayConfiguration\(/.test(viewExecutable),
             '11. the view never constructs an IpfsGatewayConfiguration itself — validation and construction stay inside the use case');
-        assert(viewExecutable.includes("import { DEFAULT_IPFS_GATEWAY_URL } from '../../core/IpfsGatewayConfiguration.js';"),
+        assert(viewExecutable.includes("import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/IpfsGatewayConfiguration.js';"),
             '12. the ONE thing the view imports from core/IpfsGatewayConfiguration.js is the plain default constant, for display only');
         assert(!/new IpfsGatewayContentStore/.test(viewExecutable),
             '13. the view never constructs a retrieval adapter itself — it only ever talks to the injected store/use case seam');
@@ -149,7 +149,7 @@ async function run() {
     console.log('✓ Section C: replacing a saved gateway never accumulates a second entry');
 
     // ===============================================================
-    // Section D — clear: "Use Deployment Default" restores genuine
+    // Section D — clear: "Reset to Defaults" restores genuine
     // absence, never a saved copy of the default.
     // ===============================================================
     {
@@ -165,7 +165,7 @@ async function run() {
         const effective = (store.get() || { gatewayUrl: DEFAULT_IPFS_GATEWAY_URL }).gatewayUrl;
         assert(effective === DEFAULT_IPFS_GATEWAY_URL, '26. after clearing, the effective gateway falls back to the deployment default');
     }
-    console.log('✓ Section D: "Use Deployment Default" clears to genuine absence, never persisting a copy of the default URL');
+    console.log('✓ Section D: "Reset to Defaults" clears to genuine absence, never persisting a copy of the default URL');
 
     // ===============================================================
     // Section E — explicit default: entering the default URL by hand
@@ -275,9 +275,9 @@ async function run() {
         const viewSource = await source('ui/views/IpfsGatewaySettingsView.js');
 
         assert(/v-if="hasOverride"/.test(viewSource), '39. the template branches on whether an override is on file');
-        assert(/No override configured/.test(viewSource) && /deploymentDefaultGatewayUrl/.test(viewSource),
+        assert(/Using the default/.test(viewSource) && /effectiveEntries/.test(viewSource),
             '40. the no-override state displays the effective deployment default as informational text');
-        assert(/Current override/.test(viewSource), '41. the override state displays the current, actually-saved gatewayUrl');
+        assert(/Using your saved/.test(viewSource), '41. the override state displays the current, actually-saved gatewayUrl');
 
         // load()/save()/clear() are the shared endpoint-settings form's own
         // (ui/composables/useEndpointSettingsForm.js); the view wires its
@@ -289,20 +289,20 @@ async function run() {
             '43. load() never calls the use case, store.save(), or store.clear() — merely opening the page persists nothing');
 
         assert(/@click="save"/.test(viewSource), '44. a Save action is wired');
-        assert(/@click="useDeploymentDefault"/.test(viewSource), '45. a Use Deployment Default action is wired');
-        const useDeploymentDefaultFnMatch = /useDeploymentDefault: form\.clear\b/.test(viewSource)
+        assert(/@click="resetToDefaults"/.test(viewSource), '45. a Reset to Defaults action is wired');
+        const resetToDefaultsFnMatch = /resetToDefaults: form\.clear\b/.test(await source('ui/composables/useEndpointListSettings.js'))
             && formSource.match(/function clear\(\)\s*\{[\s\S]*?\n\s{4}\}/);
-        assert(useDeploymentDefaultFnMatch, '46. Use Deployment Default is wired to the shared clear() function');
-        assert(/store\.clear\(\)/.test(useDeploymentDefaultFnMatch[0]), '47. Use Deployment Default calls store.clear()');
-        assert(!/DEFAULT_IPFS_GATEWAY_URL/.test(useDeploymentDefaultFnMatch[0]),
-            '48. Use Deployment Default never saves { gatewayUrl: DEFAULT_IPFS_GATEWAY_URL } — it only ever clears');
-        const saveFnMatch = /\bsave: form\.save\b/.test(viewSource)
+        assert(resetToDefaultsFnMatch, '46. Reset to Defaults is wired to the shared clear() function');
+        assert(/store\.clear\(\)/.test(resetToDefaultsFnMatch[0]), '47. Reset to Defaults calls store.clear()');
+        assert(!/DEFAULT_IPFS_GATEWAY_URL/.test(resetToDefaultsFnMatch[0]),
+            '48. Reset to Defaults never saves { gatewayUrl: DEFAULT_IPFS_GATEWAY_URL } — it only ever clears');
+        const saveFnMatch = /\bsave: form\.save\b/.test(await source('ui/composables/useEndpointListSettings.js'))
             && formSource.match(/function save\(\)\s*\{[\s\S]*?\n\s{4}\}/);
         assert(saveFnMatch, '49. a save() function exists');
-        assert(/useCase\.execute\(/.test(saveFnMatch[0]) && /useCase: setIpfsGatewayConfigurationUseCase\b/.test(viewSource), '50. save() goes through the injected use case, never a direct store.save()');
+        assert(/useCase\.execute\(/.test(saveFnMatch[0]) && /useCase: inject\('setIpfsGatewayConfigurationUseCase'/.test(viewSource), '50. save() goes through the injected use case, never a direct store.save()');
         assert(!/store\.save\(/.test(saveFnMatch[0]), '51. save() never calls store.save() directly, bypassing the use case');
 
-        console.log('✓ Section I: the view template shows the correct no-override/override states without ever mutating on load, and wires Save through the use case and Use Deployment Default through store.clear() only');
+        console.log('✓ Section I: the view template shows the correct no-override/override states without ever mutating on load, and wires Save through the use case and Reset to Defaults through store.clear() only');
     }
 
     // ===============================================================
