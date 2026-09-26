@@ -107,7 +107,7 @@ function fakeChain({ lastRootPost = START - 60 * MINUTE, visibleAfterPolls = 0, 
 
 // A thread that comes out wrong stops the run.
 {
-    const chain = fakeChain({ alter: (content) => ({ ...content, allow_votes: true }) });
+    const chain = fakeChain({ alter: (content) => ({ ...content, max_accepted_payout: '1000000.000 SBD' }) });
     const targets = planSteemDiscoveryThreads({ periods: ['2026-09'], families: ['publication', 'snapshot'] });
     let caught = null;
     try {
@@ -115,7 +115,7 @@ function fakeChain({ lastRootPost = START - 60 * MINUTE, visibleAfterPolls = 0, 
     } catch (error) {
         caught = error;
     }
-    assert(caught?.message.includes('votes are allowed'), `the problem is reported (got ${caught?.message})`);
+    assert(caught?.message.includes('payout is not declined'), `the problem is reported (got ${caught?.message})`);
     assert(chain.broadcasts.length === 1, 'nothing more is posted after a problem');
     console.log('✓ a wrong thread stops the run');
 }
