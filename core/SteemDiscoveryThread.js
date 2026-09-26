@@ -82,8 +82,10 @@ export function describeSteemDiscoveryThreadPost({ account = STEEM_DISCOVERY_THR
     });
 }
 
-// The post and its options, in one transaction: votes can only be turned
-// off before a post has any.
+// The post and its options, in one transaction: options can only change
+// before a post has votes, and bots vote on new posts within minutes.
+// Votes stay on because Steem Keychain refuses to sign options that turn
+// them off; with payout declined there is nothing for a vote to move.
 export function steemDiscoveryThreadOperations(post) {
     return [
         ['comment', {
@@ -100,8 +102,8 @@ export function steemDiscoveryThreadOperations(post) {
             permlink: post.permlink,
             max_accepted_payout: STEEM_DECLINED_PAYOUT,
             percent_steem_dollars: 10000,
-            allow_votes: false,
-            allow_curation_rewards: false,
+            allow_votes: true,
+            allow_curation_rewards: true,
             extensions: []
         }]
     ];
@@ -120,8 +122,6 @@ export function checkSteemDiscoveryThreadContent(content, { account = STEEM_DISC
     if (content.parent_author !== '') problems.push('it is a reply, not a root post');
     if (content.parent_permlink !== STEEM_DISCOVERY_THREAD_CATEGORY) problems.push(`category is ${content.parent_permlink}, expected ${STEEM_DISCOVERY_THREAD_CATEGORY}`);
     if (!isDeclinedPayout(content.max_accepted_payout)) problems.push(`payout is not declined (max_accepted_payout ${content.max_accepted_payout})`);
-    if (content.allow_votes !== false) problems.push('votes are allowed');
-    if (content.allow_curation_rewards !== false) problems.push('curation rewards are allowed');
     if (content.allow_replies !== true) problems.push('replies are turned off, so nobody can announce here');
     const thread = parseJson(content.json_metadata)?.forkbuild?.thread;
     if (!isPlainObject(thread) || thread.version !== STEEM_DISCOVERY_THREAD_VERSION || thread.family !== family || thread.period !== period) {
@@ -138,7 +138,7 @@ function threadBody({ account, family, period, label, announces }) {
         '',
         "- **What a reply contains.** The announcement is in the reply's `json_metadata` under `forkbuild`. The reply text is only a short note for people reading the thread.",
         "- **Nothing is trusted because it's posted here.** ForkBuild accepts an announcement only if its content hash and ForkBuild signature check out. The Steem account that posted a reply isn't treated as the author.",
-        '- **No rewards, no voting.** This thread and every announcement decline payout and have voting turned off.',
+        "- **No rewards.** This thread and every announcement decline payout. Votes don't change whether ForkBuild accepts an announcement.",
         "- **Replying.** Reply here only through the ForkBuild app. The app ignores replies to replies, and ignores anything it can't verify.",
         '',
         `A new thread opens each month: \`@${account}/forkbuild-${family}-YYYY-MM\`.`,

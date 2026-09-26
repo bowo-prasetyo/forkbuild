@@ -183,7 +183,8 @@ async function keyAdvice(rpc, account) {
     return `Keychain signs with the posting private key it stores for @${account}; this page never sees or sends a key. `
         + `That stored key does not match the account's posting public key${expected}. `
         + `In Keychain, compare the posting public key it shows for @${account} with that one; if they differ, remove the account and add it again with its posting private key or master password. `
-        + "If they match, check that Keychain is connected to a Steem RPC node, not a Hive one, and see Keychain's full response below for the chain's own error. ";
+        + 'If they match, check that Keychain is connected to a Steem RPC node, not a Hive one. '
+        + 'Keychain also reports this for operations it cannot sign, such as options that turn votes off. ';
 }
 
 function readSettings() {

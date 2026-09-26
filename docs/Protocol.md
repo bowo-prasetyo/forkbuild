@@ -498,7 +498,7 @@ A discovery thread post is broadcast by the thread account as one transaction:
     ['comment_options', {
       author: 'forkbuild', permlink: 'forkbuild-snapshot-2026-09',
       max_accepted_payout: '0.000 SBD', percent_steem_dollars: 10000,
-      allow_votes: false, allow_curation_rewards: false, extensions: []
+      allow_votes: true, allow_curation_rewards: true, extensions: []
     }]
 
 `allow_replies` stays true. The thread account's operator creates threads at least twelve months ahead, and never
@@ -529,11 +529,15 @@ its options:
     ['comment_options', {
       author, permlink,
       max_accepted_payout: '0.000 SBD', percent_steem_dollars: 10000,
-      allow_votes: false, allow_curation_rewards: false, extensions: []
+      allow_votes: true, allow_curation_rewards: true, extensions: []
     }]
 
-- Payout is declined and votes are off in the same transaction because these options can only be set before a post
-  has votes. With votes off, the chain rejects every upvote and downvote, so an announcement can't be downvoted.
+- Payout is declined in the same transaction because options can only be set before a post has votes, and bots vote
+  on new posts within minutes. With no payout, a vote moves no rewards, so there is little reason to downvote an
+  announcement, and readers ignore votes anyway.
+- Votes and curation stay on. Steem Keychain refuses to sign `comment_options` with `allow_votes` or
+  `allow_curation_rewards` set to false (it reports "Posting key is incorrect" without broadcasting), and the
+  same options with both true sign and broadcast normally.
 - The transaction is signed with the announcer's posting key through Steem Keychain
   (`steem_keychain.requestBroadcast(account, operations, 'Posting', callback)`), the injected signer that plays the
   part NIP-07 plays for Nostr. ForkBuild never holds a Steem key.

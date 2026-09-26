@@ -748,3 +748,20 @@ same transaction, is error-prone, and steemit.com's editor cannot turn votes off
 - Tests: `tests/SteemDiscoveryThread.test.js`, `tests/SteemRpcClient.test.js`, `tests/SteemKeychainBroadcaster.test.js`
   and `tests/SteemThreadCreation.test.js` (a fake chain and clock: pacing, skipping, stopping). The page was also
   driven in Chromium against a mocked API node and a fake Keychain.
+
+## Steem announcements decline payout, votes stay on (unnumbered, 2026-09-26)
+
+**Threads and announcements now only decline payout; they no longer turn votes and curation off.** Creating the
+first thread failed with Steem Keychain's "Posting key is incorrect" although the key was right. Tests on
+`@forkbuild` narrowed it down: a custom_json, a plain post, and a reply with its `comment_options` declining payout
+all signed and broadcast, while the same reply with `allow_votes` and `allow_curation_rewards` false failed inside
+Keychain before anything was broadcast. Keychain cannot sign options that turn votes off.
+
+- `core/SteemDiscoveryThread.js`: `comment_options` sends `allow_votes: true` and `allow_curation_rewards: true`,
+  and the thread check no longer requires votes to be off (a thread with them off still passes). The thread text
+  says votes don't change whether an announcement is accepted.
+- `docs/Protocol.md`: the thread and announcement options, and why votes stay on. With payout declined a vote moves
+  no rewards, so there is little reason to downvote, and readers ignore votes anyway.
+- The thread page links the repository's favicon.
+- Also learned: a test post was upvoted within minutes, after which the chain refused to change its options
+  (`comment.abs_rshares == 0`). Sending the options in the post's own transaction, as the page does, is required.

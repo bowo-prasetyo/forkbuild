@@ -80,7 +80,7 @@ function chainContentFor(post, overrides = {}) {
     assert(JSON.stringify(metadata.tags) === '["forkbuild"]', 'tagged forkbuild');
     assert(JSON.stringify(metadata.forkbuild.thread) === JSON.stringify({ version: 1, family: 'commentary', period: '2026-09' }), 'metadata describes the thread');
     assert(options.max_accepted_payout === '0.000 SBD', 'payout is declined');
-    assert(options.allow_votes === false && options.allow_curation_rewards === false, 'votes and curation are off');
+    assert(options.allow_votes === true && options.allow_curation_rewards === true, 'votes and curation stay on, since Steem Keychain cannot sign them off');
     assert(!('allow_replies' in options), 'replies are left on');
 
     for (const family of STEEM_DISCOVERY_FAMILIES) {
@@ -103,9 +103,10 @@ function chainContentFor(post, overrides = {}) {
     assert(good.exists && good.problems.length === 0, `a thread made from the operations is ready (problems: ${good.problems})`);
     assert(checkSteemDiscoveryThreadContent(chainContentFor(post, { max_accepted_payout: '0.000 SBD' }), where).problems.length === 0, 'the chain\'s zero amount counts as declined');
 
+    const votesOff = checkSteemDiscoveryThreadContent(chainContentFor(post, { allow_votes: false, allow_curation_rewards: false }), where);
+    assert(votesOff.exists && votesOff.problems.length === 0, 'a thread with votes off is ready too');
+
     const cases = [
-        [{ allow_votes: true }, 'votes are allowed'],
-        [{ allow_curation_rewards: true }, 'curation rewards are allowed'],
         [{ max_accepted_payout: '1000000.000 SBD' }, 'payout is not declined'],
         [{ allow_replies: false }, 'replies are turned off'],
         [{ parent_author: 'someone' }, 'it is a reply'],
