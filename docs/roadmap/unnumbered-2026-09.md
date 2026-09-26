@@ -1302,3 +1302,31 @@ design in six phases; this entry covers Phases 1 and 2.
   recording being transparent to callers, the Snapshot, Place Naming and Publication paths answering from the
   index while offline, and seeding). `tests/SnapshotDiscoveryOutcomePresentationClosureAudit.test.js` accepts
   the wrapped Nostr source in its check of the production wiring.
+
+## Announcement Index: sync cursors (unnumbered, 2026-09-26)
+
+**A sync now pages each substrate until every announcement under a tag has been read**, rather than taking the
+newest 20. This is Phase 3 of docs/AnnouncementIndex.md; nothing runs it on its own yet (Phase 4 adds the
+background scheduler).
+
+- `application/announcementIndex/NostrTagSync.js`: per relay and target, a cursor of the newest and oldest
+  `created_at` read, plus a gap while newer events are still being paged down. The head pages down from the top
+  to `newest`; backfill pages below `oldest`. Only an empty page ends paging, because relays cap page sizes below
+  the requested `limit`. Boundaries are inclusive, so events sharing a boundary's second are read again rather
+  than skipped.
+- `application/announcementIndex/ArweaveTagSync.js`: GraphQL pages sorted `HEIGHT_DESC`, continued with each
+  edge's `cursor`. The head reads down to the previous run's newest ids; backfill resumes from a saved page cursor
+  until `hasNextPage` is false. Bodies are fetched with the existing 48 KiB cap.
+- Each run reads at most five pages of 100 per endpoint, so a large backlog is read over several runs, and a burst
+  of new announcements larger than that is finished on the next run without skipping anything.
+- `AnnouncementSyncTargets.js`: the Snapshot tag and each Place Naming region tag record into the index;
+  `forkbuild-commentary` imports each envelope through `importCommentaryEnvelope()`, which verifies its signature,
+  into the Commentary store. Tag names come from each kind's own reader or publisher. Publication leads are not
+  synced: their tags are typed per search.
+- `AnnouncementSync.js` runs one target on every relay, the Arweave endpoint and Steem at once, and reports each
+  endpoint's outcome; one failing never stops the others.
+- Tests: `tests/AnnouncementSync.test.js`, against a fake relay that pages like a real one (inclusive
+  `since`/`until`, newest first, an optional server-side cap) and a fake GraphQL gateway with edge cursors. It
+  covers a 250-event backfill over several runs, a relay capping pages at 7, a 100-event burst after catching up,
+  15 events in one second across a boundary, Arweave head and backfill, one relay failing while the others
+  succeed, and the Place Naming and Commentary targets.

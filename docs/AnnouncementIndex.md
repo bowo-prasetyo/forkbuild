@@ -155,32 +155,59 @@ arrives.
 
 ## Phase 3: sync cursors
 
-**Planned.**
+**Built.**
 
 Recording what a capped query returns is not enough: an announcement
 pushed out of the newest page before this device looked is never
-recorded. Each substrate therefore keeps a cursor for each kind and tag,
-and pages until it has caught up.
+recorded. Each substrate endpoint therefore keeps a cursor for each sync
+target, and pages until it has caught up. Cursors are stored under
+`announcement-sync:<substrate>:<endpoint>:<target>`
+(`AnnouncementSyncCursorStore`).
 
-- **Nostr.** Per relay, the cursor keeps the newest and oldest event
-  times seen, and whether the relay has run out of older events.
-  - *Head:* `since: newest` for events newer than the cursor, paging with
-    `until` while each page comes back full.
-  - *Backfill:* `until: oldest - 1` pages back through older events until
-    a page comes back empty. After that, the tag counts as fully read on
-    that relay.
-- **Arweave.** Ask GraphQL for pages sorted newest first
-  (`sort: HEIGHT_DESC`), and use each edge's `cursor` as `after`.
-  - *Head:* read from the top until a transaction already recorded
-    appears.
-  - *Backfill:* continue from the saved `after` cursor until
-    `pageInfo.hasNextPage` is false.
-  - Each transaction's body is fetched with the 48 KiB cap already used.
+- **Nostr** (`NostrTagSync.js`), per relay. The cursor keeps `newest`
+  (newest `created_at` read with nothing missing below it), `oldest`, a
+  `gap` while newer events are still being paged down, and
+  `backfillDone`.
+  - *Head:* `since: newest`, paging down with `until` until a page
+    reaches `newest`.
+  - *Backfill:* `until: oldest`, paging down until a page comes back
+    empty.
+  - *End of results:* a page counts as the end only when it is empty,
+    never when it is merely short, because relays cap page sizes below
+    what is asked for.
+  - *Page boundaries:* a page boundary is inclusive, so events sharing its
+    second are read again, not skipped. Only more than a whole page of
+    events in one second can lose some.
+- **Arweave** (`ArweaveTagSync.js`), per GraphQL endpoint. Pages are
+  sorted newest first (`sort: HEIGHT_DESC`) and continued with each edge's
+  `cursor` as `after`.
+  - *Cursor:* it keeps the newest transaction ids read, a `gap` while a
+    head is unfinished, the page cursor where backfill resumes, and
+    `backfillDone`.
+  - *Head:* reads down until an id already read appears.
+  - *Backfill:* continues until GraphQL reports no next page.
+  - *Bodies:* each new transaction's body is fetched with the 48 KiB cap.
 - **Steem.** The thread reader already reads every month back to its
-  configured start, so a sync simply records what it returns.
-- **Per-run budget.** Each run fetches a limited number of pages per
-  substrate (for example five), so a large backlog is read over several
-  runs rather than all at once.
+  configured start, so a sync reads it whole and records the results.
+- **Per-run budget.** Each run reads at most five pages of 100 per
+  endpoint, so a large backlog is read over several runs.
+
+**Sync targets** (`AnnouncementSyncTargets.js`) say what to read and
+where results go:
+
+| Target | Tag | Results go to |
+|---|---|---|
+| Snapshot | `forkbuild-snapshot` | the index |
+| Place Naming | one per region tag | the index, which checks each claim belongs to that region |
+| Commentary | `forkbuild-commentary` | `importCommentaryEnvelope()`, which verifies each signature and saves it in the Commentary store |
+
+`AnnouncementSync` runs one target on every relay, the Arweave endpoint
+and Steem at once, and reports each endpoint's outcome. One endpoint
+failing never stops the others.
+
+**Publication leads are not synced.** Their discovery tags are typed by
+the player, one per search, and a lead's origin must name the relay set
+it came from. Phase 1 already keeps every lead those searches find.
 
 ## Phase 4: background sync
 
