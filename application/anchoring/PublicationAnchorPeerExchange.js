@@ -9,6 +9,12 @@ import {
     isValidPublicationAnchorPeerMessage
 } from './PublicationAnchorPeerProtocol.js';
 import { AnchorAcquisitionKind } from './AnchorAcquisitionKind.js';
+import { MAX_PEER_MESSAGE_BYTES, peerMessageByteSize } from '../../peer/PeerMessage.js';
+
+// Room left in one message for the anchors themselves, after the envelope
+// around them. Anchors that keep evidence (a Steem anchor's kept block is
+// 1–2 KB) could otherwise make a response too large to send at all.
+const RESPONSE_ANCHOR_BYTE_BUDGET = MAX_PEER_MESSAGE_BYTES - 4 * 1024;
 
 const ANCHOR_RECEIVED_EVENT = 'PublicationAnchorPeerExchangeReceived';
 
@@ -277,12 +283,19 @@ export class PublicationAnchorPeerExchange {
     _handleRequest({ publicationId }, meta) {
         const known = this._exchange.findByPublicationId(publicationId);
         const envelopes = [];
+        let bytes = 0;
         for (const anchor of known) {
             if (envelopes.length >= MAX_ANCHORS_PER_RESPONSE) {
                 break;
             }
             try {
-                envelopes.push(this._exchange.exportAnchor(anchor));
+                const envelope = this._exchange.exportAnchor(anchor);
+                // Also truncated at the message size, so the response
+                // still goes out; the requester can ask again later.
+                const size = peerMessageByteSize(envelope);
+                if (bytes + size > RESPONSE_ANCHOR_BYTE_BUDGET) continue;
+                bytes += size;
+                envelopes.push(envelope);
             } catch {
                 // Unsigned or otherwise unexportable — skip it, never let
                 // one bad cataloged entry break the response for every

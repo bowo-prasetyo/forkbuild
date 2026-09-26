@@ -81,4 +81,22 @@ export class PublicationAnchorCreationCoordinator {
     async create(publicationId, anchorType) {
         return this._createExternalPublicationAnchorUseCase.execute(publicationId, anchorType);
     }
+
+    // The anchorTypes whose publisher can anchor several publications with
+    // one external recording (one wallet approval), and the most each takes
+    // at once: `[{ anchorType, maxBatchSize }]`.
+    batchAnchorTypes() {
+        return this._publisherRegistry.anchorTypes
+            .map((anchorType) => this._publisherRegistry.get(anchorType))
+            .filter((publisher) => publisher && typeof publisher.publishBatch === 'function')
+            .map((publisher) => ({ anchorType: publisher.anchorType, maxBatchSize: publisher.maxBatchSize ?? null }));
+    }
+
+    // One external recording for every publication in `publicationIds`;
+    // resolves to `{ outcome, anchors, reason }` (see application/anchoring/
+    // CreateExternalPublicationAnchorUseCase.js#executeBatch()). Always the
+    // result of one explicit click.
+    async createBatch(publicationIds, anchorType) {
+        return this._createExternalPublicationAnchorUseCase.executeBatch(publicationIds, anchorType);
+    }
 }

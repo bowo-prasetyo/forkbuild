@@ -633,12 +633,25 @@ You'll see a card per type of evidence this device can create —
 
 **Steem anchors are Experimental, and weaker than Bitcoin ones.** A Steem
 anchor costs no fee (only Resource Credits, which regenerate), and its
-block becomes final about a minute later, so **Verify Evidence** shows
-**Verification unavailable** for that first minute. But a Steem block is signed by
+block becomes final about a minute later. The card follows it: **Waiting
+for finality** until then, **Anchored** once the block is final (or **Not
+anchored** in the rare case the chain dropped it; create it again).
+**Verify Evidence** shows **Verification unavailable** for that first
+minute, and afterwards says when and by which witness the block was
+recorded. **Inspect Evidence** shows the block's time straight away: each
+Steem anchor keeps a copy of its signed block header and transaction,
+which your device checks without the network. But a Steem block is signed by
 about 21 witnesses elected by stake, not secured by proof of work: enough
 of them acting together could rewrite history. The evidence card says so
 ("Attested by Steem witnesses"). Use a Steem anchor as quick, free extra
 evidence next to a Bitcoin anchor, not instead of one.
+
+**Anchoring several publications at once (Steem).** Under **Wallet, Archive
+& Publisher Tools → Blockchain Anchoring**, **Anchor Several Publications on
+Steem** lists your cataloged publications. Tick the ones to anchor (or
+**Select Unanchored**), then **Anchor N Publications on Steem**: one Steem
+Keychain approval anchors up to 64 of them. Each publication still gets its
+own anchor in its evidence list, verified on its own.
 
 Base anchors are created differently — see
 [Creating a Base anchor in one step](#creating-a-base-anchor-in-one-step).

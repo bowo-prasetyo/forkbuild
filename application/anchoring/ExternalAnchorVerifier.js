@@ -140,13 +140,20 @@ export class ExternalAnchorVerifier {
                 // caller must never see this as "proof is wrong."
                 return this._failure(AnchorVerificationOutcome.PROOF_UNAVAILABLE, error.message, anchor);
             }
+            // What the proof verifier reported about the external record
+            // (for Steem: the block's time and witness), passed on so a
+            // caller can show it. Only a verifier's own `details` object,
+            // and only when it gave one; never read to decide the outcome.
+            const details = proofResult && proofResult.details && typeof proofResult.details === 'object'
+                ? { details: proofResult.details }
+                : {};
             if (!proofResult || !proofResult.valid) {
                 const outcome = (proofResult && proofResult.unavailable)
                     ? AnchorVerificationOutcome.PROOF_UNAVAILABLE
                     : AnchorVerificationOutcome.INVALID_PROOF;
-                return this._failure(outcome, (proofResult && proofResult.reason) || 'proof verification failed', anchor);
+                return { ...this._failure(outcome, (proofResult && proofResult.reason) || 'proof verification failed', anchor), ...details };
             }
-            return { outcome: AnchorVerificationOutcome.VALID, anchor, reason: null };
+            return { outcome: AnchorVerificationOutcome.VALID, anchor, reason: null, ...details };
         }
 
         return { outcome: AnchorVerificationOutcome.VALID_PROOF_UNVERIFIED, anchor, reason: 'no proof verifier available for this anchorType' };

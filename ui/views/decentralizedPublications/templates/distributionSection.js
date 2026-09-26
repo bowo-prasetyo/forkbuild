@@ -185,6 +185,9 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                     <p v-if="creationView(entry, anchorType).reason" class="form-hint form-hint--neutral">
                                         {{ creationView(entry, anchorType).reason }}
                                     </p>
+                                    <p v-if="creationFinality(entry, anchorType)" class="form-hint form-hint--neutral">
+                                        <strong>{{ creationFinality(entry, anchorType).label }}:</strong> {{ creationFinality(entry, anchorType).message }}
+                                    </p>
                                     <dl v-if="creationView(entry, anchorType).anchor" class="evidence-fields">
                                         <div class="evidence-field"><dt>Transaction</dt><dd>{{ creationView(entry, anchorType).anchor.locator }}</dd></div>
                                         <div class="evidence-field"><dt>Content hash</dt><dd>{{ creationView(entry, anchorType).anchor.contentHash }}</dd></div>
@@ -217,6 +220,9 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                 </p>
                                 <p v-if="preferredCreationView(entry).reason" class="form-hint form-hint--neutral">
                                     {{ preferredCreationView(entry).reason }}
+                                </p>
+                                <p v-if="preferredCreationFinality(entry)" class="form-hint form-hint--neutral">
+                                    <strong>{{ preferredCreationFinality(entry).label }}:</strong> {{ preferredCreationFinality(entry).message }}
                                 </p>
                                 <dl v-if="preferredCreationView(entry).anchor" class="evidence-fields">
                                     <div class="evidence-field"><dt>Transaction</dt><dd>{{ preferredCreationView(entry).anchor.locator }}</dd></div>

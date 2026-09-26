@@ -9,6 +9,9 @@ export const anchorEvidenceListTemplate = `<div v-if="entry.evidenceExpanded && 
                                 <p v-if="anchorView.verificationReason" class="form-hint form-hint--neutral">
                                     {{ anchorView.verificationReason }}
                                 </p>
+                                <p v-if="verificationNote(entry, anchorView)" class="form-hint form-hint--neutral">
+                                    {{ verificationNote(entry, anchorView) }}
+                                </p>
                                 <p v-if="lifecycleNote(entry, anchorView)" class="form-hint form-hint--neutral">
                                     {{ lifecycleNote(entry, anchorView) }}
                                 </p>

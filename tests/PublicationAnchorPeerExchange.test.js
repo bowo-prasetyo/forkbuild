@@ -17,6 +17,7 @@ import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
 import { ConnectToPeerUseCase } from '../application/peer/ConnectToPeerUseCase.js';
 import { PeerMessageBus } from '../peer/PeerMessageBus.js';
+import { exceedsMaxPeerMessageSize } from '../peer/PeerMessage.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
@@ -445,6 +446,20 @@ async function run() {
         const manyResponse = bobBus.sent[bobBus.sent.length - 1];
         assert(manyResponse.payload.anchors.length === MAX_ANCHORS_PER_RESPONSE,
             '38. Bob\'s own RESPONSE truncates at MAX_ANCHORS_PER_RESPONSE rather than including every matching anchor or refusing to answer at all');
+
+        // Anchors that keep evidence (about 2 KB each, like a Steem anchor's
+        // kept block) are also truncated at one message's size, so the
+        // RESPONSE still fits and is sent.
+        for (let i = 0; i < 40; i += 1) {
+            const large = signAnchor(alice, { publicationId: 'pub-large', contentHash: 'hash-large', anchorType: 'local-test', locator: `local://ledger/large-${i}`, proof: { evidence: 'e'.repeat(2000), i } });
+            bobBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, toPublicationAnchorAnnounceMessage(large.toJSON()));
+        }
+        const sentBeforeLarge = bobBus.sent.length;
+        bobBus.deliver(PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, toPublicationAnchorRequestMessage('pub-large'), { connectedPeer: requester });
+        assert(bobBus.sent.length === sentBeforeLarge + 1, '39. a REQUEST for many large anchors is still answered');
+        const largeResponse = bobBus.sent[bobBus.sent.length - 1].payload;
+        assert(largeResponse.anchors.length > 0 && largeResponse.anchors.length < 40 && !exceedsMaxPeerMessageSize({ protocol: PublicationAnchorPeerExchange.DEFAULT_PROTOCOL, payload: largeResponse }),
+            '40. with as many anchors as fit one peer message');
     }
     console.log('✓ Section C: PublicationAnchorPeerExchange — AUTHENTICATED-only sends, auto-attach, malformed/forged drops, never consults ExternalAnchorVerifier, multi-evidence retained, dispose(); REQUEST answered only from the local catalog, unsigned entries skipped, forged anchors in a RESPONSE rejected without blocking the rest of the batch, duplicates deduplicated, RESPONSE size bounded');
 

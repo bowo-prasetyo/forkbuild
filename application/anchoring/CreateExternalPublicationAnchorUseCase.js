@@ -150,6 +150,62 @@ export class CreateExternalPublicationAnchorUseCase {
         return { outcome: ExternalAnchorCreationOutcome.CREATED, anchor, reason: null };
     }
 
+    // Anchors several publications with ONE publisher call, for a publisher
+    // that offers `publishBatch(contentHashes)` (anchoring/
+    // SteemAnchorPublisher.js: one operation, one approval). Resolves to
+    // `{ outcome, anchors, reason }`: CREATED with one cataloged anchor per
+    // publication, in the order given, or PUBLISH_UNAVAILABLE /
+    // PUBLISH_REJECTED with no anchors. Each anchor is created and signed
+    // exactly as execute() creates one, from the publisher's per-hash
+    // evidence. Throws, like execute(), for an unknown publication, no
+    // publisher, or a publisher without publishBatch().
+    async executeBatch(publicationIds, anchorType) {
+        if (!Array.isArray(publicationIds) || publicationIds.length === 0) {
+            throw new Error('CreateExternalPublicationAnchorUseCase: executeBatch() needs at least one publicationId');
+        }
+        const publisher = this._publisherRegistry.get(anchorType);
+        if (!publisher) {
+            throw new Error(`CreateExternalPublicationAnchorUseCase: no publisher registered for anchorType '${anchorType}'`);
+        }
+        if (typeof publisher.publishBatch !== 'function') {
+            throw new Error(`CreateExternalPublicationAnchorUseCase: the '${anchorType}' publisher can't anchor several publications at once`);
+        }
+        const ids = [...new Set(publicationIds)];
+        const contentHashes = ids.map((publicationId) => {
+            const publication = this._publicationCatalog.get(publicationId);
+            if (!publication) {
+                throw new Error(`CreateExternalPublicationAnchorUseCase: publication ${publicationId} not found`);
+            }
+            return publication.contentReference.hash;
+        });
+
+        let evidence;
+        try {
+            evidence = await publisher.publishBatch(contentHashes);
+        } catch (error) {
+            return { outcome: ExternalAnchorCreationOutcome.PUBLISH_UNAVAILABLE, anchors: [], reason: error.message };
+        }
+        if (!evidence || evidence.published !== true || !Array.isArray(evidence.results) || evidence.results.length !== ids.length) {
+            const outcome = (evidence && evidence.unavailable)
+                ? ExternalAnchorCreationOutcome.PUBLISH_UNAVAILABLE
+                : ExternalAnchorCreationOutcome.PUBLISH_REJECTED;
+            return { outcome, anchors: [], reason: (evidence && evidence.reason) || 'publisher declined to publish these content hashes' };
+        }
+
+        const anchors = ids.map((publicationId, index) => {
+            const result = evidence.results[index];
+            if (!result || result.contentHash !== contentHashes[index]) {
+                throw new Error('CreateExternalPublicationAnchorUseCase: publishBatch() returned results out of order');
+            }
+            return this._createPublicationAnchorUseCase.execute(publicationId, {
+                anchorType: publisher.anchorType,
+                locator: result.locator,
+                proof: result.proof
+            });
+        });
+        return { outcome: ExternalAnchorCreationOutcome.CREATED, anchors, reason: null };
+    }
+
     _failure(outcome, reason) {
         return { outcome, anchor: null, reason };
     }

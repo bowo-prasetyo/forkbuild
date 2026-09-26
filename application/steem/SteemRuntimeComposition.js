@@ -14,6 +14,7 @@ import { createSteemResourceCreditEstimator } from './SteemResourceCreditEstimat
 import { SteemAnchorPublisher } from '../../anchoring/SteemAnchorPublisher.js';
 import { SteemProofVerifier } from '../../anchoring/SteemProofVerifier.js';
 import { SteemAnchorEvidenceView } from '../../anchoring/SteemAnchorEvidenceView.js';
+import { SteemAnchorFinalityObserver } from '../../anchoring/SteemAnchorFinalityObserver.js';
 
 // One thread reader and one announcer, each family's reader and publisher
 // over them, and the Steem content store, from the saved Steem settings (or
@@ -23,8 +24,8 @@ import { SteemAnchorEvidenceView } from '../../anchoring/SteemAnchorEvidenceView
 // appears after load, or an account set later, is picked up. The content
 // store remembers unfinished uploads in `contentUploads` and reports upload
 // progress to `contentUploadProgress`, when given. The anchor publisher,
-// proof verifier and evidence view are for the `steem` anchor type; the
-// verifier asks each configured API node separately.
+// proof verifier, evidence view and finality observer are for the `steem`
+// anchor type; the verifier asks each configured API node separately.
 export function composeSteemRuntime({
     configuration = new SteemReadingConfiguration(),
     fetchImpl = globalThis.fetch,
@@ -64,6 +65,7 @@ export function composeSteemRuntime({
         }),
         anchorPublisher: new SteemAnchorPublisher({ poster: announcer, rpc }),
         proofVerifier: new SteemProofVerifier({ nodes: [...configuration.apiNodes], fetchImpl }),
-        anchorEvidenceView: new SteemAnchorEvidenceView()
+        anchorEvidenceView: new SteemAnchorEvidenceView(),
+        anchorFinalityObserver: new SteemAnchorFinalityObserver({ rpc })
     });
 }

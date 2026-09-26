@@ -22,12 +22,38 @@ import { ExternalAnchorCreationUiState } from '../../../application/anchoring/Ex
 
 // External anchor evidence for one entry: verifying and inspecting known
 // anchors, creating new ones, and discovering/synchronizing anchors with peers.
-// Creating or discovering an anchor never verifies it.
+// Creating or discovering an anchor never verifies it. For an anchorType with
+// a finality observer (`finalityObservers`, by anchorType), a newly created
+// anchor is watched until its block is final, so the card can say
+// "Anchored" rather than only "Anchor created".
 export function useAnchorEvidence({
     anchorKnowledgeStore, creationCoordinator, evidenceCoordinator, evidenceDiscoveryCoordinator,
     evidenceViewRegistry, knowledgeSynchronizationCoordinator, loadEvidence, loadPlacements,
-    preferredAnchorCreationCoordinator, recomputeConvergence, recomputeReplicaKnowledgeDetail
+    preferredAnchorCreationCoordinator, recomputeConvergence, recomputeReplicaKnowledgeDetail,
+    finalityObservers = null
 }) {
+    function evidenceViewFor(anchorType) {
+        return evidenceViewRegistry && evidenceViewRegistry.has(anchorType) ? evidenceViewRegistry.get(anchorType) : null;
+    }
+
+    // Starts watching `proof` and writes each state to `attempt.finality`.
+    // Nothing is watched for an anchorType without an observer.
+    function watchFinality(attempt, anchorType, proof) {
+        const observer = finalityObservers ? finalityObservers.get(anchorType) : null;
+        if (!observer || !attempt) return;
+        attempt.finality = { state: 'pending', blockNum: proof && proof.blockNum, lastIrreversible: null, reason: null };
+        observer.waitUntilFinal(proof, { onUpdate: (finality) => { attempt.finality = finality; } })
+            .catch((error) => { attempt.finality = { state: 'unknown', blockNum: proof && proof.blockNum, reason: error.message }; });
+    }
+
+    // `{ label, message }` for an attempt's finality, or null.
+    function describeFinality(anchorType, attempt) {
+        const view = evidenceViewFor(anchorType);
+        return attempt && attempt.finality && view && typeof view.describeFinality === 'function'
+            ? view.describeFinality(attempt.finality)
+            : null;
+    }
+
     // Verifies exactly one anchor, on an explicit click, against this
     // entry's own publicationId/contentHash, so an anchor for another
     // publication is reported as CONTENT_MISMATCH.
@@ -40,7 +66,7 @@ export function useAnchorEvidence({
             expectedContentHash: entry.publication.contentReference.hash,
             expectedPublicationId: entry.publication.id
         });
-        entry.verifications[anchor.id] = { outcome: result.outcome, reason: result.reason };
+        entry.verifications[anchor.id] = { outcome: result.outcome, reason: result.reason, details: result.details || null };
         entry.evidence = publicationEvidenceView(entry.evidenceAnchors, entry.verifications);
         recomputeConvergence(entry);
         // Append, never replace: see verificationHistory.
@@ -49,6 +75,15 @@ export function useAnchorEvidence({
         // After the history push, so verificationState reflects this
         // attempt.
         recomputeReplicaKnowledgeDetail(entry);
+    }
+
+    // What the proof verifier reported about the external record (for
+    // Steem: when and by which witness the block was recorded), or null.
+    function verificationNote(entry, anchorView) {
+        const verification = entry.verifications[anchorView.anchorId];
+        const view = evidenceViewFor(anchorView.anchorType);
+        if (!verification || !verification.details || !view || typeof view.describeVerification !== 'function') return null;
+        return view.describeVerification(verification.details);
     }
 
     // An extra sentence beside the badge, shown only when an anchor that
@@ -109,8 +144,11 @@ export function useAnchorEvidence({
         try {
             const result = await creationCoordinator.create(entry.publication.id, anchorType);
             entry.creationAttempts[anchorType] = {
-                creating: false, outcome: result.outcome, anchor: result.anchor, reason: result.reason, error: null
+                creating: false, outcome: result.outcome, anchor: result.anchor, reason: result.reason, error: null, finality: null
             };
+            if (result.outcome === ExternalAnchorCreationOutcome.CREATED && result.anchor) {
+                watchFinality(entry.creationAttempts[anchorType], anchorType, result.anchor.proof);
+            }
             // Re-discover (a local read, never a verification) so the new
             // anchor appears in the list.
             loadEvidence(entry);
@@ -201,6 +239,10 @@ export function useAnchorEvidence({
         return CREATION_BADGE_CLASSES[state] || null;
     }
 
+    function creationFinality(entry, anchorType) {
+        return describeFinality(anchorType, entry.creationAttempts[anchorType]);
+    }
+
     function creationButtonLabel(entry, anchorType) {
         const view = creationView(entry, anchorType);
         const hasExisting = entry.evidenceAnchors.some((anchor) => anchor.anchorType === anchorType);
@@ -219,8 +261,11 @@ export function useAnchorEvidence({
             const result = await preferredAnchorCreationCoordinator.create(entry.publication.id);
             entry.preferredAnchorCreationAttempt = {
                 creating: false, outcome: result.outcome, anchor: result.anchor, reason: result.reason, error: null,
-                preference: result.preference || null
+                preference: result.preference || null, finality: null
             };
+            if (result.outcome === ExternalAnchorCreationOutcome.CREATED && result.anchor) {
+                watchFinality(entry.preferredAnchorCreationAttempt, result.anchor.anchorType, result.anchor.proof);
+            }
             // Re-discover so the new anchor appears in the list.
             loadEvidence(entry);
             if (result.outcome === ExternalAnchorCreationOutcome.CREATED) {
@@ -233,6 +278,11 @@ export function useAnchorEvidence({
 
     function preferredCreationView(entry) {
         return describeCreationAttempt(entry.preferredAnchorCreationAttempt);
+    }
+
+    function preferredCreationFinality(entry) {
+        const attempt = entry.preferredAnchorCreationAttempt;
+        return attempt && attempt.anchor ? describeFinality(attempt.anchor.anchorType, attempt) : null;
     }
 
     function preferredCreationBadgeClass(entry) {
@@ -252,6 +302,6 @@ export function useAnchorEvidence({
         discoveryBadgeClass, discoveryButtonLabel, synchronizeWithPeers, synchronizationView,
         synchronizationBadgeClass, synchronizationButtonLabel, creationView, creationBadgeClass,
         creationButtonLabel, createPreferredAnchor, preferredCreationView, preferredCreationBadgeClass,
-        preferredCreationButtonLabel
+        preferredCreationButtonLabel, verificationNote, creationFinality, preferredCreationFinality, watchFinality, describeFinality
     };
 }

@@ -25,6 +25,7 @@ import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifi
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { makeIdentity } from './support/TestIdentity.js';
 import { assert } from './support/Assert.js';
+import { fakeSteemChain } from './support/FakeSteemChain.js';
 
 const HASH = 'fnv1a-32:1a2b3c4d';
 
@@ -36,62 +37,11 @@ function trxIdOf(n) {
     return n.toString(16).padStart(40, '0');
 }
 
-// A fake Steem chain: blocks, a head and a last irreversible block, a
-// broadcaster that puts each transaction in a new block, and a fetch that
-// answers the JSON-RPC calls per node URL. `overrides[node]` replaces one
-// node's answers.
-function fakeChain({ head = 1000, irreversibleLag = 20, overrides = {}, reportBlockNum = true, reportTransactionId = true } = {}) {
-    const chain = { head, blocks: new Map(), broadcasts: [], calls: [], nextTrx: 1 };
-    chain.lib = () => chain.head - irreversibleLag;
-    chain.addBlock = (transactions, { salt = 'a' } = {}) => {
-        chain.head += 1;
-        const blockNum = chain.head;
-        const ids = transactions.map(() => trxIdOf(chain.nextTrx++));
-        chain.blocks.set(blockNum, {
-            block_id: blockIdOf(blockNum, salt),
-            previous: blockIdOf(blockNum - 1, salt),
-            timestamp: '2026-09-26T10:00:00',
-            witness: 'witness-one',
-            transaction_ids: ids,
-            transactions
-        });
-        return { blockNum, ids };
-    };
-    chain.finalize = () => { chain.head += irreversibleLag; };
-    chain.broadcaster = {
-        async broadcast(account, operations) {
-            chain.broadcasts.push({ account, operations });
-            // Someone else's transaction lands in the same block first.
-            const { blockNum, ids } = chain.addBlock([
-                { operations: [['vote', { voter: 'bob', author: 'carol', permlink: 'x', weight: 100 }]] },
-                { operations }
-            ]);
-            return { transactionId: reportTransactionId ? ids[1] : null, blockNum: reportBlockNum ? blockNum : null };
-        }
-    };
-    chain.fetchImpl = async (url, init) => {
-        const { method, params, id } = JSON.parse(init.body);
-        chain.calls.push({ url, method, params });
-        const override = overrides[url];
-        if (override instanceof Error) throw override;
-        let result;
-        if (override && typeof override[method] === 'function') {
-            result = override[method](params, chain);
-        } else if (method === 'condenser_api.get_dynamic_global_properties') {
-            result = { head_block_number: chain.head, last_irreversible_block_num: chain.lib() };
-        } else if (method === 'condenser_api.get_block') {
-            result = chain.blocks.get(params[0]) ?? null;
-        } else {
-            return { ok: true, status: 200, json: async () => ({ jsonrpc: '2.0', id, error: { message: `unknown method ${method}` } }) };
-        }
-        return { ok: true, status: 200, json: async () => ({ jsonrpc: '2.0', id, result }) };
-    };
-    return chain;
-}
+const fakeChain = fakeSteemChain;
 
 function anchoredChain(options) {
     const chain = fakeChain(options);
-    const { blockNum, ids } = chain.addBlock([{ operations: steemAnchorOperations({ account: 'alice', contentHash: HASH }) }]);
+    const { blockNum, ids } = chain.addBlock([steemAnchorOperations({ account: 'alice', contentHash: HASH })]);
     chain.finalize();
     return { chain, proof: { blockNum, trxId: ids[0], chain: 'steem' } };
 }
@@ -160,8 +110,10 @@ function publisherFor(chain, options = {}) {
     assert(verifier.anchorType === 'steem', 'the anchor type is "steem"');
     const result = await verifier.verify(proof, { contentHash: HASH });
     assert(result.valid === true, 'the anchor is valid');
-    assert(result.blockId === blockIdOf(proof.blockNum) && result.timestamp === '2026-09-26T10:00:00' && result.witness === 'witness-one', 'with the block\'s id, time and witness');
-    assert(result.nodesAgreeing === 1 && result.nodesAsked === 1, 'and how many nodes were asked');
+    const block = chain.blocks.get(proof.blockNum);
+    assert(result.details.blockId === block.block_id && result.details.timestamp === block.timestamp && result.details.witness === 'witness-one', 'with the block\'s id, time and witness');
+    assert(result.details.nodesAgreeing === 1 && result.details.nodesAsked === 1, 'and how many nodes were asked');
+    assert(result.details.blockNum === proof.blockNum && result.details.batch === false && result.details.evidence === null, 'a single anchor without kept evidence');
     const methods = chain.calls.map((call) => call.method);
     assert(!methods.includes('condenser_api.get_content'), 'the operation is read from the block, never from get_content');
     console.log('✓ the verifier accepts an anchor in an irreversible block');
@@ -174,7 +126,7 @@ function publisherFor(chain, options = {}) {
     const wrongHash = await verifier.verify(proof, { contentHash: 'fnv1a-32:ffffffff' });
     assert(wrongHash.valid === false && !wrongHash.unavailable && wrongHash.reason.includes('no ForkBuild anchor'), 'another contentHash is rejected');
 
-    const vote = chain.addBlock([{ operations: [['vote', { voter: 'bob' }]] }]);
+    const vote = chain.addBlock([[['vote', { voter: 'bob', author: 'carol', permlink: 'x', weight: 1 }]]]);
     chain.finalize();
     const notAnchor = await verifier.verify({ blockNum: vote.blockNum, trxId: vote.ids[0], chain: 'steem' }, { contentHash: HASH });
     assert(notAnchor.valid === false && !notAnchor.unavailable, 'a transaction without an anchor is rejected');
@@ -194,7 +146,7 @@ function publisherFor(chain, options = {}) {
 // "Unavailable", never a rejection: not yet irreversible, no node, disagreement.
 {
     const chain = fakeChain();
-    const { blockNum, ids } = chain.addBlock([{ operations: steemAnchorOperations({ account: 'alice', contentHash: HASH }) }]);
+    const { blockNum, ids } = chain.addBlock([steemAnchorOperations({ account: 'alice', contentHash: HASH })]);
     const proof = { blockNum, trxId: ids[0], chain: 'steem' };
     const verifier = new SteemProofVerifier({ nodes: ['https://a'], fetchImpl: chain.fetchImpl });
     const early = await verifier.verify(proof, { contentHash: HASH });
@@ -220,7 +172,7 @@ function publisherFor(chain, options = {}) {
     const { chain, proof } = anchoredChain();
     const both = new SteemProofVerifier({ nodes: ['https://a', 'https://b'], fetchImpl: chain.fetchImpl });
     const agreed = await both.verify(proof, { contentHash: HASH });
-    assert(agreed.valid === true && agreed.nodesAgreeing === 2, 'two agreeing nodes make a valid anchor');
+    assert(agreed.valid === true && agreed.details.nodesAgreeing === 2, 'two agreeing nodes make a valid anchor');
     const asked = new Set(chain.calls.filter((call) => call.method === 'condenser_api.get_block').map((call) => call.url));
     assert(asked.has('https://a') && asked.has('https://b'), 'each node is asked separately');
 
@@ -229,25 +181,25 @@ function publisherFor(chain, options = {}) {
         const block = c.blocks.get(params[0]);
         return block ? { ...block, block_id: blockIdOf(params[0], 'b'), transactions: block.transactions.map(() => ({ operations: [] })) } : null;
     };
-    const { chain: split } = anchoredChain({ overrides: { 'https://b': { 'condenser_api.get_block': forked } } });
-    const disagreement = await new SteemProofVerifier({ nodes: ['https://a', 'https://b'], fetchImpl: split.fetchImpl }).verify(proof, { contentHash: HASH });
+    const { chain: split, proof: splitProof } = anchoredChain({ overrides: { 'https://b': { 'condenser_api.get_block': forked } } });
+    const disagreement = await new SteemProofVerifier({ nodes: ['https://a', 'https://b'], fetchImpl: split.fetchImpl }).verify(splitProof, { contentHash: HASH });
     assert(disagreement.valid === false && disagreement.unavailable === true && disagreement.reason.includes('disagree'), 'nodes that disagree make it unavailable, never valid or rejected');
     assert(disagreement.reason.includes('https://b'), 'naming the nodes');
 
-    const { chain: halfDown } = anchoredChain({ overrides: { 'https://b': new Error('timeout') } });
-    const oneAnswered = await new SteemProofVerifier({ nodes: ['https://a', 'https://b'], fetchImpl: halfDown.fetchImpl }).verify(proof, { contentHash: HASH });
-    assert(oneAnswered.valid === true && oneAnswered.nodesAgreeing === 1 && oneAnswered.nodesAsked === 2, 'an unreachable node is left out, and the result says one node answered');
+    const { chain: halfDown, proof: halfDownProof } = anchoredChain({ overrides: { 'https://b': new Error('timeout') } });
+    const oneAnswered = await new SteemProofVerifier({ nodes: ['https://a', 'https://b'], fetchImpl: halfDown.fetchImpl }).verify(halfDownProof, { contentHash: HASH });
+    assert(oneAnswered.valid === true && oneAnswered.details.nodesAgreeing === 1 && oneAnswered.details.nodesAsked === 2, 'an unreachable node is left out, and the result says one node answered');
 
     // A node that returns the wrong block is not believed.
     const liar = { 'condenser_api.get_block': (params, c) => ({ ...c.blocks.get(params[0]), block_id: blockIdOf(params[0] + 1) }) };
-    const { chain: lying } = anchoredChain({ overrides: { 'https://b': liar } });
-    const skipped = await new SteemProofVerifier({ nodes: ['https://a', 'https://b'], fetchImpl: lying.fetchImpl }).verify(proof, { contentHash: HASH });
-    assert(skipped.valid === true && skipped.nodesAgreeing === 1, 'a node returning another block number is treated as not answering');
+    const { chain: lying, proof: lyingProof } = anchoredChain({ overrides: { 'https://b': liar } });
+    const skipped = await new SteemProofVerifier({ nodes: ['https://a', 'https://b'], fetchImpl: lying.fetchImpl }).verify(lyingProof, { contentHash: HASH });
+    assert(skipped.valid === true && skipped.details.nodesAgreeing === 1, 'a node returning another block number is treated as not answering');
 
     // One node still sees the block as reversible.
     const lagging = { 'condenser_api.get_dynamic_global_properties': (params, c) => ({ head_block_number: c.head, last_irreversible_block_num: proof.blockNum - 1 }) };
-    const { chain: behind } = anchoredChain({ overrides: { 'https://b': lagging } });
-    const notYet = await new SteemProofVerifier({ nodes: ['https://a', 'https://b'], fetchImpl: behind.fetchImpl }).verify(proof, { contentHash: HASH });
+    const { chain: behind, proof: behindProof } = anchoredChain({ overrides: { 'https://b': lagging } });
+    const notYet = await new SteemProofVerifier({ nodes: ['https://a', 'https://b'], fetchImpl: behind.fetchImpl }).verify(behindProof, { contentHash: HASH });
     assert(notYet.valid === false && notYet.unavailable === true, 'if any answering node doesn\'t see the block as irreversible, it is unavailable');
 
     const capped = new SteemProofVerifier({ nodes: ['https://a', 'https://b', 'https://c', 'https://d'], fetchImpl: chain.fetchImpl });
@@ -266,7 +218,7 @@ function publisherFor(chain, options = {}) {
     assert(broadcast.account === 'alice' && JSON.stringify(broadcast.operations) === JSON.stringify(steemAnchorOperations({ account: 'alice', contentHash: HASH })), 'as one custom_json signed by the configured account');
     const block = chain.blocks.get(chain.head);
     assert(result.proof.blockNum === chain.head && result.proof.trxId === block.transaction_ids[1] && result.proof.chain === 'steem', 'the proof names the block and transaction');
-    assert(Object.keys(result.proof).sort().join() === 'blockNum,chain,trxId', 'and nothing else');
+    assert(Object.keys(result.proof).sort().join() === 'blockNum,chain,evidence,trxId', 'and the kept block evidence, nothing else');
     assert(result.locator === `steem:${block.transaction_ids[1]}`, 'the locator names the transaction');
     assert(!('anchoredAt' in result), 'no anchoredAt is invented');
 
@@ -297,7 +249,7 @@ function publisherFor(chain, options = {}) {
     const impostor = fakeChain({ reportBlockNum: false, reportTransactionId: false });
     impostor.broadcaster.broadcast = async (account, operations) => {
         impostor.broadcasts.push({ account, operations });
-        impostor.addBlock([{ operations: steemAnchorOperations({ account: 'mallory', contentHash: HASH }) }]);
+        impostor.addBlock([steemAnchorOperations({ account: 'mallory', contentHash: HASH })]);
         return { transactionId: null, blockNum: null };
     };
     const lost = await publisherFor(impostor, { publisher: { maxLocateAttempts: 3 } }).publish(HASH);

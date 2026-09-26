@@ -46,6 +46,11 @@ export function ref(value) {
     return { value };
 }
 
+// Nothing re-renders here, so a reactive object is just the object.
+export function reactive(value) {
+    return value;
+}
+
 export function computed(getter) {
     return { get value() { return getter(); } };
 }

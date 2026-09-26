@@ -463,6 +463,15 @@
     color: #e0e0e0;
 }
 
+/* The Publications page's batch anchoring picker: one row per publication,
+   scrolling once the list gets long. */
+.batch-anchoring-list {
+    max-height: 16rem;
+    overflow-y: auto;
+    margin: 0.5rem 0;
+    overflow-wrap: anywhere;
+}
+
 .avatar-color-swatch {
     flex: 0 0 auto;
     width: 2.2rem;

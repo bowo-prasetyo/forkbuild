@@ -331,6 +331,9 @@ if (steemRuntime) {
     externalAnchorProofVerifierRegistry.register(steemRuntime.proofVerifier);
     externalAnchorEvidenceViewRegistry.register(steemRuntime.anchorEvidenceView);
 }
+// Watches a newly created anchor until its block is final, by anchorType;
+// only Steem has one.
+app.provide('anchorFinalityObservers', new Map(steemRuntime ? [[steemRuntime.anchorFinalityObserver.anchorType, steemRuntime.anchorFinalityObserver]] : []));
 app.provide('worldDiscoverySourceRegistry', worldDiscoveryRuntime.registry);
 app.provide('steemContentUploadProgress', steemContentUploadProgress);
 app.provide('arweaveGatewayConfigurationStore', arweaveGatewayConfigurationStore);
