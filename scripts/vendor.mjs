@@ -22,8 +22,8 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const PACKAGES = {
-    '@noble/curves': { target: 'vendor/noble-curves', entries: ['ed25519.js'], rewriteBareImports: true },
-    '@noble/hashes': { target: 'vendor/noble-hashes', entries: ['sha2.js'], rewriteBareImports: true },
+    '@noble/curves': { target: 'vendor/noble-curves', entries: ['ed25519.js', 'secp256k1.js'], rewriteBareImports: true },
+    '@noble/hashes': { target: 'vendor/noble-hashes', entries: ['sha2.js', 'legacy.js'], rewriteBareImports: true },
     // The full build: templates are strings compiled in the browser.
     'vue': { target: 'vendor/vue', entries: ['dist/vue.esm-browser.prod.js'] },
     // vue-router publishes no production browser build.

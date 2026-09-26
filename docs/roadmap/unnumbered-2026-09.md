@@ -916,3 +916,92 @@ and an upload the account can't afford is refused before anything is posted.** T
   node) and `tests/SteemContentStoreBrowser.test.js` (a build in parts with Chromium's compression and WebCrypto).
 - Not done: comparing the RC estimate with a live node, which this environment can't reach; the content threads
   still have to be created on the chain before anything can be stored.
+
+## Steem anchoring proposed (unnumbered, 2026-09-26)
+
+**A written proposal for Steem as a fourth Proof/Anchoring choice, before any code.** A Steem block is irreversible
+within about a minute and its time follows a fixed 3-second schedule, and anchoring costs Resource Credits rather
+than a fee. The timestamp is backed by about 21 elected witnesses rather than proof of work, so Steem is proposed
+as an addition to Bitcoin anchoring, never a replacement.
+
+- `docs/Protocol.md`, "Proposed: Steem Anchoring": anchor type `steem`, a `custom_json` with id `forkbuild-anchor`
+  carrying the Publication's own `contentHash` (a `custom_json` can't be edited or deleted, unlike a post), signed
+  through Steem Keychain. The proof is `{ blockNum, trxId, chain }` and nothing else. The verifier reads the
+  operation from its block, never from `get_content`, treats a block that isn't irreversible yet as unavailable,
+  and asks at least two API nodes. The evidence view shows the block's own time and witness.
+- It sets out what Steem is weaker at (witness collusion, the 2020 takeover and Hive fork, no light client, few API
+  nodes) and says the UI must describe it as "attested by Steem witnesses".
+- `docs/Publishing.md` points to the proposal.
+- Not done: no code yet. Order of work: the verifier and its evidence view, then the publisher, then tracking
+  irreversibility, then optionally keeping block evidence and batching.
+
+## Steem anchor verifier and publisher (unnumbered, 2026-09-26)
+
+**Steem is a fourth, Experimental Proof/Anchoring choice: "Create Steem Anchor" broadcasts a custom_json carrying the
+Publication's contentHash through Steem Keychain, and "Verify Evidence" checks it in its irreversible block.** This
+is steps 1 and 2 of `docs/Protocol.md`, "Proposed: Steem Anchoring".
+
+- `core/SteemAnchor.js`: the `forkbuild-anchor` custom_json (`{ version: 1, contentHash }`, nothing else), the
+  `{ blockNum, trxId, chain: 'steem' }` proof, the `steem:<trxId>` locator, and finding an anchor in a transaction
+  (condenser and appbase operation shapes).
+- `anchoring/SteemProofVerifier.js`: asks each configured API node (at most three) separately for the last
+  irreversible block and the block. Not yet irreversible, no answer, a node without the block and nodes that
+  disagree are unavailable; a node returning another block number is left out; only an irreversible block the
+  answering nodes agree on and that lacks the transaction or anchor is a rejection. The operation is read from the
+  block, never from `get_content`.
+- `anchoring/SteemAnchorPublisher.js`: broadcasts through the announcer's new `postAnchor()` (same queue, no reply
+  interval wait), then confirms the block Keychain names, or reads the blocks since the broadcast to find the
+  transaction by account and contentHash. Failures are unavailable with a reason, never thrown.
+- `anchoring/SteemAnchorEvidenceView.js`: block, transaction, "Attested by: Steem witnesses (elected by stake, not
+  proof of work)", and a SteemWorld block link.
+- `SteemRpcClient` gains `getBlock()` and `getDynamicGlobalProperties()`. `composeSteemRuntime()` builds the three
+  anchor services, and `ui/main.js` registers them, so the Publications page and the Proof/Anchoring settings page
+  offer Steem (labelled as Experimental and weaker than Bitcoin). The user guide explains the difference.
+- Changed from the proposal: Keychain's `requestBroadcast` rather than `requestCustomJson`, reusing the existing
+  broadcaster; no `publicationId` in the operation, since a publisher is given only the contentHash; the verifier
+  accepts a single answering node (the default configuration has one), and compares nodes when more are configured;
+  the block's time and witness are returned by the verifier but not shown in the app yet.
+- Tests: `tests/SteemAnchoring.test.js` (the format, the verifier's valid, rejected and unavailable cases over a fake
+  chain with several nodes, the publisher with and without a block number from Keychain, failures, the evidence
+  view, and an anchor created through `CreateExternalPublicationAnchorUseCase` and verified VALID by another replica
+  once its block is irreversible).
+- Not done: tracking irreversibility after publishing, showing the block's time, keeping block evidence, batching;
+  not yet tried against a live node or a real Keychain from this environment.
+
+## Steem anchoring: finality, block time, kept block evidence and batches (unnumbered, 2026-09-26)
+
+**A Steem anchor now reports "Anchored" once its block is final, shows when its block was recorded, keeps its
+signed block as evidence that can be checked offline, and several publications can be anchored with one Keychain
+approval.** This finishes `docs/Protocol.md`, "Proposed: Steem Anchoring", which is now marked built.
+
+- Finality: `anchoring/SteemAnchorFinalityObserver.js` checks the last irreversible block every 3 seconds (up to 3
+  minutes) and reads the block once final, so a transaction a fork dropped is reported as dropped. `ui/main.js`
+  provides it as `anchorFinalityObservers`; the Publications page watches each Steem anchor it creates and shows
+  "Waiting for finality", then "Anchored".
+- Block time: `ExternalAnchorVerifier` passes a proof verifier's `details` on (never deciding with them).
+  `SteemProofVerifier` returns the block's time, witness and node agreement, and the Publications page shows them
+  under the anchor after verifying. The evidence view shows the block time from kept evidence without any network.
+- Kept evidence: `core/SteemBinary.js` serializes transactions, every current operation and the block header as the
+  chain does, and computes transaction ids, block ids and the transaction Merkle tree; it matches dsteem byte for
+  byte for all 45 operations (checked during development, with dsteem's ids kept as test vectors).
+  `core/SteemBlockEvidence.js` keeps the signed header, the anchor transaction and its Merkle path in the proof, and
+  checks offline the block id, the witness signature (secp256k1 recovery), the transaction id and its inclusion.
+  Evidence is kept only after all of that checks out against the node's block, so a block this code can't read
+  gives an anchor without evidence. The verifier and evidence view report evidence, and the chain still decides.
+- Batches: one `custom_json` carries the Merkle root (leaves and nodes domain-separated) of up to 64 contentHashes,
+  and each Publication's proof adds its path. `SteemAnchorPublisher#publishBatch()`,
+  `CreateExternalPublicationAnchorUseCase#executeBatch()` and `PublicationAnchorCreationCoordinator#createBatch()` /
+  `batchAnchorTypes()` create one signed anchor per Publication. The Publications page's Blockchain Anchoring tools
+  have **Anchor Several Publications on Steem** (`useBatchAnchoring.js`).
+- Vendored: noble's `secp256k1.js` and `legacy.js` (RIPEMD-160), through `scripts/vendor.mjs`.
+- Peer exchange: kept evidence makes a Steem anchor 1–2 KB, so `PublicationAnchorPeerExchange` now also stops
+  adding anchors to a RESPONSE at one message's size. Before, a publication with a few dozen such anchors would have
+  produced a RESPONSE too large to send, and nothing was sent.
+- Tests: `tests/SteemAnchorEvidence.test.js` (dsteem vectors, signature recovery, the Merkle tree, evidence and every
+  kind of tampering, batches, the verifier and evidence, finality, the evidence view, and a batch created and
+  verified VALID by another replica with the block time passed on), `tests/SteemBatchAnchoringUI.test.js` (the
+  page's composables: a created anchor reported as anchored, the verification note, a batch and a declined batch),
+  and `tests/SteemAnchoring.test.js` over a fake chain whose blocks are real (`tests/support/FakeSteemChain.js`).
+  The Publications page was loaded in Chromium to check the new card renders without errors.
+- Not done: trying it against a live node and a real Keychain, neither reachable from this environment; checking a
+  kept signing key against the witness's key history.

@@ -64,6 +64,7 @@ import { usePublicationDistribution } from './decentralizedPublications/usePubli
 // Large template sections live in ./decentralizedPublications/templates/ as
 // strings interpolated into `template`; they share this component's scope.
 import { anchoringToolsTabTemplate } from './decentralizedPublications/templates/anchoringToolsTab.js';
+import { useBatchAnchoring } from './decentralizedPublications/useBatchAnchoring.js';
 import { archiveToolsTabTemplate } from './decentralizedPublications/templates/archiveToolsTab.js';
 import { connectionsToolsTabTemplate } from './decentralizedPublications/templates/connectionsToolsTab.js';
 import { distributionSectionTemplate } from './decentralizedPublications/templates/distributionSection.js';
@@ -125,6 +126,7 @@ export default {
         const evidenceDiscoveryCoordinator = inject('publicationEvidenceDiscoveryCoordinator', null);
         const knowledgeSynchronizationCoordinator = inject('publicationKnowledgeSynchronizationCoordinator', null);
         const evidenceViewRegistry = inject('externalAnchorEvidenceViewRegistry', null);
+        const finalityObservers = inject('anchorFinalityObservers', null);
         const anchorKnowledgeStore = inject('anchorKnowledgeStore', null);
         const placementResolutionCoordinator = inject('publicationSnapshotPlacementResolutionCoordinator', null);
         const placementViewRegistry = inject('snapshotPlacementViewRegistry', null);
@@ -745,12 +747,20 @@ export default {
             discoveryBadgeClass, discoveryButtonLabel, synchronizeWithPeers, synchronizationView,
             synchronizationBadgeClass, synchronizationButtonLabel, creationView, creationBadgeClass,
             creationButtonLabel, createPreferredAnchor, preferredCreationView, preferredCreationBadgeClass,
-            preferredCreationButtonLabel
+            preferredCreationButtonLabel, verificationNote, creationFinality, preferredCreationFinality,
+            watchFinality, describeFinality
         } = useAnchorEvidence({
             anchorKnowledgeStore, creationCoordinator, evidenceCoordinator, evidenceDiscoveryCoordinator,
             evidenceViewRegistry, knowledgeSynchronizationCoordinator, loadEvidence, loadPlacements,
-            preferredAnchorCreationCoordinator, recomputeConvergence, recomputeReplicaKnowledgeDetail
+            preferredAnchorCreationCoordinator, recomputeConvergence, recomputeReplicaKnowledgeDetail,
+            finalityObservers
         });
+
+        const {
+            batchAnchorTypes, batchAnchoring, batchSelectedIds, batchLimit, selectUnanchoredForBatch,
+            clearBatchSelection, hasAnchorOfType, createBatchAnchors, batchCreationView, batchCreationBadgeClass,
+            batchFinality, batchButtonLabel, batchButtonDisabled
+        } = useBatchAnchoring({ creationCoordinator, entries, loadEvidence, watchFinality, describeFinality });
 
         const {
             publicationDistributionCommand, multiRelayNostrPublicationDistributionCommand,
@@ -853,7 +863,10 @@ export default {
             humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
-            createAnchor, creationView, creationBadgeClass, creationButtonLabel,
+            createAnchor, creationView, creationBadgeClass, creationButtonLabel, verificationNote, creationFinality,
+            preferredCreationFinality, batchAnchorTypes, batchAnchoring, batchSelectedIds, batchLimit,
+            selectUnanchoredForBatch, clearBatchSelection, hasAnchorOfType, createBatchAnchors, batchCreationView,
+            batchCreationBadgeClass, batchFinality, batchButtonLabel, batchButtonDisabled,
             preferredAnchorCreationCoordinator, createPreferredAnchor, preferredCreationView, preferredCreationBadgeClass, preferredCreationButtonLabel,
             publicationDistributionCommand, multiRelayNostrPublicationDistributionCommand, snapshotDistributionCommand,
             distributePublicationForEntry, discoveryDistributionButtonLabel,

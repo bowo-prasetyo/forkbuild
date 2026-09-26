@@ -1,6 +1,55 @@
 // Publications page template: the Blockchain Anchoring tools tab.
 // It renders in DecentralizedPublicationsView's scope, so it uses the names its setup() returns.
 export const anchoringToolsTabTemplate = `<div v-show="publicationsToolsTab === 'anchoring'">
+            <!-- Batch anchoring: one external recording (one wallet
+                 approval) for several publications, for each anchorType
+                 whose publisher can (Steem). Each publication still gets its
+                 own signed anchor. -->
+            <div v-for="batchType in batchAnchorTypes" :key="'batch-' + batchType.anchorType" class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Anchor Several Publications on {{ humanizeAnchorType(batchType.anchorType) }}</span>
+                    <span v-if="batchCreationView(batchType.anchorType).label" class="peer-badge" :class="batchCreationBadgeClass(batchType.anchorType)">
+                        {{ batchCreationView(batchType.anchorType).label }}
+                    </span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    Pick publications to anchor together: one transaction carries the Merkle root of their content
+                    hashes, so you approve it once, and each publication gets its own signed anchor with its path
+                    to that root<template v-if="batchType.maxBatchSize"> (at most {{ batchType.maxBatchSize }} at once)</template>.
+                    <template v-if="batchType.anchorType === 'steem'"> Steem anchors are attested by Steem witnesses,
+                    not proof of work: use them next to Bitcoin anchors, not instead of them.</template>
+                </p>
+                <p v-if="entries.length === 0" class="form-hint form-hint--neutral">No publications are cataloged yet.</p>
+                <div v-else class="batch-anchoring-list">
+                    <label v-for="entry in entries" :key="'batch-' + batchType.anchorType + '-' + entry.publication.id" class="anchor-provider-option">
+                        <input type="checkbox" v-model="batchAnchoring[batchType.anchorType].selected[entry.publication.id]" />
+                        {{ humanizeContentKind(entry.publication.contentKind) }} · {{ shortHash(entry.publication.contentReference.hash) }}
+                        · by {{ shortId(entry.publication.publisherIdentity && entry.publication.publisherIdentity.id) }}
+                        <span v-if="hasAnchorOfType(entry, batchType.anchorType)" class="form-hint form-hint--neutral">(already has a {{ humanizeAnchorType(batchType.anchorType) }} anchor)</span>
+                    </label>
+                </div>
+                <div class="identity-mgmt-actions">
+                    <button type="button" class="action-btn action-btn--secondary" @click="selectUnanchoredForBatch(batchType.anchorType)">Select Unanchored</button>
+                    <button type="button" class="action-btn action-btn--secondary" @click="clearBatchSelection(batchType.anchorType)">Clear</button>
+                    <button type="button" class="action-btn action-btn--primary" :disabled="batchButtonDisabled(batchType.anchorType)"
+                            @click="createBatchAnchors(batchType.anchorType)">
+                        {{ batchButtonLabel(batchType.anchorType) }}
+                    </button>
+                </div>
+                <p v-if="batchSelectedIds(batchType.anchorType).length > batchLimit(batchType.anchorType)" class="form-hint form-hint--neutral">
+                    Pick at most {{ batchLimit(batchType.anchorType) }} publications for one transaction.
+                </p>
+                <p v-if="batchCreationView(batchType.anchorType).message" class="form-hint form-hint--neutral">
+                    {{ batchCreationView(batchType.anchorType).message }}
+                </p>
+                <p v-if="batchCreationView(batchType.anchorType).reason" class="form-hint form-hint--neutral">
+                    {{ batchCreationView(batchType.anchorType).reason }}
+                </p>
+                <p v-if="batchFinality(batchType.anchorType)" class="form-hint form-hint--neutral">
+                    <strong>{{ batchFinality(batchType.anchorType).label }}:</strong> {{ batchFinality(batchType.anchorType).message }}
+                </p>
+            </div>
+
             <!-- Bitcoin funding: page-level, for a transaction not built yet.
                  Selects and spends nothing. -->
             <div v-if="bitcoinWalletFundingObserver && isBitcoinWalletConnected()" class="identity-mgmt-card">

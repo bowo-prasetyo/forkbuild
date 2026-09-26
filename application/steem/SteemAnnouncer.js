@@ -12,6 +12,7 @@ import {
     steemOperationsByteLength
 } from '../../core/SteemDiscoveryAnnouncement.js';
 import { steemContentManifestOperations, steemContentManifestPermlink, steemContentPartOperations, steemContentPartPermlink } from '../../core/SteemContentManifest.js';
+import { steemAnchorOperations } from '../../core/SteemAnchor.js';
 import { parseSteemTime } from '../../steem/SteemRpcClient.js';
 
 // Posts one family's envelope as a reply to the current month's discovery
@@ -146,6 +147,20 @@ export function createSteemAnnouncer({
         }));
     }
 
+    // Broadcasts a Steem anchor ("Proposed: Steem Anchoring") for a
+    // contentHash, `{ contentHash }`, or a batch's `{ merkleRoot, count }`.
+    // A custom_json doesn't count against the reply interval, so it doesn't
+    // wait for one, but it still takes its turn in the queue so Keychain
+    // asks for one approval at a time. `blockNum` is null when the
+    // broadcast result doesn't say.
+    function postAnchor(target) {
+        return enqueue(() => withPoster(async ({ author, broadcaster }) => {
+            const operations = steemAnchorOperations({ account: author, ...(typeof target === 'string' ? { contentHash: target } : target) });
+            const { transactionId, blockNum } = await broadcaster.broadcast(author, operations);
+            return Object.freeze({ status: 'accepted', author, transactionId: transactionId ?? null, blockNum: blockNum ?? null });
+        }));
+    }
+
     // The account posts would come from right now, or null.
     function currentAccount() {
         const author = getAccount();
@@ -201,7 +216,7 @@ export function createSteemAnnouncer({
         });
     }
 
-    return Object.freeze({ announce, postContent, postContentPart, currentAccount, threadAccount });
+    return Object.freeze({ announce, postContent, postContentPart, postAnchor, currentAccount, threadAccount });
 }
 
 function defaultRandomSuffix() {

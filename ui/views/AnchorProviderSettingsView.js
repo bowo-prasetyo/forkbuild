@@ -42,11 +42,13 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 // ONLY PROOF_AND_ANCHORING. This view hardcodes `RoleProviderRole.PROOF_AND_ANCHORING`
 // — there is no role selector, and no Content or Discovery section here.
 //
-// Only `bitcoin-op-return` needs a friendly name here: `arweave` already
-// title-cases to "Arweave" through describeRoleProviderPreferenceSettings()'s
-// own fallback, and `base` is never offered (see above).
+// `bitcoin-op-return` needs a friendly name here, and `steem` says what
+// backs it. `arweave` already title-cases to "Arweave" through
+// describeRoleProviderPreferenceSettings()'s own fallback, and `base` is
+// never offered (see above).
 const ANCHOR_PROVIDER_OPTION_LABELS = {
-    'bitcoin-op-return': 'Bitcoin'
+    'bitcoin-op-return': 'Bitcoin',
+    steem: 'Steem (Experimental; attested by Steem witnesses, weaker than Bitcoin)'
 };
 
 export default {
