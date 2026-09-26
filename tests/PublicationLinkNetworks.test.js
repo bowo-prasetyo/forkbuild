@@ -105,6 +105,13 @@ function publishBuild() {
     assert(await resolver.retrieveByUri('ipfs://QmHugeHugeHugeHugeHugeHugeHugeHugeHugeHugeHuge') === null, 'content larger than a claim can be is refused');
     const before = asked.length;
     assert(await resolver.retrieveByUri(`ipfs://${CID_V0}/../x`) === null && await resolver.retrieveByUri(`ar://${TX}`) === null && asked.length === before, 'anything but a bare ipfs:// CID is not its business, and nothing is fetched');
+    const slowStore = new IpfsGatewayContentStore({
+        gatewayUrl: 'https://slow.example',
+        timeoutMs: 50,
+        fetchImpl: (url, { signal }) => new Promise((resolve, reject) => signal.addEventListener('abort', () => reject(new DOMException('signal is aborted without reason', 'AbortError'))))
+    });
+    const slow = await rejection(new IpfsWorldEncounterMaterialResolver({ gatewayStore: slowStore }).retrieveByUri(`ipfs://${CID_V0}`));
+    assert(slow?.message === 'IpfsGatewayContentStore: gateway at https://slow.example did not answer within 50 ms', `a gateway that doesn't answer in time says so plainly (got ${slow?.message})`);
     const missing = await rejection(resolver.retrieveByUri('ipfs://QmMissingMissingMissingMissingMissingMissingMi'));
     assert(missing && /404/.test(missing.message), `a CID no gateway returns rejects (got ${missing?.message})`);
     console.log('✓ the IPFS claim reader');
@@ -173,6 +180,9 @@ function publishBuild() {
     assert(down.outcome === Outcome.UNREACHABLE && down.message.startsWith('Arweave could not be reached') && down.message.includes('Failed to fetch'), `Arweave down (got ${down.message})`);
     const ipfsMissing = await visit('ipfs://QmMissingMissingMissingMissingMissingMissingMi').open();
     assert(ipfsMissing.outcome === Outcome.UNREACHABLE && ipfsMissing.message.startsWith('IPFS could not be reached'), `an IPFS claim no gateway returns (got ${ipfsMissing.message})`);
+    assert(ipfsMissing.message.includes('so try again') && ipfsMissing.message.includes('add another gateway in Network Settings') && !ipfsMissing.message.includes('..'),
+        `and it says what to do (got ${ipfsMissing.message})`);
+    assert(!down.message.includes('Network Settings'), 'Arweave\'s message carries no IPFS advice');
     assert((await visit('ftp://x').open()).outcome === Outcome.INVALID_LINK, 'a locator no link can name');
     console.log('✓ opening Arweave and IPFS links');
 }

@@ -44,6 +44,12 @@ const NOT_FOUND_HINTS = Object.freeze({
     arweave: 'or it isn\'t available yet: a new Arweave upload can take a few minutes to appear',
     ipfs: 'or no IPFS gateway can reach it right now'
 });
+// Said when a network can't be reached, per network.
+const UNREACHABLE_HINTS = Object.freeze({
+    steem: '',
+    arweave: '',
+    ipfs: ' A gateway can take a while to find content kept on someone\'s own IPFS node, so try again. If it keeps failing, add another gateway in Network Settings (for example https://ipfs.io or https://dweb.link) so there is one to fall back to.'
+});
 const CANDIDATE_STORAGE_ORDER = ['steem', 'ar', 'ipfs'];
 
 // `locator` is where the Signed Claim is stored; `retrieveClaim(locator)`
@@ -65,7 +71,7 @@ export async function openPublicationLink({
     try {
         material = await retrieveClaim(where.locator);
     } catch (error) {
-        return failure(Outcome.UNREACHABLE, `${network} could not be reached to read ${where.label}: ${error.message}`);
+        return failure(Outcome.UNREACHABLE, `${network} could not be reached to read ${where.label}: ${error.message}.${UNREACHABLE_HINTS[where.network]}`.replace(/\.\.(\s|$)/, '.$1'));
     }
     if (material === null || material === undefined) {
         return failure(Outcome.CLAIM_UNAVAILABLE, `${where.label} is not a Publication stored on ${network} by ForkBuild, ${NOT_FOUND_HINTS[where.network]}.`);
