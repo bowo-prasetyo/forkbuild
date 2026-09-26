@@ -11,6 +11,7 @@ import {
     steemDiscoveryAnnouncementPermlink,
     steemOperationsByteLength
 } from '../../core/SteemDiscoveryAnnouncement.js';
+import { steemPublicationViewUrl } from '../../core/ForkBuildAppLinks.js';
 import { steemContentManifestOperations, steemContentManifestPermlink, steemContentPartOperations, steemContentPartPermlink } from '../../core/SteemContentManifest.js';
 import { steemAnchorOperations } from '../../core/SteemAnchor.js';
 import { parseSteemTime } from '../../steem/SteemRpcClient.js';
@@ -124,15 +125,17 @@ export function createSteemAnnouncer({
 
     // Posts a content manifest: `data` is the encoded content when it is
     // inline, and ignored when `content.parts` lists parts (`{ length,
-    // sha256 }` each; their permlinks follow from the manifest's). Resolves
-    // like announce().
-    function postContent({ content, data }) {
+    // sha256 }` each; their permlinks follow from the manifest's).
+    // `linkToView` puts a link to the app's view of this post, as a
+    // Publication's Signed Claim, in the notice. Resolves like announce().
+    function postContent({ content, data, linkToView = false }) {
         return enqueue(() => postReply({
             family: STEEM_CONTENT_FAMILY,
             what: 'content',
             permlinkFor: (timeMs) => steemContentManifestPermlink(timeMs, randomSuffix()),
             operationsFor: ({ author, threadPermlink, permlink }) => steemContentManifestOperations({
                 author, threadAccount, threadPermlink, permlink, data, appVersion,
+                viewUrl: linkToView ? steemPublicationViewUrl(author, permlink) : null,
                 content: { ...content, parts: content.parts.map((part, index) => ({ ...part, permlink: steemContentPartPermlink(permlink, index) })) }
             })
         }));

@@ -682,6 +682,15 @@ Publication's title or any other text a user wrote. Resource Credits and the tra
 hide long comment bodies no longer do. Version 1 (the first release) put the encoded text in the body; readers still
 accept it (see "Reading").
 
+A Publication's Signed Claim (`put(bytes, { kind: 'publication' })`, which `ContentStorePublicationMaterialUploader`
+passes and other stores ignore) gets a notice with a link instead: "A build published with ForkBuild: [see it in
+3D](…). This reply holds its signed record for the ForkBuild app, and its payout is declined." The link is
+`https://bowo-prasetyo.github.io/forkbuild/#/view/steem/<author>/<permlink>`, naming the claim's own post
+(`core/ForkBuildAppLinks.js`, `FORKBUILD_APP_URL`). The Snapshot's posts keep the plain notice: they are posted first
+and can't know the claim's permlink, and only a signed Publication can be shown in World View. Since version 2 keeps
+the data out of the body, an author can edit the notice later (for example if the app moves) without touching what
+is stored.
+
 The encoded text is split into parts of at most 48 KiB each, measured as the UTF-8 length of the part escaped as a
 JSON string (`STEEM_CONTENT_PART_MAX_BYTES`), which is exactly its size inside `json_metadata`, leaving room within
 the 64 KiB transaction limit for the notice and the rest of the operations. When the whole encoded text fits in one
@@ -856,6 +865,26 @@ resolver's limit for material), and follows the Arweave resolver's contract: a m
 content manifest, changed parts, oversized content, or content that isn't a JSON object reads as unavailable; a Steem
 node that can't be reached rejects. It never checks the claim's signature; the material verifier does, as for every
 substrate.
+
+Opening the link (`application/steem/OpenSteemPublicationLink.js`, route `/view/steem/:author/:permlink`,
+`ui/views/SteemPublicationLinkView.js`), for a visitor who may have nothing of ForkBuild's on their device:
+
+1. The claim is read with the resolver above and turned into a `Publication`.
+2. It is verified with the same identity and signature verifier as World discovery; a claim that is unsigned or
+   whose signature fails is not shown.
+3. Its Snapshot is found by the Publication's content hash: already on the device; else at the claim's own locator
+   when that is a stored one; else among announced Snapshot candidates (the composite search over the local catalog,
+   Nostr, Arweave and Steem), Steem first, then Arweave, then IPFS. Each candidate is resolved through the
+   resolution store registry.
+4. The bytes are kept locally through `StoreSnapshotContentUseCase`, which refuses bytes that don't hash to the
+   Publication's content hash.
+5. The Publication is admitted as World discovery admits a verified one, to the in-memory discovery provider and the
+   durable World Encounter admission log, and the view opens `/world/<documentId>`. World View then loads it like
+   any discovered Publication, at its placement or deterministic grid position.
+
+Anything that stops it (a link naming no post, a post that isn't a claim, Steem unreachable, a failed signature, a
+build that isn't announced anywhere or doesn't match) is shown with a reason; "Try again" is offered when Steem or
+the search was unreachable or the build wasn't found. Nothing is admitted without its build.
 
 ## Proposed: Steem Anchoring
 

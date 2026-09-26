@@ -230,7 +230,11 @@ the detailed references; in short:
 ## World View
 
 World View (ui/views/WorldView.js, route `/world/:documentId`) walks
-through the shared world. WorldNavigationSession owns its runtime:
+through the shared world. A link on a Steem post (route
+`/view/steem/:author/:permlink`, ui/views/SteemPublicationLinkView.js)
+lands a first-time visitor here: it verifies the Publication stored on
+Steem, keeps its build locally and admits it as World discovery does
+(application/steem/OpenSteemPublicationLink.js). WorldNavigationSession owns its runtime:
 camera positioning (SpatialCameraController), which documents are
 loaded near the camera (through WorldLayoutProvider and the spatial
 index), loading and unloading them, the local avatar, and selection.

@@ -32,8 +32,10 @@ const ABOUT_URL = 'https://github.com/bowo-prasetyo/forkbuild/blob/main/docs/Pro
 const NOTICE_END = `It is read by the ForkBuild app, not meant to be read here, and its payout is declined. [What this is](${ABOUT_URL})`;
 
 // The body of a version 2 manifest or part: what the post is, for people.
-export function steemContentNotice({ parts = 0, part = null } = {}) {
+// `viewUrl`, for a Publication's Signed Claim, is where the app shows it.
+export function steemContentNotice({ parts = 0, part = null, viewUrl = null } = {}) {
     if (part) return `Part ${part.index + 1} of ${part.count} of data stored by ForkBuild. ${NOTICE_END}`;
+    if (viewUrl) return `A build published with ForkBuild: [see it in 3D](${viewUrl}). This reply holds its signed record for the ForkBuild app, and its payout is declined. [What this is](${ABOUT_URL})`;
     if (parts > 0) return `Data stored by ForkBuild, continued in ${parts} ${parts === 1 ? 'reply' : 'replies'} below. ${NOTICE_END}`;
     return `Data stored by ForkBuild. ${NOTICE_END}`;
 }
@@ -88,7 +90,7 @@ export function steemContentEncodedByteLength(text) {
 
 // The manifest and its options, in one transaction. `content` describes the
 // content; `data` is the encoded content when it is inline.
-export function steemContentManifestOperations({ author, threadAccount, threadPermlink, permlink, content, data, appVersion = null }) {
+export function steemContentManifestOperations({ author, threadAccount, threadPermlink, permlink, content, data, appVersion = null, viewUrl = null }) {
     if (!isSteemAccountName(author)) throw new TypeError(`not a Steem account name: ${author}`);
     if (!isSteemAccountName(threadAccount)) throw new TypeError(`not a Steem account name: ${threadAccount}`);
     if (!CONTENT_THREAD_PATTERN.test(threadPermlink ?? '')) throw new TypeError(`not a content thread permlink: ${threadPermlink}`);
@@ -99,6 +101,7 @@ export function steemContentManifestOperations({ author, threadAccount, threadPe
     if (inline && (typeof data !== 'string' || data.length !== content.encodedLength)) {
         throw new TypeError('an inline manifest\'s data must be the encoded content');
     }
+    if (viewUrl !== null && !/^https:\/\/[^\s()]+$/.test(viewUrl)) throw new TypeError(`not a link for a notice: ${viewUrl}`);
     const metadata = {
         ...(isNonEmptyString(appVersion) ? { app: `forkbuild/${appVersion}` } : {}),
         forkbuild: { version: STEEM_CONTENT_MANIFEST_VERSION, content: copyContent(content), ...(inline ? { data } : {}) }
@@ -110,7 +113,7 @@ export function steemContentManifestOperations({ author, threadAccount, threadPe
             author,
             permlink,
             title: '',
-            body: steemContentNotice({ parts: content.parts.length }),
+            body: steemContentNotice({ parts: content.parts.length, viewUrl }),
             json_metadata: JSON.stringify(metadata)
         }],
         steemDeclinedPayoutOptions(author, permlink)

@@ -1057,3 +1057,30 @@ Resource Credits and the transaction limit count `body` and `json_metadata` the 
   default API node, returned all 86,110 characters unchanged
   (`steem://forkbuild/forkbuild-c-mui7cxxx-aj71p6ic#17b12eb5`). Other API nodes have not been checked yet; the page
   can read that same test content from any node added later.
+
+## "See it in 3D": a link from a Steem post into World View (unnumbered, 2026-09-26)
+
+**The notice on a Signed Claim stored on Steem now links straight into World View, for anyone.** The notice's only
+link went to the project on GitHub; someone reading Steemit gains far more from walking around the build itself.
+
+- The link: `https://bowo-prasetyo.github.io/forkbuild/#/view/steem/<author>/<permlink>`, naming the claim's own
+  post (`core/ForkBuildAppLinks.js`). `SteemContentStore.put(bytes, { kind: 'publication' })` writes it into the
+  notice ("A build published with ForkBuild: [see it in 3D](…)"); `ContentStorePublicationMaterialUploader` passes
+  `kind`, which other stores ignore. Snapshot posts keep the plain notice: they're posted before the claim, so they
+  can't name it.
+- Why the claim and not the Snapshot: World View shows only Publications whose signature checks out (the rule World
+  discovery already follows), and a bare Snapshot carries no signature.
+- Opening it (`application/steem/OpenSteemPublicationLink.js`, `ui/views/SteemPublicationLinkView.js`): reads the
+  claim, verifies it with World discovery's verifier, finds the Snapshot by content hash (on the device, at the
+  claim's own locator, or among announced candidates on Steem, Arweave or Nostr), keeps it through
+  `StoreSnapshotContentUseCase`, admits the Publication to the discovery provider and the durable admission log,
+  and opens World View. Failures say why, and offer "Try again" when that could help. Wired in `ui/main.js` as
+  `openSteemPublicationLink`.
+- Checked in Chromium against the real app, with Playwright answering the app's Steem API calls from a fake chain
+  holding a real signed build: a fresh browser following the link lands in World View with the build drawn, and a
+  link to a missing post explains itself (also at phone width).
+- Tests: `tests/SteemPublicationLink.test.js` (the link and notices, opening a link through the real resolver,
+  verifier, Steem snapshot announcement, resolver and local store, loading the result with World View's
+  `LoadPublishedWorldSessionUseCase`, reopening without a search, and each reason a link doesn't open).
+- Not done: the World View panel calls any shown Publication "My Publication" and offers Unpublish and Distribute,
+  including one that came from someone else; that predates this change.

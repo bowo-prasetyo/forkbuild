@@ -4,6 +4,7 @@ import { ContentReference } from '../core/ContentReference.js';
 import { computeContentHash } from '../serializer/contentHash.js';
 import { STEEM_CONTENT_FAMILY, steemDiscoveryThreadPermlink } from '../core/SteemDiscoveryThread.js';
 import { STEEM_RC_REFUSAL } from '../core/SteemResourceCredits.js';
+import { steemPublicationViewUrl } from '../core/ForkBuildAppLinks.js';
 import {
     STEEM_CONTENT_MAX_PARTS,
     STEEM_CONTENT_PART_MAX_BYTES,
@@ -105,7 +106,9 @@ export class SteemContentStore extends ContentStore {
     // `onProgress` hears `{ phase, done, total, resumed, resourceCredits }`
     // for this upload: phase 'checking', then 'posting' after each post,
     // then 'stored' or 'failed'.
-    async put(bytes, { onProgress = null } = {}) {
+    // `kind: 'publication'` marks a Signed Claim, whose notice then links to
+    // the app's view of it; anything else is stored with the plain notice.
+    async put(bytes, { onProgress = null, kind = null } = {}) {
         if (!this._announcer) throw new Error('Storing content on Steem is not available.');
         const report = (state) => {
             const frozen = Object.freeze({ ...state });
@@ -120,6 +123,7 @@ export class SteemContentStore extends ContentStore {
         };
         const text = typeof bytes === 'string' ? bytes : new TextDecoder().decode(bytes);
         const plan = await planSteemContentUpload(text);
+        const linkToView = kind === 'publication' && plan.inline;
         const author = typeof this._announcer.currentAccount === 'function' ? this._announcer.currentAccount() : null;
         const reference = new ContentReference({
             hash: plan.contentHash,
@@ -139,7 +143,8 @@ export class SteemContentStore extends ContentStore {
             const transactions = [
                 ...(resume ? [] : [steemContentManifestOperations({
                     author, threadAccount: this._threadAccounts[0], threadPermlink: ESTIMATE_THREAD_PERMLINK, permlink: ESTIMATE_MANIFEST_PERMLINK,
-                    content: manifestContent(plan, ESTIMATE_MANIFEST_PERMLINK), data: plan.inline ? plan.encoded : undefined
+                    content: manifestContent(plan, ESTIMATE_MANIFEST_PERMLINK), data: plan.inline ? plan.encoded : undefined,
+                    viewUrl: linkToView ? steemPublicationViewUrl(author, ESTIMATE_MANIFEST_PERMLINK) : null
                 })]),
                 ...pendingParts.map(({ index, edit }) => steemContentPartOperations({
                     author, manifestPermlink: ESTIMATE_MANIFEST_PERMLINK, index, count: plan.slices.length, data: plan.slices[index], withOptions: !edit
@@ -164,7 +169,8 @@ export class SteemContentStore extends ContentStore {
             if (!resume) {
                 const manifest = await this._announcer.postContent({
                     content: { ...manifestContent(plan, null), parts: plan.parts },
-                    data: plan.inline ? plan.encoded : undefined
+                    data: plan.inline ? plan.encoded : undefined,
+                    linkToView
                 });
                 manifestAuthor = manifest.author;
                 manifestPermlink = manifest.permlink;
