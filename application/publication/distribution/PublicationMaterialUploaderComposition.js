@@ -110,5 +110,10 @@ export function composePublicationMaterialUploader({
             })
         });
     }
+    if (materialStorage === 'steem') {
+        // Steem storage holds Snapshots only so far (docs/Protocol.md,
+        // "Proposed: Steem Content Storage", "Scope and order of work").
+        throw new Error('Steem storage holds Snapshots only for now. Choose Arweave or IPFS storage to distribute the Signed Claim.');
+    }
     throw new Error(`PublicationMaterialUploaderComposition: unrecognized materialStorage "${materialStorage}" — expected "ar", "ipfs", or "remote-pinning"`);
 }

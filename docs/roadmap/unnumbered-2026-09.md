@@ -856,3 +856,31 @@ the 3-second reply interval make it suitable for small builds only.
   stops at the manifest's `size`, so a small upload can't expand without bound.
 - Suggested order: the inline case first (one approval), then parts with progress and resuming, then an RC estimate
   and measured compression ratios.
+
+## Storing small Snapshots on Steem (unnumbered, 2026-09-26)
+
+**The inline case of Steem content storage: a Snapshot stored in one Steem post, with one Keychain approval.** This
+is the first step of `docs/Protocol.md`, "Proposed: Steem Content Storage". Parts, progress and resuming are not
+built yet.
+
+- `core/SteemContentManifest.js` builds and reads a manifest (a reply to `@forkbuild/forkbuild-content-<YYYY-MM>`
+  whose body is the encoded content) and the `steem://<author>/<permlink>` locator. `content` joins
+  `STEEM_DISCOVERY_FAMILIES`, so the operator page creates content threads too; their title and body say that
+  replies store content.
+- `content/SteemContentStore.js` (`storage: 'steem'`) encodes with `utf8` or `gzip-base64`, whichever is shorter
+  once escaped for the operations, and refuses anything over 48 KiB with `SteemContentTooLargeError` before posting.
+  Reading checks the manifest's thread, content hash and body length, refuses a manifest with parts, and stops
+  decompressing past the declared size. The resolver still verifies the content hash.
+- `application/steem/SteemAnnouncer.js` gains `postContent()`, sharing the announcement queue and reply interval, so
+  Distribute posts the content, waits 4.5 seconds, then posts the announcement.
+- Wiring: `composeSteemRuntime()` builds the store, `ui/main.js` registers it in the Snapshot creation and
+  resolution registries, and `'steem'` joins `SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES`. The Distribute dialogs
+  label it "Steem (small Snapshots only)", and the Publications page and the Content Provider page offer "Steem". Signed Claim material
+  on Steem storage is refused with a reason, since the dialogs share one Storage choice.
+- Measured: gzip then base64 shrinks typical builds only about 1.6 times, because brick UUIDs don't compress. One
+  post holds about 2,500 bricks; the whole village structure library is 6.5 KB.
+- Tests: `tests/SteemContentStore.test.js` (locators, the content thread, the manifest format, encoding and a bounded
+  decode, a round trip through the real announcer, refusals when storing and reading, and a Distribute to Steem
+  storage and a Steem announcement resolved through `DecentralizedSnapshotResolver`).
+- Not done: parts, progress and resuming; the RC estimate; content threads have not been created on the chain yet,
+  so storing fails with a clear message until the operator page creates them.

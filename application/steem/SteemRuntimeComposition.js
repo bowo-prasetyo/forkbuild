@@ -9,9 +9,11 @@ import { SteemPublicationDiscoveryPublisher } from './SteemPublicationDiscoveryP
 import { SteemSnapshotDiscoveryPublisher } from './SteemSnapshotDiscoveryPublisher.js';
 import { SteemPlaceNamingDiscoveryPublisher } from './SteemPlaceNamingDiscoveryPublisher.js';
 import { PublicationCommentarySteemDistribution } from './PublicationCommentarySteemDistribution.js';
+import { SteemContentStore } from '../../content/SteemContentStore.js';
 
-// One thread reader and one announcer, and each family's reader and
-// publisher over them, from the saved Steem settings (or the defaults).
+// One thread reader and one announcer, each family's reader and publisher
+// over them, and the Steem content store, from the saved Steem settings (or
+// the defaults).
 // Reading needs no Steem account; announcing asks `getAccount()` and
 // `getBroadcaster()` at the moment it announces, so a Keychain that
 // appears after load, or an account set later, is picked up.
@@ -41,6 +43,7 @@ export function composeSteemRuntime({
         publicationDiscoveryPublisher: new SteemPublicationDiscoveryPublisher({ announcer }),
         snapshotDiscoveryPublisher: new SteemSnapshotDiscoveryPublisher({ announcer }),
         placeNamingDiscoveryPublisher: new SteemPlaceNamingDiscoveryPublisher({ announcer }),
-        commentaryDistribution: new PublicationCommentarySteemDistribution({ reader, announcer })
+        commentaryDistribution: new PublicationCommentarySteemDistribution({ reader, announcer }),
+        contentStore: new SteemContentStore({ rpc, announcer, threadAccounts: [...configuration.threadAccounts] })
     });
 }

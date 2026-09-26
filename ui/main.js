@@ -320,6 +320,12 @@ const {
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
     ipfsNodeConfigurationStore
 });
+// Small Snapshots stored in a Steem post, created and resolved like the
+// Arweave store (docs/Protocol.md, "Proposed: Steem Content Storage").
+if (steemRuntime) {
+    snapshotPlacementStoreRegistry.register(steemRuntime.contentStore);
+    publicationSnapshotPlacementResolutionStoreRegistry.register(steemRuntime.contentStore);
+}
 app.provide('worldDiscoverySourceRegistry', worldDiscoveryRuntime.registry);
 app.provide('arweaveGatewayConfigurationStore', arweaveGatewayConfigurationStore);
 app.provide('setArweaveGatewayConfigurationUseCase', setArweaveGatewayConfigurationUseCase);

@@ -22,14 +22,16 @@ function throwsMatching(fn, pattern) {
     return false;
 }
 
-// Only IPFS and Arweave are eligible, in that order, and only when registered.
+// Only IPFS, Arweave and Steem are eligible, in that order, and only when
+// registered.
 {
-    assert(JSON.stringify(SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES) === JSON.stringify(['ipfs', 'ar']), 'IPFS and Arweave are the eligible backends');
+    assert(JSON.stringify(SNAPSHOT_DISTRIBUTION_ELIGIBLE_STORAGE_TYPES) === JSON.stringify(['ipfs', 'ar', 'steem']), 'IPFS, Arweave and Steem are the eligible backends');
     const ipfs = { name: 'ipfs-store' };
     const ar = { name: 'ar-store' };
-    const both = registry({ local: {}, ar, ipfs });
-    assert(JSON.stringify(availableSnapshotDistributionStorageTypes(both)) === JSON.stringify(['ipfs', 'ar']),
-        'with both registered, both are offered in eligibility order, and a local store is never offered');
+    const steem = { name: 'steem-store' };
+    const all = registry({ steem, local: {}, ar, ipfs });
+    assert(JSON.stringify(availableSnapshotDistributionStorageTypes(all)) === JSON.stringify(['ipfs', 'ar', 'steem']),
+        'with all registered, all are offered in eligibility order, and a local store is never offered');
     assert(JSON.stringify(availableSnapshotDistributionStorageTypes(registry({ ar }))) === JSON.stringify(['ar']),
         'an unregistered backend is not offered');
     assert(availableSnapshotDistributionStorageTypes(null).length === 0 && availableSnapshotDistributionStorageTypes({}).length === 0,

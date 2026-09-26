@@ -619,7 +619,12 @@ separate substrate choice, never merged with Steem results.
 
 ## Proposed: Steem Content Storage
 
-**Status: proposed, not built.**
+**Status: the inline case is built, Experimental; parts are not built yet.** A manifest that lists parts is refused
+when read ("stored in parts, which this version of ForkBuild can't read yet"), and content that doesn't fit one post
+is refused when stored. Code: `core/SteemContentManifest.js` (the format and the locator),
+`content/SteemContentStore.js` (encoding, `put()` and `get()`), and `postContent()` in
+`application/steem/SteemAnnouncer.js`; `composeSteemRuntime()` builds the store and `ui/main.js` registers it for
+Snapshot storage and resolution.
 
 Steem would be a third Content substrate next to IPFS and Arweave: a `ContentStore` whose `storage` is `'steem'`,
 holding a Snapshot's bytes in Steem comments. Storing content is a separate role from announcing it. A Snapshot
@@ -637,8 +642,10 @@ Arweave (see "Limits" below).
 
 ### Content threads
 
-Content is kept out of Steem feeds and away from the discovery threads by a fifth thread family, created by the
-thread account with the same operator page, post shape and rules as the other four:
+Content is kept out of Steem feeds and away from the discovery threads by a fifth thread family, `content` in
+`STEEM_DISCOVERY_FAMILIES` (`core/SteemDiscoveryThread.js`), created by the thread account with the same operator
+page, post shape and rules as the other four. Its title and body say that replies store content rather than
+announce it:
 
     permlink:  forkbuild-content-<YYYY-MM>          (UTC month)
 
@@ -657,14 +664,15 @@ Content is stored as one **manifest**, a direct reply to the current month's con
 content does not fit in the manifest, one or more **parts**, each a direct reply to the manifest. Every transaction
 is a `comment` and a `comment_options` that declines payout, exactly as for announcements (see "Announcing" above).
 
-Encoding. The uploader encodes the content in one of two ways and uses whichever is shorter:
+Encoding. The uploader encodes the content in one of two ways and uses whichever is shorter once escaped as a JSON
+string, which is how it travels in the operations:
 
 - `utf8`: the content text as it is (canonical JSON for a Snapshot);
 - `gzip-base64`: the content's UTF-8 bytes compressed with gzip (the browser's `CompressionStream`), then base64.
 
 Neither encoding can start with `@@ `, which API nodes read as an edit patch rather than a body. The encoded text is
-split into parts of at most 48 KiB each, leaving room within the 64 KiB transaction limit for the rest of the
-operations. When the whole encoded text fits in one part, it goes into the manifest's own body and there are no
+split into parts of at most 48 KiB each, measured as the UTF-8 length of the part escaped as a JSON string
+(`STEEM_CONTENT_PART_MAX_BYTES`), leaving room within the 64 KiB transaction limit for the rest of the operations. When the whole encoded text fits in one part, it goes into the manifest's own body and there are no
 parts (the "inline" case: one transaction, one approval).
 
 A manifest:
@@ -758,8 +766,14 @@ node outage doesn't lose a copy already loaded.
 
 ### Limits
 
-- A part is at most 48 KiB of encoded text, and the operations of one transaction are checked against the 64 KiB
-  limit before signing, as for announcements.
+- A part is at most 48 KiB of encoded text, escaped as above, and the operations of one transaction are checked
+  against the 64 KiB limit before signing, as for announcements. With the inline case only, that is the whole limit:
+  `put()` throws `SteemContentTooLargeError` (a `ContentTooLargeError`) pointing to IPFS or Arweave before anything
+  is posted.
+- Measured compression (gzip, then base64) is about 1.6 times on typical builds, because every brick's UUID is
+  random and doesn't compress: the whole village structure library (315 bricks) encodes to 6.5 KB, and a plain
+  2,000-brick block to 35 KB. One post therefore holds a build of about 2,500 bricks. Builds with short brick ids
+  compress much better.
 - An upload is at most 20 parts (960 KiB of encoded text, about 720 KiB compressed). `maxContentBytes` can't be
   known before compressing, so the store compresses first and throws `ContentTooLargeError` pointing to IPFS or
   Arweave when the encoded text would need more parts.
@@ -771,12 +785,16 @@ The first version stores Snapshot bytes only. Publication material (the signed c
 places) could use the same format later. Suggested order:
 
 1. The inline case: a manifest with no parts, the `'steem'` store, and the content thread family. This covers small
-   builds with one approval.
+   builds with one approval. **Built.**
 2. Parts, the progress display, and resuming an incomplete upload.
-3. The RC estimate, and measuring real compression ratios on typical builds to confirm the part size and part limit.
+3. The RC estimate, and measuring compression ratios on more real builds to confirm the part size and part limit.
 
-Where it's chosen: the Content Provider settings page and the content choice in the Distribute dialogs would offer
-Steem next to IPFS and Arweave. It ships as Experimental, like the Steem announcement substrate.
+Where it's chosen: the Storage choice in the Editor and World View Distribute dialogs offers **Steem (small
+Snapshots only)** next to IPFS and Arweave; the Publications page's Content choice and the Content Provider settings
+page offer **Steem**. The Distribute dialogs share one Storage choice between the Snapshot and the Signed Claim, and
+Steem storage holds Snapshots only: a Signed Claim distributed with Steem chosen is refused with "Steem storage
+holds Snapshots only for now. Choose Arweave or IPFS storage to distribute the Signed Claim.", while the Snapshot is
+still stored. It ships as Experimental, like the Steem announcement substrate.
 
 ## Vehicles, animals and inventory
 

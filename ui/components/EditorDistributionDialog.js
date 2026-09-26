@@ -1,5 +1,13 @@
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 
+// Steem holds small Snapshots only (docs/Protocol.md, "Proposed: Steem
+// Content Storage").
+const STORAGE_OPTION_LABELS = {
+    ipfs: 'IPFS (Local Kubo)',
+    ar: 'Arweave',
+    steem: 'Steem (small Snapshots only)'
+};
+
 // 0.9.672 — Editor View Distribution Dialog.
 //
 // UX-level cleanup only — the direct sibling of
@@ -110,7 +118,7 @@ export default {
             return sortOptionsByLabel([
                 ...registryStorages.map((storage) => ({
                     value: storage,
-                    label: storage === 'ipfs' ? 'IPFS (Local Kubo)' : 'Arweave'
+                    label: STORAGE_OPTION_LABELS[storage] || 'Arweave'
                 })),
                 { value: 'remote-pinning', label: 'IPFS (Remote Pinning)' }
             ]);
