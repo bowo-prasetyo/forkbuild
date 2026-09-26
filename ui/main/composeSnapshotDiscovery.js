@@ -9,6 +9,7 @@ import { composeSnapshotCandidateDiscoveryRuntime } from '../../application/snap
 import { ArweaveSnapshotDiscoveryQueryService } from '../../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
 import { NostrPlaceNamingDiscoverySource } from '../../application/placeNaming/NostrPlaceNamingDiscoverySource.js';
 import { NostrMultiRelayPlaceNamingDiscoverySource } from '../../application/placeNaming/NostrMultiRelayPlaceNamingDiscoverySource.js';
+import { ArweavePlaceNamingDiscoverySource } from '../../application/placeNaming/ArweavePlaceNamingDiscoverySource.js';
 import { composePlaceNamingDiscoveryRuntime } from '../../application/placeNaming/PlaceNamingDiscoveryRuntimeComposition.js';
 import { executeResolveSelectedSnapshotCommand } from '../../application/snapshot/ResolveSelectedSnapshotCommand.js';
 import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
@@ -94,14 +95,17 @@ export function composeSnapshotDiscovery({
     const worldSnapshotDiscoveryMonitor = new WorldSnapshotDiscoveryMonitor({ discoverSnapshotCandidatesCommand });
 
     // Only the transport half: WorldView composes the rest, since only its session
-    // knows the World layout. With no relay client, `sources` is an empty but
-    // usable roster rather than a throw.
+    // knows the World layout. Every substrate a claim can be announced on is
+    // read, whatever the saved announcement default is. Arweave is a read-only
+    // GraphQL query, so it needs no wallet. With no relay client, Nostr is simply
+    // left out rather than throwing.
     const placeNamingDiscoverySources = [
         ...(nostrRelayQueryClient
             ? [resolvedNostrRelayUrls.length > 1
                 ? new NostrMultiRelayPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrls: resolvedNostrRelayUrls })
                 : new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrls[0] })]
             : []),
+        new ArweavePlaceNamingDiscoverySource({ gatewayUrl: resolvedArweaveGatewayUrl }),
         ...(steemRuntime ? [steemRuntime.placeNamingDiscoverySource] : [])
     ];
     const { queryService: placeNamingDiscoveryQueryService } = composePlaceNamingDiscoveryRuntime({ sources: placeNamingDiscoverySources });

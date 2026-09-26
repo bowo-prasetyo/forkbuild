@@ -1964,7 +1964,7 @@ network-related settings page ForkBuild has:
 | Page | Route | What it sets |
 |---|---|---|
 | **Content Provider** | `/settings/content-provider` | Where **Use Preferred Provider** places new Content, plus the IPFS node new IPFS placements go to — see [Using a preferred provider](#using-a-preferred-provider) above |
-| **Announcement / Discovery Provider** | `/settings/announcement-discovery-provider` | The default substrate — Nostr, Arweave or Steem — for announcing and discovering — see [below](#announcement--discovery-provider) |
+| **Announcement / Discovery Provider** | `/settings/announcement-discovery-provider` | The default substrate — Nostr, Arweave or Steem — for announcing (discovery always searches all three) — see [below](#announcement--discovery-provider) |
 | **Proof / Anchoring Provider** | `/settings/anchor-provider` | Where the Publication Center's anchoring **Use Preferred Provider** button anchors — see [Anchoring on a preferred provider](#anchoring-on-a-preferred-provider) above |
 | **Arweave Gateway** | `/settings/arweave-gateway` | Gateway(s) for reading Arweave content — [below](#arweave-gateway) |
 | **IPFS Gateway** | `/settings/ipfs-gateway` | Gateway(s) for reading IPFS content — [below](#ipfs-gateway) |
@@ -2006,9 +2006,10 @@ can't substitute different bytes.
 Open **Announcement / Discovery Provider**
 (`/settings/announcement-discovery-provider`) to choose, with radio
 buttons, the default substrate — **Arweave**, **Nostr** or **Steem**
-(experimental, [below](#steem)) — used to
-announce and discover Publications, Snapshots, Place Naming claims, and
-Commentary. It's only a default: every control that offers its own
+(experimental, [below](#steem)) — your Publications, Snapshots, Place
+Naming claims, and Commentary are announced on. It only affects
+announcing: finding other people's content always searches Nostr, Arweave
+and Steem together, whichever one you pick here. It's only a default: every control that offers its own
 explicit choice (the Repository's per-card and per-row Distribution
 picker, the network picker next to **Post Comment**, the Distribute
 dialogs) starts out on the provider you saved here, and you can still

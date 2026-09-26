@@ -23,7 +23,9 @@ import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 // "Announcement / Discovery substrate" control, and addPublicationCommentaryCommand's
 // own input.discoveryProvider) still wins for that one call — this
 // preference is read only as the DEFAULT when no explicit per-call choice
-// is made.
+// is made. It only picks where to ANNOUNCE: discovery reads every substrate
+// regardless (see ui/main/composeSnapshotDiscovery.js, ui/main/
+// composeWorldDiscovery.js and ui/main.js's own refreshPublicationCommentaryCommand).
 //
 // UNLIKE CONTENT, THE PROVIDER LIST IS HARDCODED HERE, NOT READ FROM A
 // REGISTRY. Announcement & Discovery has no keyed registry the way
@@ -63,7 +65,10 @@ export default {
         <section class="announcement-discovery-provider-settings-view">
             <h1>Announcement / Discovery Provider</h1>
             <p class="form-hint form-hint--neutral">
-                Choose the default decentralized substrate — Nostr, Arweave or Steem — used to announce and discover Publications, Snapshots, Place Naming claims, and Commentary. A page or control offering its own explicit choice still overrides this default for that one action.
+                Choose the default decentralized substrate — Nostr, Arweave or Steem — your Publications, Snapshots, Place Naming claims, and Commentary are announced on. A page or control offering its own explicit choice still overrides this default for that one action.
+            </p>
+            <p class="form-hint form-hint--neutral">
+                This choice never narrows discovery: finding other people's content always searches Nostr, Arweave and Steem together.
             </p>
             <p class="form-hint form-hint--neutral">
                 Saving here takes effect the next time this app loads — it never changes an announcement already in flight.
