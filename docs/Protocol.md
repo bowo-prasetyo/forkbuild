@@ -545,6 +545,10 @@ its options:
   and Keychain are looked up each time something is announced, so an account set later, or an extension that
   injects itself after load, is picked up without a reload.
 - Announcements go to the first configured thread account's threads.
+- The chain accepts one comment per account every 3 seconds (`STEEM_MIN_REPLY_INTERVAL_HF20`), and Distribute posts
+  a Snapshot and a Publication back to back. The announcer queues announcements and, before each broadcast, waits
+  until 4.5 seconds have passed since its own last post and since the account's `last_post` on the chain (posts from
+  other devices). If the chain still refuses for that reason, it waits once more and retries once.
 - The announcer checks the operations' JSON size, an upper bound on the signed transaction's binary size, against
   the chain's 64 KiB limit before broadcasting, and refuses an oversized one rather than truncating the envelope.
 - Before the first announcement to a thread, the announcer reads it with `get_content`. If the current month's

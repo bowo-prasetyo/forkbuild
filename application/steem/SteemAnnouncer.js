@@ -10,13 +10,22 @@ import {
     steemDiscoveryAnnouncementPermlink,
     steemOperationsByteLength
 } from '../../core/SteemDiscoveryAnnouncement.js';
+import { parseSteemTime } from '../../steem/SteemRpcClient.js';
 
 // Posts one family's envelope as a reply to the current month's discovery
 // thread, signed through Steem Keychain (docs/Protocol.md, "Proposed: Steem
 // Announcement Substrate", "Announcing"). Every refusal is an Error with a
-// message a person can act on; nothing is retried or sent elsewhere.
+// message a person can act on; nothing is sent elsewhere.
 
 const SUFFIX_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789';
+// The chain accepts one comment per account in this interval
+// (STEEM_MIN_REPLY_INTERVAL_HF20). Distribute posts a Snapshot and a
+// Publication back to back, so announcements wait their turn.
+export const STEEM_MIN_REPLY_INTERVAL_MS = 3000;
+// Node and local clocks differ, and a Keychain approval can land a post
+// later than we saw it return.
+const DEFAULT_REPLY_MARGIN_MS = 1500;
+const REPLY_INTERVAL_REFUSAL = /STEEM_MIN_REPLY_INTERVAL|comment once every/i;
 
 export class SteemAnnouncementError extends Error {
     constructor(message) {
@@ -32,6 +41,9 @@ export function createSteemAnnouncer({
     threadAccount = STEEM_DISCOVERY_THREAD_ACCOUNT,
     appVersion = null,
     now = () => new Date(),
+    clock = () => Date.now(),
+    sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    replyMarginMs = DEFAULT_REPLY_MARGIN_MS,
     randomSuffix = defaultRandomSuffix
 } = {}) {
     if (!rpc || typeof rpc.getContent !== 'function') throw new TypeError('a Steem RPC client is required');
@@ -40,6 +52,41 @@ export function createSteemAnnouncer({
     // A thread, once seen open, stays open for the session: only its owner
     // can close it, and the chain would then refuse the reply anyway.
     const openThreads = new Set();
+    // One announcement at a time, whoever calls: the interval is per account.
+    let queue = Promise.resolve();
+    let lastBroadcastAt = -Infinity;
+
+    // Waits until both this announcer's last post and the account's last
+    // post on the chain (from any device) are an interval old. A node that
+    // can't say is no reason to stop; the chain has the final word.
+    async function waitForReplyInterval(author) {
+        let chainLastPost = -Infinity;
+        if (typeof rpc.getAccount === 'function') {
+            try {
+                chainLastPost = parseSteemTime((await rpc.getAccount(author))?.last_post);
+            } catch {
+                // Fall back to this announcer's own record.
+            }
+        }
+        const gap = STEEM_MIN_REPLY_INTERVAL_MS + replyMarginMs;
+        const earliest = Math.max(lastBroadcastAt + gap, Number.isFinite(chainLastPost) ? chainLastPost + gap : -Infinity);
+        const wait = earliest - clock();
+        if (wait > 0) await sleep(wait);
+    }
+
+    async function broadcastPacing(broadcaster, author, operations) {
+        await waitForReplyInterval(author);
+        try {
+            return await broadcaster.broadcast(author, operations);
+        } catch (error) {
+            // Clocks can still disagree; wait a full interval and try once more.
+            if (!REPLY_INTERVAL_REFUSAL.test(error?.message ?? '')) throw error;
+            await sleep(STEEM_MIN_REPLY_INTERVAL_MS + replyMarginMs);
+            return await broadcaster.broadcast(author, operations);
+        } finally {
+            lastBroadcastAt = clock();
+        }
+    }
 
     async function requireOpenThread(threadPermlink) {
         if (openThreads.has(threadPermlink)) return;
@@ -60,7 +107,13 @@ export function createSteemAnnouncer({
 
     // Resolves to what was broadcast. "accepted" means an API node took the
     // transaction; it is not yet irreversible.
-    async function announce(family, envelope) {
+    function announce(family, envelope) {
+        const run = queue.then(() => announceNow(family, envelope));
+        queue = run.catch(() => {});
+        return run;
+    }
+
+    async function announceNow(family, envelope) {
         const author = getAccount();
         if (!isSteemAccountName(author)) {
             throw new SteemAnnouncementError('Set your Steem account in Network Settings → Steem before announcing on Steem.');
@@ -80,7 +133,7 @@ export function createSteemAnnouncer({
             throw new SteemAnnouncementError(`This announcement is ${size} bytes, over Steem's ${STEEM_MAX_TRANSACTION_BYTES}-byte transaction limit.`);
         }
 
-        const { transactionId } = await broadcaster.broadcast(author, operations);
+        const { transactionId } = await broadcastPacing(broadcaster, author, operations);
         return Object.freeze({
             status: 'accepted',
             author,
