@@ -822,3 +822,17 @@ substrate: Steem is the third choice, next to Nostr and Arweave, wherever an ann
   fake Keychain to `@forkbuild/forkbuild-snapshot-2026-09` with payout declined.
 - Not done: tracking when an announcement becomes irreversible; nothing has been announced on the real chain from
   this environment, which can't reach a Steem node.
+
+## Steem announcements wait out the reply interval (unnumbered, 2026-09-26)
+
+**The first real Distribute to Steem posted the Snapshot, then the chain refused the Publication**: "You may only
+comment once every 3 seconds" (`STEEM_MIN_REPLY_INTERVAL_HF20`). Distribute sends the two back to back from the same
+account. The same run showed Steem Keychain works inside the app despite its content security policy.
+
+- `application/steem/SteemAnnouncer.js` queues announcements, so concurrent calls go one at a time and a failed one
+  never blocks the next. Before each broadcast it waits until 4.5 seconds (the interval plus a margin for clock
+  differences) have passed since its own last post and since the account's `last_post` on the chain; if the chain
+  still refuses for the interval, it waits once more and retries once.
+- Tests: `tests/SteemAnnouncer.test.js` runs on a fake clock and checks the queue order and gap, waiting out a recent
+  post from another device, not waiting for a quiet account, one retry after a refusal and no second, and a failed
+  announcement not blocking the queue.

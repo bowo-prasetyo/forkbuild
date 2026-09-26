@@ -1,4 +1,4 @@
-import { createSteemAnnouncer, SteemAnnouncementError } from '../application/steem/SteemAnnouncer.js';
+import { createSteemAnnouncer, SteemAnnouncementError, STEEM_MIN_REPLY_INTERVAL_MS } from '../application/steem/SteemAnnouncer.js';
 import { SteemPublicationDiscoveryPublisher } from '../application/steem/SteemPublicationDiscoveryPublisher.js';
 import { SteemSnapshotDiscoveryPublisher } from '../application/steem/SteemSnapshotDiscoveryPublisher.js';
 import { SteemPlaceNamingDiscoveryPublisher } from '../application/steem/SteemPlaceNamingDiscoveryPublisher.js';
@@ -46,7 +46,18 @@ function fakeChain({ threads = ['forkbuild-publication-2026-10', 'forkbuild-snap
     return { rpc, broadcaster, broadcasts, contentCalls };
 }
 
-function announcerFor(chain, { account = 'alice', broadcaster = chain.broadcaster } = {}) {
+// A fake clock: sleeping moves it forward and is recorded.
+function fakeClock() {
+    const clock = { time: NOW.getTime(), sleeps: [] };
+    clock.now = () => clock.time;
+    clock.sleep = async (ms) => {
+        clock.sleeps.push(ms);
+        clock.time += ms;
+    };
+    return clock;
+}
+
+function announcerFor(chain, { account = 'alice', broadcaster = chain.broadcaster, clock = fakeClock() } = {}) {
     let n = 0;
     return createSteemAnnouncer({
         rpc: chain.rpc,
@@ -54,6 +65,8 @@ function announcerFor(chain, { account = 'alice', broadcaster = chain.broadcaste
         getAccount: () => account,
         appVersion: '1.0.0',
         now: () => NOW,
+        clock: clock.now,
+        sleep: clock.sleep,
         randomSuffix: () => `abcdefg${n++}`
     });
 }
@@ -96,6 +109,49 @@ async function rejection(promise) {
     await announcer.announce('snapshot', { a: 2 });
     assert(chain.contentCalls.filter((p) => p === 'forkbuild-snapshot-2026-10').length === 2, 'an open thread is checked once per announcer');
     console.log('✓ announcing to the current thread');
+}
+
+// Announcements wait out the chain's per-account reply interval.
+{
+    const chain = fakeChain();
+    const clock = fakeClock();
+    const broadcastTimes = [];
+    const timed = { broadcast: async (account, operations) => { broadcastTimes.push(clock.time); return chain.broadcaster.broadcast(account, operations); } };
+    const announcer = announcerFor(chain, { broadcaster: timed, clock });
+    const [first, second] = await Promise.all([announcer.announce('snapshot', { n: 1 }), announcer.announce('publication', { n: 2 })]);
+    assert(first.threadPermlink === 'forkbuild-snapshot-2026-10' && second.threadPermlink === 'forkbuild-publication-2026-10', 'both are announced, in the order asked');
+    assert(broadcastTimes[1] - broadcastTimes[0] >= STEEM_MIN_REPLY_INTERVAL_MS, `the second waits at least the reply interval (gap ${broadcastTimes[1] - broadcastTimes[0]} ms)`);
+
+    const recent = fakeChain();
+    const recentClock = fakeClock();
+    recent.rpc.getAccount = async () => ({ name: 'alice', last_post: new Date(recentClock.time - 1000).toISOString().slice(0, 19) });
+    await announcerFor(recent, { clock: recentClock }).announce('snapshot', {});
+    assert(recentClock.sleeps.length === 1 && recentClock.sleeps[0] >= 2000, `a post made a second ago elsewhere is waited out (slept ${recentClock.sleeps})`);
+
+    const fresh = fakeChain();
+    const freshClock = fakeClock();
+    await announcerFor(fresh, { clock: freshClock }).announce('snapshot', {});
+    assert(freshClock.sleeps.length === 0, 'the first announcement of a quiet account does not wait');
+
+    const refusing = fakeChain();
+    let attempts = 0;
+    const onceRefused = { broadcast: async (account, operations) => {
+        attempts += 1;
+        if (attempts === 1) throw new Error('(now - auth.last_post) >= STEEM_MIN_REPLY_INTERVAL_HF20: You may only comment once every 3 seconds.');
+        return refusing.broadcaster.broadcast(account, operations);
+    } };
+    const retried = await announcerFor(refusing, { broadcaster: onceRefused }).announce('snapshot', {});
+    assert(attempts === 2 && retried.status === 'accepted', 'a reply-interval refusal is retried once after waiting');
+
+    let tries = 0;
+    const alwaysRefused = { broadcast: async () => { tries += 1; throw new Error('You may only comment once every 3 seconds.'); } };
+    const refused = await rejection(announcerFor(fakeChain(), { broadcaster: alwaysRefused }).announce('snapshot', {}));
+    assert(tries === 2 && refused?.message.includes('once every 3 seconds'), 'a second refusal is reported, not retried again');
+
+    const failing = announcerFor(fakeChain(), { broadcaster: { broadcast: async () => { throw new Error('Request was canceled by the user.'); } } });
+    const [a, b] = await Promise.allSettled([failing.announce('snapshot', {}), failing.announce('publication', {})]);
+    assert(a.status === 'rejected' && b.status === 'rejected' && b.reason.message === 'Request was canceled by the user.', 'a failed announcement does not block the next one in the queue');
+    console.log('✓ the reply interval is respected');
 }
 
 // Every refusal says what to do.
