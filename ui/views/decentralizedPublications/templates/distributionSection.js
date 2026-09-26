@@ -58,6 +58,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                             <dd>{{ observation.state }}</dd>
                                         </div>
                                     </dl>
+                                    <PublicationShareLink :publication-id="entry.publication.id" :title="entry.publication.title" />
                                 </div>
 
                                 <div v-if="snapshotDistributionCommand" class="evidence-anchor-card">

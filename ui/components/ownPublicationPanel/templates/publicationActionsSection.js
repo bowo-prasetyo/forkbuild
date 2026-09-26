@@ -22,11 +22,16 @@ export const publicationActionsSectionTemplate = `<!--
                 @click="distributionDialogOpen = true"
             >Distribute</button>
 
+            <!-- The link friends can open on any device, once the Signed Claim is on Steem. -->
+            <PublicationShareLink v-if="publication" :publication-id="publication.id" :title="publication.title" />
+
             <WorldDistributionDialog
                 v-if="distributionDialogOpen"
                 :can-distribute-publication="Boolean(publicationDistributionCommand)"
                 :can-distribute-snapshot="Boolean(snapshotDistributionCommand)"
                 :has-subject="Boolean(publication)"
+                :publication-id="publication ? publication.id : null"
+                :publication-title="publication ? publication.title : null"
                 :distribution-executing="publicationDistributionExecuting"
                 :distribution-error="publicationDistributionError"
                 :distribution-result="publicationDistributionResult"

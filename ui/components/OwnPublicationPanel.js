@@ -9,6 +9,7 @@ import { placementsSectionTemplate } from './ownPublicationPanel/templates/place
 import { publicationActionsSectionTemplate } from './ownPublicationPanel/templates/publicationActionsSection.js';
 import { diagnosticToolsSectionTemplate } from './ownPublicationPanel/templates/diagnosticToolsSection.js';
 import { commentarySectionTemplate } from './ownPublicationPanel/templates/commentarySection.js';
+import PublicationShareLink from './PublicationShareLink.js';
 
 // Actions on the local user's own current Publication in World View:
 // distribute it and its Snapshot, export the Snapshot, place or unpublish it,
@@ -44,7 +45,7 @@ import { commentarySectionTemplate } from './ownPublicationPanel/templates/comme
 
 export default {
     name: 'OwnPublicationPanel',
-    components: { WorldDistributionDialog, PublicationCommentaryRemoteCheck },
+    components: { WorldDistributionDialog, PublicationCommentaryRemoteCheck, PublicationShareLink },
     props: {
         // Supplied by the host view; null when the active document is unpublished.
         publication: {

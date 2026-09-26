@@ -128,6 +128,8 @@ export default {
                     :remote-pinning-draft="remotePinningDraft"
                     :snapshot-distribution-storage-types="snapshotDistributionStorageTypes"
                     :document-id="publishedPublication ? publishedPublication.documentId : null"
+                    :publication-id="publishedPublication ? publishedPublication.id : null"
+                    :publication-title="publishedPublication ? publishedPublication.title : null"
                     @close="distributionDialogOpen = false"
                     @distribute-both="distributePublishedDocumentAndSnapshot"
                     @distribute-publication="distributePublishedDocument"

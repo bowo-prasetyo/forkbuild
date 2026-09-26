@@ -2169,7 +2169,19 @@ before the post (it's uploaded to Steemit's image host; it costs no
 Resource Credits). If you decline, or the picture can't be made, the post
 still goes out with the words and the link. Mentions, tags and links in
 your title or description are shown as plain text, so they don't notify
-anyone. Anyone who clicks it on Steemit,
+anyone.
+
+**Share with friends.** Once a Publication's Signed Claim is stored on
+Steem, **Share…** and **Copy link** appear under it: in World View's
+publication panel, in the Distribute dialog's result, and on the
+Publications page. Share opens your device's share sheet (on phones and
+where the browser offers one); Copy link copies the link, which is also
+shown to copy by hand. Anyone can open it on any device to see the build
+in 3D, as long as its Snapshot has been distributed too. The
+`#/world/…` address in your browser's address bar works only in your own
+browser; share this link instead. A Publication whose claim is stored on
+Arweave or IPFS says to distribute it again with Steem storage to get a
+link. Anyone who clicks it on Steemit,
 even without having used ForkBuild before, lands in World View looking at
 your build. ForkBuild first checks the Publication's signature, then finds
 the build through its announcement and checks that it matches; if

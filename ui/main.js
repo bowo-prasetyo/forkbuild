@@ -316,7 +316,8 @@ const {
     worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand,
     worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
     steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
-    steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress
+    steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress,
+    publicationDistributionLifecycleRestorer
 } = composeWorldDiscovery({
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
     ipfsNodeConfigurationStore, publicationContentStore
@@ -364,6 +365,9 @@ app.provide('discoverWorldEncounterPublicationCommand', discoverWorldEncounterPu
 app.provide('worldEncounterLeadAssociationsQuery', worldEncounterLeadAssociationsQuery);
 app.provide('publicationDiscoveryTag', PUBLICATION_DISCOVERY_TAG);
 app.provide('publicationDistributionLifecycleStore', publicationDistributionLifecycleStore);
+// Startup restores the records of catalogued Publications only; a view
+// restores another one (such as a build published from the Editor) on demand.
+app.provide('publicationDistributionLifecycleRestorer', publicationDistributionLifecycleRestorer);
 
 const {
     arweaveHostSigner, nostrHostPublisher, nostrPublicationRuntimeCapabilities
