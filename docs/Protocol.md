@@ -918,8 +918,10 @@ Opening the link (`application/steem/OpenSteemPublicationLink.js`, route `/view/
 
 Sharing. The same link is what the app offers to share (`core/ForkBuildAppLinks.js` `publicationShareUrl()`,
 `application/publication/PublicationShareLink.js`, `ui/components/PublicationShareLink.js`): it is derived from a
-Publication's distribution record (`material.uri` when it is a `steem://` locator), so it needs no network call, and
-the record is restored from local storage on demand for Publications that startup doesn't restore. Share uses the
+Publication's distribution record (`material.uri` when it is a `steem://` locator), so it needs no network call. Every
+Publication's record is saved to local storage when it changes (`PublicationDistributionLifecyclePersistenceBridge
+#observeAll()` over the store's `subscribeAll()`), and restored on demand for Publications that startup doesn't
+restore (startup restores catalogued Publications only). Share uses the
 Web Share API where the browser offers it, otherwise the clipboard, otherwise the link is shown to copy by hand. It
 is a permalink to the post: it works on any device, and opens whatever validly signed claim that post holds.
 

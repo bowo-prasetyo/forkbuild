@@ -34,6 +34,7 @@ export class PublicationDistributionLifecycleMemoryStore {
     constructor() {
         this._entries = new Map();
         this._listeners = new Map();
+        this._allListeners = new Set();
         this._nextListenerId = 0;
         // publicationId -> discoveryProvider -> originKey -> discoverySection.
         this._discoveryObservations = new Map();
@@ -130,12 +131,28 @@ export class PublicationDistributionLifecycleMemoryStore {
         );
     }
 
+    // subscribeAll(listener) -> unsubscribe. Like subscribe(), for every
+    // Publication: `listener(publicationId, lifecycle)` on each set() and
+    // remove(), so a persistence bridge can keep every lifecycle, including
+    // those of Publications no one asked about beforehand.
+    subscribeAll(listener) {
+        if (typeof listener !== 'function') {
+            return () => {};
+        }
+        const entry = { listener };
+        this._allListeners.add(entry);
+        return () => {
+            this._allListeners.delete(entry);
+        };
+    }
+
     _notify(publicationId, lifecycle) {
         const listenersForId = this._listeners.get(publicationId);
-        if (!listenersForId) {
-            return;
-        }
-        for (const listener of Array.from(listenersForId.values())) {
+        const listeners = [
+            ...(listenersForId ? Array.from(listenersForId.values()) : []),
+            ...Array.from(this._allListeners, (entry) => entry.listener)
+        ];
+        for (const listener of listeners) {
             try {
                 listener(publicationId, lifecycle);
             } catch (error) {

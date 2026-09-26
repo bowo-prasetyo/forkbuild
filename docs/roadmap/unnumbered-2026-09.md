@@ -1167,3 +1167,23 @@ already has the build; the `#/view/steem/…` link works anywhere, so it is the 
 - Tests: `tests/PublicationShareLink.test.js` (the link, what is offered, a real distribution command making the
   link available, and sharing, cancelling, falling back and copying).
 - Not done: links for claims stored on Arweave or IPFS.
+
+## Distribution records saved for every Publication (unnumbered, 2026-09-26)
+
+**A build published from the Editor now keeps its distribution record, and so its Share button, after a reload.** On
+the live site, World View showed no Share button for "Thin Pyramid with Stair", distributed with its claim on Steem.
+The persistence bridge saved a distribution record only for Publications it was told to watch at startup: the
+catalogued ones that already had a saved record. A build published from the Editor is not in the catalog, so its
+distribution was held in memory only and gone after a reload; restoring it on demand (the previous change) found
+nothing to restore. The earlier check in Chromium had written the record by hand, which hid this.
+
+- `PublicationDistributionLifecycleMemoryStore#subscribeAll()` reports every Publication's changes, and
+  `PublicationDistributionLifecyclePersistenceBridge#observeAll()` saves each of them. `ui/main/composeWorldDiscovery.js`
+  uses it in place of watching the restored ids one by one.
+- Checked in Chromium on the real app, with no record written by hand: a build opened from its Steem link and
+  distributed from World View's Distribute dialog (claim on Steem, announced on Steem, through a stand-in Keychain
+  posting to a fake chain) shows the share link in the dialog and, after a reload, in World View's panel. The same
+  run without this change shows it in the dialog and not after the reload.
+- Tests: `tests/PublicationShareLink.test.js` (a Publication no one watched is distributed, its record is saved, and
+  after a reload the share link comes back; a failing listener doesn't stop the others). It fails without the change.
+- Publications distributed before this change have no saved record; distributing them again saves one.
