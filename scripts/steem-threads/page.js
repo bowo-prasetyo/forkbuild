@@ -91,6 +91,7 @@ createButton.addEventListener('click', async () => {
     const { settings, results } = checked;
     const targets = results.filter((r) => !r.exists);
     running = new AbortController();
+    showResponse(undefined);
     setBusy(true);
     createButton.disabled = true;
     stopButton.disabled = false;
@@ -135,6 +136,7 @@ createButton.addEventListener('click', async () => {
             const reason = error.message.replace(/\.+$/, '');
             const advice = isKeyError(error) ? await keyAdvice(rpc, settings.account) : '';
             setStatus(`Stopped: ${reason}. ${advice}Check again before continuing.`, 'bad');
+            showResponse(error.response);
         }
     } finally {
         clearInterval(countdown);
@@ -152,6 +154,17 @@ window.addEventListener('beforeunload', (event) => {
     if (running) event.preventDefault();
 });
 
+// Keychain's message is often a generic label for what the chain said;
+// the full response carries the chain's own error.
+function showResponse(response) {
+    const details = $('response');
+    details.hidden = response === undefined;
+    if (response === undefined) return;
+    console.error('Steem Keychain response:', response);
+    details.querySelector('pre').textContent = JSON.stringify(response, null, 2);
+    details.open = true;
+}
+
 function isKeyError(error) {
     return error.name === 'SteemBroadcastError' && /\bkey\b/i.test(error.message);
 }
@@ -166,8 +179,11 @@ async function keyAdvice(rpc, account) {
     } catch {
         // The advice below still helps without the keys.
     }
-    const named = keys.length > 0 ? `The chain's posting public key for @${account} is ${keys.join(' or ')}. ` : '';
-    return `${named}Keychain must hold the matching posting private key: in Keychain, remove @${account} and add it again with its posting private key (or its master password). An owner, active or memo key does not work here. `;
+    const expected = keys.length > 0 ? ` (the chain lists ${keys.join(' or ')})` : '';
+    return `Keychain signs with the posting private key it stores for @${account}; this page never sees or sends a key. `
+        + `That stored key does not match the account's posting public key${expected}. `
+        + `In Keychain, compare the posting public key it shows for @${account} with that one; if they differ, remove the account and add it again with its posting private key or master password. `
+        + "If they match, check that Keychain is connected to a Steem RPC node, not a Hive one, and see Keychain's full response below for the chain's own error. ";
 }
 
 function readSettings() {
