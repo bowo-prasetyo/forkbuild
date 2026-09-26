@@ -1141,3 +1141,5 @@ it in 3D" link.** A picture and a few words draw far more Steemit readers into W
   `https://cdn.steemitimages.com/DQmf2MADzdCGgTshHpSNXKSV9CRACfPuurhnNznJ5X4ocPG/forkbuild-build.png` and listed in
   `json_metadata.image`. That build's description was its title, so the notice showed it twice; a description that
   only repeats the title is now left out.
+- Checked live on a device that had never opened ForkBuild: the notice's link showed the loading page, then World View
+  with the build, fetched from Steem and checked on the way.
