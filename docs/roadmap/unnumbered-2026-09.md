@@ -1105,4 +1105,35 @@ expects, and that the host accepts uploads from this site.
   prefix and the PNG (9,464 bytes for a 9,443-byte image), the upload goes to `/<account>/<signature>` as form data,
   and the preview loads; also at phone width.
 - Tests: `tests/SteemImageUpload.test.js` (the payload, the signer, uploading and each way it fails, and the check).
-- Not done: running the check against the live Steem Keychain and steemitimages.com; then the notice itself.
+- Checked live (2026-09-26, account `forkbuild`): Steem Keychain signed the 10,017-byte test image (a 130-character
+  signature), steemitimages.com accepted the upload from this site and returned
+  `https://cdn.steemitimages.com/DQmYHT6cvKFRcympSgDeXukiQ4uLgVMfihjb3yPvZhB2adi/forkbuild-image-check.png`, which
+  loads. The returned address is on `cdn.steemitimages.com`, not the upload host.
+- Not done: the notice itself (thumbnail, title and description on a Signed Claim's post).
+
+## A picture, title and description on Steem notices (unnumbered, 2026-09-26)
+
+**A Signed Claim's post on Steem now shows the build: its thumbnail, title, author and description, above the "See
+it in 3D" link.** A picture and a few words draw far more Steemit readers into World View than a line of text.
+
+- `core/SteemContentManifest.js`: `steemContentNotice({ viewUrl, card })` lays out the card (the picture links to the
+  view too), and `json_metadata.image` lists the picture for front-end previews. `steemNoticeText()` makes
+  user-written text safe for Markdown: one line, no links, no control or direction-override characters, HTML and
+  Markdown escaped, `@` and `#` broken with a zero-width space so they neither notify nor tag, and capped (title
+  100, author 40, description 300). `isSteemNoticeImageUrl()` accepts only https addresses that can't end the
+  Markdown early.
+- `application/steem/SteemPublicationNoticeCard.js`: the describer finds each part on its own (title and author from
+  the claim, description from the build in the local content store, the picture drawn and uploaded) and falls back
+  part by part. `SteemPublicationNoticeComposition.js` supplies the browser pieces: `DocumentThumbnailRenderer`
+  (created on first use) and `uploadSteemImage()` through Steem Keychain, as the Steem account in settings.
+- `SteemContentStore` takes a `describePublication` hook and asks it before posting a Signed Claim (reporting phase
+  `describing`: "adding a picture of the build. Approve signing the picture in Steem Keychain."); a hook that fails
+  leaves the plain link notice and never stops the post. Wired through `composeSteemRuntime()` from
+  `ui/main/composeWorldDiscovery.js`.
+- Checked in Chromium with a stand-in Keychain and image host: a stepped pyramid from a local content store was drawn
+  by the real WebGL thumbnail renderer, signed, uploaded and laid out, with a mention and a tag in its description
+  neutralised.
+- Tests: `tests/SteemPublicationNotice.test.js` (the text rules, including links, mentions, tags, HTML, Markdown,
+  hidden characters and caps; picture addresses; the layout; the describer and each fallback; the store asking only
+  for Signed Claims, reporting progress, and posting plainly when the card fails).
+- Not done: a live distribute with the picture on Steemit.

@@ -81,7 +81,10 @@ export class SteemContentStore extends ContentStore {
     // (storage/SteemContentUploadStore.js); `estimator` checks Resource
     // Credits (application/steem/SteemResourceCreditEstimator.js); `progress`
     // hears every upload's progress. All three are optional.
-    constructor({ rpc, announcer = null, threadAccounts, uploads = null, estimator = null, progress = null, maxDecodedBytes = DEFAULT_MAX_DECODED_BYTES } = {}) {
+    // `describePublication(claim)`, when given, is asked for a Signed Claim's
+    // card (`{ title, author, description, imageUrl }`) before it is posted;
+    // it may reject or resolve to null, and the notice is then plainer.
+    constructor({ rpc, announcer = null, threadAccounts, uploads = null, estimator = null, progress = null, maxDecodedBytes = DEFAULT_MAX_DECODED_BYTES, describePublication = null } = {}) {
         super();
         if (!rpc || typeof rpc.getContent !== 'function') throw new TypeError('SteemContentStore: a Steem RPC client is required');
         if (announcer !== null && (typeof announcer.postContent !== 'function' || typeof announcer.postContentPart !== 'function')) {
@@ -95,6 +98,7 @@ export class SteemContentStore extends ContentStore {
         this._estimator = estimator;
         this._progress = progress;
         this._maxDecodedBytes = maxDecodedBytes;
+        this._describePublication = typeof describePublication === 'function' ? describePublication : null;
     }
 
     get storage() { return STEEM_CONTENT_STORAGE; }
@@ -136,6 +140,11 @@ export class SteemContentStore extends ContentStore {
         const resume = author ? await this._findResumable(author, plan) : null;
         const pendingParts = resume ? resume.pendingParts : plan.slices.map((_, index) => ({ index, edit: false }));
         const done = resume ? total - pendingParts.length : 0;
+        let card = null;
+        if (linkToView && this._describePublication) {
+            report({ phase: 'describing', done, total, resumed: false, resourceCredits: null });
+            card = await describeClaim(this._describePublication, text);
+        }
         let state = { phase: 'checking', done, total, resumed: Boolean(resume), resourceCredits: null };
         report(state);
 
@@ -144,7 +153,8 @@ export class SteemContentStore extends ContentStore {
                 ...(resume ? [] : [steemContentManifestOperations({
                     author, threadAccount: this._threadAccounts[0], threadPermlink: ESTIMATE_THREAD_PERMLINK, permlink: ESTIMATE_MANIFEST_PERMLINK,
                     content: manifestContent(plan, ESTIMATE_MANIFEST_PERMLINK), data: plan.inline ? plan.encoded : undefined,
-                    viewUrl: linkToView ? steemPublicationViewUrl(author, ESTIMATE_MANIFEST_PERMLINK) : null
+                    viewUrl: linkToView ? steemPublicationViewUrl(author, ESTIMATE_MANIFEST_PERMLINK) : null,
+                    card
                 })]),
                 ...pendingParts.map(({ index, edit }) => steemContentPartOperations({
                     author, manifestPermlink: ESTIMATE_MANIFEST_PERMLINK, index, count: plan.slices.length, data: plan.slices[index], withOptions: !edit
@@ -170,7 +180,8 @@ export class SteemContentStore extends ContentStore {
                 const manifest = await this._announcer.postContent({
                     content: { ...manifestContent(plan, null), parts: plan.parts },
                     data: plan.inline ? plan.encoded : undefined,
-                    linkToView
+                    linkToView,
+                    card
                 });
                 manifestAuthor = manifest.author;
                 manifestPermlink = manifest.permlink;
@@ -323,6 +334,18 @@ export class SteemContentStore extends ContentStore {
 // What will be posted: the encoded content, inline when it fits one post,
 // otherwise gzip-base64 split into parts with their hashes. Throws
 // SteemContentTooLargeError when it would need more than the most parts.
+// A Signed Claim's card, or null when there is none or describing it
+// failed: a card only makes the notice richer, so it never stops a post.
+async function describeClaim(describePublication, text) {
+    try {
+        const card = await describePublication(JSON.parse(text));
+        return card && typeof card === 'object' ? card : null;
+    } catch (error) {
+        console.warn('The Steem notice will have no picture or description:', error?.message ?? error);
+        return null;
+    }
+}
+
 export async function planSteemContentUpload(text) {
     const size = new TextEncoder().encode(text).length;
     const contentHash = computeContentHash(text);

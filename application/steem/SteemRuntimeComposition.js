@@ -36,7 +36,8 @@ export function composeSteemRuntime({
     getBroadcaster = () => undefined,
     appVersion = null,
     contentUploads = null,
-    contentUploadProgress = null
+    contentUploadProgress = null,
+    describePublication = null
 } = {}) {
     if (typeof fetchImpl !== 'function') return null;
     const rpc = createSteemRpcClient({ nodes: [...configuration.apiNodes], fetchImpl });
@@ -64,7 +65,8 @@ export function composeSteemRuntime({
             threadAccounts: [...configuration.threadAccounts],
             uploads: contentUploads,
             estimator: createSteemResourceCreditEstimator({ rpc }),
-            progress: contentUploadProgress
+            progress: contentUploadProgress,
+            describePublication
         }),
         publicationMaterialResolver: new SteemWorldEncounterMaterialResolver({ rpc, threadAccounts: [...configuration.threadAccounts] }),
         anchorPublisher: new SteemAnchorPublisher({ poster: announcer, rpc }),

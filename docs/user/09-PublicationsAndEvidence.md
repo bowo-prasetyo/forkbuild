@@ -2162,8 +2162,14 @@ the Publication's announcement reads the claim back from Steem, and its
 signature is checked exactly as for a claim from Arweave. As with every
 storage, a Snapshot loaded back is checked against its content hash.
 
-**Sharing a link on Steem.** The Signed Claim's post on Steem says "A build
-published with ForkBuild: see it in 3D". Anyone who clicks it on Steemit,
+**Sharing a link on Steem.** The Signed Claim's post on Steem shows a
+picture of your build, its title, your name and its description, with a
+"See it in 3D" link. Keychain asks you to approve signing the picture
+before the post (it's uploaded to Steemit's image host; it costs no
+Resource Credits). If you decline, or the picture can't be made, the post
+still goes out with the words and the link. Mentions, tags and links in
+your title or description are shown as plain text, so they don't notify
+anyone. Anyone who clicks it on Steemit,
 even without having used ForkBuild before, lands in World View looking at
 your build. ForkBuild first checks the Publication's signature, then finds
 the build through its announcement and checks that it matches; if

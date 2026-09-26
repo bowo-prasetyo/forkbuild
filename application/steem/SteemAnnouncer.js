@@ -127,8 +127,10 @@ export function createSteemAnnouncer({
     // inline, and ignored when `content.parts` lists parts (`{ length,
     // sha256 }` each; their permlinks follow from the manifest's).
     // `linkToView` puts a link to the app's view of this post, as a
-    // Publication's Signed Claim, in the notice. Resolves like announce().
-    function postContent({ content, data, linkToView = false }) {
+    // Publication's Signed Claim, in the notice, and `card` (`{ title,
+    // author, description, imageUrl }`) the build's picture and words above
+    // it. Resolves like announce().
+    function postContent({ content, data, linkToView = false, card = null }) {
         return enqueue(() => postReply({
             family: STEEM_CONTENT_FAMILY,
             what: 'content',
@@ -136,6 +138,7 @@ export function createSteemAnnouncer({
             operationsFor: ({ author, threadPermlink, permlink }) => steemContentManifestOperations({
                 author, threadAccount, threadPermlink, permlink, data, appVersion,
                 viewUrl: linkToView ? steemPublicationViewUrl(author, permlink) : null,
+                card: linkToView ? card : null,
                 content: { ...content, parts: content.parts.map((part, index) => ({ ...part, permlink: steemContentPartPermlink(permlink, index) })) }
             })
         }));
