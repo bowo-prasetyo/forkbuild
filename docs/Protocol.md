@@ -672,10 +672,22 @@ string, which is how it travels in the operations:
 - `utf8`: the content text as it is (canonical JSON for a Snapshot);
 - `gzip-base64`: the content's UTF-8 bytes compressed with gzip (the browser's `CompressionStream`), then base64.
 
-Neither encoding can start with `@@ `, which API nodes read as an edit patch rather than a body. The encoded text is
-split into parts of at most 48 KiB each, measured as the UTF-8 length of the part escaped as a JSON string
-(`STEEM_CONTENT_PART_MAX_BYTES`), leaving room within the 64 KiB transaction limit for the rest of the operations. When the whole encoded text fits in one part, it goes into the manifest's own body and there are no
-parts (the "inline" case: one transaction, one approval).
+Where the encoded text goes. Since format version 2 it travels in each post's `json_metadata`, as
+`forkbuild.data`, and the body carries a short notice for people who come across the post on a Steem front end
+(`steemContentNotice()`): "Data stored by ForkBuild. It is read by the ForkBuild app, not meant to be read here, and
+its payout is declined." with a link to this section, "…continued in N replies below." on a manifest with parts, and
+"Part i of N of data stored by ForkBuild. …" on a part. The notice is the same for everyone and never repeats the
+Publication's title or any other text a user wrote. Resource Credits and the transaction limit count `body` and
+`json_metadata` the same way, so this costs nothing; it spares Steem readers screens of base64, and front ends that
+hide long comment bodies no longer do. Version 1 (the first release) put the encoded text in the body; readers still
+accept it (see "Reading").
+
+The encoded text is split into parts of at most 48 KiB each, measured as the UTF-8 length of the part escaped as a
+JSON string (`STEEM_CONTENT_PART_MAX_BYTES`), which is exactly its size inside `json_metadata`, leaving room within
+the 64 KiB transaction limit for the notice and the rest of the operations. When the whole encoded text fits in one
+part, it goes into the manifest itself and there are no parts (the "inline" case: one transaction, one approval).
+`utf8` is never used for content starting with `@@ `, which API nodes read as an edit patch in a body; version 1
+needed that, and it is kept.
 
 A manifest:
 
@@ -684,15 +696,16 @@ A manifest:
       author: <uploader's Steem account>,
       permlink: 'forkbuild-c-<base36 ms timestamp>-<8 random [a-z0-9]>',
       title: '',
-      body: <inline: the encoded content; with parts: one human-readable line>,
+      body: <the notice>,
       json_metadata: JSON.stringify({ app: 'forkbuild/<app version>',
-        forkbuild: { version: 1, content: {
+        forkbuild: { version: 2, content: {
           contentHash, algorithm,              // as in the ContentReference (algorithm 'fnv1a-32' today)
           mediaType, size,                     // size: the content's length in UTF-8 bytes
           encoding,                            // 'utf8' or 'gzip-base64'
           encodedLength,                       // characters of encoded text, across all parts
           parts: [ { permlink, length, sha256 } ]   // in order; [] when inline
-        } } })
+        },
+        data: <inline only: the encoded content> } })
     }]
     ['comment_options', { author, permlink, max_accepted_payout: '0.000 SBD', ... }]
 
@@ -703,13 +716,13 @@ A part:
       author: <uploader>,
       permlink: '<manifest permlink>-p<index>',          // index from 0
       title: '',
-      body: <this part's slice of the encoded text>,
+      body: <the notice>,
       json_metadata: JSON.stringify({ app: 'forkbuild/<app version>',
-        forkbuild: { version: 1, part: { index, count } } })
+        forkbuild: { version: 2, part: { index, count }, data: <this part's slice of the encoded text> } })
     }]
     ['comment_options', { ... payout declined ... }]
 
-`sha256` is the SHA-256 (WebCrypto) of the part's body as hex, and `length` is its length in characters. Part
+`sha256` is the SHA-256 (WebCrypto) of the part's slice as hex, and `length` is its length in characters. Part
 permlinks and hashes are known before anything is posted, so the manifest is posted first and lists every part.
 
 The part hashes only let a reader find a wrong or edited part quickly. They are not a security boundary: anyone can
@@ -751,9 +764,10 @@ If a part fails (declined, out of RC, node unreachable), `put()` throws `SteemCo
 how many posts are stored and saying to distribute again with the same account; nothing is announced. Storing the
 same content again with the same account reads the recorded manifest back from the chain. If it still describes the
 same content, encoding and parts (lengths and SHA-256), the store posts only the parts that are missing, and edits
-any part whose body differs (a `comment` alone, without `comment_options`, since the post already exists and its
+any part whose data differs (a `comment` alone, without `comment_options`, since the post already exists and its
 payout is already declined). If the manifest is gone or doesn't match, for example because the compressor produced
-different bytes, the record is dropped and the upload starts over. The chain stays the source of truth: the record
+different bytes or it was posted in format version 1, the record is dropped and the upload starts over, so one
+upload never mixes versions. The chain stays the source of truth: the record
 only says where to look. A manifest whose parts never all arrive stays on the chain as an incomplete upload, and
 readers report it as unavailable.
 
@@ -778,13 +792,16 @@ The Steem store's `get(reference)` for a `steem://` locator:
 
 1. `condenser_api.get_content(uploader, permlink)`. A manifest that doesn't exist, isn't a direct reply to a
    `forkbuild-content-<YYYY-MM>` thread of a configured thread account, or whose `json_metadata` lacks
-   `forkbuild.version === 1` or a well-formed `content`, is unavailable.
+   `forkbuild.version` 1 or 2 or a well-formed `content`, is unavailable. An inline manifest's encoded text is
+   `forkbuild.data` in version 2 and the body in version 1, and must be `encodedLength` characters long.
 2. The manifest's `contentHash` must equal the requested one; otherwise the locator is for different content.
 3. A manifest may list at most 20 parts, whose permlinks must be `<manifest permlink>-p<index>` and whose lengths
    must add up to `encodedLength`. Parts are fetched with one `get_content_replies(uploader, permlink)`, falling back
    to `get_content` for any part it didn't return. A part is accepted only when its author is the manifest's author,
    its permlink is the one the manifest lists, and its parent is the manifest. Anyone can reply to a manifest; other
-   replies are ignored.
+   replies are ignored. A part's encoded text is read in the manifest's version: `forkbuild.data` (with
+   `forkbuild.version` equal to the manifest's) in version 2, the body in version 1. A part whose `json_metadata` is
+   missing or cut short is reported as carrying no ForkBuild data.
 4. Each part's `length` and `sha256` must match. The parts are joined in order, and the result must be
    `encodedLength` characters long.
 5. `gzip-base64` is decoded and decompressed with the browser's `DecompressionStream`, stopping as soon as the output
@@ -800,7 +817,7 @@ node outage doesn't lose a copy already loaded.
 
 ### Limits
 
-- A part (or an inline manifest body) is at most 48 KiB of encoded text, escaped as above, and the operations of one
+- A part (or an inline manifest) is at most 48 KiB of encoded text, escaped as above, and the operations of one
   transaction are checked against the 64 KiB limit before signing, as for announcements.
 - An upload is at most 20 parts (960 KiB of encoded text, about 720 KiB compressed), so at most 21 posts and 21
   Keychain approvals. `maxContentBytes` can't be known before compressing, so the store compresses first and throws
@@ -810,6 +827,12 @@ node outage doesn't lose a copy already loaded.
   2,000-brick block to 35 KB. One post therefore holds a build of about 2,500 bricks, and 20 parts about 30,000.
   Builds with short brick ids compress much better.
 - The decoded content is at most 64 MiB, the same bound as a peer transfer.
+
+Checking API nodes. Version 2 depends on API nodes returning a post's `json_metadata` in full, close to 48 KiB.
+`scripts/steem-threads/content-check.html`, an operator page served like the thread page, stores random test content
+that needs a manifest and two near-full parts through the real `SteemContentStore`, then reads it back from each
+listed node on its own (`get_content` and `get_content_replies`), reporting per node whether it came back unchanged
+(`scripts/steem-threads/SteemContentCheck.js`).
 
 ### Scope
 

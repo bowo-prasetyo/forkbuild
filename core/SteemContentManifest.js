@@ -2,14 +2,19 @@ import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 import { STEEM_CONTENT_FAMILY, isSteemAccountName, steemDeclinedPayoutOptions } from './SteemDiscoveryThread.js';
 
 // Content stored on Steem: a manifest, a direct reply to a monthly content
-// thread, whose body is the encoded content or, when that doesn't fit one
+// thread, which holds the encoded content or, when that doesn't fit one
 // post, whose parts are replies to it (docs/Protocol.md, "Proposed: Steem
 // Content Storage"). This file builds and reads the manifest, the parts and
 // the `steem://` locator; encoding, hashing, network and signing live
 // elsewhere.
+//
+// Version 2 keeps the encoded content in `json_metadata` (`forkbuild.data`)
+// and puts a short notice for people reading Steem in the body. Version 1
+// kept the encoded content in the body; posts in it are still read.
 
 export const STEEM_CONTENT_STORAGE = 'steem';
-export const STEEM_CONTENT_MANIFEST_VERSION = 1;
+export const STEEM_CONTENT_MANIFEST_VERSION = 2;
+export const STEEM_CONTENT_READABLE_VERSIONS = Object.freeze([1, 2]);
 export const STEEM_CONTENT_URI_PREFIX = 'steem://';
 export const STEEM_CONTENT_ENCODINGS = Object.freeze(['utf8', 'gzip-base64']);
 // The most encoded text one post holds, measured as the UTF-8 length of the
@@ -23,7 +28,15 @@ const PERMLINK_SUFFIX_PATTERN = /^[a-z0-9]{8}$/;
 // Steem permlinks: lowercase letters, digits and hyphens, at most 256.
 const PERMLINK_PATTERN = /^[a-z0-9-]{1,256}$/;
 const CONTENT_THREAD_PATTERN = new RegExp(`^forkbuild-${STEEM_CONTENT_FAMILY}-\\d{4}-(0[1-9]|1[0-2])$`);
-const PARTS_BODY = 'ForkBuild content, continued in the replies below. Read by the ForkBuild app.';
+const ABOUT_URL = 'https://github.com/bowo-prasetyo/forkbuild/blob/main/docs/Protocol.md#proposed-steem-content-storage';
+const NOTICE_END = `It is read by the ForkBuild app, not meant to be read here, and its payout is declined. [What this is](${ABOUT_URL})`;
+
+// The body of a version 2 manifest or part: what the post is, for people.
+export function steemContentNotice({ parts = 0, part = null } = {}) {
+    if (part) return `Part ${part.index + 1} of ${part.count} of data stored by ForkBuild. ${NOTICE_END}`;
+    if (parts > 0) return `Data stored by ForkBuild, continued in ${parts} ${parts === 1 ? 'reply' : 'replies'} below. ${NOTICE_END}`;
+    return `Data stored by ForkBuild. ${NOTICE_END}`;
+}
 
 // A manifest's permlink: unique per author, from the time and eight random
 // lowercase letters or digits the caller supplies.
@@ -74,8 +87,8 @@ export function steemContentEncodedByteLength(text) {
 }
 
 // The manifest and its options, in one transaction. `content` describes the
-// content; `body` is the encoded content when it is inline.
-export function steemContentManifestOperations({ author, threadAccount, threadPermlink, permlink, content, body, appVersion = null }) {
+// content; `data` is the encoded content when it is inline.
+export function steemContentManifestOperations({ author, threadAccount, threadPermlink, permlink, content, data, appVersion = null }) {
     if (!isSteemAccountName(author)) throw new TypeError(`not a Steem account name: ${author}`);
     if (!isSteemAccountName(threadAccount)) throw new TypeError(`not a Steem account name: ${threadAccount}`);
     if (!CONTENT_THREAD_PATTERN.test(threadPermlink ?? '')) throw new TypeError(`not a content thread permlink: ${threadPermlink}`);
@@ -83,12 +96,12 @@ export function steemContentManifestOperations({ author, threadAccount, threadPe
     const problem = contentProblem(content);
     if (problem) throw new TypeError(`the content description is malformed: ${problem}`);
     const inline = content.parts.length === 0;
-    if (inline && (typeof body !== 'string' || body.length !== content.encodedLength)) {
-        throw new TypeError('an inline manifest body must be the encoded content');
+    if (inline && (typeof data !== 'string' || data.length !== content.encodedLength)) {
+        throw new TypeError('an inline manifest\'s data must be the encoded content');
     }
     const metadata = {
         ...(isNonEmptyString(appVersion) ? { app: `forkbuild/${appVersion}` } : {}),
-        forkbuild: { version: STEEM_CONTENT_MANIFEST_VERSION, content: copyContent(content) }
+        forkbuild: { version: STEEM_CONTENT_MANIFEST_VERSION, content: copyContent(content), ...(inline ? { data } : {}) }
     };
     return [
         ['comment', {
@@ -97,7 +110,7 @@ export function steemContentManifestOperations({ author, threadAccount, threadPe
             author,
             permlink,
             title: '',
-            body: inline ? body : PARTS_BODY,
+            body: steemContentNotice({ parts: content.parts.length }),
             json_metadata: JSON.stringify(metadata)
         }],
         steemDeclinedPayoutOptions(author, permlink)
@@ -107,16 +120,16 @@ export function steemContentManifestOperations({ author, threadAccount, threadPe
 // One part and its options, in one transaction: a reply to the manifest.
 // `withOptions: false` leaves out the options, for editing a part that is
 // already on the chain (its payout is already declined).
-export function steemContentPartOperations({ author, manifestPermlink, index, count, body, appVersion = null, withOptions = true }) {
+export function steemContentPartOperations({ author, manifestPermlink, index, count, data, appVersion = null, withOptions = true }) {
     if (!isSteemAccountName(author)) throw new TypeError(`not a Steem account name: ${author}`);
     if (!Number.isInteger(count) || count < 1 || count > STEEM_CONTENT_MAX_PARTS || !Number.isInteger(index) || index < 0 || index >= count) {
         throw new TypeError(`part ${index} of ${count} is out of range`);
     }
-    if (typeof body !== 'string' || body.length === 0) throw new TypeError('a part body must be non-empty text');
+    if (typeof data !== 'string' || data.length === 0) throw new TypeError('a part\'s data must be non-empty text');
     const permlink = steemContentPartPermlink(manifestPermlink, index);
     const metadata = {
         ...(isNonEmptyString(appVersion) ? { app: `forkbuild/${appVersion}` } : {}),
-        forkbuild: { version: STEEM_CONTENT_MANIFEST_VERSION, part: { index, count } }
+        forkbuild: { version: STEEM_CONTENT_MANIFEST_VERSION, part: { index, count }, data }
     };
     const comment = ['comment', {
         parent_author: author,
@@ -124,23 +137,37 @@ export function steemContentPartOperations({ author, manifestPermlink, index, co
         author,
         permlink,
         title: '',
-        body,
+        body: steemContentNotice({ part: { index, count } }),
         json_metadata: JSON.stringify(metadata)
     }];
     return withOptions ? [comment, steemDeclinedPayoutOptions(author, permlink)] : [comment];
 }
 
+// The encoded text a part post carries, in the manifest's version: the
+// body in version 1, `forkbuild.data` in version 2. Null when there is none.
+export function steemContentPartData(post, version = STEEM_CONTENT_MANIFEST_VERSION) {
+    if (!isPlainObject(post)) return null;
+    if (version === 1) return typeof post.body === 'string' ? post.body : null;
+    const forkbuild = parseJsonObject(post.json_metadata)?.forkbuild;
+    if (!isPlainObject(forkbuild) || forkbuild.version !== version) return null;
+    return typeof forkbuild.data === 'string' ? forkbuild.data : null;
+}
+
 // Whether a post returned by the chain is part `index` of `manifest`, as the
 // manifest lists it: by the manifest's author, replying to the manifest, at
-// the listed permlink and length. The hash is checked by the caller, which
-// has WebCrypto. Returns a problem, or null.
+// the listed permlink and length, in the manifest's version. The hash is
+// checked by the caller, which has WebCrypto. Returns a problem, or null.
 export function steemContentPartProblem(post, manifest, index) {
     const listed = manifest.parts[index];
     if (!isPlainObject(post) || !post.author) return `part ${index + 1} of ${manifest.parts.length} is missing`;
     if (post.author !== manifest.author || post.parent_author !== manifest.author || post.parent_permlink !== manifest.permlink || post.permlink !== listed.permlink) {
         return `part ${index + 1} of ${manifest.parts.length} is not the one the manifest lists`;
     }
-    if (typeof post.body !== 'string' || post.body.length !== listed.length) {
+    const data = steemContentPartData(post, manifest.version);
+    if (data === null) {
+        return `part ${index + 1} of ${manifest.parts.length} carries no ForkBuild data (its json_metadata is missing or was cut short)`;
+    }
+    if (data.length !== listed.length) {
         return `part ${index + 1} of ${manifest.parts.length} has been changed since the content was stored`;
     }
     return null;
@@ -157,14 +184,16 @@ export function describeSteemContentManifest(post, { threadAccounts }) {
         return failure('the post is not a reply to a ForkBuild content thread');
     }
     const forkbuild = parseJsonObject(post.json_metadata)?.forkbuild;
-    if (!isPlainObject(forkbuild) || forkbuild.version !== STEEM_CONTENT_MANIFEST_VERSION) {
+    if (!isPlainObject(forkbuild) || !STEEM_CONTENT_READABLE_VERSIONS.includes(forkbuild.version)) {
         return failure('the post does not describe ForkBuild content');
     }
+    const version = forkbuild.version;
     const problem = contentProblem(forkbuild.content);
     if (problem) return failure(`the content description is malformed: ${problem}`);
     const content = copyContent(forkbuild.content);
     const inline = content.parts.length === 0;
-    if (inline && (typeof post.body !== 'string' || post.body.length !== content.encodedLength)) {
+    const data = inline ? (version === 1 ? post.body : forkbuild.data) : null;
+    if (inline && (typeof data !== 'string' || data.length !== content.encodedLength)) {
         return failure('the post has been changed since the content was stored');
     }
     if (!inline) {
@@ -180,9 +209,10 @@ export function describeSteemContentManifest(post, { threadAccounts }) {
         manifest: Object.freeze({
             author: post.author,
             permlink: post.permlink,
+            version,
             ...content,
             inline,
-            body: inline ? post.body : null
+            data
         }),
         problem: null
     });
