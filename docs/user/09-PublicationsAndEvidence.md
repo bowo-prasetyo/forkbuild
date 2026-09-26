@@ -2162,6 +2162,16 @@ the Publication's announcement reads the claim back from Steem, and its
 signature is checked exactly as for a claim from Arweave. As with every
 storage, a Snapshot loaded back is checked against its content hash.
 
+**Sharing a link on Steem.** The Signed Claim's post on Steem says "A build
+published with ForkBuild: see it in 3D". Anyone who clicks it on Steemit,
+even without having used ForkBuild before, lands in World View looking at
+your build. ForkBuild first checks the Publication's signature, then finds
+the build through its announcement and checks that it matches; if
+anything doesn't check out, the page says why instead. The build and its
+Publication are then kept in their browser, like any build found in the
+World. The link needs the build to be announced as well as stored, which
+Distribute does.
+
 Open **Steem** (`/settings/steem`) to set **Your Steem account** under
 **Posting** (it applies at once), or to change where it reads from:
 

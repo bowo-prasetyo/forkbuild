@@ -110,7 +110,9 @@ export class ContentStorePublicationMaterialUploader {
             return null;
         }
 
-        const reference = await this._contentStore.put(material);
+        // Stores that describe what they hold (Steem's notice) are told this
+        // is a Publication; the others ignore the option.
+        const reference = await this._contentStore.put(material, { kind: 'publication' });
         const uri = reference && reference.uri;
         if (typeof uri !== 'string' || uri.length === 0) {
             throw new Error('ContentStorePublicationMaterialUploader: contentStore resolved with no uri');
