@@ -30,6 +30,8 @@ import { PublicationDistributionLifecycleRestorer } from '../../application/publ
 import { hydratePublicationDistributionLifecycles } from '../../application/publication/distribution/PublicationDistributionLifecycleHydration.js';
 import { createNostrRelayQueryClient } from '../../nostr/NostrRelayQueryClient.js';
 import { LocalDiscoveryProvider } from '../../discovery/LocalDiscoveryProvider.js';
+import { AnnouncementKind } from '../../application/announcementIndex/AnnouncementKinds.js';
+import { IndexBackedPublicationDiscoveryService } from '../../application/announcementIndex/IndexedDiscoverySources.js';
 import { composeDecentralizedWorldEncounterMaterialDiscoveryServices, composeDecentralizedWorldEncounterMaterialDiscoveryRuntime } from '../../application/worldEncounter/DecentralizedWorldEncounterMaterialDiscoveryRuntimeComposition.js';
 import { composeDiscoverWorldEncounterPublicationCommand } from '../../application/worldEncounter/DiscoverWorldEncounterPublicationCommandComposition.js';
 import { composeWorldEncounterLeadAssociationsQuery } from '../../application/worldEncounter/WorldEncounterLeadAssociationsQueryComposition.js';
@@ -40,7 +42,7 @@ import { composeWorldEncounterLeadAssociationsQuery } from '../../application/wo
 // distribution lifecycles.
 export function composeWorldDiscovery({
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
-    ipfsNodeConfigurationStore, publicationContentStore = null
+    ipfsNodeConfigurationStore, publicationContentStore = null, announcementIndex = null
 }) {
     // The one World discovery registry. A peer's World contribution registers when
     // it sends and unregisters automatically when the peer disconnects.
@@ -114,13 +116,21 @@ export function composeWorldDiscovery({
     });
 
     const nostrRelayQueryClient = createNostrRelayQueryClient({});
-    const decentralizedWorldDiscoveryServices = {
+    // Each service records the leads it finds in the Announcement Index and
+    // returns the ones it found before (docs/AnnouncementIndex.md).
+    const networkWorldDiscoveryServices = {
         ...composeDecentralizedWorldEncounterMaterialDiscoveryServices({
             nostrQueryImpl: nostrRelayQueryClient,
             nostrRelayUrls: resolvedNostrRelayUrls
         }),
         steem: steemRuntime ? steemRuntime.publicationDiscoveryQueryService : null
     };
+    const decentralizedWorldDiscoveryServices = Object.fromEntries(Object.entries(networkWorldDiscoveryServices).map(([name, service]) => [
+        name,
+        service && announcementIndex
+            ? new IndexBackedPublicationDiscoveryService(service, { index: announcementIndex, kind: AnnouncementKind.PUBLICATION })
+            : service
+    ]));
     const decentralizedWorldEncounterMaterialDiscoveryRuntime = composeDecentralizedWorldEncounterMaterialDiscoveryRuntime({
         discoveryServices: decentralizedWorldDiscoveryServices,
         local: new LocalWorldEncounterMaterialSource(new LocalStorageProvider()),

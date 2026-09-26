@@ -109,7 +109,7 @@ the app already keeps.
 
 ## Phase 1: record every discovery result
 
-**Planned.**
+**Built.**
 
 `application/announcementIndex/AnnouncementIndex.js` is the store.
 `application/announcementIndex/AnnouncementKinds.js` defines each kind's
@@ -136,18 +136,22 @@ connects them to the existing discovery code.
 
 ## Phase 2: show the index first
 
-**Planned.**
+**Built.**
 
 When World View opens, it does not wait for the network. On its first
-refresh, it reads the index alone and:
+refresh with a position, it reads the index alone and:
 
-- hands every indexed Snapshot candidate to automatic placement, which
-  already does nothing for one it has handled;
-- shows the Place Naming claims the index holds for this World's
-  regions, near the player.
+- hands every indexed Snapshot candidate to automatic placement
+  (`discoverIndexedSnapshotCandidatesCommand`). Placement already does
+  nothing for a candidate it has handled;
+- shows the Place Naming claims the index holds for this World's regions
+  near the player (`indexedPlaceNamingDiscoveryQueryService`, then
+  `PlaceNamingDiscoveryMonitor#seed()`). A seed only fills an empty
+  result, so it never overwrites a network answer that arrived first.
 
-The normal network discovery then runs as before. What it finds is
-recorded, and appears on the next refresh.
+The normal network discovery runs on that same refresh, as before. Its
+answer, which includes the index, replaces the seeded claims when it
+arrives.
 
 ## Phase 3: sync cursors
 

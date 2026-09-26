@@ -573,7 +573,7 @@ async function runTests() {
         // own Section E/G for the identical journey run WITH Arweave
         // included, end to end.
         const mainSourceForFinding = (await Promise.all(mainFiles().map((file) => readSource(file)))).join('\n');
-        assert(/arweaveSnapshotDiscoveryQueryService/.test(mainSourceForFinding) && /nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService/.test(mainSourceForFinding),
+        assert(/arweaveSnapshotDiscoveryQueryService/.test(mainSourceForFinding) && /nostrSnapshotDiscoveryQueryService: (recording\()?snapshotDiscoveryQueryService/.test(mainSourceForFinding),
             '59. production confirmation: the real discoverSnapshotCandidatesWithOutcomeCommand is composed from Nostr + Local + Arweave together — this fix is reachable in production, not only in this test\'s own constructed scenario');
 
         console.log('✓ Section I CLOSED (0.9.591): ArweaveSnapshotDiscoveryQueryService now carries the identical searchWithOutcome() sibling NostrSnapshotDiscoveryQueryService already had — the composite\'s own "classify from the outside" heuristic now correctly detects an Arweave failure as UNAVAILABLE, while a genuine Arweave EMPTY still reports EMPTY, exactly mirroring NostrSnapshotDiscoveryQueryService\'s own 0.9.589 addition, one source over.');

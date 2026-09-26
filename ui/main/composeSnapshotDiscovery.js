@@ -4,6 +4,7 @@ import { composePlaceNamingPublicationRuntime } from '../../application/placeNam
 import { composeDiscoverSnapshotRuntime } from '../../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
 import { executeDiscoverSnapshotCommand } from '../../application/snapshot/DiscoverSnapshotCommand.js';
 import { executeDiscoverSnapshotCandidatesCommand, executeDiscoverSnapshotCandidatesCommandWithOutcome } from '../../application/snapshot/DiscoverSnapshotCandidatesCommand.js';
+import { SnapshotCandidateDiscoveryQueryService } from '../../application/snapshot/SnapshotCandidateDiscoveryQueryService.js';
 import { WorldSnapshotDiscoveryMonitor } from '../../application/snapshot/WorldSnapshotDiscoveryMonitor.js';
 import { composeSnapshotCandidateDiscoveryRuntime } from '../../application/snapshot/SnapshotCandidateDiscoveryRuntimeComposition.js';
 import { ArweaveSnapshotDiscoveryQueryService } from '../../application/arweave/ArweaveSnapshotDiscoveryQueryService.js';
@@ -14,6 +15,8 @@ import { composePlaceNamingDiscoveryRuntime } from '../../application/placeNamin
 import { executeResolveSelectedSnapshotCommand } from '../../application/snapshot/ResolveSelectedSnapshotCommand.js';
 import { MaterializeSnapshotFromSelectedCandidateUseCase } from '../../application/snapshot/materialization/MaterializeSnapshotFromSelectedCandidateUseCase.js';
 import { executeMaterializeSelectedSnapshotCommand } from '../../application/snapshot/materialization/MaterializeSelectedSnapshotCommand.js';
+import { AnnouncementKind } from '../../application/announcementIndex/AnnouncementKinds.js';
+import { RecordingDiscoverySource, IndexedAnnouncementSource } from '../../application/announcementIndex/IndexedDiscoverySources.js';
 
 // Composition root: the saved content provider default, Place Naming
 // publication and discovery, and Snapshot discovery, candidate discovery,
@@ -22,8 +25,16 @@ export function composeSnapshotDiscovery({
     publicationSnapshotPlacementCatalog, publicationSnapshotPlacementResolutionStoreRegistry,
     roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
-    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime = null
+    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime = null,
+    announcementIndex = null
 }) {
+    // Every network discovery result is recorded in the Announcement Index, and
+    // the index answers beside the network (docs/AnnouncementIndex.md).
+    const recording = (source, kind, origin) => (source && announcementIndex
+        ? new RecordingDiscoverySource(source, { index: announcementIndex, kind, origin })
+        : source);
+    const indexedSource = (kind) => (announcementIndex ? new IndexedAnnouncementSource({ index: announcementIndex, kind }) : null);
+
     // Seeds the Content/Snapshot pickers from the saved CONTENT preference, never
     // overriding a pick. 'remote-pinning' is added to the eligible list because that
     // store reports its storage as 'ipfs' and so never has its own registry key;
@@ -69,9 +80,10 @@ export function composeSnapshotDiscovery({
     // Reads Arweave directly: a read-only query needs no signer or wallet.
     const arweaveSnapshotDiscoveryQueryService = new ArweaveSnapshotDiscoveryQueryService({ gatewayUrl: resolvedArweaveGatewayUrl });
     const { queryService: snapshotCandidateDiscoveryQueryService } = composeSnapshotCandidateDiscoveryRuntime({
-        nostrSnapshotDiscoveryQueryService: snapshotDiscoveryQueryService,
-        arweaveSnapshotDiscoveryQueryService,
-        steemSnapshotDiscoveryQueryService: steemRuntime ? steemRuntime.snapshotDiscoveryQueryService : null,
+        nostrSnapshotDiscoveryQueryService: recording(snapshotDiscoveryQueryService, AnnouncementKind.SNAPSHOT, 'nostr'),
+        arweaveSnapshotDiscoveryQueryService: recording(arweaveSnapshotDiscoveryQueryService, AnnouncementKind.SNAPSHOT, 'arweave'),
+        steemSnapshotDiscoveryQueryService: recording(steemRuntime ? steemRuntime.snapshotDiscoveryQueryService : null, AnnouncementKind.SNAPSHOT, 'steem'),
+        announcementIndexSource: indexedSource(AnnouncementKind.SNAPSHOT),
         placementCatalog: publicationSnapshotPlacementCatalog
     });
 
@@ -82,6 +94,16 @@ export function composeSnapshotDiscovery({
         discoveryTag: 'forkbuild-snapshot',
         discoveryQueryService: snapshotCandidateDiscoveryQueryService
     });
+
+    // The index alone: World View shows what earlier searches found before the
+    // network answers. Null without an index.
+    const indexedSnapshotSource = indexedSource(AnnouncementKind.SNAPSHOT);
+    const discoverIndexedSnapshotCandidatesCommand = indexedSnapshotSource
+        ? () => executeDiscoverSnapshotCandidatesCommand({
+            discoveryTag: 'forkbuild-snapshot',
+            discoveryQueryService: new SnapshotCandidateDiscoveryQueryService([indexedSnapshotSource])
+        })
+        : null;
 
     // Same service, but searchWithOutcome() lets the explicit button tell an empty
     // result from a failed search. The background monitor keeps the plain command.
@@ -101,14 +123,18 @@ export function composeSnapshotDiscovery({
     // left out rather than throwing.
     const placeNamingDiscoverySources = [
         ...(nostrRelayQueryClient
-            ? [resolvedNostrRelayUrls.length > 1
+            ? [recording(resolvedNostrRelayUrls.length > 1
                 ? new NostrMultiRelayPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrls: resolvedNostrRelayUrls })
-                : new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrls[0] })]
+                : new NostrPlaceNamingDiscoverySource({ queryImpl: nostrRelayQueryClient, relayUrl: resolvedNostrRelayUrls[0] }), AnnouncementKind.PLACE_NAMING, 'nostr')]
             : []),
-        new ArweavePlaceNamingDiscoverySource({ gatewayUrl: resolvedArweaveGatewayUrl }),
-        ...(steemRuntime ? [steemRuntime.placeNamingDiscoverySource] : [])
+        recording(new ArweavePlaceNamingDiscoverySource({ gatewayUrl: resolvedArweaveGatewayUrl }), AnnouncementKind.PLACE_NAMING, 'arweave'),
+        ...(steemRuntime ? [recording(steemRuntime.placeNamingDiscoverySource, AnnouncementKind.PLACE_NAMING, 'steem')] : []),
+        ...(announcementIndex ? [indexedSource(AnnouncementKind.PLACE_NAMING)] : [])
     ];
     const { queryService: placeNamingDiscoveryQueryService } = composePlaceNamingDiscoveryRuntime({ sources: placeNamingDiscoverySources });
+    const indexedPlaceNamingDiscoveryQueryService = announcementIndex
+        ? composePlaceNamingDiscoveryRuntime({ sources: [indexedSource(AnnouncementKind.PLACE_NAMING)] }).queryService
+        : null;
 
     // Resolves exactly the selected candidate via resolveCandidate(), through the
     // same resolution registry.
@@ -128,6 +154,7 @@ export function composeSnapshotDiscovery({
         resolvedContentDistributionProvider, publishPlaceNamingClaimToNostrCommand, discoverSnapshotCommand,
         snapshotCandidateDiscoveryQueryService, discoverSnapshotCandidatesCommand,
         discoverSnapshotCandidatesWithOutcomeCommand, worldSnapshotDiscoveryMonitor,
-        placeNamingDiscoveryQueryService, resolveSelectedSnapshotCommand, materializeSelectedSnapshotCommand
+        placeNamingDiscoveryQueryService, resolveSelectedSnapshotCommand, materializeSelectedSnapshotCommand,
+        discoverIndexedSnapshotCandidatesCommand, indexedPlaceNamingDiscoveryQueryService
     };
 }

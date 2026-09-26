@@ -1272,3 +1272,33 @@ configured more by hand. The Bitcoin endpoint could not hold more than one serve
   a wrapper only for two or more endpoints); `tests/NetworkSettingsSharedForms.test.js` (every list page starts from
   its defaults, won't save them unchanged, and Reset refills them); `tests/SteemReadingSettingsView.test.js` (the same
   for the Steem page); Bitcoin configuration and persistence tests for the list shape.
+
+## Announcement Index: record discovery results and show them first (unnumbered, 2026-09-26)
+
+**Everything discovery finds is now kept on this device, and World View shows it before the network answers.**
+A Nostr or Arweave query returns only the newest 20 announcements for a tag, and Snapshot candidates, Place
+Naming claims and Publication leads were held in memory only. So every visit started from nothing, and an
+announcement pushed out of that newest page was never seen again. docs/AnnouncementIndex.md sets out the whole
+design in six phases; this entry covers Phases 1 and 2.
+
+- `application/announcementIndex/AnnouncementIndex.js` stores records per kind and tag in the same storage as
+  everything else (IndexedDB in the browser). Each record has a key, a payload, the origins that reported it,
+  and first- and last-seen times. It holds at most 2,000 records a tag, dropping the least recently seen, and
+  refuses payloads over 8 KiB. `AnnouncementKinds.js` defines each kind's checks and key. A Place Naming claim's
+  key includes its signature, so a forged copy under a real claim id is kept beside the real claim, never in its
+  place, and a claim must belong to the region tag it is stored under.
+- `IndexedDiscoverySources.js`: every Nostr, Arweave and Steem source of Snapshot candidate and Place Naming
+  discovery is wrapped so its successful results are recorded. Results and failures pass through unchanged, and
+  a failure to record is ignored. The index joins each aggregator as one more source. An empty index reports
+  UNAVAILABLE, never EMPTY, so it cannot turn "every substrate failed" into "nothing was announced". Publication
+  discovery services also return the leads they found before for the same origin, so a lead keeps the origin
+  that decides how its material is fetched.
+- World View, on its first refresh with a position, hands indexed Snapshot candidates to automatic placement and
+  seeds nearby Place Naming claims (`PlaceNamingDiscoveryMonitor#seed()`, which only fills an empty result).
+  Network discovery still runs on the same refresh and replaces the seeded claims.
+- Checked in Chromium on the real app: with a Snapshot candidate saved in the index, opening World View requested
+  its Arweave locator while every relay and gateway was unreachable.
+- Tests: `tests/AnnouncementIndex.test.js` (keys, merging across origins, persistence, limits, each kind's checks,
+  recording being transparent to callers, the Snapshot, Place Naming and Publication paths answering from the
+  index while offline, and seeding). `tests/SnapshotDiscoveryOutcomePresentationClosureAudit.test.js` accepts
+  the wrapped Nostr source in its check of the production wiring.
