@@ -330,13 +330,15 @@ export function composePublicationDistributionRuntime({
     discoveryProvider = 'nostr',
     nostrPublisherOptions = {},
     arweaveAnnouncementPublisherOptions = {},
-    steemPublicationDiscoveryPublisher = null
+    steemPublicationDiscoveryPublisher = null,
+    steemMaterialStore = null
 } = {}) {
     const uploader = composePublicationMaterialUploader({
         materialStorage,
         arweaveUploaderOptions,
         ipfsNodeOptions,
-        remotePinningProviderOptions
+        remotePinningProviderOptions,
+        steemMaterialStore
     });
 
     let publisher;

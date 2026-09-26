@@ -625,10 +625,11 @@ separate substrate choice, never merged with Steem results.
 resuming and the RC check, and `get()`), `storage/SteemContentUploadStore.js` (unfinished uploads),
 `application/steem/SteemResourceCreditEstimator.js` (asking a node), and `postContent()` and `postContentPart()` in
 `application/steem/SteemAnnouncer.js`. `composeSteemRuntime()` builds the store, and `ui/main.js` registers it for
-Snapshot storage and resolution.
+Snapshot storage and resolution; Publication distribution stores Signed Claims through it, and
+`application/worldEncounter/SteemWorldEncounterMaterialResolver.js` reads them back.
 
 Steem would be a third Content substrate next to IPFS and Arweave: a `ContentStore` whose `storage` is `'steem'`,
-holding a Snapshot's bytes in Steem comments. Storing content is a separate role from announcing it. A Snapshot
+holding a Snapshot's bytes, or a Publication's Signed Claim, in Steem comments. Storing content is a separate role from announcing it. A Snapshot
 stored on Steem can be announced on Nostr, Arweave or Steem, and one stored on IPFS can be announced on Steem, as
 today. The chain is only a carrier: a reader loads the bytes only after they match `contentHash`, exactly as it does
 for bytes from any other store, so Steem never has to be trusted.
@@ -812,17 +813,26 @@ node outage doesn't lose a copy already loaded.
 
 ### Scope
 
-Steem storage holds Snapshot bytes only. Publication material (the signed claim the Arweave uploader also places)
-could use the same format later. The work was done in the order the proposal suggested: the inline case, then parts
-with progress and resuming, then the Resource Credits estimate. Still open: comparing the RC estimate with a live
-node, and measuring compression on more real builds to confirm the part size and part limit.
+Steem storage holds a Snapshot's bytes and a Publication's Signed Claim (the material the Arweave and IPFS uploaders
+also place), in the same manifest format. A Signed Claim is a few kilobytes, so it is always one inline manifest.
+The work was done in the order the proposal suggested: the inline case, then parts with progress and resuming, then
+the Resource Credits estimate, then Signed Claims. Still open: comparing the RC estimate with a live node, and
+measuring compression on more real builds to confirm the part size and part limit.
 
-Where it's chosen: the Storage choice in the Editor and World View Distribute dialogs offers **Steem (Snapshots
-only)** next to IPFS and Arweave; the Publications page's Content choice and the Content Provider settings page offer
-**Steem**. The Distribute dialogs share one Storage choice between the Snapshot and the Signed Claim, and Steem
-storage holds Snapshots only: a Signed Claim distributed with Steem chosen is refused with "Steem storage holds
-Snapshots only for now. Choose Arweave or IPFS storage to distribute the Signed Claim.", while the Snapshot is still
-stored. It ships as Experimental, like the Steem announcement substrate.
+Where it's chosen: the Storage choice in the Editor and World View Distribute dialogs offers **Steem** next to IPFS
+and Arweave; the Publications page's Content choice and the Content Provider settings page offer **Steem** too. The
+Distribute dialogs share one Storage choice between the Snapshot and the Signed Claim. With Steem chosen,
+`composePublicationMaterialUploader()` stores the claim through the Steem runtime's `SteemContentStore`, and the
+Publication announcement's `uri` is the claim's `steem://<author>/<permlink>` locator, on whichever substrate
+announces it. It ships as Experimental, like the Steem announcement substrate.
+
+Reading a Signed Claim back: World discovery's decentralized material source sends a `steem://` uri to
+`application/worldEncounter/SteemWorldEncounterMaterialResolver.js` and every other uri to the Arweave resolver. The
+resolver reads through its own `SteemContentStore` with no announcer and a 48 KiB decoded limit (the Arweave
+resolver's limit for material), and follows the Arweave resolver's contract: a missing post, a post that isn't a
+content manifest, changed parts, oversized content, or content that isn't a JSON object reads as unavailable; a Steem
+node that can't be reached rejects. It never checks the claim's signature; the material verifier does, as for every
+substrate.
 
 ## Proposed: Steem Anchoring
 

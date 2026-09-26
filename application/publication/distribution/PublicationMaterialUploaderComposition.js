@@ -20,18 +20,22 @@ import { HttpPinningProvider } from '../../../content/HttpPinningProvider.js';
 // `materialStorage` value means.
 //
 //   composePublicationMaterialUploader({
-//       materialStorage,             // 'ar' (default) | 'ipfs' | 'remote-pinning'
+//       materialStorage,             // 'ar' (default) | 'ipfs' | 'remote-pinning' | 'steem'
 //       arweaveUploaderOptions,
 //       ipfsNodeOptions,
-//       remotePinningProviderOptions
+//       remotePinningProviderOptions,
+//       steemMaterialStore           // the Steem runtime's content store, or null
 //   })
 //        │
 //        ├──► 'ar'             → new ArweavePublicationMaterialUploader(arweaveUploaderOptions)               (0.9.45, unmodified)
 //        ├──► 'ipfs'           → new ContentStorePublicationMaterialUploader({                                (0.9.670)
 //        │                          contentStore: new IpfsContentStore(ipfsNodeOptions) })            (content/IpfsContentStore.js, 0.7.1, unmodified)
-//        └──► 'remote-pinning' → new ContentStorePublicationMaterialUploader({                                (0.9.670)
-//                                   contentStore: new IpfsRemotePinningContentStore({                          (content/IpfsRemotePinningContentStore.js, 0.8.67, unmodified)
-//                                       provider: new HttpPinningProvider(remotePinningProviderOptions) }) })  (content/HttpPinningProvider.js, 0.8.67, unmodified)
+//        ├──► 'remote-pinning' → new ContentStorePublicationMaterialUploader({                                (0.9.670)
+//        │                          contentStore: new IpfsRemotePinningContentStore({                          (content/IpfsRemotePinningContentStore.js, 0.8.67, unmodified)
+//        │                              provider: new HttpPinningProvider(remotePinningProviderOptions) }) })  (content/HttpPinningProvider.js, 0.8.67, unmodified)
+//        └──► 'steem'          → new ContentStorePublicationMaterialUploader({
+//                                   contentStore: steemMaterialStore })                                (content/SteemContentStore.js, injected;
+//                                                                                                       throws when none was given)
 //        │
 //        ▼
 //   materialUploader   ({ upload(material) -> Promise<uri|null>, storage })
@@ -85,7 +89,7 @@ import { HttpPinningProvider } from '../../../content/HttpPinningProvider.js';
 //   unmodified.
 
 // composePublicationMaterialUploader({ materialStorage, arweaveUploaderOptions,
-//   ipfsNodeOptions, remotePinningProviderOptions }) -> materialUploader.
+//   ipfsNodeOptions, remotePinningProviderOptions, steemMaterialStore }) -> materialUploader.
 // See this file's own header for the full contract. Throws synchronously for
 // an unrecognized `materialStorage`, or for a malformed option bag the
 // selected concrete constructor already rejects.
@@ -93,7 +97,8 @@ export function composePublicationMaterialUploader({
     materialStorage = 'ar',
     arweaveUploaderOptions = {},
     ipfsNodeOptions = {},
-    remotePinningProviderOptions = {}
+    remotePinningProviderOptions = {},
+    steemMaterialStore = null
 } = {}) {
     if (materialStorage === 'ar') {
         return new ArweavePublicationMaterialUploader(arweaveUploaderOptions);
@@ -111,9 +116,13 @@ export function composePublicationMaterialUploader({
         });
     }
     if (materialStorage === 'steem') {
-        // Steem storage holds Snapshots only so far (docs/Protocol.md,
-        // "Proposed: Steem Content Storage", "Scope and order of work").
-        throw new Error('Steem storage holds Snapshots only for now. Choose Arweave or IPFS storage to distribute the Signed Claim.');
+        // The same Steem content store Snapshots use (docs/Protocol.md,
+        // "Proposed: Steem Content Storage", "Scope"): the Signed Claim is
+        // stored as one manifest reply to this month's content thread.
+        if (!steemMaterialStore) {
+            throw new Error('Steem storage is not available. Choose Arweave or IPFS storage to distribute the Signed Claim.');
+        }
+        return new ContentStorePublicationMaterialUploader({ contentStore: steemMaterialStore });
     }
-    throw new Error(`PublicationMaterialUploaderComposition: unrecognized materialStorage "${materialStorage}" — expected "ar", "ipfs", or "remote-pinning"`);
+    throw new Error(`PublicationMaterialUploaderComposition: unrecognized materialStorage "${materialStorage}" — expected "ar", "ipfs", "remote-pinning" or "steem"`);
 }

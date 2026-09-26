@@ -1,12 +1,12 @@
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 import { describeSteemContentUploadProgress } from '../../application/steem/SteemContentUploadProgressText.js';
 
-// Steem holds Snapshots only (docs/Protocol.md, "Proposed: Steem
-// Content Storage").
+// Steem holds both the Snapshot and the Signed Claim (docs/Protocol.md,
+// "Proposed: Steem Content Storage").
 const STORAGE_OPTION_LABELS = {
     ipfs: 'IPFS (Local Kubo)',
     ar: 'Arweave',
-    steem: 'Steem (Snapshots only)'
+    steem: 'Steem'
 };
 
 // 0.9.672 — World View Distribution Dialog.

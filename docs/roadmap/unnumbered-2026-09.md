@@ -1005,3 +1005,28 @@ approval.** This finishes `docs/Protocol.md`, "Proposed: Steem Anchoring", which
   The Publications page was loaded in Chromium to check the new card renders without errors.
 - Not done: trying it against a live node and a real Keychain, neither reachable from this environment; checking a
   kept signing key against the witness's key history.
+
+## Signed Claims on Steem storage (unnumbered, 2026-09-26)
+
+**A Publication's Signed Claim can now be stored on Steem, and World discovery reads it back.** Before, choosing
+Steem storage in a Distribute dialog stored the Snapshot but refused the Signed Claim with "Steem storage holds
+Snapshots only for now". Nothing technical stood in the way: the claim is a few kilobytes of JSON, one inline
+manifest in the content thread, and its signature is what makes it trustworthy, whatever carries it.
+
+- Storing: `composePublicationMaterialUploader({ materialStorage: 'steem', steemMaterialStore })` wraps the Steem
+  runtime's `SteemContentStore` in the existing `ContentStorePublicationMaterialUploader`, as IPFS does. The store is
+  passed down from `ui/main/composePublicationDistribution.js` through both publication distribution commands (the
+  single-provider one and the Nostr multi-relay one). Without a store, Steem storage is refused with a reason.
+- Reading: `application/worldEncounter/SteemWorldEncounterMaterialResolver.js` reads a `steem://` locator through
+  its own announcer-less `SteemContentStore` with a 48 KiB limit, and follows the Arweave material resolver's
+  contract (unavailable for missing or malformed content, a rejection when no node answers). `SteemContentStore`
+  now attaches the node error as `cause` when it can't reach Steem, which is how the resolver tells the two apart.
+  `composeWorldEncounterMaterialSources()` sends `steem://` uris to it and every other uri to Arweave;
+  `composeSteemRuntime()` provides it as `publicationMaterialResolver`.
+- The Distribute dialogs' storage label is now "Steem".
+- Tests: `tests/SteemPublicationMaterial.test.js` (the uploader choice, a claim stored and announced on a fake
+  chain through the real command, discovery, retrieval and signature verification end to end, a tampered claim
+  rejected by the verifier, the resolver's refusals and rejection, and routing by uri).
+- Not done: World discovery only links an announced claim to a Publication already known on this device when that
+  Publication's `contentReference.uri` equals the announced uri; that is how discovery works for every substrate,
+  and it is unchanged here.
