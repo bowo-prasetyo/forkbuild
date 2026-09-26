@@ -43,7 +43,7 @@ import { readSource as source } from './support/SourceText.js';
 //   Section E  — rejected input never mutates the existing configuration.
 //   Section F  — replacement: relay-A -> relay-B replaces, never
 //                accumulates a second entry.
-//   Section G  — clear: "Use Deployment Default" restores genuine absence.
+//   Section G  — clear: "Reset to Defaults" restores genuine absence.
 //   Section H  — restart: a brand-new store/use-case pair, over the SAME
 //                underlying storage, observes what an earlier instance
 //                saved.
@@ -158,7 +158,7 @@ async function run() {
             '10. the view writes the configuration through the injected use case, never NostrRelayConfigurationStore.save() directly');
         assert(!/new NostrRelayConfiguration\(/.test(viewExecutable),
             '11. the view never constructs a NostrRelayConfiguration itself — validation and construction stay inside the use case');
-        assert(viewExecutable.includes("import { DEFAULT_NOSTR_RELAY_URL } from '../../core/NostrRelayConfiguration.js';"),
+        assert(viewExecutable.includes("import { DEFAULT_NOSTR_RELAY_URLS } from '../../core/NostrRelayConfiguration.js';"),
             '12. the ONE thing the view imports from core/NostrRelayConfiguration.js is the plain default constant, for display only');
         console.log('✓ Section 0: the settings entry point is really wired — nav link, route, shared store, shared use case, and a view that only ever goes through the injected collaborators');
     }
@@ -262,7 +262,7 @@ async function run() {
     console.log('✓ Section F: replacing a saved relay never accumulates a second entry');
 
     // ===============================================================
-    // Section G — clear: "Use Deployment Default" restores genuine
+    // Section G — clear: "Reset to Defaults" restores genuine
     // absence, never a saved copy of the default.
     // ===============================================================
     {
@@ -273,7 +273,7 @@ async function run() {
         setUseCase.execute({ relayUrls: ['wss://my-relay.example'] });
         assert(store.get() !== null, '34. a configuration is on file before clearing');
 
-        // "Use Deployment Default" — the view calls store.clear() directly,
+        // "Reset to Defaults" — the view calls store.clear() directly,
         // never setUseCase.execute({ relayUrls: [DEFAULT_NOSTR_RELAY_URL] }).
         store.clear();
         assert(store.get() === null, '35. clear() restores genuine absence — get() is a real null');
@@ -282,7 +282,7 @@ async function run() {
         const effective = (store.get() || { relayUrl: DEFAULT_NOSTR_RELAY_URL }).relayUrl;
         assert(effective === DEFAULT_NOSTR_RELAY_URL, '37. after clearing, the effective relay falls back to the deployment default');
     }
-    console.log('✓ Section G: "Use Deployment Default" clears to genuine absence, never persisting a copy of the default URL');
+    console.log('✓ Section G: "Reset to Defaults" clears to genuine absence, never persisting a copy of the default URL');
 
     // ===============================================================
     // Section H — restart: a brand-new store/use-case pair, over the SAME
@@ -453,9 +453,9 @@ async function run() {
 
         // Display state.
         assert(/v-if="hasOverride"/.test(viewSource), '58. the template branches on whether an override is on file');
-        assert(/No override configured/.test(viewSource) && /deploymentDefaultRelayUrl/.test(viewSource),
+        assert(/Using the default/.test(viewSource) && /effectiveEntries/.test(viewSource),
             '59. the no-override state displays the effective deployment default as informational text');
-        assert(/Current override/.test(viewSource), '60. the override state displays the current, actually-saved relayUrl');
+        assert(/Using your saved/.test(viewSource), '60. the override state displays the current, actually-saved relayUrl');
 
         // Opening the page never writes anything: load() only calls
         // store.get(), never store.save()/setNostrRelayConfigurationUseCase.execute()
@@ -469,20 +469,20 @@ async function run() {
         assert(!/execute\(|\.save\(|\.clear\(/.test(loadFnMatch[0]),
             '62. load() never calls the use case, store.save(), or store.clear() — merely opening the page persists nothing');
 
-        // Save / Use Deployment Default wiring.
+        // Save / Reset to Defaults wiring.
         assert(/@click="save"/.test(viewSource), '63. a Save action is wired');
-        assert(/@click="useDeploymentDefault"/.test(viewSource), '64. a Use Deployment Default action is wired');
-        const useDeploymentDefaultFnMatch = /useDeploymentDefault: form\.clear\b/.test(viewSource)
+        assert(/@click="resetToDefaults"/.test(viewSource), '64. a Reset to Defaults action is wired');
+        const resetToDefaultsFnMatch = /resetToDefaults: form\.clear\b/.test(await source('ui/composables/useEndpointListSettings.js'))
             && formSource.match(/function clear\(\)\s*\{[\s\S]*?\n\s{4}\}/);
-        assert(useDeploymentDefaultFnMatch, '65. Use Deployment Default is wired to the shared clear() function');
-        assert(/store\.clear\(\)/.test(useDeploymentDefaultFnMatch[0]),
-            '66. Use Deployment Default calls store.clear()');
-        assert(!/DEFAULT_NOSTR_RELAY_URL/.test(useDeploymentDefaultFnMatch[0]),
-            '67. Use Deployment Default never saves { relayUrl: DEFAULT_NOSTR_RELAY_URL } — it only ever clears');
-        const saveFnMatch = /\bsave: form\.save\b/.test(viewSource)
+        assert(resetToDefaultsFnMatch, '65. Reset to Defaults is wired to the shared clear() function');
+        assert(/store\.clear\(\)/.test(resetToDefaultsFnMatch[0]),
+            '66. Reset to Defaults calls store.clear()');
+        assert(!/DEFAULT_NOSTR_RELAY_URL/.test(resetToDefaultsFnMatch[0]),
+            '67. Reset to Defaults never saves { relayUrl: DEFAULT_NOSTR_RELAY_URL } — it only ever clears');
+        const saveFnMatch = /\bsave: form\.save\b/.test(await source('ui/composables/useEndpointListSettings.js'))
             && formSource.match(/function save\(\)\s*\{[\s\S]*?\n\s{4}\}/);
         assert(saveFnMatch, '68. a save() function exists');
-        assert(/useCase\.execute\(/.test(saveFnMatch[0]) && /useCase: setNostrRelayConfigurationUseCase\b/.test(viewSource),
+        assert(/useCase\.execute\(/.test(saveFnMatch[0]) && /useCase: inject\('setNostrRelayConfigurationUseCase'/.test(viewSource),
             '69. save() goes through the injected use case, never a direct store.save()');
         assert(!/store\.save\(/.test(saveFnMatch[0]),
             '70. save() never calls store.save() directly, bypassing the use case');
@@ -514,7 +514,7 @@ async function run() {
             assert(!templateText.includes(term), `75 ('${term}'). the deliberately-excluded feature vocabulary never appears in what the view actually renders`);
         }
 
-        console.log('✓ Section L: the view template shows the correct no-override/override states without ever mutating on load, wires Save through the use case and Use Deployment Default through store.clear() only, constructs no infrastructure/network logic, and carries none of the deliberately-excluded feature vocabulary');
+        console.log('✓ Section L: the view template shows the correct no-override/override states without ever mutating on load, wires Save through the use case and Reset to Defaults through store.clear() only, constructs no infrastructure/network logic, and carries none of the deliberately-excluded feature vocabulary');
     }
 
     // ===============================================================

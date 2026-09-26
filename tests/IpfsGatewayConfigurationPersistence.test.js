@@ -180,10 +180,8 @@ async function run() {
         const mainSource = (await Promise.all(mainFiles().map((file) => source(file)))).join('\n');
         assert(mainSource.includes('const ipfsGatewayConfigurationStore = new IpfsGatewayConfigurationStore(new LocalStorageProvider());'),
             'I1. ui/main.js constructs exactly one IpfsGatewayConfigurationStore, over LocalStorageProvider, the same composition-root shape Arweave/Nostr already hold');
-        assert(mainSource.includes("const resolvedIpfsGatewayUrl = (ipfsGatewayConfigurationStore.get() || { gatewayUrl: DEFAULT_IPFS_GATEWAY_URL }).gatewayUrl;"),
-            'I2. ui/main.js still resolves the single effective gateway with the identical "absent -> default, present -> override" pattern Section H proved directly against the store');
-        assert(mainSource.includes("const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: [DEFAULT_IPFS_GATEWAY_URL] }).gatewayUrls;"),
-            'I2b. ui/main.js also resolves the FULL ordered gatewayUrls list, over the SAME store instance, mirroring resolvedArweaveGatewayUrls\' own 0.9.440 shape');
+        assert(mainSource.includes("const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: DEFAULT_IPFS_GATEWAY_URLS }).gatewayUrls;"),
+            'I2. ui/main.js resolves the FULL ordered gatewayUrls list with the "absent -> default list, present -> override" pattern Section H proved directly against the store');
         const gatewayConstructionsWithOption = (mainSource.match(/composeIpfsGatewayContentStore\(resolvedIpfsGatewayUrls\)/g) || []).length;
         assert(gatewayConstructionsWithOption === 2, `I3. both real IPFS gateway content store construction sites now go through composeIpfsGatewayContentStore(resolvedIpfsGatewayUrls) — found ${gatewayConstructionsWithOption}`);
         assert(!/new IpfsGatewayContentStore\(\)/.test(mainSource), 'I4. no construction site passes zero arguments any more — the seam Section A/D of the earlier product-gap audits found unreached is now genuinely wired');

@@ -1,4 +1,5 @@
 import { BitcoinOpReturnProofVerifier } from '../../../anchoring/BitcoinOpReturnProofVerifier.js';
+import { BitcoinOpReturnProofVerifierFailover } from '../../../anchoring/BitcoinEsploraFailover.js';
 
 // 0.8.1 — External Anchor Proof Adapters & Verification Registry.
 //
@@ -15,10 +16,13 @@ import { BitcoinOpReturnProofVerifier } from '../../../anchoring/BitcoinOpReturn
 // caller that already knows it is about to verify a `bitcoin-op-return`
 // anchor.
 export class CreateBitcoinAnchorProofVerifierUseCase {
-    execute({ apiUrl, network, fetchImpl, timeoutMs, minConfirmations } = {}) {
-        const bitcoinProofVerifier = new BitcoinOpReturnProofVerifier({
-            apiUrl, network, fetchImpl, timeoutMs, minConfirmations
-        });
+    // `apiUrls` (two or more endpoints, in order) builds the failover
+    // wrapper from anchoring/BitcoinEsploraFailover.js; otherwise one
+    // adapter on `apiUrl` (or `apiUrls`' only entry).
+    execute({ apiUrl, apiUrls, network, fetchImpl, timeoutMs, minConfirmations } = {}) {
+        const bitcoinProofVerifier = Array.isArray(apiUrls) && apiUrls.length > 1
+            ? new BitcoinOpReturnProofVerifierFailover({ apiUrls, network, fetchImpl, timeoutMs, minConfirmations })
+            : new BitcoinOpReturnProofVerifier({ apiUrl: Array.isArray(apiUrls) && apiUrls.length === 1 ? apiUrls[0] : apiUrl, network, fetchImpl, timeoutMs, minConfirmations });
 
         return { bitcoinProofVerifier };
     }

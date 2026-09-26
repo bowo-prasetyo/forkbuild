@@ -1,7 +1,6 @@
-import { ref, inject } from 'vue';
-import { useEndpointSettingsForm } from '../composables/useEndpointSettingsForm.js';
-import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
-import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfiguration.js';
+import { inject } from 'vue';
+import { useEndpointListSettings } from '../composables/useEndpointListSettings.js';
+import { DEFAULT_ARWEAVE_GATEWAY_URLS } from '../../core/ArweaveGatewayConfiguration.js';
 
 // 0.9.366 — Arweave Gateway Settings UI.
 //
@@ -17,11 +16,11 @@ import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfigurat
 //      │
 //      ▼
 //   ArweaveGatewaySettingsView   ★ (THIS)
-//      current override / Save / Use Deployment Default
+//      current override / Save / Reset to Defaults
 //      │
 //      ▼
 //   application/settings/SetArweaveGatewayConfigurationUseCase.js (Save)   (this same milestone)
-//   storage/ArweaveGatewayConfigurationStore.js#clear() (Use Deployment Default)   (0.9.364, unmodified)
+//   storage/ArweaveGatewayConfigurationStore.js#clear() (Reset to Defaults)   (0.9.364, unmodified)
 //      │
 //      ▼
 //   ArweaveGatewayConfigurationStore
@@ -40,9 +39,9 @@ import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfigurat
 //
 // THIS VIEW NEVER CONSTRUCTS A RETRIEVAL ADAPTER, AND NEVER IMPORTS
 // content/ArweaveContentStore.js OR application/
-// ArweaveWorldEncounterMaterialResolver.js. `DEFAULT_ARWEAVE_GATEWAY_URL`
+// ArweaveWorldEncounterMaterialResolver.js. `DEFAULT_ARWEAVE_GATEWAY_URLS`
 // is the one thing imported from core/ArweaveGatewayConfiguration.js — a
-// plain constant, consulted only to LABEL the deployment default when no
+// plain constant, consulted only to SHOW the deployment defaults when no
 // override is on file, never to construct anything. A change saved here
 // only reaches those adapters through the existing composition root
 // (ui/main.js resolves `arweaveGatewayConfigurationStore.get()` once at
@@ -51,20 +50,21 @@ import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfigurat
 // re-composition this view attempts to perform itself.
 //
 // OPENING THIS PAGE NEVER WRITES ANYTHING. The shared `load()` (ui/composables/
-// useEndpointSettingsForm.js) only ever reads
-// `store.get()`; when it returns `null`, the input stays empty and the
-// deployment default is shown purely as informational text
-// (`deploymentDefaultGatewayUrl`) — merely visiting this page can never turn "no
-// override" into a persisted, explicit default. That is 0.9.364's own
-// "absence stays meaningful" rule, held here at the one place that could
-// otherwise quietly violate it.
+// useEndpointSettingsForm.js) only ever reads `store.get()`; when it returns
+// `null`, the textarea is filled with the deployment defaults as a starting
+// point, and Save stays disabled until the text differs from them (ui/
+// composables/useEndpointListSettings.js) — merely visiting this page, or
+// pressing Save on it unchanged, can never turn "no override" into a
+// persisted copy of the defaults. That is 0.9.364's own "absence stays
+// meaningful" rule, held here at the one place that could otherwise quietly
+// violate it.
 //
-// "USE DEPLOYMENT DEFAULT" CALLS `store.clear()`, NEVER
-// `save({ gatewayUrl: DEFAULT_ARWEAVE_GATEWAY_URL })`. Saving the default
-// value would wrongly turn "no preference" into "an explicit preference
-// that happens to match the default" — the exact confusion storage/
-// ArweaveGatewayConfigurationStore.js's own header already rules out. This
-// button is the one UI path back to genuine absence.
+// "RESET TO DEFAULTS" CALLS `store.clear()`, NEVER A SAVE OF THE DEFAULT
+// LIST. Saving the defaults would wrongly turn "no preference" into "an
+// explicit preference that happens to match today's defaults", which would
+// then stop following the defaults when a later release changes them — the
+// exact confusion storage/ArweaveGatewayConfigurationStore.js's own header
+// already rules out. This button is the one UI path back to genuine absence.
 //
 // 0.9.440 — ONE GATEWAY PER LINE, IN TRY ORDER. The single text input
 // became a multi-line field: each non-empty line is one gateway URL, and
@@ -88,38 +88,18 @@ import { DEFAULT_ARWEAVE_GATEWAY_URL } from '../../core/ArweaveGatewayConfigurat
 export default {
     name: 'ArweaveGatewaySettingsView',
     setup() {
-        const store = inject('arweaveGatewayConfigurationStore', null);
-        const setArweaveGatewayConfigurationUseCase = inject('setArweaveGatewayConfigurationUseCase', null);
-
-        // One gateway URL per line, in the order they should be tried.
-        const gatewayUrlInput = ref('');
-
-        const form = useEndpointSettingsForm({
-            store,
-            useCase: setArweaveGatewayConfigurationUseCase,
+        const settings = useEndpointListSettings({
+            store: inject('arweaveGatewayConfigurationStore', null),
+            useCase: inject('setArweaveGatewayConfigurationUseCase', null),
+            defaults: DEFAULT_ARWEAVE_GATEWAY_URLS,
+            entriesOf: (configuration) => configuration.gatewayUrls,
             // Splitting the textarea into lines is the ONLY interpretation
             // this view performs; every other rule (what counts as a valid
             // URL) stays inside core/ArweaveGatewayConfiguration.js's own
             // constructor, reached through the use case.
-            buildRequest: () => {
-                const gatewayUrls = splitNonEmptyLines(gatewayUrlInput.value);
-                return gatewayUrls.length > 0 ? { gatewayUrls } : null;
-            },
-            fillInputs: (configuration) => {
-                gatewayUrlInput.value = configuration ? configuration.gatewayUrls.join('\n') : '';
-            }
+            toRequest: (gatewayUrls) => ({ gatewayUrls })
         });
-
-        // Shown only when no override is on file, as informational text —
-        // so the gateway in effect is always exactly the deployment
-        // default, never a merge with anything.
-        const deploymentDefaultGatewayUrl = DEFAULT_ARWEAVE_GATEWAY_URL;
-
-        return {
-            hasOverride: form.hasConfiguration, deploymentDefaultGatewayUrl, configuration: form.configuration, gatewayUrlInput,
-            saveError: form.saveError, saveStatus: form.saveStatus, clearStatus: form.clearStatus,
-            save: form.save, useDeploymentDefault: form.clear
-        };
+        return { ...settings, gatewayUrlInput: settings.input };
     },
     template: `
         <section class="arweave-gateway-settings-view">
@@ -128,12 +108,11 @@ export default {
                 Gateway(s) used for retrieving Arweave content. One per line, in the order they should be tried — if the first does not respond, the next one is used. This setting affects retrieval only; it does not change where your publications are uploaded.
             </p>
 
-            <p v-if="hasOverride" class="form-hint form-hint--neutral">
-                Current override(s): {{ configuration.gatewayUrls.join(', ') }}
-            </p>
-            <p v-else class="form-hint form-hint--neutral">
-                No override configured. Currently using the deployment default: {{ deploymentDefaultGatewayUrl }}
-            </p>
+            <p v-if="hasOverride" class="form-hint form-hint--neutral">Using your saved gateways:</p>
+            <p v-else class="form-hint form-hint--neutral">Using the default gateways:</p>
+            <ul class="endpoint-settings-list">
+                <li v-for="url in effectiveEntries" :key="url">{{ url }}</li>
+            </ul>
 
             <div class="arweave-gateway-settings-form">
                 <textarea
@@ -145,10 +124,10 @@ export default {
 
                 <p v-if="saveError" class="form-hint">{{ saveError }}</p>
                 <p v-if="saveStatus === 'saved'" class="form-hint form-hint--neutral">Saved.</p>
-                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Cleared — now using the deployment default.</p>
+                <p v-if="clearStatus === 'cleared'" class="form-hint form-hint--neutral">Reset — now using the default gateways.</p>
 
-                <button class="action-btn action-btn--primary" @click="save" :disabled="!gatewayUrlInput.trim()">Save</button>
-                <button class="action-btn" @click="useDeploymentDefault">Use Deployment Default</button>
+                <button class="action-btn action-btn--primary" @click="save" :disabled="!canSave">Save</button>
+                <button class="action-btn" @click="resetToDefaults" :disabled="!hasOverride">Reset to Defaults</button>
             </div>
         </section>
     `

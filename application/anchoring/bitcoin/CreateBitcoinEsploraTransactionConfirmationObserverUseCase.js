@@ -1,4 +1,5 @@
 import { BitcoinEsploraTransactionConfirmationObserver } from '../../../anchoring/BitcoinEsploraTransactionConfirmationObserver.js';
+import { BitcoinEsploraTransactionConfirmationObserverFailover } from '../../../anchoring/BitcoinEsploraFailover.js';
 
 // 0.8.54 — Bitcoin Anchor Confirmation Observation.
 //
@@ -11,10 +12,13 @@ import { BitcoinEsploraTransactionConfirmationObserver } from '../../../anchorin
 // CreateBitcoinAnchorConfirmationObserverUseCase.js's own
 // `confirmationSource` option.
 export class CreateBitcoinEsploraTransactionConfirmationObserverUseCase {
-    execute({ apiUrl, fetchImpl, timeoutMs } = {}) {
-        const bitcoinEsploraTransactionConfirmationObserver = new BitcoinEsploraTransactionConfirmationObserver({
-            apiUrl, fetchImpl, timeoutMs
-        });
+    // `apiUrls` (two or more endpoints, in order) builds the failover
+    // wrapper from anchoring/BitcoinEsploraFailover.js; otherwise one
+    // adapter on `apiUrl` (or `apiUrls`' only entry).
+    execute({ apiUrl, apiUrls, fetchImpl, timeoutMs } = {}) {
+        const bitcoinEsploraTransactionConfirmationObserver = Array.isArray(apiUrls) && apiUrls.length > 1
+            ? new BitcoinEsploraTransactionConfirmationObserverFailover({ apiUrls, fetchImpl, timeoutMs })
+            : new BitcoinEsploraTransactionConfirmationObserver({ apiUrl: Array.isArray(apiUrls) && apiUrls.length === 1 ? apiUrls[0] : apiUrl, fetchImpl, timeoutMs });
 
         return { bitcoinEsploraTransactionConfirmationObserver };
     }

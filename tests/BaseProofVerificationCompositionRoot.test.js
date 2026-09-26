@@ -162,8 +162,8 @@ async function run() {
         // reopened header for the Bitcoin Endpoint Settings UI this
         // reflects); the registration/seeding shape this section actually
         // cares about is otherwise untouched.
-        check(/const \{ bitcoinProofVerifier \} = new CreateBitcoinAnchorProofVerifierUseCase\(\)\.execute\(\{ apiUrl: resolvedBitcoinEsploraApiUrl \}\);/.test(mainCode),
-            'A4. Bitcoin\'s own proof verifier construction now threads the settings-backed apiUrl — AMENDED, see comment above');
+        check(/const \{ bitcoinProofVerifier \} = new CreateBitcoinAnchorProofVerifierUseCase\(\)\.execute\(\{ apiUrls: resolvedBitcoinEsploraApiUrls \}\);/.test(mainCode),
+            'A4. Bitcoin\'s own proof verifier construction now threads the settings-backed endpoint list — AMENDED, see comment above');
         check(/proofVerifiers: \[bitcoinProofVerifier\]/.test(mainCode),
             'A5. ...and still seeds CreateExternalAnchorVerifierUseCase the same way');
         check(/externalAnchorProofVerifierRegistry\.register\(arweaveProofVerifier\)/.test(mainCode),

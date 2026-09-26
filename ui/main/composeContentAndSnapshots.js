@@ -29,7 +29,7 @@ import { ObservePeerSnapshotPossessionUseCase } from '../../application/snapshot
 import { SnapshotPeerPossessionCoordinator } from '../../application/snapshot/possession/SnapshotPeerPossessionCoordinator.js';
 import { SnapshotMaterializationSelectionCoordinator } from '../../application/snapshot/materialization/SnapshotMaterializationSelectionCoordinator.js';
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
-import { DEFAULT_IPFS_GATEWAY_URL } from '../../core/IpfsGatewayConfiguration.js';
+import { DEFAULT_IPFS_GATEWAY_URLS } from '../../core/IpfsGatewayConfiguration.js';
 import { IpfsGatewayConfigurationStore } from '../../storage/IpfsGatewayConfigurationStore.js';
 import { DEFAULT_IPFS_NODE_API_URL } from '../../core/IpfsNodeConfiguration.js';
 import { IpfsNodeConfigurationStore } from '../../storage/IpfsNodeConfigurationStore.js';
@@ -47,12 +47,11 @@ export function composeContentAndSnapshots({
     // registry below, because a gateway cannot put(). With two or more gateways
     // configured, reads fail over in order.
     const ipfsGatewayConfigurationStore = new IpfsGatewayConfigurationStore(new LocalStorageProvider());
-    const resolvedIpfsGatewayUrl = (ipfsGatewayConfigurationStore.get() || { gatewayUrl: DEFAULT_IPFS_GATEWAY_URL }).gatewayUrl;
     // The node API URL governs writing to IPFS; the gateway setting above governs
     // reading. They are separate settings.
     const ipfsNodeConfigurationStore = new IpfsNodeConfigurationStore(new LocalStorageProvider());
     const resolvedIpfsNodeApiUrl = (ipfsNodeConfigurationStore.get() || { apiUrl: DEFAULT_IPFS_NODE_API_URL }).apiUrl;
-    const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: [DEFAULT_IPFS_GATEWAY_URL] }).gatewayUrls;
+    const resolvedIpfsGatewayUrls = (ipfsGatewayConfigurationStore.get() || { gatewayUrls: DEFAULT_IPFS_GATEWAY_URLS }).gatewayUrls;
     function composeIpfsGatewayContentStore(gatewayUrls) {
         return gatewayUrls.length > 1
             ? new IpfsGatewayFailoverContentStore({ gatewayUrls })
