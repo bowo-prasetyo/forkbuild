@@ -211,22 +211,37 @@ it came from. Phase 1 already keeps every lead those searches find.
 
 ## Phase 4: background sync
 
-**Planned.**
+**Built.**
 
-An app-level scheduler runs every sync on a timer: once shortly after the
-app opens, then every few minutes, and only while the tab is visible. It
-runs whether or not World View is open.
+`AnnouncementSyncScheduler` runs the Phase 3 sync on a timer, whether or
+not World View is open. `ui/main/composeAnnouncementSync.js` wires it to
+the same relays, Arweave gateway and Steem reader discovery already
+uses.
 
-- **What it syncs.** Every tag the index has seen: the Snapshot tag, the
-  Place Naming region tags searched so far, the Publication tags searched
-  so far and the Commentary tag.
+- **When it runs.**
+  - First, 10 seconds after the app opens.
+  - Then every 5 minutes, or every 30 seconds while any endpoint is still
+    behind (a head not caught up, or a backfill not finished).
+  - Nothing runs while the tab is hidden.
+  - A failed run never stops the schedule.
+- **What it syncs.**
+  - *Core targets, every run:* the Snapshot tag and the Commentary tag.
+  - *Rotating targets:* the Place Naming region tags this device has
+    searched, ten per run, in turn. `AnnouncementIndex#watch()` notes a
+    tag each time discovery searches it, whether or not anything was
+    found. The 100 most recently searched tags are kept, and each is
+    written at most once a minute.
+  - Targets run one after another, so a run never floods the network.
 - **Commentary.** Every verified envelope found is imported into the
-  Commentary store, whichever Publication it is about. When a Commentary
-  section opens later, its comments are already there.
-- **World View.** It still asks for discovery when the player moves
-  100 units. That request now also reads the index, so what the
-  background sync found in the meantime appears without extra network
-  calls.
+  Commentary store, whichever Publication it is about, through the same
+  notification bridge as other remote Commentary. A new comment on one of
+  this identity's own Publications therefore raises a notification even
+  when no Commentary section is open.
+- **World View.** It subscribes to the scheduler. After each run it
+  hands the indexed Snapshots to automatic placement again, and replaces
+  the nearby Place Naming claims with what the index now holds
+  (`seed(…, { replace: true })`). It still searches the network itself
+  when the player moves 100 units.
 
 ## Phase 5: peers share their index
 

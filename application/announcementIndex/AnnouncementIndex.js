@@ -3,6 +3,9 @@ import { byteLength } from '../../utils/responseSize.js';
 import { isNonEmptyString } from '../../utils/typeGuards.js';
 
 const STORAGE_PREFIX = 'announcement-index:';
+const WATCH_PREFIX = 'announcement-watch:';
+export const DEFAULT_MAX_WATCHED_TAGS = 100;
+const WATCH_REFRESH_MS = 60 * 1000;
 const STORAGE_VERSION = 1;
 export const DEFAULT_MAX_RECORDS_PER_TAG = 2000;
 export const DEFAULT_MAX_PAYLOAD_BYTES = 8 * 1024;
@@ -21,7 +24,8 @@ export class AnnouncementIndex {
         kinds = ANNOUNCEMENT_KINDS,
         now = () => Date.now(),
         maxRecordsPerTag = DEFAULT_MAX_RECORDS_PER_TAG,
-        maxPayloadBytes = DEFAULT_MAX_PAYLOAD_BYTES
+        maxPayloadBytes = DEFAULT_MAX_PAYLOAD_BYTES,
+        maxWatchedTags = DEFAULT_MAX_WATCHED_TAGS
     } = {}) {
         if (!storage || typeof storage.load !== 'function' || typeof storage.save !== 'function') {
             throw new Error('AnnouncementIndex: a StorageProvider is required');
@@ -31,6 +35,39 @@ export class AnnouncementIndex {
         this._now = now;
         this._maxRecordsPerTag = maxRecordsPerTag;
         this._maxPayloadBytes = maxPayloadBytes;
+        this._maxWatchedTags = maxWatchedTags;
+    }
+
+    // Notes that this device searched `tag`, whether or not anything was
+    // found, so the background sync keeps reading it. The most recently
+    // searched tags are kept, up to a cap.
+    watch(kind, tag) {
+        if (!isNonEmptyString(tag)) return;
+        const now = this._now();
+        const all = this._loadWatched(kind);
+        // Every source of one search calls this; one write a minute is plenty.
+        const current = all.find((entry) => entry.tag === tag);
+        if (current && now - current.watchedAt < WATCH_REFRESH_MS) return;
+        const watched = all.filter((entry) => entry.tag !== tag);
+        watched.unshift({ tag, watchedAt: now });
+        this._storage.save(WATCH_PREFIX + kind, watched.slice(0, this._maxWatchedTags));
+    }
+
+    // Tags searched for this kind, most recently searched first.
+    watchedTags(kind) {
+        return this._loadWatched(kind).map((entry) => entry.tag);
+    }
+
+    _loadWatched(kind) {
+        let stored;
+        try {
+            stored = this._storage.load(WATCH_PREFIX + kind);
+        } catch {
+            return [];
+        }
+        return Array.isArray(stored)
+            ? stored.filter((entry) => entry && isNonEmptyString(entry.tag) && Number.isFinite(entry.watchedAt))
+            : [];
     }
 
     // Records each result under (kind, tag), noting `origin` as one of the

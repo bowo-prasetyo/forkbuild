@@ -5,6 +5,14 @@ import { SnapshotCandidateDiscoveryOutcome } from '../snapshot/SnapshotCandidate
 // search returns or how it fails, and a failure to record is swallowed: the
 // index is a convenience, never a reason a search goes wrong.
 
+function watchQuietly(index, kind, tag) {
+    try {
+        index.watch(kind, tag);
+    } catch {
+        // As for recording.
+    }
+}
+
 function recordQuietly(index, kind, tag, results, origin) {
     try {
         index.record(kind, tag, results, origin);
@@ -27,6 +35,7 @@ export class RecordingDiscoverySource {
         // for it keep treating this source exactly as before.
         if (typeof source.searchWithOutcome === 'function') {
             this.searchWithOutcome = async (discoveryTag) => {
+                watchQuietly(this._index, this._kind, discoveryTag);
                 const result = await this._source.searchWithOutcome(discoveryTag);
                 if (result && result.outcome !== SnapshotCandidateDiscoveryOutcome.UNAVAILABLE && Array.isArray(result.candidates)) {
                     recordQuietly(this._index, this._kind, discoveryTag, result.candidates, this._origin);
@@ -37,6 +46,7 @@ export class RecordingDiscoverySource {
     }
 
     async search(discoveryTag) {
+        watchQuietly(this._index, this._kind, discoveryTag);
         const results = await this._source.search(discoveryTag);
         if (Array.isArray(results)) recordQuietly(this._index, this._kind, discoveryTag, results, this._origin);
         return results;

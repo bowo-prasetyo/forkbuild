@@ -220,6 +220,7 @@ export default {
         // earlier searches found before the network answers (docs/AnnouncementIndex.md).
         const discoverIndexedSnapshotCandidatesCommand = inject('discoverIndexedSnapshotCandidatesCommand', null);
         const indexedPlaceNamingDiscoveryQueryService = inject('indexedPlaceNamingDiscoveryQueryService', null);
+        const announcementSyncScheduler = inject('announcementSyncScheduler', null);
         const publishPlaceNamingClaimToNostrCommand = inject('publishPlaceNamingClaimToNostrCommand', null);
         const resolveSelectedSnapshotCommand = inject('resolveSelectedSnapshotCommand', null);
         const materializeSelectedSnapshotCommand = inject('materializeSelectedSnapshotCommand', null);
@@ -431,7 +432,9 @@ export default {
         // monitors' own network discovery still runs on this same tick, and its
         // result replaces this one when it arrives.
         let discoveryPrimedFromIndex = false;
-        function primeDiscoveryFromIndex(context) {
+        // `replace`: after a background sync, show everything the index now
+        // holds rather than only filling an empty result.
+        function primeDiscoveryFromIndex(context, { replace = false } = {}) {
             if (discoverIndexedSnapshotCandidatesCommand) {
                 discoverIndexedSnapshotCandidatesCommand().then(handleDiscoveredSnapshotCandidates, () => {});
             }
@@ -443,12 +446,22 @@ export default {
                     if (!placeNamingDiscoveryPresentationActive) {
                         return;
                     }
-                    if (placeNamingDiscoveryMonitor.seed(context.position, perRegion.flat())) {
+                    if (placeNamingDiscoveryMonitor.seed(context.position, perRegion.flat(), { replace })) {
                         nearbyPlaceNamingClaims.value = placeNamingDiscoveryMonitor.lastResult || [];
                     }
                 }, () => {});
             }
         }
+
+        // What a background sync adds to the index shows here without waiting for
+        // the player to move.
+        const unsubscribeAnnouncementSync = announcementSyncScheduler
+            ? announcementSyncScheduler.onSynced(() => {
+                if (discoveryPrimedFromIndex && spatialContext.value) {
+                    primeDiscoveryFromIndex(spatialContext.value, { replace: true });
+                }
+            })
+            : () => {};
 
         function refreshSpatialUI() {
             const state = session.getSpatialState();
@@ -921,6 +934,7 @@ export default {
             // sees a dead session at its registration checkpoint.
             automaticCascadeSessionActive = false;
             placeNamingDiscoveryPresentationActive = false;
+            unsubscribeAnnouncementSync();
             if (placeNamingDiscoveryMonitor) {
                 placeNamingDiscoveryMonitor.dispose();
             }

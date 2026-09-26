@@ -27,6 +27,7 @@ import { CreateIpfsPublicationContentVerificationCoordinatorUseCase } from '../a
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
 import { AnnouncementIndex } from '../application/announcementIndex/AnnouncementIndex.js';
+import { composeAnnouncementSync } from './main/composeAnnouncementSync.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { composeRefreshPublicationCommentaryCommand } from '../application/publication/commentary/RefreshPublicationCommentaryCommandComposition.js';
@@ -463,6 +464,13 @@ const refreshPublicationCommentaryCommand = composeRefreshPublicationCommentaryC
     ]
 });
 app.provide('refreshPublicationCommentaryCommand', refreshPublicationCommentaryCommand);
+
+const { announcementSyncScheduler } = composeAnnouncementSync({
+    announcementIndex, nostrRelayQueryClient, resolvedNostrRelayUrls, resolvedArweaveGatewayUrl, steemRuntime,
+    publicationCommentaryDistributionExchange, publicationCommentaryRemoteNotificationBridge
+});
+announcementSyncScheduler.start();
+app.provide('announcementSyncScheduler', announcementSyncScheduler);
 
 const {
     arweaveAnnouncementUploadTaggedTransaction, publicationDistributionCommand,

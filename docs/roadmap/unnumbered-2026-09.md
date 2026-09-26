@@ -1330,3 +1330,32 @@ background scheduler).
   covers a 250-event backfill over several runs, a relay capping pages at 7, a 100-event burst after catching up,
   15 events in one second across a boundary, Arweave head and backfill, one relay failing while the others
   succeed, and the Place Naming and Commentary targets.
+
+## Announcement Index: background sync (unnumbered, 2026-09-26)
+
+**The Announcement Index now fills itself in the background**, whether or not World View is open. This is Phase 4
+of docs/AnnouncementIndex.md. Until now, discovery searched only when World View's player had moved 100 units,
+when a Commentary section opened, or when **Discover** was clicked.
+
+- `application/announcementIndex/AnnouncementSyncScheduler.js` runs the Phase 3 sync 10 s after startup, then
+  every 5 minutes, or every 30 s while an endpoint is still behind. It skips runs while the tab is hidden, and runs
+  targets one after another. The Snapshot and Commentary tags are synced every run. Place Naming region tags take
+  turns, ten per run.
+- `AnnouncementIndex#watch()` / `watchedTags()`: every discovery search notes its tag, found or not, so the sync
+  keeps reading the regions a player has visited. It keeps the 100 most recent tags, and writes a tag at most
+  once a minute.
+- `ui/main/composeAnnouncementSync.js` wires the scheduler to the configured relays, Arweave gateway and Steem
+  reader. Imported Commentary goes through the existing notification bridge, so a new comment on one of this
+  identity's Publications is announced even when no Commentary section is open.
+- World View subscribes: after each run it re-hands indexed Snapshots to automatic placement, and replaces its
+  nearby Place Naming claims with the index's (`PlaceNamingDiscoveryMonitor#seed(…, { replace: true })`).
+- Checked in Chromium on the real app: on the Home page, about 10 s after load, the sync queried Arweave GraphQL
+  for the Snapshot and Commentary tags, newest first.
+- Two older tests that match source text now allow for the sync: `tests/PublicationCommentaryNostrAsynchronousDistribution.test.js` counts five notification bridge call sites, not four. World View listens through `onSynced()`, so `tests/WorldViewPublicationDistributionIntegration.test.js`'s ban on `.subscribe(` in World View still holds.
+- Tests: `tests/AnnouncementSyncScheduler.test.js` covers:
+  - the first-run delay, the catch-up and regular intervals, and stop;
+  - hidden tabs, and `runNow()` joining a run in progress;
+  - rotation;
+  - a failing run still being rescheduled, and a broken listener not stopping the others;
+  - watched tags and their write throttle;
+  - replacing seeded claims.
