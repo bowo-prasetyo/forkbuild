@@ -691,6 +691,31 @@ and can't know the claim's permlink, and only a signed Publication can be shown 
 the data out of the body, an author can edit the notice later (for example if the app moves) without touching what
 is stored.
 
+The build's card. Before a Signed Claim is posted, the store asks its `describePublication(claim)` hook
+(`application/steem/SteemPublicationNoticeCard.js`, composed in `ui/main/composeWorldDiscovery.js`) for
+`{ title, author, description, imageUrl }`: the title and author from the claim, the description from the build (read
+from the local content store by content hash), and a 320×200 thumbnail drawn with `DocumentThumbnailRenderer` (as in
+the Repository), signed through Steem Keychain and uploaded to the image host (see "Images for notices" below). The
+notice then reads:
+
+    [![<title>](<image address>)](<view link>)
+
+    **<title>** by <author>
+
+    <description>
+
+    [See it in 3D](<view link>) · A build published with ForkBuild. This reply holds its signed record for the
+    ForkBuild app, and its payout is declined. [What this is](…)
+
+and `json_metadata.image` lists the picture, so front ends can show a preview. Text the user wrote goes through
+`steemNoticeText()` first: one line; links, control and direction-override characters removed; HTML and Markdown
+characters escaped; `@` and `#` followed by a zero-width space so they neither notify an account nor add a tag; at
+most 100 characters for the title, 40 for the author and 300 for the description. A picture address must be an https
+URL with nothing that could end the Markdown early. Every part is optional and found on its own: a build not on this
+device leaves the title and author; a picture that can't be drawn or uploaded, or whose signing is declined, leaves
+the words; a hook that fails leaves the plain link notice. The claim is posted in every case. The picture costs one
+Keychain approval and no Resource Credits.
+
 The encoded text is split into parts of at most 48 KiB each, measured as the UTF-8 length of the part escaped as a
 JSON string (`STEEM_CONTENT_PART_MAX_BYTES`), which is exactly its size inside `json_metadata`, leaving room within
 the 64 KiB transaction limit for the notice and the rest of the operations. When the whole encoded text fits in one
@@ -843,7 +868,7 @@ that needs a manifest and two near-full parts through the real `SteemContentStor
 listed node on its own (`get_content` and `get_content_replies`), reporting per node whether it came back unchanged
 (`scripts/steem-threads/SteemContentCheck.js`).
 
-Images for notices (proposed). Steem front ends don't show `data:` images, so a picture on a post has to live on an
+Images for notices. Steem front ends don't show `data:` images, so a picture on a post has to live on an
 image host. `steem/SteemImageUpload.js` uploads one the way Steemit's editor does: Steem Keychain's
 `requestSignBuffer` signs "ImageSigningChallenge" followed by the image bytes with the posting key, and the image is
 posted as the multipart field `file` to `<host>/<account>/<signature>` (host `https://steemitimages.com` by default),

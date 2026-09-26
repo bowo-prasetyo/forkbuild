@@ -319,7 +319,7 @@ const {
     steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress
 } = composeWorldDiscovery({
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
-    ipfsNodeConfigurationStore
+    ipfsNodeConfigurationStore, publicationContentStore
 });
 // Small Snapshots stored in a Steem post, created and resolved like the
 // Arweave store (docs/Protocol.md, "Proposed: Steem Content Storage").

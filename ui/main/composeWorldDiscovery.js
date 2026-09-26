@@ -12,6 +12,7 @@ import { SteemReadingConfiguration } from '../../core/SteemReadingConfiguration.
 import { SteemReadingConfigurationStore } from '../../storage/SteemReadingConfigurationStore.js';
 import { SetSteemReadingConfigurationUseCase } from '../../application/settings/SetSteemReadingConfigurationUseCase.js';
 import { composeSteemRuntime } from '../../application/steem/SteemRuntimeComposition.js';
+import { composeSteemPublicationNoticeDescriber } from '../../application/steem/SteemPublicationNoticeComposition.js';
 import { SteemAnnouncingConfigurationStore } from '../../storage/SteemAnnouncingConfigurationStore.js';
 import { SetSteemAnnouncingConfigurationUseCase } from '../../application/settings/SetSteemAnnouncingConfigurationUseCase.js';
 import { createSteemKeychainBroadcaster } from '../../steem/SteemKeychainBroadcaster.js';
@@ -37,7 +38,7 @@ import { composeWorldEncounterLeadAssociationsQuery } from '../../application/wo
 // distribution lifecycles.
 export function composeWorldDiscovery({
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
-    ipfsNodeConfigurationStore
+    ipfsNodeConfigurationStore, publicationContentStore = null
 }) {
     // The one World discovery registry. A peer's World contribution registers when
     // it sends and unregisters automatically when the peer disconnects.
@@ -99,7 +100,15 @@ export function composeWorldDiscovery({
         getAccount: () => steemAnnouncingConfigurationStore.get()?.account ?? null,
         getBroadcaster: () => createSteemKeychainBroadcaster({ keychain: globalThis.steem_keychain }),
         contentUploads: new SteemContentUploadStore(new LocalStorageProvider()),
-        contentUploadProgress: { report: (state) => { steemContentUploadProgress.value = state; } }
+        contentUploadProgress: { report: (state) => { steemContentUploadProgress.value = state; } },
+        // A Signed Claim's notice shows its build: title, description and a
+        // thumbnail uploaded to the Steem image host.
+        describePublication: publicationContentStore
+            ? composeSteemPublicationNoticeDescriber({
+                contentStore: publicationContentStore,
+                getAccount: () => steemAnnouncingConfigurationStore.get()?.account ?? null
+            })
+            : null
     });
 
     const nostrRelayQueryClient = createNostrRelayQueryClient({});

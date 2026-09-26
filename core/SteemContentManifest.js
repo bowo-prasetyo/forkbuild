@@ -31,10 +31,48 @@ const CONTENT_THREAD_PATTERN = new RegExp(`^forkbuild-${STEEM_CONTENT_FAMILY}-\\
 const ABOUT_URL = 'https://github.com/bowo-prasetyo/forkbuild/blob/main/docs/Protocol.md#proposed-steem-content-storage';
 const NOTICE_END = `It is read by the ForkBuild app, not meant to be read here, and its payout is declined. [What this is](${ABOUT_URL})`;
 
+export const STEEM_NOTICE_TITLE_MAX = 100;
+export const STEEM_NOTICE_AUTHOR_MAX = 40;
+export const STEEM_NOTICE_DESCRIPTION_MAX = 300;
+const NOTICE_IMAGE_URL = /^https:\/\/[^\s()<>[\]"'\\]{1,500}$/;
+const ZERO_WIDTH_SPACE = '\u200b';
+
+// Text a user wrote (a title, an author name, a description), made safe to
+// show in a notice that Steem front ends render as Markdown: one line, no
+// links, no HTML, Markdown characters escaped, and "@name" and "#tag" broken
+// with a zero-width space so they neither notify an account nor add a tag.
+// At most `maxLength` characters (before escaping), ending in "…" when cut.
+export function steemNoticeText(value, maxLength) {
+    if (typeof value !== 'string') return '';
+    let text = value.normalize('NFC')
+        .replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, ' ')
+        .replace(/\b[a-z][a-z0-9+.-]*:\/\/\S*/gi, ' ')
+        .replace(/\bwww\.\S*/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const characters = Array.from(text);
+    if (characters.length > maxLength) text = `${characters.slice(0, maxLength - 1).join('').trimEnd()}…`;
+    return text
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/[\\`*_[\](){}!|~+=-]/g, (character) => `\\${character}`)
+        .replace(/#/g, `\\#${ZERO_WIDTH_SPACE}`)
+        .replace(/@/g, `@${ZERO_WIDTH_SPACE}`)
+        .replace(/^(\d+)\./, '$1\\.');
+}
+
+// Whether `url` can be shown as a notice's picture: an https address with
+// nothing that could end the Markdown image early.
+export function isSteemNoticeImageUrl(url) {
+    return typeof url === 'string' && NOTICE_IMAGE_URL.test(url);
+}
+
 // The body of a version 2 manifest or part: what the post is, for people.
-// `viewUrl`, for a Publication's Signed Claim, is where the app shows it.
-export function steemContentNotice({ parts = 0, part = null, viewUrl = null } = {}) {
+// `viewUrl`, for a Publication's Signed Claim, is where the app shows it;
+// `card` (`{ title, author, description, imageUrl }`, any of them missing)
+// adds the build's picture, title, author and description above the link.
+export function steemContentNotice({ parts = 0, part = null, viewUrl = null, card = null } = {}) {
     if (part) return `Part ${part.index + 1} of ${part.count} of data stored by ForkBuild. ${NOTICE_END}`;
+    if (viewUrl && card) return publicationCardNotice(viewUrl, card);
     if (viewUrl) return `A build published with ForkBuild: [see it in 3D](${viewUrl}). This reply holds its signed record for the ForkBuild app, and its payout is declined. [What this is](${ABOUT_URL})`;
     if (parts > 0) return `Data stored by ForkBuild, continued in ${parts} ${parts === 1 ? 'reply' : 'replies'} below. ${NOTICE_END}`;
     return `Data stored by ForkBuild. ${NOTICE_END}`;
@@ -90,7 +128,20 @@ export function steemContentEncodedByteLength(text) {
 
 // The manifest and its options, in one transaction. `content` describes the
 // content; `data` is the encoded content when it is inline.
-export function steemContentManifestOperations({ author, threadAccount, threadPermlink, permlink, content, data, appVersion = null, viewUrl = null }) {
+// A Signed Claim's notice with its build's card.
+function publicationCardNotice(viewUrl, { title = null, author = null, description = null, imageUrl = null }) {
+    const safeTitle = steemNoticeText(title, STEEM_NOTICE_TITLE_MAX) || 'An untitled build';
+    const safeAuthor = steemNoticeText(author, STEEM_NOTICE_AUTHOR_MAX);
+    const safeDescription = steemNoticeText(description, STEEM_NOTICE_DESCRIPTION_MAX);
+    return [
+        ...(isSteemNoticeImageUrl(imageUrl) ? [`[![${safeTitle}](${imageUrl})](${viewUrl})`] : []),
+        `**${safeTitle}**${safeAuthor ? ` by ${safeAuthor}` : ''}`,
+        ...(safeDescription ? [safeDescription] : []),
+        `[See it in 3D](${viewUrl}) · A build published with ForkBuild. This reply holds its signed record for the ForkBuild app, and its payout is declined. [What this is](${ABOUT_URL})`
+    ].join('\n\n');
+}
+
+export function steemContentManifestOperations({ author, threadAccount, threadPermlink, permlink, content, data, appVersion = null, viewUrl = null, card = null }) {
     if (!isSteemAccountName(author)) throw new TypeError(`not a Steem account name: ${author}`);
     if (!isSteemAccountName(threadAccount)) throw new TypeError(`not a Steem account name: ${threadAccount}`);
     if (!CONTENT_THREAD_PATTERN.test(threadPermlink ?? '')) throw new TypeError(`not a content thread permlink: ${threadPermlink}`);
@@ -102,8 +153,10 @@ export function steemContentManifestOperations({ author, threadAccount, threadPe
         throw new TypeError('an inline manifest\'s data must be the encoded content');
     }
     if (viewUrl !== null && !/^https:\/\/[^\s()]+$/.test(viewUrl)) throw new TypeError(`not a link for a notice: ${viewUrl}`);
+    const withCard = viewUrl !== null && card !== null && typeof card === 'object';
     const metadata = {
         ...(isNonEmptyString(appVersion) ? { app: `forkbuild/${appVersion}` } : {}),
+        ...(withCard && isSteemNoticeImageUrl(card.imageUrl) ? { image: [card.imageUrl] } : {}),
         forkbuild: { version: STEEM_CONTENT_MANIFEST_VERSION, content: copyContent(content), ...(inline ? { data } : {}) }
     };
     return [
@@ -113,7 +166,7 @@ export function steemContentManifestOperations({ author, threadAccount, threadPe
             author,
             permlink,
             title: '',
-            body: steemContentNotice({ parts: content.parts.length, viewUrl }),
+            body: steemContentNotice({ parts: content.parts.length, viewUrl, card: withCard ? card : null }),
             json_metadata: JSON.stringify(metadata)
         }],
         steemDeclinedPayoutOptions(author, permlink)
