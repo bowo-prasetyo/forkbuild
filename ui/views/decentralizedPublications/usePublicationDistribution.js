@@ -1,6 +1,7 @@
 import { inject } from 'vue';
 import { sortOptionsByLabel } from '../../../utils/sortOptionsByLabel.js';
 import { humanizeStorageType } from './presentation.js';
+import { describeSteemContentUploadProgress } from '../../../application/steem/SteemContentUploadProgressText.js';
 
 // Distributing an entry's publication and snapshot with the same app-wide
 // commands WorldView uses, plus the storage and announcement choices they read.
@@ -14,6 +15,8 @@ export function usePublicationDistribution({
     const publicationDistributionCommand = inject('publicationDistributionCommand', null);
     const multiRelayNostrPublicationDistributionCommand = inject('multiRelayNostrPublicationDistributionCommand', null);
     const snapshotDistributionCommand = inject('snapshotDistributionCommand', null);
+    // Steem storage reports each post while it stores a Snapshot.
+    const steemContentUploadProgress = inject('steemContentUploadProgress', null);
     // Eligible, registered Content backends for snapshot distribution
     // ('ipfs'/'ar'; 'local' is never eligible, see
     // application/snapshot/SnapshotDistributionContentBackendSelection.js). Read
@@ -125,6 +128,14 @@ export function usePublicationDistribution({
         return '/settings/nostr-relay';
     }
 
+    // The Steem upload line for an entry whose Snapshot is being stored on
+    // Steem right now, or null.
+    function steemUploadProgressText(entry) {
+        const attempt = entry.snapshotDistributionAttempt;
+        if (!attempt || !attempt.distributing || entry.snapshotDistributionStorage !== 'steem' || !steemContentUploadProgress) return null;
+        return describeSteemContentUploadProgress(steemContentUploadProgress.value);
+    }
+
     // The Settings route for the entry's chosen Content backend; IPFS uses
     // /settings/content-provider (there is no IPFS-only settings view).
     function snapshotDistributionConfigurationRoute(entry) {
@@ -141,6 +152,6 @@ export function usePublicationDistribution({
         publicationDistributionLifecycleStore, distributeEntryPublication, distributeEntrySnapshot,
         distributePublicationForEntry, discoveryDistributionButtonLabel, distributeSnapshot,
         snapshotDistributionButtonLabel, discoveryObservationsView, discoveryDistributionConfigurationRoute,
-        snapshotDistributionConfigurationRoute
+        snapshotDistributionConfigurationRoute, steemUploadProgressText
     };
 }

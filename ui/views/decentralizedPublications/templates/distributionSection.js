@@ -90,6 +90,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                         </router-link>
                                         <router-link to="/settings/nostr-relay" class="action-btn action-btn--secondary">Configure Nostr</router-link>
                                     </div>
+                                    <p v-if="steemUploadProgressText(entry)" class="form-hint form-hint--neutral" role="status">{{ steemUploadProgressText(entry) }}</p>
                                     <p v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.error" class="form-hint form-hint--neutral">
                                         {{ entry.snapshotDistributionAttempt.error }}
                                     </p>

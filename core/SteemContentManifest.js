@@ -2,11 +2,11 @@ import { isNonEmptyString, isPlainObject } from '../utils/typeGuards.js';
 import { STEEM_CONTENT_FAMILY, isSteemAccountName, steemDeclinedPayoutOptions } from './SteemDiscoveryThread.js';
 
 // Content stored on Steem: a manifest, a direct reply to a monthly content
-// thread, whose body is the encoded content (docs/Protocol.md, "Proposed:
-// Steem Content Storage"). This file builds and reads a manifest's shape
-// and the `steem://` locator; encoding, network and signing live elsewhere.
-// Only the inline case is readable so far: a manifest that lists parts is
-// described, then refused as not yet supported.
+// thread, whose body is the encoded content or, when that doesn't fit one
+// post, whose parts are replies to it (docs/Protocol.md, "Proposed: Steem
+// Content Storage"). This file builds and reads the manifest, the parts and
+// the `steem://` locator; encoding, hashing, network and signing live
+// elsewhere.
 
 export const STEEM_CONTENT_STORAGE = 'steem';
 export const STEEM_CONTENT_MANIFEST_VERSION = 1;
@@ -16,6 +16,8 @@ export const STEEM_CONTENT_ENCODINGS = Object.freeze(['utf8', 'gzip-base64']);
 // text escaped as a JSON string, which is how it travels in the operations.
 // Leaves room within the chain's 64 KiB transaction for everything else.
 export const STEEM_CONTENT_PART_MAX_BYTES = 48 * 1024;
+// The most parts one upload may have, and a reader accepts.
+export const STEEM_CONTENT_MAX_PARTS = 20;
 
 const PERMLINK_SUFFIX_PATTERN = /^[a-z0-9]{8}$/;
 // Steem permlinks: lowercase letters, digits and hyphens, at most 256.
@@ -44,6 +46,26 @@ export function parseSteemContentLocator(uri) {
     const [author, permlink, ...rest] = uri.slice(STEEM_CONTENT_URI_PREFIX.length).split('/');
     if (rest.length > 0 || !isSteemAccountName(author) || !PERMLINK_PATTERN.test(permlink ?? '')) return null;
     return Object.freeze({ author, permlink });
+}
+
+// A part's permlink, from its manifest's and its index.
+export function steemContentPartPermlink(manifestPermlink, index) {
+    if (!PERMLINK_PATTERN.test(manifestPermlink ?? '')) throw new TypeError(`not a Steem permlink: ${manifestPermlink}`);
+    if (!Number.isInteger(index) || index < 0) throw new TypeError(`index must be a non-negative integer, got ${index}`);
+    return `${manifestPermlink}-p${index}`;
+}
+
+// Splits encoded text into slices that each fit a part. Only ASCII text
+// (gzip-base64) is split, so a slice's escaped length is its length plus the
+// two quotes.
+export function splitSteemContent(encoded) {
+    if (typeof encoded !== 'string' || !/^[\x20-\x7e]*$/.test(encoded) || /["\\]/.test(encoded)) {
+        throw new TypeError('only ASCII text without quotes or backslashes can be split into parts');
+    }
+    const size = STEEM_CONTENT_PART_MAX_BYTES - 2;
+    const slices = [];
+    for (let i = 0; i < encoded.length; i += size) slices.push(encoded.slice(i, i + size));
+    return slices;
 }
 
 // The length that counts against STEEM_CONTENT_PART_MAX_BYTES.
@@ -82,6 +104,48 @@ export function steemContentManifestOperations({ author, threadAccount, threadPe
     ];
 }
 
+// One part and its options, in one transaction: a reply to the manifest.
+// `withOptions: false` leaves out the options, for editing a part that is
+// already on the chain (its payout is already declined).
+export function steemContentPartOperations({ author, manifestPermlink, index, count, body, appVersion = null, withOptions = true }) {
+    if (!isSteemAccountName(author)) throw new TypeError(`not a Steem account name: ${author}`);
+    if (!Number.isInteger(count) || count < 1 || count > STEEM_CONTENT_MAX_PARTS || !Number.isInteger(index) || index < 0 || index >= count) {
+        throw new TypeError(`part ${index} of ${count} is out of range`);
+    }
+    if (typeof body !== 'string' || body.length === 0) throw new TypeError('a part body must be non-empty text');
+    const permlink = steemContentPartPermlink(manifestPermlink, index);
+    const metadata = {
+        ...(isNonEmptyString(appVersion) ? { app: `forkbuild/${appVersion}` } : {}),
+        forkbuild: { version: STEEM_CONTENT_MANIFEST_VERSION, part: { index, count } }
+    };
+    const comment = ['comment', {
+        parent_author: author,
+        parent_permlink: manifestPermlink,
+        author,
+        permlink,
+        title: '',
+        body,
+        json_metadata: JSON.stringify(metadata)
+    }];
+    return withOptions ? [comment, steemDeclinedPayoutOptions(author, permlink)] : [comment];
+}
+
+// Whether a post returned by the chain is part `index` of `manifest`, as the
+// manifest lists it: by the manifest's author, replying to the manifest, at
+// the listed permlink and length. The hash is checked by the caller, which
+// has WebCrypto. Returns a problem, or null.
+export function steemContentPartProblem(post, manifest, index) {
+    const listed = manifest.parts[index];
+    if (!isPlainObject(post) || !post.author) return `part ${index + 1} of ${manifest.parts.length} is missing`;
+    if (post.author !== manifest.author || post.parent_author !== manifest.author || post.parent_permlink !== manifest.permlink || post.permlink !== listed.permlink) {
+        return `part ${index + 1} of ${manifest.parts.length} is not the one the manifest lists`;
+    }
+    if (typeof post.body !== 'string' || post.body.length !== listed.length) {
+        return `part ${index + 1} of ${manifest.parts.length} has been changed since the content was stored`;
+    }
+    return null;
+}
+
 // Reads what `condenser_api.get_content` returned for a manifest. Returns
 // `{ manifest, problem }`: a manifest when the post is one of ours on a
 // content thread of one of `threadAccounts`, otherwise a problem a person
@@ -102,6 +166,15 @@ export function describeSteemContentManifest(post, { threadAccounts }) {
     const inline = content.parts.length === 0;
     if (inline && (typeof post.body !== 'string' || post.body.length !== content.encodedLength)) {
         return failure('the post has been changed since the content was stored');
+    }
+    if (!inline) {
+        if (content.parts.length > STEEM_CONTENT_MAX_PARTS) return failure(`it lists ${content.parts.length} parts, more than the ${STEEM_CONTENT_MAX_PARTS} ForkBuild reads`);
+        if (content.parts.some((part, index) => part.permlink !== steemContentPartPermlink(post.permlink, index))) {
+            return failure('its parts are not replies ForkBuild would have made');
+        }
+        if (content.parts.reduce((sum, part) => sum + part.length, 0) !== content.encodedLength) {
+            return failure("its parts' lengths don't add up to the content's length");
+        }
     }
     return Object.freeze({
         manifest: Object.freeze({
@@ -125,7 +198,7 @@ function contentProblem(content) {
     if (!Number.isInteger(content.encodedLength) || content.encodedLength < 0) return 'encodedLength is not a non-negative integer';
     if (!Array.isArray(content.parts)) return 'parts is not a list';
     for (const part of content.parts) {
-        if (!isPlainObject(part) || !PERMLINK_PATTERN.test(part.permlink ?? '') || !Number.isInteger(part.length) || !isNonEmptyString(part.sha256)) {
+        if (!isPlainObject(part) || !PERMLINK_PATTERN.test(part.permlink ?? '') || !Number.isInteger(part.length) || part.length < 1 || !/^[0-9a-f]{64}$/.test(part.sha256 ?? '')) {
             return 'a part is malformed';
         }
     }

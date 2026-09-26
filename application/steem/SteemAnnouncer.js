@@ -11,7 +11,7 @@ import {
     steemDiscoveryAnnouncementPermlink,
     steemOperationsByteLength
 } from '../../core/SteemDiscoveryAnnouncement.js';
-import { steemContentManifestOperations, steemContentManifestPermlink } from '../../core/SteemContentManifest.js';
+import { steemContentManifestOperations, steemContentManifestPermlink, steemContentPartOperations, steemContentPartPermlink } from '../../core/SteemContentManifest.js';
 import { parseSteemTime } from '../../steem/SteemRpcClient.js';
 
 // Posts one family's envelope as a reply to the current month's discovery
@@ -121,15 +121,35 @@ export function createSteemAnnouncer({
         }));
     }
 
-    // Posts a content manifest whose body is `body` (the inline case).
-    // Resolves like announce().
+    // Posts a content manifest: `body` is the encoded content when it is
+    // inline, and ignored when `content.parts` lists parts (`{ length,
+    // sha256 }` each; their permlinks follow from the manifest's). Resolves
+    // like announce().
     function postContent({ content, body }) {
         return enqueue(() => postReply({
             family: STEEM_CONTENT_FAMILY,
             what: 'content',
             permlinkFor: (timeMs) => steemContentManifestPermlink(timeMs, randomSuffix()),
-            operationsFor: ({ author, threadPermlink, permlink }) => steemContentManifestOperations({ author, threadAccount, threadPermlink, permlink, content, body, appVersion })
+            operationsFor: ({ author, threadPermlink, permlink }) => steemContentManifestOperations({
+                author, threadAccount, threadPermlink, permlink, body, appVersion,
+                content: { ...content, parts: content.parts.map((part, index) => ({ ...part, permlink: steemContentPartPermlink(permlink, index) })) }
+            })
         }));
+    }
+
+    // Posts part `index` of `count` as a reply to the manifest, which must be
+    // the current account's. `edit` replaces a part already on the chain.
+    function postContentPart({ manifestPermlink, index, count, body, edit = false }) {
+        return enqueue(() => withPoster(async ({ author, broadcaster }) => {
+            const operations = steemContentPartOperations({ author, manifestPermlink, index, count, body, appVersion, withOptions: !edit });
+            return broadcastChecked({ author, broadcaster, operations, what: `content part ${index + 1} of ${count}`, parentUrlPath: `@${author}/${manifestPermlink}` });
+        }));
+    }
+
+    // The account posts would come from right now, or null.
+    function currentAccount() {
+        const author = getAccount();
+        return isSteemAccountName(author) ? author : null;
     }
 
     // One post at a time, whoever calls: the interval is per account.
@@ -140,6 +160,18 @@ export function createSteemAnnouncer({
     }
 
     async function postReply({ family, what, permlinkFor, operationsFor }) {
+        return withPoster(async ({ author, broadcaster }) => {
+            const period = steemDiscoveryPeriodOf(now());
+            const threadPermlink = steemDiscoveryThreadPermlink(family, period);
+            await requireOpenThread(family, threadPermlink);
+            const permlink = permlinkFor(now().getTime());
+            const operations = operationsFor({ author, threadPermlink, permlink });
+            const posted = await broadcastChecked({ author, broadcaster, operations, what, parentUrlPath: `@${threadAccount}/${threadPermlink}` });
+            return Object.freeze({ ...posted, threadAccount, threadPermlink, period });
+        });
+    }
+
+    async function withPoster(task) {
         const author = getAccount();
         if (!isSteemAccountName(author)) {
             throw new SteemAnnouncementError('Set your Steem account in Network Settings → Steem before posting on Steem.');
@@ -148,33 +180,28 @@ export function createSteemAnnouncer({
         if (!broadcaster) {
             throw new SteemAnnouncementError('Steem Keychain was not found. Install it, add your Steem account with its posting key, and reload.');
         }
-        const period = steemDiscoveryPeriodOf(now());
-        const threadPermlink = steemDiscoveryThreadPermlink(family, period);
-        await requireOpenThread(family, threadPermlink);
+        return task({ author, broadcaster });
+    }
 
-        const permlink = permlinkFor(now().getTime());
-        const operations = operationsFor({ author, threadPermlink, permlink });
+    async function broadcastChecked({ author, broadcaster, operations, what, parentUrlPath }) {
         const size = steemOperationsByteLength(operations);
         if (size > STEEM_MAX_TRANSACTION_BYTES) {
             throw new SteemAnnouncementError(`This ${what} is ${size} bytes, over Steem's ${STEEM_MAX_TRANSACTION_BYTES}-byte transaction limit.`);
         }
-
+        const { permlink } = operations[0][1];
         const { transactionId } = await broadcastPacing(broadcaster, author, operations);
         return Object.freeze({
             status: 'accepted',
             author,
             permlink,
-            threadAccount,
-            threadPermlink,
-            period,
             transactionId,
             id: `@${author}/${permlink}`,
             url: `https://steemit.com/@${author}/${permlink}`,
-            threadUrl: `https://steemit.com/@${threadAccount}/${threadPermlink}`
+            threadUrl: `https://steemit.com/${parentUrlPath}`
         });
     }
 
-    return Object.freeze({ announce, postContent, threadAccount });
+    return Object.freeze({ announce, postContent, postContentPart, currentAccount, threadAccount });
 }
 
 function defaultRandomSuffix() {

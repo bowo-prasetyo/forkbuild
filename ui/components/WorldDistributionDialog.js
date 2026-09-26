@@ -1,11 +1,12 @@
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
+import { describeSteemContentUploadProgress } from '../../application/steem/SteemContentUploadProgressText.js';
 
-// Steem holds small Snapshots only (docs/Protocol.md, "Proposed: Steem
+// Steem holds Snapshots only (docs/Protocol.md, "Proposed: Steem
 // Content Storage").
 const STORAGE_OPTION_LABELS = {
     ipfs: 'IPFS (Local Kubo)',
     ar: 'Arweave',
-    steem: 'Steem (small Snapshots only)'
+    steem: 'Steem (Snapshots only)'
 };
 
 // 0.9.672 — World View Distribution Dialog.
@@ -88,6 +89,8 @@ const STORAGE_OPTION_LABELS = {
 // a Publication-only dialog offers all three Material storages.
 export default {
     name: 'WorldDistributionDialog',
+    // Steem storage reports each post while it stores a Snapshot.
+    inject: { steemContentUploadProgress: { default: null } },
     props: {
         canDistributePublication: { type: Boolean, default: false },
         canDistributeSnapshot: { type: Boolean, default: false },
@@ -122,6 +125,13 @@ export default {
         'update:discoveryProvider'
     ],
     computed: {
+        // Only while this dialog's Snapshot is being distributed, so another
+        // page's upload never shows here.
+        steemUploadProgressText() {
+            // Options API injections arrive with the ref already unwrapped.
+            if (!this.snapshotDistributionExecuting) return null;
+            return describeSteemContentUploadProgress(this.steemContentUploadProgress);
+        },
         storageModel: {
             get() { return this.storage; },
             set(value) { this.$emit('update:storage', value); }
@@ -266,6 +276,7 @@ export default {
                         @click="$emit('distribute-snapshot')"
                     >{{ snapshotDistributionExecuting ? 'Distributing…' : (canDistributePublication ? 'Distribute Snapshot only' : 'Distribute Snapshot') }}</button>
 
+                    <p v-if="steemUploadProgressText" class="form-hint form-hint--neutral world-distribution-dialog-steem-progress" role="status">{{ steemUploadProgressText }}</p>
                     <p v-if="snapshotDistributionError" class="world-distribution-dialog-snapshot-error">{{ snapshotDistributionError }}</p>
                     <dl v-else-if="snapshotDistributionResult" class="world-distribution-dialog-snapshot-detail">
                         <dt>Content hash</dt>

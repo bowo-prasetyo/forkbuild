@@ -4,10 +4,18 @@ import {
     parseSteemContentLocator,
     steemContentLocator,
     steemContentManifestOperations,
-    steemContentManifestPermlink
+    steemContentManifestPermlink,
+    STEEM_CONTENT_MAX_PARTS
 } from '../core/SteemContentManifest.js';
 import { describeSteemDiscoveryThreadPost, STEEM_DISCOVERY_FAMILIES } from '../core/SteemDiscoveryThread.js';
-import { SteemContentStore, SteemContentTooLargeError, decodeSteemContent, encodeSteemContent } from '../content/SteemContentStore.js';
+import {
+    SteemContentStore,
+    SteemContentTooLargeError,
+    SteemContentUploadIncompleteError,
+    SteemResourceCreditsError,
+    decodeSteemContent,
+    encodeSteemContent
+} from '../content/SteemContentStore.js';
 import { ContentTooLargeError } from '../content/ContentStore.js';
 import { ContentUnavailableError } from '../content/IpfsContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
@@ -20,18 +28,25 @@ import { DecentralizedSnapshotResolver } from '../application/snapshot/Decentral
 import { DecentralizedSnapshotResolutionOutcome } from '../application/snapshot/DecentralizedSnapshotResolutionOutcome.js';
 import { SnapshotPlacementStoreRegistry } from '../application/snapshot/placement/SnapshotPlacementStoreRegistry.js';
 import { composePublicationMaterialUploader } from '../application/publication/distribution/PublicationMaterialUploaderComposition.js';
+import { SteemContentUploadStore } from '../storage/SteemContentUploadStore.js';
+import { describeSteemContentUploadProgress } from '../application/steem/SteemContentUploadProgressText.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
-// Steem content storage, inline case (docs/Protocol.md, "Proposed: Steem
-// Content Storage"): the manifest format, encoding, and a Snapshot stored
-// through the real announcer and read back through the real resolver.
+// Steem content storage (docs/Protocol.md, "Proposed: Steem Content
+// Storage"): the manifest and part formats, encoding, a Snapshot stored in
+// one post or in parts through the real announcer, resuming an unfinished
+// upload, the Resource Credits check, progress, and reading back through the
+// real resolver.
 
 const NOW = new Date('2026-10-05T12:00:00Z');
 const CONTENT_THREAD = 'forkbuild-content-2026-10';
 
 // A fake chain that keeps every post, as get_content would return it.
-function fakeChain({ threads = [CONTENT_THREAD, 'forkbuild-snapshot-2026-10'] } = {}) {
+// `fail(attempt, operations)` may return an Error to refuse a broadcast.
+function fakeChain({ threads = [CONTENT_THREAD, 'forkbuild-snapshot-2026-10'], fail = () => null } = {}) {
     const posts = new Map();
+    let attempts = 0;
     for (const permlink of threads) posts.set(`forkbuild/${permlink}`, { author: 'forkbuild', permlink, allow_replies: true });
     const broadcasts = [];
     const rpc = {
@@ -44,9 +59,11 @@ function fakeChain({ threads = [CONTENT_THREAD, 'forkbuild-snapshot-2026-10'] } 
     };
     const broadcaster = {
         async broadcast(account, operations) {
+            const refusal = fail(++attempts, operations);
+            if (refusal) throw refusal;
             broadcasts.push({ account, operations });
             const [, comment] = operations[0];
-            posts.set(`${comment.author}/${comment.permlink}`, { ...comment, allow_replies: true, created: '2026-10-05T12:00:00' });
+            posts.set(`${comment.author}/${comment.permlink}`, { ...(posts.get(`${comment.author}/${comment.permlink}`) ?? {}), ...comment, allow_replies: true, created: '2026-10-05T12:00:00' });
             return { transactionId: `tx${broadcasts.length}` };
         }
     };
@@ -77,8 +94,8 @@ function announcerFor(chain, { clock = fakeClock() } = {}) {
     });
 }
 
-function storeFor(chain, options = {}) {
-    return new SteemContentStore({ rpc: chain.rpc, announcer: announcerFor(chain, options), threadAccounts: ['forkbuild'] });
+function storeFor(chain, { clock, uploads = null, estimator = null, progress = null } = {}) {
+    return new SteemContentStore({ rpc: chain.rpc, announcer: announcerFor(chain, { clock }), threadAccounts: ['forkbuild'], uploads, estimator, progress });
 }
 
 async function rejection(promise) {
@@ -157,10 +174,26 @@ function incompressibleText(characters) {
         assert(none === null && problem.includes(expected), `${JSON.stringify(override)} reports "${expected}" (got ${problem})`);
     }
 
-    const parts = { ...content, parts: [{ permlink: 'forkbuild-c-x-abcd1234-p0', length: 5, sha256: 'ff' }] };
-    const partsOps = steemContentManifestOperations({ author: 'alice', threadAccount: 'forkbuild', threadPermlink: CONTENT_THREAD, permlink: 'forkbuild-c-x-abcd1234', content: parts });
-    const read = describeSteemContentManifest(partsOps[0][1], { threadAccounts }).manifest;
-    assert(read && read.inline === false && read.body === null && read.parts.length === 1, 'a manifest with parts is described, not inline');
+    const sha = 'a'.repeat(64);
+    const withParts = (parts, extra = {}) => steemContentManifestOperations({
+        author: 'alice', threadAccount: 'forkbuild', threadPermlink: CONTENT_THREAD, permlink: 'forkbuild-c-x-abcd1234',
+        content: { ...content, encoding: 'gzip-base64', encodedLength: parts.reduce((n, p) => n + p.length, 0), parts, ...extra }
+    })[0][1];
+    const twoParts = [{ permlink: 'forkbuild-c-x-abcd1234-p0', length: 3, sha256: sha }, { permlink: 'forkbuild-c-x-abcd1234-p1', length: 2, sha256: sha }];
+    const partsComment = withParts(twoParts);
+    assert(partsComment.body.includes('continued in the replies'), 'a manifest with parts says so in its body');
+    const read = describeSteemContentManifest(partsComment, { threadAccounts }).manifest;
+    assert(read && read.inline === false && read.body === null && read.parts.length === 2, 'a manifest with parts is described, not inline');
+    const partCases = [
+        [withParts([{ ...twoParts[0], permlink: 'forkbuild-c-x-abcd1234-p9' }, twoParts[1]]), 'not replies ForkBuild would have made'],
+        [withParts(twoParts, { encodedLength: 6 }), "don't add up"],
+        [withParts(Array.from({ length: 21 }, (_, i) => ({ permlink: `forkbuild-c-x-abcd1234-p${i}`, length: 1, sha256: sha }))), 'more than the 20 ForkBuild reads'],
+        [{ ...partsComment, json_metadata: partsComment.json_metadata.replace(sha, 'ff') }, 'a part is malformed']
+    ];
+    for (const [post, expected] of partCases) {
+        const { problem } = describeSteemContentManifest(post, { threadAccounts });
+        assert(problem?.includes(expected), `a manifest reports "${expected}" (got ${problem})`);
+    }
     console.log('✓ the manifest format');
 }
 
@@ -217,8 +250,9 @@ function incompressibleText(characters) {
 {
     const chain = fakeChain();
     const store = storeFor(chain);
-    const big = await rejection(store.put(incompressibleText(STEEM_CONTENT_PART_MAX_BYTES * 2)));
-    assert(big instanceof SteemContentTooLargeError && big instanceof ContentTooLargeError, 'content that does not fit one post is refused as too large');
+    const big = await rejection(store.put(incompressibleText(STEEM_CONTENT_PART_MAX_BYTES * 25)));
+    assert(big instanceof SteemContentTooLargeError && big instanceof ContentTooLargeError, 'content that needs more than 20 parts is refused as too large');
+    assert(big.message.includes('(20 posts)'), `the message names the limit (got ${big.message})`);
     assert(big.message.includes('Choose IPFS or Arweave') && chain.broadcasts.length === 0, `the message points elsewhere and nothing is broadcast (got ${big.message})`);
 
     const noThread = fakeChain({ threads: [] });
@@ -249,17 +283,157 @@ function incompressibleText(characters) {
     await expectUnavailable(reference, 'changed since', 'an edited manifest');
     assert(await store.has(reference) === false, 'has() is false rather than throwing');
 
-    const metadata = JSON.parse(comment.json_metadata);
-    metadata.forkbuild.content.parts = [{ permlink: `${comment.permlink}-p0`, length: 1, sha256: 'ff' }];
-    chain.posts.set(key, { ...comment, json_metadata: JSON.stringify(metadata), body: 'x' });
-    await expectUnavailable(reference, "stored in parts, which this version of ForkBuild can't read yet", 'a manifest with parts');
-
     const otherAccounts = new SteemContentStore({ rpc: chain.rpc, threadAccounts: ['someone-else'] });
     await expectUnavailable(reference, 'not a reply to a ForkBuild content thread', 'a thread account that is not configured', otherAccounts);
 
     const down = new SteemContentStore({ rpc: { getContent: async () => { throw new Error('timeout'); } }, threadAccounts: ['forkbuild'] });
     await expectUnavailable(reference, "Couldn't read", 'an unreachable node', down);
     console.log('✓ refusals when reading');
+}
+
+// Storing a build that needs parts: the manifest first, then each part as a
+// reply to it, with progress after each post.
+{
+    const chain = fakeChain();
+    const clock = fakeClock();
+    const events = [];
+    const store = storeFor(chain, { clock });
+    const text = incompressibleText(STEEM_CONTENT_PART_MAX_BYTES * 3);
+    const reference = await store.put(text, { onProgress: (state) => events.push(state) });
+
+    const comments = chain.broadcasts.map((b) => b.operations[0][1]);
+    const [manifest, ...parts] = comments;
+    assert(parts.length >= 2 && parts.length <= STEEM_CONTENT_MAX_PARTS, `the build needs several parts (got ${parts.length})`);
+    assert(manifest.parent_permlink === CONTENT_THREAD && parts.every((p, i) => p.parent_author === 'alice' && p.parent_permlink === manifest.permlink && p.permlink === `${manifest.permlink}-p${i}`),
+        'the manifest replies to the content thread and each part replies to the manifest');
+    const listed = JSON.parse(manifest.json_metadata).forkbuild.content;
+    assert(listed.encoding === 'gzip-base64' && listed.parts.length === parts.length && listed.parts.every((p, i) => p.permlink === parts[i].permlink && p.length === parts[i].body.length),
+        'the manifest lists every part before they are posted');
+    assert(chain.broadcasts.every((b) => b.operations.length === 2 && b.operations[1][1].max_accepted_payout === '0.000 SBD'), 'every post declines payout');
+    assert(clock.sleeps.length === parts.length && clock.sleeps.every((ms) => ms === 4500), `each post waits out the reply interval (sleeps ${clock.sleeps})`);
+
+    const total = parts.length + 1;
+    assert(JSON.stringify(events.map((e) => `${e.phase}:${e.done}`)) === JSON.stringify(['checking:0', 'posting:0', ...Array.from({ length: total }, (_, i) => `posting:${i + 1}`), `stored:${total}`]),
+        `progress is reported after each post (got ${events.map((e) => `${e.phase}:${e.done}`)})`);
+    assert(events.every((e) => e.total === total && e.resumed === false), 'every event carries the total');
+
+    assert(await store.get(reference) === text && reference.verify(text), 'the parts read back, joined, into the same content');
+    console.log('✓ storing in parts, with progress');
+
+    const expectUnavailable = async (expected, label) => {
+        const error = await rejection(store.get(reference));
+        assert(error instanceof ContentUnavailableError && error.message.includes(expected), `${label} (got ${error?.message})`);
+    };
+    const partKey = `alice/${parts[1].permlink}`;
+    const original = chain.posts.get(partKey);
+    const flipped = original.body.slice(0, -1) + (original.body.endsWith('A') ? 'B' : 'A');
+    chain.posts.set(partKey, { ...original, body: flipped });
+    await expectUnavailable(`part 2 of ${parts.length} has been changed`, 'an edited part of the same length fails its hash');
+    chain.posts.set(partKey, { ...original, body: `${original.body}x` });
+    await expectUnavailable(`part 2 of ${parts.length} has been changed`, 'an edited part of another length fails its length');
+    chain.posts.delete(partKey);
+    await expectUnavailable(`part 2 of ${parts.length} is missing. The upload may not have finished`, 'a missing part');
+    chain.posts.set('mallory/' + parts[1].permlink, { ...original, author: 'mallory' });
+    await expectUnavailable(`part 2 of ${parts.length} is missing`, "someone else's post at a part's permlink is not the part");
+    chain.posts.set(partKey, original);
+    assert(await store.get(reference) === text, 'restoring the part makes the content readable again');
+    console.log('✓ reading parts, and refusing missing or changed ones');
+}
+
+// Resuming: a failed part leaves a record, and storing the same content
+// again with the same account posts only what is missing or changed.
+{
+    let refuseAttempt = 3;
+    const chain = fakeChain({ fail: (attempt) => (attempt === refuseAttempt ? new Error('The user declined the transaction.') : null) });
+    const uploads = new SteemContentUploadStore(new InMemoryStorageProvider());
+    const store = storeFor(chain, { uploads });
+    const text = incompressibleText(STEEM_CONTENT_PART_MAX_BYTES * 3);
+
+    const failed = await rejection(store.put(text));
+    assert(failed instanceof SteemContentUploadIncompleteError && failed.done === 2 && failed.message.startsWith(`Post 3 of ${failed.total} on Steem failed: The user declined the transaction. 2 of ${failed.total} posts are stored`),
+        `a failed part names what is stored and how to finish (got ${failed?.message})`);
+    const manifest = chain.broadcasts[0].operations[0][1];
+    const hash = computeContentHash(text);
+    assert(uploads.get('alice', hash)?.permlink === manifest.permlink, 'the unfinished upload is remembered');
+
+    refuseAttempt = -1;
+    const events = [];
+    const before = chain.broadcasts.length;
+    const reference = await store.put(text, { onProgress: (state) => events.push(state) });
+    const resumedPosts = chain.broadcasts.slice(before).map((b) => b.operations[0][1]);
+    assert(resumedPosts.length === failed.total - 2 && resumedPosts.every((p) => p.parent_permlink === manifest.permlink), `only the missing parts are posted (got ${resumedPosts.length})`);
+    assert(reference.uri === `steem://alice/${manifest.permlink}`, 'the resumed upload keeps its manifest');
+    assert(events.every((e) => e.resumed) && events[0].done === 2 && events.at(-1).phase === 'stored', 'progress says it resumed, starting from what was already stored');
+    assert(uploads.get('alice', hash) === null, 'the record is cleared once every part is stored');
+    assert(await store.get(reference) === text, 'the resumed upload reads back');
+
+    // A changed part is fixed with an edit, without options.
+    uploads.save({ author: 'alice', permlink: manifest.permlink, contentHash: hash });
+    const partKey = `alice/${manifest.permlink}-p1`;
+    chain.posts.set(partKey, { ...chain.posts.get(partKey), body: 'changed' });
+    const beforeEdit = chain.broadcasts.length;
+    await store.put(text);
+    const edits = chain.broadcasts.slice(beforeEdit);
+    assert(edits.length === 1 && edits[0].operations.length === 1 && edits[0].operations[0][1].permlink === `${manifest.permlink}-p1`, 'a changed part is edited in place, and nothing else is posted');
+    assert(await store.get(reference) === text, 'the edited part reads back');
+
+    // A record whose manifest is gone starts a fresh upload.
+    uploads.save({ author: 'alice', permlink: 'forkbuild-c-gone-abcd1234', contentHash: hash });
+    const beforeFresh = chain.broadcasts.length;
+    const fresh = await store.put(text);
+    assert(fresh.uri !== reference.uri && chain.broadcasts.length - beforeFresh === failed.total, 'a record that no longer matches the chain starts over');
+    console.log('✓ resuming an unfinished upload');
+}
+
+// Resource Credits: refused before posting when the estimate says the
+// account can't afford it; a refusal from the chain gets its own message.
+{
+    const estimates = [];
+    const estimatorSaying = (result) => ({ async estimate(account, transactions) { estimates.push({ account, transactions }); return result; } });
+    const text = incompressibleText(STEEM_CONTENT_PART_MAX_BYTES * 2);
+
+    const poor = fakeChain();
+    const events = [];
+    const refused = await rejection(storeFor(poor, { estimator: estimatorSaying({ enough: false, neededPercent: 40, availablePercent: 12 }) }).put(text, { onProgress: (e) => events.push(e) }));
+    assert(refused instanceof SteemResourceCreditsError && poor.broadcasts.length === 0, 'too few Resource Credits stops the upload before anything is posted');
+    assert(refused.message.startsWith("Storing this build on Steem needs about 40% of your account's Resource Credits, and it has 12% right now."), `the message gives both shares (got ${refused.message})`);
+    assert(events.at(-1).phase === 'failed', 'progress reports the failure');
+    const [{ account, transactions }] = estimates;
+    assert(account === 'alice' && transactions.length === 3 && transactions[0][0][1].parent_permlink.startsWith('forkbuild-content-') && transactions[1][0][1].permlink.endsWith('-p0'),
+        'the estimate covers the manifest and every part');
+
+    const rich = fakeChain();
+    const richEvents = [];
+    await storeFor(rich, { estimator: estimatorSaying({ enough: true, neededPercent: 3, availablePercent: 90 }) }).put(text, { onProgress: (e) => richEvents.push(e) });
+    assert(rich.broadcasts.length === 3 && richEvents.at(-1).resourceCredits?.neededPercent === 3, 'enough Resource Credits: the upload goes ahead and progress carries the estimate');
+
+    const unknown = fakeChain();
+    await storeFor(unknown, { estimator: estimatorSaying(null) }).put(text);
+    assert(unknown.broadcasts.length === 3, 'no estimate (the node could not say): the upload goes ahead');
+
+    const rcRefusal = new Error('Account: alice has 10 RC, needs 999 RC. Please wait to transact, or power up STEEM.');
+    const first = await rejection(storeFor(fakeChain({ fail: () => rcRefusal })).put(text));
+    assert(first?.message.startsWith('Steem refused the post: your Steem account ran out of Resource Credits.'), `a refusal on the first post (got ${first?.message})`);
+    const middle = await rejection(storeFor(fakeChain({ fail: (attempt) => (attempt === 2 ? rcRefusal : null) })).put(text));
+    assert(middle instanceof SteemContentUploadIncompleteError && middle.message.includes('your Steem account ran out of Resource Credits. 1 of 3 posts are stored'),
+        `a refusal part-way (got ${middle?.message})`);
+    console.log('✓ the Resource Credits check');
+}
+
+// The progress line, and the upload record.
+{
+    assert(describeSteemContentUploadProgress(null) === null && describeSteemContentUploadProgress({ phase: 'stored', done: 3, total: 3 }) === null, 'nothing to show when idle or finished');
+    assert(describeSteemContentUploadProgress({ phase: 'checking', done: 0, total: 3 }) === 'Storing on Steem: checking your Resource Credits…', 'checking');
+    const line = describeSteemContentUploadProgress({ phase: 'posting', done: 2, total: 5, resumed: true, resourceCredits: { neededPercent: 7, availablePercent: 80 } });
+    assert(line === 'Storing on Steem: 2 of 5 posts made. Approve each post in Steem Keychain. Resuming an earlier upload of this build. Uses about 7% of your Resource Credits (80% available).', `posting (got ${line})`);
+    assert(describeSteemContentUploadProgress({ phase: 'posting', done: 0, total: 1 }).includes('0 of 1 post made'), 'one post is singular');
+
+    const uploads = new SteemContentUploadStore(new InMemoryStorageProvider());
+    uploads.save({ author: 'alice', permlink: 'forkbuild-c-x-abcd1234', contentHash: 'abcd0123' });
+    assert(uploads.get('alice', 'abcd0123')?.permlink === 'forkbuild-c-x-abcd1234' && uploads.get('bob', 'abcd0123') === null, 'records are per account and content');
+    uploads.remove('alice', 'abcd0123');
+    assert(uploads.get('alice', 'abcd0123') === null, 'a record can be removed');
+    console.log('✓ the progress line and the upload record');
 }
 
 // Distributing a snapshot to Steem storage and a Steem announcement, then
