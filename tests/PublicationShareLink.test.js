@@ -4,6 +4,10 @@ import {
 } from '../application/publication/PublicationShareLink.js';
 import { PublicationDistributionLifecycleMemoryStore } from '../application/publication/distribution/PublicationDistributionLifecycleStore.js';
 import { executePublicationDistributionCommand } from '../application/publication/distribution/PublicationDistributionCommand.js';
+import { PublicationDistributionLifecyclePersistence } from '../application/publication/distribution/PublicationDistributionLifecyclePersistence.js';
+import { PublicationDistributionLifecyclePersistenceBridge } from '../application/publication/distribution/PublicationDistributionLifecyclePersistenceBridge.js';
+import { PublicationDistributionLifecycleRestorer } from '../application/publication/distribution/PublicationDistributionLifecycleRestorer.js';
+import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // Sharing a distributed Publication: the link from where its Signed Claim is
@@ -77,6 +81,38 @@ const onSteem = { material: { state: 'PRESENT', uri: 'steem://forkbuild/forkbuil
     assert(await copyPublicationShareLink(share, {}) === 'unavailable', 'no clipboard, the same');
     assert(await copyPublicationShareLink({ available: false }, desktop) === 'unavailable', 'nothing to copy without a link');
     console.log('✓ sharing and copying');
+}
+
+// After a reload: a build published from the Editor is in no catalog, so
+// nothing watched its id at startup. Its distribution must still be saved,
+// and the share link come back from what was saved.
+{
+    const storage = new InMemoryStorageProvider();
+    const persistence = new PublicationDistributionLifecyclePersistence(storage);
+    const before = new PublicationDistributionLifecycleMemoryStore();
+    new PublicationDistributionLifecyclePersistenceBridge(before, persistence).observeAll();
+    await executePublicationDistributionCommand({
+        publication: { id: 'editor-pub', signature: { signature: 'sig' } },
+        serializedMaterial: '{"id":"editor-pub"}',
+        materialStorage: 'steem',
+        discoveryProvider: 'steem',
+        steemMaterialStore: { storage: 'steem', put: async () => ({ uri: 'steem://forkbuild/forkbuild-c-thin-abcd1234' }) },
+        steemPublicationDiscoveryPublisher: { discoveryTag: 'forkbuild-publication', publish: async () => ({ published: true, relayUrl: 'https://steemit.com/x', id: 'x' }) },
+        lifecycleStore: before
+    });
+    assert(persistence.load('editor-pub')?.material.uri === 'steem://forkbuild/forkbuild-c-thin-abcd1234', 'the distribution of a Publication no one watched is saved');
+
+    const afterReload = new PublicationDistributionLifecycleMemoryStore();
+    assert(afterReload.get('editor-pub') === null, 'after a reload it is not in memory');
+    const restored = new PublicationDistributionLifecycleRestorer(persistence, afterReload).restore('editor-pub');
+    const share = describePublicationShare({ lifecycle: restored, title: 'Thin Pyramid with Stair' });
+    assert(share?.available && share.url.endsWith('#/view/steem/forkbuild/forkbuild-c-thin-abcd1234'), `the share link comes back from what was saved (got ${JSON.stringify(share)})`);
+
+    const unsubscribe = before.subscribeAll(() => { throw new Error('a failing listener'); });
+    before.set('other', { material: { state: 'ABSENT' }, discovery: { state: 'ABSENT' } });
+    unsubscribe();
+    assert(persistence.load('other') !== null, 'one failing listener doesn\'t stop the others');
+    console.log('✓ the share link survives a reload');
 }
 
 console.log('\n✅ All PublicationShareLink tests passed.');

@@ -162,13 +162,14 @@ export function composeWorldDiscovery({
         publicationDistributionLifecycleStore,
         publicationDistributionLifecyclePersistence
     );
-    const restoredPublicationDistributionLifecycles = hydratePublicationDistributionLifecycles(
+    hydratePublicationDistributionLifecycles(
         publicationDistributionLifecycleRestorer,
         publicationCatalog.list().map((publication) => publication.id)
     );
-    for (const { publicationId } of restoredPublicationDistributionLifecycles) {
-        publicationDistributionLifecyclePersistenceBridge.observe(publicationId);
-    }
+    // Every Publication's lifecycle is persisted, not only the catalogued
+    // ones restored above: a build published from the Editor isn't in the
+    // catalog, and its distribution would otherwise be lost on reload.
+    publicationDistributionLifecyclePersistenceBridge.observeAll();
 
     return {
         worldDiscoveryRuntime, worldEncounterMaterialVerifier, arweaveGatewayConfigurationStore,

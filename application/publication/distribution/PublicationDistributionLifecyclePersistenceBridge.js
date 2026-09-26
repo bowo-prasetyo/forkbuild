@@ -238,12 +238,24 @@ export class PublicationDistributionLifecyclePersistenceBridge {
         if (!isNonEmptyString(publicationId)) {
             return () => {};
         }
-        return this._store.subscribe(publicationId, (id, lifecycle) => {
-            if (lifecycle) {
-                this._persistence.save(id, lifecycle);
-            } else {
-                this._persistence.remove(id);
-            }
-        });
+        return this._store.subscribe(publicationId, (id, lifecycle) => this._persist(id, lifecycle));
+    }
+
+    // Persists every Publication's lifecycle from now on, whichever it is
+    // (a build published from the Editor is not in the catalog, so observe()
+    // over the catalog's ids never saw it). Needs the store's subscribeAll().
+    observeAll() {
+        if (typeof this._store.subscribeAll !== 'function') {
+            throw new Error('PublicationDistributionLifecyclePersistenceBridge: observeAll() needs a store with subscribeAll()');
+        }
+        return this._store.subscribeAll((id, lifecycle) => this._persist(id, lifecycle));
+    }
+
+    _persist(id, lifecycle) {
+        if (lifecycle) {
+            this._persistence.save(id, lifecycle);
+        } else {
+            this._persistence.remove(id);
+        }
     }
 }
