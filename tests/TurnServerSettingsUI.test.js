@@ -106,7 +106,7 @@ async function run() {
             n('A4. REAL COMPONENT: no error/save/clear status is shown on an empty first mount'));
 
         const viewSource = await source('ui/views/TurnServerSettingsView.js');
-        assert(/No TURN server configured\./.test(viewSource), n('A5. the template carries real "no configuration" copy, never a blank/broken section'));
+        assert(/No TURN server of your own configured\./.test(viewSource), n('A5. the template carries real "no configuration" copy, never a blank/broken section'));
     }
     console.log('✓ Section A: an empty TURN configuration renders correctly — every field empty, no error, no fabricated default');
 

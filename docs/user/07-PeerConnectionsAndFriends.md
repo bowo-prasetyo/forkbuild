@@ -101,6 +101,12 @@ direct or STUN-negotiated path. This setting affects connection setup
 only; it does not change peer identity, authentication, or any existing
 connection.
 
+You don't need to fill this in to get a relay: when a connection starts,
+ForkBuild already asks your rendezvous servers (see Rendezvous Servers)
+for a short-lived TURN relay and uses it when they offer one. Add a relay
+here only if you run or pay for one yourself; it is used alongside
+theirs, never instead of it.
+
 [ One turn:/turns: URL per line, e.g. turn:relay.example:3478 ]
 
 Username [______________]
@@ -117,12 +123,15 @@ set, the current relay shows as "Current TURN relay (*N* url(s)):
 never shown back to you once saved, only that one is configured. Click
 **Clear** to remove it entirely.
 
-**There is deliberately no "Use Deployment Default" button here.**
-Unlike Arweave Gateway or Nostr Relays, ForkBuild ships no deployment-wide
-TURN server of its own — leaving this unconfigured simply means peer
-connections rely on STUN and direct connectivity alone. A TURN relay is entirely optional, and something you'd
-supply yourself (many WebRTC hosting providers offer one) only if
-connections to certain peers keep failing to connect directly. Like every
+**There is deliberately no "Reset to Defaults" button here.** The
+default relay comes from the rendezvous servers, as described above, so
+this page has nothing built in to reset to: shipping a TURN server here
+would mean publishing its credential in the app for anyone to read and
+spend. Leaving the page empty still gets you the rendezvous servers'
+relay, when they offer one; with no relay from either, connections rely
+on STUN and direct connectivity alone. Your own relay is optional, and
+something you'd supply yourself (many WebRTC hosting providers offer one)
+only if connections to certain peers keep failing even so. Like every
 other Network Settings page, a change here only takes effect on the next
 app load.
 

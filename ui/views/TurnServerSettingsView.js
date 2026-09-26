@@ -92,9 +92,12 @@ import { splitNonEmptyLines } from '../../utils/splitNonEmptyLines.js';
 // Unlike STUN/Rendezvous/the Nostr relay pages, TURN has no deployment-wide
 // default to "reset to" — see storage/TurnServerConfigurationStore.js's own
 // header, "there is no deployment-wide default TURN relay this store could
-// fall back to." Clearing therefore reads "Clear," not "Reset to Defaults"
-// or "Use Deployment Default," and its own confirmation text says exactly
-// that: no TURN server configured, full stop.
+// fall back to." (The relay a connection gets by default comes from the
+// rendezvous servers — createTurnCredentialSource() in peer/IceServerConfig.js
+// — never from this setting, which the page's second paragraph tells the
+// user.) Clearing therefore reads "Clear," not "Reset to Defaults" or "Use
+// Deployment Default," and its own confirmation text says exactly that: no
+// TURN server of your own configured.
 //
 // NO TEST CONNECTION BUTTON, DELIBERATELY. A successful HTTP/TURN-adjacent
 // probe would not establish that a real WebRTC connection can actually use
@@ -154,14 +157,17 @@ export default {
         <section class="turn-server-settings-view">
             <h1>TURN Server</h1>
             <p class="form-hint form-hint--neutral">
-                Your own TURN relay, used for peer connections that can't establish a direct or STUN-negotiated path. This setting affects connection setup only; it does not change peer identity, authentication, or any existing connection. ForkBuild has no deployment-wide default TURN server — leave this unconfigured to rely on STUN/direct connectivity alone.
+                Your own TURN relay, used for peer connections that can't establish a direct or STUN-negotiated path. This setting affects connection setup only; it does not change peer identity, authentication, or any existing connection.
+            </p>
+            <p class="form-hint form-hint--neutral">
+                You don't need to fill this in to get a relay: when a connection starts, ForkBuild already asks your rendezvous servers (see Rendezvous Servers) for a short-lived TURN relay and uses it when they offer one. Add a relay here only if you run or pay for one yourself; it is used alongside theirs, never instead of it.
             </p>
 
             <p v-if="hasConfiguration" class="form-hint form-hint--neutral">
                 Current TURN relay ({{ configuration.urls.length }} url(s)): {{ configuration.urls.join(', ') }} — username: {{ configuration.username }}
             </p>
             <p v-else class="form-hint form-hint--neutral">
-                No TURN server configured.
+                No TURN server of your own configured.
             </p>
 
             <div class="turn-server-settings-form">
