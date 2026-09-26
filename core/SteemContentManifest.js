@@ -132,13 +132,20 @@ export function steemContentEncodedByteLength(text) {
 function publicationCardNotice(viewUrl, { title = null, author = null, description = null, imageUrl = null }) {
     const safeTitle = steemNoticeText(title, STEEM_NOTICE_TITLE_MAX) || 'An untitled build';
     const safeAuthor = steemNoticeText(author, STEEM_NOTICE_AUTHOR_MAX);
-    const safeDescription = steemNoticeText(description, STEEM_NOTICE_DESCRIPTION_MAX);
+    // A description that only repeats the title adds nothing.
+    const safeDescription = sameWords(description, title) ? '' : steemNoticeText(description, STEEM_NOTICE_DESCRIPTION_MAX);
     return [
         ...(isSteemNoticeImageUrl(imageUrl) ? [`[![${safeTitle}](${imageUrl})](${viewUrl})`] : []),
         `**${safeTitle}**${safeAuthor ? ` by ${safeAuthor}` : ''}`,
         ...(safeDescription ? [safeDescription] : []),
         `[See it in 3D](${viewUrl}) · A build published with ForkBuild. This reply holds its signed record for the ForkBuild app, and its payout is declined. [What this is](${ABOUT_URL})`
     ].join('\n\n');
+}
+
+// Whether two texts say the same, ignoring case, spacing and punctuation.
+function sameWords(a, b) {
+    const words = (text) => (typeof text === 'string' ? text.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim() : '');
+    return words(a) !== '' && words(a) === words(b);
 }
 
 export function steemContentManifestOperations({ author, threadAccount, threadPermlink, permlink, content, data, appVersion = null, viewUrl = null, card = null }) {

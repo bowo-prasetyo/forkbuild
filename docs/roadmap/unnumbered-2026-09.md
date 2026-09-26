@@ -1136,4 +1136,8 @@ it in 3D" link.** A picture and a few words draw far more Steemit readers into W
 - Tests: `tests/SteemPublicationNotice.test.js` (the text rules, including links, mentions, tags, HTML, Markdown,
   hidden characters and caps; picture addresses; the layout; the describer and each fallback; the store asking only
   for Signed Claims, reporting progress, and posting plainly when the card fails).
-- Not done: a live distribute with the picture on Steemit.
+- Checked live (2026-09-26): distributing "Twin House With Rabbits" posted
+  `@forkbuild/forkbuild-c-muiesncy-wkg6k1nb` with its thumbnail uploaded to
+  `https://cdn.steemitimages.com/DQmf2MADzdCGgTshHpSNXKSV9CRACfPuurhnNznJ5X4ocPG/forkbuild-build.png` and listed in
+  `json_metadata.image`. That build's description was its title, so the notice showed it twice; a description that
+  only repeats the title is now left out.

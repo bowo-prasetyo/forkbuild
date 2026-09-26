@@ -73,6 +73,10 @@ const IMAGE_URL = 'https://cdn.steemitimages.com/DQmTest/forkbuild-build.png';
 
     const plain = steemContentNotice({ viewUrl: VIEW_URL, card: { title: null, author: null, description: null, imageUrl: 'http://not-https.example/x.png' } });
     assert(plain.split('\n\n')[0] === '**An untitled build**' && !plain.includes('!['), `without a title or a usable picture it still reads well (got ${plain})`);
+    const repeated = steemContentNotice({ viewUrl: VIEW_URL, card: { title: 'Twin House With Rabbits,', author: 'forkbuild', description: 'twin house with rabbits' } });
+    assert(repeated.split('\n\n').length === 2 && repeated.startsWith('**Twin House With Rabbits,** by forkbuild\n\n[See it in 3D]'), `a description that only repeats the title is left out (got ${repeated})`);
+    const different = steemContentNotice({ viewUrl: VIEW_URL, card: { title: 'Twin House', description: 'Twin House With Rabbits' } });
+    assert(different.split('\n\n')[1] === 'Twin House With Rabbits', 'a description that says more is kept');
     const noCard = steemContentNotice({ viewUrl: VIEW_URL });
     assert(noCard.startsWith('A build published with ForkBuild: [see it in 3D]'), 'without a card the notice is the plain link');
 
