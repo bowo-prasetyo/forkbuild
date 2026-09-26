@@ -131,7 +131,11 @@ export class IpfsGatewayContentStore extends ContentStore {
         try {
             response = await this._fetch(`${this._gatewayUrl}${path}`, { method: 'GET', signal: controller.signal });
         } catch (error) {
-            throw new ContentUnavailableError(`IpfsGatewayContentStore: could not reach gateway at ${this._gatewayUrl} — ${error.message}`);
+            // An abort is this store's own timeout; say so rather than pass on
+            // the browser's "signal is aborted without reason".
+            throw new ContentUnavailableError(controller.signal.aborted
+                ? `IpfsGatewayContentStore: gateway at ${this._gatewayUrl} did not answer within ${this._timeoutMs >= 1000 ? `${Math.round(this._timeoutMs / 1000)} s` : `${this._timeoutMs} ms`}`
+                : `IpfsGatewayContentStore: could not reach gateway at ${this._gatewayUrl} — ${error.message}`);
         } finally {
             clearTimeout(timer);
         }

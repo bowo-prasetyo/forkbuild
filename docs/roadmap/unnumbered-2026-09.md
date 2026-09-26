@@ -1217,3 +1217,22 @@ opened on it.
   IPFS gateway store with a really signed Publication, including a claim not there yet and a network down).
 - Also fixed in the user guide: the "Share with friends" paragraph had been inserted into the middle of "Sharing a
   link on Steem".
+
+## IPFS share links: time to find content, and a clearer message (unnumbered, 2026-09-26)
+
+**Opening an IPFS share link now gives each gateway 30 seconds, and says plainly what went wrong and what to do.** On
+the live site, a link to a claim on IPFS failed with "IpfsGatewayContentStore: could not reach gateway at
+https://gateway.pinata.cloud — signal is aborted without reason": the gateway store gives up after 5 seconds, and a
+gateway often needs tens of seconds to find content that lives on someone's own IPFS node. With one gateway
+configured, there was nothing to fall back to.
+
+- `composePublicationClaimRetriever()` gives IPFS gateways 30 s (`PUBLICATION_CLAIM_IPFS_TIMEOUT_MS`) when reading a
+  claim for a link; the gateway stores' 5 s default elsewhere is unchanged.
+- `IpfsGatewayContentStore` reports its own timeout as "gateway at … did not answer within 30 s" instead of the
+  browser's abort text.
+- When IPFS can't be reached, the link page adds: a gateway can take a while to find content on someone's own node,
+  so try again, and adding another gateway in Network Settings (such as https://ipfs.io or https://dweb.link) gives
+  one to fall back to.
+- Checked in Chromium on the real app: a gateway answering after 8 s (which the 5 s limit cut off) now opens World
+  View; one that never answers shows the new message after 30 s, with Try again.
+- Tests: `tests/PublicationLinkNetworks.test.js` (the timeout message, and the advice on IPFS but not on Arweave).

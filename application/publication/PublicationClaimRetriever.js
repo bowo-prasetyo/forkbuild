@@ -22,17 +22,22 @@ export function createPublicationClaimRetriever({ steem = null, arweave = null, 
     };
 }
 
+// How long each IPFS gateway gets to return a claim. Longer than a gateway
+// store's usual 5 s: content that lives on someone's own IPFS node has to be
+// found through the IPFS network first, which often takes tens of seconds.
+export const PUBLICATION_CLAIM_IPFS_TIMEOUT_MS = 30000;
+
 // The retriever for the app: Steem through the Steem runtime's resolver (null
 // when there is none), Arweave through the configured gateways (failing over
 // in order) and IPFS through the configured gateways.
-export function composePublicationClaimRetriever({ steemResolver = null, arweaveGatewayUrls, ipfsGatewayUrls }) {
+export function composePublicationClaimRetriever({ steemResolver = null, arweaveGatewayUrls, ipfsGatewayUrls, ipfsTimeoutMs = PUBLICATION_CLAIM_IPFS_TIMEOUT_MS }) {
     return createPublicationClaimRetriever({
         steem: steemResolver,
         arweave: buildArweaveWorldEncounterMaterialResolver({ gatewayUrls: arweaveGatewayUrls }),
         ipfs: new IpfsWorldEncounterMaterialResolver({
             gatewayStore: ipfsGatewayUrls.length > 1
-                ? new IpfsGatewayFailoverContentStore({ gatewayUrls: ipfsGatewayUrls })
-                : new IpfsGatewayContentStore({ gatewayUrl: ipfsGatewayUrls[0] })
+                ? new IpfsGatewayFailoverContentStore({ gatewayUrls: ipfsGatewayUrls, timeoutMs: ipfsTimeoutMs })
+                : new IpfsGatewayContentStore({ gatewayUrl: ipfsGatewayUrls[0], timeoutMs: ipfsTimeoutMs })
         })
     });
 }

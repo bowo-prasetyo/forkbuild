@@ -908,7 +908,9 @@ ForkBuild's on their device:
    `steem://` with the resolver above, `ar://<id>` (43 base64url characters) with the Arweave material resolver over
    the configured gateways, `ipfs://<cid>` (a bare CID) with `IpfsWorldEncounterMaterialResolver` over the configured
    IPFS gateways (48 KiB at most, a JSON object; a gateway can't tell "not on IPFS" from "unreachable", so a miss
-   reads as unreachable). It is turned into a `Publication`.
+   reads as unreachable). Each IPFS gateway gets 30 s (`PUBLICATION_CLAIM_IPFS_TIMEOUT_MS`), not a gateway store's
+   usual 5 s, since content kept on someone's own node has to be found through the IPFS network first; the message
+   when IPFS can't be reached says to try again or add a second gateway to fall back to. It is turned into a `Publication`.
 2. It is verified with the same identity and signature verifier as World discovery; a claim that is unsigned or
    whose signature fails is not shown.
 3. Its Snapshot is found by the Publication's content hash: already on the device; else at the claim's own locator

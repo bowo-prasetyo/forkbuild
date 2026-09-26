@@ -2195,7 +2195,9 @@ share this link instead.
   IPFS node is online and reachable from public gateways. A remote pinning
   service or Arweave keeps it available when your computer is off.
 - Friends read Arweave and IPFS through the gateways set in their own
-  Network Settings.
+  Network Settings. For IPFS, a gateway gets up to 30 seconds to find the
+  claim; if it keeps failing, adding a second gateway (for example
+  `https://ipfs.io` or `https://dweb.link`) gives it one to fall back to.
 
 Open **Steem** (`/settings/steem`) to set **Your Steem account** under
 **Posting** (it applies at once), or to change where it reads from:
