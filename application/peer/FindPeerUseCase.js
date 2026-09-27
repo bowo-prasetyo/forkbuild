@@ -1,6 +1,7 @@
 import { EventBus } from '../../core/events/EventBus.js';
 
 const REJECTED_EVENT = 'FindPeerRejected';
+const PUBLISHED_EVENT = 'FindPeerSelfPublished';
 
 // 0.2.64 — Decentralized Peer Discovery.
 //
@@ -82,11 +83,26 @@ export class FindPeerUseCase {
     // stopPublishing() — see that file's own header, including the
     // one-connection-per-publication caveat inherent to peer/
     // WebRtcPeerConnectionProvider.js.
+    // "Be Discoverable". A success is announced through onPublished(), so
+    // AutoConnectKnownPeersUseCase can look for Known Peers who are
+    // discoverable too: two friends who both click it then connect.
     async publishSelf(options) {
         if (typeof this._peerSessionManager.publishSelf !== 'function') {
             return null;
         }
-        return this._peerSessionManager.publishSelf(options);
+        const publication = await this._peerSessionManager.publishSelf(options);
+        if (publication) {
+            this._eventBus.publish(PUBLISHED_EVENT, {});
+        }
+        return publication;
+    }
+
+    // Returns an unsubscribe function. Fires after each successful
+    // publishSelf() (a person's Be Discoverable click), never for the public
+    // lobby's own republishing, which goes to PeerSessionManager directly.
+    onPublished(callback) {
+        const subscription = this._eventBus.subscribe(PUBLISHED_EVENT, () => callback());
+        return () => subscription.unsubscribe();
     }
 
     isPublishing() {

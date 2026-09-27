@@ -42,7 +42,9 @@ import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 // device already has, the moment this class starts observing it — the
 // "application starts" case) and again every time application/
 // PeerRelationshipUseCase.js#onRelationshipsChanged() fires (the "a
-// relationship was remembered/updated/forgotten" case). A run already in
+// relationship was remembered/updated/forgotten" case), and once more each
+// time this person clicks Be Discoverable (FindPeerUseCase#onPublished(),
+// the "I am reachable now; is anyone I know?" case). A run already in
 // flight coalesces a change that arrives mid-run into exactly one more
 // full pass afterward, rather than overlapping two concurrent passes that
 // could each decide, correctly at the time, that the same identity is not
@@ -75,6 +77,13 @@ export class AutoConnectKnownPeersUseCase {
         this._running = false;
         this._rerunRequested = false;
         this._unsubscribeRelationships = peerRelationshipUseCase.onRelationshipsChanged(() => this._scheduleRun());
+        // A third reason for one pass: this person just became discoverable
+        // (Be Discoverable), so a Known Peer who already is can be reached
+        // now instead of at the next app start. Still one pass per click,
+        // never a timer.
+        this._unsubscribePublished = typeof findPeerUseCase.onPublished === 'function'
+            ? findPeerUseCase.onPublished(() => this._scheduleRun())
+            : null;
         this._scheduleRun();
     }
 
@@ -82,6 +91,10 @@ export class AutoConnectKnownPeersUseCase {
         if (this._unsubscribeRelationships) {
             this._unsubscribeRelationships();
             this._unsubscribeRelationships = null;
+        }
+        if (this._unsubscribePublished) {
+            this._unsubscribePublished();
+            this._unsubscribePublished = null;
         }
         // Deliberately does NOT dispose the injected findPeerUseCase,
         // peerRelationshipUseCase, or connectedPeerRegistry — all three are

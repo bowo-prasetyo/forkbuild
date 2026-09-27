@@ -167,4 +167,48 @@ async function waitFor(condition, message, timeoutMs = 15000) {
     bob.sessions.dispose();
 }
 
+// Two Known Peers, both already running: the one who clicks Be Discoverable
+// second connects to the first, and the lobby's own republishing never
+// triggers a lookup.
+{
+    const network = new LocalRendezvousNetwork();
+    const alice = makeDevice('mailbox-both-alice', network);
+    const bob = makeDevice('mailbox-both-bob', network);
+    const lookups = [];
+    const lookup = network.lookup.bind(network);
+    network.lookup = (identityId) => { lookups.push(identityId); return lookup(identityId); };
+    const knowEachOther = (device, other) => {
+        const relationships = new PeerRelationshipUseCase(new InMemoryStorageProvider(), device.identityProvider);
+        const signing = other.identityProvider.getSigningIdentity();
+        relationships.rememberPeer(new PeerIdentity({ identityId: other.id, publicKey: signing.publicKey, algorithm: signing.algorithm }));
+        const find = new FindPeerUseCase({ peerSessionManager: device.sessions });
+        const auto = new AutoConnectKnownPeersUseCase({ findPeerUseCase: find, peerRelationshipUseCase: relationships, connectedPeerRegistry: device.sessions.registry });
+        return { find, auto };
+    };
+    const aliceSide = knowEachOther(alice, bob);
+    const bobSide = knowEachOther(bob, alice);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    assert(!authenticatedTo(alice.sessions, bob.id), 'at startup neither is discoverable, so nothing connects');
+
+    const before = lookups.length;
+    await alice.sessions.publishSelf();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    assert(lookups.length === before, 'publishing directly (as the lobby does) looks nobody up');
+
+    await aliceSide.find.stopPublishing();
+    await aliceSide.find.publishSelf();
+    await waitFor(() => lookups.filter((id) => id === bob.id).length > 0, 'Alice\'s Be Discoverable looks her Known Peer up once');
+    assert(!authenticatedTo(alice.sessions, bob.id), 'Bob is not discoverable yet, so nothing connects');
+
+    await bobSide.find.publishSelf();
+    await waitFor(() => authenticatedTo(alice.sessions, bob.id) && authenticatedTo(bob.sessions, alice.id),
+        'Bob\'s Be Discoverable finds Alice, and they connect with nothing copied');
+    console.log('✓ two Known Peers who both click Be Discoverable connect');
+
+    aliceSide.auto.dispose();
+    bobSide.auto.dispose();
+    alice.sessions.dispose();
+    bob.sessions.dispose();
+}
+
 console.log('\n✅ All RendezvousAnswerMailbox tests passed.');
