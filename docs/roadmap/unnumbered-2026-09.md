@@ -1724,3 +1724,16 @@ panel called itself **My Publication** and offered to unpublish or distribute so
 - Tests: `tests/OwnPublicationPanelOwnership.test.js` (ownership, including a locked identity, someone else's, signed
   out and legacy; the guarded methods; following the session). The three distribution tests that call the panel's
   methods on a stand-in context now declare that context the viewer's own (`isOwnPublication: true`).
+
+## Be Discoverable looks for Known Peers too (unnumbered, 2026-09-27)
+
+**Two Known Peers who both click Be Discoverable now connect.** Reported from two open browsers: each click only
+published an offer and waited, because the automatic Known Peer connection (0.9.345) runs only at startup and when a
+relationship changes, so neither side ever looked the other up.
+
+- `FindPeerUseCase#publishSelf()` announces a success through a new `onPublished()`, and
+  `AutoConnectKnownPeersUseCase` runs one pass on it: the person who clicks second finds the first. It remains one
+  pass per click, never a timer, so the rendezvous operator still cannot watch a Known Peers list over time. The
+  public lobby's frequent republishing goes to `PeerSessionManager` directly and triggers no lookups.
+- Tests: `tests/RendezvousAnswerMailbox.test.js` adds two running Known Peers who connect once both have clicked
+  Be Discoverable, with no lookup from a direct (lobby-style) publish; it fails when the new trigger is removed.

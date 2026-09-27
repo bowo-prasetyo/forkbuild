@@ -192,10 +192,12 @@ connection with an explicit error, rather than silently trusting whoever
 answered.
 
 ForkBuild also tries this for you, automatically, for every identity in
-Known Peers: as soon as the app starts, and again any time you Remember,
-Forget, or otherwise change a Known Peer relationship, it quietly checks
-whether each one is currently **Be Discoverable** and, if so, connects
-without you having to click Reconnect yourself. A Known Peer who isn't
+Known Peers: as soon as the app starts, any time you Remember, Forget, or
+otherwise change a Known Peer relationship, and each time you click **Be
+Discoverable** yourself, it quietly checks whether each one is currently
+**Be Discoverable** and, if so, connects without you having to click
+Reconnect yourself. So two friends who both click **Be Discoverable**
+connect: the second click finds the first. A Known Peer who isn't
 discoverable right now, or who can't be reached, is simply left alone —
 there's no retry loop chasing them, no notification about the attempt, and
 one identity failing never affects another. Use **Reconnect** when you
