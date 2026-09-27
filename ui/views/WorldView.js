@@ -25,6 +25,8 @@ import LocationsPanel from '../components/LocationsPanel.js';
 import LandmarkFormModal from '../components/LandmarkFormModal.js';
 import RegionFormModal from '../components/RegionFormModal.js';
 import WorldMembersPanel from '../components/WorldMembersPanel.js';
+import PublicLobbyPanel from '../components/PublicLobbyPanel.js';
+import { worldLobby } from '../../core/LobbyCard.js';
 import WorldPresenceIndicator from '../components/WorldPresenceIndicator.js';
 import WorldCollaboratorIndicator from '../components/WorldCollaboratorIndicator.js';
 import { buildWorldCollaborationRoster } from '../components/WorldCollaborationRoster.js';
@@ -91,7 +93,7 @@ export default {
         WorldSearchPanel, LocationDocumentsDialog, WorldLocationBrowser,
         AvatarInfoPanel, NearbyAvatarsPanel,
         CompassIndicator, LocationsPanel, LandmarkFormModal, RegionFormModal,
-        WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator,
+        WorldMembersPanel, WorldPresenceIndicator, WorldCollaboratorIndicator, PublicLobbyPanel,
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
         WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt, AnimalInteractionPrompt,
@@ -172,6 +174,12 @@ export default {
         // Raw facts for the ACTIVE document, re-read on each refresh and on live
         // membership/presence changes; joined into rows only by worldCollaborationRoster.
         const showMembersPanel = ref(false);
+        // This World's public lobby (core/LobbyCard.js), following the
+        // active document like the header does.
+        const activeWorldLobby = ref(null);
+        const showLobbyPanel = ref(false);
+        function openLobbyPanel() { showLobbyPanel.value = true; }
+        function closeLobbyPanel() { showLobbyPanel.value = false; }
         const worldMembers = ref([]);
         const worldPresenceRoster = ref([]);
         const isActiveWorldOwner = ref(false);
@@ -598,6 +606,7 @@ export default {
                 author.value = activeDoc.metadata.author;
             }
             activeDocumentInfo.value = activeId ? session.getDocumentInfo(activeId) : null;
+            activeWorldLobby.value = activeId ? worldLobby(activeId) : null;
             canUndo.value = session.canUndo();
             canRedo.value = session.canRedo();
             undoLabel.value = session.getUndoLabel();
@@ -1215,6 +1224,7 @@ export default {
             namingPanelPublishToNostrResult,
             myIdentityId,
             showMembersPanel,
+            activeWorldLobby, showLobbyPanel, openLobbyPanel, closeLobbyPanel,
             worldCollaborationRoster,
             worldOnlineCount,
             spatialCollaboratorRows,
@@ -1310,6 +1320,7 @@ export default {
                 <div v-if="activeDocumentInfo" class="world-view-actions world-view-actions--collaboration">
                     <WorldPresenceIndicator :online-count="worldOnlineCount" @open="openMembersPanel" />
                     <button class="action-btn" @click="openMembersPanel">Members</button>
+                    <button v-if="activeWorldLobby" class="action-btn" @click="openLobbyPanel">Lobby</button>
                 </div>
 
                 <WorldCollaboratorIndicator v-if="activeDocumentInfo" :rows="spatialCollaboratorRows" @follow="followCollaborator" />

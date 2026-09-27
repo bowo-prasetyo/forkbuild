@@ -50,7 +50,7 @@ const {
     peerSessionManager, peerRelationshipUseCase, peerReconnectionUseCase, findPeerUseCase, peerMessageBus,
     peerBlockUseCase, deviceAuthorizationUseCase, friendRelationshipUseCase,
     identityLifecyclePropagationUseCase, chatUseCase, peerPresenceUseCase, deviceConversationSyncUseCase,
-    voiceUseCase
+    voiceUseCase, publicLobbyUseCase
 } = composeIdentityAndPeers();
 
 // The one LocalPublicationCatalog instance; every collaborator below shares it.
@@ -231,6 +231,13 @@ app.provide('peerSessionManager', peerSessionManager);
 app.provide('peerRelationshipUseCase', peerRelationshipUseCase);
 app.provide('peerReconnectionUseCase', peerReconnectionUseCase);
 app.provide('findPeerUseCase', findPeerUseCase);
+app.provide('publicLobbyUseCase', publicLobbyUseCase);
+// Leaving takes a card out of every lobby at once instead of leaving it
+// listed until it expires. Best effort: the page may be gone first.
+window.addEventListener('pagehide', () => { publicLobbyUseCase.leaveAll(); });
+// A lobby card speaks for the identity that signed it; switching identity
+// takes it out rather than leave it listed beside the new identity's offers.
+identityUseCase.onSessionChanged(() => { publicLobbyUseCase.leaveAll(); });
 app.provide('friendRelationshipUseCase', friendRelationshipUseCase);
 app.provide('identityLifecyclePropagationUseCase', identityLifecyclePropagationUseCase);
 app.provide('deviceAuthorizationUseCase', deviceAuthorizationUseCase);

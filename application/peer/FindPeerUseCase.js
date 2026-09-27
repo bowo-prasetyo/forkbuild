@@ -109,17 +109,17 @@ export class FindPeerUseCase {
     // found via search() will always have those match going in, but this
     // method never assumes it — see this class's own header on why the
     // expectation is what Alice asked for, never what the record claims).
-    // Returns `{ connectedPeer, reply }` exactly like
-    // application/peer/PeerSessionManager.js#acceptInvitation: `reply` must
-    // still be relayed back out-of-band for the handshake to complete —
-    // 0.2.64 changes nothing about WebRTC's own two-step signaling.
+    // Returns `{ connectedPeer, reply, delivered }`. When `delivered` is
+    // true the rendezvous answer mailbox carried the reply and the
+    // connection completes on its own; otherwise `reply` must still be
+    // handed back out-of-band (see PeerSessionManager#connectToDiscovered).
     async connect(record, identityId) {
         if (!identityId || typeof identityId !== 'string') {
             throw new Error('FindPeerUseCase: identityId is required');
         }
-        const { connectedPeer, reply } = await this._peerSessionManager.connectToDiscovered(record, { expectedIdentityId: identityId });
+        const { connectedPeer, reply, delivered = false } = await this._peerSessionManager.connectToDiscovered(record, { expectedIdentityId: identityId });
         this._searchedIdentityIds.set(connectedPeer.connectionId, identityId);
-        return { connectedPeer, reply };
+        return { connectedPeer, reply, delivered };
     }
 
     // Returns an unsubscribe function. Fires `{ expectedIdentityId,

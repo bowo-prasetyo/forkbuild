@@ -48,6 +48,7 @@ export class DiscoveryBootstrap extends PeerDiscoveryProvider {
         }
         this._localProvider = localProvider;
         this._discoveredListeners = new Set();
+        this._answerListeners = new Set();
         this._bootstrapUnsubscribes = new Map(); // provider -> unsubscribe
         this._localUnsubscribe = this._wireListener(this._localProvider);
         for (const provider of bootstrapProviders) {
@@ -65,7 +66,13 @@ export class DiscoveryBootstrap extends PeerDiscoveryProvider {
         if (this._bootstrapUnsubscribes.has(provider)) {
             return;
         }
-        this._bootstrapUnsubscribes.set(provider, this._wireListener(provider));
+        const unsubscribeDiscovered = this._wireListener(provider);
+        const unsubscribeAnswers = typeof provider.onAnswer === 'function'
+            ? provider.onAnswer((found) => {
+                for (const listener of this._answerListeners) listener(found);
+            })
+            : () => {};
+        this._bootstrapUnsubscribes.set(provider, () => { unsubscribeDiscovered(); unsubscribeAnswers(); });
     }
 
     removeBootstrapProvider(provider) {
@@ -208,6 +215,41 @@ export class DiscoveryBootstrap extends PeerDiscoveryProvider {
         }
     }
 
+    // Hands `answer` to whichever bootstrap provider `record` was
+    // discovered through. Resolves to true once one accepts it.
+    async deliverAnswer(record, answer) {
+        for (const provider of this._bootstrapUnsubscribes.keys()) {
+            if (typeof provider.deliverAnswer === 'function' && await provider.deliverAnswer(record, answer)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // The first answer any bootstrap provider holds for this device's own
+    // publication, asked concurrently like discover(). Without one, reports
+    // { answer: null, watching: true } only when `watch` was asked and every
+    // provider agreed to push, since a single server that won't push still
+    // has to be polled; otherwise null.
+    async fetchAnswer({ watch = false } = {}) {
+        const providers = Array.from(this._bootstrapUnsubscribes.keys()).filter((provider) => typeof provider.fetchAnswer === 'function');
+        const settled = await Promise.allSettled(providers.map((provider) => provider.fetchAnswer({ watch })));
+        const found = settled.find((outcome) => outcome.status === 'fulfilled' && outcome.value && outcome.value.answer);
+        if (found) {
+            return found.value;
+        }
+        const allWatching = watch && providers.length > 0
+            && settled.every((outcome) => outcome.status === 'fulfilled' && outcome.value && outcome.value.watching);
+        return allWatching ? { answer: null, answererId: null, watching: true } : null;
+    }
+
+    // Returns an unsubscribe function. Fires with { answer, answererId }
+    // whenever any bootstrap provider receives a pushed answer.
+    onAnswer(callback) {
+        this._answerListeners.add(callback);
+        return () => this._answerListeners.delete(callback);
+    }
+
     dispose() {
         this._localUnsubscribe();
         for (const unsubscribe of this._bootstrapUnsubscribes.values()) {
@@ -215,6 +257,7 @@ export class DiscoveryBootstrap extends PeerDiscoveryProvider {
         }
         this._bootstrapUnsubscribes.clear();
         this._discoveredListeners.clear();
+        this._answerListeners.clear();
     }
 
     _wireListener(provider) {

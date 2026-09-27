@@ -1568,3 +1568,90 @@ Snapshot already stored locally was downloaded again on every visit; the store s
     store, and a Snapshot fetched and stored once is read locally the next time.
   - `tests/NearbySnapshotCandidates.test.js`: the cell block, a placement winning over a claim, the cap on
     candidates with no position, no viewer position, and `limitConcurrency()`'s limit, order and error handling.
+
+## Public lobby and the rendezvous answer mailbox (unnumbered, 2026-09-27)
+
+**People who don't know each other's identity ids can now meet and connect: an opt-in public lobby, one for
+everyone and one per World.** Until now every connection started from an identity someone already had, because
+the rendezvous server only answers "where is this exact identity?". That keeps strangers from ever being listed,
+but it also meant a new player knew nobody to connect to. The lobby adds the smallest opening that keeps the
+existing rules: a list of only those who chose to join, holding no addresses.
+
+- The answer mailbox came first, because the lobby cannot work without it. A rendezvous publication carried the
+  WebRTC offer, but the answer had to be copied back by hand, which strangers cannot do, and which also left the
+  automatic Known Peer connection (0.9.345) unable to complete. The worker now takes `POST_ANSWER` (signed by the
+  answering identity; the first answer per publication wins, and an answered publication is no longer returned
+  by LOOKUP) and `FETCH_ANSWER` (signed by the publisher, because an answer lists the answerer's addresses).
+  `PeerSessionManager#connectToDiscovered()` leaves the answer there and reports `delivered`; `publishSelf()`
+  polls for one and completes the connection itself; an answer it cannot apply closes the pending connection, so
+  the spent publication never looks available. Without a signing identity or a mailbox the reply is still
+  returned to hand over.
+- Lobby cards (`core/LobbyCard.js`): identity, lobby (`public` or `world:<documentId>`), a self-chosen display
+  name of at most 40 characters, a lifetime of at most 15 minutes, signed by the identity. No offer and no
+  address. The worker gains `JOIN_LOBBY`, `LEAVE_LOBBY` and `LIST_LOBBY` (a random sample of at most 50), with
+  replay protection like PUBLISH and a total cap (`MAX_LOBBY_CARDS`, 20,000). Listing is a separate contract,
+  `peer/RendezvousLobbyTransport.js`, so identity lookup still cannot list anyone.
+- `application/peer/PublicLobbyUseCase.js` joins on every configured server, renews cards while the app runs,
+  and keeps the device discoverable while any lobby is joined, republishing as soon as a publication is spent.
+  Those standing offers skip fetching a TURN credential (`publishSelf({ prepareRelay: false })`): the player
+  asked that the relay be used only when needed, to save the monthly allowance. The person who clicks Connect
+  may fetch one, and ICE relays only when no direct path works. Listings keep only cards that verify by their own
+  signature and drop this identity and blocked ones; `connect()` is Find Someone by exact identity; `block()`
+  derives the key from the did:key. Leaving never waits for an offer still being prepared; that offer withdraws
+  itself when it lands.
+- UI: `ui/components/PublicLobbyPanel.js`, on the Peers page (**Public Lobby**) and behind a **Lobby** button in
+  World View. It shows who is listed, **Connecting…** until the handshake authenticates, then **Connected**.
+  Joining lasts for the session and the page leaves every lobby on `pagehide`.
+- Deliberately unchanged, as the player chose: a lobby connection is an ordinary authenticated peer, so the
+  announcement index and publication sync run with a stranger as with anyone; `docs/Privacy.md` and the Peers
+  guide now say so explicitly. Friendship still gates chat and voice.
+- Four principles in `docs/principles/peers.md`: "A Rendezvous Answer Is Signed, And Readable Only By The
+  Publisher", "A Lobby Card Says Who Is Present, Never Where To Reach Them", "The Lobby Is The Only Listing, And
+  Only Of Those Who Join It", "A Standing Offer Never Spends A Relay Credential".
+- Needs the new worker: a server from before this answers the lobby's requests with an unknown-type error, which
+  the lobby reports as "does not offer a lobby yet", and the mailbox falls back to handing the reply over.
+- Tests:
+  - `server/rendezvous-worker/worker.test.js`: the mailbox (signatures, first answer wins, LOOKUP hides answered
+    publications, only the publisher reads), lobby cards (signatures, per-lobby listing, replay and rollback,
+    name and lifetime limits, leave), the listing and total caps, and the alarm sweeping expired cards.
+  - `tests/RendezvousWorkerInterop.test.js`: the app's own signed answers and cards against the real worker.
+  - `tests/RendezvousAnswerMailbox.test.js`: Find Someone and automatic Known Peer connection completing over real
+    WebRTC with nothing copied, and the hand-over fallback for a locked identity.
+  - `tests/LobbyCard.test.js`: lobby names, display-name normalization, lifetime cap, signing and verification.
+  - `tests/PublicLobby.test.js`: strangers connecting over real WebRTC and the joiner staying reachable for a
+    second one, no relay credential for standing offers, leaving (including mid-republish), a junk answer in the
+    mailbox (the spent offer is closed and replaced at once, so the joiner is never stranded), World lobbies kept
+    apart, blocked, forged and expired cards dropped, a locked identity, no server, an unreachable server and a
+    server from before the lobby.
+
+## Rendezvous answers pushed, not polled (unnumbered, 2026-09-27)
+
+**A publisher waiting for someone to connect now gets the answer pushed down its open rendezvous connection
+instead of polling for it every 2 seconds.** Polling was the main cost of the public lobby: every waiting device
+sent 30 requests a minute to every server and kept its Durable Object from hibernating, so 1,000 people waiting
+meant about 500 requests a second. It also added about a second, on average, before a connection could complete.
+
+- Worker: FETCH_ANSWER takes `watch: true`. The signed request returns an answer already waiting, acknowledges
+  with `watching: true`, and records the watch in the socket's attachment, which survives hibernation. When
+  POST_ANSWER stores an answer, the worker pushes `{ type: 'ANSWER', identityId, publicationId, answer,
+  answererId }` to the connections watching that publication and ends their watch. Only a connection whose watch
+  carried the publisher's signature ever receives it, as FETCH_ANSWER already required. The rate limiter now
+  merges into the attachment instead of overwriting it.
+- Client: `WebSocketRendezvousTransport` raises pushed answers (`onAnswerPushed()`), `RendezvousDiscoveryProvider`
+  keeps those for its own current publication (`onAnswer()`), `DiscoveryBootstrap` merges its providers, and
+  `PeerSessionManager` completes the connection on whichever of push or check comes first, and only once. The
+  first check runs as soon as it publishes, so the watch is in place before anyone can answer.
+- Fallback: checks continue every 30 seconds while every server replied `watching: true`, to catch a push lost to
+  a dropped connection, and every 2 seconds otherwise, so a server from before pushes still works.
+- Result: about 2 requests a minute per waiting publisher instead of 30 (about 33 a second for 1,000 people), an
+  idle Durable Object, and a connection that completes one round trip after the answer is posted.
+- Tests:
+  - `server/rendezvous-worker/worker.test.js`: a signed watch is acknowledged and stored beside the rate limiter,
+    an unsigned one is refused, the answer is pushed to the watching connection only and ends the watch, a late
+    watch returns the answer at once, a stale publication is not watched, and FETCH_ANSWER without `watch` is
+    unchanged.
+  - `tests/RendezvousWorkerInterop.test.js`: the app's client registers a watch with the real worker and receives
+    the push.
+  - `tests/RendezvousAnswerMailbox.test.js`: with checks an hour apart a connection still completes promptly,
+    after exactly one check (the test fails when the push is ignored), and a network that never pushes is still
+    polled at the frequent rate.

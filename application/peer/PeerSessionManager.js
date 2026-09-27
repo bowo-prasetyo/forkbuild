@@ -7,6 +7,10 @@ import { DiscoverPeersUseCase } from './DiscoverPeersUseCase.js';
 
 const DEFAULT_INVITATION_TTL_MS = 10 * 60 * 1000; // 10 minutes — matches peer/PeerInvitation.js's own default
 const SIGNAL_TIMEOUT_MS = 30 * 1000; // ICE gathering ordinarily resolves in well under this on a working network
+const DEFAULT_ANSWER_POLL_INTERVAL_MS = 2 * 1000;
+// Checks while every rendezvous server pushes answers only catch a push
+// lost to a dropped connection.
+const DEFAULT_ANSWER_WATCH_INTERVAL_MS = 30 * 1000;
 
 // 0.2.55 — the one small application abstraction the design doc asked
 // for: a UI-facing surface over the exact four-stage pipeline 0.2.49
@@ -52,7 +56,13 @@ const SIGNAL_TIMEOUT_MS = 30 * 1000; // ICE gathering ordinarily resolves in wel
 // agrees with it — see application/peer/FindPeerUseCase.js, the one caller
 // that ever calls these three methods, for that.
 export class PeerSessionManager {
-    constructor({ identityProvider, peerConnectionProvider = new WebRtcPeerConnectionProvider(), discoveryProvider = new LocalPeerDiscoveryProvider() } = {}) {
+    constructor({
+        identityProvider,
+        peerConnectionProvider = new WebRtcPeerConnectionProvider(),
+        discoveryProvider = new LocalPeerDiscoveryProvider(),
+        answerPollIntervalMs = DEFAULT_ANSWER_POLL_INTERVAL_MS,
+        answerWatchIntervalMs = DEFAULT_ANSWER_WATCH_INTERVAL_MS
+    } = {}) {
         if (!identityProvider) {
             throw new Error('PeerSessionManager: identityProvider is required');
         }
@@ -64,6 +74,15 @@ export class PeerSessionManager {
         // publishSelf() — { connectionId, invitation } — or null. See
         // isPublishing() below.
         this._publishedOffer = null;
+        this._answerPollIntervalMs = answerPollIntervalMs;
+        this._answerWatchIntervalMs = answerWatchIntervalMs;
+        this._answerTimer = null;
+        this._unsubscribeAnswers = this._discoverPeersUseCase.onAnswer(({ answer }) => {
+            const offer = this._publishedOffer;
+            if (offer && answer && this.isPublishing()) {
+                this._applyAnswer(offer, answer);
+            }
+        });
         // Harmless for peer/WebRtcPeerConnectionProvider.js today (its own
         // onIncomingConnection() never fires — see that file's header) and
         // free forward-compatibility for any future transport that DOES
@@ -97,8 +116,16 @@ export class PeerSessionManager {
     // for ICE gathering to finish before wrapping the resulting offer as
     // an ordinary 0.2.50 PeerInvitation. Returns once there is something
     // to display and copy — never partway through.
-    async createInvitation({ ttlMs = DEFAULT_INVITATION_TTL_MS, expectedIdentityId = null } = {}) {
-        await this._prepareIceServers();
+    //
+    // `prepareRelay: false` skips asking for a TURN relay credential. The
+    // public lobby uses it for its standing offers, which are republished
+    // for as long as someone stays in the lobby: the person who connects
+    // fetches one, and ICE falls back to a relay only when no direct path
+    // works, so a standing offer need not spend the monthly allowance.
+    async createInvitation({ ttlMs = DEFAULT_INVITATION_TTL_MS, expectedIdentityId = null, prepareRelay = true } = {}) {
+        if (prepareRelay) {
+            await this._prepareIceServers();
+        }
         const connection = this._peerConnectionProvider.createOffer({ ttlMs });
         const connectedPeer = this._connectToPeerUseCase.attach(connection, null, { expectedIdentityId });
         const offer = await waitForLocalSignal(connection, connectedPeer);
@@ -204,11 +231,78 @@ export class PeerSessionManager {
     // only needs "did this work at all" (see ui/views/PeerConnectionsView.js#togglePublish)
     // can check truthiness either way; one that needs a specific
     // publication's own fields must know which shape it is holding.
-    async publishSelf({ ttlMs = DEFAULT_INVITATION_TTL_MS } = {}) {
-        const { invitation, connectedPeer } = await this.createInvitation({ ttlMs });
+    async publishSelf({ ttlMs = DEFAULT_INVITATION_TTL_MS, prepareRelay = true } = {}) {
+        const { invitation, connectedPeer } = await this.createInvitation({ ttlMs, prepareRelay });
         const publication = await this._discoverPeersUseCase.publish(invitation, { ttlMs });
         this._publishedOffer = publication ? { connectionId: connectedPeer.connectionId, invitation } : null;
+        if (this._publishedOffer && this._discoverPeersUseCase.canFetchAnswers()) {
+            this._watchForAnswer(this._publishedOffer);
+        }
         return publication;
+    }
+
+    // Collects the answer to `offer` from the rendezvous mailbox and
+    // completes the connection with it, so whoever found this device never
+    // has to send a reply back by hand. Each check also asks the servers to
+    // push a later answer (see the onAnswer() subscription in the
+    // constructor). While every server has agreed to push, checks are only
+    // a slow fallback for a push lost to a dropped connection; otherwise
+    // (a server from before pushes) they stay frequent. The first check runs
+    // at once so the watch is in place before anyone can answer.
+    _watchForAnswer(offer) {
+        this._clearAnswerTimer();
+        const check = async () => {
+            this._answerTimer = null;
+            if (this._publishedOffer !== offer || !this.isPublishing()) {
+                return;
+            }
+            let found = null;
+            try {
+                found = await this._discoverPeersUseCase.fetchAnswer({ watch: true });
+            } catch {
+                found = null;
+            }
+            if (this._publishedOffer !== offer || offer.answered) {
+                return;
+            }
+            if (found && found.answer) {
+                await this._applyAnswer(offer, found.answer);
+                return;
+            }
+            const delay = found && found.watching ? this._answerWatchIntervalMs : this._answerPollIntervalMs;
+            this._answerTimer = setTimeout(check, delay);
+            // Never keeps a Node test process alive on its own.
+            if (this._answerTimer && typeof this._answerTimer.unref === 'function') {
+                this._answerTimer.unref();
+            }
+        };
+        check();
+    }
+
+    // Applies the first answer to arrive for `offer`, by push or by check;
+    // any later one for the same offer is ignored.
+    async _applyAnswer(offer, answer) {
+        if (offer.answered || this._publishedOffer !== offer) {
+            return;
+        }
+        offer.answered = true;
+        this._clearAnswerTimer();
+        try {
+            await this.completeConnection(offer.connectionId, answer);
+        } catch {
+            // The server will not offer this publication again, so an
+            // answer that cannot be applied (malformed, or someone else's)
+            // must not leave it looking available: closing it ends
+            // isPublishing() and lets the caller publish anew.
+            this.disconnect(offer.connectionId);
+        }
+    }
+
+    _clearAnswerTimer() {
+        if (this._answerTimer) {
+            clearTimeout(this._answerTimer);
+            this._answerTimer = null;
+        }
     }
 
     // Whether the last publishSelf() can still answer someone: its offer's
@@ -237,6 +331,7 @@ export class PeerSessionManager {
     // failing to answer.
     async stopPublishing() {
         this._publishedOffer = null;
+        this._clearAnswerTimer();
         return this._discoverPeersUseCase.unpublish();
     }
 
@@ -249,11 +344,21 @@ export class PeerSessionManager {
     // `expectedIdentityId` gate 0.2.62 already built — a mismatch closes
     // the connection and is reported through this class's own
     // onIdentityMismatch(), completely unmodified.
+    //
+    // When the candidate came from a rendezvous network with an answer
+    // mailbox, the answer is left there for the publisher to collect and
+    // `delivered` is true; otherwise `reply` still has to be handed over.
     async connectToDiscovered(discoveryRecord, { expectedIdentityId = null } = {}) {
         await this._prepareIceServers();
         const connectedPeer = this._connectToPeerUseCase.connect(discoveryRecord, { expectedIdentityId });
         const answer = await waitForLocalSignal(connectedPeer.connection, connectedPeer);
-        return { connectedPeer, reply: JSON.stringify(answer.toJSON()) };
+        let delivered = false;
+        try {
+            delivered = await this._discoverPeersUseCase.deliverAnswer(discoveryRecord, answer.toJSON());
+        } catch {
+            delivered = false;
+        }
+        return { connectedPeer, reply: JSON.stringify(answer.toJSON()), delivered: Boolean(delivered) };
     }
 
     // Lets the connection provider fetch TURN credentials just before a
@@ -278,6 +383,12 @@ export class PeerSessionManager {
     }
 
     dispose() {
+        this._publishedOffer = null;
+        this._clearAnswerTimer();
+        if (this._unsubscribeAnswers) {
+            this._unsubscribeAnswers();
+            this._unsubscribeAnswers = null;
+        }
         if (this._stopListening) {
             this._stopListening();
             this._stopListening = null;

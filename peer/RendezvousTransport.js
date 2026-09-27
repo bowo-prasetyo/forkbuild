@@ -66,4 +66,29 @@ export class RendezvousTransport {
     async remove(publicationId, proof) {
         throw new Error('RendezvousTransport.remove() must be implemented by a subclass');
     }
+
+    // The answer mailbox. A WebRTC offer needs an answer to come back before
+    // the connection opens; these carry it through the rendezvous network so
+    // nobody has to copy a reply by hand. postAnswer() leaves `answer` for
+    // `identityId`'s publication `publicationId` and resolves to true;
+    // fetchAnswer() resolves to { answer, answererId, watching } or null.
+    // With `watch: true` the network also pushes a later answer to
+    // onAnswerPushed() listeners and reports `watching: true`; `answer` is
+    // null while none has arrived. `signature`s come from
+    // peer/RendezvousPublicationSigning.js; a networked server requires them.
+    async postAnswer({ identityId, publicationId, answer, answererId, signature }) {
+        throw new Error('RendezvousTransport.postAnswer() must be implemented by a subclass');
+    }
+
+    async fetchAnswer({ identityId, publicationId, signature, watch }) {
+        throw new Error('RendezvousTransport.fetchAnswer() must be implemented by a subclass');
+    }
+
+    // Returns an unsubscribe function. `callback({ identityId,
+    // publicationId, answer, answererId })` fires for each answer pushed to
+    // a watch this transport registered. A transport that never pushes
+    // never calls it.
+    onAnswerPushed(callback) {
+        return () => {};
+    }
 }

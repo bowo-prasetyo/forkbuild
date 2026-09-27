@@ -29,6 +29,10 @@ export class LocalRendezvousNetwork extends RendezvousTransport {
     constructor() {
         super();
         this._publications = new Map(); // identityHint -> RendezvousPublication
+        this._answers = new Map(); // publicationId -> { answer, answererId }
+        this._watched = new Set(); // publicationIds someone is watching
+        this._answerListeners = new Set();
+        this._lobbies = new Map(); // lobby -> Map(identityId -> LobbyCard)
         this._available = true;
     }
 
@@ -51,7 +55,8 @@ export class LocalRendezvousNetwork extends RendezvousTransport {
         this._assertAvailable();
         this._pruneExpired();
         const publication = this._publications.get(identityId);
-        return publication ? [publication] : [];
+        // An answered offer is spent, as on the reference server.
+        return publication && !this._answers.has(publication.publicationId) ? [publication] : [];
     }
 
     async remove(publicationId) {
@@ -63,6 +68,89 @@ export class LocalRendezvousNetwork extends RendezvousTransport {
             }
         }
         return false;
+    }
+
+    // The answer mailbox, without the reference server's signature checks
+    // (this network accepts unsigned publications too).
+    async postAnswer({ identityId, publicationId, answer, answererId = null } = {}) {
+        this._assertAvailable();
+        this._pruneExpired();
+        const publication = this._publications.get(identityId);
+        if (!publication || publication.publicationId !== publicationId) {
+            throw new Error('LocalRendezvousNetwork: that publication is no longer available');
+        }
+        if (this._answers.has(publicationId)) {
+            throw new Error('LocalRendezvousNetwork: that publication was already answered');
+        }
+        this._answers.set(publicationId, { answer, answererId });
+        if (this._watched.delete(publicationId)) {
+            // Pushed after this call returns, as a server's push arrives
+            // after its reply to POST_ANSWER.
+            const pushed = { identityId, publicationId, answer, answererId };
+            queueMicrotask(() => {
+                for (const listener of this._answerListeners) {
+                    listener(pushed);
+                }
+            });
+        }
+        return true;
+    }
+
+    async fetchAnswer({ identityId, publicationId, watch = false } = {}) {
+        this._assertAvailable();
+        const publication = this._publications.get(identityId);
+        const current = Boolean(publication && publication.publicationId === publicationId);
+        const found = current ? this._answers.get(publicationId) || null : null;
+        if (!watch) {
+            return found;
+        }
+        if (current && !found) {
+            this._watched.add(publicationId);
+        }
+        return { answer: found ? found.answer : null, answererId: found ? found.answererId : null, watching: current };
+    }
+
+    // One in-process network stands in for every connection, so every
+    // listener hears every push; providers keep only their own.
+    onAnswerPushed(callback) {
+        this._answerListeners.add(callback);
+        return () => this._answerListeners.delete(callback);
+    }
+
+    // peer/RendezvousLobbyTransport.js, in memory and, like publish(),
+    // without the reference server's signature checks.
+    async joinLobby(card) {
+        this._assertAvailable();
+        if (!this._lobbies.has(card.lobby)) {
+            this._lobbies.set(card.lobby, new Map());
+        }
+        this._lobbies.get(card.lobby).set(card.identityId, card);
+        return typeof card.toJSON === 'function' ? card.toJSON() : card;
+    }
+
+    async leaveLobby({ identityId, lobby, cardId } = {}) {
+        this._assertAvailable();
+        const members = this._lobbies.get(lobby);
+        const card = members && members.get(identityId);
+        if (!card || card.cardId !== cardId) {
+            return false;
+        }
+        members.delete(identityId);
+        return true;
+    }
+
+    async listLobby(lobby, now = new Date()) {
+        this._assertAvailable();
+        const members = this._lobbies.get(lobby);
+        const cards = [];
+        for (const [identityId, card] of members || []) {
+            if (typeof card.isExpired === 'function' && card.isExpired(now)) {
+                members.delete(identityId);
+            } else {
+                cards.push(typeof card.toJSON === 'function' ? card.toJSON() : card);
+            }
+        }
+        return { cards, total: cards.length };
     }
 
     // Defensive against more than mere expiry: an entry that doesn't even
@@ -77,6 +165,7 @@ export class LocalRendezvousNetwork extends RendezvousTransport {
         for (const [identityHint, publication] of this._publications) {
             if (typeof publication.isExpired !== 'function' || publication.isExpired(now)) {
                 this._publications.delete(identityHint);
+                this._answers.delete(publication.publicationId);
             }
         }
     }

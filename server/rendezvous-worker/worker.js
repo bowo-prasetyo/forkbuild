@@ -13,10 +13,25 @@
 //     { v: 1, type: 'REMOVE',  requestId, identityId, publicationId, signature }
 //         signature: the identity's signature over a rendezvous-removal
 //         envelope naming that publication
+//     { v: 1, type: 'POST_ANSWER', requestId, identityId, publicationId, answer, answererId, signature }
+//         leaves a WebRTC answer to identityId's current publication;
+//         signature: answererId's signature over a rendezvous-answer envelope
+//     { v: 1, type: 'FETCH_ANSWER', requestId, identityId, publicationId, signature, watch? }
+//         collects that answer; signature: identityId's signature over a
+//         rendezvous-answer-fetch envelope. With `watch: true` the result is
+//         { answer|null, answererId, watching: true }, and an answer that
+//         arrives later is pushed to this connection (see below)
+//     { v: 1, type: 'JOIN_LOBBY',  requestId, card }
+//         a signed core/LobbyCard.js toJSON(): "this identity is in this lobby"
+//     { v: 1, type: 'LEAVE_LOBBY', requestId, identityId, lobby, cardId, signature }
+//     { v: 1, type: 'LIST_LOBBY',  requestId, lobby }
+//         -> { cards, total }: a random sample of the lobby's current cards
 //
 //   Server -> Client, exactly one response per request, in any order:
 //     { v: 1, type: 'OK',    requestId, result }
 //     { v: 1, type: 'ERROR', requestId, message }
+//   and, unrequested, to a connection watching a publication:
+//     { v: 1, type: 'ANSWER', identityId, publicationId, answer, answererId }
 //
 // What the server enforces:
 //
@@ -61,6 +76,10 @@ const PROTOCOL_VERSION = 1;
 const SIGNING_DOMAIN = 'forkbuild';
 const PUBLICATION_SIGNATURE_TYPE = 'rendezvous-publication';
 const REMOVAL_SIGNATURE_TYPE = 'rendezvous-removal';
+const ANSWER_SIGNATURE_TYPE = 'rendezvous-answer';
+const ANSWER_FETCH_SIGNATURE_TYPE = 'rendezvous-answer-fetch';
+const LOBBY_CARD_SIGNATURE_TYPE = 'lobby-card';
+const LOBBY_LEAVE_SIGNATURE_TYPE = 'lobby-leave';
 
 export const LIMITS = Object.freeze({
     // Largest accepted frame. A publication carries a WebRTC offer, a few
@@ -88,13 +107,32 @@ export const LIMITS = Object.freeze({
     // Credentials handed out per calendar month (UTC), all addresses
     // together. Can be overridden with the TURN_CREDENTIALS_PER_MONTH
     // variable.
-    turnCredentialsPerMonth: 10000
+    turnCredentialsPerMonth: 10000,
+    // Public lobby cards: how long one may last, how long a display name
+    // may be, how many cards all lobbies hold together (override with
+    // MAX_LOBBY_CARDS), how many one LIST_LOBBY returns, and how many
+    // stored cards it samples them from.
+    maxLobbyCardLifetimeMs: 15 * 60 * 1000,
+    maxDisplayNameLength: 40,
+    maxLobbyCards: 20000,
+    lobbyListSize: 50,
+    lobbyListScan: 1000
 });
+
+// Mirrors core/LobbyCard.js: the global lobby, or one per World.
+const LOBBY_PATTERN = /^(public|world:[A-Za-z0-9._-]{1,128})$/;
 
 // One entry per identity, stored under this prefix:
 //   { publication, publishedAtMs, expiresAtMs, removed }
 const STORAGE_KEY_PREFIX = 'pub:';
 const ENTRY_COUNT_KEY = 'meta:entries';
+
+// One card per identity per lobby, stored under
+//   lobby:<lobby>|<identityId> -> { card, publishedAtMs, expiresAtMs, removed }
+// ('|' cannot appear in a lobby name, so one lobby's prefix never matches
+// another's).
+const LOBBY_KEY_PREFIX = 'lobby:';
+const LOBBY_CARD_COUNT_KEY = 'meta:lobbycards';
 
 // The alarm sweeps out entries nobody looked up after they expired.
 const SWEEP_INTERVAL_MS = 5 * 60 * 1000;
@@ -206,6 +244,55 @@ function removalDescriptor(identityId, publicationId) {
     };
 }
 
+// Mirrors core/RendezvousPublicationEnvelope.js#getRendezvousAnswerSigningDescriptor.
+function answerDescriptor({ answererId, identityId, publicationId, answer }) {
+    return {
+        type: ANSWER_SIGNATURE_TYPE,
+        id: answererId,
+        revision: publicationId,
+        payload: { publicationId, identityHint: identityId, answer }
+    };
+}
+
+// Mirrors core/LobbyCard.js#getLobbyCardSigningDescriptor.
+function lobbyCardDescriptor(card) {
+    return {
+        type: LOBBY_CARD_SIGNATURE_TYPE,
+        id: card.identityId,
+        revision: card.cardId,
+        payload: {
+            cardId: card.cardId,
+            identityId: card.identityId,
+            lobby: card.lobby,
+            displayName: card.displayName,
+            publishedAt: card.publishedAt,
+            expiresAt: card.expiresAt
+        }
+    };
+}
+
+function lobbyLeaveDescriptor({ identityId, lobby, cardId }) {
+    return {
+        type: LOBBY_LEAVE_SIGNATURE_TYPE,
+        id: identityId,
+        revision: cardId,
+        payload: { cardId, identityId, lobby }
+    };
+}
+
+function lobbyKey(lobby, identityId) {
+    return `${LOBBY_KEY_PREFIX}${lobby}|${identityId}`;
+}
+
+function answerFetchDescriptor(identityId, publicationId) {
+    return {
+        type: ANSWER_FETCH_SIGNATURE_TYPE,
+        id: identityId,
+        revision: publicationId,
+        payload: { publicationId, identityHint: identityId }
+    };
+}
+
 // ------------------------------------------------------------------
 // Validation
 // ------------------------------------------------------------------
@@ -239,6 +326,32 @@ function checkPublicationShape(publication, now) {
     }
     if (expiresAtMs - Math.max(publishedAtMs, now - LIMITS.maxClockSkewMs) > LIMITS.maxPublicationLifetimeMs) {
         throw new Error(`PUBLISH: a publication may last at most ${LIMITS.maxPublicationLifetimeMs / 60000} minutes`);
+    }
+    return { publishedAtMs, expiresAtMs };
+}
+
+// Throws unless `card` is a well-formed lobby card whose times are within
+// the limits. Returns its parsed times.
+function checkLobbyCardShape(card, now) {
+    if (!card || typeof card !== 'object'
+        || !isShortString(card.cardId)
+        || !isShortString(card.identityId)
+        || typeof card.lobby !== 'string' || !LOBBY_PATTERN.test(card.lobby)
+        || typeof card.displayName !== 'string' || card.displayName.length > LIMITS.maxDisplayNameLength
+        || !isIsoDate(card.publishedAt)
+        || !isIsoDate(card.expiresAt)) {
+        throw new Error('JOIN_LOBBY: invalid lobby card');
+    }
+    const publishedAtMs = Date.parse(card.publishedAt);
+    const expiresAtMs = Date.parse(card.expiresAt);
+    if (expiresAtMs <= now) {
+        throw new Error('JOIN_LOBBY: the card has already expired');
+    }
+    if (publishedAtMs > now + LIMITS.maxClockSkewMs) {
+        throw new Error('JOIN_LOBBY: the card is dated in the future; check this device\'s clock');
+    }
+    if (expiresAtMs - Math.max(publishedAtMs, now - LIMITS.maxClockSkewMs) > LIMITS.maxLobbyCardLifetimeMs) {
+        throw new Error(`JOIN_LOBBY: a lobby card may last at most ${LIMITS.maxLobbyCardLifetimeMs / 60000} minutes`);
     }
     return { publishedAtMs, expiresAtMs };
 }
@@ -289,6 +402,8 @@ export class RendezvousNode {
         this.env = env;
         const configuredMax = Number.parseInt(env.MAX_ENTRIES, 10);
         this.maxEntries = Number.isFinite(configuredMax) && configuredMax > 0 ? configuredMax : LIMITS.maxEntries;
+        const configuredLobbyMax = Number.parseInt(env.MAX_LOBBY_CARDS, 10);
+        this.maxLobbyCards = Number.isFinite(configuredLobbyMax) && configuredLobbyMax > 0 ? configuredLobbyMax : LIMITS.maxLobbyCards;
         this.ctx.blockConcurrencyWhile(async () => {
             const existing = await this.ctx.storage.getAlarm();
             if (existing === null) {
@@ -353,6 +468,21 @@ export class RendezvousNode {
                 case 'REMOVE':
                     result = await this._handleRemove(message);
                     break;
+                case 'POST_ANSWER':
+                    result = await this._handlePostAnswer(message);
+                    break;
+                case 'FETCH_ANSWER':
+                    result = await this._handleFetchAnswer(message, Date.now(), ws);
+                    break;
+                case 'JOIN_LOBBY':
+                    result = await this._handleJoinLobby(message.card);
+                    break;
+                case 'LEAVE_LOBBY':
+                    result = await this._handleLeaveLobby(message);
+                    break;
+                case 'LIST_LOBBY':
+                    result = await this._handleListLobby(message.lobby);
+                    break;
                 default:
                     throw new Error(`unknown request type "${String(type).slice(0, 32)}"`);
             }
@@ -377,7 +507,7 @@ export class RendezvousNode {
         const saved = state && typeof state.tokens === 'number' ? state.tokens : LIMITS.requestBurst;
         const tokens = Math.min(LIMITS.requestBurst, saved + ((now - last) / 1000) * LIMITS.requestsPerSecond);
         const allowed = tokens >= 1;
-        ws.serializeAttachment({ tokens: allowed ? tokens - 1 : tokens, at: now });
+        ws.serializeAttachment({ ...(state || {}), tokens: allowed ? tokens - 1 : tokens, at: now });
         return allowed;
     }
 
@@ -431,7 +561,9 @@ export class RendezvousNode {
             await this._deleteEntry(key);
             return [];
         }
-        return entry.removed ? [] : [entry.publication];
+        // An answered publication's offer is spent: a second caller could
+        // never complete a connection with it.
+        return entry.removed || entry.answer ? [] : [entry.publication];
     }
 
     // REMOVE withdraws one publication. It needs the identity's signature
@@ -456,6 +588,181 @@ export class RendezvousNode {
         }
         await this.ctx.storage.put(key, { ...entry, removed: true });
         return true;
+    }
+
+    // POST_ANSWER leaves a WebRTC answer to one current publication, for its
+    // publisher to collect with FETCH_ANSWER. The first answer wins: one
+    // offer can complete one connection. The answer is signed by the
+    // identity leaving it, so every answer has an accountable sender; the
+    // peer handshake still decides who is really on the other end.
+    async _handlePostAnswer({ identityId, publicationId, answer, answererId, signature } = {}, now = Date.now()) {
+        if (!isShortString(identityId) || !isShortString(publicationId) || !isShortString(answererId)
+            || !answer || typeof answer !== 'object' || Array.isArray(answer)) {
+            throw new Error('POST_ANSWER: identityId, publicationId, answererId and an answer are required');
+        }
+        if (!signature) {
+            throw new Error('POST_ANSWER: the answer must be signed by the identity leaving it; unlock your identity and try again');
+        }
+        if (!await verifySignature(answerDescriptor({ answererId, identityId, publicationId, answer }), signature, answererId)) {
+            throw new Error('POST_ANSWER: the signature does not match the answer or its identity');
+        }
+        const key = STORAGE_KEY_PREFIX + identityId;
+        const entry = await this.ctx.storage.get(key);
+        if (!entry || entry.removed || entry.expiresAtMs <= now || entry.publication.publicationId !== publicationId) {
+            throw new Error('POST_ANSWER: that publication is no longer available');
+        }
+        if (entry.answer) {
+            throw new Error('POST_ANSWER: that publication was already answered');
+        }
+        await this.ctx.storage.put(key, { ...entry, answer: { answer, answererId, postedAtMs: now } });
+        this._pushAnswer({ identityId, publicationId, answer, answererId });
+        return true;
+    }
+
+    // Sends a stored answer to every connection whose publisher asked, with
+    // a signed FETCH_ANSWER, to watch that publication, and ends the watch.
+    // The watch lives in the socket's attachment, so it survives
+    // hibernation. Answers are rare next to requests, so scanning the
+    // connections here costs far less than the polling it replaces. A
+    // connection that dropped misses the push; its client still polls,
+    // slowly, as a fallback.
+    _pushAnswer({ identityId, publicationId, answer, answererId }) {
+        const pushed = JSON.stringify({ v: PROTOCOL_VERSION, type: 'ANSWER', identityId, publicationId, answer, answererId });
+        for (const ws of this.ctx.getWebSockets()) {
+            let state = null;
+            try { state = ws.deserializeAttachment(); } catch { /* none yet */ }
+            const watch = state && state.watch;
+            if (!watch || watch.identityId !== identityId || watch.publicationId !== publicationId) {
+                continue;
+            }
+            try {
+                ws.serializeAttachment({ ...state, watch: null });
+                ws.send(pushed);
+            } catch {
+                // Closing already; the client's fallback poll collects it.
+            }
+        }
+    }
+
+    // FETCH_ANSWER returns { answer, answererId } once someone has answered
+    // the publication, otherwise null. Only the publishing identity may read
+    // it, because an answer carries the answerer's network addresses.
+    //
+    // With `watch: true` it also marks `ws` as watching that publication, so
+    // POST_ANSWER pushes the answer there, and always returns
+    // { answer, answererId, watching } (answer null while none has arrived),
+    // so a client can tell a server that pushes from one that ignores the
+    // flag. One connection watches one publication; a newer watch replaces
+    // it. Registering and reading in one request means an answer that
+    // arrives just before the watch is still returned.
+    async _handleFetchAnswer({ identityId, publicationId, signature, watch = false } = {}, now = Date.now(), ws = null) {
+        if (!isShortString(identityId) || !isShortString(publicationId)) {
+            throw new Error('FETCH_ANSWER: identityId and publicationId are required');
+        }
+        if (!signature) {
+            throw new Error('FETCH_ANSWER: the request must be signed by the identity it names');
+        }
+        if (!await verifySignature(answerFetchDescriptor(identityId, publicationId), signature, identityId)) {
+            throw new Error('FETCH_ANSWER: the signature does not match the request or its identity');
+        }
+        const entry = await this.ctx.storage.get(STORAGE_KEY_PREFIX + identityId);
+        const current = entry && !entry.removed && entry.expiresAtMs > now && entry.publication.publicationId === publicationId;
+        const found = current && entry.answer ? { answer: entry.answer.answer, answererId: entry.answer.answererId } : null;
+        if (watch !== true) {
+            return found;
+        }
+        const watching = Boolean(current && !found && ws);
+        if (watching) {
+            let state = null;
+            try { state = ws.deserializeAttachment(); } catch { /* none yet */ }
+            ws.serializeAttachment({ ...(state || {}), watch: { identityId, publicationId } });
+        }
+        return { answer: found ? found.answer : null, answererId: found ? found.answererId : null, watching: watching || Boolean(found) };
+    }
+
+    // JOIN_LOBBY stores a card signed by the identity it names, replacing
+    // that identity's card in the same lobby. As with PUBLISH, an older card
+    // cannot replace a newer one, and a card the identity withdrew cannot
+    // be replayed.
+    async _handleJoinLobby(card, now = Date.now()) {
+        const { publishedAtMs, expiresAtMs } = checkLobbyCardShape(card, now);
+        if (!didKeyToPublicKey(card.identityId)) {
+            throw new Error('JOIN_LOBBY: identityId is not a did:key identity');
+        }
+        if (!card.signature) {
+            throw new Error('JOIN_LOBBY: the card must be signed by the identity it names; unlock your identity and try again');
+        }
+        if (!await verifySignature(lobbyCardDescriptor(card), card.signature, card.identityId)) {
+            throw new Error('JOIN_LOBBY: the signature does not match the card or its identity');
+        }
+        const key = lobbyKey(card.lobby, card.identityId);
+        const existing = await this.ctx.storage.get(key);
+        const current = existing && existing.expiresAtMs > now ? existing : null;
+        if (current) {
+            if (publishedAtMs < current.publishedAtMs) {
+                throw new Error('JOIN_LOBBY: a newer card for this identity is already in this lobby');
+            }
+            if (current.removed && current.card.cardId === card.cardId) {
+                throw new Error('JOIN_LOBBY: this card was withdrawn');
+            }
+        } else if (!existing && await this._lobbyCardCount() >= this.maxLobbyCards) {
+            throw new Error('JOIN_LOBBY: the lobbies on this rendezvous server are full; try again later');
+        }
+        await this.ctx.storage.put(key, { card, publishedAtMs, expiresAtMs, removed: false });
+        if (!existing) {
+            await this._adjustLobbyCardCount(1);
+        }
+        return card;
+    }
+
+    // LEAVE_LOBBY withdraws one card, with its identity's signature over
+    // that card. The entry stays as a tombstone until it would have expired.
+    async _handleLeaveLobby({ identityId, lobby, cardId, signature } = {}, now = Date.now()) {
+        if (!isShortString(identityId) || !isShortString(cardId) || typeof lobby !== 'string' || !LOBBY_PATTERN.test(lobby)) {
+            throw new Error('LEAVE_LOBBY: identityId, lobby and cardId are required');
+        }
+        if (!signature) {
+            throw new Error('LEAVE_LOBBY: the request must be signed by the identity it names');
+        }
+        if (!await verifySignature(lobbyLeaveDescriptor({ identityId, lobby, cardId }), signature, identityId)) {
+            throw new Error('LEAVE_LOBBY: the signature does not match the request or its identity');
+        }
+        const key = lobbyKey(lobby, identityId);
+        const entry = await this.ctx.storage.get(key);
+        if (!entry || entry.removed || entry.expiresAtMs <= now || entry.card.cardId !== cardId) {
+            return false;
+        }
+        await this.ctx.storage.put(key, { ...entry, removed: true });
+        return true;
+    }
+
+    // LIST_LOBBY returns up to lobbyListSize current cards, sampled at
+    // random from the first lobbyListScan stored, so the same early joiners
+    // never fill every page. `total` counts the current cards scanned.
+    async _handleListLobby(lobby, now = Date.now()) {
+        if (typeof lobby !== 'string' || !LOBBY_PATTERN.test(lobby)) {
+            throw new Error('LIST_LOBBY: that is not a lobby');
+        }
+        const stored = await this.ctx.storage.list({ prefix: `${LOBBY_KEY_PREFIX}${lobby}|`, limit: LIMITS.lobbyListScan });
+        const current = [];
+        for (const entry of stored.values()) {
+            if (entry && !entry.removed && typeof entry.expiresAtMs === 'number' && entry.expiresAtMs > now) {
+                current.push(entry.card);
+            }
+        }
+        for (let i = current.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [current[i], current[j]] = [current[j], current[i]];
+        }
+        return { cards: current.slice(0, LIMITS.lobbyListSize), total: current.length };
+    }
+
+    async _lobbyCardCount() {
+        return (await this.ctx.storage.get(LOBBY_CARD_COUNT_KEY)) || 0;
+    }
+
+    async _adjustLobbyCardCount(delta) {
+        await this.ctx.storage.put(LOBBY_CARD_COUNT_KEY, Math.max(0, (await this._lobbyCardCount()) + delta));
     }
 
     async _entryCount() {
@@ -665,6 +972,16 @@ export class RendezvousNode {
             }
         }
         await this.ctx.storage.put(ENTRY_COUNT_KEY, remaining);
+        const lobbyCards = await this.ctx.storage.list({ prefix: LOBBY_KEY_PREFIX });
+        let remainingCards = 0;
+        for (const [key, entry] of lobbyCards) {
+            if (!entry || typeof entry.expiresAtMs !== 'number' || entry.expiresAtMs <= now) {
+                await this.ctx.storage.delete(key);
+            } else {
+                remainingCards++;
+            }
+        }
+        await this.ctx.storage.put(LOBBY_CARD_COUNT_KEY, remainingCards);
         await this.ctx.storage.setAlarm(Date.now() + SWEEP_INTERVAL_MS);
     }
 }
@@ -703,7 +1020,7 @@ export default {
             return new Response(
                 'ForkBuild rendezvous worker is running.\n\n' +
                 'This endpoint only understands WebSocket connections speaking the\n' +
-                'PUBLISH / LOOKUP / REMOVE protocol documented in\n' +
+                'rendezvous protocol documented in\n' +
                 'peer/WebSocketRendezvousTransport.js (ForkBuild repo) and in this\n' +
                 'folder\'s own README.md.\n',
                 { status: 200, headers: { 'content-type': 'text/plain; charset=utf-8' } }

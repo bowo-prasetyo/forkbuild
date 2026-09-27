@@ -19,6 +19,7 @@ import { CreatePeerRelationshipUseCase } from '../../application/peer/CreatePeer
 import { PeerReconnectionUseCase } from '../../application/peer/PeerReconnectionUseCase.js';
 import { FindPeerUseCase } from '../../application/peer/FindPeerUseCase.js';
 import { AutoConnectKnownPeersUseCase } from '../../application/peer/AutoConnectKnownPeersUseCase.js';
+import { PublicLobbyUseCase } from '../../application/peer/PublicLobbyUseCase.js';
 import { CreateFriendRelationshipUseCase } from '../../application/identity/CreateFriendRelationshipUseCase.js';
 import { CreateIdentityLifecyclePropagationUseCase } from '../../application/identity/CreateIdentityLifecyclePropagationUseCase.js';
 import { CreateDeviceAuthorizationUseCase } from '../../application/identity/CreateDeviceAuthorizationUseCase.js';
@@ -83,9 +84,12 @@ export function composeIdentityAndPeers() {
     const bitcoinEsploraConfigurationStore = new BitcoinEsploraConfigurationStore(new LocalStorageProvider());
     const resolvedBitcoinEsploraApiUrls = (bitcoinEsploraConfigurationStore.get() || { apiUrls: DEFAULT_BITCOIN_ESPLORA_API_URLS }).apiUrls;
     const setBitcoinEsploraConfigurationUseCase = new SetBitcoinEsploraConfigurationUseCase({ bitcoinEsploraConfigurationStore });
+    // One connection per rendezvous server, shared by identity lookup and the
+    // public lobby.
+    const rendezvousTransports = new Map(resolvedRendezvousUrls.map((url) => [url, new WebSocketRendezvousTransport({ url })]));
     const discoveryBootstrap = new DiscoveryBootstrap({
         bootstrapProviders: resolvedRendezvousUrls.map((url) => new RendezvousDiscoveryProvider({
-            transport: new WebSocketRendezvousTransport({ url }),
+            transport: rendezvousTransports.get(url),
             identityProvider
         }))
     });
@@ -101,6 +105,14 @@ export function composeIdentityAndPeers() {
     // Built before friendRelationshipUseCase so its isBlocked predicate can gate
     // the friendship protocol.
     const peerBlockUseCase = new CreatePeerBlockUseCase().execute(identityProvider);
+    const publicLobbyUseCase = new PublicLobbyUseCase({
+        transports: Array.from(rendezvousTransports.values()),
+        identityProvider,
+        peerSessionManager,
+        findPeerUseCase,
+        peerBlockUseCase,
+        storageProvider: new LocalStorageProvider()
+    });
     // Forward reference: its knowsIdentity gate consults friendRelationshipUseCase,
     // which is built below. resolveSocialIdentity is only called at runtime, after
     // assignment. It lets friendship, chat, voice and presence treat an authorized
@@ -183,6 +195,6 @@ export function composeIdentityAndPeers() {
         setBitcoinEsploraConfigurationUseCase, peerSessionManager, peerRelationshipUseCase,
         peerReconnectionUseCase, findPeerUseCase, peerMessageBus, peerBlockUseCase, deviceAuthorizationUseCase,
         friendRelationshipUseCase, identityLifecyclePropagationUseCase, chatUseCase, peerPresenceUseCase,
-        deviceConversationSyncUseCase, voiceUseCase
+        deviceConversationSyncUseCase, voiceUseCase, publicLobbyUseCase
     };
 }

@@ -9,10 +9,14 @@ import worker, { RendezvousNode, LIMITS } from './worker.js';
 
 function fakeDurableObjectState({ socketsPerAddress = 0 } = {}) {
     const store = new Map();
+    const sockets = [];
     let alarmAt = null;
     return {
         blockConcurrencyWhile: async (fn) => fn(),
-        getWebSockets: () => new Array(socketsPerAddress),
+        // With a tag (an address): the per-address count. Without: every
+        // accepted socket, which tests add to `_sockets`.
+        getWebSockets: (tag) => (tag === undefined ? sockets : new Array(socketsPerAddress)),
+        _sockets: sockets,
         storage: {
             async get(key) { return store.has(key) ? store.get(key) : undefined; },
             async put(key, value) { store.set(key, value); },
@@ -248,6 +252,203 @@ const MINUTE = 60 * 1000;
     console.log('✓ REMOVE needs the identity\'s signature, and a withdrawn publication stays withdrawn');
 }
 
+async function answerFor(answerer, publisher, publicationId, answer = { sdp: 'fake-sdp-answer' }) {
+    const signature = await answerer.sign({
+        type: 'rendezvous-answer',
+        id: answerer.id,
+        revision: publicationId,
+        payload: { publicationId, identityHint: publisher.id, answer }
+    });
+    return { identityId: publisher.id, publicationId, answer, answererId: answerer.id, signature };
+}
+
+async function answerFetch(publisher, publicationId, signer = publisher) {
+    const signature = await signer.sign({
+        type: 'rendezvous-answer-fetch',
+        id: publisher.id,
+        revision: publicationId,
+        payload: { publicationId, identityHint: publisher.id }
+    });
+    return { identityId: publisher.id, publicationId, signature };
+}
+
+// The answer mailbox: the connecting side leaves a signed answer, and only
+// the publisher can collect it.
+{
+    const carol = await createIdentity();
+    const node = new RendezvousNode(fakeDurableObjectState());
+    const publication = await signedPublication(alice);
+    await node._handlePublish(publication);
+    const { publicationId } = publication;
+
+    assert(await node._handleFetchAnswer(await answerFetch(alice, publicationId)) === null, 'before anyone answers, FETCH_ANSWER returns null');
+    const unsigned = await answerFor(bob, alice, publicationId);
+    delete unsigned.signature;
+    await assertRejects(node._handlePostAnswer(unsigned), /must be signed/, 'an unsigned answer is refused');
+    const forged = await answerFor(bob, alice, publicationId);
+    await assertRejects(node._handlePostAnswer({ ...forged, answer: { sdp: 'swapped' } }), /signature does not match/,
+        'an answer changed after signing is refused');
+    await assertRejects(node._handlePostAnswer(await answerFor(bob, alice, 'some-old-publication')), /no longer available/,
+        'an answer to a publication that is not the current one is refused');
+
+    assert(await node._handlePostAnswer(await answerFor(bob, alice, publicationId)) === true, 'Bob can answer Alice\'s publication');
+    await assertRejects(node._handlePostAnswer(await answerFor(carol, alice, publicationId)), /already answered/,
+        'a second answer to the same publication is refused');
+    assert((await node._handleLookup(alice.id)).length === 0, 'LOOKUP no longer offers an answered publication');
+
+    await assertRejects(node._handleFetchAnswer(await answerFetch(alice, publicationId, bob)), /signature does not match/,
+        'nobody but Alice can collect the answer to her publication');
+    const collected = await node._handleFetchAnswer(await answerFetch(alice, publicationId));
+    assert(collected && collected.answererId === bob.id && collected.answer.sdp === 'fake-sdp-answer', 'Alice collects Bob\'s answer');
+
+    const next = await signedPublication(alice);
+    await node._handlePublish(next);
+    assert((await node._handleLookup(alice.id)).length === 1, 'a fresh publication is offered again');
+    assert(await node._handleFetchAnswer(await answerFetch(alice, next.publicationId)) === null, '...with an empty mailbox');
+
+    const ws = fakeSocket();
+    await node.webSocketMessage(ws, JSON.stringify({ v: 1, type: 'POST_ANSWER', requestId: 'a', ...(await answerFor(carol, alice, next.publicationId)) }));
+    await node.webSocketMessage(ws, JSON.stringify({ v: 1, type: 'FETCH_ANSWER', requestId: 'f', ...(await answerFetch(alice, next.publicationId)) }));
+    assert(ws.sent[0].type === 'OK' && ws.sent[1].type === 'OK' && ws.sent[1].result.answererId === carol.id, 'both requests work over the socket');
+    console.log('✓ the answer mailbox takes one signed answer per publication, readable only by its publisher');
+}
+
+// A watching publisher gets the answer pushed to its own connection only.
+{
+    const ctx = fakeDurableObjectState();
+    const node = new RendezvousNode(ctx);
+    const carol = await createIdentity();
+    const publication = await signedPublication(alice);
+    await node._handlePublish(publication);
+    const aliceSocket = fakeSocket();
+    const bystander = fakeSocket();
+    const bobSocket = fakeSocket();
+    ctx._sockets.push(aliceSocket, bystander, bobSocket);
+
+    await node.webSocketMessage(bystander, JSON.stringify({ v: 1, type: 'FETCH_ANSWER', requestId: 'x', watch: true, ...(await answerFetch(alice, publication.publicationId, carol)) }));
+    assert(bystander.sent[0].type === 'ERROR', 'a watch not signed by the publisher is refused');
+    await node.webSocketMessage(aliceSocket, JSON.stringify({ v: 1, type: 'FETCH_ANSWER', requestId: 'w', watch: true, ...(await answerFetch(alice, publication.publicationId)) }));
+    const ack = aliceSocket.sent[0];
+    assert(ack.type === 'OK' && ack.result.watching === true && ack.result.answer === null, 'a signed watch is acknowledged with no answer yet');
+    const attachment = aliceSocket.deserializeAttachment();
+    assert(attachment.watch.publicationId === publication.publicationId && typeof attachment.tokens === 'number',
+        'the watch is kept in the socket attachment, beside the rate limiter');
+    await node.webSocketMessage(aliceSocket, JSON.stringify({ v: 1, type: 'LOOKUP', requestId: 'l', identityId: bob.id }));
+    assert(aliceSocket.deserializeAttachment().watch, 'the rate limiter no longer overwrites the watch');
+
+    await node.webSocketMessage(bobSocket, JSON.stringify({ v: 1, type: 'POST_ANSWER', requestId: 'a', ...(await answerFor(bob, alice, publication.publicationId)) }));
+    const pushed = aliceSocket.sent.find((m) => m.type === 'ANSWER');
+    assert(pushed && pushed.publicationId === publication.publicationId && pushed.answererId === bob.id && pushed.answer.sdp === 'fake-sdp-answer' && !pushed.requestId,
+        'the answer is pushed to Alice\'s watching connection, unrequested');
+    assert(!bystander.sent.some((m) => m.type === 'ANSWER') && !bobSocket.sent.some((m) => m.type === 'ANSWER'), 'no other connection receives it');
+    assert(!aliceSocket.deserializeAttachment().watch, 'the watch ends once the answer is pushed');
+
+    const late = await node._handleFetchAnswer({ ...(await answerFetch(alice, publication.publicationId)), watch: true }, Date.now(), fakeSocket());
+    assert(late.watching === true && late.answererId === bob.id, 'watching after the answer arrived returns it at once');
+    const stale = await node._handleFetchAnswer({ ...(await answerFetch(alice, 'old-publication')), watch: true }, Date.now(), fakeSocket());
+    assert(stale.watching === false && stale.answer === null, 'a publication that is not current is not watched');
+    assert(await node._handleFetchAnswer(await answerFetch(alice, publication.publicationId)) !== null
+        && !('watching' in await node._handleFetchAnswer(await answerFetch(alice, publication.publicationId))),
+        'without watch, FETCH_ANSWER answers as before');
+    console.log('✓ a watching publisher gets its answer pushed, and only its own connection does');
+}
+
+let cardCounter = 0;
+function makeLobbyCard(identityId, { lobby = 'public', displayName = 'Alice', publishedAt = Date.now(), lifetimeMs = 10 * MINUTE } = {}) {
+    return {
+        cardId: `card-${++cardCounter}`,
+        identityId,
+        lobby,
+        displayName,
+        publishedAt: new Date(publishedAt).toISOString(),
+        expiresAt: new Date(publishedAt + lifetimeMs).toISOString()
+    };
+}
+
+async function signLobbyCard(identity, card) {
+    const signature = await identity.sign({
+        type: 'lobby-card',
+        id: card.identityId,
+        revision: card.cardId,
+        payload: {
+            cardId: card.cardId,
+            identityId: card.identityId,
+            lobby: card.lobby,
+            displayName: card.displayName,
+            publishedAt: card.publishedAt,
+            expiresAt: card.expiresAt
+        }
+    });
+    return { ...card, signature };
+}
+
+async function lobbyLeave(identity, card, signer = identity) {
+    const signature = await signer.sign({
+        type: 'lobby-leave',
+        id: identity.id,
+        revision: card.cardId,
+        payload: { cardId: card.cardId, identityId: identity.id, lobby: card.lobby }
+    });
+    return { identityId: identity.id, lobby: card.lobby, cardId: card.cardId, signature };
+}
+
+// The public lobby: signed cards, one per identity per lobby, listed per
+// lobby, withdrawn only by their identity.
+{
+    const node = new RendezvousNode(fakeDurableObjectState());
+    const aliceCard = await signLobbyCard(alice, makeLobbyCard(alice.id));
+    assert(await node._handleJoinLobby(aliceCard) === aliceCard, 'JOIN_LOBBY stores and echoes a signed card');
+    await node._handleJoinLobby(await signLobbyCard(bob, makeLobbyCard(bob.id, { displayName: 'Bob' })));
+    await node._handleJoinLobby(await signLobbyCard(bob, makeLobbyCard(bob.id, { lobby: 'world:w-1', displayName: 'Bob' })));
+
+    const everyone = await node._handleListLobby('public');
+    assert(everyone.total === 2 && everyone.cards.map((c) => c.displayName).sort().join() === 'Alice,Bob', 'LIST_LOBBY lists the public lobby');
+    const world = await node._handleListLobby('world:w-1');
+    assert(world.total === 1 && world.cards[0].identityId === bob.id, 'a World lobby lists only its own members');
+    assert((await node._handleListLobby('world:w-2')).total === 0, 'another World\'s lobby is empty');
+    await assertRejects(node._handleListLobby('world:w-1|x'), /not a lobby/, 'a malformed lobby name is refused');
+
+    await assertRejects(node._handleJoinLobby(makeLobbyCard(alice.id)), /must be signed/, 'an unsigned card is refused');
+    await assertRejects(node._handleJoinLobby(await signLobbyCard(bob, makeLobbyCard(alice.id))), /signature does not match/,
+        'Bob cannot put Alice in a lobby');
+    const renamed = { ...aliceCard, displayName: 'Mallory' };
+    await assertRejects(node._handleJoinLobby(renamed), /signature does not match/, 'a signed card whose name was changed is refused');
+    await assertRejects(node._handleJoinLobby(await signLobbyCard(alice, makeLobbyCard(alice.id, { displayName: 'x'.repeat(41) }))), /invalid lobby card/,
+        'a display name over 40 characters is refused');
+    await assertRejects(node._handleJoinLobby(await signLobbyCard(alice, makeLobbyCard(alice.id, { lifetimeMs: 60 * MINUTE }))), /at most 15 minutes/,
+        'a card asking to last an hour is refused');
+
+    const renewed = await signLobbyCard(alice, makeLobbyCard(alice.id, { displayName: 'Alice B.' }));
+    await node._handleJoinLobby(renewed);
+    const afterRenewal = await node._handleListLobby('public');
+    assert(afterRenewal.total === 2 && afterRenewal.cards.some((c) => c.displayName === 'Alice B.'), 'a newer card replaces the identity\'s old one');
+    await assertRejects(node._handleJoinLobby(await signLobbyCard(alice, makeLobbyCard(alice.id, { publishedAt: Date.now() - MINUTE }))), /newer card/,
+        'an older card cannot roll the entry back');
+
+    assert(await node._handleLeaveLobby(await lobbyLeave(alice, renewed, bob)).catch(() => 'refused') === 'refused', 'Bob cannot take Alice out');
+    assert(await node._handleLeaveLobby(await lobbyLeave(alice, renewed)) === true, 'Alice leaves the lobby');
+    assert((await node._handleListLobby('public')).cards.every((c) => c.identityId !== alice.id), '...and is no longer listed');
+    await assertRejects(node._handleJoinLobby(renewed), /withdrawn/, 'her withdrawn card cannot be replayed');
+    console.log('✓ lobby cards are signed, listed per lobby, and withdrawn only by their identity');
+}
+
+// Lobby listings are capped and sampled; the lobby card total is capped too.
+{
+    const node = new RendezvousNode(fakeDurableObjectState(), { MAX_LOBBY_CARDS: String(LIMITS.lobbyListSize + 5) });
+    const members = [];
+    for (let i = 0; i < LIMITS.lobbyListSize + 5; i++) {
+        const member = await createIdentity();
+        members.push(member);
+        await node._handleJoinLobby(await signLobbyCard(member, makeLobbyCard(member.id, { displayName: `m${i}` })));
+    }
+    const page = await node._handleListLobby('public');
+    assert(page.cards.length === LIMITS.lobbyListSize && page.total === LIMITS.lobbyListSize + 5, 'one listing returns at most lobbyListSize cards, and reports the total');
+    const extra = await createIdentity();
+    await assertRejects(node._handleJoinLobby(await signLobbyCard(extra, makeLobbyCard(extra.id))), /full/, 'past MAX_LOBBY_CARDS a new identity is refused');
+    await node._handleJoinLobby(await signLobbyCard(members[0], makeLobbyCard(members[0].id, { displayName: 'renamed' })));
+    console.log('✓ lobby listings and the number of lobby cards are capped');
+}
+
 // The alarm sweeps expired entries and tombstones and recounts.
 {
     const ctx = fakeDurableObjectState();
@@ -257,7 +458,13 @@ const MINUTE = 60 * 1000;
     const entry = ctx._rawStore.get('pub:' + bob.id);
     ctx._rawStore.set('pub:' + bob.id, { ...entry, expiresAtMs: Date.now() - 1 });
     ctx._rawStore.set('meta:entries', 7);
+    await node._handleJoinLobby(await signLobbyCard(alice, makeLobbyCard(alice.id)));
+    const expiredCard = await signLobbyCard(bob, makeLobbyCard(bob.id));
+    await node._handleJoinLobby(expiredCard);
+    const cardKey = 'lobby:public|' + bob.id;
+    ctx._rawStore.set(cardKey, { ...ctx._rawStore.get(cardKey), expiresAtMs: Date.now() - 1 });
     await node.alarm();
+    assert(!ctx._rawStore.has(cardKey) && ctx._rawStore.get('meta:lobbycards') === 1, 'the alarm sweeps expired lobby cards and recounts them');
     assert((await node._handleLookup(alice.id)).length === 1, 'the alarm leaves a fresh entry alone');
     assert(!ctx._rawStore.has('pub:' + bob.id), '...sweeps an expired one');
     assert(ctx._rawStore.get('meta:entries') === 1, '...and corrects the entry count');

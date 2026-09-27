@@ -1,4 +1,9 @@
-import { getRendezvousPublicationSigningDescriptor, getRendezvousRemovalSigningDescriptor } from '../core/RendezvousPublicationEnvelope.js';
+import {
+    getRendezvousAnswerFetchSigningDescriptor,
+    getRendezvousAnswerSigningDescriptor,
+    getRendezvousPublicationSigningDescriptor,
+    getRendezvousRemovalSigningDescriptor
+} from '../core/RendezvousPublicationEnvelope.js';
 
 // The reference rendezvous server (server/rendezvous-worker/) now refuses
 // unsigned publications and removals, so on a real network an unsigned
@@ -74,3 +79,47 @@ export function signRendezvousRemoval(publicationId, identityId, identityProvide
     }
 }
 
+// The signed-in identity's id, or null when it cannot sign right now (no
+// provider, signed out, or locked).
+export function signingIdentityId(identityProvider) {
+    if (!identityProvider
+        || typeof identityProvider.signCanonical !== 'function'
+        || typeof identityProvider.getSigningIdentity !== 'function') {
+        return null;
+    }
+    try {
+        return identityProvider.getSigningIdentity().id;
+    } catch {
+        return null;
+    }
+}
+
+// Signs the WebRTC answer this device leaves in the rendezvous mailbox for
+// `identityId`'s publication `publicationId`. Returns
+// { answererId, signature } or null when this device cannot sign.
+export function signRendezvousAnswer({ identityId, publicationId, answer }, identityProvider) {
+    const answererId = signingIdentityId(identityProvider);
+    if (!answererId) {
+        return null;
+    }
+    try {
+        const signature = identityProvider.signCanonical(getRendezvousAnswerSigningDescriptor({ answererId, identityId, publicationId, answer }));
+        return { answererId, signature: signature.toJSON() };
+    } catch {
+        return null;
+    }
+}
+
+// Signs this device's request to collect the answer to its own publication.
+// Returns { identityId, signature } or null, like signRendezvousRemoval().
+export function signRendezvousAnswerFetch(publicationId, identityId, identityProvider) {
+    if (signingIdentityId(identityProvider) !== identityId) {
+        return null;
+    }
+    try {
+        const signature = identityProvider.signCanonical(getRendezvousAnswerFetchSigningDescriptor({ identityId, publicationId }));
+        return { identityId, signature: signature.toJSON() };
+    } catch {
+        return null;
+    }
+}

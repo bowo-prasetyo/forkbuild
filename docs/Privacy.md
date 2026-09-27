@@ -35,6 +35,20 @@ is no other copy and no way to recover it.
   They also receive the Snapshot and Place Naming announcements your device
   has discovered, so they learn which World regions you have searched for
   place names (docs/AnnouncementIndex.md).
+- **Anyone, while you are in a public lobby.** Joining the public lobby
+  (**Peers**) or a World's lobby (**Lobby** in World View) lists your
+  identity's public key and the display name you choose, for anyone who
+  opens that lobby. A World's lobby also tells them which World you have
+  open. Your listing lasts until you leave, close the app (then up to 10
+  minutes), or the card expires. It holds no network address, but anyone in
+  the lobby can connect to you, and a stranger who connects is an ordinary
+  connected peer: they learn your IP address, see your avatar and presence
+  as your visibility settings allow, and **exchange Snapshot and Place Naming
+  announcements and publication metadata with you, exactly as any connected
+  peer does**, before you Remember or befriend them. Chat and voice still
+  need a mutual friendship. **Block** in the lobby hides someone from your
+  lobby lists and blocks them as it does on the Peers page (presence,
+  profile, chat and friend requests).
 
 ## Servers ForkBuild contacts
 
@@ -50,9 +64,10 @@ only when you use the feature, and each server can be changed under
 
 | When | Server (default) | What it receives |
 | --- | --- | --- |
-| You make yourself discoverable, or look someone up, in **Peers** | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | your identity's public key and a connection offer, kept for at most 15 minutes; the identity you look up |
+| You make yourself discoverable, or look someone up, in **Peers** | the rendezvous server (`forkbuild-rendezvous.prazjp.workers.dev`) | your identity's public key and a connection offer, kept for at most 15 minutes; the identity you look up; when you connect to someone you found, your connection reply (it lists your network addresses), which only they can collect |
+| You join, or look into, a public lobby | the same rendezvous server | your signed lobby card (public key, display name, which lobby), kept for at most 15 minutes and renewed while you stay; which lobby you look into |
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |
-| A peer connection starts, if the rendezvous server offers a relay | the rendezvous server's `/turn-credentials`, then its TURN relay (Cloudflare) | a request for short-lived relay credentials; relayed traffic is end-to-end encrypted by WebRTC |
+| You start a peer connection, if the rendezvous server offers a relay | the rendezvous server's `/turn-credentials`, then its TURN relay (Cloudflare) | a request for short-lived relay credentials, at most about once an hour; relayed traffic is end-to-end encrypted by WebRTC |
 | The app is open and its tab visible (background announcement sync) | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`) | queries for ForkBuild's discovery tags: the shared Snapshot and Commentary tags, and the Place Naming regions and map cells you have visited |
 | You distribute or discover publications over Nostr (*experimental*) | Nostr relays (`relay.damus.io`) | signed announcements you publish; your queries |
 | You store or fetch content on Arweave (*experimental*) | an Arweave gateway (`arweave.net`) | the content you publish; what you fetch |
@@ -64,6 +79,13 @@ only when you use the feature, and each server can be changed under
 
 ForkBuild never sends your private key, your passphrase, or your saved
 documents to any of these servers.
+
+**Relays are used only when needed.** A connection always tries a direct
+path first, then one found through STUN, and falls back to the TURN relay
+only when neither works. While you wait in a lobby, the offers your device
+keeps ready never ask for relay credentials, so a lobby stay does not use up
+the relay allowance the rendezvous server hands out each month; the person
+who connects to you asks for one, if they need it.
 
 ## If you run your own copy
 

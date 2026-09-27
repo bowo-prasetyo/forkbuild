@@ -224,6 +224,71 @@ are inside the signed envelope. The spatial-index formats
 (SpatialCell, SpatialIndexManifest, SpatialIndexRoot) and Delegation
 records are defined in core/ but not produced by the running app.
 
+## Rendezvous
+
+A rendezvous server helps peers find each other before they connect. The
+client is peer/WebSocketRendezvousTransport.js and the reference server is
+server/rendezvous-worker/worker.js. It speaks JSON frames over one
+WebSocket; each request carries a `requestId` and gets exactly one
+`{ v: 1, type: 'OK', requestId, result }` or
+`{ v: 1, type: 'ERROR', requestId, message }`.
+
+Two contracts share the connection. Identity lookup
+(peer/RendezvousTransport.js) answers only for an exact identity and can
+never list anyone. The public lobby (peer/RendezvousLobbyTransport.js) lists
+only identities that joined it.
+
+| Request | Fields | Result |
+| --- | --- | --- |
+| `PUBLISH` | `publication`: a signed peer/RendezvousPublication.js (an invitation carrying a WebRTC offer) | the stored publication |
+| `LOOKUP` | `identityId` | the identity's current publication in an array, or `[]` (also once it has been answered) |
+| `REMOVE` | `identityId`, `publicationId`, `signature` | whether one was withdrawn |
+| `POST_ANSWER` | `identityId`, `publicationId`, `answer` (a PeerConnectionAnswer's JSON), `answererId`, `signature` | `true`; refused if the publication is not current or already answered |
+| `FETCH_ANSWER` | `identityId`, `publicationId`, `signature`, optional `watch: true` | `{ answer, answererId }`, or `null` while none has arrived; with `watch`, always `{ answer, answererId, watching }` (`answer` null while none has arrived) |
+| `JOIN_LOBBY` | `card`: a signed core/LobbyCard.js | the stored card |
+| `LEAVE_LOBBY` | `identityId`, `lobby`, `cardId`, `signature` | whether one was withdrawn |
+| `LIST_LOBBY` | `lobby` | `{ cards, total }`: at most 50 current cards, a random sample, and how many there are |
+
+Signatures use the canonical envelope (see "Signatures"), with these types:
+
+| Type | Signed by | `id` | `revision` | `payload` |
+| --- | --- | --- | --- | --- |
+| `rendezvous-publication` | the publishing identity | its did:key | `publicationId` | the publication (core/RendezvousPublicationEnvelope.js) |
+| `rendezvous-removal` | the publishing identity | its did:key | `publicationId` | `{ publicationId, identityHint }` |
+| `rendezvous-answer` | the answering identity | its did:key | `publicationId` | `{ publicationId, identityHint, answer }`; `identityHint` is the publisher |
+| `rendezvous-answer-fetch` | the publishing identity | its did:key | `publicationId` | `{ publicationId, identityHint }` |
+| `lobby-card` | the card's identity | its did:key | `cardId` | `{ cardId, identityId, lobby, displayName, publishedAt, expiresAt }` |
+| `lobby-leave` | the card's identity | its did:key | `cardId` | `{ cardId, identityId, lobby }` |
+
+A lobby is `public` or `world:<documentId>` (`documentId` of 1 to 128
+characters from `A-Z a-z 0-9 . _ -`). A display name is at most 40
+characters, whitespace collapsed and trimmed, with no control characters
+(core/LobbyCard.js#normalizeDisplayName). A card carries no offer or
+address. Publications and cards last at most 15 minutes; an older one
+cannot replace a newer one for the same identity (and lobby), and a
+withdrawn one cannot be sent again. Receivers verify every listed card by
+its own signature, whatever the server says.
+
+The server also sends one unrequested message, with no `requestId`:
+
+    { v: 1, type: 'ANSWER', identityId, publicationId, answer, answererId }
+
+It goes only to a connection that sent a signed `FETCH_ANSWER` with
+`watch: true` for that publication (`watching: true` in the reply), once,
+when the answer arrives. The watch is kept with the connection, one
+publication per connection, and ends with the push or the connection.
+
+Connecting through rendezvous: the finder LOOKUPs the identity, answers the
+offer, and leaves its answer with POST_ANSWER. The publisher sends
+FETCH_ANSWER with `watch: true` as soon as it publishes, which returns an
+answer already waiting and registers the watch; the server then pushes the
+answer and the publisher completes the connection. The publisher checks
+again every 30 seconds in case a push was lost to a dropped connection, or
+every 2 seconds when any of its servers did not reply `watching: true` (a
+server from before pushes). Only then does the peer handshake below run.
+Without a signing identity the finder gets the answer back to hand over
+itself.
+
 ## Peer messages
 
 Peers talk over one authenticated WebRTC data channel per connection.

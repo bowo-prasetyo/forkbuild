@@ -24,6 +24,19 @@ change against the id itself.
   signature over withdrawing that one publication. The app signs both
   automatically while the identity is signed in and unlocked; a locked
   identity is told to unlock first.
+- **Answers reach only the publisher.** Someone connecting to a
+  publication leaves their WebRTC answer with POST_ANSWER, signed by their
+  own identity; the publisher collects it with FETCH_ANSWER, signed by the
+  publisher. With `watch: true`, that signed request also marks the
+  publisher's connection, and the answer is pushed to that connection (and
+  no other) as it arrives, so a waiting publisher need not poll and the
+  Durable Object can hibernate. The first answer wins, and an answered
+  publication is no longer returned by LOOKUP.
+- **The public lobby lists only those who join it.** JOIN_LOBBY stores a
+  card signed by the identity it names (lobby `public` or `world:<id>`, a
+  display name of at most 40 characters, no address); LEAVE_LOBBY needs
+  that identity's signature; LIST_LOBBY returns a random sample of at most
+  50 current cards. LOOKUP still answers only for an exact identity.
 - **No replays.** A publication older than the stored one is refused, so
   nobody can roll an identity back to an old endpoint, and a withdrawn
   publication cannot be published again.
@@ -37,6 +50,9 @@ change against the id itself.
   | Requests per connection | bursts of 120, then 2 per second |
   | Connections per IP address | 16 |
   | Identities stored at once | 100,000; set the `MAX_ENTRIES` variable to change it |
+  | Lobby card lifetime | at most 15 minutes (the app asks for 10 and renews) |
+  | Lobby cards stored at once, all lobbies together | 20,000; set the `MAX_LOBBY_CARDS` variable to change it |
+  | Cards returned by one LIST_LOBBY | 50, sampled from up to 1,000 stored |
 
 What it cannot do is prove that whoever publishes an identity answers at
 the published endpoint. Peers still authenticate each other when they
@@ -243,6 +259,10 @@ Redeploy with `wrangler deploy`. Entries stored by the previous version
 keep working until they expire (at most minutes). Clients older than
 this version of the app still publish signed entries, but their REMOVE
 is unsigned and is refused; their entries simply expire instead.
+
+The answer mailbox and the public lobby need this version of the worker.
+Against an older one, the app falls back to handing the connection reply
+over by hand, and the lobby says the server does not offer one yet.
 
 ## If you ever need to change or remove it
 

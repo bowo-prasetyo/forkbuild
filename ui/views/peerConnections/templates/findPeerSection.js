@@ -81,7 +81,11 @@ export const findPeerSectionTemplate = `<h2 class="peer-my-peers-heading">Find a
                                 This is only a claim — connecting proves (or disproves) it.
                             </p>
 
-                            <div v-if="findReplies[record.peerDiscoveryId]" class="peer-signal-box peer-signal-box--nested">
+                            <p v-if="findDelivered[record.peerDiscoveryId]" class="form-hint form-hint--neutral">
+                                Your reply went through the rendezvous server; the connection completes on its
+                                own. Check <strong>My Peers</strong> above for live progress.
+                            </p>
+                            <div v-else-if="findReplies[record.peerDiscoveryId]" class="peer-signal-box peer-signal-box--nested">
                                 <p class="form-hint form-hint--neutral">
                                     Send this reply back to whoever gave you this candidate — the connection
                                     will not complete until they paste it in. Check <strong>My Peers</strong>
