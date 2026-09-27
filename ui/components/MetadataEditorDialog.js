@@ -117,7 +117,7 @@ export default {
                     </select>
                 </label>
                 <p class="form-hint" v-if="placementPolicy !== 'anyone'">
-                    Others can still find, view and (if the license allows) fork it, but ForkBuild won't let them place copies of it in their World. Applies from your next publish.
+                    Others can still find, view and (if the license allows) fork it, but ForkBuild won't let them place it in their World. Applies from your next publish.
                 </p>
 
                 <div class="modal-actions">

@@ -1900,3 +1900,20 @@ who held a build could place a copy of it anywhere in their own World.
   Position state, the Document Properties dialog, and forks versus imports).
   `WorldCreationPublicationLifecycleProductReassessment` now lists `placementPolicy` in DocumentMetadata's expected
   fields.
+
+## Placing is not copying: wording (unnumbered, 2026-09-27)
+
+**World View and the docs stop calling a placement a "copy".** A placement is a signed pointer to one unchanged
+Publication; only a fork is a copy. Calling both "copy" blurred the difference that the placement setting above
+depends on.
+
+- The Placements panel's **Place Copy Here** is now **Add Placement Here**, and its rows, tooltips and remove
+  confirmations say "placement" (`ui/components/ownPublicationPanel/templates/placementsSection.js`). The
+  confirmations read "Placed at …" and "Placement removed from World" (`useOwnPublicationActions.js`).
+- The placement setting reads **Anyone may place it**, and Accept Position's hint says it places the build "with a
+  placement signed by you" rather than "your own copy".
+- `docs/user/03-WorldView.md` gains a **Placing vs forking** note (a table of what each creates, who's the author,
+  and which setting controls it), and its placement sections use the same terms. `04-PublishingAndForking.md` links
+  to it.
+- Tests updated for the new labels: `PlaceCopyHereDuplicateGuard`, `WorldViewPanelLayoutBrowser`,
+  `PublicationPlacementRowActions` and `PublicationPlacementPolicy`.

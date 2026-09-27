@@ -96,12 +96,12 @@ export function useOwnPublicationActions({
         refreshSpatialUI();
     }
 
-    // One row of the Placements list: removes exactly that copy.
+    // One row of the Placements list: removes exactly that placement.
     function removePublicationPlacement(placement) {
         if (!placement) return;
         guarded(() => {
             session.removePublicationPlacement(placement.publicationId, placement.placementId);
-            feedback.show('Copy removed from World');
+            feedback.show('Placement removed from World');
         });
         placementsRevision.value += 1;
         refreshSpatialUI();
@@ -121,8 +121,8 @@ export function useOwnPublicationActions({
     }
 
     // Resolves only where "here" is: avatar position, else camera position, else
-    // the World origin. Each click adds another copy, so a click where a copy
-    // of this Publication already sits is refused: without moving, repeated
+    // the World origin. Each click adds another placement, so a click where a
+    // placement of this Publication already sits is refused: without moving, repeated
     // clicks would only stack invisible duplicates on one spot.
     function placeOwnPublication(publication) {
         if (!publication) return;
@@ -130,12 +130,12 @@ export function useOwnPublicationActions({
             const position = session.getAvatarPosition() || session.getCameraPosition() || { x: 0, y: 0, z: 0 };
             const existing = session.getPlacementsForPublication(publication.id);
             if (!detectSpatialOverlap(position, existing).isEmpty) {
-                feedback.show('A copy is already placed here. Move elsewhere to place another, or use a copy\'s Move… to relocate it.');
+                feedback.show('This build is already placed here. Move elsewhere to place it again, or use a placement\'s Move… to relocate it.');
                 return;
             }
             session.placePublication(publication.id, position);
             const count = existing.length + 1;
-            feedback.show(`Copy placed at ${formatPosition(position)} (${count} ${count === 1 ? 'placement' : 'placements'} now)`);
+            feedback.show(`Placed at ${formatPosition(position)} (${count} ${count === 1 ? 'placement' : 'placements'} now)`);
         });
         placementsRevision.value += 1;
         refreshSpatialUI();

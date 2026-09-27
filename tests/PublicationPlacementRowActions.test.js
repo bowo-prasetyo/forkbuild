@@ -45,7 +45,7 @@ function makeBackend() {
     const byId = new Map(session.getPlacementsForPublication('pub-a').map((p) => [p.placementId, p]));
     assert(byId.get(second).position.x === 25 && byId.get(second).position.z === 5, 'A1. the chosen copy moved');
     assert(byId.get(second).revision === 2, 'A2. moving makes a new revision of that copy');
-    assert(byId.get(first).position.x === 10 && byId.get(third).position.x === 30, 'A3. the other copies are untouched');
+    assert(byId.get(first).position.x === 10 && byId.get(third).position.x === 30, 'A3. the other placements are untouched');
 
     session.removePublicationPlacement('pub-a', first);
     const remaining = session.getPlacementsForPublication('pub-a').map((p) => p.placementId).sort();
@@ -53,7 +53,7 @@ function makeBackend() {
 
     let threw = null;
     try { session.removePublicationPlacement('pub-a', first); } catch (e) { threw = e; }
-    assert(threw && /no longer exists/.test(threw.message), 'A5. a stale row (already removed) refuses rather than acting on another copy');
+    assert(threw && /no longer exists/.test(threw.message), 'A5. a stale row (already removed) refuses rather than acting on another placement');
 
     const other = place('pub-b', 40);
     threw = null;

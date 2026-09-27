@@ -1,7 +1,7 @@
 // Own Publication panel template: the Publication's placements list.
 // It renders in OwnPublicationPanel's scope, so it uses the component's props, data, computed properties and methods.
 export const placementsSectionTemplate = `<!--
-                Every placement of the Publication, one row each, with that copy's own
+                Every placement of the Publication, one row each, with that placement's own
                 Move and Remove. Ownership only gates the buttons locally; the signed
                 revision is what is authorized.
             -->
@@ -36,7 +36,7 @@ export const placementsSectionTemplate = `<!--
                                 type="button"
                                 class="action-btn own-publication-placement-move-action"
                                 :disabled="!placement.movable"
-                                :title="placement.movable ? 'Move this copy to another position' : 'Only the owner of this copy can move it'"
+                                :title="placement.movable ? 'Move this placement to another position' : 'Only the owner of this placement can move it'"
                                 @click="movePublicationPlacement(placement)"
                             >Move…</button>
                             <button
@@ -44,7 +44,7 @@ export const placementsSectionTemplate = `<!--
                                 type="button"
                                 class="action-btn own-publication-placement-remove-request-action"
                                 :disabled="!placement.removable"
-                                :title="placement.removable ? 'Remove this copy from the World' : 'Only the owner of this copy can remove it'"
+                                :title="placement.removable ? 'Remove this placement from the World' : 'Only the owner of this placement can remove it'"
                                 @click="requestPlacementRemoval(placement)"
                             >Remove…</button>
                         </div>
@@ -56,8 +56,8 @@ export const placementsSectionTemplate = `<!--
                         >
                             <p class="own-publication-placement-remove-confirm-text">
                                 {{ publicationPlacements.length === 1
-                                    ? 'Remove the only copy? The build will no longer appear in the World, but stays published and can be placed again.'
-                                    : 'Remove this copy from the World? The other copies and the Publication stay.' }}
+                                    ? 'Remove the only placement? The build will no longer appear in the World, but stays published and can be placed again.'
+                                    : 'Remove this placement from the World? The other placements and the Publication stay.' }}
                             </p>
                             <button
                                 type="button"
@@ -76,16 +76,16 @@ export const placementsSectionTemplate = `<!--
                 <div class="own-publication-placement-actions">
                     <!--
                         Always enabled with a publication: a Publication can be placed any number of
-                        times. Labelled as a copy so it is never mistaken for "show" or "move".
+                        times. Labelled "Add" so it is never mistaken for "show" or "move".
                     -->
                     <button
                         v-if="placePublicationCommand"
                         type="button"
                         class="action-btn own-publication-place-action"
                         :disabled="!publication"
-                        title="Adds another copy of this build to the World at your current position. To relocate an existing copy, use its Move… button above."
+                        title="Places this same build again, at your current position. It adds a placement, not a copy: the build stays one Publication. To relocate an existing placement, use its Move… button above."
                         @click="placeOwnPublication"
-                    >Place Copy Here</button>
+                    >Add Placement Here</button>
                     <!-- The host's own placement actions (World View's Move Placement). -->
                     <slot name="placement-actions"></slot>
                 </div>
