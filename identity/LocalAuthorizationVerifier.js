@@ -5,6 +5,7 @@ import { getAvatarProfileSigningDescriptor } from '../core/AvatarProfileAdvertis
 import { getAvatarInteractionSigningDescriptor } from '../core/AvatarInteractionAdvertisement.js';
 import { getFriendshipSigningDescriptor } from '../core/FriendshipAdvertisement.js';
 import { getRendezvousPublicationSigningDescriptor } from '../core/RendezvousPublicationEnvelope.js';
+import { getLobbyCardSigningDescriptor } from '../core/LobbyCard.js';
 import { getIdentityRevocationSigningDescriptor } from '../core/IdentityRevocationEnvelope.js';
 import { getIdentitySuccessionSigningDescriptor } from '../core/IdentitySuccessionEnvelope.js';
 import {
@@ -275,6 +276,30 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         }
         const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
         return this.verifyDescriptor(getRendezvousPublicationSigningDescriptor(publication), publication.signature, identity);
+    }
+
+    // A lobby card must be signed by the identity it names: the rendezvous
+    // server checks this too, but a client never trusts a server's listing.
+    verifyLobbyCard(card) {
+        if (!card) {
+            return { valid: false, signed: false, reason: 'no lobby card' };
+        }
+        if (!card.signature) {
+            return { valid: false, signed: false, reason: 'unsigned lobby card' };
+        }
+        const sig = Signature.fromJSON(card.signature);
+        if (!sig) {
+            return { valid: false, signed: true, reason: 'malformed signature' };
+        }
+        if (sig.signer !== card.identityId) {
+            return { valid: false, signed: true, reason: 'signer does not match the card\'s identity' };
+        }
+        const publicKeyBytes = Ed25519.didKeyToPublicKey(sig.signer);
+        if (!publicKeyBytes) {
+            return { valid: false, signed: true, reason: 'unknown signer identity' };
+        }
+        const identity = { id: sig.signer, algorithm: 'Ed25519', publicKey: Ed25519.bytesToHex(publicKeyBytes) };
+        return this.verifyDescriptor(getLobbyCardSigningDescriptor(card), card.signature, identity);
     }
 
     // 0.2.67 — like verifyFriendshipAdvertisement() above and unlike

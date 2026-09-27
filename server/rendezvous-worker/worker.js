@@ -19,6 +19,11 @@
 //     { v: 1, type: 'FETCH_ANSWER', requestId, identityId, publicationId, signature }
 //         collects that answer; signature: identityId's signature over a
 //         rendezvous-answer-fetch envelope
+//     { v: 1, type: 'JOIN_LOBBY',  requestId, card }
+//         a signed core/LobbyCard.js toJSON(): "this identity is in this lobby"
+//     { v: 1, type: 'LEAVE_LOBBY', requestId, identityId, lobby, cardId, signature }
+//     { v: 1, type: 'LIST_LOBBY',  requestId, lobby }
+//         -> { cards, total }: a random sample of the lobby's current cards
 //
 //   Server -> Client, exactly one response per request, in any order:
 //     { v: 1, type: 'OK',    requestId, result }
@@ -69,6 +74,8 @@ const PUBLICATION_SIGNATURE_TYPE = 'rendezvous-publication';
 const REMOVAL_SIGNATURE_TYPE = 'rendezvous-removal';
 const ANSWER_SIGNATURE_TYPE = 'rendezvous-answer';
 const ANSWER_FETCH_SIGNATURE_TYPE = 'rendezvous-answer-fetch';
+const LOBBY_CARD_SIGNATURE_TYPE = 'lobby-card';
+const LOBBY_LEAVE_SIGNATURE_TYPE = 'lobby-leave';
 
 export const LIMITS = Object.freeze({
     // Largest accepted frame. A publication carries a WebRTC offer, a few
@@ -96,13 +103,32 @@ export const LIMITS = Object.freeze({
     // Credentials handed out per calendar month (UTC), all addresses
     // together. Can be overridden with the TURN_CREDENTIALS_PER_MONTH
     // variable.
-    turnCredentialsPerMonth: 10000
+    turnCredentialsPerMonth: 10000,
+    // Public lobby cards: how long one may last, how long a display name
+    // may be, how many cards all lobbies hold together (override with
+    // MAX_LOBBY_CARDS), how many one LIST_LOBBY returns, and how many
+    // stored cards it samples them from.
+    maxLobbyCardLifetimeMs: 15 * 60 * 1000,
+    maxDisplayNameLength: 40,
+    maxLobbyCards: 20000,
+    lobbyListSize: 50,
+    lobbyListScan: 1000
 });
+
+// Mirrors core/LobbyCard.js: the global lobby, or one per World.
+const LOBBY_PATTERN = /^(public|world:[A-Za-z0-9._-]{1,128})$/;
 
 // One entry per identity, stored under this prefix:
 //   { publication, publishedAtMs, expiresAtMs, removed }
 const STORAGE_KEY_PREFIX = 'pub:';
 const ENTRY_COUNT_KEY = 'meta:entries';
+
+// One card per identity per lobby, stored under
+//   lobby:<lobby>|<identityId> -> { card, publishedAtMs, expiresAtMs, removed }
+// ('|' cannot appear in a lobby name, so one lobby's prefix never matches
+// another's).
+const LOBBY_KEY_PREFIX = 'lobby:';
+const LOBBY_CARD_COUNT_KEY = 'meta:lobbycards';
 
 // The alarm sweeps out entries nobody looked up after they expired.
 const SWEEP_INTERVAL_MS = 5 * 60 * 1000;
@@ -224,6 +250,36 @@ function answerDescriptor({ answererId, identityId, publicationId, answer }) {
     };
 }
 
+// Mirrors core/LobbyCard.js#getLobbyCardSigningDescriptor.
+function lobbyCardDescriptor(card) {
+    return {
+        type: LOBBY_CARD_SIGNATURE_TYPE,
+        id: card.identityId,
+        revision: card.cardId,
+        payload: {
+            cardId: card.cardId,
+            identityId: card.identityId,
+            lobby: card.lobby,
+            displayName: card.displayName,
+            publishedAt: card.publishedAt,
+            expiresAt: card.expiresAt
+        }
+    };
+}
+
+function lobbyLeaveDescriptor({ identityId, lobby, cardId }) {
+    return {
+        type: LOBBY_LEAVE_SIGNATURE_TYPE,
+        id: identityId,
+        revision: cardId,
+        payload: { cardId, identityId, lobby }
+    };
+}
+
+function lobbyKey(lobby, identityId) {
+    return `${LOBBY_KEY_PREFIX}${lobby}|${identityId}`;
+}
+
 function answerFetchDescriptor(identityId, publicationId) {
     return {
         type: ANSWER_FETCH_SIGNATURE_TYPE,
@@ -266,6 +322,32 @@ function checkPublicationShape(publication, now) {
     }
     if (expiresAtMs - Math.max(publishedAtMs, now - LIMITS.maxClockSkewMs) > LIMITS.maxPublicationLifetimeMs) {
         throw new Error(`PUBLISH: a publication may last at most ${LIMITS.maxPublicationLifetimeMs / 60000} minutes`);
+    }
+    return { publishedAtMs, expiresAtMs };
+}
+
+// Throws unless `card` is a well-formed lobby card whose times are within
+// the limits. Returns its parsed times.
+function checkLobbyCardShape(card, now) {
+    if (!card || typeof card !== 'object'
+        || !isShortString(card.cardId)
+        || !isShortString(card.identityId)
+        || typeof card.lobby !== 'string' || !LOBBY_PATTERN.test(card.lobby)
+        || typeof card.displayName !== 'string' || card.displayName.length > LIMITS.maxDisplayNameLength
+        || !isIsoDate(card.publishedAt)
+        || !isIsoDate(card.expiresAt)) {
+        throw new Error('JOIN_LOBBY: invalid lobby card');
+    }
+    const publishedAtMs = Date.parse(card.publishedAt);
+    const expiresAtMs = Date.parse(card.expiresAt);
+    if (expiresAtMs <= now) {
+        throw new Error('JOIN_LOBBY: the card has already expired');
+    }
+    if (publishedAtMs > now + LIMITS.maxClockSkewMs) {
+        throw new Error('JOIN_LOBBY: the card is dated in the future; check this device\'s clock');
+    }
+    if (expiresAtMs - Math.max(publishedAtMs, now - LIMITS.maxClockSkewMs) > LIMITS.maxLobbyCardLifetimeMs) {
+        throw new Error(`JOIN_LOBBY: a lobby card may last at most ${LIMITS.maxLobbyCardLifetimeMs / 60000} minutes`);
     }
     return { publishedAtMs, expiresAtMs };
 }
@@ -316,6 +398,8 @@ export class RendezvousNode {
         this.env = env;
         const configuredMax = Number.parseInt(env.MAX_ENTRIES, 10);
         this.maxEntries = Number.isFinite(configuredMax) && configuredMax > 0 ? configuredMax : LIMITS.maxEntries;
+        const configuredLobbyMax = Number.parseInt(env.MAX_LOBBY_CARDS, 10);
+        this.maxLobbyCards = Number.isFinite(configuredLobbyMax) && configuredLobbyMax > 0 ? configuredLobbyMax : LIMITS.maxLobbyCards;
         this.ctx.blockConcurrencyWhile(async () => {
             const existing = await this.ctx.storage.getAlarm();
             if (existing === null) {
@@ -385,6 +469,15 @@ export class RendezvousNode {
                     break;
                 case 'FETCH_ANSWER':
                     result = await this._handleFetchAnswer(message);
+                    break;
+                case 'JOIN_LOBBY':
+                    result = await this._handleJoinLobby(message.card);
+                    break;
+                case 'LEAVE_LOBBY':
+                    result = await this._handleLeaveLobby(message);
+                    break;
+                case 'LIST_LOBBY':
+                    result = await this._handleListLobby(message.lobby);
                     break;
                 default:
                     throw new Error(`unknown request type "${String(type).slice(0, 32)}"`);
@@ -539,6 +632,91 @@ export class RendezvousNode {
             return null;
         }
         return { answer: entry.answer.answer, answererId: entry.answer.answererId };
+    }
+
+    // JOIN_LOBBY stores a card signed by the identity it names, replacing
+    // that identity's card in the same lobby. As with PUBLISH, an older card
+    // cannot replace a newer one, and a card the identity withdrew cannot
+    // be replayed.
+    async _handleJoinLobby(card, now = Date.now()) {
+        const { publishedAtMs, expiresAtMs } = checkLobbyCardShape(card, now);
+        if (!didKeyToPublicKey(card.identityId)) {
+            throw new Error('JOIN_LOBBY: identityId is not a did:key identity');
+        }
+        if (!card.signature) {
+            throw new Error('JOIN_LOBBY: the card must be signed by the identity it names; unlock your identity and try again');
+        }
+        if (!await verifySignature(lobbyCardDescriptor(card), card.signature, card.identityId)) {
+            throw new Error('JOIN_LOBBY: the signature does not match the card or its identity');
+        }
+        const key = lobbyKey(card.lobby, card.identityId);
+        const existing = await this.ctx.storage.get(key);
+        const current = existing && existing.expiresAtMs > now ? existing : null;
+        if (current) {
+            if (publishedAtMs < current.publishedAtMs) {
+                throw new Error('JOIN_LOBBY: a newer card for this identity is already in this lobby');
+            }
+            if (current.removed && current.card.cardId === card.cardId) {
+                throw new Error('JOIN_LOBBY: this card was withdrawn');
+            }
+        } else if (!existing && await this._lobbyCardCount() >= this.maxLobbyCards) {
+            throw new Error('JOIN_LOBBY: the lobbies on this rendezvous server are full; try again later');
+        }
+        await this.ctx.storage.put(key, { card, publishedAtMs, expiresAtMs, removed: false });
+        if (!existing) {
+            await this._adjustLobbyCardCount(1);
+        }
+        return card;
+    }
+
+    // LEAVE_LOBBY withdraws one card, with its identity's signature over
+    // that card. The entry stays as a tombstone until it would have expired.
+    async _handleLeaveLobby({ identityId, lobby, cardId, signature } = {}, now = Date.now()) {
+        if (!isShortString(identityId) || !isShortString(cardId) || typeof lobby !== 'string' || !LOBBY_PATTERN.test(lobby)) {
+            throw new Error('LEAVE_LOBBY: identityId, lobby and cardId are required');
+        }
+        if (!signature) {
+            throw new Error('LEAVE_LOBBY: the request must be signed by the identity it names');
+        }
+        if (!await verifySignature(lobbyLeaveDescriptor({ identityId, lobby, cardId }), signature, identityId)) {
+            throw new Error('LEAVE_LOBBY: the signature does not match the request or its identity');
+        }
+        const key = lobbyKey(lobby, identityId);
+        const entry = await this.ctx.storage.get(key);
+        if (!entry || entry.removed || entry.expiresAtMs <= now || entry.card.cardId !== cardId) {
+            return false;
+        }
+        await this.ctx.storage.put(key, { ...entry, removed: true });
+        return true;
+    }
+
+    // LIST_LOBBY returns up to lobbyListSize current cards, sampled at
+    // random from the first lobbyListScan stored, so the same early joiners
+    // never fill every page. `total` counts the current cards scanned.
+    async _handleListLobby(lobby, now = Date.now()) {
+        if (typeof lobby !== 'string' || !LOBBY_PATTERN.test(lobby)) {
+            throw new Error('LIST_LOBBY: that is not a lobby');
+        }
+        const stored = await this.ctx.storage.list({ prefix: `${LOBBY_KEY_PREFIX}${lobby}|`, limit: LIMITS.lobbyListScan });
+        const current = [];
+        for (const entry of stored.values()) {
+            if (entry && !entry.removed && typeof entry.expiresAtMs === 'number' && entry.expiresAtMs > now) {
+                current.push(entry.card);
+            }
+        }
+        for (let i = current.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [current[i], current[j]] = [current[j], current[i]];
+        }
+        return { cards: current.slice(0, LIMITS.lobbyListSize), total: current.length };
+    }
+
+    async _lobbyCardCount() {
+        return (await this.ctx.storage.get(LOBBY_CARD_COUNT_KEY)) || 0;
+    }
+
+    async _adjustLobbyCardCount(delta) {
+        await this.ctx.storage.put(LOBBY_CARD_COUNT_KEY, Math.max(0, (await this._lobbyCardCount()) + delta));
     }
 
     async _entryCount() {
@@ -748,6 +926,16 @@ export class RendezvousNode {
             }
         }
         await this.ctx.storage.put(ENTRY_COUNT_KEY, remaining);
+        const lobbyCards = await this.ctx.storage.list({ prefix: LOBBY_KEY_PREFIX });
+        let remainingCards = 0;
+        for (const [key, entry] of lobbyCards) {
+            if (!entry || typeof entry.expiresAtMs !== 'number' || entry.expiresAtMs <= now) {
+                await this.ctx.storage.delete(key);
+            } else {
+                remainingCards++;
+            }
+        }
+        await this.ctx.storage.put(LOBBY_CARD_COUNT_KEY, remainingCards);
         await this.ctx.storage.setAlarm(Date.now() + SWEEP_INTERVAL_MS);
     }
 }

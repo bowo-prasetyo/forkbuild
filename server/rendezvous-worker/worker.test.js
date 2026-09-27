@@ -309,6 +309,102 @@ async function answerFetch(publisher, publicationId, signer = publisher) {
     console.log('✓ the answer mailbox takes one signed answer per publication, readable only by its publisher');
 }
 
+let cardCounter = 0;
+function makeLobbyCard(identityId, { lobby = 'public', displayName = 'Alice', publishedAt = Date.now(), lifetimeMs = 10 * MINUTE } = {}) {
+    return {
+        cardId: `card-${++cardCounter}`,
+        identityId,
+        lobby,
+        displayName,
+        publishedAt: new Date(publishedAt).toISOString(),
+        expiresAt: new Date(publishedAt + lifetimeMs).toISOString()
+    };
+}
+
+async function signLobbyCard(identity, card) {
+    const signature = await identity.sign({
+        type: 'lobby-card',
+        id: card.identityId,
+        revision: card.cardId,
+        payload: {
+            cardId: card.cardId,
+            identityId: card.identityId,
+            lobby: card.lobby,
+            displayName: card.displayName,
+            publishedAt: card.publishedAt,
+            expiresAt: card.expiresAt
+        }
+    });
+    return { ...card, signature };
+}
+
+async function lobbyLeave(identity, card, signer = identity) {
+    const signature = await signer.sign({
+        type: 'lobby-leave',
+        id: identity.id,
+        revision: card.cardId,
+        payload: { cardId: card.cardId, identityId: identity.id, lobby: card.lobby }
+    });
+    return { identityId: identity.id, lobby: card.lobby, cardId: card.cardId, signature };
+}
+
+// The public lobby: signed cards, one per identity per lobby, listed per
+// lobby, withdrawn only by their identity.
+{
+    const node = new RendezvousNode(fakeDurableObjectState());
+    const aliceCard = await signLobbyCard(alice, makeLobbyCard(alice.id));
+    assert(await node._handleJoinLobby(aliceCard) === aliceCard, 'JOIN_LOBBY stores and echoes a signed card');
+    await node._handleJoinLobby(await signLobbyCard(bob, makeLobbyCard(bob.id, { displayName: 'Bob' })));
+    await node._handleJoinLobby(await signLobbyCard(bob, makeLobbyCard(bob.id, { lobby: 'world:w-1', displayName: 'Bob' })));
+
+    const everyone = await node._handleListLobby('public');
+    assert(everyone.total === 2 && everyone.cards.map((c) => c.displayName).sort().join() === 'Alice,Bob', 'LIST_LOBBY lists the public lobby');
+    const world = await node._handleListLobby('world:w-1');
+    assert(world.total === 1 && world.cards[0].identityId === bob.id, 'a World lobby lists only its own members');
+    assert((await node._handleListLobby('world:w-2')).total === 0, 'another World\'s lobby is empty');
+    await assertRejects(node._handleListLobby('world:w-1|x'), /not a lobby/, 'a malformed lobby name is refused');
+
+    await assertRejects(node._handleJoinLobby(makeLobbyCard(alice.id)), /must be signed/, 'an unsigned card is refused');
+    await assertRejects(node._handleJoinLobby(await signLobbyCard(bob, makeLobbyCard(alice.id))), /signature does not match/,
+        'Bob cannot put Alice in a lobby');
+    const renamed = { ...aliceCard, displayName: 'Mallory' };
+    await assertRejects(node._handleJoinLobby(renamed), /signature does not match/, 'a signed card whose name was changed is refused');
+    await assertRejects(node._handleJoinLobby(await signLobbyCard(alice, makeLobbyCard(alice.id, { displayName: 'x'.repeat(41) }))), /invalid lobby card/,
+        'a display name over 40 characters is refused');
+    await assertRejects(node._handleJoinLobby(await signLobbyCard(alice, makeLobbyCard(alice.id, { lifetimeMs: 60 * MINUTE }))), /at most 15 minutes/,
+        'a card asking to last an hour is refused');
+
+    const renewed = await signLobbyCard(alice, makeLobbyCard(alice.id, { displayName: 'Alice B.' }));
+    await node._handleJoinLobby(renewed);
+    const afterRenewal = await node._handleListLobby('public');
+    assert(afterRenewal.total === 2 && afterRenewal.cards.some((c) => c.displayName === 'Alice B.'), 'a newer card replaces the identity\'s old one');
+    await assertRejects(node._handleJoinLobby(await signLobbyCard(alice, makeLobbyCard(alice.id, { publishedAt: Date.now() - MINUTE }))), /newer card/,
+        'an older card cannot roll the entry back');
+
+    assert(await node._handleLeaveLobby(await lobbyLeave(alice, renewed, bob)).catch(() => 'refused') === 'refused', 'Bob cannot take Alice out');
+    assert(await node._handleLeaveLobby(await lobbyLeave(alice, renewed)) === true, 'Alice leaves the lobby');
+    assert((await node._handleListLobby('public')).cards.every((c) => c.identityId !== alice.id), '...and is no longer listed');
+    await assertRejects(node._handleJoinLobby(renewed), /withdrawn/, 'her withdrawn card cannot be replayed');
+    console.log('✓ lobby cards are signed, listed per lobby, and withdrawn only by their identity');
+}
+
+// Lobby listings are capped and sampled; the lobby card total is capped too.
+{
+    const node = new RendezvousNode(fakeDurableObjectState(), { MAX_LOBBY_CARDS: String(LIMITS.lobbyListSize + 5) });
+    const members = [];
+    for (let i = 0; i < LIMITS.lobbyListSize + 5; i++) {
+        const member = await createIdentity();
+        members.push(member);
+        await node._handleJoinLobby(await signLobbyCard(member, makeLobbyCard(member.id, { displayName: `m${i}` })));
+    }
+    const page = await node._handleListLobby('public');
+    assert(page.cards.length === LIMITS.lobbyListSize && page.total === LIMITS.lobbyListSize + 5, 'one listing returns at most lobbyListSize cards, and reports the total');
+    const extra = await createIdentity();
+    await assertRejects(node._handleJoinLobby(await signLobbyCard(extra, makeLobbyCard(extra.id))), /full/, 'past MAX_LOBBY_CARDS a new identity is refused');
+    await node._handleJoinLobby(await signLobbyCard(members[0], makeLobbyCard(members[0].id, { displayName: 'renamed' })));
+    console.log('✓ lobby listings and the number of lobby cards are capped');
+}
+
 // The alarm sweeps expired entries and tombstones and recounts.
 {
     const ctx = fakeDurableObjectState();
@@ -318,7 +414,13 @@ async function answerFetch(publisher, publicationId, signer = publisher) {
     const entry = ctx._rawStore.get('pub:' + bob.id);
     ctx._rawStore.set('pub:' + bob.id, { ...entry, expiresAtMs: Date.now() - 1 });
     ctx._rawStore.set('meta:entries', 7);
+    await node._handleJoinLobby(await signLobbyCard(alice, makeLobbyCard(alice.id)));
+    const expiredCard = await signLobbyCard(bob, makeLobbyCard(bob.id));
+    await node._handleJoinLobby(expiredCard);
+    const cardKey = 'lobby:public|' + bob.id;
+    ctx._rawStore.set(cardKey, { ...ctx._rawStore.get(cardKey), expiresAtMs: Date.now() - 1 });
     await node.alarm();
+    assert(!ctx._rawStore.has(cardKey) && ctx._rawStore.get('meta:lobbycards') === 1, 'the alarm sweeps expired lobby cards and recounts them');
     assert((await node._handleLookup(alice.id)).length === 1, 'the alarm leaves a fresh entry alone');
     assert(!ctx._rawStore.has('pub:' + bob.id), '...sweeps an expired one');
     assert(ctx._rawStore.get('meta:entries') === 1, '...and corrects the entry count');

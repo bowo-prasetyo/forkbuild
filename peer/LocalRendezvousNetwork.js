@@ -30,6 +30,7 @@ export class LocalRendezvousNetwork extends RendezvousTransport {
         super();
         this._publications = new Map(); // identityHint -> RendezvousPublication
         this._answers = new Map(); // publicationId -> { answer, answererId }
+        this._lobbies = new Map(); // lobby -> Map(identityId -> LobbyCard)
         this._available = true;
     }
 
@@ -90,6 +91,42 @@ export class LocalRendezvousNetwork extends RendezvousTransport {
             return null;
         }
         return this._answers.get(publicationId) || null;
+    }
+
+    // peer/RendezvousLobbyTransport.js, in memory and, like publish(),
+    // without the reference server's signature checks.
+    async joinLobby(card) {
+        this._assertAvailable();
+        if (!this._lobbies.has(card.lobby)) {
+            this._lobbies.set(card.lobby, new Map());
+        }
+        this._lobbies.get(card.lobby).set(card.identityId, card);
+        return typeof card.toJSON === 'function' ? card.toJSON() : card;
+    }
+
+    async leaveLobby({ identityId, lobby, cardId } = {}) {
+        this._assertAvailable();
+        const members = this._lobbies.get(lobby);
+        const card = members && members.get(identityId);
+        if (!card || card.cardId !== cardId) {
+            return false;
+        }
+        members.delete(identityId);
+        return true;
+    }
+
+    async listLobby(lobby, now = new Date()) {
+        this._assertAvailable();
+        const members = this._lobbies.get(lobby);
+        const cards = [];
+        for (const [identityId, card] of members || []) {
+            if (typeof card.isExpired === 'function' && card.isExpired(now)) {
+                members.delete(identityId);
+            } else {
+                cards.push(typeof card.toJSON === 'function' ? card.toJSON() : card);
+            }
+        }
+        return { cards, total: cards.length };
     }
 
     // Defensive against more than mere expiry: an entry that doesn't even

@@ -55,12 +55,17 @@ import { createId } from '../core/createId.js';
 //                                  // signature: getRendezvousAnswerSigningDescriptor(), signed by answererId
 //     { v: 1, type: 'FETCH_ANSWER', requestId, identityId, publicationId, signature }
 //                                  // signature: getRendezvousAnswerFetchSigningDescriptor(), signed by identityId
+//     { v: 1, type: 'JOIN_LOBBY',  requestId, card }    // a signed core/LobbyCard.js toJSON()
+//     { v: 1, type: 'LEAVE_LOBBY', requestId, identityId, lobby, cardId, signature }
+//     { v: 1, type: 'LIST_LOBBY',  requestId, lobby }   // see peer/RendezvousLobbyTransport.js
 //
 //   Server -> Client, exactly one response per request, in any order:
 //     { v: 1, type: 'OK',    requestId, result }   // publish(): the stored publication;
 //                                                    // lookup(): an array of publications;
 //                                                    // remove(), postAnswer(): a boolean;
-//                                                    // fetchAnswer(): { answer, answererId } or null
+//                                                    // fetchAnswer(): { answer, answererId } or null;
+//                                                    // joinLobby(): the stored card; leaveLobby(): a boolean;
+//                                                    // listLobby(): { cards, total }
 //     { v: 1, type: 'ERROR', requestId, message }
 //
 // A server is free to also push unsolicited messages (no matching
@@ -156,6 +161,24 @@ export class WebSocketRendezvousTransport extends RendezvousTransport {
             return null;
         }
         return { answer: result.answer, answererId: typeof result.answererId === 'string' ? result.answererId : null };
+    }
+
+    // peer/RendezvousLobbyTransport.js, over the same connection.
+    async joinLobby(card) {
+        return this._request('JOIN_LOBBY', { card: typeof card.toJSON === 'function' ? card.toJSON() : card });
+    }
+
+    async leaveLobby({ identityId, lobby, cardId, signature } = {}) {
+        return Boolean(await this._request('LEAVE_LOBBY', { identityId, lobby, cardId, signature }));
+    }
+
+    // A malformed listing reads as an empty lobby.
+    async listLobby(lobby) {
+        const result = await this._request('LIST_LOBBY', { lobby });
+        if (!result || typeof result !== 'object' || !Array.isArray(result.cards)) {
+            return { cards: [], total: 0 };
+        }
+        return { cards: result.cards, total: Number.isFinite(result.total) ? result.total : result.cards.length };
     }
 
     // Not part of peer/RendezvousTransport.js's own formal contract —

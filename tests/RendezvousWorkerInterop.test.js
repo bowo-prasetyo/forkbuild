@@ -3,6 +3,9 @@ import { WebSocketRendezvousTransport } from '../peer/WebSocketRendezvousTranspo
 import { RendezvousDiscoveryProvider } from '../peer/RendezvousDiscoveryProvider.js';
 import { PeerInvitation } from '../peer/PeerInvitation.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
+import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
+import { LobbyCard, PUBLIC_LOBBY, worldLobby } from '../core/LobbyCard.js';
+import { signLobbyCard, signLobbyLeave } from '../peer/LobbyCardSigning.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 
@@ -141,6 +144,21 @@ const offer = (identityHint, text = 'v=0\r\no=alice 1 1 IN IP4 127.0.0.1\r\n') =
     assert(collected && collected.answererId === bob.provider._signedInIdentityId() && collected.answer.sdp.includes('o=bob'),
         'Alice collects Bob\'s answer');
     console.log('✓ the answer mailbox carries a signed answer from the connecting client to the publisher only');
+}
+
+// The public lobby: cards the app signs are accepted, listed, and withdrawn.
+{
+    const card = signLobbyCard(LobbyCard.create({ identityId: aliceId, lobby: worldLobby('w-7'), displayName: 'Alice' }), aliceDevice);
+    await alice.transport.joinLobby(card);
+    const listed = await bob.transport.listLobby(worldLobby('w-7'));
+    assert(listed.total === 1 && listed.cards[0].displayName === 'Alice', 'Bob sees Alice in the World lobby');
+    assert(new LocalAuthorizationVerifier().verifyLobbyCard(LobbyCard.fromJSON(listed.cards[0])).valid, '...and her card verifies on his side');
+    assert((await bob.transport.listLobby(PUBLIC_LOBBY)).total === 0, 'she is not in the public lobby she never joined');
+    await rejects(bob.transport.joinLobby(LobbyCard.create({ identityId: aliceId, lobby: PUBLIC_LOBBY })), /must be signed/,
+        'nobody can put Alice in a lobby without her signature');
+    assert(await alice.transport.leaveLobby({ ...card.toJSON(), signature: signLobbyLeave(card, aliceDevice) }) === true, 'Alice\'s signed leave is accepted');
+    assert((await bob.transport.listLobby(worldLobby('w-7'))).total === 0, '...and she is gone');
+    console.log('✓ the lobby accepts, lists and withdraws the cards the app signs');
 }
 
 // A locked identity cannot sign, so the server refuses its publication
