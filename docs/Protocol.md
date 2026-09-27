@@ -427,9 +427,24 @@ tag) are grouped into families, and a reader only queries its own:
 | Family | Tag | Envelope |
 |--------|-----|----------|
 | Publications | `forkbuild-publication` | `{ protocol: 'forkbuild', version: 1, kind, objectId, uri }` (core/DecentralizedDiscoveryEnvelope.js) |
-| Snapshots | `forkbuild-snapshot` | `{ protocol: 'forkbuild-snapshot-discovery', version: 1, publicationId, contentHash, storage, locator, claimedPosition }` (core/SnapshotDiscoveryEnvelope.js) |
+| Snapshots | `forkbuild-snapshot`, plus `forkbuild-snapshot:cell:<cx>:<cz>` when there is a `claimedPosition` | `{ protocol: 'forkbuild-snapshot-discovery', version: 1, publicationId, contentHash, storage, locator, claimedPosition }` (core/SnapshotDiscoveryEnvelope.js) |
 | Place naming | per region, from `derivePlaceNamingDiscoveryTag(worldId, regionId)` | `{ protocol: 'forkbuild-place-naming-discovery', version: 1, worldId, regionId, claim }` (core/PlaceNamingDiscoveryEnvelope.js) |
-| Commentary | `forkbuild-commentary` | see "Publication Commentary Distribution" |
+| Commentary | `forkbuild-commentary`, plus `forkbuild-commentary:<publicationId>` | see "Publication Commentary Distribution" |
+
+The second tags are narrow tags (core/NarrowDiscoveryTags.js). They are
+carried on the same Nostr event (a second `t` tag) or Arweave transaction
+(a second transaction tag), never as a second announcement.
+
+- **Snapshot cells.** A cell is a 1,000-unit square of the claimed
+  position's `x` and `z`: `cx = floor(x / 1000)`, `cz = floor(z / 1000)`.
+- **Readers.**
+  - World View reads the player's cell beside `forkbuild-snapshot`.
+  - A Commentary refresh reads its Publication's tag beside
+    `forkbuild-commentary`.
+  - Readers still read the global tags, so announcements made before the
+    narrow tags existed are still found.
+  - A reader stores a Snapshot under a cell tag only when its claimed
+    position lies in that cell.
 
 The `ui/main.js` constants and the `*DiscoveryPublisher` /
 `*QueryService` classes in application/ set these tags.
@@ -463,13 +478,15 @@ One envelope, three carriers:
 | Carrier | Where | Shape |
 |---------|-------|-------|
 | WebRTC  | peer protocol `forkbuild:commentary-distribution` | `{ kind: 'ANNOUNCE', envelope }` — announce only, no request/response history sync |
-| Nostr   | a kind-1 event on every configured relay (fan-out) | `content` = envelope JSON; tag `['t', 'forkbuild-commentary']` |
-| Arweave | a tagged transaction | body = envelope JSON; tag `ForkBuild-Commentary-Discovery-Tag: forkbuild-commentary`, found through GraphQL tag search |
+| Nostr   | a kind-1 event on every configured relay (fan-out) | `content` = envelope JSON; tags `['t', 'forkbuild-commentary']` and `['t', 'forkbuild-commentary:<publicationId>']` |
+| Arweave | a tagged transaction | body = envelope JSON; tags `ForkBuild-Commentary-Discovery-Tag: forkbuild-commentary` and `ForkBuild-Commentary-Discovery-Tag: forkbuild-commentary:<publicationId>`, found through GraphQL tag search |
 
 Posting always persists locally first, announces over WebRTC second, and then publishes to one chosen asynchronous
 substrate (Nostr or Arweave; the saved Announcement/Discovery default, overridable per post). It never publishes to
 both. A network failure never undoes the local write. Readers query both substrates when a Commentary section opens
-or on "Check for new comments", filter by `publicationId`, and import every candidate through the same verifier.
+or on "Check for new comments", under both the shared tag and the Publication's own tag, filter by `publicationId`,
+and import every candidate through the same verifier. The background sync (docs/AnnouncementIndex.md) also imports
+every verified envelope under the shared tag, whichever Publication it is about.
 A Nostr relay OK means "accepted," not durably stored. On Arweave, "not yet mined," "never published" and "gateway
 unreachable" all surface as `ContentUnavailableError`, and are never reported as "absent."
 

@@ -1,4 +1,5 @@
 import { LocalStorageProvider } from '../../storage/LocalStorageProvider.js';
+import { SNAPSHOT_CELL_TAG_PREFIX } from '../../core/NarrowDiscoveryTags.js';
 import { AnnouncementKind } from '../../application/announcementIndex/AnnouncementKinds.js';
 import { AnnouncementSync } from '../../application/announcementIndex/AnnouncementSync.js';
 import { AnnouncementSyncCursorStore } from '../../application/announcementIndex/AnnouncementSyncCursorStore.js';
@@ -45,9 +46,15 @@ export function composeAnnouncementSync({
         sync,
         targets: () => ({
             core: coreTargets,
-            rotating: announcementIndex.watchedTags(AnnouncementKind.PLACE_NAMING).map((tag) => placeNamingSyncTarget({
-                index: announcementIndex, tag, steemSource: steemRuntime ? steemRuntime.placeNamingDiscoverySource : null
-            }))
+            rotating: [
+                // Map cells World View has searched; Steem has no cell tags.
+                ...announcementIndex.watchedTags(AnnouncementKind.SNAPSHOT)
+                    .filter((tag) => tag.startsWith(SNAPSHOT_CELL_TAG_PREFIX))
+                    .map((tag) => snapshotSyncTarget({ index: announcementIndex, tag })),
+                ...announcementIndex.watchedTags(AnnouncementKind.PLACE_NAMING).map((tag) => placeNamingSyncTarget({
+                    index: announcementIndex, tag, steemSource: steemRuntime ? steemRuntime.placeNamingDiscoverySource : null
+                }))
+            ]
         }),
         isActive: () => typeof document === 'undefined' || document.visibilityState !== 'hidden'
     });

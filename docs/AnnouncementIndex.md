@@ -285,18 +285,33 @@ connection to a friend gives it everything that friend has seen.
 
 ## Phase 6: narrower tags
 
-**Planned.**
+**Built.**
 
 Narrower tags make each backfill smaller and each query more complete.
+They also keep nearby Snapshots in the index when the global Snapshot tag
+reaches its 2,000-record cap. The tags come from `core/NarrowDiscoveryTags.js`.
 
 - **Commentary.** Each Commentary announcement also carries the tag
-  `forkbuild-commentary:<publicationId>`. Nostr events and Arweave
-  transactions can both carry more than one tag, so this costs nothing
-  extra. The Commentary section reads its Publication's own tag.
+  `forkbuild-commentary:<publicationId>`.
+  - Nostr events and Arweave transactions can both carry more than one
+    tag, so this costs nothing extra.
+  - On Arweave, `uploadTaggedTransaction()` takes optional extra tags.
+  - `discover(publicationId)` on the Nostr and Arweave distributions
+    reads that tag beside the shared one, and the Commentary refresh
+    passes its Publication.
 - **Snapshots.** Each Snapshot announcement that carries a
-  `claimedPosition` also gets a tag for its map cell,
-  `forkbuild-snapshot:cell:<cx>:<cz>`, with 1,000-unit cells. World View
-  reads the cells around the player.
+  `claimedPosition` also gets the tag of its map cell,
+  `forkbuild-snapshot:cell:<cx>:<cz>`, with 1,000-unit cells. Readers use
+  it in three places:
+  - World View's discovery reads the player's cell beside the global tag,
+    so the cell becomes a watched tag.
+  - The background sync reads watched cells in turn.
+  - On startup, World View shows what the index holds for the 3×3 cells
+    around the player.
+  - The index stores a Snapshot under a cell tag only when its claimed
+    position lies in that cell.
+- **Steem.** Steem has no tags: its threads are read whole, and its
+  Snapshot reader answers only for the global tag.
 - **Old announcements.** Anything announced before this phase carries
   only the global tag. Readers keep reading the global tags, so nothing
   already announced is lost.

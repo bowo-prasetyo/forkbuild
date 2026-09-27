@@ -1,4 +1,6 @@
 import { resolveSavedProviderDefault } from '../../application/settings/SavedProviderDefaultChoice.js';
+import { snapshotCellTag, snapshotCellTagsAround } from '../../core/NarrowDiscoveryTags.js';
+import { SNAPSHOT_DISCOVERY_TAG } from '../../application/announcementIndex/AnnouncementSyncTargets.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import { composePlaceNamingPublicationRuntime } from '../../application/placeNaming/PlaceNamingPublicationRuntimeComposition.js';
 import { composeDiscoverSnapshotRuntime } from '../../application/snapshot/DiscoverSnapshotRuntimeComposition.js';
@@ -89,20 +91,26 @@ export function composeSnapshotDiscovery({
 
     // Answers "what was announced under this tag", as opposed to resolving one
     // contentHash. Local catalog entries (including peer announcements) and
-    // Nostr/Arweave all reach callers through the one composite service.
-    const discoverSnapshotCandidatesCommand = () => executeDiscoverSnapshotCandidatesCommand({
-        discoveryTag: 'forkbuild-snapshot',
-        discoveryQueryService: snapshotCandidateDiscoveryQueryService
-    });
+    // Nostr/Arweave all reach callers through the one composite service. Given
+    // World View's spatial context, the player's map cell tag is read too, so
+    // nearby Snapshots are found even when the global tag's newest page has
+    // moved past them (docs/AnnouncementIndex.md, "Phase 6").
+    const discoverSnapshotCandidatesForTags = (tags, discoveryQueryService) => Promise.all(tags.map((discoveryTag) => (
+        executeDiscoverSnapshotCandidatesCommand({ discoveryTag, discoveryQueryService })
+    ))).then(mergeSnapshotCandidates);
+    const discoverSnapshotCandidatesCommand = (context = null) => discoverSnapshotCandidatesForTags(
+        [SNAPSHOT_DISCOVERY_TAG, snapshotCellTag(context && context.position)].filter(Boolean),
+        snapshotCandidateDiscoveryQueryService
+    );
 
     // The index alone: World View shows what earlier searches found before the
     // network answers. Null without an index.
     const indexedSnapshotSource = indexedSource(AnnouncementKind.SNAPSHOT);
     const discoverIndexedSnapshotCandidatesCommand = indexedSnapshotSource
-        ? () => executeDiscoverSnapshotCandidatesCommand({
-            discoveryTag: 'forkbuild-snapshot',
-            discoveryQueryService: new SnapshotCandidateDiscoveryQueryService([indexedSnapshotSource])
-        })
+        ? (position = null) => discoverSnapshotCandidatesForTags(
+            [SNAPSHOT_DISCOVERY_TAG, ...snapshotCellTagsAround(position)],
+            new SnapshotCandidateDiscoveryQueryService([indexedSnapshotSource])
+        )
         : null;
 
     // Same service, but searchWithOutcome() lets the explicit button tell an empty
@@ -157,4 +165,16 @@ export function composeSnapshotDiscovery({
         placeNamingDiscoveryQueryService, resolveSelectedSnapshotCommand, materializeSelectedSnapshotCommand,
         discoverIndexedSnapshotCandidatesCommand, indexedPlaceNamingDiscoveryQueryService
     };
+}
+
+// One candidate per storage, content hash and locator, the identity
+// SnapshotCandidateDiscoveryQueryService deduplicates by, first seen first.
+function mergeSnapshotCandidates(perTag) {
+    const seen = new Set();
+    return perTag.flat().filter((candidate) => {
+        const identity = `${candidate.storage} ${candidate.contentHash} ${candidate.locator}`;
+        if (seen.has(identity)) return false;
+        seen.add(identity);
+        return true;
+    });
 }

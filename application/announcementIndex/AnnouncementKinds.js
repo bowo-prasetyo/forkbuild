@@ -1,4 +1,5 @@
 import { derivePlaceNamingDiscoveryTag, parsePlaceNamingDiscoveryEnvelope } from '../../core/PlaceNamingDiscoveryEnvelope.js';
+import { snapshotCellTag, SNAPSHOT_CELL_TAG_PREFIX } from '../../core/NarrowDiscoveryTags.js';
 import { isNonEmptyString, isPlainObject } from '../../utils/typeGuards.js';
 
 // Each kind turns one raw discovery result into the payload the Announcement
@@ -20,8 +21,11 @@ function isPosition(value) {
     return isPlainObject(value) && isFiniteNumber(value.x) && isFiniteNumber(value.y) && isFiniteNumber(value.z);
 }
 
-// Same identity SnapshotCandidateDiscoveryQueryService deduplicates by.
-function normalizeSnapshotCandidate(candidate) {
+// Same identity SnapshotCandidateDiscoveryQueryService deduplicates by. Under
+// a map cell tag, the claimed position must lie in that cell, so a relay that
+// ignores the tag filter, or an announcer that mislabels one, cannot fill
+// another cell's list.
+function normalizeSnapshotCandidate(candidate, tag) {
     if (!isPlainObject(candidate)
         || !isNonEmptyString(candidate.contentHash)
         || !isNonEmptyString(candidate.locator)
@@ -33,6 +37,9 @@ function normalizeSnapshotCandidate(candidate) {
     if (isNonEmptyString(candidate.publicationId) && isPosition(candidate.claimedPosition)) {
         payload.publicationId = candidate.publicationId;
         payload.claimedPosition = { x: candidate.claimedPosition.x, y: candidate.claimedPosition.y, z: candidate.claimedPosition.z };
+    }
+    if (typeof tag === 'string' && tag.startsWith(SNAPSHOT_CELL_TAG_PREFIX) && snapshotCellTag(payload.claimedPosition) !== tag) {
+        return null;
     }
     return { key: `${payload.storage} ${payload.contentHash} ${payload.locator}`, payload };
 }

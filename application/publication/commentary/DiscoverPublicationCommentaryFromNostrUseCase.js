@@ -100,7 +100,7 @@ export class DiscoverPublicationCommentaryFromNostrUseCase {
         if (!publicationId || typeof publicationId !== 'string') {
             return [];
         }
-        const candidates = await this._nostrDistribution.discover();
+        const candidates = await this._nostrDistribution.discover(publicationId);
         const admitted = [];
         for (const candidateJson of candidates) {
             if (!candidateJson || candidateJson.publicationId !== publicationId) {

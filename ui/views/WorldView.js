@@ -437,7 +437,7 @@ export default {
         // holds rather than only filling an empty result.
         function primeDiscoveryFromIndex(context, { replace = false } = {}) {
             if (discoverIndexedSnapshotCandidatesCommand) {
-                discoverIndexedSnapshotCandidatesCommand().then(handleDiscoveredSnapshotCandidates, () => {});
+                discoverIndexedSnapshotCandidatesCommand(context.position).then(handleDiscoveredSnapshotCandidates, () => {});
             }
             if (indexedPlaceNamingDiscoveryQueryService && placeNamingDiscoveryMonitor) {
                 const regions = session.getRegions();

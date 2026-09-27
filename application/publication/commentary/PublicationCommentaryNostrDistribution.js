@@ -1,4 +1,5 @@
 import { withTimeout } from '../../../utils/withTimeout.js';
+import { commentaryPublicationTag } from '../../../core/NarrowDiscoveryTags.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
 const DEFAULT_TAG_NAME = 't';
@@ -229,9 +230,12 @@ export class PublicationCommentaryNostrDistribution {
     //   application/nostr/NostrPublicationDiscoveryPublisher.js's own header
     //   already draws.
     async publish(envelopeJson) {
+        // Also tagged with its Publication, so that Publication's comments can
+        // be asked for on their own (docs/AnnouncementIndex.md, "Phase 6").
+        const publicationTag = commentaryPublicationTag(envelopeJson && envelopeJson.publicationId);
         const eventTemplate = Object.freeze({
             kind: this._kind,
-            tags: [[this._tagName, this._discoveryTag]],
+            tags: [[this._tagName, this._discoveryTag], ...(publicationTag ? [[this._tagName, publicationTag]] : [])],
             content: JSON.stringify(envelopeJson)
         });
 
@@ -269,11 +273,25 @@ export class PublicationCommentaryNostrDistribution {
     // DiscoverPublicationCommentaryFromNostrUseCase.js filters by
     // publicationId). Never throws for a malformed individual event; a
     // genuine queryImpl failure propagates as a rejection.
-    async discover() {
-        const filter = { [`#${this._tagName}`]: [this._discoveryTag] };
-        const events = await withTimeout(this._queryImpl(this._relayUrl, filter), this._timeoutMs, 'PublicationCommentaryNostrDistribution: relay operation timed out');
+    //
+    // With a publicationId, that Publication's own tag is read as well: a
+    // relay caps how many events one query returns, and under the shared tag
+    // that Publication's comments may be past the cap.
+    async discover(publicationId = null) {
+        const tags = [this._discoveryTag, commentaryPublicationTag(publicationId)].filter(Boolean);
+        const results = await Promise.all(tags.map((tag) => withTimeout(
+            this._queryImpl(this._relayUrl, { [`#${this._tagName}`]: [tag] }),
+            this._timeoutMs,
+            'PublicationCommentaryNostrDistribution: relay operation timed out'
+        )));
+        const seen = new Set();
         const envelopes = [];
-        for (const event of (events || [])) {
+        for (const event of results.flatMap((events) => events || [])) {
+            // An event carrying both tags comes back from both queries.
+            if (!event || seen.has(event.id)) {
+                continue;
+            }
+            seen.add(event.id);
             const parsed = parseEventContent(event);
             if (parsed !== null) {
                 envelopes.push(parsed);

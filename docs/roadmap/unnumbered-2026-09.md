@@ -1387,3 +1387,32 @@ Place Naming claim its peer has discovered. This is Phase 5 of docs/Announcement
   - identical indexes sending only summaries;
   - a misbehaving peer, where unrequested, expired, over-author-cap and over-hourly-cap records are all refused;
   - responses split to fit peer messages.
+
+## Announcement Index: narrower tags for Snapshots and Commentary (unnumbered, 2026-09-26)
+
+**Snapshot and Commentary announcements now carry a narrow tag beside their global one**, and readers ask for it.
+This is Phase 6, the last phase of docs/AnnouncementIndex.md. Both global tags are shared by every announcement
+in the network, so a capped query under them can miss exactly the Snapshots near the player or the comments on
+one Publication.
+
+- `core/NarrowDiscoveryTags.js`: `forkbuild-commentary:<publicationId>`, and
+  `forkbuild-snapshot:cell:<cx>:<cz>` for a Snapshot's claimed position in 1,000-unit cells.
+- Publishing: the narrow tag rides on the same Nostr event (a second `t` tag) or Arweave transaction.
+  `createArweaveTaggedTransactionUpload()`'s `uploadTaggedTransaction(material, tag, extraTags = [])` signs every
+  tag. The Nostr and Arweave Snapshot publishers add the cell tag when there is a claimed position; both Commentary
+  distributions add the Publication tag. Steem has no tags and is unchanged.
+- Reading:
+  - Commentary `discover(publicationId)` reads both tags on Nostr and Arweave, and returns an event found under
+    both only once.
+  - World View's Snapshot discovery reads the player's cell beside the global tag
+    (`WorldSnapshotDiscoveryMonitor` now passes its spatial context to the command). The background sync reads
+    watched cells in turn. On startup, World View shows the index's 3×3 cells around the player.
+  - The index stores a Snapshot under a cell tag only when its claimed position lies in that cell.
+  - Global tags are still read, so earlier announcements are still found.
+- Tests: `tests/NarrowDiscoveryTags.test.js` covers:
+  - the tag helpers, including negative coordinates and -0;
+  - the Nostr and Arweave Snapshot publishers adding the cell tag only with a position, and the upload signing
+    extra tags;
+  - both Commentary distributions tagging and reading the Publication tag;
+  - the monitor passing its context;
+  - the index refusing a Snapshot filed under the wrong cell.

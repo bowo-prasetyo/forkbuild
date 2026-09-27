@@ -1,4 +1,5 @@
 import { ArweaveContentStore } from '../../../content/ArweaveContentStore.js';
+import { commentaryPublicationTag } from '../../../core/NarrowDiscoveryTags.js';
 import { ContentUnavailableError } from '../../../content/IpfsContentStore.js';
 import { createArweaveTaggedTransactionUpload } from '../../arweave/ArweaveTaggedTransactionUpload.js';
 import { createArweaveTaggedTransactionSearch } from '../../arweave/ArweaveTaggedTransactionSearch.js';
@@ -276,8 +277,11 @@ export class PublicationCommentaryArweaveDistribution {
     async publish(envelopeJson) {
         const material = JSON.stringify(envelopeJson);
         const tag = Object.freeze({ name: this._tagName, value: this._discoveryTag });
+        // Also tagged with its Publication (docs/AnnouncementIndex.md, "Phase 6").
+        const publicationTag = commentaryPublicationTag(envelopeJson && envelopeJson.publicationId);
+        const extraTags = publicationTag ? [Object.freeze({ name: this._tagName, value: publicationTag })] : [];
 
-        const result = await this._upload(material, tag);
+        const result = await this._upload(material, tag, extraTags);
         if (!result) {
             return null;
         }
@@ -307,8 +311,12 @@ export class PublicationCommentaryArweaveDistribution {
     // rejecting) propagates unmodified; a single candidate transaction that
     // is not yet retrievable, or whose bytes fail to parse, is silently
     // skipped instead.
-    async discover() {
-        const candidateIds = await this._search(this._discoveryTag);
+    //
+    // With a publicationId, that Publication's own tag is searched as well, as
+    // one search returns a capped number of transactions.
+    async discover(publicationId = null) {
+        const tags = [this._discoveryTag, commentaryPublicationTag(publicationId)].filter(Boolean);
+        const candidateIds = [...new Set((await Promise.all(tags.map((tag) => this._search(tag)))).flat())];
         const envelopes = [];
         for (const candidateId of candidateIds) {
             let text;
