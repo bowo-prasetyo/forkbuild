@@ -28,7 +28,7 @@ export function composeSnapshotDiscovery({
     roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
     arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime = null,
-    announcementIndex = null
+    announcementIndex = null, publicationContentStore = null
 }) {
     // Every network discovery result is recorded in the Announcement Index, and
     // the index answers beside the network (docs/AnnouncementIndex.md).
@@ -76,7 +76,8 @@ export function composeSnapshotDiscovery({
         discoveryTag: 'forkbuild-snapshot',
         contentHash,
         resolver: snapshotResolver,
-        storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry
+        storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry,
+        localContentStore: publicationContentStore
     });
 
     // Reads Arweave directly: a read-only query needs no signer or wallet.
@@ -145,11 +146,13 @@ export function composeSnapshotDiscovery({
         : null;
 
     // Resolves exactly the selected candidate via resolveCandidate(), through the
-    // same resolution registry.
+    // same resolution registry. Both commands read this device's content store
+    // first, so a Snapshot fetched once is not fetched again.
     const resolveSelectedSnapshotCommand = (candidate) => executeResolveSelectedSnapshotCommand({
         candidate,
         resolver: snapshotResolver,
-        storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry
+        storeRegistry: publicationSnapshotPlacementResolutionStoreRegistry,
+        localContentStore: publicationContentStore
     });
 
     const materializeSnapshotFromSelectedCandidateUseCase = new MaterializeSnapshotFromSelectedCandidateUseCase(storeSnapshotContentUseCase);

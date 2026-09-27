@@ -199,7 +199,7 @@ export class DecentralizedSnapshotResolver {
     // `storeRegistry` — a caller that passed both meant the explicit one.
     // Mirrors application/snapshot/placement/SnapshotPlacementResolver.js#resolve()'s own
     // `{ contentStore, storeRegistry }` option shape exactly.
-    async resolve(discoveryTag, contentHash, { contentStore = null, storeRegistry = null } = {}) {
+    async resolve(discoveryTag, contentHash, { contentStore = null, storeRegistry = null, localContentStore = null } = {}) {
         if (!discoveryTag || typeof discoveryTag !== 'string') {
             throw new Error('DecentralizedSnapshotResolver: resolve() requires a discoveryTag');
         }
@@ -236,7 +236,7 @@ export class DecentralizedSnapshotResolver {
         // `candidates` (the FULL discovered set, not just the one
         // attempted) is overridden on the returned result — every other
         // field is resolveCandidate()'s own, unchanged.
-        const candidateResult = await this.resolveCandidate(selected, { contentStore, storeRegistry });
+        const candidateResult = await this.resolveCandidate(selected, { contentStore, storeRegistry, localContentStore });
         return { ...candidateResult, candidates };
     }
 
@@ -263,7 +263,12 @@ export class DecentralizedSnapshotResolver {
     // violation — a missing/malformed candidate — never for a discovery,
     // store, or network failure; mirrors `resolve()`'s own restraint, one
     // layer over.
-    async resolveCandidate(candidate, { contentStore = null, storeRegistry = null } = {}) {
+    //
+    // `localContentStore` (optional) is this device's own content store,
+    // asked first by content hash: bytes already fetched once are not
+    // fetched again. They are verified like any other bytes, and a miss, a
+    // read failure or a mismatch there falls through to the network.
+    async resolveCandidate(candidate, { contentStore = null, storeRegistry = null, localContentStore = null } = {}) {
         if (!candidate || typeof candidate !== 'object') {
             throw new Error('DecentralizedSnapshotResolver: resolveCandidate() requires a candidate');
         }
@@ -272,6 +277,14 @@ export class DecentralizedSnapshotResolver {
         }
         if (!candidate.locator || typeof candidate.locator !== 'string') {
             throw new Error('DecentralizedSnapshotResolver: resolveCandidate() requires a candidate with a locator');
+        }
+
+        // Built from THIS candidate's own contentHash and locator/storage —
+        // see RETRIEVAL, below. This device's own store looks it up by hash.
+        const reference = new ContentReference({ hash: candidate.contentHash, uri: candidate.locator, storage: candidate.storage });
+        const localBytes = await this._readLocal(localContentStore, reference);
+        if (localBytes !== null) {
+            return this._resolved(candidate, localBytes);
         }
 
         // 2. LOCATION — "the locator can be queried." An explicit
@@ -293,7 +306,6 @@ export class DecentralizedSnapshotResolver {
         // candidate whose declared contentHash disagrees with its own
         // bytes is caught at verification, not silently trusted at this
         // step.
-        const reference = new ContentReference({ hash: candidate.contentHash, uri: candidate.locator, storage: candidate.storage });
         let bytes;
         try {
             bytes = await resolvedStore.get(reference);
@@ -319,7 +331,7 @@ export class DecentralizedSnapshotResolver {
         // verification: a selected locator resolving and genuinely
         // retrieving bytes is never, by itself, treated as proof those
         // bytes are the right ones.
-        if (!reference.verify(bytes)) {
+        if (!this._verifies(reference, bytes)) {
             return this._failure(
                 DecentralizedSnapshotResolutionOutcome.CONTENT_HASH_MISMATCH,
                 'retrieved content does not match the candidate\'s own declared contentHash — selection is not verification',
@@ -328,6 +340,10 @@ export class DecentralizedSnapshotResolver {
             );
         }
 
+        return this._resolved(candidate, bytes);
+    }
+
+    _resolved(candidate, bytes) {
         return {
             outcome: DecentralizedSnapshotResolutionOutcome.RESOLVED,
             bytes,
@@ -336,6 +352,26 @@ export class DecentralizedSnapshotResolver {
             storage: candidate.storage,
             reason: null
         };
+    }
+
+    // The verified bytes for `reference` from this device's own store, or
+    // null when it has none (or none that verify).
+    async _readLocal(localContentStore, reference) {
+        if (!localContentStore || typeof localContentStore.has !== 'function' || typeof localContentStore.get !== 'function') {
+            return null;
+        }
+        try {
+            if (!(await localContentStore.has(reference))) return null;
+            const bytes = await localContentStore.get(reference);
+            return bytes !== null && bytes !== undefined && this._verifies(reference, bytes) ? bytes : null;
+        } catch {
+            return null;
+        }
+    }
+
+    // The one verification rule, for local and retrieved bytes alike.
+    _verifies(reference, bytes) {
+        return reference.verify(bytes);
     }
 
     _failure(outcome, reason, candidates, selected = null) {

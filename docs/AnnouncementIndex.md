@@ -327,7 +327,10 @@ reaches its 2,000-record cap. The tags come from `core/NarrowDiscoveryTags.js`.
 ## Deliberately not in this design
 
 - **Content bytes.** Content is still fetched on demand, and stored where
-  it is today.
+  it is today. A Snapshot already stored on this device is read from there
+  rather than fetched again, and World View fetches only the Snapshots near
+  the player (docs/roadmap/unnumbered-2026-09.md, "Snapshot bytes: read
+  locally first, fetched only nearby").
 - **Ranking or trust decisions.** No announcement is preferred over
   another beyond the size limits.
 - **Deleting a record because its locator no longer answers.** A gateway
