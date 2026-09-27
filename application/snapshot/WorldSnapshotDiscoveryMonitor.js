@@ -126,7 +126,7 @@ export class WorldSnapshotDiscoveryMonitor {
         this.executing = true;
 
         return Promise.resolve()
-            .then(() => this._discoverSnapshotCandidatesCommand())
+            .then(() => this._discoverSnapshotCandidatesCommand(context))
             .then((candidates) => {
                 if (requestId !== this._requestId) {
                     return;

@@ -1272,3 +1272,160 @@ configured more by hand. The Bitcoin endpoint could not hold more than one serve
   a wrapper only for two or more endpoints); `tests/NetworkSettingsSharedForms.test.js` (every list page starts from
   its defaults, won't save them unchanged, and Reset refills them); `tests/SteemReadingSettingsView.test.js` (the same
   for the Steem page); Bitcoin configuration and persistence tests for the list shape.
+
+## Announcement Index: record discovery results and show them first (unnumbered, 2026-09-26)
+
+**Everything discovery finds is now kept on this device, and World View shows it before the network answers.**
+A Nostr or Arweave query returns only the newest 20 announcements for a tag, and Snapshot candidates, Place
+Naming claims and Publication leads were held in memory only. So every visit started from nothing, and an
+announcement pushed out of that newest page was never seen again. docs/AnnouncementIndex.md sets out the whole
+design in six phases; this entry covers Phases 1 and 2.
+
+- `application/announcementIndex/AnnouncementIndex.js` stores records per kind and tag in the same storage as
+  everything else (IndexedDB in the browser). Each record has a key, a payload, the origins that reported it,
+  and first- and last-seen times. It holds at most 2,000 records a tag, dropping the least recently seen, and
+  refuses payloads over 8 KiB. `AnnouncementKinds.js` defines each kind's checks and key. A Place Naming claim's
+  key includes its signature, so a forged copy under a real claim id is kept beside the real claim, never in its
+  place, and a claim must belong to the region tag it is stored under.
+- `IndexedDiscoverySources.js`: every Nostr, Arweave and Steem source of Snapshot candidate and Place Naming
+  discovery is wrapped so its successful results are recorded. Results and failures pass through unchanged, and
+  a failure to record is ignored. The index joins each aggregator as one more source. An empty index reports
+  UNAVAILABLE, never EMPTY, so it cannot turn "every substrate failed" into "nothing was announced". Publication
+  discovery services also return the leads they found before for the same origin, so a lead keeps the origin
+  that decides how its material is fetched.
+- World View, on its first refresh with a position, hands indexed Snapshot candidates to automatic placement and
+  seeds nearby Place Naming claims (`PlaceNamingDiscoveryMonitor#seed()`, which only fills an empty result).
+  Network discovery still runs on the same refresh and replaces the seeded claims.
+- Checked in Chromium on the real app: with a Snapshot candidate saved in the index, opening World View requested
+  its Arweave locator while every relay and gateway was unreachable.
+- Tests: `tests/AnnouncementIndex.test.js` (keys, merging across origins, persistence, limits, each kind's checks,
+  recording being transparent to callers, the Snapshot, Place Naming and Publication paths answering from the
+  index while offline, and seeding). `tests/SnapshotDiscoveryOutcomePresentationClosureAudit.test.js` accepts
+  the wrapped Nostr source in its check of the production wiring.
+
+## Announcement Index: sync cursors (unnumbered, 2026-09-26)
+
+**A sync now pages each substrate until every announcement under a tag has been read**, rather than taking the
+newest 20. This is Phase 3 of docs/AnnouncementIndex.md; nothing runs it on its own yet (Phase 4 adds the
+background scheduler).
+
+- `application/announcementIndex/NostrTagSync.js`: per relay and target, a cursor of the newest and oldest
+  `created_at` read, plus a gap while newer events are still being paged down. The head pages down from the top
+  to `newest`; backfill pages below `oldest`. Only an empty page ends paging, because relays cap page sizes below
+  the requested `limit`. Boundaries are inclusive, so events sharing a boundary's second are read again rather
+  than skipped.
+- `application/announcementIndex/ArweaveTagSync.js`: GraphQL pages sorted `HEIGHT_DESC`, continued with each
+  edge's `cursor`. The head reads down to the previous run's newest ids; backfill resumes from a saved page cursor
+  until `hasNextPage` is false. Bodies are fetched with the existing 48 KiB cap.
+- Each run reads at most five pages of 100 per endpoint, so a large backlog is read over several runs, and a burst
+  of new announcements larger than that is finished on the next run without skipping anything.
+- `AnnouncementSyncTargets.js`: the Snapshot tag and each Place Naming region tag record into the index;
+  `forkbuild-commentary` imports each envelope through `importCommentaryEnvelope()`, which verifies its signature,
+  into the Commentary store. Tag names come from each kind's own reader or publisher. Publication leads are not
+  synced: their tags are typed per search.
+- `AnnouncementSync.js` runs one target on every relay, the Arweave endpoint and Steem at once, and reports each
+  endpoint's outcome; one failing never stops the others.
+- Tests: `tests/AnnouncementSync.test.js`, against a fake relay that pages like a real one (inclusive
+  `since`/`until`, newest first, an optional server-side cap) and a fake GraphQL gateway with edge cursors. It
+  covers a 250-event backfill over several runs, a relay capping pages at 7, a 100-event burst after catching up,
+  15 events in one second across a boundary, Arweave head and backfill, one relay failing while the others
+  succeed, and the Place Naming and Commentary targets.
+
+## Announcement Index: background sync (unnumbered, 2026-09-26)
+
+**The Announcement Index now fills itself in the background**, from the first time World View opens in a session,
+and keeps doing so after it closes. This is Phase 4 of docs/AnnouncementIndex.md. Until now, discovery searched only when World View's player had moved 100 units,
+when a Commentary section opened, or when **Discover** was clicked.
+
+- `application/announcementIndex/BackgroundAnnouncementSync.js` runs the Phase 3 sync 10 s after it starts, then
+  every 5 minutes, or every 30 s while an endpoint is still behind. It skips runs while the tab is hidden, and runs
+  targets one after another. The Snapshot and Commentary tags are synced every run. Place Naming region tags take
+  turns, ten per run.
+- `AnnouncementIndex#watch()` / `watchedTags()`: every discovery search notes its tag, found or not, so the sync
+  keeps reading the regions a player has visited. It keeps the 100 most recent tags, and writes a tag at most
+  once a minute.
+- `ui/main/composeAnnouncementSync.js` wires the scheduler to the configured relays, Arweave gateway and Steem
+  reader. Imported Commentary goes through the existing notification bridge, so a new comment on one of this
+  identity's Publications is announced even when no Commentary section is open.
+- World View subscribes: after each run it re-hands indexed Snapshots to automatic placement, and replaces its
+  nearby Place Naming claims with the index's (`PlaceNamingDiscoveryMonitor#seed(…, { replace: true })`).
+- It starts when World View first opens, not when the app opens: docs/Privacy.md promises that opening the app
+  contacts nothing but the site it is served from.
+- Checked in Chromium on the real app: the Home page made no sync request; about 10 s after World View opened,
+  the sync queried Arweave GraphQL for the Snapshot and Commentary tags, newest first.
+- Two older tests that match source text now allow for the sync: `tests/PublicationCommentaryNostrAsynchronousDistribution.test.js` counts five notification bridge call sites, not four. World View listens through `onSynced()`, so `tests/WorldViewPublicationDistributionIntegration.test.js`'s ban on `.subscribe(` in World View still holds.
+- Tests: `tests/BackgroundAnnouncementSync.test.js` covers:
+  - the first-run delay, the catch-up and regular intervals, and stop;
+  - hidden tabs, and `runNow()` joining a run in progress;
+  - rotation;
+  - a failing run still being rescheduled, and a broken listener not stopping the others;
+  - watched tags and their write throttle;
+  - replacing seeded claims.
+
+## Announcement Index: peers share their index (unnumbered, 2026-09-26)
+
+**Connected peers now share their Announcement Indexes**, so one connection gives a new device every Snapshot and
+Place Naming claim its peer has discovered. This is Phase 5 of docs/AnnouncementIndex.md.
+
+- New peer protocol `forkbuild:announcement-index` (docs/Protocol.md, "Announcement Index exchange").
+  - When a peer authenticates, each side sends a SUMMARY: kind, tag, count and a digest of the record keys per
+    tag, at most 300 tags within one message.
+  - The other side REQUESTs each tag whose digest differs, at most 50 per summary. RESPONSEs carry the payloads,
+    split to fit peer messages.
+- Only Snapshot candidates and Place Naming claims are shared. A Publication lead's origin cannot be vouched for
+  by a peer, and Commentary has its own protocol.
+- Received records pass the index's usual checks and carry the origin `peer:<identityId>`.
+  - A RESPONSE counts only for a tag requested from that peer in the last five minutes.
+  - A peer may add at most 20,000 records an hour.
+  - A Place Naming author may hold at most 100 claims per region tag.
+- `composeAnnouncementSync()` now also builds the exchange, and gives World View one `announcementIndexChanges`
+  signal for both finished syncs and peer records (grouped over one second).
+- docs/Privacy.md: connected peers learn which tags this device holds, including the World regions it has searched
+  for Place Naming.
+- Tests: `tests/AnnouncementIndexPeerExchange.test.js` covers:
+  - two devices on the real in-memory peer network exchanging both ways, without Publication leads;
+  - identical indexes sending only summaries;
+  - a misbehaving peer, where unrequested, expired, over-author-cap and over-hourly-cap records are all refused;
+  - responses split to fit peer messages.
+
+## Announcement Index: narrower tags for Snapshots and Commentary (unnumbered, 2026-09-26)
+
+**Snapshot and Commentary announcements now carry a narrow tag beside their global one**, and readers ask for it.
+This is Phase 6, the last phase of docs/AnnouncementIndex.md. Both global tags are shared by every announcement
+in the network, so a capped query under them can miss exactly the Snapshots near the player or the comments on
+one Publication.
+
+- `core/NarrowDiscoveryTags.js`: `forkbuild-commentary:<publicationId>`, and
+  `forkbuild-snapshot:cell:<cx>:<cz>` for a Snapshot's claimed position in 1,000-unit cells.
+- Publishing: the narrow tag rides on the same Nostr event (a second `t` tag) or Arweave transaction.
+  `createArweaveTaggedTransactionUpload()`'s `uploadTaggedTransaction(material, tag, extraTags = [])` signs every
+  tag. The Nostr and Arweave Snapshot publishers add the cell tag when there is a claimed position; both Commentary
+  distributions add the Publication tag. Steem is unchanged: announcements there are replies to monthly threads,
+  which tag feeds don't list, and readers fetch each thread whole and filter on the device.
+- Reading:
+  - Commentary `discover(publicationId)` reads both tags on Nostr and Arweave, and returns an event found under
+    both only once.
+  - World View's Snapshot discovery reads the player's cell beside the global tag
+    (`WorldSnapshotDiscoveryMonitor` now passes its spatial context to the command). The background sync reads
+    watched cells in turn. On startup, World View shows the index's 3×3 cells around the player.
+  - The index stores a Snapshot under a cell tag only when its claimed position lies in that cell.
+  - Global tags are still read, so earlier announcements are still found.
+- Tests: `tests/NarrowDiscoveryTags.test.js` covers:
+  - the tag helpers, including negative coordinates and -0;
+  - the Nostr and Arweave Snapshot publishers adding the cell tag only with a position, and the upload signing
+    extra tags;
+  - both Commentary distributions tagging and reading the Publication tag;
+  - the monitor passing its context;
+  - the index refusing a Snapshot filed under the wrong cell.
+
+## Announcement Index: background sync starts with the app (unnumbered, 2026-09-27)
+
+**The background announcement sync now starts when the app opens**, whichever page is shown, instead of the first
+time World View opens. It reads only announcements (small pointers and signed claims, at most 48 KiB each), never
+content bytes, and publishes nothing, so starting it early costs little. In return, the index is already fuller
+by the time a player reaches World View.
+
+- `ui/main.js` starts `BackgroundAnnouncementSync` at load; World View no longer starts it.
+- docs/Privacy.md no longer says that opening the app contacts only its own site. It names this one automatic
+  exception, and adds a row for the background sync to the table of servers: which relays, gateway and Steem
+  nodes it queries, and for which tags.

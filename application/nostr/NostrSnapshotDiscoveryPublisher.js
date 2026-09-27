@@ -1,4 +1,5 @@
 import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../../core/SnapshotDiscoveryEnvelope.js';
+import { snapshotCellTag } from '../../core/NarrowDiscoveryTags.js';
 import { withTimeout } from '../../utils/withTimeout.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
@@ -220,9 +221,12 @@ export class NostrSnapshotDiscoveryPublisher {
             return null;
         }
 
+        // A claimed position also gets its map cell's tag, so nearby readers
+        // can ask for just their cells (docs/AnnouncementIndex.md, "Phase 6").
+        const cellTag = snapshotCellTag(described.claimedPosition);
         const eventTemplate = Object.freeze({
             kind: this._kind,
-            tags: [[this._tagName, this._discoveryTag]],
+            tags: [[this._tagName, this._discoveryTag], ...(cellTag ? [[this._tagName, cellTag]] : [])],
             content: JSON.stringify(described)
         });
 

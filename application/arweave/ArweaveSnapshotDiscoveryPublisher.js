@@ -1,4 +1,5 @@
 import { describeSnapshotDiscoveryEnvelope, SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL, SNAPSHOT_DISCOVERY_ENVELOPE_VERSION } from '../../core/SnapshotDiscoveryEnvelope.js';
+import { snapshotCellTag } from '../../core/NarrowDiscoveryTags.js';
 import { withTimeout } from '../../utils/withTimeout.js';
 
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';
@@ -304,8 +305,12 @@ export class ArweaveSnapshotDiscoveryPublisher {
 
         const material = JSON.stringify(described);
         const tag = Object.freeze({ name: this._tagName, value: this._discoveryTag });
+        // A claimed position also gets its map cell's tag, so nearby readers
+        // can ask for just their cells (docs/AnnouncementIndex.md, "Phase 6").
+        const cellTag = snapshotCellTag(described.claimedPosition);
+        const extraTags = cellTag ? [Object.freeze({ name: this._tagName, value: cellTag })] : [];
 
-        const result = await withTimeout(this._uploadTaggedTransaction(material, tag), this._timeoutMs, 'ArweaveSnapshotDiscoveryPublisher: uploadTaggedTransaction timed out');
+        const result = await withTimeout(this._uploadTaggedTransaction(material, tag, extraTags), this._timeoutMs, 'ArweaveSnapshotDiscoveryPublisher: uploadTaggedTransaction timed out');
 
         if (result === null || result === undefined) {
             return null;

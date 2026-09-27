@@ -164,6 +164,7 @@ export function composeSnapshotCandidateDiscoveryRuntime({
     nostrSnapshotDiscoveryQueryService = null,
     arweaveSnapshotDiscoveryQueryService = null,
     steemSnapshotDiscoveryQueryService = null,
+    announcementIndexSource = null,
     placementCatalog
 } = {}) {
     const sources = [];
@@ -175,6 +176,11 @@ export function composeSnapshotCandidateDiscoveryRuntime({
     }
     if (isSearchableSource(steemSnapshotDiscoveryQueryService)) {
         sources.push(steemSnapshotDiscoveryQueryService);
+    }
+    // What earlier searches found (docs/AnnouncementIndex.md), merged and
+    // deduplicated with the network's results like any other source.
+    if (isSearchableSource(announcementIndexSource)) {
+        sources.push(announcementIndexSource);
     }
     sources.push(new LocalSnapshotCandidateDiscoveryQueryService(placementCatalog));
 

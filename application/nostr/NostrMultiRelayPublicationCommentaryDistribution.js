@@ -144,8 +144,8 @@ export class NostrMultiRelayPublicationCommentaryDistribution {
 
     // discover() -> Promise<envelopeJson[]>. See this file's own header for
     // the full contract.
-    async discover() {
-        const settled = await Promise.allSettled(this._distributions.map((distribution) => distribution.discover()));
+    async discover(publicationId = null) {
+        const settled = await Promise.allSettled(this._distributions.map((distribution) => distribution.discover(publicationId)));
 
         const envelopes = [];
         let anyFulfilled = false;

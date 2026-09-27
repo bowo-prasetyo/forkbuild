@@ -304,6 +304,29 @@ written themselves and not yet stored. On open, `forkbuild:` entries still
 in localStorage are moved into IndexedDB. If IndexedDB is missing or does
 not open within 10 seconds, the session uses localStorage.
 
+## Announcement Index
+
+application/announcementIndex/ keeps every announcement this device has
+discovered: Snapshot candidates, Place Naming claims and Publication
+leads, one storage entry per kind and discovery tag
+(`announcement-index:<kind>:<tag>`), at most 2,000 records a tag and 8 KiB
+a payload. Network discovery sources are wrapped so what they return is
+recorded, and the index answers beside them, so an announcement that has
+left a substrate's newest page is still found. World View shows what the
+index holds before the network answers. The index holds pointers and
+claims only; parsing, signature checks and resolving still happen on
+whatever it returns.
+
+- **Sync cursors.** They page each Nostr relay and the Arweave GraphQL
+  endpoint until every announcement under a tag has been read, a few
+  pages per run.
+- **Background sync.** `BackgroundAnnouncementSync` runs the sync in the
+  background from the moment the app opens.
+- **Peers.** The `forkbuild:announcement-index` peer protocol shares
+  Snapshot and Place Naming records between connected peers.
+
+docs/AnnouncementIndex.md has the full design.
+
 ## Documents: save, autosave, publish and fork
 
 A Document moves through three kinds of storage, each with its own

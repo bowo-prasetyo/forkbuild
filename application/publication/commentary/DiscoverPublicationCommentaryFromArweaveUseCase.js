@@ -100,7 +100,7 @@ export class DiscoverPublicationCommentaryFromArweaveUseCase {
         if (!publicationId || typeof publicationId !== 'string') {
             return [];
         }
-        const candidates = await this._arweaveDistribution.discover();
+        const candidates = await this._arweaveDistribution.discover(publicationId);
         const admitted = [];
         for (const candidateJson of candidates) {
             if (!candidateJson || candidateJson.publicationId !== publicationId) {

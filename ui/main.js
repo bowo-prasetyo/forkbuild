@@ -26,6 +26,8 @@ import { CreateIpfsPublicationContentVerifierUseCase } from '../application/ipfs
 import { CreateIpfsPublicationContentVerificationCoordinatorUseCase } from '../application/ipfs/CreateIpfsPublicationContentVerificationCoordinatorUseCase.js';
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
+import { AnnouncementIndex } from '../application/announcementIndex/AnnouncementIndex.js';
+import { composeAnnouncementSync } from './main/composeAnnouncementSync.js';
 import { LocalDiscoveryProvider } from '../discovery/LocalDiscoveryProvider.js';
 import { DecentralizedPublicationDiscoveryProvider } from '../discovery/DecentralizedPublicationDiscoveryProvider.js';
 import { composeRefreshPublicationCommentaryCommand } from '../application/publication/commentary/RefreshPublicationCommentaryCommandComposition.js';
@@ -308,6 +310,9 @@ app.provide('snapshotPeerMaterializationCoordinator', snapshotPeerMaterializatio
 app.provide('snapshotPeerPossessionCoordinator', snapshotPeerPossessionCoordinator);
 app.provide('snapshotMaterializationSelectionCoordinator', snapshotMaterializationSelectionCoordinator);
 
+// Every announcement this device has discovered (docs/AnnouncementIndex.md).
+const announcementIndex = new AnnouncementIndex({ storage: new LocalStorageProvider() });
+
 const {
     worldDiscoveryRuntime, worldEncounterMaterialVerifier, arweaveGatewayConfigurationStore,
     resolvedArweaveGatewayUrl, setArweaveGatewayConfigurationUseCase, setIpfsGatewayConfigurationUseCase,
@@ -320,7 +325,7 @@ const {
     publicationDistributionLifecycleRestorer, retrievePublicationClaim
 } = composeWorldDiscovery({
     peerSessionManager, peerMessageBus, publicationCatalog, ipfsGatewayConfigurationStore,
-    ipfsNodeConfigurationStore, publicationContentStore
+    ipfsNodeConfigurationStore, publicationContentStore, announcementIndex
 });
 // Small Snapshots stored in a Steem post, created and resolved like the
 // Arweave store (docs/Protocol.md, "Proposed: Steem Content Storage").
@@ -460,6 +465,16 @@ const refreshPublicationCommentaryCommand = composeRefreshPublicationCommentaryC
 });
 app.provide('refreshPublicationCommentaryCommand', refreshPublicationCommentaryCommand);
 
+const { backgroundAnnouncementSync, announcementIndexChanges } = composeAnnouncementSync({
+    announcementIndex, nostrRelayQueryClient, resolvedNostrRelayUrls, resolvedArweaveGatewayUrl, steemRuntime,
+    publicationCommentaryDistributionExchange, publicationCommentaryRemoteNotificationBridge,
+    peerMessageBus, connectedPeerRegistry: peerSessionManager.registry
+});
+// Starts with the app: it reads announcements only, never content bytes, so
+// the index is already fuller by the time World View opens (docs/Privacy.md).
+backgroundAnnouncementSync.start();
+app.provide('announcementIndexChanges', announcementIndexChanges);
+
 const {
     arweaveAnnouncementUploadTaggedTransaction, publicationDistributionCommand,
     multiRelayNostrPublicationDistributionCommand, resolveSnapshotDiscoveryPublisher,
@@ -481,12 +496,14 @@ const {
     resolvedContentDistributionProvider, publishPlaceNamingClaimToNostrCommand, discoverSnapshotCommand,
     snapshotCandidateDiscoveryQueryService, discoverSnapshotCandidatesCommand,
     discoverSnapshotCandidatesWithOutcomeCommand, worldSnapshotDiscoveryMonitor,
-    placeNamingDiscoveryQueryService, resolveSelectedSnapshotCommand, materializeSelectedSnapshotCommand
+    placeNamingDiscoveryQueryService, resolveSelectedSnapshotCommand, materializeSelectedSnapshotCommand,
+    discoverIndexedSnapshotCandidatesCommand, indexedPlaceNamingDiscoveryQueryService
 } = composeSnapshotDiscovery({
     publicationSnapshotPlacementCatalog, publicationSnapshotPlacementResolutionStoreRegistry,
     roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
-    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime
+    arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime,
+    announcementIndex
 });
 app.provide('defaultContentDistributionProvider', resolvedContentDistributionProvider);
 app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNostrCommand);
@@ -496,6 +513,8 @@ app.provide('discoverSnapshotCandidatesCommand', discoverSnapshotCandidatesComma
 app.provide('discoverSnapshotCandidatesWithOutcomeCommand', discoverSnapshotCandidatesWithOutcomeCommand);
 app.provide('worldSnapshotDiscoveryMonitor', worldSnapshotDiscoveryMonitor);
 app.provide('placeNamingDiscoveryQueryService', placeNamingDiscoveryQueryService);
+app.provide('discoverIndexedSnapshotCandidatesCommand', discoverIndexedSnapshotCandidatesCommand);
+app.provide('indexedPlaceNamingDiscoveryQueryService', indexedPlaceNamingDiscoveryQueryService);
 app.provide('resolveSelectedSnapshotCommand', resolveSelectedSnapshotCommand);
 app.provide('materializeSelectedSnapshotCommand', materializeSelectedSnapshotCommand);
 

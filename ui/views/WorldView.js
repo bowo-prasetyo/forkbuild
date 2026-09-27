@@ -216,6 +216,11 @@ export default {
         // Only the transport half: the command and position resolver are composed here
         // because only this session holds the World layout.
         const placeNamingDiscoveryQueryService = inject('placeNamingDiscoveryQueryService', null);
+        // Answer from the Announcement Index alone, so World View can show what
+        // earlier searches found before the network answers (docs/AnnouncementIndex.md).
+        const discoverIndexedSnapshotCandidatesCommand = inject('discoverIndexedSnapshotCandidatesCommand', null);
+        const indexedPlaceNamingDiscoveryQueryService = inject('indexedPlaceNamingDiscoveryQueryService', null);
+        const announcementIndexChanges = inject('announcementIndexChanges', null);
         const publishPlaceNamingClaimToNostrCommand = inject('publishPlaceNamingClaimToNostrCommand', null);
         const resolveSelectedSnapshotCommand = inject('resolveSelectedSnapshotCommand', null);
         const materializeSelectedSnapshotCommand = inject('materializeSelectedSnapshotCommand', null);
@@ -401,6 +406,63 @@ export default {
         // Spatial UI refresh
         // -----------------------------------------------------------------
 
+        function handleDiscoveredSnapshotCandidates(candidates) {
+            if (!Array.isArray(candidates)) {
+                return;
+            }
+            candidates.forEach((candidate) => automaticSnapshotEncounterCascade.processCandidate(candidate).then((result) => {
+                // The only place a Snapshot becomes watched for retention; manual
+                // registrations never pass through here.
+                if (result && result.outcome === SnapshotWorldRegistrationOutcome.REGISTERED) {
+                    automaticSnapshotEncounterRetentionReconciliation.noteAutomaticRegistration({
+                        publicationId: result.publicationId,
+                        contentHash: result.contentHash
+                    });
+                }
+                // The only place an observer-local encounter is recorded; only UNPLACED runs
+                // with a usable position carry one.
+                if (result && result.encounter) {
+                    observerLocalEncounterStore.record(result.encounter);
+                }
+            }));
+        }
+
+        // Once per mount, on the first refresh with a position: show what the
+        // Announcement Index already holds without waiting for the network. The
+        // monitors' own network discovery still runs on this same tick, and its
+        // result replaces this one when it arrives.
+        let discoveryPrimedFromIndex = false;
+        // `replace`: after a background sync, show everything the index now
+        // holds rather than only filling an empty result.
+        function primeDiscoveryFromIndex(context, { replace = false } = {}) {
+            if (discoverIndexedSnapshotCandidatesCommand) {
+                discoverIndexedSnapshotCandidatesCommand(context.position).then(handleDiscoveredSnapshotCandidates, () => {});
+            }
+            if (indexedPlaceNamingDiscoveryQueryService && placeNamingDiscoveryMonitor) {
+                const regions = session.getRegions();
+                Promise.all(regions.map((region) => indexedPlaceNamingDiscoveryQueryService.search(
+                    derivePlaceNamingDiscoveryTag(region.worldId, region.id)
+                ))).then((perRegion) => {
+                    if (!placeNamingDiscoveryPresentationActive) {
+                        return;
+                    }
+                    if (placeNamingDiscoveryMonitor.seed(context.position, perRegion.flat(), { replace })) {
+                        nearbyPlaceNamingClaims.value = placeNamingDiscoveryMonitor.lastResult || [];
+                    }
+                }, () => {});
+            }
+        }
+
+        // What a background sync or a peer adds to the index shows here without
+        // waiting for the player to move.
+        const unsubscribeAnnouncementIndexChanges = announcementIndexChanges
+            ? announcementIndexChanges.onChanged(() => {
+                if (discoveryPrimedFromIndex && spatialContext.value) {
+                    primeDiscoveryFromIndex(spatialContext.value, { replace: true });
+                }
+            })
+            : () => {};
+
         function refreshSpatialUI() {
             const state = session.getSpatialState();
             const docs = session.getLoadedDocuments();
@@ -430,26 +492,14 @@ export default {
             // Re-feeding an unchanged result is harmless: the cascade is idempotent per
             // publicationId:contentHash. Never awaited; a registration becomes visible
             // through the canvas's normal rendering.
+            if (spatialContext.value && !discoveryPrimedFromIndex) {
+                discoveryPrimedFromIndex = true;
+                primeDiscoveryFromIndex(spatialContext.value);
+            }
+
             if (worldSnapshotDiscoveryMonitor && spatialContext.value) {
                 worldSnapshotDiscoveryMonitor.observe(spatialContext.value).then(() => {
-                    const candidates = worldSnapshotDiscoveryMonitor.lastResult;
-                    if (Array.isArray(candidates)) {
-                        candidates.forEach((candidate) => automaticSnapshotEncounterCascade.processCandidate(candidate).then((result) => {
-                            // The only place a Snapshot becomes watched for retention; manual
-                            // registrations never pass through here.
-                            if (result && result.outcome === SnapshotWorldRegistrationOutcome.REGISTERED) {
-                                automaticSnapshotEncounterRetentionReconciliation.noteAutomaticRegistration({
-                                    publicationId: result.publicationId,
-                                    contentHash: result.contentHash
-                                });
-                            }
-                            // The only place an observer-local encounter is recorded; only UNPLACED runs
-                            // with a usable position carry one.
-                            if (result && result.encounter) {
-                                observerLocalEncounterStore.record(result.encounter);
-                            }
-                        }));
-                    }
+                    handleDiscoveredSnapshotCandidates(worldSnapshotDiscoveryMonitor.lastResult);
                 });
             }
 
@@ -884,6 +934,7 @@ export default {
             // sees a dead session at its registration checkpoint.
             automaticCascadeSessionActive = false;
             placeNamingDiscoveryPresentationActive = false;
+            unsubscribeAnnouncementIndexChanges();
             if (placeNamingDiscoveryMonitor) {
                 placeNamingDiscoveryMonitor.dispose();
             }

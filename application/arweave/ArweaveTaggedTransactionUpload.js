@@ -175,20 +175,22 @@ export function createArweaveTaggedTransactionUpload({
         ? maxResponseBytes
         : DEFAULT_MAX_RESPONSE_BYTES;
 
-    // uploadTaggedTransaction(material, tag) -> Promise<{ id } | null>. See
-    // this file's own header for the full contract.
-    async function uploadTaggedTransaction(material, tag) {
+    // uploadTaggedTransaction(material, tag, extraTags = []) -> Promise<{ id }
+    // | null>. See this file's own header for the full contract. `extraTags`
+    // are further { name, value } tags on the same transaction, such as a
+    // narrower discovery tag (docs/AnnouncementIndex.md, "Phase 6").
+    async function uploadTaggedTransaction(material, tag, extraTags = []) {
         if (typeof material !== 'string' || material.length === 0) {
             return null;
         }
         if (byteLength(material) > maxMaterial) {
             return null;
         }
-        if (!isWellFormedTag(tag)) {
+        if (!isWellFormedTag(tag) || !Array.isArray(extraTags) || !extraTags.every(isWellFormedTag)) {
             return null;
         }
 
-        const signed = await signer.sign(material, [{ name: tag.name, value: tag.value }]);
+        const signed = await signer.sign(material, [tag, ...extraTags].map(({ name, value }) => ({ name, value })));
         const id = signed && signed.id;
         if (typeof id !== 'string' || !TRANSACTION_ID_PATTERN.test(id)) {
             throw new Error('createArweaveTaggedTransactionUpload: signer resolved with no valid transaction id');

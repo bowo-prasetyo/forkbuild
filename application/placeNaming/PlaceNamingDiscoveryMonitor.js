@@ -280,6 +280,20 @@ export class PlaceNamingDiscoveryMonitor {
     // performed." Never mutates an envelope; produces a fresh plain object
     // per entry. A non-array `envelopes` degrades to `[]`, mirroring every
     // other aggregation boundary in this codebase.
+    // Shows claims already known (the Announcement Index) without a network
+    // search. It never counts as an observation, so the next network search
+    // still runs. By default it only fills an empty result, for the first
+    // display before the network answers; `replace` is for after a background
+    // sync, when the index holds everything a network search would return and
+    // more. Returns whether it changed the result.
+    seed(position, envelopes, { replace = false } = {}) {
+        if (this._disposed || (!replace && this.lastResult !== null) || !Array.isArray(envelopes)) {
+            return false;
+        }
+        this.lastResult = this._selectNearby(this._attachPositions(envelopes), position, this._proximityRadius);
+        return true;
+    }
+
     _attachPositions(envelopes) {
         if (!Array.isArray(envelopes)) {
             return [];
