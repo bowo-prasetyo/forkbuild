@@ -567,6 +567,7 @@ export default {
                 description: document.metadata.description || '',
                 author: document.metadata.author,
                 license: document.metadata.license,
+                placementPolicy: document.metadata.placementPolicy,
                 parentDocumentId: document.metadata.parentDocumentId,
                 parentStructureId: document.metadata.parentStructureId,
                 status,
@@ -638,8 +639,8 @@ export default {
             });
         }
 
-        function onSaveMetadata({ title, description, license }) {
-            updateDocumentMetadataUseCase.execute(documentManager, { title, description, license });
+        function onSaveMetadata({ title, description, license, placementPolicy }) {
+            updateDocumentMetadataUseCase.execute(documentManager, { title, description, license, placementPolicy });
             showMetadataEditor.value = false;
             feedback.show('Updated document properties');
         }

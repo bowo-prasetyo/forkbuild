@@ -13,6 +13,16 @@ publication be placed in more than one location.
 
 [Full text](history/0.1-0.2.md#a-publication-is-what-a-placement-is-where-0223)
 
+### A Publisher Decides Who May Place Their Publication (2026-09-27)
+
+A publisher may allow only their own placements of a Publication. The
+choice is signed inside the Publication, and is honored when a placement
+is created, merged from a peer, or accepted from a claim. An unknown value
+reads as restrictive. Like a license's fork permission, it binds honest
+software, not a modified client.
+
+[Full text](history/0.9.md#a-publisher-decides-who-may-place-their-publication-2026-09-27)
+
 ### Moving A Placement Is Not Editing A Document (0.2.23)
 
 Repositioning a published world never forks the Publication and never

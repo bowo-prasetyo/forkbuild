@@ -79,7 +79,8 @@ deserializing and serializing again gives byte-identical JSON):
       metadata: {
         title, description, author, authorIdentityId, created, modified,
         protocolVersion, engineVersion, parentDocumentId, parentStructureId,
-        license: { id, attribution }
+        license: { id, attribution },
+        placementPolicy                                              // optional, see below
       }
     }
 
@@ -90,7 +91,9 @@ deserializing and serializing again gives byte-identical JSON):
 - A StructurePlacement references another Document by id and never
   copies its bricks.
 - Fields added after a document was written are optional and read with a
-  default (`description` as `''`, arrays as `[]`, `color` as `null`).
+  default (`description` as `''`, arrays as `[]`, `color` as `null`,
+  `placementPolicy` as `'anyone'`). `placementPolicy` is written only when
+  it isn't `'anyone'`, so documents that never set it hash as before.
 - The content hash of a document is serializer/contentHash.js over the
   canonical JSON (FNV-1a, 32-bit, hex). `core/ContentReference.js`
   records the algorithm (`fnv1a-32` today), so a stronger hash can be
@@ -169,9 +172,19 @@ A Publication (publisher/Publication.js) is pure data about one publish:
 
     { id, documentId, title, author, providerId, publishedAt, url,
       parentDocumentId, snapshotId, contentHash, schemaVersion,
-      license, contentReference, publisherIdentity, signature }
+      license, contentReference, publisherIdentity, placementPolicy,
+      signature }
 
     contentReference: { hash, algorithm, mediaType, size, uri, storage }
+
+`placementPolicy` (core/PlacementPolicy.js) is who may place the
+Publication in shared space: absent means `'anyone'`, and
+`'publisher-only'` means only the identity in `publisherIdentity` (or, for
+an unsigned legacy Publication, the same `author` name). It is copied from
+the document's metadata at publish time and is present in the record, and in
+the signed payload, only when it isn't `'anyone'`, so Publications without it
+keep their signatures. A receiver treats any value it doesn't recognize as
+`'publisher-only'`.
 
 Local storage keys (through a StorageProvider):
 
@@ -220,7 +233,10 @@ A published world's position in shared space is a PlacementRecord
 Each move creates a new revision with a new signature and an advanced
 `causalStamp` (a vector clock, `{ version, clock: { did:key → integer } }`);
 earlier revisions keep their own signatures. `causalStamp` and `parents`
-are inside the signed envelope. The spatial-index formats
+are inside the signed envelope. A PlacementRecord whose Publication is
+`'publisher-only'` is valid only when signed by the publisher: a replica
+refuses to create any other, and ReplicaMergeService rejects one received
+from a peer (reason `PLACEMENT_POLICY`) when it knows the Publication. The spatial-index formats
 (SpatialCell, SpatialIndexManifest, SpatialIndexRoot) and Delegation
 records are defined in core/ but not produced by the running app.
 

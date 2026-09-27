@@ -1,6 +1,7 @@
 import { VERSION } from './version.js';
 import { PROTOCOL_VERSION } from './protocolVersion.js';
 import { License } from './License.js';
+import { PlacementPolicy } from './PlacementPolicy.js';
 
 const DEFAULT_ENGINE_VERSION = `${VERSION.major}.${VERSION.minor}.${VERSION.patch}`;
 
@@ -61,7 +62,10 @@ export class DocumentMetadata {
         // Identity Fact, Never A Free-Text Label, When One Is
         // Available (0.2.95)."
         authorIdentityId = null,
-        license = null
+        license = null,
+        // Copied onto the signed Publication at publish time. Stored only when
+        // it isn't the default, so older documents keep their content hash.
+        placementPolicy = PlacementPolicy.ANYONE
     } = {}) {
         this._title = title;
         this._description = description;
@@ -74,6 +78,7 @@ export class DocumentMetadata {
         this._parentStructureId = parentStructureId;
         this._authorIdentityId = authorIdentityId || null;
         this._license = license instanceof License ? license : (license ? License.fromJSON(license) : new License());
+        this._placementPolicy = placementPolicy || PlacementPolicy.ANYONE;
     }
 
     get title() { return this._title; }
@@ -87,6 +92,7 @@ export class DocumentMetadata {
     get parentDocumentId() { return this._parentDocumentId; }
     get parentStructureId() { return this._parentStructureId; }
     get license() { return this._license; }
+    get placementPolicy() { return this._placementPolicy; }
 
     // 0.2.21: title/description become directly editable (Document
     // Properties UI) — same "value object with a few narrow, explicit
@@ -99,6 +105,7 @@ export class DocumentMetadata {
     set title(t) { this._title = t; }
     set description(d) { this._description = d; }
     set license(l) { this._license = l instanceof License ? l : new License(); }
+    set placementPolicy(p) { this._placementPolicy = p || PlacementPolicy.ANYONE; }
 
     touch() {
         this._modified = new Date();
@@ -116,7 +123,8 @@ export class DocumentMetadata {
             parentDocumentId: this._parentDocumentId,
             parentStructureId: this._parentStructureId,
             authorIdentityId: this._authorIdentityId,
-            license: this._license.toJSON()
+            license: this._license.toJSON(),
+            ...(this._placementPolicy !== PlacementPolicy.ANYONE ? { placementPolicy: this._placementPolicy } : {})
         };
     }
 
@@ -143,7 +151,8 @@ export class DocumentMetadata {
             // same tolerant-default treatment; see the constructor's
             // own 0.2.95 comment for what reading `null` here means.
             authorIdentityId: json.authorIdentityId || null,
-            license: json.license ? License.fromJSON(json.license) : null
+            license: json.license ? License.fromJSON(json.license) : null,
+            placementPolicy: json.placementPolicy || PlacementPolicy.ANYONE
         });
     }
 }

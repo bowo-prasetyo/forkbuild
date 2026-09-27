@@ -23,11 +23,15 @@ import { ReplayGuard } from '../../replication/ReplayGuard.js';
 // As of 0.2.19, a ReplayGuard is wired by default (pass `replayGuard:
 // null` to opt out) so repeatedly-seen objects skip re-verification
 // cheaply — see replication/ReplayGuard.js and identity/TrustPolicy.js.
+//
+// Pass `findPublicationById` so placements that break their Publication's
+// placement policy (core/PlacementPolicy.js) are rejected at merge.
 export class CreateReplicationUseCase {
     execute(storageProvider, placementRegistry, {
         spatialIndexBuilder = null,
         indexAuthorityIdentity = null,
-        replayGuard = new ReplayGuard()
+        replayGuard = new ReplayGuard(),
+        findPublicationById = null
     } = {}) {
         const replicationStore = new LocalReplicationStore(storageProvider);
         const resolver = new ConflictResolver();
@@ -41,7 +45,8 @@ export class CreateReplicationUseCase {
             registry: placementRegistry,
             replicationStore,
             spatialIndexBuilder,
-            replayGuard
+            replayGuard,
+            findPublicationById
         });
 
         return {

@@ -2,6 +2,9 @@ import { WorldPlacement } from '../../core/WorldPlacement.js';
 import { SpatialBounds } from '../../core/SpatialBounds.js';
 import { PlacementRecord } from '../../core/PlacementRecord.js';
 import { CausalStamp } from '../../core/CausalStamp.js';
+import {
+    evaluatePlacementPermission, placementPolicyOf, PlacementPolicy, PlacementPermissionReason, PlacementNotPermittedError
+} from '../../core/PlacementPolicy.js';
 
 // Creates a WorldPlacement and a PlacementRecord for a published document.
 //
@@ -44,6 +47,10 @@ export class PlacePublicationUseCase {
         const publication = this._discoveryProvider.findById(publicationId);
         if (!publication) {
             throw new Error(`PlacePublicationUseCase: publication ${publicationId} not found`);
+        }
+        const permission = this.checkPermission(publication);
+        if (!permission.allowed) {
+            throw new PlacementNotPermittedError(publicationId, permission.reason);
         }
 
         let bounds = options.bounds;
@@ -140,5 +147,37 @@ export class PlacePublicationUseCase {
 			}
         }
         return placement;
+    }
+
+    // Whether the current user may place `publication` (a Publication or its
+    // id), so a UI can explain a refusal before anyone clicks. The current
+    // identity is only looked up when the publisher restricted placement.
+    checkPermission(publication) {
+        const resolved = typeof publication === 'string'
+            ? this._discoveryProvider.findById(publication)
+            : publication;
+        if (!resolved || placementPolicyOf(resolved) === PlacementPolicy.ANYONE) {
+            return { allowed: true, reason: PlacementPermissionReason.ALLOWED };
+        }
+        return evaluatePlacementPermission(resolved, this._currentPlacer());
+    }
+
+    // Who would sign the placement: the same identity the record below is
+    // signed with, or just the display name when there is no signing key.
+    _currentPlacer() {
+        const provider = this._identityProvider;
+        const user = provider ? provider.currentUser() : null;
+        if (!user) {
+            return {};
+        }
+        let identity = null;
+        if (typeof provider.getSigningIdentity === 'function' && typeof provider.signCanonical === 'function') {
+            try {
+                identity = provider.getSigningIdentity();
+            } catch (err) {
+                // No usable key (locked or revoked): fall back to the display name.
+            }
+        }
+        return { identityId: identity ? identity.id : null, username: user.username || null };
     }
 }

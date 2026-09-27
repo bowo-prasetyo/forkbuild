@@ -43,7 +43,7 @@ export class DocumentCloneService {
     // caller of this method is a fork/duplicate, which always passes
     // its own resolved value or `null`) — never silently defaults to
     // undefined the way a forgotten field would.
-    execute(sourceDocument, { title = null, description = undefined, author = undefined, authorIdentityId = undefined, parentDocumentId = undefined, license = undefined, eventBus = null } = {}) {
+    execute(sourceDocument, { title = null, description = undefined, author = undefined, authorIdentityId = undefined, parentDocumentId = undefined, license = undefined, placementPolicy = undefined, eventBus = null } = {}) {
         if (!sourceDocument) throw new Error('DocumentCloneService: no source document');
 
         const worldJson = sourceDocument.world.toJSON();
@@ -88,7 +88,10 @@ export class DocumentCloneService {
             created: new Date(),
             modified: new Date(),
             parentDocumentId: parentDocumentId === undefined ? sourceDocument.world.id : parentDocumentId,
-            license: nextLicense
+            license: nextLicense,
+            // Not inherited: who may place a publication is its publisher's
+            // choice, so a fork's author starts from the default.
+            placementPolicy
         });
         return new Document({ world: clonedWorld, metadata });
     }

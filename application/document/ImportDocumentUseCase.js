@@ -39,6 +39,7 @@ export class ImportDocumentUseCase {
             author: sourceDocument.metadata.author,
             authorIdentityId: sourceDocument.metadata.authorIdentityId,
             license: sourceDocument.metadata.license,
+            placementPolicy: sourceDocument.metadata.placementPolicy,
             // An imported document is not a fork of anything that exists
             // on THIS device — the source's own world.id names a document
             // that lives (if anywhere) on a different device's storage.

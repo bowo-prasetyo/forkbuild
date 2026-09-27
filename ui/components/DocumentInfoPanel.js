@@ -1,4 +1,5 @@
 import { describeLicense } from '../../application/document/LicenseLabels.js';
+import { describePlacementPolicy } from '../../application/document/PlacementPolicyLabels.js';
 import { LifecycleStatus } from '../../application/document/DocumentLifecycleStatus.js';
 
 // 0.2.21: the "Document Information" panel from the milestone design
@@ -34,6 +35,9 @@ export default {
     },
     emits: ['edit-metadata'],
     methods: {
+        placementPolicyLabel(policy) {
+            return describePlacementPolicy(policy || 'anyone');
+        },
         licenseLabel(license) {
             return describeLicense(license ? license.id : null);
         },
@@ -82,6 +86,10 @@ export default {
             <div class="info-row">
                 <span class="info-label">License</span>
                 <span class="info-value">{{ licenseLabel(info.license) }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Placement</span>
+                <span class="info-value">{{ placementPolicyLabel(info.placementPolicy) }}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Status</span>
