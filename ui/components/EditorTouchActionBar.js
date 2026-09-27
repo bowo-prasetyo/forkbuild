@@ -1,6 +1,7 @@
 // The Editor's touch-screen stand-ins for keys a phone lacks: Undo, Redo,
-// Rotate, Delete, a Multi-select toggle (a tap then acts as Ctrl-click), and the
-// Command Palette, which reaches every other action. Each runs the same
+// Rotate, Delete, a Multi-select toggle (a tap then acts as Ctrl-click), a Box
+// toggle (a drag then draws the Shift-drag marquee), and the Command Palette,
+// which reaches every other action. Each runs the same
 // EditorActionRegistry action as its shortcut, with the same enabled rules.
 const ACTIONS = Object.freeze({
     undo: 'history.undo',
@@ -16,10 +17,11 @@ export default {
         registry: { type: Object, required: true },
         getContext: { type: Function, required: true },
         multiSelect: { type: Boolean, default: false },
+        boxSelect: { type: Boolean, default: false },
         // While placing, Rotate turns the piece being placed (the R key there).
         placing: { type: Boolean, default: false }
     },
-    emits: ['run', 'rotate-placement', 'toggle-multi-select'],
+    emits: ['run', 'rotate-placement', 'toggle-multi-select', 'toggle-box-select'],
     computed: {
         context() {
             return this.getContext();
@@ -53,6 +55,12 @@ export default {
                 :aria-pressed="multiSelect ? 'true' : 'false'"
                 @click="$emit('toggle-multi-select')"
             >Multi</button>
+            <button
+                type="button"
+                :class="['editor-touch-btn', { 'editor-touch-btn--active': boxSelect }]"
+                :aria-pressed="boxSelect ? 'true' : 'false'"
+                @click="$emit('toggle-box-select')"
+            >Box</button>
             <button type="button" class="editor-touch-btn" @click="run('palette')">More</button>
         </div>
     `

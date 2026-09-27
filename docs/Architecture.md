@@ -159,6 +159,8 @@ docs/CapabilityMatrix.md for exactly what each surface may do.
   until it lifts, drops it if it moved or a second finger joined (the
   camera's orbit, pan or pinch), and otherwise replays it as a hover,
   press and release at the lift point, so tools need no touch handling.
+  In touch Box-select mode a one-finger drag is the same marquee as
+  Shift-drag, with the camera controls off while it is drawn.
 - **Commands and history.** Every document change is a Command executed
   through CommandHistory (application/editor/CommandHistory.js): a linear
   history where executing after an undo clears redo. Commands carry an
@@ -705,7 +707,8 @@ who you are, what your avatar looks like, and where it is right now.
   (application/avatar/TouchMovementInput.js) turns World View's joystick
   (core/TouchJoystickKeys.js) and buttons into the session's
   avatarKeyDown/avatarKeyUp calls, holding each button for at least one
-  frame's sampling. PresenceSyncService
+  frame's sampling. Its Cruise button sends the Alt+W chords, choosing the
+  next one from avatarContinuousMovementState(). PresenceSyncService
   broadcasts it as a core/AvatarPresenceAdvertisement.js, signed when the
   identity provider can sign (PresenceSigning), through a
   presence/ broadcast provider: PeerAvatarPresenceBroadcastProvider over

@@ -1,8 +1,11 @@
 // World view template: the prompts, dialogs and panels that open over the World.
 // It renders in WorldView's scope, so it uses the names its setup() returns.
 export const dialogsTemplate = `<ActionFeedback :message="feedbackMessage" :visible="feedbackVisible" />
-            <VehicleInteractionPrompt :state="vehicleInteractionState" :store-state="storeInteractionState" />
-            <AnimalInteractionPrompt :state="animalInteractionState" />
+            <!-- Keyboard hints; the touch pad's own buttons replace them. -->
+            <template v-if="!touchPadVisible">
+                <VehicleInteractionPrompt :state="vehicleInteractionState" :store-state="storeInteractionState" />
+                <AnimalInteractionPrompt :state="animalInteractionState" :decoration-state="decorationInteractionState" />
+            </template>
             <MetadataEditorDialog
                 v-if="showMetadataEditor"
                 :info="metadataEditTarget"

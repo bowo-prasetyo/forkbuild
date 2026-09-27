@@ -70,7 +70,7 @@
     justify-content: flex-end;
     align-items: flex-end;
     gap: 0.5rem;
-    max-width: 50%;
+    max-width: calc(100% - 128px - 1rem);
 }
 
 .touch-pad-btn {
@@ -84,10 +84,32 @@
     font-size: 0.9rem;
     font-weight: 600;
     font-family: inherit;
+    white-space: nowrap;
+}
+
+.touch-pad-group {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.touch-pad-btn--small {
+    min-width: 44px;
+    padding: 0;
+}
+
+.touch-pad-btn-detail {
+    margin-left: 0.35rem;
+    font-weight: 400;
+    opacity: 0.8;
 }
 
 .touch-pad-btn:active {
     background: rgba(76, 175, 125, 0.6);
+}
+
+.touch-pad-btn--active {
+    background: rgba(58, 110, 165, 0.85);
+    border-color: rgba(255, 255, 255, 0.6);
 }
 
 .touch-pad-btn--primary {
@@ -118,25 +140,27 @@
     transform: translateX(-50%);
     z-index: 20;
     display: flex;
-    gap: 0.25rem;
+    gap: 0.2rem;
     max-width: calc(100% - 1rem);
     overflow-x: auto;
-    padding: 0.35rem;
+    padding: 0.3rem;
     border-radius: 8px;
     background: rgba(18, 18, 18, 0.85);
     border: 1px solid #2a2a2a;
 }
 
+/* Narrow enough for all seven to fit a 360px-wide phone; the bar scrolls
+   sideways on anything narrower. */
 .editor-touch-btn {
     flex: none;
-    min-width: 44px;
+    min-width: 38px;
     min-height: 44px;
-    padding: 0 0.5rem;
+    padding: 0 0.3rem;
     border-radius: 6px;
     border: 1px solid #3a3a3a;
     background: #1f1f1f;
     color: #e0e0e0;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-family: inherit;
 }
 
@@ -305,7 +329,8 @@
         bottom: 0;
         left: 0;
         z-index: 30;
-        width: min(85vw, 320px);
+        /* Leaves room for the Hide Tools button at the top right. */
+        width: min(320px, calc(100% - 7rem));
         box-shadow: 4px 0 16px rgba(0, 0, 0, 0.5);
     }
 

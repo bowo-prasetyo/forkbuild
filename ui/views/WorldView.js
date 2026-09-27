@@ -309,6 +309,8 @@ export default {
         const vehicleInteractionState = ref(null);
         const storeInteractionState = ref(null);
         const animalInteractionState = ref(null);
+        const decorationInteractionState = ref(null);
+        const cruiseState = ref(null);
         // null means the free orbit camera.
         const cameraPerspective = ref(null);
         // Not gated on having an avatar (docs/Principles.md, "Watching Presence Never
@@ -868,8 +870,17 @@ export default {
         const touchInput = useMediaQuery(TOUCH_INPUT_QUERY);
         const compactLayout = useMediaQuery(COMPACT_LAYOUT_QUERY);
         const panelOpen = ref(!compactLayout.value);
+        const touchPadVisible = computed(() => touchInput.value && hasLocalAvatar.value && avatarControlMode.value);
         function togglePanel() {
             panelOpen.value = !panelOpen.value;
+        }
+
+        // The touch pad's Decorate: the same action as 'G', but through guarded() so a
+        // refusal (not signed in, no edit access) is shown instead of ignored.
+        function toggleAnimalDecoration() {
+            guarded(() => session.toggleNearestAnimalDecorationHere());
+            decorationInteractionState.value = session.animalDecorationInteractionState();
+            refreshSpatialUI();
         }
 
         const {
@@ -937,6 +948,12 @@ export default {
                 animalInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.avatarAnimalInteractionState()
                     : null;
+                decorationInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value)
+                    ? session.animalDecorationInteractionState()
+                    : null;
+                cruiseState.value = (hasLocalAvatar.value && avatarControlMode.value)
+                    ? session.avatarContinuousMovementState()
+                    : null;
             }, 150);
         });
 
@@ -981,6 +998,9 @@ export default {
             vehicleInteractionState,
             storeInteractionState,
             animalInteractionState,
+            decorationInteractionState,
+            toggleAnimalDecoration,
+            cruiseState,
             cameraPerspective,
             CameraPerspective,
             setCameraPerspective,
@@ -990,6 +1010,7 @@ export default {
             pressAvatarKey,
             releaseAvatarKey,
             touchInput,
+            touchPadVisible,
             panelOpen,
             togglePanel,
             toggleFollowAvatar,
@@ -1310,12 +1331,15 @@ export default {
             ${dialogsTemplate}
             ${navigationHudSectionTemplate}
             <TouchMovementPad
-                v-if="touchInput && hasLocalAvatar && avatarControlMode"
+                v-if="touchPadVisible"
                 :vehicle-state="vehicleInteractionState"
                 :store-state="storeInteractionState"
                 :animal-state="animalInteractionState"
+                :decoration-state="decorationInteractionState"
+                :cruise-state="cruiseState"
                 @key-down="pressAvatarKey"
                 @key-up="releaseAvatarKey"
+                @decorate="toggleAnimalDecoration"
             />
             <button
                 v-if="touchInput && hasLocalAvatar"

@@ -240,10 +240,12 @@ export default {
                         :registry="actionRegistry"
                         :get-context="getActionContext"
                         :multi-select="touchMultiSelect"
+                        :box-select="touchBoxSelect"
                         :placing="PLACING_TOOLS.has(activeTool)"
                         @run="runTouchAction"
                         @rotate-placement="rotateTouchPlacement"
                         @toggle-multi-select="toggleTouchMultiSelect"
+                        @toggle-box-select="toggleTouchBoxSelect"
                     />
                     <div
                         v-if="marqueeRect"
@@ -702,6 +704,16 @@ export default {
             touchMultiSelect.value = !touchMultiSelect.value;
             editorSession.setTouchMultiSelect(touchMultiSelect.value);
         }
+        // While on, a one-finger drag draws a selection box and the camera stays still.
+        const touchBoxSelect = ref(false);
+        function toggleTouchBoxSelect() {
+            touchBoxSelect.value = !touchBoxSelect.value;
+            editorSession.setTouchBoxSelect(touchBoxSelect.value);
+            if (!touchBoxSelect.value && editorSession.cancelMarquee()) {
+                updateMarqueeRect();
+            }
+            feedback.show(touchBoxSelect.value ? 'Box on — drag to select' : 'Box off');
+        }
         function runTouchAction(id) {
             actionRegistry.execute(id, getActionContext());
             refreshSelectedPlacementInfo();
@@ -867,6 +879,7 @@ export default {
             window.addEventListener('pointerup', onPointerUp);
             onPointerCancel = (event) => {
                 editorSession.onPointerCancel(event);
+                updateMarqueeRect();
             };
             window.addEventListener('pointercancel', onPointerCancel);
 
@@ -1012,6 +1025,8 @@ export default {
             sidebarOpen,
             touchMultiSelect,
             toggleTouchMultiSelect,
+            touchBoxSelect,
+            toggleTouchBoxSelect,
             runTouchAction,
             rotateTouchPlacement,
             PLACING_TOOLS,

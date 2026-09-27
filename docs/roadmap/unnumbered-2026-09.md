@@ -1469,3 +1469,68 @@ layout at any width, so the nav, the World View panel and the Editor sidebar cov
   a click, drags and two-finger touches never reaching the tools, stale pointer ids, pointercancel, Multi-select
   and gizmo drags by touch, and that mouse input is unchanged. `tests/PlacementPreviewUX.test.js` now checks that a
   turn made before any hover carries into the next preview.
+
+## Phones and tablets: stored-vehicle cycling and animal decoration by touch (unnumbered, 2026-09-27)
+
+**The touch pad can now choose which stored vehicle to deploy and decorate a World with an animal**, two of the
+four keyboard actions the first touch release left out. Desktop gets a prompt for `G`, which had none.
+
+- `ui/components/avatarInteractionLabels.js` formats the store/deploy and decoration states the session already
+  resolves, for both the keyboard prompts and the pad, so they show the same actions under the same conditions.
+  The vehicle and species names moved here from the two prompt components.
+- Cycling: with two or more vehicles carried, **‹** and **›** beside **Deploy** press `[` and `]`. Deploy names the
+  selected vehicle and its place in the list ("Deploy Car 2/3").
+- Decoration: World View now polls `animalDecorationInteractionState()` with the other interaction states.
+  - The pad shows **Decorate** or **Undo Decoration**.
+  - `AnimalInteractionPrompt` shows "[G] Decorate with <Species>" or "[G] Undo <Species> Decoration".
+  - The button does not press `G`: the session's `G` ignores a refusal (not signed in, no EDIT access) on purpose,
+    which suits a stray key press but leaves a tapped button doing nothing. The button runs
+    `toggleNearestAnimalDecorationHere()` through World View's `guarded()`, which shows the reason, and the fork
+    notice when decorating made an editable copy.
+- The keyboard prompts are hidden while the touch pad shows, since the pad's buttons replace them; before, they
+  overlapped the pad.
+- Hands-free continuous movement and Editor box selection still have no touch control; they are next.
+- Tests: `tests/AvatarInteractionLabels.test.js` covers store vs deploy, the position shown only with several
+  vehicles, no cycling while riding, decorate winning a tie as `G` does, and fallback names.
+
+## Phones and tablets: hands-free Cruise (unnumbered, 2026-09-27)
+
+**The touch pad has a Cruise button for the hands-free walk and run** that `Alt` + `W` starts on a keyboard, so a
+player can travel without holding the joystick.
+
+- Each tap takes the next step: walk forward, then run, then stop. The button sends the keyboard's own chords
+  (`Alt`+`W`, `Alt`+`Shift`+`W`, then a plain `W`, which ends any hands-free movement) through
+  `avatarKeyDown`/`avatarKeyUp`, so the continuous-movement rules stay in the session alone. `cruiseChord()` in
+  `application/avatar/TouchMovementInput.js` picks the chord; `pressChord()` sends it at once (a chord is read on
+  keydown and needs no minimum hold), without releasing a W or Shift the joystick is holding.
+- `WorldNavigationSession#avatarContinuousMovementState()` reads the current intent and mode, which World View
+  polls with the other interaction states so the button shows **Cruise: Walk**, **Cruise: Run** or, for a backward
+  cruise started from a keyboard, **Cruise: Back**.
+- As on a keyboard, pushing the joystick forward or back stops a cruise, and pushing it sideways steers it.
+- Tests:
+  - `tests/TouchCruiseIntegration.test.js` drives a real `WorldNavigationSession` through walk, run and stop,
+    checks that the joystick turns without stopping and stops when pushed forward, and that there is no state
+    without an avatar.
+  - `tests/TouchMovementInput.test.js` adds the chord for each state, and a chord's order and its respect for
+    keys the joystick holds.
+
+## Phones and tablets: box selection by touch (unnumbered, 2026-09-27)
+
+**The Editor's touch bar has a Box button, the touch form of the Shift-drag marquee**, the last of the four
+keyboard-only actions the first touch release left out.
+
+- While **Box** is on, a one-finger drag draws the selection box (`application/editorSession/pointerInputMethods.js`
+  reuses the Shift-drag marquee state, `marqueeSelect()` and the overlay). With **Multi** also on the box adds to
+  the selection, as `Ctrl/Cmd+Shift`-drag does. A still tap is still a tap, and gizmo handles still take a touch
+  first.
+- The camera controls are off while the box is drawn, as for Shift-drag, so the camera never sees that finger and
+  a second finger cannot become a pinch. A second finger or a pointercancel cancels the box and turns the controls
+  back on. So the scene works like a drawing surface while Box is on, and the player turns Box off to move the
+  camera; turning it off cancels any box in progress.
+- Fixed from the first touch release: on phones narrower than about 380 px the open Tools drawer (85% of the
+  width) covered its own Hide Tools button, so it could not be closed. The drawer is now at most the width less
+  7rem.
+- The touch bar's buttons are a little narrower so all seven fit a 360 px-wide phone; narrower screens scroll it.
+- Tests: `tests/EditorTouchTap.test.js` adds a box drag (rect, replace, camera off then on), Box with Multi
+  (additive), a still tap in Box mode, cancellation by a second finger and by pointercancel, and gizmo handles
+  winning over the box.

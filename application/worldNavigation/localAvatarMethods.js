@@ -442,6 +442,19 @@ export const localAvatarMethods = {
         return this._vehicleSteeringIntent;
     },
 
+    // The hands-free walk or run Alt+W/S started, for a UI that shows it (the touch
+    // pad's Cruise button). `{ intent, mode }` from core/AvatarContinuousMovement*;
+    // null when no avatar exists.
+    avatarContinuousMovementState() {
+        if (!this._avatarMovementController) {
+            return null;
+        }
+        return Object.freeze({
+            intent: this._avatarMovementController.continuousMovementIntent(),
+            mode: this._avatarMovementController.continuousMovementMode()
+        });
+    },
+
     // Turning the mode off releases every held key at once, so none stays stuck
     // after a lost keyup (e.g. focus moved to a dialog mid-press). `_altDown` and
     // `_shiftDown` reset for the same reason. The continuous movement intent and

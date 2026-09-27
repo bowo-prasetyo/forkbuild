@@ -159,6 +159,7 @@ export class EditorSession {
         this._touchPointerIds = new Set();
         this._touchTap = null;
         this._touchMultiSelect = false;
+        this._touchBoxSelect = false;
 
         this._pasteCount = 0;
 
