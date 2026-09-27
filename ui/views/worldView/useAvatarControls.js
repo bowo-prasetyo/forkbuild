@@ -1,7 +1,7 @@
 
 
 // Local avatar controls: visibility, control mode, follow, camera perspective,
-// interactions, remote avatar visibility and avatar keyboard input.
+// interactions, remote avatar visibility and avatar keyboard and touch input.
 export function useAvatarControls({
     avatarControlMode, blurCheckbox, cameraPerspective, followAvatar, followedRemoteAvatarId, refreshSpatialUI,
     session, showMyAvatar, showOtherAvatars
@@ -95,6 +95,16 @@ export function useAvatarControls({
         }
     }
 
+    // The touch pad's presses, already turned into keys. The pad is shown only
+    // while Avatar Control Mode is on, and the session ignores keydowns otherwise.
+    function pressAvatarKey(key) {
+        session.avatarKeyDown(key);
+    }
+
+    function releaseAvatarKey(key) {
+        session.avatarKeyUp(key);
+    }
+
     // A blur can swallow a keyup, so release every held key. The mode itself stays
     // on: losing focus is not the user turning it off.
     function onWindowBlur() {
@@ -104,6 +114,6 @@ export function useAvatarControls({
     return {
         toggleShowMyAvatar, toggleAvatarControlMode, toggleFollowAvatar, setCameraPerspective,
         followAvatarFromPanel, stopFollowingAvatarFromPanel, performAvatarInteraction, selectNearbyAvatar,
-        toggleShowOtherAvatars, onAvatarKeyDown, onAvatarKeyUp, onWindowBlur
+        toggleShowOtherAvatars, onAvatarKeyDown, onAvatarKeyUp, pressAvatarKey, releaseAvatarKey, onWindowBlur
     };
 }

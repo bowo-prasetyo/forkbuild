@@ -39,6 +39,8 @@ import VehicleInteractionPrompt from '../components/VehicleInteractionPrompt.js'
 import AnimalInteractionPrompt from '../components/AnimalInteractionPrompt.js';
 import HistoryTimelinePanel from '../components/HistoryTimelinePanel.js';
 import NotificationHistoryPanel from '../components/NotificationHistoryPanel.js';
+import TouchMovementPad from '../components/TouchMovementPad.js';
+import { useMediaQuery, COMPACT_LAYOUT_QUERY, TOUCH_INPUT_QUERY } from '../composables/useMediaQuery.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
 import { WorldViewNavigationState, WorldViewPrimaryMode } from '../../application/world/WorldViewNavigationState.js';
 import { PlaceNamingDiscoveryMonitor } from '../../application/placeNaming/PlaceNamingDiscoveryMonitor.js';
@@ -88,7 +90,7 @@ export default {
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
         WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt, AnimalInteractionPrompt,
-        HistoryTimelinePanel, NotificationHistoryPanel
+        HistoryTimelinePanel, NotificationHistoryPanel, TouchMovementPad
     },
     setup() {
         const route = useRoute();
@@ -855,11 +857,20 @@ export default {
         const {
             toggleShowMyAvatar, toggleAvatarControlMode, toggleFollowAvatar, setCameraPerspective,
             followAvatarFromPanel, stopFollowingAvatarFromPanel, performAvatarInteraction, selectNearbyAvatar,
-            toggleShowOtherAvatars, onAvatarKeyDown, onAvatarKeyUp, onWindowBlur
+            toggleShowOtherAvatars, onAvatarKeyDown, onAvatarKeyUp, pressAvatarKey, releaseAvatarKey, onWindowBlur
         } = useAvatarControls({
             avatarControlMode, blurCheckbox, cameraPerspective, followAvatar, followedRemoteAvatarId,
             refreshSpatialUI, session, showMyAvatar, showOtherAvatars
         });
+
+        // Touch screens get the on-screen movement pad. On a phone-width screen the
+        // side panel starts closed so the World fills the screen.
+        const touchInput = useMediaQuery(TOUCH_INPUT_QUERY);
+        const compactLayout = useMediaQuery(COMPACT_LAYOUT_QUERY);
+        const panelOpen = ref(!compactLayout.value);
+        function togglePanel() {
+            panelOpen.value = !panelOpen.value;
+        }
 
         const {
             onKeyDown, onPointerDown, onPointerMove, onPointerUp
@@ -976,6 +987,11 @@ export default {
             showOtherAvatars,
             remoteAvatarDiagnostics,
             toggleAvatarControlMode,
+            pressAvatarKey,
+            releaseAvatarKey,
+            touchInput,
+            panelOpen,
+            togglePanel,
             toggleFollowAvatar,
             toggleShowOtherAvatars,
             avatarInfo,
@@ -1201,7 +1217,14 @@ export default {
     },
     template: `
         <div class="world-view">
-            <div class="world-view-overlay">
+            <div :class="['world-view-overlay', { 'world-view-overlay--collapsed': !panelOpen }]">
+              <!-- Shown only on phone-width screens (css/main/touch-and-compact.css). -->
+              <button
+                  type="button"
+                  class="action-btn world-view-panel-toggle"
+                  :aria-expanded="panelOpen ? 'true' : 'false'"
+                  @click="togglePanel"
+              >{{ panelOpen ? 'Hide Panel' : 'Panel' }}</button>
               <div class="world-view-overlay-scroll">
                 ${headerSectionTemplate}
             <!--
@@ -1259,7 +1282,10 @@ export default {
                     <button class="action-btn" @click="exploreHere">Explore Here</button>
                     <button class="action-btn" @click="whatsHere">What's Here?</button>
                 </div>
-                <p class="world-view-hint">
+                <p v-if="touchInput" class="world-view-hint">
+                    Drag to orbit • Pinch to zoom • Two fingers to pan • Tap to inspect<template v-if="avatarControlMode"> • Joystick to walk, push to the edge to run</template>
+                </p>
+                <p v-else class="world-view-hint">
                     Drag to orbit • Scroll to zoom • Home to reset • Click to inspect<template v-if="avatarControlMode"> • WASD to walk • Shift to run • Space to jump</template>
                 </p>
 
@@ -1283,6 +1309,21 @@ export default {
             <div ref="viewport" class="world-viewport"></div>
             ${dialogsTemplate}
             ${navigationHudSectionTemplate}
+            <TouchMovementPad
+                v-if="touchInput && hasLocalAvatar && avatarControlMode"
+                :vehicle-state="vehicleInteractionState"
+                :store-state="storeInteractionState"
+                :animal-state="animalInteractionState"
+                @key-down="pressAvatarKey"
+                @key-up="releaseAvatarKey"
+            />
+            <button
+                v-if="touchInput && hasLocalAvatar"
+                type="button"
+                :class="['action-btn', 'world-view-walk-toggle', { 'action-btn--active': avatarControlMode }]"
+                :aria-pressed="avatarControlMode ? 'true' : 'false'"
+                @click="toggleAvatarControlMode"
+            >Walk</button>
         </div>
     `
 };

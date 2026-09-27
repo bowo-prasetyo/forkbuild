@@ -1,12 +1,25 @@
 // EditorSession pointer and keyboard input forwarded from EditorView: gizmo
-// drags, Shift+Drag marquee selection, and key events.
+// drags, Shift+Drag marquee selection, touch taps, and key events.
 
 // Shift+Click adds one brick; Shift+Drag draws a box. Movement under this many
 // pixels counts as a click.
 const MARQUEE_DRAG_THRESHOLD_PX = 6;
 
+// A finger moves a little even when tapping, so touch gets a wider margin.
+const TOUCH_TAP_SLOP_PX = 10;
+
+// Touch: one finger both orbits the camera and taps, and the tools act on
+// pointer-down, so a touch reaches the tools only once it lifts as a tap (no
+// second finger, little movement). It then replays as a hover, press and
+// release at that point, so Place gets a fresh preview to commit instead of the
+// last hover, which touch never had. Multi-select mode makes each tap a
+// Ctrl-click, toggling a brick in or out of the selection. Gizmo handles still
+// take the touch at once, as they do a mouse.
 export const pointerInputMethods = {
     onPointerDown(event) {
+        if (event.pointerType === 'touch') {
+            return this._onTouchPointerDown(event);
+        }
         if (event.button === 0 && this._session
             && this._session.gizmoPointerDown(event.clientX, event.clientY, this._editorContext.selection)) {
             return null;
@@ -37,6 +50,9 @@ export const pointerInputMethods = {
     },
 
     onPointerMove(event) {
+        if (event.pointerType === 'touch') {
+            return this._onTouchPointerMove(event);
+        }
         if (this._marqueeState) {
             this._marqueeState.x1 = event.clientX;
             this._marqueeState.y1 = event.clientY;
@@ -65,6 +81,9 @@ export const pointerInputMethods = {
     },
 
     onPointerUp(event) {
+        if (event.pointerType === 'touch') {
+            return this._onTouchPointerUp(event);
+        }
         if (this._marqueeState) {
             const { x0, y0, x1, y1, additive, moved } = this._marqueeState;
             this._marqueeState = null;
@@ -94,6 +113,105 @@ export const pointerInputMethods = {
         }
         if (this._inputDispatcher) {
             this._inputDispatcher.dispatchPointerUp(event);
+        }
+        return null;
+    },
+
+    // The browser took the touch over (e.g. for scrolling), so it is no tap.
+    onPointerCancel(event) {
+        if (event.pointerType !== 'touch') {
+            return;
+        }
+        this._touchPointerIds.delete(event.pointerId);
+        if (this._touchTap && this._touchTap.pointerId === event.pointerId) {
+            this._touchTap = null;
+        }
+    },
+
+    setTouchMultiSelect(active) {
+        this._touchMultiSelect = Boolean(active);
+    },
+
+    isTouchMultiSelect() {
+        return this._touchMultiSelect;
+    },
+
+    _onTouchPointerDown(event) {
+        // The first finger down starts afresh, so an id whose pointerup was never
+        // delivered cannot turn every later tap into a pinch.
+        if (event.isPrimary) {
+            this._touchPointerIds.clear();
+        }
+        this._touchPointerIds.add(event.pointerId);
+        if (this._touchPointerIds.size > 1) {
+            // A second finger: pinch or pan, never a tap.
+            this._touchTap = null;
+            return null;
+        }
+        if (this._session
+            && this._session.gizmoPointerDown(event.clientX, event.clientY, this._editorContext.selection)) {
+            this._touchTap = null;
+            return null;
+        }
+        this._touchTap = { pointerId: event.pointerId, x0: event.clientX, y0: event.clientY };
+        return null;
+    },
+
+    _onTouchPointerMove(event) {
+        const tap = this._touchTap;
+        if (tap && tap.pointerId === event.pointerId
+            && Math.hypot(event.clientX - tap.x0, event.clientY - tap.y0) > TOUCH_TAP_SLOP_PX) {
+            this._touchTap = null;
+        }
+        if (this._session) {
+            const result = this._session.gizmoPointerMove(
+                event.clientX,
+                event.clientY,
+                this._editorContext.selection,
+                this._toKeyEvent(event).modifiers
+            );
+            if (result && result.consumed) {
+                return result;
+            }
+        }
+        // No hover on touch: a finger on the glass is always a press.
+        return null;
+    },
+
+    _onTouchPointerUp(event) {
+        this._touchPointerIds.delete(event.pointerId);
+        if (this._session) {
+            const result = this._session.gizmoPointerUp(
+                event.clientX,
+                event.clientY,
+                this._editorContext.selection,
+                this._toKeyEvent(event).modifiers
+            );
+            if (result && result.consumed) {
+                this._refreshGizmo();
+                return result;
+            }
+        }
+        const tap = this._touchTap;
+        if (!tap || tap.pointerId !== event.pointerId) {
+            return null;
+        }
+        this._touchTap = null;
+        if (this._inputDispatcher) {
+            const click = {
+                pointerType: 'touch',
+                clientX: event.clientX,
+                clientY: event.clientY,
+                button: 0,
+                buttons: 0,
+                ctrlKey: this._touchMultiSelect,
+                shiftKey: false,
+                altKey: false,
+                metaKey: false
+            };
+            this._inputDispatcher.dispatchPointerMove(click);
+            this._inputDispatcher.dispatchPointerDown({ ...click, buttons: 1 });
+            this._inputDispatcher.dispatchPointerUp(click);
         }
         return null;
     },

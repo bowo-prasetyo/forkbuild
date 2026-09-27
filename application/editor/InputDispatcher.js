@@ -5,14 +5,14 @@
 // does it go" meet: DOM specifics stop here — ToolManager and every Tool
 // only ever see the normalized shapes below, never a browser Event.
 //
-// pointerType is always 'mouse' today (only DOM PointerEvent is wired in
-// EditorView), but the shape doesn't assume that — touch/pen/gamepad
-// input could construct the exact same interaction event without
-// ToolManager or any Tool needing to change.
+// pointerType is the raw event's own ('mouse', 'pen' or 'touch'). Touch
+// arrives only as whole taps, replayed by EditorSession's pointer input
+// (application/editorSession/pointerInputMethods.js), so no Tool needs
+// touch-specific handling.
 //
 // Interaction pointer event shape:
 //   {
-//       pointerType,              // 'mouse' today; 'touch'/'pen' later
+//       pointerType,              // 'mouse', 'pen' or 'touch'
 //       buttons,                  // bitmask, matches native PointerEvent.buttons
 //       modifiers: { ctrl, shift, alt, meta },
 //       screenPosition: { x, y },

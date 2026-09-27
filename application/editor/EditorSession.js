@@ -156,6 +156,9 @@ export class EditorSession {
         this._clipboardState = null;
         this._selectedGroupId = null;
         this._marqueeState = null;
+        this._touchPointerIds = new Set();
+        this._touchTap = null;
+        this._touchMultiSelect = false;
 
         this._pasteCount = 0;
 

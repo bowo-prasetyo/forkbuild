@@ -35,6 +35,8 @@ import KeyboardShortcutsOverlay from '../components/KeyboardShortcutsOverlay.js'
 import ActionFeedback from '../components/ActionFeedback.js';
 import RecoveryBanner from '../components/RecoveryBanner.js';
 import TransformFeedback from '../components/TransformFeedback.js';
+import EditorTouchActionBar from '../components/EditorTouchActionBar.js';
+import { useMediaQuery, COMPACT_LAYOUT_QUERY, TOUCH_INPUT_QUERY } from '../composables/useMediaQuery.js';
 import { CreatePublisherUseCase } from '../../application/publisher/CreatePublisherUseCase.js';
 import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
 import { CreateBlueprintAttributionUseCase } from '../../application/blueprint/CreateBlueprintAttributionUseCase.js';
@@ -67,9 +69,11 @@ import { useStructureInspection } from './editorView/useStructureInspection.js';
 
 const TOOL_SHORTCUTS = { 1: ToolId.SELECT, 2: ToolId.PLACE };
 
+const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMPOSE_STRUCTURE]);
+
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, EditorTouchActionBar },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -137,7 +141,7 @@ export default {
                     @view-in-repository="viewDistributedPublicationInRepository"
                 />
             </div>
-            <div class="editor-body">
+            <div :class="['editor-body', { 'editor-body--sidebar-open': sidebarOpen }]">
                 <div class="sidebar">
                   <div class="sidebar-scroll">
                     <div class="tool-switcher">
@@ -154,6 +158,15 @@ export default {
                             Place
                         </button>
                     </div>
+                    <template v-if="touchInput">
+                        <p v-if="activeTool === ToolId.PLACE" class="placement-hint">
+                            Tap the ground to place; Rotate turns the brick first.
+                        </p>
+                        <p v-if="activeTool === ToolId.PLACE_STRUCTURE || activeTool === ToolId.COMPOSE_STRUCTURE" class="placement-hint">
+                            Placing "{{ activeTool === ToolId.PLACE_STRUCTURE ? activeStructureTitle : activeCompositionTitle }}" — tap the ground to place; Rotate turns it first.
+                        </p>
+                    </template>
+                    <template v-else>
                     <p v-if="activeTool === ToolId.PLACE" class="placement-hint">
                         Hover the ground, R to rotate, click to place.
                     </p>
@@ -163,6 +176,7 @@ export default {
                     <p v-if="activeTool === ToolId.COMPOSE_STRUCTURE" class="placement-hint">
                         Placing "{{ activeCompositionTitle }}" — hover the ground, R to rotate, click to place, Esc to cancel.
                     </p>
+                    </template>
                     <DocumentInfoPanel :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
                     <StructureInstancePanel
                         v-if="selectedPlacementInfo"
@@ -214,6 +228,23 @@ export default {
                 </div>
                 <div :style="{ position: 'relative', flex: 1, minWidth: 0, display: 'flex' }">
                     <div ref="viewport" class="viewport"></div>
+                    <!-- Shown only on phone-width screens (css/main/touch-and-compact.css). -->
+                    <button
+                        type="button"
+                        class="action-btn editor-sidebar-toggle"
+                        :aria-expanded="sidebarOpen ? 'true' : 'false'"
+                        @click="sidebarOpen = !sidebarOpen"
+                    >{{ sidebarOpen ? 'Hide Tools' : 'Tools' }}</button>
+                    <EditorTouchActionBar
+                        v-if="touchInput"
+                        :registry="actionRegistry"
+                        :get-context="getActionContext"
+                        :multi-select="touchMultiSelect"
+                        :placing="PLACING_TOOLS.has(activeTool)"
+                        @run="runTouchAction"
+                        @rotate-placement="rotateTouchPlacement"
+                        @toggle-multi-select="toggleTouchMultiSelect"
+                    />
                     <div
                         v-if="marqueeRect"
                         class="marquee-rect"
@@ -661,9 +692,32 @@ export default {
             paletteOpen.value = false;
         }
 
+        // Touch screens get EditorTouchActionBar. On a phone-width screen the sidebar
+        // is a drawer over the viewport, closed at first so the scene fills the screen.
+        const touchInput = useMediaQuery(TOUCH_INPUT_QUERY);
+        const compactLayout = useMediaQuery(COMPACT_LAYOUT_QUERY);
+        const sidebarOpen = ref(!compactLayout.value);
+        const touchMultiSelect = ref(false);
+        function toggleTouchMultiSelect() {
+            touchMultiSelect.value = !touchMultiSelect.value;
+            editorSession.setTouchMultiSelect(touchMultiSelect.value);
+        }
+        function runTouchAction(id) {
+            actionRegistry.execute(id, getActionContext());
+            refreshSelectedPlacementInfo();
+            refreshSelectionSummary();
+        }
+        // The R key while placing: turns the piece about to be placed. Touch shows
+        // no preview before the tap, so say that it turned.
+        function rotateTouchPlacement() {
+            editorSession.onKeyDown({ key: 'r' });
+            feedback.show('Rotated +90° — tap the ground to place');
+        }
+
         let onPointerDown = null;
         let onPointerMove = null;
         let onPointerUp = null;
+        let onPointerCancel = null;
         let onKeyDown = null;
 
         // In CSS pixels relative to the viewport container, recomputed from the
@@ -698,6 +752,11 @@ export default {
                 EditorEvent.TOOL_CHANGED,
                 ({ activeTool: t }) => {
                     activeTool.value = t;
+                    // Picking something to place closes the drawer, so the tap that places
+                    // it can reach the scene.
+                    if (compactLayout.value && PLACING_TOOLS.has(t)) {
+                        sidebarOpen.value = false;
+                    }
                 }
             );
             unsubSelection = editorContext.eventBus.subscribe(
@@ -806,6 +865,10 @@ export default {
                 refreshSelectionSummary();
             };
             window.addEventListener('pointerup', onPointerUp);
+            onPointerCancel = (event) => {
+                editorSession.onPointerCancel(event);
+            };
+            window.addEventListener('pointercancel', onPointerCancel);
 
             const handleKeyDown = (event) => {
                 if (InputRouter.isTextInputTarget(event.target)) {
@@ -930,6 +993,7 @@ export default {
             }
             window.removeEventListener('keydown', onKeyDown);
             window.removeEventListener('pointerup', onPointerUp);
+            window.removeEventListener('pointercancel', onPointerCancel);
             viewport.value.removeEventListener('pointermove', onPointerMove);
             viewport.value.removeEventListener('pointerdown', onPointerDown);
             editorSession.dispose();
@@ -944,6 +1008,13 @@ export default {
 
         return {
             viewport,
+            touchInput,
+            sidebarOpen,
+            touchMultiSelect,
+            toggleTouchMultiSelect,
+            runTouchAction,
+            rotateTouchPlacement,
+            PLACING_TOOLS,
             marqueeRect,
             transformFeedback,
             paletteUseCase,

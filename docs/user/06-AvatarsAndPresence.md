@@ -99,6 +99,10 @@ Mode**:
 | **Alt + W / S** | Hands-free continuous walk forward/backward — keeps moving after you let go of the keys |
 | **Alt + Shift + W / S** | Same, but running instead of walking |
 
+On a phone or tablet an on-screen joystick and buttons stand in for these
+keys: push the joystick to walk and all the way to its rim to run, and tap
+**Jump**. See [Touch screens](ControlsReference.md#walking-world-view).
+
 Walking respects collision against nearby loaded buildings, trees, and
 wildlife — you can't walk through structures streamed in around you, through
 the trees generated as part of the terrain, or through a deer or rabbit
