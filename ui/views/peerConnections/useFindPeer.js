@@ -1,17 +1,10 @@
 import { ref, reactive, computed } from 'vue';
 import { formatDuration, stripPrefix, shortId } from './presentation.js';
 
-// Find a Peer (0.2.64) and Be Discoverable (0.2.66).
-//
-// "Discovered" is never "Authenticated" — see application/
-// FindPeerUseCase.js's own header. A candidate below is exactly
-// as untrusted as any invitation this device has ever imported;
-// clicking Connect starts a REAL connection through the exact
-// same WebRTC + 0.2.49 handshake pipeline every other card on
-// this page already goes through, and the result shows up in
-// "My Peers" like any other pending connection — this
-// section never renders a second, competing progression display
-// for it.
+// Find by ID and Be Discoverable. A found candidate is as untrusted as
+// any imported invitation (see application/peer/FindPeerUseCase.js):
+// Connect runs the full handshake, and the connection then shows under
+// Needs your attention like any other pending one.
 export function useFindPeer({ findPeerUseCase, peers, now }) {
     const findImportText = ref('');
     const findImportError = ref('');

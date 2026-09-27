@@ -135,10 +135,8 @@ export function useFriendships({ friendRelationshipUseCase, identityLifecyclePro
         return (relationship && relationship.alias) || shortId(identityId);
     }
 
-    const friends = computed(() => friendships.value.filter((f) => f.status === FriendshipState.FRIEND));
-
     return {
-        friendshipError, refreshFriendships, remoteLifecycleFor, friends, friendStatus, hasPendingIncomingRequest, hasSentRequest,
+        friendships, friendshipError, refreshFriendships, remoteLifecycleFor, friendStatus, hasPendingIncomingRequest, hasSentRequest,
         sendFriendRequest, acceptFriendRequest, rejectFriendRequest, cancelFriendRequest, unfriendPeer, unfriendByIdentity,
         friendDisplayName
     };

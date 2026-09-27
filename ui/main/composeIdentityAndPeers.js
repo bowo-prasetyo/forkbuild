@@ -96,7 +96,12 @@ export function composeIdentityAndPeers() {
     // App-wide, so live peers survive navigating away from /peers.
     const peerSessionManager = new PeerSessionManager({ identityProvider, peerConnectionProvider, discoveryProvider: discoveryBootstrap });
     const peerRelationshipUseCase = new CreatePeerRelationshipUseCase().execute(identityProvider);
-    const peerReconnectionUseCase = new PeerReconnectionUseCase({ peerSessionManager, peerRelationshipUseCase });
+    // Reads friendRelationshipUseCase lazily: it is composed further down.
+    const peerReconnectionUseCase = new PeerReconnectionUseCase({
+        peerSessionManager,
+        peerRelationshipUseCase,
+        getFriendship: (identityId) => friendRelationshipUseCase.getRelationship(identityId)
+    });
     const findPeerUseCase = new FindPeerUseCase({ peerSessionManager });
     // Needs no binding: it tries every eligible Known Peer on construction and on
     // each relationship change, never by polling.

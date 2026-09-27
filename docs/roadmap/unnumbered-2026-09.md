@@ -1827,3 +1827,44 @@ Build Library instead of below fifteen bricks.** Same approach as World View's p
   focus hook, no sideways overflow with every section open, the compact header against the full one);
   `tests/BuildLibraryUX.test.js` Section F (display sections over the real brick registry); `tests/EditorUX.test.js`
   Section E (`onExecute`).
+
+## Peers page layout (unnumbered, 2026-09-27)
+
+**The Peers page leads with what needs doing and the people you already have, shows each person once, and folds the
+ways to connect into one tabbed panel.** Same approach as the World View and Editor layout passes (above).
+
+- Order: a header with **Your ID** (and Copy full ID), **Needs your attention**, **People**, **Connect with someone
+  new**, and a folded **Blocked (N)** that appears only when someone is blocked. The tools for meeting new people
+  used to come first, and the people you already have last. The title is now "Peers", matching the nav.
+- **Needs your attention** (`templates/attentionSection.js`) holds connections still in progress, as "step N of 5",
+  with the reply box inline when one is waiting for the other side's reply, and incoming friend requests with
+  Accept / Decline. It shows only when there is something. Reply text is kept per connection
+  (`useConnectionFlow`'s `replyTexts`), so two waiting connections no longer share one box.
+- **People** (`templates/peopleSection.js`, merged by `buildPeople()` in `peerConnections/people.js`) has one row per
+  identity, merging Known Peers, current friends and live authenticated connections. It used to show up to three
+  cards for one person. Connections are matched through `PeerPresenceUseCase#findConnectedPeers()` (new, the list
+  form of `findConnectedPeer()`), so a friend on an authorized device lands on the friend's row. Tags (Friend,
+  Remembered, Blocked, Revoked, Request sent, Wants to be friends), an online dot, one or two main actions (Chat,
+  Reconnect, Add Friend), and a ⋯ menu (a native `<details>`) for the rest. Filters: All, Friends, Online. The three
+  records stay separate; only the display merges.
+- **Reconnect works for friends who were never remembered.** A Friends card had no Reconnect, only the text
+  "Reconnect to unfriend". `PeerReconnectionUseCase` takes an optional `getFriendship` lookup and accepts a current
+  friend as the expected identity (a pending request does not qualify). The identity check is unchanged, a
+  friend reconnect never remembers them, and `onReconnectRejected` now also carries `target`.
+- **One name per person.** Rename edits the Known Peer alias; for someone not remembered, **Name & Remember** does
+  both, building the `PeerIdentity` from their live connection or friendship record (a `PeerIdentity` refuses an
+  identityId that doesn't match its key). The separate per-connection "Local alias" field is gone.
+- **Connect with someone new** (`templates/connectSection.js`): tabs for Invite, Paste an invitation, Find by ID
+  (with Be Discoverable) and Public lobby. "Add a Candidate", which looked identical to Connect to Peer, is now
+  "Save an invitation for later", folded under Find by ID. Invite, Paste and Reconnect share
+  `peerConnections/InvitationExchange.js`, where Reconnect used to repeat the whole flow nested inside its card.
+- Copy: six explanatory paragraphs become one-line hints and a "How this works" link to the user guide. The Blocked
+  paragraph no longer names a source file (`core/PeerBlockRecord.js`). An action's error shows on the row it came
+  from, or above the list if that row is filtered out.
+- Styles in `css/main/peers-page.css`; unused rules for the old page are removed from
+  `identity-publications-and-peers.css`.
+- Tests: `tests/PeersPageLayoutBrowser.test.js` (the real view over fake use cases: section order, one row per
+  person, Reconnect and Name & Remember for a never-remembered friend, Add Friend, Accept and Finish Connecting
+  from the attention list, filters, tabs, no sideways scroll at 390px with a menu open); `tests/PeersPeopleList.test.js`
+  (`buildPeople()`, including a friend online from another device); `tests/PeerConnectionResilience.test.js` adds
+  reconnecting a friend, the identity check on it, and refusing a pending request.

@@ -1,12 +1,10 @@
 import { ref, computed } from 'vue';
 import { stripPrefix } from './presentation.js';
 
-// Blocked (0.2.60). Entirely local, never requires a live connection —
-// see core/PeerBlockRecord.js's own header. Available from any card
-// this device already holds identityId/publicKey for: an
-// AUTHENTICATED "My Peers" entry, a Known Peer, or a Friend —
-// `identity` is duck-typed (identityId/publicKey[/algorithm]),
-// so all three shapes work unmodified.
+// Blocking is entirely local and never needs a live connection (see
+// core/PeerBlockRecord.js). `identity` is duck-typed (identityId,
+// publicKey, algorithm), so a live peer's remoteIdentity, a Known Peer or
+// a friendship record all work.
 export function useBlockedPeers({ peerBlockUseCase }) {
     const blocked = ref(peerBlockUseCase.getBlocked());
     const blockError = ref('');
@@ -38,5 +36,5 @@ export function useBlockedPeers({ peerBlockUseCase }) {
         blocked.value = list || peerBlockUseCase.getBlocked();
     }
 
-    return { blocked, blockError, isBlockedIdentity, blockIdentity, unblockIdentity, refreshBlocked };
+    return { blocked, blockedIds, blockError, isBlockedIdentity, blockIdentity, unblockIdentity, refreshBlocked };
 }
