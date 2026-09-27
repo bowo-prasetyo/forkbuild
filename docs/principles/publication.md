@@ -449,3 +449,20 @@ being checked, unavailable is never evidence of a mismatch, and the
 verification record is a plain, unsigned local fact.
 
 [Full text](history/0.8.md#a-gateway-moves-bytes-it-never-judges-them-0869)
+
+### A Shared World Is Fetched Only From Whoever Shared It (2026-09-27)
+
+A shared World's bytes come only from connections authenticated as the
+identity that signed the share, and the Publication inside must be signed by
+that identity. Hashes here are 32-bit, so matching bytes from anyone else
+are not enough.
+
+[Full text](history/0.9.md#a-shared-world-is-fetched-only-from-whoever-shared-it-2026-09-27)
+
+### Only A Trusted Sharer's World Is Retrieved Without Asking (2026-09-27)
+
+Friends' and Known Peers' shares are retrieved automatically; anyone
+else's wait for a Retrieve click, so a stranger's connection can never fill
+someone's storage.
+
+[Full text](history/0.9.md#only-a-trusted-sharers-world-is-retrieved-without-asking-2026-09-27)

@@ -683,6 +683,13 @@ always here whenever you have a world open, whether or not anyone else is nearby
 whether or not it's currently published (until you publish it, the button
 is simply disabled, with a note that there's nothing to distribute yet).
 
+When the World you have open was published by someone else (one a peer
+shared with you, say), the panel is titled **Publication** instead, and
+leaves out **Unpublish** and **Distribute**: only a World's own publisher
+can retract or distribute it. Its placements, Snapshot tools, share link
+and **Commentary** stay, so you can still read and post comments on
+anyone's World.
+
 Below all of that sits a **Commentary** section, same as everything else
 on this panel scoped to your current world — see
 [Commentary](09-PublicationsAndEvidence.md#commentary) for the full

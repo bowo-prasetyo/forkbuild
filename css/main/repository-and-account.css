@@ -90,6 +90,15 @@
     padding-top: 0.75rem;
 }
 
+/* Share with Peers (ui/components/SharePublicationButton.js), on its own row. */
+.share-publication {
+    margin-top: 0.5rem;
+}
+
+.share-publication-status {
+    margin: 0.25rem 0 0;
+}
+
 .action-btn {
     padding: 0.3rem 0.8rem;
     border: none;

@@ -1673,3 +1673,54 @@ peer behind.** Reported from a browser whose passphrase-protected identity was l
 - Tests: `tests/PublishSelfGuards.test.js` (a locked identity, repeated tries, unlocking afterwards, an
   unreachable network, and no network, each leaving no pending connection). It fails on the previous code with
   the reported message.
+
+## Share with Peers: published Worlds in a connected peer's Repository (unnumbered, 2026-09-27)
+
+**A World published on one device can now reach the Repository of someone connected to it.** Reported after two
+connected browsers kept separate Repositories: a plain Publish lists a World on its own device only, the connection
+sync announces only the decentralized publication catalog, and a peer-announced envelope reaches the Repository only
+after a manual Retrieve on the experimental Publications page, which did not fetch the World's snapshot either. There
+was no product path to share a Repository entry with a peer at all.
+
+- **Share with Peers** (`application/publication/sharing/SharePublicationWithPeersUseCase.js`, a button on the
+  identity's own Repository cards) wraps the signed Publication in a signed DecentralizedPublication through
+  `PublicationResolver#publish()`, catalogs it and announces it. Cataloging is what makes `forkbuild:content` serve
+  the Publication's JSON and `PublicationPeerConnectionSync` announce it to later peers; the snapshot is already in the
+  same content store from publishing. Sharing again reuses the envelope. Only the identity's own signed Publications
+  can be shared.
+- **Retrieval** (`RetrieveSharedPublicationUseCase`) resolves the envelope from connections authenticated as the
+  sharer only (including their authorized devices), requires the Publication inside to be signed by the sharer, adds
+  it to the Repository's discovery provider, and fetches its snapshot over `forkbuild:snapshot-content-transfer`, so
+  **Explore** works. Content addresses are 32-bit FNV-1a, which a peer can collide, so no relay is ever a source.
+- **Automatic for Friends and Known Peers** (`AutoRetrieveSharedPublicationsUseCase`): a share from a Friend or Known
+  Peer who is not blocked is retrieved when it arrives or when its sharer reconnects. Anyone else's waits under
+  **Shared with you** in the Repository (`ui/components/SharedWithYouPanel.js`) for a **Retrieve** click, the choice
+  the player made: now that the lobby admits strangers, no stranger's connection may fill a device's storage.
+- The Repository remounts its catalog when a World joins it while the page is open.
+- The use cases take the Publication kind from `CreatePublicationDisplayKindRegistryUseCase`'s new
+  `publicationKindPlugin`, keeping the rule that only the registry names that kind.
+- Not changed, noted for later: World View shows its **My Publication** panel (with Unpublish and Distribute) for
+  any Publication in the Repository, including one retrieved from a peer. That predates this change.
+- Two principles in `docs/principles/publication.md`: "A Shared World Is Fetched Only From Whoever Shared It" and
+  "Only A Trusted Sharer's World Is Retrieved Without Asking".
+- Tests: `tests/SharePublicationWithPeers.test.js`: sharing only one's own World, idempotently, reaching peers that
+  connect later; a stranger's manual Retrieve with the snapshot; automatic retrieval on arrival and on reconnection
+  for a trusted sharer and never for an untrusted or blocked one; refusal when only a relay is connected; refusal of
+  a World re-shared under another identity. The two security rules were each checked to fail the test when removed.
+
+## Owner-only actions on World View's publication panel (unnumbered, 2026-09-27)
+
+**World View's publication panel offers Unpublish and Distribute only on the viewer's own World.** It opens for any
+Publication in the Repository, and since Share with Peers that routinely includes Worlds other people published: the
+panel called itself **My Publication** and offered to unpublish or distribute someone else's World.
+
+- `OwnPublicationPanel`'s new `isOwnPublication` is true when the signed-in identity signed the Publication, read from
+  the session (`IdentityUseCase#currentSession()`, followed through `onSessionChanged`) so a locked identity still
+  recognizes its own; an unsigned legacy Publication counts as the viewer's, since peers only share signed ones.
+- Otherwise the panel is titled **Publication**, says only the publisher can unpublish or distribute it, and hides
+  Unpublish, Distribute and the distribution dialog. `unpublishOwnPublication()`, `distributeOwnSnapshot()` and
+  `distributeOwnPublication()` also refuse, so a direct call cannot bypass the hidden buttons. Placements, Snapshot
+  tools, the share link and Commentary stay for everyone.
+- Tests: `tests/OwnPublicationPanelOwnership.test.js` (ownership, including a locked identity, someone else's, signed
+  out and legacy; the guarded methods; following the session). The three distribution tests that call the panel's
+  methods on a stand-in context now declare that context the viewer's own (`isOwnPublication: true`).

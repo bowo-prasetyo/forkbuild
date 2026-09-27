@@ -5,28 +5,31 @@ export const publicationActionsSectionTemplate = `<!--
                 Retracts the Publication from the catalog only; never a placement, the
                 Document or distributed material.
             -->
-            <button
-                v-if="unpublishCommand"
-                type="button"
-                class="action-btn own-publication-unpublish-action"
-                :disabled="!publication"
-                @click="unpublishOwnPublication"
-            >Unpublish</button>
+            <!-- Unpublish and Distribute act as the publisher: offered on the viewer's own Publication only. -->
+            <template v-if="isOwnPublication">
+                <button
+                    v-if="unpublishCommand"
+                    type="button"
+                    class="action-btn own-publication-unpublish-action"
+                    :disabled="!publication"
+                    @click="unpublishOwnPublication"
+                >Unpublish</button>
 
-            <!-- Opens WorldDistributionDialog, which holds every storage/substrate choice. -->
-            <button
-                v-if="snapshotDistributionCommand || publicationDistributionCommand"
-                type="button"
-                class="action-btn own-publication-distribution-trigger-action"
-                :disabled="!publication"
-                @click="distributionDialogOpen = true"
-            >Distribute</button>
+                <!-- Opens WorldDistributionDialog, which holds every storage/substrate choice. -->
+                <button
+                    v-if="snapshotDistributionCommand || publicationDistributionCommand"
+                    type="button"
+                    class="action-btn own-publication-distribution-trigger-action"
+                    :disabled="!publication"
+                    @click="distributionDialogOpen = true"
+                >Distribute</button>
+            </template>
 
             <!-- The link friends can open on any device, once the Signed Claim is on Steem. -->
             <PublicationShareLink v-if="publication" :publication-id="publication.id" :title="publication.title" />
 
             <WorldDistributionDialog
-                v-if="distributionDialogOpen"
+                v-if="distributionDialogOpen && isOwnPublication"
                 :can-distribute-publication="Boolean(publicationDistributionCommand)"
                 :can-distribute-snapshot="Boolean(snapshotDistributionCommand)"
                 :has-subject="Boolean(publication)"

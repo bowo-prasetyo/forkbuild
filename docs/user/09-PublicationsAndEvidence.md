@@ -124,7 +124,10 @@ way and you resolve it — with **Re-check** or **Retrieve from Peers** — it
 gets folded into the Repository's own search results, its author's page,
 and World View exploration, exactly as if it had been found the ordinary
 way — and it's still there after a reload. The ordinary **Publish** button
-doesn't create one of these cards; they only arrive from elsewhere.
+doesn't create one of these cards. **Share with Peers** in the Repository
+does, for your own Worlds, and those also show up in the other person's
+Repository under **Shared with you** (see
+[Sharing with connected peers](04-PublishingAndForking.md#sharing-with-connected-peers)).
 
 ## The Publications page
 

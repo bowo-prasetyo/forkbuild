@@ -26,7 +26,7 @@ that no longer apply are listed at the end of their theme file under
 | [Bricks, structures and blueprints](principles/building.md) | 27 |
 | [Shared worlds and collaboration](principles/collaboration.md) | 22 |
 | [Places, landmarks and naming](principles/places.md) | 19 |
-| [Decentralized publication, content and replicas](principles/publication.md) | 50 |
+| [Decentralized publication, content and replicas](principles/publication.md) | 52 |
 | [External anchoring and chain transactions](principles/anchoring.md) | 67 |
 | [Achievements, rankings and reconciliation](principles/achievements.md) | 20 |
 | [Notifications](principles/notifications.md) | 9 |

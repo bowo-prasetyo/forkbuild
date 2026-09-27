@@ -1,5 +1,6 @@
 import PublicationPreview from './PublicationPreview.js';
 import PublicationCommentarySection from './PublicationCommentarySection.js';
+import SharePublicationButton from './SharePublicationButton.js';
 import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
 import { License } from '../../core/License.js';
 
@@ -22,7 +23,7 @@ import { License } from '../../core/License.js';
 // never share or bleed state.
 export default {
     name: 'PublicationList',
-    components: { PublicationPreview, PublicationCommentarySection },
+    components: { PublicationPreview, PublicationCommentarySection, SharePublicationButton },
     inject: {
         // Read only to decide whether to offer the Comment toggle.
         getPublicationCommentariesCommand: { default: null }
@@ -116,6 +117,7 @@ export default {
                                         @click="toggleCommentary(pub)"
                                     >{{ isCommentaryOpen(pub) ? 'Hide Comments' : 'Comment' }}</button>
                                 </div>
+                                <SharePublicationButton :publication="pub" />
                             </td>
                         </tr>
 

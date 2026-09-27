@@ -42,10 +42,18 @@ import PublicationShareLink from './PublicationShareLink.js';
 // never polled. A failed read keeps the current list and only sets the error,
 // so "none" and "failed" stay distinguishable. Authorship is never supplied by
 // the UI.
+//
+// The panel shows for any Publication World View has open, including one a
+// peer shared. Unpublish and Distribute act as its publisher, so they are
+// offered only on the viewer's own Publication (isOwnPublication); placements,
+// Snapshot tools, the share link and Commentary stay for everyone.
 
 export default {
     name: 'OwnPublicationPanel',
     components: { WorldDistributionDialog, PublicationCommentaryRemoteCheck, PublicationShareLink },
+    inject: {
+        identityUseCase: { default: null }
+    },
     props: {
         // Supplied by the host view; null when the active document is unpublished.
         publication: {
@@ -157,6 +165,9 @@ export default {
     },
     data() {
         return {
+            // The signed-in identity, read from the session so a locked
+            // identity still recognizes its own Publication.
+            sessionIdentityId: null,
             // Visibility only; never touches pipeline state.
             diagnosticToolsOpen: false,
             snapshotDistributionExecuting: false,
@@ -226,6 +237,21 @@ export default {
         };
     },
     computed: {
+        // True for a Publication the signed-in identity signed, and for an
+        // unsigned (legacy) one, which can only have been published on this
+        // device: sharing between peers requires a signature.
+        isOwnPublication() {
+            const publication = this.publication;
+            if (!publication) {
+                return false;
+            }
+            const publisher = publication.publisherIdentity;
+            if (!publisher || !publisher.id) {
+                return true;
+            }
+            const self = this.sessionIdentityId || this.viewerIdentityId;
+            return Boolean(self) && publisher.id === self;
+        },
         // The shared Storage choice for both actions. With Snapshot distribution
         // available the options are its registered backends plus 'remote-pinning'
         // (which never has its own registry key), otherwise all three Material
@@ -307,12 +333,22 @@ export default {
             }
         }
     },
+    created() {
+        this.readSessionIdentity();
+        this.unsubscribeSession = this.identityUseCase && typeof this.identityUseCase.onSessionChanged === 'function'
+            ? this.identityUseCase.onSessionChanged(() => this.readSessionIdentity())
+            : null;
+    },
     mounted() {
         // Watchers only fire on later changes, so load once on mount.
         this.refreshPublicationCommentaries();
         this.refreshPublicationPlacements();
     },
     beforeUnmount() {
+        if (this.unsubscribeSession) {
+            this.unsubscribeSession();
+            this.unsubscribeSession = null;
+        }
         // Invalidate in-flight calls.
         this.snapshotDistributionRequestId += 1;
         this.publicationDistributionRequestId += 1;
@@ -323,6 +359,16 @@ export default {
         this.selectedSnapshotMaterializationRequestId += 1;
     },
     methods: {
+        readSessionIdentity() {
+            let identityId = null;
+            try {
+                const session = this.identityUseCase ? this.identityUseCase.currentSession() : null;
+                identityId = session && session.identityId ? session.identityId : null;
+            } catch {
+                identityId = null;
+            }
+            this.sessionIdentityId = identityId;
+        },
         // Called on mount, on publication change and after a successful submit, never
         // on a timer. Keeps the returned order.
         refreshPublicationCommentaries() {
@@ -390,7 +436,7 @@ export default {
     },
     template: `
         <div v-if="snapshotDistributionCommand" class="own-publication-panel">
-            <h4 class="own-publication-panel-title">My Publication</h4>
+            <h4 class="own-publication-panel-title">{{ publication && !isOwnPublication ? 'Publication' : 'My Publication' }}</h4>
 
             <dl v-if="publication" class="own-publication-detail">
                 <dt>Title</dt>
@@ -400,6 +446,9 @@ export default {
             </dl>
             <p v-else class="own-publication-empty-hint">
                 Publish your current World to distribute its Snapshot.
+            </p>
+            <p v-if="publication && !isOwnPublication" class="own-publication-empty-hint">
+                Someone else published this World, so only they can unpublish or distribute it.
             </p>
 
             ${placementsSectionTemplate}

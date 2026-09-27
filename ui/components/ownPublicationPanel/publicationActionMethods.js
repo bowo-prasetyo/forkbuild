@@ -17,7 +17,7 @@ export const publicationActionMethods = {
     // Synchronous. Success shows up as the `publication` prop becoming null.
     unpublishOwnPublication() {
         const publication = this.publication;
-        if (!publication || !this.unpublishCommand) {
+        if (!publication || !this.unpublishCommand || !this.isOwnPublication) {
             return;
         }
         this.unpublishCommand(publication);
@@ -36,7 +36,7 @@ export const publicationActionMethods = {
     // No-op without a publication or command, or while busy.
     distributeOwnSnapshot() {
         const publication = this.publication;
-        if (!publication || !this.snapshotDistributionCommand || this.snapshotDistributionExecuting) {
+        if (!publication || !this.snapshotDistributionCommand || this.snapshotDistributionExecuting || !this.isOwnPublication) {
             return;
         }
 
@@ -75,7 +75,7 @@ export const publicationActionMethods = {
     },
     distributeOwnPublication() {
         const publication = this.publication;
-        if (!publication || !this.publicationDistributionCommand || this.publicationDistributionExecuting) {
+        if (!publication || !this.publicationDistributionCommand || this.publicationDistributionExecuting || !this.isOwnPublication) {
             return;
         }
 
