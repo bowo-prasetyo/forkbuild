@@ -155,6 +155,8 @@ function makeSnapshotDistributionAction({ snapshotDistributionCommand, publicati
 function panelCtx(overrides = {}) {
     return {
         publication: null,
+        // The viewer's own Publication: owner-only actions are offered.
+        isOwnPublication: true,
         snapshotDistributionCommand: null,
         snapshotDistributionExecuting: false,
         snapshotDistributionError: null,

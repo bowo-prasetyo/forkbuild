@@ -72,6 +72,8 @@ function canvasCtx(overrides = {}) {
 function panelCtx(overrides = {}) {
     return {
         publication: null,
+        // The viewer's own Publication: owner-only actions are offered.
+        isOwnPublication: true,
         publicationDistributionCommand: null,
         publicationDistributionExecuting: false,
         publicationDistributionError: null,

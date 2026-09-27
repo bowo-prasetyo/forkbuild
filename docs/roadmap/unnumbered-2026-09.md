@@ -1707,3 +1707,20 @@ was no product path to share a Repository entry with a peer at all.
   connect later; a stranger's manual Retrieve with the snapshot; automatic retrieval on arrival and on reconnection
   for a trusted sharer and never for an untrusted or blocked one; refusal when only a relay is connected; refusal of
   a World re-shared under another identity. The two security rules were each checked to fail the test when removed.
+
+## Owner-only actions on World View's publication panel (unnumbered, 2026-09-27)
+
+**World View's publication panel offers Unpublish and Distribute only on the viewer's own World.** It opens for any
+Publication in the Repository, and since Share with Peers that routinely includes Worlds other people published: the
+panel called itself **My Publication** and offered to unpublish or distribute someone else's World.
+
+- `OwnPublicationPanel`'s new `isOwnPublication` is true when the signed-in identity signed the Publication, read from
+  the session (`IdentityUseCase#currentSession()`, followed through `onSessionChanged`) so a locked identity still
+  recognizes its own; an unsigned legacy Publication counts as the viewer's, since peers only share signed ones.
+- Otherwise the panel is titled **Publication**, says only the publisher can unpublish or distribute it, and hides
+  Unpublish, Distribute and the distribution dialog. `unpublishOwnPublication()`, `distributeOwnSnapshot()` and
+  `distributeOwnPublication()` also refuse, so a direct call cannot bypass the hidden buttons. Placements, Snapshot
+  tools, the share link and Commentary stay for everyone.
+- Tests: `tests/OwnPublicationPanelOwnership.test.js` (ownership, including a locked identity, someone else's, signed
+  out and legacy; the guarded methods; following the session). The three distribution tests that call the panel's
+  methods on a stand-in context now declare that context the viewer's own (`isOwnPublication: true`).
