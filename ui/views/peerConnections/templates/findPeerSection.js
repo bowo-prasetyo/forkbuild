@@ -48,8 +48,12 @@ export const findPeerSectionTemplate = `<h2 class="peer-my-peers-heading">Find a
                         </button>
                     </div>
                     <p v-if="publishError" class="identity-unlock-error">{{ publishError }}</p>
+                    <p v-else-if="isIdentityLocked && !isPublished" class="form-hint form-hint--neutral">
+                        Unlock your identity (see <router-link to="/identity">My Identities</router-link>) to be
+                        discoverable: a publication must be signed.
+                    </p>
                     <div class="modal-actions">
-                        <button class="modal-btn modal-btn--primary" :disabled="publishPending" @click="togglePublish">
+                        <button class="modal-btn modal-btn--primary" :disabled="publishPending || (isIdentityLocked && !isPublished)" @click="togglePublish">
                             {{ publishPending ? 'Working…' : (isPublished ? 'Stop Being Discoverable' : 'Be Discoverable') }}
                         </button>
                     </div>

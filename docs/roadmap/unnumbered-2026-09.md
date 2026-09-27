@@ -1655,3 +1655,21 @@ meant about 500 requests a second. It also added about a second, on average, bef
   - `tests/RendezvousAnswerMailbox.test.js`: with checks an hour apart a connection still completes promptly,
     after exactly one check (the test fails when the push is ignored), and a network that never pushes is still
     polled at the frequent rate.
+
+## Be Discoverable with a locked identity (unnumbered, 2026-09-27)
+
+**Be Discoverable with a locked identity now says to unlock it, and a failed attempt no longer leaves a pending
+peer behind.** Reported from a browser whose passphrase-protected identity was locked: the button answered
+"RendezvousDiscoveryProvider: an invitation with no identityHint cannot be published", and every click added an
+"Unknown peer · Connecting…" card to My Peers that nothing could ever answer.
+
+- A locked identity cannot sign, so `DiscoverPeersUseCase#createInvitation()` built the invitation without an
+  identity and the publish step refused it, after the WebRTC offer had already been made and registered.
+- `PeerSessionManager#publishSelf()` now checks that the identity can sign before making an offer, with a message
+  that says to unlock it, and closes the offer when publishing throws or publishes nothing (no rendezvous server).
+  The public lobby, which publishes through the same method, benefits too.
+- The Peers page disables **Be Discoverable** while the identity is locked and says why; the "no rendezvous
+  server" message now points to Network Settings instead of a source file.
+- Tests: `tests/PublishSelfGuards.test.js` (a locked identity, repeated tries, unlocking afterwards, an
+  unreachable network, and no network, each leaving no pending connection). It fails on the previous code with
+  the reported message.
