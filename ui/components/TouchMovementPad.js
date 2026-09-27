@@ -1,20 +1,27 @@
 import { ref, computed, onBeforeUnmount } from 'vue';
 import { TouchMovementInput } from '../../application/avatar/TouchMovementInput.js';
 import { clampTouchJoystickOffset } from '../../core/TouchJoystickKeys.js';
+import { describeAnimalDecorationAction, describeVehicleStoreAction } from './avatarInteractionLabels.js';
 
 // World View's on-screen controls for touch screens: a joystick for W/A/S/D
 // (pushed to the rim, it runs) and buttons for the other avatar keys. It only
 // sends key presses; the session decides what each one does, exactly as for a
 // keyboard. The context buttons appear under the same conditions as
 // VehicleInteractionPrompt and AnimalInteractionPrompt.
+//
+// Decorate is the one exception: it emits 'decorate' instead of pressing 'G',
+// because the session's 'G' silently ignores a refusal (not signed in, no edit
+// access), and a button that does nothing when tapped leaves a player stuck.
+// The host runs the action itself and shows why it failed.
 export default {
     name: 'TouchMovementPad',
     props: {
         vehicleState: { type: Object, default: null },
         storeState: { type: Object, default: null },
-        animalState: { type: Object, default: null }
+        animalState: { type: Object, default: null },
+        decorationState: { type: Object, default: null }
     },
-    emits: ['key-down', 'key-up'],
+    emits: ['key-down', 'key-up', 'decorate'],
     setup(props, { emit }) {
         const input = new TouchMovementInput({
             keyDown: (key) => emit('key-down', key),
@@ -73,15 +80,15 @@ export default {
         const mounted = computed(() => Boolean(props.vehicleState && props.vehicleState.mounted));
         const mountVisible = computed(() => Boolean(props.vehicleState)
             && (props.vehicleState.mounted || Boolean(props.vehicleState.targetVehicleId)));
-        const storeVisible = computed(() => Boolean(props.storeState)
-            && (props.storeState.canStore || props.storeState.canDeploy));
+        const store = computed(() => describeVehicleStoreAction(props.storeState));
+        const decoration = computed(() => describeAnimalDecorationAction(props.decorationState));
         const animalVisible = computed(() => Boolean(props.animalState)
             && (props.animalState.canCatch || props.animalState.canRelease));
 
         onBeforeUnmount(() => input.releaseAll());
 
         return {
-            thumb, mounted, mountVisible, storeVisible, animalVisible,
+            thumb, mounted, mountVisible, store, animalVisible, decoration,
             onStickDown, onStickMove, onStickUp, holdButton, releaseButton, tapButton
         };
     },
@@ -108,18 +115,39 @@ export default {
                     class="touch-pad-btn"
                     @click="tapButton('e')"
                 >{{ mounted ? 'Get Off' : 'Ride' }}</button>
-                <button
-                    v-if="storeVisible"
-                    type="button"
-                    class="touch-pad-btn"
-                    @click="tapButton('q')"
-                >{{ storeState.canStore ? 'Store' : 'Deploy' }}</button>
+                <div v-if="store" class="touch-pad-group">
+                    <button
+                        v-if="store.canCycle"
+                        type="button"
+                        class="touch-pad-btn touch-pad-btn--small"
+                        aria-label="Older stored vehicle"
+                        @click="tapButton('[')"
+                    >‹</button>
+                    <button
+                        type="button"
+                        class="touch-pad-btn"
+                        @click="tapButton('q')"
+                    >{{ store.action === 'store' ? 'Store' : 'Deploy ' + store.vehicleLabel }}<span v-if="store.position" class="touch-pad-btn-detail">{{ store.position }}</span></button>
+                    <button
+                        v-if="store.canCycle"
+                        type="button"
+                        class="touch-pad-btn touch-pad-btn--small"
+                        aria-label="Newer stored vehicle"
+                        @click="tapButton(']')"
+                    >›</button>
+                </div>
                 <button
                     v-if="animalVisible"
                     type="button"
                     class="touch-pad-btn"
                     @click="tapButton('f')"
                 >{{ animalState.canCatch ? 'Catch' : 'Release' }}</button>
+                <button
+                    v-if="decoration"
+                    type="button"
+                    class="touch-pad-btn"
+                    @click="$emit('decorate')"
+                >{{ decoration.action === 'decorate' ? 'Decorate' : 'Undo Decoration' }}</button>
                 <template v-if="mounted">
                     <button
                         type="button"

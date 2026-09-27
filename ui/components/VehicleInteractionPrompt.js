@@ -1,3 +1,5 @@
+import { describeVehicleStoreAction, vehicleTypeLabel } from './avatarInteractionLabels.js';
+
 // 0.9.98 — Vehicle Mount/Dismount World View Integration.
 //
 // The smallest UI seam this milestone adds: a floating, bottom-center
@@ -25,12 +27,6 @@
 // displayed. A raw vehicle id is an internal, deterministic identity
 // string (core/VehicleIdentity.js's own `vehicle:<seed>:<cellX>,<cellZ>`
 // shape), never a player-facing label.
-const VEHICLE_TYPE_LABEL = {
-    bicycle: 'Bicycle',
-    motorcycle: 'Motorcycle',
-    car: 'Car',
-    drone: 'Drone'
-};
 
 export default {
     name: 'VehicleInteractionPrompt',
@@ -68,34 +64,27 @@ export default {
             if (this.state.mounted) {
                 return '[E] Dismount';
             }
-            const typeLabel = VEHICLE_TYPE_LABEL[this.state.vehicleType] || 'Vehicle';
-            return `[E] Mount ${typeLabel}`;
+            return `[E] Mount ${vehicleTypeLabel(this.state.vehicleType)}`;
+        },
+        store() {
+            return describeVehicleStoreAction(this.storeState);
         },
         storeVisible() {
-            return Boolean(this.storeState) && (this.storeState.canStore || this.storeState.canDeploy);
+            return this.store !== null;
         },
         storeLabel() {
-            if (!this.storeState) {
+            if (!this.store) {
                 return '';
             }
-            if (this.storeState.canStore) {
+            if (this.store.action === 'store') {
                 return '[Q] Store';
             }
-            const typeLabel = VEHICLE_TYPE_LABEL[this.storeState.vehicleType] || 'Vehicle';
-            // 0.9.671 — Avatar Inventory Cycle Selection. Only worth
-            // naming a position ("2/3") once there is more than one
-            // carried entry to be a position AMONG — a single carried
-            // vehicle stays exactly as plain as 0.9.670 ever showed it.
-            if (this.storeState.carriedCount > 1) {
-                return `[Q] Deploy ${typeLabel} (${this.storeState.selectedIndex}/${this.storeState.carriedCount})`;
-            }
-            return `[Q] Deploy ${typeLabel}`;
+            const position = this.store.position ? ` (${this.store.position})` : '';
+            return `[Q] Deploy ${this.store.vehicleLabel}${position}`;
         },
-        // 0.9.671 — Avatar Inventory Cycle Selection. The third, optional
-        // hint line — only while there is something to cycle THROUGH
-        // (2+ carried) and somewhere for a deploy to land (not mounted).
+        // Only while there is something to cycle through and somewhere to deploy.
         cycleVisible() {
-            return Boolean(this.storeState) && this.storeState.canDeploy && this.storeState.carriedCount > 1;
+            return Boolean(this.store && this.store.canCycle);
         }
     },
     template: `

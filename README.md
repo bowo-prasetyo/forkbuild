@@ -44,8 +44,8 @@ models").
   See [docs/CapabilityMatrix.md](docs/CapabilityMatrix.md).
 
 **Phones and tablets**
-- Touch controls in both views: a joystick and buttons for walking, riding and
-  catching in World View, and tap-to-place with an Undo, Redo, Rotate,
+- Touch controls in both views: a joystick and buttons for walking, riding,
+  storing vehicles, catching and decorating in World View, and tap-to-place with an Undo, Redo, Rotate,
   Delete and Multi-select bar in the Editor. On narrow screens the menu and
   side panels fold away so the 3D view fills the screen. See
   [Touch screens](docs/user/ControlsReference.md#touch-screens).

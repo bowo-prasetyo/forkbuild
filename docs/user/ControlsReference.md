@@ -107,7 +107,7 @@ nearby or you're carrying one.
 |---|---|---|
 | `F` (near a catchable animal) | Catch it | Adds it to your inventory and removes it from the world |
 | `F` (not near a catchable animal, carrying one) | Release the most recently caught animal | Spawns it at your current position, catchable again |
-| `G` (near an animal you released) | Decorate the World with it | Saves it into the World's content as a decoration — no longer catchable; needs EDIT access; no on-screen prompt |
+| `G` (near an animal you released) | Decorate the World with it | Saves it into the World's content as a decoration — no longer catchable; needs EDIT access. A prompt shows when `G` would do something |
 | `G` (near an animal decoration, no released animal nearby) | Undo the decoration | Removes it from the World and turns it back into a live, catchable animal |
 
 Your inventory, placed vehicles, and released animals are saved on this
@@ -315,13 +315,16 @@ above the joystick turns the mode, and with it the pad, on and off.
 | Joystick pushed to the rim | `Shift` | Run |
 | **Jump** | `Space` | |
 | **Ride** / **Get Off** | `E` | Shown when a vehicle is in range, or while riding |
-| **Store** / **Deploy** | `Q` | Shown when you can store the vehicle you're on, or deploy a stored one |
+| **Store** / **Deploy** | `Q` | Shown when you can store the vehicle you're on, or deploy a stored one. Deploy names the vehicle, and its place in the list (such as 2/3) when you carry more than one |
+| **‹** / **›** beside Deploy | `[` / `]` | Carrying 2+ vehicles: choose an older or newer one to deploy |
 | **Catch** / **Release** | `F` | Shown when an animal is catchable nearby, or while carrying one |
+| **Decorate** / **Undo Decoration** | `G` | Shown near an animal you released, or near a decoration. Unlike `G`, a refused decoration (not signed in, no EDIT access) says why |
 | **↶** / **↷** | `←` / `→` | While riding: a 45° steering turn per tap |
 | **Brake** | `Ctrl` (held) | While riding |
 
-Hands-free continuous movement (`Alt` + `W`/`S`), cycling stored vehicles
-(`[`/`]`) and decorating with an animal (`G`) have no touch control yet.
+The pad's buttons replace the keyboard prompts, which are hidden while it
+shows. Hands-free continuous movement (`Alt` + `W`/`S`) has no touch control
+yet.
 
 ### Editing (Editor)
 

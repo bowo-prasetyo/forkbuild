@@ -239,13 +239,14 @@ your mind? Stand next to it and press **G** again: the decoration is
 removed from the World and becomes a live, catchable animal again. When
 both are nearby, **G** decorates a fresh released animal first, just as
 **F** prefers catching over releasing. Only animals you released can be
-decorated — wildlife the world placed by itself can't — and there's no
-on-screen prompt for **G**. Like adding a
+decorated — wildlife the world placed by itself can't. A prompt shows when
+**G** would decorate or undo something nearby. Like adding a
 [landmark](03-WorldView.md#landmarks--marking-a-place-worth-remembering),
 decorating needs you signed in with EDIT access to the World you're in.
 On someone else's published World, the decoration goes into your own
 copy of it — as long as its license allows forking. If none of that
-applies, **G** simply does nothing.
+applies, **G** simply does nothing; the touch pad's **Decorate** button
+tells you why instead.
 
 #### What survives a reload
 

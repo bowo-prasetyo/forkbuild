@@ -1469,3 +1469,26 @@ layout at any width, so the nav, the World View panel and the Editor sidebar cov
   a click, drags and two-finger touches never reaching the tools, stale pointer ids, pointercancel, Multi-select
   and gizmo drags by touch, and that mouse input is unchanged. `tests/PlacementPreviewUX.test.js` now checks that a
   turn made before any hover carries into the next preview.
+
+## Phones and tablets: stored-vehicle cycling and animal decoration by touch (unnumbered, 2026-09-27)
+
+**The touch pad can now choose which stored vehicle to deploy and decorate a World with an animal**, two of the
+four keyboard actions the first touch release left out. Desktop gets a prompt for `G`, which had none.
+
+- `ui/components/avatarInteractionLabels.js` formats the store/deploy and decoration states the session already
+  resolves, for both the keyboard prompts and the pad, so they show the same actions under the same conditions.
+  The vehicle and species names moved here from the two prompt components.
+- Cycling: with two or more vehicles carried, **‹** and **›** beside **Deploy** press `[` and `]`. Deploy names the
+  selected vehicle and its place in the list ("Deploy Car 2/3").
+- Decoration: World View now polls `animalDecorationInteractionState()` with the other interaction states.
+  - The pad shows **Decorate** or **Undo Decoration**.
+  - `AnimalInteractionPrompt` shows "[G] Decorate with <Species>" or "[G] Undo <Species> Decoration".
+  - The button does not press `G`: the session's `G` ignores a refusal (not signed in, no EDIT access) on purpose,
+    which suits a stray key press but leaves a tapped button doing nothing. The button runs
+    `toggleNearestAnimalDecorationHere()` through World View's `guarded()`, which shows the reason, and the fork
+    notice when decorating made an editable copy.
+- The keyboard prompts are hidden while the touch pad shows, since the pad's buttons replace them; before, they
+  overlapped the pad.
+- Hands-free continuous movement and Editor box selection still have no touch control; they are next.
+- Tests: `tests/AvatarInteractionLabels.test.js` covers store vs deploy, the position shown only with several
+  vehicles, no cycling while riding, decorate winning a tie as `G` does, and fallback names.
