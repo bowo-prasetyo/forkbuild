@@ -125,7 +125,7 @@ export class PublicLobbyUseCase {
         }
         const identityId = signingIdentityId(this._identityProvider);
         if (!identityId) {
-            throw new Error('PublicLobbyUseCase: unlock your identity to join the lobby');
+            throw new Error('PublicLobbyUseCase: sign in and unlock your identity to join the lobby');
         }
         const name = normalizeDisplayName(displayName);
         const card = await this._sendCard(LobbyCard.create({ identityId, lobby, displayName: name, ttlMs: this._cardTtlMs, now: this._now() }));
@@ -193,6 +193,9 @@ export class PublicLobbyUseCase {
             }
         }
         if (reachable === 0 && this._transports.length > 0) {
+            if (settled.some((outcome) => isUnsupported(outcome.reason))) {
+                throw new Error(`PublicLobbyUseCase: ${UNSUPPORTED_MESSAGE}`);
+            }
             throw new Error('PublicLobbyUseCase: no rendezvous server answered; try again in a moment');
         }
         const connected = this.connectedIdentityIds();
@@ -283,11 +286,15 @@ export class PublicLobbyUseCase {
     async _sendCard(unsigned) {
         const card = signLobbyCard(unsigned, this._identityProvider);
         if (!card) {
-            throw new Error('PublicLobbyUseCase: unlock your identity to join the lobby');
+            throw new Error('PublicLobbyUseCase: sign in and unlock your identity to join the lobby');
         }
         const settled = await Promise.allSettled(this._transports.map((transport) => transport.joinLobby(card)));
         if (!settled.some((outcome) => outcome.status === 'fulfilled')) {
-            const failure = settled.find((outcome) => outcome.status === 'rejected');
+            const failure = settled.find((outcome) => outcome.status === 'rejected' && !isUnsupported(outcome.reason))
+                || settled.find((outcome) => outcome.status === 'rejected');
+            if (failure && isUnsupported(failure.reason)) {
+                throw new Error(`PublicLobbyUseCase: ${UNSUPPORTED_MESSAGE}`);
+            }
             throw new Error('PublicLobbyUseCase: ' + stripTransportPrefix(failure && failure.reason && failure.reason.message));
         }
         return card;
@@ -428,6 +435,14 @@ export class PublicLobbyUseCase {
     _emit() {
         this._eventBus.publish(CHANGED_EVENT, {});
     }
+}
+
+const UNSUPPORTED_MESSAGE = 'your rendezvous server does not offer a lobby yet; its operator needs to update it (server/rendezvous-worker)';
+
+// A server from before the lobby answers its requests with an ERROR naming
+// an unknown request type.
+function isUnsupported(error) {
+    return Boolean(error && /unknown request type/.test(error.message || ''));
 }
 
 function isAuthenticatedAs(peer, identityId) {

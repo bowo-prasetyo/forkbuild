@@ -126,6 +126,26 @@ async function rejects(promise, pattern, message) {
     for (const device of [alice, bob]) { device.lobby.dispose(); device.sessions.dispose(); }
 }
 
+// A junk answer left in the mailbox spends the offer but never strands the
+// joiner: the pending connection closes and a fresh offer replaces it.
+{
+    const network = new LocalRendezvousNetwork();
+    const alice = makeDevice('lobby-junk-alice', network);
+    const bob = makeDevice('lobby-junk-bob', network);
+    await alice.lobby.join(PUBLIC_LOBBY, { displayName: 'Alice' });
+    const [spoiled] = await network.lookup(alice.id);
+    await network.postAnswer({ identityId: alice.id, publicationId: spoiled.publicationId, answer: { connectionId: 'not-hers', sdp: 'junk' }, answererId: 'did:key:zJunk' });
+    await waitFor(() => {
+        const current = network._publications.get(alice.id);
+        return current && current.publicationId !== spoiled.publicationId && alice.sessions.isPublishing();
+    }, 'Alice publishes a fresh offer after the junk answer');
+    assert(alice.sessions.listPeers().length === 1, 'the spoiled pending connection was closed, leaving only the fresh one');
+    await bob.lobby.connect(alice.id);
+    await waitFor(() => authenticatedTo(alice.sessions, bob.id) && authenticatedTo(bob.sessions, alice.id), 'Bob still connects');
+    console.log('✓ a junk answer never leaves the joiner unreachable');
+    for (const device of [alice, bob]) { device.lobby.dispose(); device.sessions.dispose(); }
+}
+
 // World lobbies are separate; blocked, forged and expired cards are never
 // listed.
 {
@@ -173,6 +193,13 @@ async function rejects(promise, pattern, message) {
     const serverless = new PublicLobbyUseCase({ transports: [], identityProvider, peerSessionManager: sessions, findPeerUseCase });
     assert(!serverless.isAvailable(), 'with no rendezvous server the lobby is unavailable');
     await rejects(serverless.join(PUBLIC_LOBBY), /no rendezvous server/, '...and joining says so');
+    const oldServer = {
+        joinLobby: async () => { throw new Error('WebSocketRendezvousTransport: unknown request type "JOIN_LOBBY"'); },
+        listLobby: async () => { throw new Error('WebSocketRendezvousTransport: unknown request type "LIST_LOBBY"'); },
+        leaveLobby: async () => false
+    };
+    const outdated = new PublicLobbyUseCase({ transports: [oldServer], identityProvider, peerSessionManager: sessions, findPeerUseCase });
+    await rejects(outdated.list(PUBLIC_LOBBY), /does not offer a lobby yet/, 'a server from before the lobby is named as such, not as unreachable');
     network.setAvailable(false);
     await rejects(locked.list(PUBLIC_LOBBY), /no rendezvous server answered/, 'an unreachable server is reported, not shown as an empty lobby');
     console.log('✓ joining needs an unlocked identity and a reachable rendezvous server');

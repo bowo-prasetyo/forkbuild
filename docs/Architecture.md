@@ -640,6 +640,37 @@ one app-wide owner of connections (listPeers(), importCandidate(),
 disconnect(), onIdentityMismatch()), and ConnectedPeerRegistry lists the
 authenticated ones.
 
+**Answer mailbox.** A rendezvous publication carries the WebRTC offer, and
+the server also carries the answer back (POST_ANSWER, FETCH_ANSWER; see
+docs/Protocol.md, "Rendezvous"). PeerSessionManager#connectToDiscovered()
+leaves the answer through RendezvousDiscoveryProvider#deliverAnswer(), which
+knows which publication each discovered record came from, and
+publishSelf() polls fetchAnswer() while its offer waits and calls
+completeConnection() itself. Find Someone and the automatic Known Peer
+connection (AutoConnectKnownPeersUseCase) therefore complete with nothing
+copied by hand; when the mailbox can't be used (a locked identity, a pasted
+invitation) the reply is returned to hand over as before.
+
+**Public lobby.** application/peer/PublicLobbyUseCase.js lets people who
+don't know each other's identity ids meet: one global lobby (`public`) and
+one per World (`world:<documentId>`). Joining signs a core/LobbyCard.js
+(identity, lobby, display name; no address) and sends it to every
+rendezvous server through peer/RendezvousLobbyTransport.js, a contract kept
+separate from identity lookup so that lookup still cannot list anyone.
+While any lobby is joined the use case keeps this device discoverable: it
+calls publishSelf({ prepareRelay: false }) and republishes as soon as a
+publication is spent, so standing offers never fetch a TURN credential;
+the person who connects does. Cards are renewed while the app runs and
+withdrawn on leave and on `pagehide`; joining is never restored at
+startup. list() keeps only cards that verify by their own signature (the
+server's listing is untrusted), drops this identity and blocked ones, and
+marks who is connected. connect() is FindPeerUseCase#search() and
+#connect() by exact identity. A lobby connection is an ordinary
+authenticated peer: publication sync and the announcement index run as for
+any peer, and friendship still gates chat and voice. The UI is
+ui/components/PublicLobbyPanel.js, on the Peers page and behind World
+View's Lobby button.
+
 **Protocols.** Every application protocol shares each connection through
 peer/PeerMessageBus.js, which routes by a protocol id
 (`forkbuild:chat`, `forkbuild:avatar-presence`, …; the full list is in

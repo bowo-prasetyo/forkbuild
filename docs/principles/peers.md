@@ -871,6 +871,39 @@ device presence and identity presence stay distinct.
 
 [Full text](history/0.1-0.2.md#identity-presence-is-an-aggregate-of-authorized-device-observations-never-a-fourth-store-0285)
 
+### A Rendezvous Answer Is Signed, And Readable Only By The Publisher (2026-09-27)
+
+The rendezvous server carries a WebRTC answer back to the publisher, so
+nobody returns a reply by hand. The answerer signs it, only the publisher
+can read it, and the first answer wins. It proves nothing about who is on
+the other end; the handshake does.
+
+[Full text](history/0.9.md#a-rendezvous-answer-is-signed-and-readable-only-by-the-publisher-2026-09-27)
+
+### A Lobby Card Says Who Is Present, Never Where To Reach Them (2026-09-27)
+
+A lobby card names an identity, a lobby and a display name, signed and
+short-lived, and never carries an offer or address. Connecting goes
+through an exact-identity lookup and the handshake.
+
+[Full text](history/0.9.md#a-lobby-card-says-who-is-present-never-where-to-reach-them-2026-09-27)
+
+### The Lobby Is The Only Listing, And Only Of Those Who Join It (2026-09-27)
+
+Identity lookup still cannot list anyone. Only a separate lobby contract
+lists, and only identities that joined with a signed card for this
+session. Seeing someone never connects to them.
+
+[Full text](history/0.9.md#the-lobby-is-the-only-listing-and-only-of-those-who-join-it-2026-09-27)
+
+### A Standing Offer Never Spends A Relay Credential (2026-09-27)
+
+An offer kept waiting for anyone, as the lobby's is, asks for no TURN
+credential. The person who connects may, and ICE relays only when no
+direct path works.
+
+[Full text](history/0.9.md#a-standing-offer-never-spends-a-relay-credential-2026-09-27)
+
 ## Changed or superseded
 
 These rules described the code at the time and no longer apply as written.

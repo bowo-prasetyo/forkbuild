@@ -28,7 +28,10 @@ information through some channel you already trust (chat, email, in person):
 - **Connect to Peer** — the receiving side: paste an invitation someone sent
   you, and get a reply to send back.
 - **Find Someone** — search by identity ID among candidates you or others
-  have published.
+  have published, then **Connect**. Your reply travels back through the
+  rendezvous server, so the connection completes on its own; you only copy a
+  reply by hand when that isn't possible (your identity is locked, or the
+  candidate came from a pasted invitation).
 - **Be Discoverable** — publishes your own identity to a rendezvous network
   so someone who already knows your identity ID can find and connect to you
   without a direct invitation. One publication answers one connection
@@ -60,6 +63,45 @@ even though a Known Peer or Friend record survives it. Each card's
 "connected …" timer counts from when that connection was actually made,
 not from when you opened the page, so it keeps counting correctly if you
 navigate away and come back.
+
+## The public lobby: meeting people you don't know yet
+
+Find Someone needs someone's full identity ID. The **Public Lobby** is for
+meeting people whose ID you don't have. There is one lobby for everyone, on
+the **Peers** page under **Public Lobby**, and one for each World, under
+**Lobby** in World View.
+
+- **Join Lobby** lists you there under a display name you choose, next to
+  the end of your identity ID. Anyone can pick any name; the identity is
+  what a connection actually checks. The name is remembered for next time.
+- While you're in a lobby, this device stays discoverable: anyone in it can
+  click **Connect** on you, and when someone does, it gets ready for the
+  next person straight away.
+- **Connect** on someone in the list connects to them the same way Find
+  Someone does, with nothing to copy. Their card shows **Connecting…**, then
+  **Connected** once the handshake proves who they are. Seeing someone in the
+  lobby never connects to them on its own.
+- **Block** hides someone from your lobby lists and blocks them as it does
+  everywhere else on this page.
+- **Leave Lobby** takes you out at once. Joining lasts for this visit only:
+  closing the app leaves every lobby, and you're never put back in one
+  when you open it again.
+
+**What someone who connects to you from a lobby gets.** A lobby connection
+is an ordinary connected peer, even before you Remember or befriend them.
+They learn your IP address, see your avatar and presence as your visibility
+settings allow, and your devices **exchange Snapshot and Place Naming
+announcements and publication metadata**, exactly as with any connected
+peer (see [Privacy](../Privacy.md)). Chat and voice still need a friendship.
+
+**Relays only when needed.** Every connection tries a direct path first and
+uses the rendezvous server's TURN relay only when no direct path works.
+While you wait in a lobby, your device never asks for relay credentials; the
+person connecting to you asks for one only if they need it. That keeps the
+relay's monthly allowance for connections that actually happen.
+
+The lobby needs a rendezvous server (see **Rendezvous Servers** in **Network
+Settings**) and an unlocked identity.
 
 ## Remembering, friending, blocking
 

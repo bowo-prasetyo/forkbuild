@@ -253,7 +253,11 @@ export class PeerSessionManager {
                 try {
                     await this.completeConnection(offer.connectionId, found.answer);
                 } catch {
-                    // A bad or expired answer leaves the offer to expire on its own.
+                    // The server will not offer this publication again, so an
+                    // answer that cannot be applied (malformed, or someone
+                    // else's) must not leave it looking available: closing it
+                    // ends isPublishing() and lets the caller publish anew.
+                    this.disconnect(offer.connectionId);
                 }
                 return;
             }

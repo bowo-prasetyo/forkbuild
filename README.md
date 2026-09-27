@@ -68,6 +68,8 @@ models").
   export/import, succession, revocation and multi-device grants.
 - Direct WebRTC peer connections found through rendezvous or a manual
   invitation, and authenticated with a challenge–response handshake.
+- An opt-in public lobby, one for everyone and one per World, for meeting
+  people whose identity you don't know yet.
 - Remembered peers, mutual-consent friendships and blocking.
 - Chat with offline queuing, persistent history and read receipts, and voice
   calls.
