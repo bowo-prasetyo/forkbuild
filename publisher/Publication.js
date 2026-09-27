@@ -63,7 +63,7 @@ export class Publication {
             : (contentReference ? ContentReference.fromJSON(contentReference) : null);
         this._publisherIdentity = publisherIdentity ? { ...publisherIdentity } : null;
         this._signature = signature instanceof Signature ? signature : Signature.fromJSON(signature);
-        // Null (not stored) means "anyone may place copies": see core/PlacementPolicy.js.
+        // Null (not stored) means "anyone may place it": see core/PlacementPolicy.js.
         this._placementPolicy = typeof placementPolicy === 'string' && placementPolicy.length > 0 ? placementPolicy : null;
     }
 

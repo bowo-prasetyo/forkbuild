@@ -13,10 +13,10 @@ import { ClaimedBuildVerificationOutcome } from '../../../application/snapshot/c
 const RECONCILE_INTERVAL_MS = 1000;
 
 const ACCEPTANCE_HINTS = Object.freeze({
-    [ClaimedBuildAcceptance.ACCEPTABLE]: 'Places your own copy of this build at the claimed position.',
+    [ClaimedBuildAcceptance.ACCEPTABLE]: 'Places this build at the claimed position, with a placement signed by you.',
     [ClaimedBuildAcceptance.PUBLICATION_UNKNOWN]: 'Its publisher\'s signed Publication isn\'t on this device yet. Verify fetches it from the network; it also arrives when they share it with you, or from a connected peer in World Encounters.',
     [ClaimedBuildAcceptance.CONTENT_MISMATCH]: 'The verified Publication names different content than this ghost shows, so accepting it could place something else.',
-    [ClaimedBuildAcceptance.PUBLISHER_ONLY]: 'Its publisher allows only their own placements of this build, so you can\'t place a copy.'
+    [ClaimedBuildAcceptance.PUBLISHER_ONLY]: 'Its publisher allows only their own placements of this build, so you can\'t place it.'
 });
 
 const VERIFICATION_MESSAGES = Object.freeze({

@@ -86,7 +86,7 @@ const verifier = new LocalAuthorizationVerifier();
 // Section A — the setting on the document, and its default.
 {
     const plain = new DocumentMetadata({ title: 'x' });
-    assert(plain.placementPolicy === PlacementPolicy.ANYONE, 'A1. a document lets anyone place copies unless its author says otherwise');
+    assert(plain.placementPolicy === PlacementPolicy.ANYONE, 'A1. a document lets anyone place it unless its author says otherwise');
     assert(!('placementPolicy' in plain.toJSON()), 'A2. the default is not written, so existing documents keep their content hash');
 
     const restricted = new DocumentMetadata({ title: 'x', placementPolicy: PlacementPolicy.PUBLISHER_ONLY });

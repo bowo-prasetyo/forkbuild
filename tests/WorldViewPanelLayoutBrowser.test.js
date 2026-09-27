@@ -206,7 +206,7 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     console.log('✓ the hover card floats outside the panel');
 }
 
-// Each Placements row carries its own Move and Remove; Place Copy Here stays under the list.
+// Each Placements row carries its own Move and Remove; Add Placement Here stays under the list.
 {
     const publication = { id: 'pub-1', title: 'A Pyramid with Stair', author: 'forkbuild', publisherIdentity: null };
     const placements = [
@@ -236,8 +236,8 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     });
     await nextTick();
     const actions = host.querySelector('.own-publication-placements .own-publication-placement-actions');
-    assert(actions && JSON.stringify(buttonLabels(actions)) === JSON.stringify(['Place Copy Here']),
-        `Place Copy Here sits under the list — got ${actions ? buttonLabels(actions).join(', ') : 'no row'}`);
+    assert(actions && JSON.stringify(buttonLabels(actions)) === JSON.stringify(['Add Placement Here']),
+        `Add Placement Here sits under the list — got ${actions ? buttonLabels(actions).join(', ') : 'no row'}`);
     const rows = [...host.querySelectorAll('.own-publication-placement-entry')];
     assert(rows.length === 2, 'one row per placement');
     const rowButtons = (row) => [...row.querySelectorAll('.own-publication-placement-row-actions button')];
@@ -255,7 +255,7 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     rowButtons(rows[0])[1].click();
     await nextTick();
     const confirm = rows[0].querySelector('.own-publication-placement-remove-confirm');
-    assert(confirm && /other copies/.test(confirm.textContent), 'Remove… first asks, naming what stays');
+    assert(confirm && /other placements/.test(confirm.textContent), 'Remove… first asks, naming what stays');
     assert(calls.length === 1, 'nothing is removed before confirming');
     confirm.querySelector('.own-publication-placement-remove-action').click();
     await nextTick();

@@ -1,4 +1,4 @@
-// World View's "Place Copy Here": each click adds another copy at "here", but a
+// World View's "Add Placement Here": each click adds another placement at "here", but a
 // click where a copy of this Publication already sits is refused, so repeated
 // clicks without moving never stack duplicates on one spot.
 import { useOwnPublicationActions } from '../ui/views/worldView/useOwnPublicationActions.js';
@@ -35,21 +35,21 @@ const publication = { id: 'pub-1' };
 {
     const h = harness({ avatar: { x: 1095, y: 0, z: 2455 } });
     h.actions.placeOwnPublication(publication);
-    assert(h.placements.length === 1, 'the first click places a copy');
-    assert(h.messages[0] === 'Copy placed at 1095.0, 0.0, 2455.0 (1 placement now)',
+    assert(h.placements.length === 1, 'the first click places it');
+    assert(h.messages[0] === 'Placed at 1095.0, 0.0, 2455.0 (1 placement now)',
         `the confirmation names where and how many — got "${h.messages[0]}"`);
 
     h.actions.placeOwnPublication(publication);
     h.actions.placeOwnPublication(publication);
     assert(h.placements.length === 1, 'repeated clicks on the same spot place nothing more');
     assert(/already placed here/.test(h.messages[1]) && /Move…/.test(h.messages[1]),
-        'a refused click says why and points at a copy\'s Move…');
+        'a refused click says why and points at a placement\'s Move…');
 
     h.move({ x: 1200, y: 0, z: 2455 });
     h.actions.placeOwnPublication(publication);
-    assert(h.placements.length === 2, 'after moving, another copy can be placed');
-    assert(h.messages[h.messages.length - 1].endsWith('(2 placements now)'), 'the count includes every copy');
-    console.log('✓ Place Copy Here refuses a duplicate on the same spot and places again after moving');
+    assert(h.placements.length === 2, 'after moving, it can be placed again');
+    assert(h.messages[h.messages.length - 1].endsWith('(2 placements now)'), 'the count includes every placement');
+    console.log('✓ Add Placement Here refuses a duplicate on the same spot and places again after moving');
 }
 
 {

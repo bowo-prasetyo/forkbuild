@@ -368,9 +368,9 @@ position. Each row has:
   the combined **Distribute** button announces both), no copy was validly
   signed, or the signed Publication names different content. Verify never
   accepts anything by itself.
-- **Accept Position** — the one way to trust a claim. It places *your own*
-  copy of the build at the claimed position, signed by you like any other
-  placement, and from then on it's a normal build in your World. It's only
+- **Accept Position** — the one way to trust a claim. It places the build
+  at the claimed position with a placement of *your own*, signed by you like
+  any other placement, and from then on it's a normal build in your World. It's only
   enabled once this device holds the publisher's signed, verified
   Publication record — through **Verify**, when they share the World with
   you (see
@@ -700,16 +700,17 @@ shared space* is theirs to move.
 A real building can't be picked up and put somewhere else, so it may seem
 odd that ForkBuild lets you place anyone's published build wherever you
 like. A published build isn't one physical object. It's fixed content,
-identified by its content hash, that anyone can hold a copy of, much like a
-file or a Git repository. A **placement** is a separate, signed record that
-says where one copy sits.
+identified by its content hash, much like a file or a Git repository. A
+**placement** is a separate, signed record that says "show this build here".
+It points at the build; it doesn't copy it. The same build can have many
+placements, and each one shows exactly the same published content.
 
 So placing someone else's build never moves or changes theirs:
 
 - **Their placement stays where they put it.** Only they can move it (see
   [Placements you don't own](#placements-you-dont-own) above).
-- **Your placement is signed by you**, and it only says where *you* put your
-  copy.
+- **Your placement is signed by you**, and it only says where *you* show
+  their build.
 - **The build keeps its author and history.** It's still exactly the content
   they published, and anyone can check that against its hash and signature.
 
@@ -733,7 +734,26 @@ A publisher who doesn't want this can choose **Only I may place it** when
 they publish (see
 [Choosing who can place it](04-PublishingAndForking.md#choosing-who-can-place-it)).
 You can still find, view and, if the license allows, fork their build, but
-you can't place a copy of it.
+you can't place it.
+
+### Placing vs forking
+
+Both let you have someone else's build in a World of yours, but they're
+different things:
+
+| | Placing | Forking (Fork, or Edit a Copy) |
+|---|---|---|
+| What's created | A placement: a small signed record of where to show the build | A new document, with new ids, that belongs to you |
+| The build | The same Publication, shown as published | Your own copy, with a note linking back to the original |
+| Can you change the bricks? | No | Yes, in the Editor |
+| Who's the author | The original publisher | You, with the original recorded as its parent |
+| Controlled by | The publisher's **Who can place it** setting | The license |
+| Publishing it | Nothing new is published | Creates a new Publication under your name |
+
+Placing is like linking to the same file from another page; forking is like
+cloning a repository to work on your own copy. So only a fork is a real
+copy. Someone who chose **Only I may place it** can still allow forks
+through their license, and a fork is then yours to place wherever you like.
 
 ## World View is read-only — building happens in the Editor
 
@@ -841,19 +861,21 @@ one place, and every placement this device can discover is listed, never
 just a single, most-recently-updated stand-in for the rest.
 
 Each row has its own **Move…** and **Remove…**, acting on exactly that
-copy and no other. **Move…** opens the same X/Y/Z Move Placement dialog
-(with its overlap warning) for that copy. **Remove…** asks once before
-taking that copy out of the World; the Publication, its Document and the
-other copies stay, and removing the last copy only means the build no
-longer appears anywhere until you place it again. Both are disabled on a
-copy someone else placed: only its owner can move or remove it.
+placement and no other. **Move…** opens the same X/Y/Z Move Placement dialog
+(with its overlap warning) for that placement. **Remove…** asks once before
+taking that placement out of the World; the Publication, its Document and
+the other placements stay, and removing the last placement only means the
+build no longer appears anywhere until you place it again. Both are disabled
+on a placement someone else made: only its owner can move or remove it.
 
-**Place Copy Here**, under the list, adds *another* copy of the build at
+**Add Placement Here**, under the list, places the same build *again* at
 your avatar's (or, without one, the camera's) position — it never moves
-an existing one; use that copy's **Move…** for that. The confirmation
-names where the copy went and how many placements the Publication now
-has. If a copy already sits exactly where you are, the button refuses and
-asks you to move first, so repeated clicks can't pile invisible
+an existing placement; use that placement's **Move…** for that. It adds a
+placement, not a copy: the build stays one Publication (see
+[Placing vs forking](#placing-vs-forking)). The confirmation names where it
+was placed and how many placements the Publication now has. If a placement
+already sits exactly where you are, the button refuses and asks you to move
+first, so repeated clicks can't pile invisible
 duplicates onto one spot. An empty list
 just means this Publication hasn't been placed anywhere yet; a read
 failure shows its own plain error instead.

@@ -125,16 +125,19 @@ they just can't fork it until you pick a license that allows it.
 
 ## Choosing who can place it
 
-Other people can normally place copies of your published creation in their
-own Worlds. That never moves or changes yours (see
+Other people can normally place your published creation in their own
+Worlds. That adds a placement of your build, never a copy of it, and it never
+moves or changes yours (see
 [Why can I place other people's builds?](03-WorldView.md#why-can-i-place-other-peoples-builds)).
-If you'd rather they didn't, open **Document Properties** and set **Who can
+Forking is separate and governed by the license (see
+[Placing vs forking](03-WorldView.md#placing-vs-forking)).
+If you'd rather they didn't place it, open **Document Properties** and set **Who can
 place it in the World**:
 
 | Setting | Meaning |
 |---|---|
-| **Anyone may place copies** | The default. Anyone can place a copy of it wherever they like in their own World |
-| **Only I may place it** | Only you can place it. Other people can still find, view and (if the license allows) fork it, but ForkBuild won't let them place copies of it |
+| **Anyone may place it** | The default. Anyone can place it wherever they like in their own World |
+| **Only I may place it** | Only you can place it. Other people can still find, view and (if the license allows) fork it, but ForkBuild won't let them place it |
 
 The setting is signed as part of the publication when you publish, so
 nobody can remove or change it afterwards. That also means it applies only

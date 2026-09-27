@@ -1,4 +1,4 @@
-// Who may place copies of a Publication in shared space. The publisher
+// Who may place a Publication in shared space. The publisher
 // chooses it, and it is signed as part of the Publication, so nobody can
 // change or strip it without breaking that signature. It is honored by
 // every ForkBuild replica, the same way the license's fork permission is:
