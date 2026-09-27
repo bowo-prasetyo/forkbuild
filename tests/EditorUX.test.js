@@ -353,4 +353,23 @@ function selectBricks(editorContext, building, brickIds) {
     console.log('✓ D. CAPSTONE: Place -> Select -> Duplicate -> Rotate -> Repeat -> Extract -> Save -> Place as independent bricks, and a StructurePlacement selection never crosses into the brick-selection inspector path');
 }
 
+// E. onExecute: a listener hears every action that actually ran (so a view
+// can refresh clipboard state, which no document event reports), never one
+// that was disabled, and stops hearing after unsubscribing.
+{
+    const heard = [];
+    const registry = new EditorActionRegistry([
+        { id: 'test.on', label: 'On', category: 'Test', enabled: () => true, execute: () => {} },
+        { id: 'test.off', label: 'Off', category: 'Test', enabled: () => false, execute: () => {} }
+    ]);
+    const unsubscribe = registry.onExecute((id) => heard.push(id));
+    assert(registry.execute('test.on', {}) === true, 'E1. an enabled action runs');
+    assert(registry.execute('test.off', {}) === false, 'E2. a disabled action does not run');
+    assert(JSON.stringify(heard) === JSON.stringify(['test.on']), `E3. the listener hears only the action that ran, got ${heard.join(', ')}`);
+    unsubscribe();
+    registry.execute('test.on', {});
+    assert(heard.length === 1, 'E4. after unsubscribing the listener hears nothing more');
+    console.log('✓ E. EditorActionRegistry#onExecute reports actions that ran');
+}
+
 console.log('\nAll Editor UX Consolidation tests passed.');

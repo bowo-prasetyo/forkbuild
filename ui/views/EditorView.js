@@ -29,7 +29,6 @@ import { saveDocument } from '../components/saveDocument.js';
 import BuildLibraryPanel from '../components/BuildLibraryPanel.js';
 import EditingSidebar from '../components/EditingSidebar.js';
 import StructureInstancePanel from '../components/StructureInstancePanel.js';
-import SelectionInspector from '../components/SelectionInspector.js';
 import CommandPalette from '../components/CommandPalette.js';
 import KeyboardShortcutsOverlay from '../components/KeyboardShortcutsOverlay.js';
 import ActionFeedback from '../components/ActionFeedback.js';
@@ -73,7 +72,7 @@ const PLACING_TOOLS = new Set([ToolId.PLACE, ToolId.PLACE_STRUCTURE, ToolId.COMP
 
 export default {
     name: 'EditorView',
-    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, SelectionInspector, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, EditorTouchActionBar },
+    components: { Toolbar, BuildLibraryPanel, EditingSidebar, StructureInstancePanel, CommandPalette, KeyboardShortcutsOverlay, ActionFeedback, RecoveryBanner, DocumentInfoPanel, MetadataEditorDialog, CreateBlueprintDialog, StructureInfoPanel, TransformFeedback, ForkFailureDialog, EditorDistributionDialog, EditorTouchActionBar },
     template: `
         <div class="editor-view">
             <Toolbar
@@ -144,15 +143,17 @@ export default {
             <div :class="['editor-body', { 'editor-body--sidebar-open': sidebarOpen }]">
                 <div class="sidebar">
                   <div class="sidebar-scroll">
-                    <div class="tool-switcher">
+                    <div class="tool-switcher tool-switcher--editor" role="group" aria-label="Tool">
                         <button
                             :class="['tool-btn', { 'tool-btn--active': activeTool === ToolId.SELECT }]"
+                            :aria-pressed="activeTool === ToolId.SELECT ? 'true' : 'false'"
                             @click="setTool(ToolId.SELECT)"
                         >
                             Select
                         </button>
                         <button
-                            :class="['tool-btn', { 'tool-btn--active': activeTool === ToolId.PLACE }]"
+                            :class="['tool-btn', { 'tool-btn--active': PLACING_TOOLS.has(activeTool) }]"
+                            :aria-pressed="PLACING_TOOLS.has(activeTool) ? 'true' : 'false'"
                             @click="setTool(ToolId.PLACE)"
                         >
                             Place
@@ -177,7 +178,7 @@ export default {
                         Placing "{{ activeCompositionTitle }}" — hover the ground, R to rotate, click to place, Esc to cancel.
                     </p>
                     </template>
-                    <DocumentInfoPanel :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
+                    <DocumentInfoPanel compact :info="documentInfo" @edit-metadata="showMetadataEditor = true" />
                     <StructureInstancePanel
                         v-if="selectedPlacementInfo"
                         :info="selectedPlacementInfo"
@@ -187,12 +188,19 @@ export default {
                         @edit-source="editSelectedPlacementSource"
                         @apply-transform="applySelectedPlacementTransform"
                     />
-                    <SelectionInspector
-                        v-if="selectionSummary"
+                    <EditingSidebar
                         :registry="actionRegistry"
                         :get-context="getActionContext"
-                        :summary="selectionSummary"
+                        :ui="actionUi"
+                        :selection-count="selectionCount"
+                        :is-structure-placement-selection="selectionIsStructurePlacement"
+                        :selection-summary="selectionSummary"
                         :recolor="recolorSelection"
+                        :apply-numeric="applyNumericTransform"
+                        :align="alignSelection"
+                        :distribute="distributeSelection"
+                        :repeat="repeatSelection"
+                        :select-group="selectGroup"
                     />
                     <BuildLibraryPanel
                         :palette-use-case="paletteUseCase"
@@ -211,18 +219,6 @@ export default {
                         @import-blueprint="importBlueprint"
                         @inspect-structure="inspectStructure"
                         @fork-to-library="forkStructureToLibrary"
-                    />
-                    <EditingSidebar
-                        :registry="actionRegistry"
-                        :get-context="getActionContext"
-                        :ui="actionUi"
-                        :selection-count="selectionCount"
-                        :is-structure-placement-selection="selectionIsStructurePlacement"
-                        :apply-numeric="applyNumericTransform"
-                        :align="alignSelection"
-                        :distribute="distributeSelection"
-                        :repeat="repeatSelection"
-                        :select-group="selectGroup"
                     />
                   </div>
                 </div>
@@ -679,6 +675,11 @@ export default {
         const actionRegistry = new EditorActionRegistry(
             createStandardActions({ session: editorSession, feedback, ui: actionUi })
         );
+        // Copy changes the clipboard but not the document, so without this the
+        // sidebar would keep showing Paste as unavailable.
+        actionRegistry.onExecute(() => {
+            documentVersion.value++;
+        });
         const getActionContext = () => {
             // Read only so computeds built on this track documentVersion too.
             void documentVersion.value;

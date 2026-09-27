@@ -3,7 +3,7 @@ import { CreateStructureRegistryUseCase } from '../application/editor/CreateStru
 import { VillageLibrary } from '../core/library/VillageLibrary.js';
 import { LibraryPreviewService } from '../application/editor/LibraryPreviewService.js';
 import { PreviewType } from '../core/DocumentPreview.js';
-import { matches, normalize } from '../ui/components/BuildLibraryPanel.js';
+import { groupBricksForDisplay, matches, normalize } from '../ui/components/BuildLibraryPanel.js';
 import { EditorContext } from '../application/editor/EditorContext.js';
 import { PaletteUseCase } from '../application/editor/PaletteUseCase.js';
 import { ForkStructureUseCase } from '../application/editor/ForkStructureUseCase.js';
@@ -288,6 +288,38 @@ async function run() {
             'fork: forking a structure never touches the active tool by itself');
 
         console.log('✓ Section E: selecting a brick and forking a structure are structurally independent actions');
+    }
+
+    // Section F: the Bricks tab shows a few broad sections, not one
+    // heading per registry category.
+    {
+        const brickRegistry = new CreateBrickRegistryUseCase().execute();
+        const registryGroups = brickRegistry.groupByCategory();
+        const sections = groupBricksForDisplay(registryGroups);
+        const names = (section) => section.definitions.map((d) => d.name);
+
+        assert(JSON.stringify(sections.map((s) => s.category))
+            === JSON.stringify(['Basic', 'Structure', 'Roofs & Stairs', 'Openings', 'Details']),
+            `bricks: five display sections in a fixed order, got ${sections.map((s) => s.category).join(', ')}`);
+        const total = registryGroups.reduce((sum, g) => sum + g.definitions.length, 0);
+        assert(sections.reduce((sum, s) => sum + s.definitions.length, 0) === total,
+            'bricks: every registry brick appears in exactly one section');
+        const openings = names(sections.find((s) => s.category === 'Openings'));
+        assert(openings.includes('Small Window') && openings.includes('Large Window') && openings.includes('Door'),
+            `bricks: both windows and the door share Openings, got ${openings.join(', ')}`);
+        assert(names(sections.find((s) => s.category === 'Basic'))[0] === 'Cube',
+            'bricks: registry order is kept within a section');
+        assert(brickRegistry.get('core:window_small').category === 'primitive',
+            'bricks: display grouping never changes a BrickDefinition\'s own category');
+
+        const unknown = groupBricksForDisplay([
+            { category: 'primitive', definitions: [{ name: 'A', category: 'primitive', tags: [] }] },
+            { category: 'custom', definitions: [{ name: 'B', category: 'custom', tags: [] }] }
+        ]);
+        assert(JSON.stringify(unknown.map((s) => s.category)) === JSON.stringify(['Basic', 'custom']),
+            'bricks: an unmapped category keeps its own name, after the known sections');
+
+        console.log('✓ Section F: bricks are shown in broad display sections');
     }
 
     console.log('✓ All BuildLibraryUX tests passed');

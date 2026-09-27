@@ -54,6 +54,52 @@ export function buildCategoryOptions(...groupsLists) {
     return { total, options };
 }
 
+// The brick registry's own categories give most bricks a heading to
+// themselves, so the palette shows them in a few broader sections
+// instead. Display only: BrickDefinition.category is left alone.
+const BRICK_SECTIONS = ['Basic', 'Structure', 'Roofs & Stairs', 'Openings', 'Details'];
+const BRICK_SECTION_BY_CATEGORY = {
+    primitive: 'Basic',
+    structural: 'Basic',
+    wall: 'Structure',
+    floor: 'Structure',
+    column: 'Structure',
+    beam: 'Structure',
+    roof: 'Roofs & Stairs',
+    stairs: 'Roofs & Stairs',
+    arch: 'Openings',
+    window: 'Openings',
+    door: 'Openings',
+    decorative: 'Details'
+};
+const OPENING_TAGS = new Set(['window', 'door', 'opening']);
+
+function brickSectionFor(definition) {
+    if ((definition.tags || []).some((tag) => OPENING_TAGS.has(tag))) {
+        return 'Openings';
+    }
+    return BRICK_SECTION_BY_CATEGORY[definition.category] || definition.category;
+}
+
+// Regroups [{ category, definitions }] into display sections, known
+// sections first in BRICK_SECTIONS order, then any unmapped category in
+// the order it first appears. Keeps registry order within a section.
+export function groupBricksForDisplay(groups) {
+    const bySection = new Map();
+    for (const group of groups) {
+        for (const definition of group.definitions) {
+            const section = brickSectionFor(definition);
+            if (!bySection.has(section)) {
+                bySection.set(section, []);
+            }
+            bySection.get(section).push(definition);
+        }
+    }
+    const known = BRICK_SECTIONS.filter((section) => bySection.has(section));
+    const others = [...bySection.keys()].filter((section) => !BRICK_SECTIONS.includes(section));
+    return [...known, ...others].map((category) => ({ category, definitions: bySection.get(category) }));
+}
+
 // 0.2.84 — Building Library & Palette UX. Replaces the Editor sidebar's
 // two previously-unrelated panels (ui/components/Sidebar.js wrapping
 // BrickPalette, and ui/components/StructureLibraryPanel.js) with one
@@ -293,11 +339,11 @@ export default {
 
         const filteredBrickGroups = computed(() => {
             const normalized = normalize(query.value);
-            return brickGroups.value
+            return groupBricksForDisplay(brickGroups.value)
                 .map((group) => ({
                     category: group.category,
                     definitions: group.definitions.filter((definition) =>
-                        matches(normalized, definition.name, definition.category, definition.tags.join(' '))
+                        matches(normalized, definition.name, definition.category, group.category, definition.tags.join(' '))
                     )
                 }))
                 .filter((group) => group.definitions.length > 0);
@@ -589,7 +635,7 @@ export default {
                 <p v-if="filteredBrickGroups.length === 0" class="build-library-empty">No matching bricks.</p>
                 <div v-for="group in filteredBrickGroups" :key="group.category" class="palette-group">
                     <h4 class="palette-category">{{ group.category }}</h4>
-                    <ul class="palette-list">
+                    <ul class="palette-list palette-list--grid">
                         <li
                             v-for="definition in group.definitions"
                             :key="definition.id"

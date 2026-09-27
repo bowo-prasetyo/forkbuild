@@ -86,7 +86,6 @@ export default {
                 borderRadius: '3px',
                 color: enabled ? '#d0d0d0' : '#606060',
                 fontSize: '11px',
-                fontFamily: 'monospace',
                 cursor: enabled ? 'pointer' : 'not-allowed',
                 whiteSpace: 'nowrap'
             };

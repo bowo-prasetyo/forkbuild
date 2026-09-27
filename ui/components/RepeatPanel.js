@@ -56,7 +56,7 @@ export default {
         },
         inputStyle() {
             return {
-                width: '48px',
+                width: '40px',
                 padding: '3px 6px',
                 background: this.enabled ? '#121212' : '#181818',
                 border: '1px solid ' + (this.invalid ? '#e74c3c' : '#2a2a2a'),
@@ -69,7 +69,6 @@ export default {
         labelStyle() {
             return {
                 color: '#909090',
-                fontFamily: 'monospace',
                 fontSize: '11px'
             };
         },
@@ -82,7 +81,7 @@ export default {
                 borderRadius: '3px',
                 color: this.enabled ? '#d0d0d0' : '#606060',
                 fontSize: '11px',
-                fontFamily: 'monospace',
+                whiteSpace: 'nowrap',
                 cursor: this.enabled ? 'pointer' : 'not-allowed'
             };
         }

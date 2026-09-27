@@ -2,113 +2,65 @@ import AlignmentPanel from './AlignmentPanel.js';
 import NumericTransformPanel from './NumericTransformPanel.js';
 import RepeatPanel from './RepeatPanel.js';
 import CollapsibleSection from './CollapsibleSection.js';
+import SelectionInspector from './SelectionInspector.js';
 
-// The consolidated editing sidebar (0.1.50): Selection / Transform /
-// Groups / Clipboard in one place, organized — not a new UI framework.
-// Composes the existing AlignmentPanel and NumericTransformPanel
-// unchanged, and drives every button through the EditorActionRegistry,
-// so disabled states come with reasons ("Select at least 2 bricks",
-// "Clipboard is empty", ...) and the same operations stay reachable
-// from the palette and keyboard.
+// The Editor's contextual Selection panel. It only shows controls that can
+// act right now: with nothing selected, a hint plus Select All / Paste and
+// the group list (clicking a group selects its bricks); with bricks
+// selected, SelectionInspector's actions and three collapsed sections for
+// the occasional operations. A StructurePlacement selection renders
+// nothing here, because StructureInstancePanel is that selection's card.
 //
-// 0.6.2 — Editor UX Consolidation reworks this file around a Primary /
-// Common / Advanced action hierarchy (application/editor/EditorActionRegistry.js's
-// own `tier` field — see that file's 0.6.2 header) instead of exposing
-// every operation at once:
-//   - The old "Selection" section (a bare "N brick(s) selected" line
-//     plus Duplicate/Delete/Clear) moved OUT of this file entirely, to
-//     ui/components/SelectionInspector.js — selection info now lives
-//     next to the live position readout that explains what those
-//     buttons would act on, not a scroll away in a separate section.
-//     Select All stays here: it grows the selection rather than acting
-//     on one that already exists, so it belongs with "nothing selected
-//     yet."
-//   - Transform keeps Rotate (Primary) and the numeric panel (Move)
-//     always visible; Align/Distribute/Repeat (Advanced) collapse into
-//     one CollapsibleSection, collapsed by default.
-//   - Groups keeps Create always visible (the entry point); every other
-//     group operation (Advanced) collapses the same way.
-//   - Clipboard is small enough already (two buttons) to stay always
-//     visible — collapsing it would hide more chrome than it saves.
-//
-// Empty-state copy matters as much as the buttons: with nothing
-// selected, the sidebar says what the surface is for instead of
-// rendering a wall of dead controls.
+// Every button runs through the EditorActionRegistry, so disabled states
+// carry the same reasons and the operations stay reachable from the
+// Command Palette and keyboard.
 export default {
     name: 'EditingSidebar',
-    components: { AlignmentPanel, NumericTransformPanel, RepeatPanel, CollapsibleSection },
+    components: { AlignmentPanel, NumericTransformPanel, RepeatPanel, CollapsibleSection, SelectionInspector },
     props: {
         registry: { type: Object, required: true },
         getContext: { type: Function, required: true },
         ui: { type: Object, default: () => ({}) },
         selectionCount: { type: Number, default: 0 },
-        // 0.2.91 — World Instance Editing & Placement Management: true
-        // when the selection is exactly one StructurePlacement, so the
-        // Selection section's copy and Duplicate button reflect "an
-        // instance" rather than always assuming bricks.
         isStructurePlacementSelection: { type: Boolean, default: false },
+        // EditorSession#getSelectionSummary() for a brick selection, else null.
+        selectionSummary: { type: Object, default: null },
+        recolor: { type: Function, default: null },
         applyNumeric: { type: Function, required: true },
         align: { type: Function, required: true },
         distribute: { type: Function, required: true },
-        // 0.6.2 — the Repeat panel's own host callback, same shape as
-        // align/distribute above: this component stays dumb about what
-        // "repeat" means, the host view routes it to
-        // EditorSession#repeatSelection().
         repeat: { type: Function, required: true },
-        // Rename/Duplicate/Delete/+Sel/-Sel below all act on "the
-        // selected group" (EditorSession#_selectedGroupId) — this is
-        // the ONLY way this sidebar has to set which one that is, since
-        // the group list itself is otherwise just names and counts.
-        // Routed through the host view (like repeat above) because
-        // EditorSession#selectGroup() is deliberately a plain session
-        // state change, not a registry action: it produces no history
-        // entry and needs no enabled()/disabledReason() gating of its
-        // own — see ui/views/EditorView.js#selectGroup()'s own header.
+        // The only way to set "the selected group" that Rename/Duplicate/
+        // Delete/Add/Remove act on. A plain session state change, not a
+        // registry action: it makes no history entry.
         selectGroup: { type: Function, required: true }
     },
     data() {
         return {
-            // 0.6.2 — local, not a shared navigation-state store like
-            // WorldViewNavigationState: this sidebar never unmounts
-            // while the Editor is open, so there is nothing for a
-            // remount to forget. Both start collapsed — "progressive
-            // disclosure," not "advanced controls hidden forever."
-            transformAdvancedCollapsed: true,
-            groupsAdvancedCollapsed: true
+            numericCollapsed: true,
+            arrangeCollapsed: true,
+            groupsCollapsed: true
         };
     },
     computed: {
         context() {
             return this.getContext();
+        },
+        hasBrickSelection() {
+            return !!this.selectionSummary && !this.isStructurePlacementSelection;
+        },
+        isEmpty() {
+            return this.selectionCount === 0;
         }
     },
     mounted() {
-        // transform.numeric focuses the first numeric field in this
-        // sidebar; the action layer reaches it through ui.focusNumeric.
-        if (this.ui) {
-            this.ui.focusNumeric = () => {
-                const input = this.$el && this.$el.querySelector('input');
-                if (input) {
-                    input.focus();
-                }
-            };
-            // 0.6.2 — transform.repeat's own focus hook, mirroring
-            // focusNumeric immediately above but scoped to the Repeat
-            // panel's own count field (a generic "first input" selector
-            // would hit NumericTransformPanel's X field instead) — and,
-            // since Repeat lives inside the collapsed-by-default
-            // Advanced section, expanding it first so focus() lands on
-            // something actually visible.
-            this.ui.focusRepeat = () => {
-                this.transformAdvancedCollapsed = false;
-                this.$nextTick(() => {
-                    const input = this.$el && this.$el.querySelector('.repeat-panel-count');
-                    if (input) {
-                        input.focus();
-                    }
-                });
-            };
+        if (!this.ui) {
+            return;
         }
+        // transform.numeric / transform.repeat focus a field that lives in a
+        // collapsed section, so expand it before focusing.
+        this.ui.focusNumeric = () => this.expandAndFocus('numericCollapsed', '.numeric-transform-panel input');
+        this.ui.focusRepeat = () => this.expandAndFocus('arrangeCollapsed', '.repeat-panel-count');
     },
     methods: {
         run(id) {
@@ -118,185 +70,141 @@ export default {
             const action = this.registry.get(id);
             return !action || !action.enabled(this.context);
         },
-        reasonFor(id) {
-            const action = this.registry.get(id);
-            if (!action || !action.disabledReason) {
-                return null;
+        titleFor(id, enabledTitle) {
+            if (!this.isDisabled(id)) {
+                return enabledTitle;
             }
-            return action.disabledReason(this.context);
+            const action = this.registry.get(id);
+            return action && action.disabledReason ? action.disabledReason(this.context) : null;
         },
-        buttonStyle() {
-            return {
-                padding: '3px 8px',
-                background: '#1f1f1f',
-                border: '1px solid #2a2a2a',
-                borderRadius: '3px',
-                color: '#c0c0c0',
-                fontSize: '11px',
-                fontFamily: 'monospace',
-                cursor: 'pointer'
-            };
+        expandAndFocus(collapsedKey, selector) {
+            this[collapsedKey] = false;
+            this.$nextTick(() => {
+                const input = this.$el && this.$el.querySelector && this.$el.querySelector(selector);
+                if (input) {
+                    input.focus();
+                }
+            });
         },
-        sectionStyle() {
-            return {
-                marginTop: '12px',
-                padding: '10px',
-                background: '#161616',
-                border: '1px solid #242424',
-                borderRadius: '4px'
-            };
-        },
-        headingStyle() {
-            return {
-                margin: '0 0 6px',
-                fontSize: '10px',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: '#707070'
-            };
-        },
-        rowStyle() {
-            return { display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px' };
-        },
-        emptyStyle() {
-            return { margin: '0', color: '#707070', fontSize: '11px', lineHeight: '1.5' };
-        },
-        groupItemStyle(selected) {
-            return {
-                padding: '3px 6px',
-                marginBottom: '2px',
-                borderRadius: '3px',
-                cursor: 'pointer',
-                background: selected ? '#2a3a2a' : 'transparent',
-                border: selected ? '1px solid #4caf7d' : '1px solid transparent'
-            };
+        onSelectGroup(groupId) {
+            this.selectGroup(groupId);
+            // Selecting a group selects its bricks; open the section whose
+            // buttons act on that group so the next step is visible.
+            this.groupsCollapsed = false;
         }
     },
     template: `
-        <div>
-            <div :style="sectionStyle()">
-                <h4 :style="headingStyle()">Selection</h4>
-                <p v-if="context.selectionCount === 0" :style="emptyStyle()">
-                    Nothing selected — place a brick or structure, or click one to select it.
-                </p>
-                <div :style="rowStyle()">
+        <div v-if="!isStructurePlacementSelection" class="editing-sidebar">
+            <section v-if="isEmpty" class="editor-panel editing-sidebar-empty">
+                <h4 class="editor-panel-heading">Selection</h4>
+                <p class="editor-panel-hint">Click a brick to select it, or pick one from the library below to start placing.</p>
+                <div class="editor-panel-actions">
                     <button
-                        type="button"
-                        :style="buttonStyle()"
+                        type="button" class="editor-panel-btn"
                         :disabled="isDisabled('selection.selectAll')"
-                        :title="isDisabled('selection.selectAll') ? reasonFor('selection.selectAll') : 'Select every brick'"
+                        :title="titleFor('selection.selectAll', 'Select every brick (Ctrl/Cmd+A)')"
                         @click="run('selection.selectAll')"
                     >Select All</button>
+                    <button
+                        v-if="!context.clipboardEmpty"
+                        type="button" class="editor-panel-btn"
+                        :disabled="isDisabled('clipboard.paste')"
+                        :title="titleFor('clipboard.paste', 'Paste the clipboard contents (Ctrl/Cmd+V)')"
+                        @click="run('clipboard.paste')"
+                    >Paste</button>
                 </div>
-            </div>
+                <template v-if="context.hasGroups">
+                    <h5 class="editor-panel-subheading">Groups</h5>
+                    <ul class="editing-sidebar-group-list">
+                        <li v-for="group in context.groups" :key="group.id">
+                            <button
+                                type="button" class="editing-sidebar-group"
+                                title="Select this group's bricks"
+                                @click="onSelectGroup(group.id)"
+                            >{{ group.name || '(unnamed group)' }} <span class="editing-sidebar-group-count">{{ group.memberCount }}</span></button>
+                        </li>
+                    </ul>
+                </template>
+            </section>
 
-            <div :style="sectionStyle()">
-                <h4 :style="headingStyle()">Transform</h4>
-                <!-- 0.6.2 — hidden for a StructurePlacement selection:
-                     StructureInstancePanel (above, in EditorView's own
-                     sidebar) already renders its OWN Rotate ↻/↺ pair for
-                     exactly that case — same underlying
-                     EditorSession#rotateSelection() either way, so
-                     showing both here would be the redundant-UI problem
-                     this milestone exists to remove, not add to. -->
-                <div v-if="!isStructurePlacementSelection" :style="rowStyle()">
-                    <button
-                        type="button" :style="buttonStyle()"
-                        :disabled="isDisabled('transform.rotateClockwise')"
-                        :title="isDisabled('transform.rotateClockwise') ? reasonFor('transform.rotateClockwise') : 'Rotate +90°'"
-                        @click="run('transform.rotateClockwise')"
-                    >Rotate ↻</button>
-                    <button
-                        type="button" :style="buttonStyle()"
-                        :disabled="isDisabled('transform.rotateCounterClockwise')"
-                        :title="isDisabled('transform.rotateCounterClockwise') ? reasonFor('transform.rotateCounterClockwise') : 'Rotate −90°'"
-                        @click="run('transform.rotateCounterClockwise')"
-                    >Rotate ↺</button>
-                </div>
-                <div :style="{ marginTop: '10px' }">
+            <SelectionInspector
+                v-else-if="hasBrickSelection"
+                :registry="registry"
+                :get-context="getContext"
+                :summary="selectionSummary"
+                :recolor="recolor"
+            >
+                <CollapsibleSection
+                    title="Exact position & rotation"
+                    :collapsed="numericCollapsed"
+                    @toggle="numericCollapsed = $event"
+                >
                     <NumericTransformPanel
                         :selection-count="selectionCount"
                         :apply="applyNumeric"
                     />
-                </div>
-                <div :style="{ marginTop: '10px' }">
-                    <CollapsibleSection
-                        title="Advanced"
-                        :collapsed="transformAdvancedCollapsed"
-                        @toggle="transformAdvancedCollapsed = $event"
-                    >
-                        <AlignmentPanel
-                            :selection-count="selectionCount"
-                            :align="align"
-                            :distribute="distribute"
-                        />
-                        <div :style="{ marginTop: '8px' }">
-                            <RepeatPanel
-                                :selection-count="selectionCount"
-                                :repeat="repeat"
-                            />
-                        </div>
-                    </CollapsibleSection>
-                </div>
-            </div>
-
-            <div :style="sectionStyle()">
-                <h4 :style="headingStyle()">Groups</h4>
-                <p v-if="!context.hasGroups" :style="emptyStyle()">
-                    No groups yet — select bricks and create one.
-                </p>
-                <ul v-else :style="{ margin: '0 0 6px', padding: '0', listStyle: 'none', color: '#b0b0b0', fontSize: '12px' }">
-                    <li v-for="group in context.groups" :key="group.id"
-                        :style="groupItemStyle(group.id === context.selectedGroupId)"
-                        :title="'Select this group — Rename/Duplicate/Delete/+Sel/−Sel below act on whichever group is selected'"
-                        @click="selectGroup(group.id)"
-                    >
-                        {{ group.name || '(unnamed group)' }} <span :style="{ color: '#707070' }">({{ group.memberCount }})</span>
-                    </li>
-                </ul>
-                <div :style="rowStyle()">
-                    <button type="button" :style="buttonStyle()" :disabled="isDisabled('group.create')"
-                        :title="isDisabled('group.create') ? reasonFor('group.create') : 'Group the selected bricks'"
-                        @click="run('group.create')">Create</button>
-                </div>
-                <div :style="{ marginTop: '10px' }">
-                    <CollapsibleSection
-                        title="Advanced"
-                        :collapsed="groupsAdvancedCollapsed"
-                        @toggle="groupsAdvancedCollapsed = $event"
-                    >
-                        <div :style="rowStyle()">
-                            <button type="button" :style="buttonStyle()" :disabled="isDisabled('group.rename')"
-                                :title="isDisabled('group.rename') ? reasonFor('group.rename') : 'Rename the selected group'"
-                                @click="run('group.rename')">Rename</button>
-                            <button type="button" :style="buttonStyle()" :disabled="isDisabled('group.duplicate')"
-                                :title="isDisabled('group.duplicate') ? reasonFor('group.duplicate') : 'Duplicate the selected group'"
-                                @click="run('group.duplicate')">Duplicate</button>
-                            <button type="button" :style="buttonStyle()" :disabled="isDisabled('group.delete')"
-                                :title="isDisabled('group.delete') ? reasonFor('group.delete') : 'Delete the selected group'"
-                                @click="run('group.delete')">Delete</button>
-                            <button type="button" :style="buttonStyle()" :disabled="isDisabled('group.addSelection')"
-                                :title="isDisabled('group.addSelection') ? reasonFor('group.addSelection') : 'Add the selected bricks to the group'"
-                                @click="run('group.addSelection')">+Sel</button>
-                            <button type="button" :style="buttonStyle()" :disabled="isDisabled('group.removeSelection')"
-                                :title="isDisabled('group.removeSelection') ? reasonFor('group.removeSelection') : 'Remove the selected bricks from the group'"
-                                @click="run('group.removeSelection')">−Sel</button>
-                        </div>
-                    </CollapsibleSection>
-                </div>
-            </div>
-
-            <div :style="sectionStyle()">
-                <h4 :style="headingStyle()">Clipboard</h4>
-                <div :style="rowStyle()">
-                    <button type="button" :style="buttonStyle()" :disabled="isDisabled('clipboard.copy')"
-                        :title="isDisabled('clipboard.copy') ? reasonFor('clipboard.copy') : 'Copy the selected bricks'"
-                        @click="run('clipboard.copy')">Copy</button>
-                    <button type="button" :style="buttonStyle()" :disabled="isDisabled('clipboard.paste')"
-                        :title="isDisabled('clipboard.paste') ? reasonFor('clipboard.paste') : 'Paste the clipboard contents'"
-                        @click="run('clipboard.paste')">Paste</button>
-                </div>
-            </div>
+                </CollapsibleSection>
+                <CollapsibleSection
+                    title="Align, distribute, repeat"
+                    :collapsed="arrangeCollapsed"
+                    @toggle="arrangeCollapsed = $event"
+                >
+                    <AlignmentPanel
+                        :selection-count="selectionCount"
+                        :align="align"
+                        :distribute="distribute"
+                    />
+                    <RepeatPanel
+                        :selection-count="selectionCount"
+                        :repeat="repeat"
+                    />
+                </CollapsibleSection>
+                <CollapsibleSection
+                    title="Groups & blueprint"
+                    :collapsed="groupsCollapsed"
+                    @toggle="groupsCollapsed = $event"
+                >
+                    <ul v-if="context.hasGroups" class="editing-sidebar-group-list">
+                        <li v-for="group in context.groups" :key="group.id">
+                            <button
+                                type="button"
+                                :class="['editing-sidebar-group', { 'editing-sidebar-group--selected': group.id === context.selectedGroupId }]"
+                                :aria-pressed="group.id === context.selectedGroupId ? 'true' : 'false'"
+                                title="Select this group — the group buttons below act on it"
+                                @click="onSelectGroup(group.id)"
+                            >{{ group.name || '(unnamed group)' }} <span class="editing-sidebar-group-count">{{ group.memberCount }}</span></button>
+                        </li>
+                    </ul>
+                    <div class="editor-panel-actions">
+                        <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.create')"
+                            :title="titleFor('group.create', 'Group the selected bricks')"
+                            @click="run('group.create')">New group</button>
+                        <template v-if="context.hasGroups">
+                            <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.addSelection')"
+                                :title="titleFor('group.addSelection', 'Add the selected bricks to the selected group')"
+                                @click="run('group.addSelection')">Add to group</button>
+                            <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.removeSelection')"
+                                :title="titleFor('group.removeSelection', 'Remove the selected bricks from the selected group')"
+                                @click="run('group.removeSelection')">Remove from group</button>
+                            <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.rename')"
+                                :title="titleFor('group.rename', 'Rename the selected group')"
+                                @click="run('group.rename')">Rename group</button>
+                            <button type="button" class="editor-panel-btn" :disabled="isDisabled('group.duplicate')"
+                                :title="titleFor('group.duplicate', 'Duplicate the selected group')"
+                                @click="run('group.duplicate')">Duplicate group</button>
+                            <button type="button" class="editor-panel-btn editor-panel-btn--danger" :disabled="isDisabled('group.delete')"
+                                :title="titleFor('group.delete', 'Delete the selected group (its bricks stay)')"
+                                @click="run('group.delete')">Delete group</button>
+                        </template>
+                    </div>
+                    <div class="editor-panel-actions">
+                        <button type="button" class="editor-panel-btn"
+                            :disabled="isDisabled('structure.createFromSelection')"
+                            :title="titleFor('structure.createFromSelection', 'Save this selection as a reusable Structure in My Structures')"
+                            @click="run('structure.createFromSelection')">Create Blueprint</button>
+                    </div>
+                </CollapsibleSection>
+            </SelectionInspector>
         </div>
     `
 };

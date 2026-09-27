@@ -188,11 +188,13 @@ docs/CapabilityMatrix.md for exactly what each surface may do.
   (InputRouter#matchShortcut()) and the shortcuts overlay
   (KeyboardShortcutsOverlay.js) all read the same registry. `tier`
   only decides what the sidebar shows by default. EditorView implements
-  the Escape chain itself.
+  the Escape chain itself, and refreshes its action context through
+  `onExecute()` after any action runs (Copy changes no document state).
 - **Feedback.** ActionFeedback shows one transient line after an action;
-  TransformFeedback shows the live gesture state; SelectionInspector
-  shows the current brick selection (StructureInstancePanel does the
-  same for a structure placement).
+  TransformFeedback shows the live gesture state; SelectionInspector,
+  inside EditingSidebar's contextual Selection panel, shows the current
+  brick selection (StructureInstancePanel does the same for a structure
+  placement, and EditingSidebar then renders nothing).
 - **Other Editor features.**
   - Export/Import (0.9.641/0.9.642): ExportDocumentUseCase and
     ImportDocumentUseCase, reached from the Toolbar. Import always clones
