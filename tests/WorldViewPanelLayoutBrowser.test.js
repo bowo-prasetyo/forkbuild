@@ -53,13 +53,17 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
             nearbyLandmarkRows: [],
             nearbyPeopleRows: [],
             nearbyPlaceNamingClaimRows: [],
+            claimedBuildRows: [],
             placeNamingDiscoveryError: null,
-            nearbySectionsCollapsed: { places: true, landmarks: true, people: true, placeNaming: true, worldEncounters: true }
+            nearbySectionsCollapsed: { places: true, landmarks: true, people: true, placeNaming: true, worldEncounters: true, claimedBuilds: false }
         }),
         methods: {
             setNearbySectionCollapsed() {},
             exploreHere() { calls.push('exploreHere'); },
-            whatsHere() { calls.push('whatsHere'); }
+            whatsHere() { calls.push('whatsHere'); },
+            navigateToClaimedBuild(build) { calls.push(['navigate', build.key]); },
+            acceptClaimedBuild(build) { calls.push(['accept', build.key]); },
+            dismissClaimedBuild(build) { calls.push(['hide', build.key]); }
         },
         template: nearbySectionTemplate
     });
@@ -81,8 +85,34 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
         'Explore Here and What\'s Here? sit inside the Nearby section');
     exploreActions.querySelectorAll('button').forEach((b) => b.click());
     assert(JSON.stringify(calls) === JSON.stringify(['exploreHere', 'whatsHere']), 'both still run their camera queries');
+
+    // Claimed Builds: only when there is one, with Navigate, Accept Position and Hide.
+    calls.length = 0;
+    vm.claimedBuildRows.push({
+        key: 'pub-b:h', publicationId: 'pub-b', title: 'Bob\'s Tower', author: 'bob', distance: 50,
+        position: { x: 40, y: 0, z: 30 }, acceptable: false, acceptanceHint: 'Its publisher\'s signed Publication isn\'t on this device yet.'
+    });
+    await nextTick();
+    assert(JSON.stringify(titles()) === JSON.stringify(['Landmarks', 'People', 'Place Names', 'Claimed Builds', 'World Encounters']),
+        `Claimed Builds appears once there is a claim — got ${titles().join(', ')}`);
+    const claimRow = section.querySelector('.world-view-claimed-build-row');
+    assert(claimRow.textContent.includes('Bob\'s Tower') && claimRow.textContent.includes('claimed by bob') && claimRow.textContent.includes('unverified'),
+        'a claimed build row names the build and says its position is unverified');
+    const claimButtons = [...claimRow.querySelectorAll('button')];
+    assert(JSON.stringify(claimButtons.map((b) => b.textContent.trim())) === JSON.stringify(['Navigate', 'Accept Position', 'Hide']),
+        'each row has Navigate, Accept Position and Hide');
+    assert(claimButtons[1].disabled && claimRow.textContent.includes("isn't on this device yet"),
+        'Accept Position is disabled with its reason until the claim can be verified');
+    claimButtons[0].click();
+    claimButtons[2].click();
+    vm.claimedBuildRows[0].acceptable = true;
+    await nextTick();
+    claimRow.querySelectorAll('button')[1].click();
+    assert(JSON.stringify(calls) === JSON.stringify([['navigate', 'pub-b:h'], ['hide', 'pub-b:h'], ['accept', 'pub-b:h']]),
+        `the row's buttons act on that claim — got ${JSON.stringify(calls)}`);
     unmount();
     console.log('✓ Nearby shows short group titles, folds empty ones, and holds the camera queries');
+    console.log('✓ Claimed Builds lists nearby claims with Navigate, Accept Position and Hide');
 }
 
 // Avatar: without an avatar of your own, only what works shows.

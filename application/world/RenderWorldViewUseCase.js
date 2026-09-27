@@ -1,5 +1,6 @@
 import { Renderer } from '../../renderer/Renderer.js';
 import { WorldRenderer } from '../../renderer/WorldRenderer.js';
+import { ClaimedBuildGhostRenderer } from '../../renderer/ClaimedBuildGhostRenderer.js';
 import { PickingService } from '../../renderer/PickingService.js';
 import { AvatarPickingService } from '../../renderer/AvatarPickingService.js';
 import { SpatialSelectionRenderer } from '../../renderer/SpatialSelectionRenderer.js';
@@ -49,6 +50,8 @@ export class RenderWorldViewUseCase {
         if (eventBus) {
             worldRenderer.subscribe(eventBus);
         }
+        // Claimed builds: translucent and never pickable, apart from worldRenderer.
+        const claimedBuildGhostRenderer = new ClaimedBuildGhostRenderer(renderer, registry);
         renderer.start();
         const pickingService = new PickingService(
             renderer.camera,
@@ -289,6 +292,8 @@ export class RenderWorldViewUseCase {
             setControlsEnabled: (enabled) => renderer.cameraController.setEnabled(enabled),
             addWorld: (world, documentId, layoutPosition) => worldRenderer.addWorld(world, documentId, layoutPosition),
             removeWorld: (world, documentId) => worldRenderer.removeWorld(world, documentId),
+            showClaimedBuild: (key, world, position) => claimedBuildGhostRenderer.show(key, world, position),
+            hideClaimedBuild: (key) => claimedBuildGhostRenderer.hide(key),
             selectBrick: (brickId) => spatialSelectionRenderer.select(brickId),
             selectBricks: (brickIds, primaryBrickId = null) => spatialSelectionRenderer.selectMany(brickIds, primaryBrickId),
             // 0.2.93 — highlights every mesh of ONE StructurePlacement,
@@ -661,6 +666,7 @@ export class RenderWorldViewUseCase {
                 }
             },
             dispose() {
+                claimedBuildGhostRenderer.hideAll();
                 transformGizmoController.dispose();
                 transformGizmoRenderer.dispose();
                 spatialPreviewRenderer.dispose();

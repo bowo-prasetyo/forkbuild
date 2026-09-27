@@ -114,6 +114,46 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                     </div>
                 </CollapsibleSection>
                 <!--
+                    Other people's builds whose publishers claim a position near here, drawn as
+                    translucent ghosts. A claim is unverified: title and author come from the
+                    build's own content. Accept Position is the only step that trusts it, and
+                    places the Wanderer's own copy there.
+                -->
+                <CollapsibleSection
+                    v-if="claimedBuildRows.length > 0"
+                    title="Claimed Builds"
+                    :count="claimedBuildRows.length"
+                    :collapsed="nearbySectionsCollapsed.claimedBuilds"
+                    @toggle="setNearbySectionCollapsed('claimedBuilds', NEARBY_CLAIMED_BUILDS_SECTION, $event)"
+                >
+                    <div
+                        v-for="build in claimedBuildRows"
+                        :key="build.key"
+                        class="world-view-nearby-row world-view-claimed-build-row"
+                        :title="build.publicationId"
+                    >
+                        <span class="world-view-nearby-row-label">◌ {{ build.title }}</span>
+                        <span class="world-view-nearby-row-distance">{{ build.distance }}m · at ({{ Math.round(build.position.x) }}, {{ Math.round(build.position.z) }})</span>
+                        <span class="world-view-claimed-build-author">claimed{{ build.author ? ' by ' + build.author : '' }} · unverified position</span>
+                        <button
+                            class="action-btn world-view-nearby-row-go"
+                            @click="navigateToClaimedBuild(build)"
+                        >Navigate</button>
+                        <button
+                            class="action-btn world-view-claimed-build-accept"
+                            :disabled="!build.acceptable"
+                            :title="build.acceptanceHint"
+                            @click="acceptClaimedBuild(build)"
+                        >Accept Position</button>
+                        <button
+                            class="action-btn world-view-claimed-build-hide"
+                            title="Hide this ghost for the rest of this visit"
+                            @click="dismissClaimedBuild(build)"
+                        >Hide</button>
+                        <span v-if="!build.acceptable" class="world-view-claimed-build-hint">{{ build.acceptanceHint }}</span>
+                    </div>
+                </CollapsibleSection>
+                <!--
                     WorldEncounterCanvas mounted inside Explore, with the app-wide collaborators
                     and this view's thin command wrappers passed straight through. All encounter
                     behavior stays inside the canvas; this view constructs and decides nothing.

@@ -483,6 +483,29 @@ export const placementMethods = {
         this._removeWorldPlacementUseCase.execute(record.placementId);
     },
 
+    // Every placement this device knows, reduced to what an overlap check
+    // needs. [] without a registry.
+    listKnownPlacements() {
+        if (!this._placementRegistry) return [];
+        return this._placementRegistry.list().map((record) => ({
+            placementId: record.placementId,
+            publicationId: record.publicationId,
+            position: { x: record.position.x, y: record.position.y, z: record.position.z }
+        }));
+    },
+
+    // Claimed builds (application/snapshot/claimed/ClaimedBuilds.js): drawn
+    // translucent and unpickable, never as a Placement. No-ops before start().
+    showClaimedBuild(key, world, position) {
+        if (!this._session || typeof this._session.showClaimedBuild !== 'function') return 0;
+        return this._session.showClaimedBuild(key, world, position);
+    },
+
+    hideClaimedBuild(key) {
+        if (!this._session || typeof this._session.hideClaimedBuild !== 'function') return;
+        this._session.hideClaimedBuild(key);
+    },
+
     // Retracts the Publication governing `documentId` from the catalog. Not a
     // placement removal or a document deletion: UnpublishDocumentUseCase decides
     // what happens, and this adds no cleanup of its own.

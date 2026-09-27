@@ -29,12 +29,16 @@ export function useNearbySections({
     // Defaults collapsed: an unverified discovered claim should not demand
     // attention.
     const NEARBY_PLACE_NAMING_SECTION = 'explore:nearby-place-naming';
+    // Defaults expanded: a claimed build is already drawn as a ghost in the
+    // World, so the list explaining what it is should be at hand.
+    const NEARBY_CLAIMED_BUILDS_SECTION = 'explore:nearby-claimed-builds';
     const nearbySectionsCollapsed = ref({
         places: worldViewNav.isSectionCollapsed(NEARBY_PLACES_SECTION, false),
         landmarks: worldViewNav.isSectionCollapsed(NEARBY_LANDMARKS_SECTION, true),
         people: worldViewNav.isSectionCollapsed(NEARBY_PEOPLE_SECTION, true),
         worldEncounters: worldViewNav.isSectionCollapsed(WORLD_ENCOUNTERS_SECTION, false),
-        placeNaming: worldViewNav.isSectionCollapsed(NEARBY_PLACE_NAMING_SECTION, true)
+        placeNaming: worldViewNav.isSectionCollapsed(NEARBY_PLACE_NAMING_SECTION, true),
+        claimedBuilds: worldViewNav.isSectionCollapsed(NEARBY_CLAIMED_BUILDS_SECTION, false)
     });
 
     function setNearbySectionCollapsed(key, sectionId, collapsed) {
@@ -136,7 +140,8 @@ export function useNearbySections({
 
     return {
         nearbyPlaceNamingClaims, placeNamingDiscoveryError, NEARBY_PLACES_SECTION, NEARBY_LANDMARKS_SECTION,
-        NEARBY_PEOPLE_SECTION, WORLD_ENCOUNTERS_SECTION, NEARBY_PLACE_NAMING_SECTION, nearbySectionsCollapsed,
+        NEARBY_PEOPLE_SECTION, WORLD_ENCOUNTERS_SECTION, NEARBY_PLACE_NAMING_SECTION, NEARBY_CLAIMED_BUILDS_SECTION,
+        nearbySectionsCollapsed,
         setNearbySectionCollapsed, nearbyLandmarkRows, nearbyPeopleRows, formatNearbyPlaceNamingCreatedAt,
         nearbyPlaceNamingClaimRows, navigateToNearbyPlaceNamingClaim, adoptNearbyPlaceNamingClaim
     };
