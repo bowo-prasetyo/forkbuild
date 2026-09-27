@@ -155,6 +155,14 @@ export const dialogsTemplate = `<ActionFeedback :message="feedbackMessage" :visi
                 @revoke="revokeWorldMember"
                 @cancel="closeMembersPanel"
             />
+            <div v-if="showLobbyPanel && activeWorldLobby" role="dialog" aria-label="World Lobby" class="modal-overlay" @click.self="closeLobbyPanel">
+                <div class="modal-panel">
+                    <PublicLobbyPanel :lobby="activeWorldLobby" title="This World's Lobby" />
+                    <div class="modal-actions">
+                        <button class="action-btn" @click="closeLobbyPanel">Close</button>
+                    </div>
+                </div>
+            </div>
             <NotificationHistoryPanel
                 v-if="showNotificationHistoryPanel"
                 :getRecipientNotificationEventsCommand="getRecipientNotificationEventsCommand"

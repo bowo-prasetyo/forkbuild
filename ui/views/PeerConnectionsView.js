@@ -14,6 +14,8 @@ import { inviteAndConnectTemplate } from './peerConnections/templates/inviteAndC
 import { findPeerSectionTemplate } from './peerConnections/templates/findPeerSection.js';
 import { myPeersListTemplate } from './peerConnections/templates/myPeersList.js';
 import { knownPeersListTemplate } from './peerConnections/templates/knownPeersList.js';
+import PublicLobbyPanel from '../components/PublicLobbyPanel.js';
+import { PUBLIC_LOBBY } from '../../core/LobbyCard.js';
 
 // 0.2.60 — Friendship Revocation, Blocking & Privacy Withdrawal adds:
 //   - Reject/Cancel on a pending request (the terminal counterparts to
@@ -96,6 +98,7 @@ import { knownPeersListTemplate } from './peerConnections/templates/knownPeersLi
 // the page-wide subscriptions and the one-second tick.
 export default {
     name: 'PeerConnectionsView',
+    components: { PublicLobbyPanel },
     setup() {
         const identityUseCase = inject('identityUseCase');
         const peerSessionManager = inject('peerSessionManager');
@@ -307,6 +310,7 @@ export default {
         });
 
         return {
+            PUBLIC_LOBBY,
             isAuthenticated, isIdentityLocked, myIdentityId, peers, PeerLifecycleState, LIFECYCLE_LABELS, LIFECYCLE_CLASSES, PROGRESSION_STEPS,
             connectedFor, shortId,
             invitePending, inviteError, pendingInvitation, startInvite, dismissInvitation,
@@ -359,6 +363,13 @@ export default {
                 ${inviteAndConnectTemplate}
 
                 ${findPeerSectionTemplate}
+
+                <h2 class="peer-my-peers-heading">Public Lobby</h2>
+                <p class="form-hint form-hint--neutral">
+                    Meet people you don't know yet. Each World also has its own lobby, under
+                    <strong>Lobby</strong> in World View.
+                </p>
+                <PublicLobbyPanel :lobby="PUBLIC_LOBBY" title="Everyone" />
             </template>
 
             <h2 class="peer-my-peers-heading">My Peers</h2>

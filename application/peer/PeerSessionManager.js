@@ -105,8 +105,16 @@ export class PeerSessionManager {
     // for ICE gathering to finish before wrapping the resulting offer as
     // an ordinary 0.2.50 PeerInvitation. Returns once there is something
     // to display and copy — never partway through.
-    async createInvitation({ ttlMs = DEFAULT_INVITATION_TTL_MS, expectedIdentityId = null } = {}) {
-        await this._prepareIceServers();
+    //
+    // `prepareRelay: false` skips asking for a TURN relay credential. The
+    // public lobby uses it for its standing offers, which are republished
+    // for as long as someone stays in the lobby: the person who connects
+    // fetches one, and ICE falls back to a relay only when no direct path
+    // works, so a standing offer need not spend the monthly allowance.
+    async createInvitation({ ttlMs = DEFAULT_INVITATION_TTL_MS, expectedIdentityId = null, prepareRelay = true } = {}) {
+        if (prepareRelay) {
+            await this._prepareIceServers();
+        }
         const connection = this._peerConnectionProvider.createOffer({ ttlMs });
         const connectedPeer = this._connectToPeerUseCase.attach(connection, null, { expectedIdentityId });
         const offer = await waitForLocalSignal(connection, connectedPeer);
@@ -212,8 +220,8 @@ export class PeerSessionManager {
     // only needs "did this work at all" (see ui/views/PeerConnectionsView.js#togglePublish)
     // can check truthiness either way; one that needs a specific
     // publication's own fields must know which shape it is holding.
-    async publishSelf({ ttlMs = DEFAULT_INVITATION_TTL_MS } = {}) {
-        const { invitation, connectedPeer } = await this.createInvitation({ ttlMs });
+    async publishSelf({ ttlMs = DEFAULT_INVITATION_TTL_MS, prepareRelay = true } = {}) {
+        const { invitation, connectedPeer } = await this.createInvitation({ ttlMs, prepareRelay });
         const publication = await this._discoverPeersUseCase.publish(invitation, { ttlMs });
         this._publishedOffer = publication ? { connectionId: connectedPeer.connectionId, invitation } : null;
         if (this._publishedOffer && this._discoverPeersUseCase.canFetchAnswers()) {
