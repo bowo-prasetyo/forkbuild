@@ -1,6 +1,7 @@
 # Controls Reference
 
-Every mouse and keyboard interaction in ForkBuild. World View is for
+Every mouse and keyboard interaction in ForkBuild; phones and tablets are
+covered in [Touch screens](#touch-screens). World View is for
 looking around and navigating; every building control (selection for
 editing, transforms, groups, clipboard, placement, and the Command
 Palette) works only in the Editor. The Editor's shortcuts are the same
@@ -277,13 +278,70 @@ Place tool at all.
 | Input | Action | Notes |
 |---|---|---|
 | Move the pointer | Preview follows the hovered ground/brick face | tinted red when the position is currently occupied |
-| `R` | Rotate the pending preview +90° | persists across brick switches; resets when you leave Place mode |
+| `R` | Rotate the pending preview +90° | persists across brick switches; resets when you leave Place mode. Pressed before anything is hovered, it turns the next preview |
 | `Shift+R` | Rotate the pending preview −90° | |
 | Click | Commit the preview as a real Brick | refused at an occupied (red) position |
 | Build Library **Color** swatch | Choose the color for the next bricks you place | resets to the brick type's default when you pick a different type — see [Brick colors](02-TheEditor.md#brick-colors) |
 
 To recolor bricks you've already placed, select them and use the **Color**
 swatch in the Selection section — one undo step per change.
+
+## Touch screens
+
+On a phone or tablet the same actions have on-screen controls. They appear
+whenever the device has a touch screen, so a touch laptop shows them beside
+its keyboard and mouse. On a screen 720 pixels wide or narrower, the page
+also rearranges itself: the page links fold behind a **Menu** button, World
+View's side panel opens from a **Panel** button, and the Editor's sidebar
+becomes a drawer opened from a **Tools** button.
+
+### Camera (both views)
+
+| Touch | Action |
+|---|---|
+| One-finger drag | Orbit |
+| Two-finger drag | Pan |
+| Pinch | Zoom |
+| Tap | World View: inspect what you tapped. Editor: the same as a click with the current tool |
+
+### Walking (World View)
+
+The touch pad appears while Avatar Control Mode is on; the **Walk** button
+above the joystick turns the mode, and with it the pad, on and off.
+
+| Control | Keys it stands for | Notes |
+|---|---|---|
+| Joystick | `W` / `A` / `S` / `D` | Push up to walk forward, sideways to turn; diagonals press both keys |
+| Joystick pushed to the rim | `Shift` | Run |
+| **Jump** | `Space` | |
+| **Ride** / **Get Off** | `E` | Shown when a vehicle is in range, or while riding |
+| **Store** / **Deploy** | `Q` | Shown when you can store the vehicle you're on, or deploy a stored one |
+| **Catch** / **Release** | `F` | Shown when an animal is catchable nearby, or while carrying one |
+| **↶** / **↷** | `←` / `→` | While riding: a 45° steering turn per tap |
+| **Brake** | `Ctrl` (held) | While riding |
+
+Hands-free continuous movement (`Alt` + `W`/`S`), cycling stored vehicles
+(`[`/`]`) and decorating with an animal (`G`) have no touch control yet.
+
+### Editing (Editor)
+
+A tap does what a click does: selects with the Select tool, places with the
+Place tool. A drag only moves the camera, so orbiting never places a brick
+or clears the selection by accident. Touch has no hover, so the Place tool
+shows no preview before the tap; the brick goes where you tap. Choosing a
+brick or structure to place closes the Tools drawer, so the next tap reaches
+the scene. The bar at the bottom of the viewport stands in for the keys:
+
+| Button | Same as | Notes |
+|---|---|---|
+| **Undo** / **Redo** | `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` | |
+| **Rotate** | `R` | While placing, turns the next brick or structure before you tap; otherwise rotates the selection |
+| **Delete** | `Delete` | |
+| **Multi** | `Ctrl/Cmd`-click | While on, each tap adds a brick to the selection or removes it |
+| **More** | `Ctrl/Cmd+K` | The Command Palette, which reaches every other editing action |
+
+Gizmo handles work by touch as they do with a mouse: drag a handle. The
+Shift-drag marquee has no touch equivalent; use **Multi** instead.
 
 ## Escape priority (Editor)
 

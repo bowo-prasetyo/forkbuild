@@ -128,12 +128,15 @@ export class StructurePlacementTool extends Tool {
             return;
         }
         const active = this.context.editorContext.activeStructure;
-        if (!active.documentId || !this._lastPosition) {
+        if (!active.documentId) {
             return;
         }
         const delta = keyEvent.modifiers?.shift ? -90 : 90;
         this._rotation += delta;
-        this._showPreview(active, this._lastPosition);
+        // See PlacementTool#onKeyDown: the turn applies even with nothing hovered.
+        if (this._lastPosition) {
+            this._showPreview(active, this._lastPosition);
+        }
     }
 
     // Shared by onPointerMove() (a fresh position) and onKeyDown() (the

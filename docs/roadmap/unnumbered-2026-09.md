@@ -1429,3 +1429,43 @@ by the time a player reaches World View.
 - docs/Privacy.md no longer says that opening the app contacts only its own site. It names this one automatic
   exception, and adds a row for the background sync to the table of servers: which relays, gateway and Steem
   nodes it queries, and for which tags.
+
+## Phones and tablets: touch controls and a compact layout (unnumbered, 2026-09-27)
+
+**ForkBuild can now be played on a phone.** Until now every control needed a keyboard or a mouse: walking only
+answered W/A/S/D, panning needed a right-drag, multi-select needed Ctrl or Shift, and the page kept its desktop
+layout at any width, so the nav, the World View panel and the Editor sidebar covered most of a phone's screen.
+
+- World View touch pad (`ui/components/TouchMovementPad.js`), shown on touch screens while Avatar Control Mode is
+  on, with a **Walk** button that toggles the mode:
+  - A joystick for W/A/S/D. `core/TouchJoystickKeys.js` maps the thumb's offset to keys in eight sectors, with a
+    dead zone, and holds Shift (run) at the rim.
+  - **Jump**, and context buttons shown under the same conditions as the on-screen prompts: Ride/Get Off (`E`),
+    Store/Deploy (`Q`), Catch/Release (`F`), and, while riding, steering (`←`/`→`) and Brake (`Ctrl`).
+  - `application/avatar/TouchMovementInput.js` turns these into the session's existing
+    `avatarKeyDown`/`avatarKeyUp`, so the session stays the one place that decides what a key does. It sends a key
+    only when its held state changes, and holds each button for at least 120 ms: the session samples Jump and the
+    interaction keys once per frame, so a quicker tap could be missed.
+- Editor touch input (`application/editorSession/pointerInputMethods.js`): the tools act on pointer-down, so with
+  one finger both orbiting and tapping, every orbit placed a brick or cleared the selection. A touch now reaches
+  the tools only when it lifts as a tap (moved at most 10 px, no second finger), replayed as a hover, press and
+  release at the lift point, which also gives Place a fresh preview to commit. Gizmo handles still take a touch at
+  once. A lost pointerup cannot block later taps, and pointercancel drops the tap.
+- Editor touch bar (`ui/components/EditorTouchActionBar.js`): Undo, Redo, Rotate, Delete, Multi (each tap becomes a
+  Ctrl-click, toggling a brick in or out of the selection) and More (the Command Palette). Each runs the same
+  `EditorActionRegistry` action as its shortcut; Rotate while placing sends the Place tool's `R`.
+- `R` in the Place, structure placement and composition tools now turns the next preview even when nothing is
+  hovered yet, instead of doing nothing. Touch never hovers before a tap, so Rotate would otherwise not work there.
+- Compact layout at 720 px and narrower (`css/main/touch-and-compact.css`, `ui/composables/useMediaQuery.js`): the
+  nav folds behind a **Menu** button, World View's panel opens from a **Panel** button and starts closed, the
+  navigation HUD shrinks, the Editor sidebar becomes a drawer opened from **Tools** (closing when something is
+  picked to place), and the Editor toolbar scrolls sideways. Buttons get 40 px tap targets on touch screens, and
+  the 3D views set `touch-action: none` so the page does not scroll or zoom under a drag. Desktop layouts are
+  unchanged.
+- Docs: a Touch screens section in docs/user/ControlsReference.md, notes in the Editor and Avatars guides, and
+  docs/Architecture.md on how touch reaches the tools and the avatar.
+- Tests: `tests/TouchMovementInput.test.js` covers the joystick's sectors, dead zone, run threshold and thumb clamp,
+  key transitions, the button minimum hold and `releaseAll`. `tests/EditorTouchTap.test.js` covers a tap replaying as
+  a click, drags and two-finger touches never reaching the tools, stale pointer ids, pointercancel, Multi-select
+  and gizmo drags by touch, and that mouse input is unchanged. `tests/PlacementPreviewUX.test.js` now checks that a
+  turn made before any hover carries into the next preview.

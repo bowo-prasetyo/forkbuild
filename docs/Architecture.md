@@ -154,6 +154,11 @@ docs/CapabilityMatrix.md for exactly what each surface may do.
   (SelectionTool, PlacementTool, StructurePlacementTool,
   StructureCompositionTool). InputDispatcher normalizes DOM events and
   picks once per pointer event, so tools receive pre-picked results.
+  Touch reaches the tools only as whole taps: EditorSession's pointer
+  input (application/editorSession/pointerInputMethods.js) holds a touch
+  until it lifts, drops it if it moved or a second finger joined (the
+  camera's orbit, pan or pinch), and otherwise replays it as a hover,
+  press and release at the lift point, so tools need no touch handling.
 - **Commands and history.** Every document change is a Command executed
   through CommandHistory (application/editor/CommandHistory.js): a linear
   history where executing after an undo clears redo. Commands carry an
@@ -695,7 +700,12 @@ who you are, what your avatar looks like, and where it is right now.
 - **Presence.** AvatarPresenceSession holds the local avatar's current
   AvatarPresence in memory only; it is never persisted or placed.
   AvatarMovementController simulates movement (see "Avatar movement
-  constraint pipeline") and produces new presence. PresenceSyncService
+  constraint pipeline") and produces new presence. Touch screens drive it
+  through the same keys: TouchMovementInput
+  (application/avatar/TouchMovementInput.js) turns World View's joystick
+  (core/TouchJoystickKeys.js) and buttons into the session's
+  avatarKeyDown/avatarKeyUp calls, holding each button for at least one
+  frame's sampling. PresenceSyncService
   broadcasts it as a core/AvatarPresenceAdvertisement.js, signed when the
   identity provider can sign (PresenceSigning), through a
   presence/ broadcast provider: PeerAvatarPresenceBroadcastProvider over

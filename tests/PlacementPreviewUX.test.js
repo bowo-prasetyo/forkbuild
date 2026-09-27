@@ -200,15 +200,18 @@ async function runTests() {
     }
 
     // -------------------------------------------------------------
-    // Section F: rotating with nothing hovered is a safe no-op — you
-    // cannot rotate a preview that was never shown.
+    // Section F: rotating with nothing hovered shows nothing, but the
+    // turn applies to the next preview (touch never hovers first).
     // -------------------------------------------------------------
     {
         const { tool, editorContext } = buildTool();
         editorContext.setActiveBrick('core:cube');
         key(tool, 'r');
         assert(editorContext.preview.visible === false,
-            '27. pressing R before ever hovering the world does nothing — there is no cached position to re-show');
+            '27. pressing R before ever hovering the world shows no preview — there is no cached position to show');
+        move(tool, 4, 0, 4);
+        assert(editorContext.preview.visible === true && editorContext.preview.rotation === 90,
+            '28. the next preview carries the turn made before it');
     }
 
     console.log('✅ All Placement Preview UX (Editor) tests passed.');

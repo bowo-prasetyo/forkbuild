@@ -1,4 +1,5 @@
-import { provide } from 'vue';
+import { provide, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import UserWidget from './components/UserWidget.js';
 import ExperimentalBanner from './components/ExperimentalBanner.js';
 import { CreatePreviewUseCase } from '../application/editor/CreatePreviewUseCase.js';
@@ -14,13 +15,26 @@ export default {
     setup() {
         const { previewService } = new CreatePreviewUseCase().execute();
         provide('previewService', previewService);
+
+        // On phone-width screens the nav folds behind a Menu button; choosing a page
+        // folds it again.
+        const route = useRoute();
+        const menuOpen = ref(false);
+        watch(() => route.fullPath, () => { menuOpen.value = false; });
+        return { menuOpen };
     },
     template: `
         <div class="app-shell">
             <header class="app-header">
                 <span class="app-title">ForkBuild</span>
+                <button
+                    type="button"
+                    class="app-menu-toggle"
+                    :aria-expanded="menuOpen ? 'true' : 'false'"
+                    @click="menuOpen = !menuOpen"
+                >{{ menuOpen ? 'Close' : 'Menu' }}</button>
                 <div class="app-header-right">
-	                <nav class="app-nav">
+	                <nav :class="['app-nav', { 'app-nav--open': menuOpen }]">
 	                    <router-link to="/" class="app-nav-link">Home</router-link>
 	                    <router-link to="/editor" class="app-nav-link">Editor</router-link>
 	                    <router-link to="/repository" class="app-nav-link">Repository</router-link>

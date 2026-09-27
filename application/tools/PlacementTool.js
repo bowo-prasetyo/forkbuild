@@ -146,12 +146,16 @@ export class PlacementTool extends Tool {
             return;
         }
         const definitionId = this.context.editorContext.activeBrick.definitionId;
-        if (!definitionId || !this._lastPosition) {
+        if (!definitionId) {
             return;
         }
         const delta = keyEvent.modifiers?.shift ? -90 : 90;
         this._rotation += delta;
-        this._showPreview(definitionId, this._lastPosition);
+        // With nothing hovered yet (always so on touch, which has no hover) the
+        // turn still applies to the next preview and placement.
+        if (this._lastPosition) {
+            this._showPreview(definitionId, this._lastPosition);
+        }
     }
 
     // Shared by onPointerMove() (a fresh position) and onKeyDown() (the

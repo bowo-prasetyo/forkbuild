@@ -110,12 +110,15 @@ export class StructureCompositionTool extends Tool {
             return;
         }
         const structure = this.context.editorContext.activeComposition.structure;
-        if (!structure || !this._lastPosition) {
+        if (!structure) {
             return;
         }
         const delta = keyEvent.modifiers?.shift ? -90 : 90;
         this._rotation = ((this._rotation + delta) % 360 + 360) % 360;
-        this._showPreview(structure, this._lastPosition);
+        // See PlacementTool#onKeyDown: the turn applies even with nothing hovered.
+        if (this._lastPosition) {
+            this._showPreview(structure, this._lastPosition);
+        }
     }
 
     _showPreview(structure, position) {
