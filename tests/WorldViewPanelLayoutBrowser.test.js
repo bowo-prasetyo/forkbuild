@@ -183,7 +183,7 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     });
     await nextTick();
     const actions = host.querySelector('.own-publication-placements .own-publication-placement-actions');
-    assert(actions && JSON.stringify(buttonLabels(actions)) === JSON.stringify(['Place', 'Move Placement']),
+    assert(actions && JSON.stringify(buttonLabels(actions)) === JSON.stringify(['Place Copy Here', 'Move Placement']),
         `Place and the host's Move Placement share one row — got ${actions ? buttonLabels(actions).join(', ') : 'no row'}`);
     const detail = host.querySelector('.own-publication-placement-detail');
     assert(detail.textContent.includes('680.0, 0.0, 1600.0'), 'the placement\'s position still renders');

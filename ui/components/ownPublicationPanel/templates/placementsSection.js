@@ -32,15 +32,16 @@ export const placementsSectionTemplate = `<!--
                 <div class="own-publication-placement-actions">
                     <!--
                         Always enabled with a publication: a Publication can be placed any number of
-                        times.
+                        times. Labelled as a copy so it is never mistaken for "show" or "move".
                     -->
                     <button
                         v-if="placePublicationCommand"
                         type="button"
                         class="action-btn own-publication-place-action"
                         :disabled="!publication"
+                        title="Adds another copy of this build to the World at your current position. To relocate an existing copy, use Move Placement."
                         @click="placeOwnPublication"
-                    >Place</button>
+                    >Place Copy Here</button>
                     <!-- The host's own placement actions (World View's Move Placement). -->
                     <slot name="placement-actions"></slot>
                 </div>

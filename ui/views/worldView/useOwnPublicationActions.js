@@ -1,4 +1,8 @@
+import { detectSpatialOverlap } from '../../../core/SpatialOverlap.js';
 
+function formatPosition(position) {
+    return `${position.x.toFixed(1)}, ${position.y.toFixed(1)}, ${position.z.toFixed(1)}`;
+}
 
 // The active World's own publication: the placement editor, unpublish/place,
 // and commentary and placement commands. (Notification History lives in the app's
@@ -84,13 +88,21 @@ export function useOwnPublicationActions({
     }
 
     // Resolves only where "here" is: avatar position, else camera position, else
-    // the World origin.
+    // the World origin. Each click adds another copy, so a click where a copy
+    // of this Publication already sits is refused: without moving, repeated
+    // clicks would only stack invisible duplicates on one spot.
     function placeOwnPublication(publication) {
         if (!publication) return;
         guarded(() => {
             const position = session.getAvatarPosition() || session.getCameraPosition() || { x: 0, y: 0, z: 0 };
+            const existing = session.getPlacementsForPublication(publication.id);
+            if (!detectSpatialOverlap(position, existing).isEmpty) {
+                feedback.show('A copy is already placed here. Move elsewhere to place another, or use Move Placement to relocate one.');
+                return;
+            }
             session.placePublication(publication.id, position);
-            feedback.show('Publication placed in World');
+            const count = existing.length + 1;
+            feedback.show(`Copy placed at ${formatPosition(position)} (${count} ${count === 1 ? 'placement' : 'placements'} now)`);
         });
         refreshSpatialUI();
     }
