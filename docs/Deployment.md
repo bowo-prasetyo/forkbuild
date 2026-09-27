@@ -20,6 +20,15 @@ with it. Without it, Pages runs Jekyll, which leaves out every file whose
 name starts with `_` (such as `vendor/noble-hashes/_md.js`), and the app
 shows a blank page.
 
+**Many requests at once.** There is no bundler, so the browser fetches well
+over a thousand module files when the page opens. If the host drops or
+refuses even one of them (GitHub Pages has been seen doing this in Firefox),
+the browser aborts the whole load. The console then fills with "Loading
+failed for the module with source" errors, each naming a module that was
+still in flight. `ui/boot.js` retries the load a few times with backoff.
+Files that already loaded come back from the HTTP cache, so each retry
+requests fewer of them.
+
 ## Everything is served from your own origin
 
 The page loads no scripts, styles or fonts from anywhere else. The
