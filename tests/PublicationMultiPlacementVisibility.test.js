@@ -300,10 +300,23 @@ async function runTests() {
         // other command-invoking method in this file (27 already
         // confirms no such import/construction exists anywhere in this
         // file, this section included).
-        const placementsSection = panelCode.split('own-publication-placements"')[1].split('</div>')[0];
-        const clickHandlers = placementsSection.match(/@click="[^"]+"/g) || [];
-        assert(clickHandlers.length === 1 && clickHandlers[0] === '@click="placeOwnPublication"',
-            '28. AMENDED BY 0.9.600 — the placements section hosts EXACTLY ONE interactive control, the Place action bound to placeOwnPublication, and no other click handler.');
+        // AMENDED AGAIN: each row now carries its own Move and Remove (with
+        // Remove's confirmation). They too only forward to injected command
+        // props (27 still holds), so the section's click handlers are exactly
+        // this set and no other.
+        const placementsSection = panelCode.split('own-publication-placements"')[1].split('</div>`')[0];
+        const clickHandlers = (placementsSection.match(/@click="[^"]+"/g) || [])
+            .filter((handler, index, all) => all.indexOf(handler) === index)
+            .sort();
+        const expectedHandlers = [
+            '@click="confirmPlacementRemoval(placement)"',
+            '@click="movePublicationPlacement(placement)"',
+            '@click="pendingRemovalPlacementId = null"',
+            '@click="placeOwnPublication"',
+            '@click="requestPlacementRemoval(placement)"'
+        ];
+        assert(JSON.stringify(clickHandlers) === JSON.stringify(expectedHandlers),
+            `28. AMENDED — the placements section hosts exactly Place plus each row's Move/Remove/confirm controls — got ${clickHandlers.join(', ')}`);
         assert(!/v-model|type="submit"/.test(placementsSection),
             '28b. still no form input or submit control of any kind — the Place action is a single button, never a form.');
 

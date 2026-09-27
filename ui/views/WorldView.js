@@ -60,6 +60,7 @@ import { useNearbySections } from './worldView/useNearbySections.js';
 import { useWorldMembersPanel } from './worldView/useWorldMembersPanel.js';
 import { useWorldEncounterCommands } from './worldView/useWorldEncounterCommands.js';
 import { useOwnPublicationActions } from './worldView/useOwnPublicationActions.js';
+import { useClaimedBuilds } from './worldView/useClaimedBuilds.js';
 import { useViewportInput } from './worldView/useViewportInput.js';
 import { useHomeAndLocations } from './worldView/useHomeAndLocations.js';
 import { useEditorHandoff } from './worldView/useEditorHandoff.js';
@@ -414,11 +415,19 @@ export default {
 
         const {
             openPlacementEditor, closePlacementEditor, onMovePlacement, removePlacementFromPanel,
-            unpublishOwnPublication, placeOwnPublication, getPublicationCommentariesCommand,
+            removePublicationPlacement, placementsRevision, unpublishOwnPublication, placeOwnPublication, getPublicationCommentariesCommand,
             addPublicationCommentaryCommand, getPublicationPlacementsCommand
         } = useOwnPublicationActions({
             feedback, guarded, placementEditTarget, placementOverlapWarning, refreshSpatialUI,
             session, showPlacementEditor
+        });
+
+        const {
+            claimedBuildRows, noteSnapshotCandidateResult, reconcileClaimedBuilds,
+            navigateToClaimedBuild, acceptClaimedBuild, dismissClaimedBuild, disposeClaimedBuilds
+        } = useClaimedBuilds({
+            session, publicationContentStore, feedback, guarded, refreshSpatialUI,
+            getViewerPosition: () => (spatialContext.value ? spatialContext.value.position : null)
         });
 
         // Notification History lives in the app's header (ui/App.js).
@@ -468,6 +477,8 @@ export default {
                 if (result && result.encounter) {
                     observerLocalEncounterStore.record(result.encounter);
                 }
+                // An UNPLACED run with a claimed position becomes a ghost (useClaimedBuilds).
+                noteSnapshotCandidateResult(candidate, result);
             }));
         }
 
@@ -536,6 +547,8 @@ export default {
             // Re-feeding an unchanged result is harmless: the cascade is idempotent per
             // publicationId:contentHash. Never awaited; a registration becomes visible
             // through the canvas's normal rendering.
+            reconcileClaimedBuilds();
+
             if (spatialContext.value && !discoveryPrimedFromIndex) {
                 discoveryPrimedFromIndex = true;
                 primeDiscoveryFromIndex(spatialContext.value);
@@ -817,7 +830,7 @@ export default {
         const {
             nearbyPlaceNamingClaims, placeNamingDiscoveryError, NEARBY_PLACES_SECTION,
             NEARBY_LANDMARKS_SECTION, NEARBY_PEOPLE_SECTION, WORLD_ENCOUNTERS_SECTION,
-            NEARBY_PLACE_NAMING_SECTION, nearbySectionsCollapsed, setNearbySectionCollapsed,
+            NEARBY_PLACE_NAMING_SECTION, NEARBY_CLAIMED_BUILDS_SECTION, nearbySectionsCollapsed, setNearbySectionCollapsed,
             nearbyLandmarkRows, nearbyPeopleRows, formatNearbyPlaceNamingCreatedAt, nearbyPlaceNamingClaimRows,
             navigateToNearbyPlaceNamingClaim, adoptNearbyPlaceNamingClaim
         } = useNearbySections({
@@ -1005,6 +1018,7 @@ export default {
             // sees a dead session at its registration checkpoint.
             automaticCascadeSessionActive = false;
             placeNamingDiscoveryPresentationActive = false;
+            disposeClaimedBuilds();
             unsubscribeAnnouncementIndexChanges();
             if (placeNamingDiscoveryMonitor) {
                 placeNamingDiscoveryMonitor.dispose();
@@ -1088,6 +1102,12 @@ export default {
             closePlacementEditor,
             onMovePlacement,
             removePlacementFromPanel,
+            removePublicationPlacement,
+            placementsRevision,
+            claimedBuildRows,
+            navigateToClaimedBuild,
+            acceptClaimedBuild,
+            dismissClaimedBuild,
             unpublishOwnPublication,
             placeOwnPublication,
             getPublicationCommentariesCommand,
@@ -1184,6 +1204,7 @@ export default {
             NEARBY_PEOPLE_SECTION,
             WORLD_ENCOUNTERS_SECTION,
             NEARBY_PLACE_NAMING_SECTION,
+            NEARBY_CLAIMED_BUILDS_SECTION,
             nearbyPlaceNamingClaimRows,
             placeNamingDiscoveryError,
             worldDiscoverySourceRegistry,

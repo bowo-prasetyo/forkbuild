@@ -14,7 +14,7 @@ import { assert } from './support/Assert.js';
 // World View's left panel layout, rendered by real Vue in Chromium: the
 // Nearby section's groups and camera actions, Worlds in View shown only
 // when it adds something, the hover card kept out of the panel, and the
-// host's Move Placement beside the Own Publication panel's Place action.
+// Own Publication panel's per-placement Move and Remove.
 
 // The app's real stylesheet, so layout assertions see the shipped CSS.
 await new Promise((resolve, reject) => {
@@ -53,13 +53,17 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
             nearbyLandmarkRows: [],
             nearbyPeopleRows: [],
             nearbyPlaceNamingClaimRows: [],
+            claimedBuildRows: [],
             placeNamingDiscoveryError: null,
-            nearbySectionsCollapsed: { places: true, landmarks: true, people: true, placeNaming: true, worldEncounters: true }
+            nearbySectionsCollapsed: { places: true, landmarks: true, people: true, placeNaming: true, worldEncounters: true, claimedBuilds: false }
         }),
         methods: {
             setNearbySectionCollapsed() {},
             exploreHere() { calls.push('exploreHere'); },
-            whatsHere() { calls.push('whatsHere'); }
+            whatsHere() { calls.push('whatsHere'); },
+            navigateToClaimedBuild(build) { calls.push(['navigate', build.key]); },
+            acceptClaimedBuild(build) { calls.push(['accept', build.key]); },
+            dismissClaimedBuild(build) { calls.push(['hide', build.key]); }
         },
         template: nearbySectionTemplate
     });
@@ -81,8 +85,34 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
         'Explore Here and What\'s Here? sit inside the Nearby section');
     exploreActions.querySelectorAll('button').forEach((b) => b.click());
     assert(JSON.stringify(calls) === JSON.stringify(['exploreHere', 'whatsHere']), 'both still run their camera queries');
+
+    // Claimed Builds: only when there is one, with Navigate, Accept Position and Hide.
+    calls.length = 0;
+    vm.claimedBuildRows.push({
+        key: 'pub-b:h', publicationId: 'pub-b', title: 'Bob\'s Tower', author: 'bob', distance: 50,
+        position: { x: 40, y: 0, z: 30 }, acceptable: false, acceptanceHint: 'Its publisher\'s signed Publication isn\'t on this device yet.'
+    });
+    await nextTick();
+    assert(JSON.stringify(titles()) === JSON.stringify(['Landmarks', 'People', 'Place Names', 'Claimed Builds', 'World Encounters']),
+        `Claimed Builds appears once there is a claim — got ${titles().join(', ')}`);
+    const claimRow = section.querySelector('.world-view-claimed-build-row');
+    assert(claimRow.textContent.includes('Bob\'s Tower') && claimRow.textContent.includes('claimed by bob') && claimRow.textContent.includes('unverified'),
+        'a claimed build row names the build and says its position is unverified');
+    const claimButtons = [...claimRow.querySelectorAll('button')];
+    assert(JSON.stringify(claimButtons.map((b) => b.textContent.trim())) === JSON.stringify(['Navigate', 'Accept Position', 'Hide']),
+        'each row has Navigate, Accept Position and Hide');
+    assert(claimButtons[1].disabled && claimRow.textContent.includes("isn't on this device yet"),
+        'Accept Position is disabled with its reason until the claim can be verified');
+    claimButtons[0].click();
+    claimButtons[2].click();
+    vm.claimedBuildRows[0].acceptable = true;
+    await nextTick();
+    claimRow.querySelectorAll('button')[1].click();
+    assert(JSON.stringify(calls) === JSON.stringify([['navigate', 'pub-b:h'], ['hide', 'pub-b:h'], ['accept', 'pub-b:h']]),
+        `the row's buttons act on that claim — got ${JSON.stringify(calls)}`);
     unmount();
     console.log('✓ Nearby shows short group titles, folds empty ones, and holds the camera queries');
+    console.log('✓ Claimed Builds lists nearby claims with Navigate, Accept Position and Hide');
 }
 
 // Avatar: without an avatar of your own, only what works shows.
@@ -159,17 +189,23 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     console.log('✓ the hover card floats outside the panel');
 }
 
-// Move Placement sits beside the Own Publication panel's Place action.
+// Each Placements row carries its own Move and Remove; Place Copy Here stays under the list.
 {
     const publication = { id: 'pub-1', title: 'A Pyramid with Stair', author: 'forkbuild', publisherIdentity: null };
-    const placements = [{ placementId: 'p1', position: { x: 680, y: 0, z: 1600 }, revision: 1, owner: 'forkbuild' }];
+    const placements = [
+        { placementId: 'p1', publicationId: 'pub-1', position: { x: 680, y: 0, z: 1600 }, revision: 1, owner: 'forkbuild', movable: true, removable: true },
+        { placementId: 'p2', publicationId: 'pub-1', position: { x: 1095, y: 0, z: 2455 }, revision: 1, owner: 'alice', movable: false, removable: false }
+    ];
+    const calls = [];
     const { host, unmount } = mount({
         components: { OwnPublicationPanel },
         data: () => ({ publication }),
         methods: {
             distribute() {},
             place() {},
-            placements() { return placements; }
+            placements() { return placements; },
+            move(placement) { calls.push(['move', placement.placementId]); },
+            remove(placement) { calls.push(['remove', placement.placementId]); }
         },
         template: `
             <OwnPublicationPanel
@@ -177,19 +213,39 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
                 :snapshotDistributionCommand="distribute"
                 :placePublicationCommand="place"
                 :getPublicationPlacementsCommand="placements"
-            >
-                <template #placement-actions><button class="host-move">Move Placement</button></template>
-            </OwnPublicationPanel>`
+                :movePlacementCommand="move"
+                :removePlacementCommand="remove"
+            />`
     });
     await nextTick();
     const actions = host.querySelector('.own-publication-placements .own-publication-placement-actions');
-    assert(actions && JSON.stringify(buttonLabels(actions)) === JSON.stringify(['Place Copy Here', 'Move Placement']),
-        `Place and the host's Move Placement share one row — got ${actions ? buttonLabels(actions).join(', ') : 'no row'}`);
-    const detail = host.querySelector('.own-publication-placement-detail');
+    assert(actions && JSON.stringify(buttonLabels(actions)) === JSON.stringify(['Place Copy Here']),
+        `Place Copy Here sits under the list — got ${actions ? buttonLabels(actions).join(', ') : 'no row'}`);
+    const rows = [...host.querySelectorAll('.own-publication-placement-entry')];
+    assert(rows.length === 2, 'one row per placement');
+    const rowButtons = (row) => [...row.querySelectorAll('.own-publication-placement-row-actions button')];
+    assert(JSON.stringify(rowButtons(rows[0]).map((b) => b.textContent.trim())) === JSON.stringify(['Move…', 'Remove…']),
+        'each row has its own Move… and Remove…');
+    assert(rowButtons(rows[0]).every((b) => !b.disabled), 'your own copy\'s buttons are enabled');
+    assert(rowButtons(rows[1]).every((b) => b.disabled), 'someone else\'s copy\'s buttons are disabled');
+    const detail = rows[0].querySelector('.own-publication-placement-detail');
     assert(detail.textContent.includes('680.0, 0.0, 1600.0'), 'the placement\'s position still renders');
     assert(getComputedStyle(detail).display === 'grid', 'placement details lay out as a compact label/value grid');
+
+    rowButtons(rows[0])[0].click();
+    assert(calls[0] && calls[0][0] === 'move' && calls[0][1] === 'p1', 'Move… hands that row\'s placement to the host');
+
+    rowButtons(rows[0])[1].click();
+    await nextTick();
+    const confirm = rows[0].querySelector('.own-publication-placement-remove-confirm');
+    assert(confirm && /other copies/.test(confirm.textContent), 'Remove… first asks, naming what stays');
+    assert(calls.length === 1, 'nothing is removed before confirming');
+    confirm.querySelector('.own-publication-placement-remove-action').click();
+    await nextTick();
+    assert(calls[1] && calls[1][0] === 'remove' && calls[1][1] === 'p1', 'confirming removes exactly that row\'s placement');
+    assert(!rows[0].querySelector('.own-publication-placement-remove-confirm'), 'the confirmation closes');
     unmount();
-    console.log('✓ Move Placement sits beside Place');
+    console.log('✓ each placement row has its own Move and Remove');
 }
 
 // The publication panel: Distribute up front, the rest behind More, Unpublish

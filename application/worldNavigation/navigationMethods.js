@@ -149,6 +149,21 @@ export const navigationMethods = {
         return true;
     },
 
+    // Moves the camera to look at a bare World position, framed like
+    // focusLocation(): for things with a position but no WorldLocation, such
+    // as a claimed build. Navigation only; never touches the active document.
+    focusPosition(position) {
+        if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y) || !Number.isFinite(position.z)) {
+            return false;
+        }
+        const { x, y, z } = position;
+        this._beginCameraFocus({
+            position: { x: x + LOCATION_FOCUS_OFFSET.x, y: y + LOCATION_FOCUS_OFFSET.y, z: z + LOCATION_FOCUS_OFFSET.z },
+            target: { x, y, z }
+        });
+        return true;
+    },
+
     // "Home" returns the camera and the local avatar to the user's own world.
     // World origin is reachable through the ORIGIN_LOCATION_ID entry, but a
     // published world sits somewhere on a huge shared grid, so origin is almost

@@ -704,3 +704,17 @@
     font-size: 0.76rem;
     color: #808080;
 }
+
+/* Claimed Builds: other people's builds shown as ghosts at an unverified,
+   claimed position. The author/unverified line and the Accept hint are
+   secondary lines, like Place Names' author line. */
+.world-view-claimed-build-author,
+.world-view-claimed-build-hint {
+    flex-basis: 100%;
+    font-size: 0.7rem;
+    color: #808080;
+}
+
+.world-view-claimed-build-hint {
+    color: #b08a4a;
+}

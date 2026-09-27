@@ -42,8 +42,8 @@ const publication = { id: 'pub-1' };
     h.actions.placeOwnPublication(publication);
     h.actions.placeOwnPublication(publication);
     assert(h.placements.length === 1, 'repeated clicks on the same spot place nothing more');
-    assert(/already placed here/.test(h.messages[1]) && /Move Placement/.test(h.messages[1]),
-        'a refused click says why and points at Move Placement');
+    assert(/already placed here/.test(h.messages[1]) && /Move…/.test(h.messages[1]),
+        'a refused click says why and points at a copy\'s Move…');
 
     h.move({ x: 1200, y: 0, z: 2455 });
     h.actions.placeOwnPublication(publication);

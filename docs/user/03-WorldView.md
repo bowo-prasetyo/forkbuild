@@ -118,10 +118,12 @@ same time.
 
 - **Explore** is the default. It shows the arrival/welcome panel (who's
   here, and a few suggested destinations) plus a **Nearby** section with
-  five collapsible groups — **Places**, **Landmarks**, **People**,
+  collapsible groups — **Places**, **Landmarks**, **People**,
   **Place Names** (see
   [Nearby Place Names](#nearby-place-names--discovering-claims-from-anyone)
-  below), and **World Encounters** (see
+  below), **Claimed Builds** (see
+  [Claimed Builds](#claimed-builds--other-peoples-builds-where-their-publishers-say-they-stand)
+  below, shown only when there is one), and **World Encounters** (see
   [World Encounters](#world-encounters--publications-and-avatars-your-peers-are-sharing)
   below) — each just a name, a distance, and a compact **Go** button
   (World Encounters and Place Names instead show their own,
@@ -325,6 +327,50 @@ query error), a small notice says so, but whatever claims you already saw
 stay on screen; it's never treated as "there are no nearby claims." See
 [Naming a place](09-PublicationsAndEvidence.md#naming-a-place) for how a
 claim gets published in the first place.
+
+### Claimed Builds — other people's builds, where their publishers say they stand
+
+As you walk, ForkBuild downloads Snapshots announced near you (see
+[My Publication](#my-publication--distributing-your-own-snapshot-no-peers-required)'s
+automatic path). A Snapshot's announcement may say where its publisher
+placed it, but that is only a **claim**: nobody has checked it, and
+trusting it blindly would let anyone put a build on top of yours. So a
+claimed build is shown as a **ghost** — its bricks drawn translucent at
+the claimed position — and never becomes a real placement on its own.
+
+A ghost is only drawn when:
+
+- its position is near you (your map cell or the ones around it, about
+  1,000 units each way), and it disappears again as you walk away;
+- its content downloaded and matched its content hash;
+- this device has no placement of that build yet — once it does, the real
+  build is shown instead;
+- nothing this device knows is already placed at exactly that spot — a
+  claim always yields to a real placement.
+
+You can't select, inspect, edit or fork a ghost in the 3D view. Very large
+builds are drawn only in part (the first few thousand bricks).
+
+Each ghost also gets a row in the **Claimed Builds** group, nearest first:
+its title, distance and position, and "claimed by …" — the title and author
+come from the build's own content and are just as unverified as its
+position. Each row has:
+
+- **Navigate** — moves the camera to look at the claimed spot. Nothing
+  else changes.
+- **Accept Position** — the one way to trust a claim. It places *your own*
+  copy of the build at the claimed position, signed by you like any other
+  placement, and from then on it's a normal build in your World. It's only
+  enabled once this device holds the publisher's signed, verified
+  Publication record — it arrives when they share the World with you (see
+  [Sharing with connected peers](04-PublishingAndForking.md#sharing-with-connected-peers);
+  it then shows in your Repository), or when a connected peer's
+  [World Encounter](#world-encounters--publications-and-avatars-your-peers-are-sharing)
+  for it reaches **Available** — and only if that Publication names
+  exactly the content the ghost shows. Otherwise the row says which of the
+  two is missing.
+- **Hide** — removes that ghost and its row until you leave World View.
+  Nothing is reported or deleted.
 
 ### Info — what am I looking at?
 
@@ -732,15 +778,23 @@ actually placed at, in whatever order they were found — position,
 revision, and (when known) owner, one row per placement. Nothing here is
 reduced to "the latest one": a Publication can genuinely sit in more than
 one place, and every placement this device can discover is listed, never
-just a single, most-recently-updated stand-in for the rest. Its **Place
-Copy Here** button, and **Move Placement** for the placement you have
-selected, sit right under the list. **Place Copy Here** adds *another*
-copy of the build at your avatar's (or, without one, the camera's)
-position — it never moves an existing one; use **Move Placement** for
-that. The confirmation names where the copy went and how many placements
-the Publication now has. If a copy already sits exactly where you are,
-the button refuses and asks you to move first, so repeated clicks can't
-pile invisible duplicates onto one spot. An empty list
+just a single, most-recently-updated stand-in for the rest.
+
+Each row has its own **Move…** and **Remove…**, acting on exactly that
+copy and no other. **Move…** opens the same X/Y/Z Move Placement dialog
+(with its overlap warning) for that copy. **Remove…** asks once before
+taking that copy out of the World; the Publication, its Document and the
+other copies stay, and removing the last copy only means the build no
+longer appears anywhere until you place it again. Both are disabled on a
+copy someone else placed: only its owner can move or remove it.
+
+**Place Copy Here**, under the list, adds *another* copy of the build at
+your avatar's (or, without one, the camera's) position — it never moves
+an existing one; use that copy's **Move…** for that. The confirmation
+names where the copy went and how many placements the Publication now
+has. If a copy already sits exactly where you are, the button refuses and
+asks you to move first, so repeated clicks can't pile invisible
+duplicates onto one spot. An empty list
 just means this Publication hasn't been placed anywhere yet; a read
 failure shows its own plain error instead.
 
