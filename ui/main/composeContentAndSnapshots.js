@@ -189,6 +189,7 @@ export function composeContentAndSnapshots({
         storeSnapshotContentUseCase, snapshotContentMaterializationCoordinator, exportSnapshotCommand,
         snapshotPlacementMaterializationCoordinator, snapshotPeerMaterializationCoordinator,
         snapshotPeerPossessionCoordinator, snapshotMaterializationSelectionCoordinator,
-        publicationEvidenceDiscoveryCoordinator, publicationKnowledgeSynchronizationCoordinator
+        publicationEvidenceDiscoveryCoordinator, publicationKnowledgeSynchronizationCoordinator,
+        materializeSnapshotFromPeerUseCase
     };
 }

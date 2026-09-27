@@ -110,6 +110,8 @@ export class CreatePublicationDisplayKindRegistryUseCase {
             [publicationKind.contentKind]: publicationKind
         };
 
-        return { kindPlugins, verifier };
+        // publicationKindPlugin: the Publication kind on its own, for callers
+        // that handle only Publications (application/publication/sharing/).
+        return { kindPlugins, verifier, publicationKindPlugin: publicationKind };
     }
 }

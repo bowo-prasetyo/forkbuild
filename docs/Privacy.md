@@ -35,6 +35,13 @@ is no other copy and no way to recover it.
   They also receive the Snapshot and Place Naming announcements your device
   has discovered, so they learn which World regions you have searched for
   place names (docs/AnnouncementIndex.md).
+- **Peers, for Worlds you share.** **Share with Peers** in the Repository
+  offers one of your published Worlds to everyone you're connected to now and
+  to anyone who connects later, lobby strangers included: they receive its
+  listing and can fetch the World itself from your device while you're
+  connected. Your Friends' and Known Peers' devices fetch it on their own;
+  anyone else's only when they click **Retrieve**. A World you only
+  **Publish** is never sent to anyone.
 - **Anyone, while you are in a public lobby.** Joining the public lobby
   (**Peers**) or a World's lobby (**Lobby** in World View) lists your
   identity's public key and the display name you choose, for anyone who

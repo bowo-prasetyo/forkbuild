@@ -19,12 +19,13 @@ also automatically given a position in the shared world, so **Explore**
 always has somewhere to take people — see
 [Finding worlds](03-WorldView.md#finding-worlds).
 
-> **Note:** Publishing stores your Document/World on this device (and on
-> any peer's device it later reaches). Publishing never uploads anything to
-> a decentralized network by itself — that's the separate, optional
-> **Distribute** step described next, which pushes the publication to
+> **Note:** Publishing stores your Document/World on this device only.
+> Publishing never sends anything anywhere by itself. Two separate, optional
+> steps do: **Distribute**, described next, pushes the publication to
 > Arweave or IPFS and announces it on Nostr or Arweave so other people can
-> find it without being connected to you.
+> find it without being connected to you; and
+> [**Share with Peers**](#sharing-with-connected-peers) offers it to the
+> people you are connected to.
 
 ## Distributing straight from the Editor
 
@@ -78,6 +79,31 @@ happens on this later, separate, explicit click. Publishing again
 replaces the whole overlay with a fresh one for the new publication;
 dismissing it, or leaving the page, clears it — neither the notice nor
 either section's result is remembered anywhere.
+
+## Sharing with connected peers
+
+A World you publish is listed in *your* Repository only. To put it in the
+Repository of someone you're connected to (see
+[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)), click
+**Share with Peers** under it in the Repository. The button appears only on
+your own published Worlds.
+
+- Sharing offers the World to everyone connected right now, and to anyone
+  who connects later. **Shared ✓ · Share Again** announces it again to the
+  people connected now.
+- On their side, a World shared by one of their **Friends** or **Known
+  Peers** is added to their Repository by itself, along with everything
+  needed to **Explore** it. A World shared by anyone else waits under
+  **Shared with you** at the top of their Repository until they click
+  **Retrieve**. Nobody's device downloads a stranger's World without
+  being asked.
+- The World is fetched only from you, and only while you're connected: if
+  you're offline, **Retrieve** waits until you're back, and a Friend or
+  Known Peer gets it as soon as you reconnect. Your device checks that the
+  World is signed by you before adding it, so nobody can pass off a copy as
+  theirs.
+- Like any publishing, sharing can't be taken back from people who already
+  received it.
 
 ## Choosing a license
 

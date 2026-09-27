@@ -9,6 +9,10 @@ import { PublicationCommentaryArweaveDistribution } from '../application/publica
 import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';
 import { DiscoverPublicationCommentaryUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryUseCase.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
+import { FriendshipState } from '../core/FriendshipState.js';
+import { SharePublicationWithPeersUseCase } from '../application/publication/sharing/SharePublicationWithPeersUseCase.js';
+import { RetrieveSharedPublicationUseCase } from '../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
+import { AutoRetrieveSharedPublicationsUseCase } from '../application/publication/sharing/AutoRetrieveSharedPublicationsUseCase.js';
 import { CreatePublicationResolverUseCase } from '../application/publication/CreatePublicationResolverUseCase.js';
 import { CreatePublicationPeerExchangeUseCase } from '../application/publication/CreatePublicationPeerExchangeUseCase.js';
 import { CreatePeerContentExchangeUseCase } from '../application/peer/CreatePeerContentExchangeUseCase.js';
@@ -74,7 +78,7 @@ const { coordinator: publicationResolutionCoordinator } = new CreatePublicationR
 });
 // Kept separate from the durable stores: checking what a publication resolves
 // to must never import it into them.
-const { kindPlugins: publicationDisplayKindPlugins } = new CreatePublicationDisplayKindRegistryUseCase().execute();
+const { kindPlugins: publicationDisplayKindPlugins, publicationKindPlugin } = new CreatePublicationDisplayKindRegistryUseCase().execute();
 
 // One app-wide instance: a per-view accumulator would lose admitted candidates
 // whenever a person navigated away.
@@ -192,12 +196,45 @@ const {
     snapshotContentMaterializationCoordinator, exportSnapshotCommand,
     snapshotPlacementMaterializationCoordinator, snapshotPeerMaterializationCoordinator,
     snapshotPeerPossessionCoordinator, snapshotMaterializationSelectionCoordinator,
-    publicationEvidenceDiscoveryCoordinator, publicationKnowledgeSynchronizationCoordinator
+    publicationEvidenceDiscoveryCoordinator, publicationKnowledgeSynchronizationCoordinator,
+    materializeSnapshotFromPeerUseCase
 } = composeContentAndSnapshots({
     identityProvider, peerSessionManager, peerMessageBus, publicationContentStore, publicationCatalog,
     publicationAnchorDiscoveryCoordinator, publicationSnapshotPlacementCatalog, placementKnowledgeStore,
     publicationSnapshotPlacementPeerExchange, publicationSnapshotPlacementDiscoveryCoordinator
 });
+// Share with Peers: this identity's own Worlds offered to peers, and Worlds
+// peers shared, retrieved automatically from Friends and Known Peers and by
+// hand from anyone else. A connection counts as the identity it speaks for,
+// so a friend's authorized device counts as the friend.
+const identityOfConnection = (connectedPeer) => {
+    const resolved = deviceAuthorizationUseCase.resolveConnectionIdentity(connectedPeer);
+    return resolved ? resolved.identityId : (connectedPeer.remoteIdentity ? connectedPeer.remoteIdentity.identityId : null);
+};
+const sharePublicationWithPeersUseCase = new SharePublicationWithPeersUseCase({
+    publicationResolver, publicationCatalog, publicationPeerExchange, identityProvider, publicationKindPlugin
+});
+const retrieveSharedPublicationUseCase = new RetrieveSharedPublicationUseCase({
+    publicationCatalog,
+    resolutionCoordinator: publicationResolutionCoordinator,
+    publicationKindPlugin,
+    discoveryProvider: decentralizedPublicationDiscoveryProvider,
+    contentStore: publicationContentStore,
+    materializeSnapshotFromPeer: materializeSnapshotFromPeerUseCase,
+    connectedPeerRegistry: peerSessionManager.registry,
+    identityProvider,
+    identityOfConnection
+});
+const autoRetrieveSharedPublicationsUseCase = new AutoRetrieveSharedPublicationsUseCase({
+    retrieveSharedPublicationUseCase,
+    publicationPeerExchange,
+    connectedPeerRegistry: peerSessionManager.registry,
+    identityOfConnection,
+    publicationKindPlugin,
+    isTrustedSharer: (identityId) => !peerBlockUseCase.isBlocked(identityId)
+        && (friendRelationshipUseCase.getState(identityId) === FriendshipState.FRIEND || peerRelationshipUseCase.isKnown(identityId))
+});
+
 const {
     externalAnchorProofVerifierRegistry, publicationEvidenceCoordinator, externalAnchorPublisherRegistry,
     publicationAnchorCreationCoordinator, preferredPublicationAnchorCreationCoordinator,
@@ -291,6 +328,9 @@ app.provide('publicationCatalogContentResolver', publicationCatalogContentResolv
 // publicationCatalog (which only holds peer-announced envelopes), so readers
 // look them up by contentReference here.
 app.provide('publicationContentStore', publicationContentStore);
+app.provide('sharePublicationWithPeersUseCase', sharePublicationWithPeersUseCase);
+app.provide('retrieveSharedPublicationUseCase', retrieveSharedPublicationUseCase);
+app.provide('autoRetrieveSharedPublicationsUseCase', autoRetrieveSharedPublicationsUseCase);
 app.provide('ipfsRemotePublicationCoordinator', ipfsRemotePublicationCoordinator);
 app.provide('ipfsPublicationContentVerificationCoordinator', ipfsPublicationContentVerificationCoordinator);
 // The view falls back to its own instance if this is missing; providing one

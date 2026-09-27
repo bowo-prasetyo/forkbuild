@@ -93,6 +93,11 @@ They learn your IP address, see your avatar and presence as your visibility
 settings allow, and your devices **exchange Snapshot and Place Naming
 announcements and publication metadata**, exactly as with any connected
 peer (see [Privacy](../Privacy.md)). Chat and voice still need a friendship.
+Worlds you've shared with peers are offered to them too, but their device
+fetches one only if they click **Retrieve** (see
+[Sharing with connected peers](04-PublishingAndForking.md#sharing-with-connected-peers)).
+Worlds shared by your Friends and Known Peers are fetched for you
+automatically; a lobby stranger's never are.
 
 **Relays only when needed.** Every connection tries a direct path first and
 uses the rendezvous server's TURN relay only when no direct path works.

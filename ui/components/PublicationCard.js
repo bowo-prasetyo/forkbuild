@@ -1,5 +1,6 @@
 import PublicationPreview from './PublicationPreview.js';
 import PublicationCommentarySection from './PublicationCommentarySection.js';
+import SharePublicationButton from './SharePublicationButton.js';
 import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
 import { License } from '../../core/License.js';
 
@@ -30,7 +31,7 @@ import { License } from '../../core/License.js';
 // gate every optional capability in this codebase's UI layer follows.
 export default {
     name: 'PublicationCard',
-    components: { PublicationPreview, PublicationCommentarySection },
+    components: { PublicationPreview, PublicationCommentarySection, SharePublicationButton },
     inject: {
         // Read only to decide whether to offer the Comment toggle.
         getPublicationCommentariesCommand: { default: null }
@@ -110,6 +111,7 @@ export default {
                     @click="toggleCommentary"
                 >{{ commentaryOpen ? 'Hide Comments' : 'Comment' }}</button>
             </div>
+            <SharePublicationButton :publication="publication" />
 
             <PublicationCommentarySection
                 v-if="getPublicationCommentariesCommand && commentaryOpen"

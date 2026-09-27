@@ -692,6 +692,39 @@ their 8 s waits restart on each part (`onTransferProgress()`), so a
 timeout bounds silence rather than the whole transfer (docs/Protocol.md,
 "Large content in parts").
 
+**Sharing Worlds with peers.** A plain Publish lists a World on this
+device only. application/publication/sharing/ adds sharing on top of the
+existing decentralized publication pipeline, without new wire protocols:
+
+- SharePublicationWithPeersUseCase wraps this identity's own signed
+  Publication in a signed DecentralizedPublication
+  (PublicationResolver#publish(), which stores the Publication's JSON in
+  publicationContentStore), catalogs it and announces it over
+  `forkbuild:publication`. Being cataloged is what lets PeerContentExchange
+  serve those bytes and PublicationPeerConnectionSync re-announce them to
+  later peers; the World's snapshot is already in the same store from
+  publishing.
+- RetrieveSharedPublicationUseCase resolves a shared envelope with
+  resolvePublicationView() against **only the connections authenticated as
+  the sharer** (directly or as an authorized device, via
+  DeviceAuthorizationPropagationUseCase#resolveConnectionIdentity()),
+  requires the Publication inside to be signed by the sharer, admits it to
+  DecentralizedPublicationDiscoveryProvider (the Repository), then fetches
+  its snapshot over `forkbuild:snapshot-content-transfer`
+  (MaterializeSnapshotFromPeerUseCase) so World View can load it. Content
+  addresses are 32-bit FNV-1a, which a peer could collide, so no other peer
+  is ever a source.
+- AutoRetrieveSharedPublicationsUseCase runs that retrieval on its own when
+  a share arrives or its sharer authenticates, only if the sharer is a
+  Friend or Known Peer and not blocked (the predicate is composed in
+  ui/main.js). Anyone else's share waits for a click in the Repository's
+  SharedWithYouPanel.
+
+The use cases take the Publication kind from
+CreatePublicationDisplayKindRegistryUseCase's `publicationKindPlugin`
+rather than naming it. The UI is ui/components/SharePublicationButton.js on
+Repository cards and ui/components/SharedWithYouPanel.js above the catalog.
+
 **Relationships.** Three separate kinds of local state:
 
 - PeerRelationshipUseCase: peers this device chose to remember, by
