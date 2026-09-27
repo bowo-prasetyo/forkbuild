@@ -414,7 +414,7 @@ export default {
 
         const {
             openPlacementEditor, closePlacementEditor, onMovePlacement, removePlacementFromPanel,
-            unpublishOwnPublication, placeOwnPublication, getPublicationCommentariesCommand,
+            removePublicationPlacement, placementsRevision, unpublishOwnPublication, placeOwnPublication, getPublicationCommentariesCommand,
             addPublicationCommentaryCommand, getPublicationPlacementsCommand
         } = useOwnPublicationActions({
             feedback, guarded, placementEditTarget, placementOverlapWarning, refreshSpatialUI,
@@ -1088,6 +1088,8 @@ export default {
             closePlacementEditor,
             onMovePlacement,
             removePlacementFromPanel,
+            removePublicationPlacement,
+            placementsRevision,
             unpublishOwnPublication,
             placeOwnPublication,
             getPublicationCommentariesCommand,

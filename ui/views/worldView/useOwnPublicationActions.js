@@ -1,3 +1,4 @@
+import { ref } from 'vue';
 import { detectSpatialOverlap } from '../../../core/SpatialOverlap.js';
 
 function formatPosition(position) {
@@ -11,6 +12,25 @@ export function useOwnPublicationActions({
     feedback, guarded, placementEditTarget, placementOverlapWarning, refreshSpatialUI, session,
     showPlacementEditor
 }) {
+    // Bumped after every placement change made here, so OwnPublicationPanel
+    // re-reads its Placements list (a move finishes in a dialog it never sees).
+    const placementsRevision = ref(0);
+
+    // A target from the Placements list carries no documentId: it names its
+    // placement by publicationId + placementId, which a Publication placed
+    // several times needs. The inspection panel's target keeps the documentId path.
+    function checkMove(info, position) {
+        return info.documentId
+            ? session.checkPlacementOverlap(info.documentId, position)
+            : session.checkPublicationPlacementOverlap(info.publicationId, info.placementId, position);
+    }
+
+    function applyMove(info, position) {
+        return info.documentId
+            ? session.movePlacement(info.documentId, position)
+            : session.movePublicationPlacement(info.publicationId, info.placementId, position);
+    }
+
     // Moving a placement is not a document mutation (docs/Principles.md, "Moving A
     // Placement Is Not Editing A Document"), so it skips fork-on-write; guarded()
     // only turns failures into messages.
@@ -42,7 +62,7 @@ export function useOwnPublicationActions({
             && pendingPosition.x === position.x && pendingPosition.y === position.y && pendingPosition.z === position.z;
 
         if (!warningMatchesRequest) {
-            const check = guarded(() => session.checkPlacementOverlap(info.documentId, position));
+            const check = guarded(() => checkMove(info, position));
             if (check && check.requiresConfirmation) {
                 placementOverlapWarning.value = check;
                 return;
@@ -55,9 +75,10 @@ export function useOwnPublicationActions({
         }
 
         guarded(() => {
-            session.movePlacement(info.documentId, position);
+            applyMove(info, position);
             feedback.show('Placement moved');
         });
+        placementsRevision.value += 1;
         closePlacementEditor();
         refreshSpatialUI();
     }
@@ -71,6 +92,18 @@ export function useOwnPublicationActions({
             session.removePlacement(info.documentId, info.placementId);
             feedback.show('Placement removed from World');
         });
+        placementsRevision.value += 1;
+        refreshSpatialUI();
+    }
+
+    // One row of the Placements list: removes exactly that copy.
+    function removePublicationPlacement(placement) {
+        if (!placement) return;
+        guarded(() => {
+            session.removePublicationPlacement(placement.publicationId, placement.placementId);
+            feedback.show('Copy removed from World');
+        });
+        placementsRevision.value += 1;
         refreshSpatialUI();
     }
 
@@ -97,13 +130,14 @@ export function useOwnPublicationActions({
             const position = session.getAvatarPosition() || session.getCameraPosition() || { x: 0, y: 0, z: 0 };
             const existing = session.getPlacementsForPublication(publication.id);
             if (!detectSpatialOverlap(position, existing).isEmpty) {
-                feedback.show('A copy is already placed here. Move elsewhere to place another, or use Move Placement to relocate one.');
+                feedback.show('A copy is already placed here. Move elsewhere to place another, or use a copy\'s Move… to relocate it.');
                 return;
             }
             session.placePublication(publication.id, position);
             const count = existing.length + 1;
             feedback.show(`Copy placed at ${formatPosition(position)} (${count} ${count === 1 ? 'placement' : 'placements'} now)`);
         });
+        placementsRevision.value += 1;
         refreshSpatialUI();
     }
 
@@ -125,7 +159,7 @@ export function useOwnPublicationActions({
 
     return {
         openPlacementEditor, closePlacementEditor, onMovePlacement, removePlacementFromPanel,
-        unpublishOwnPublication, placeOwnPublication, getPublicationCommentariesCommand,
+        removePublicationPlacement, placementsRevision, unpublishOwnPublication, placeOwnPublication, getPublicationCommentariesCommand,
         addPublicationCommentaryCommand, getPublicationPlacementsCommand
     };
 }

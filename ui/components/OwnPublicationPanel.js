@@ -161,6 +161,22 @@ export default {
         placePublicationCommand: {
             type: Function,
             default: null
+        },
+        // `(placement) -> void`: starts moving one row's placement (the host opens
+        // its Move Placement dialog). `placement` is a getPublicationPlacementsCommand row.
+        movePlacementCommand: {
+            type: Function,
+            default: null
+        },
+        // `(placement) -> void`: removes exactly that row's placement. Synchronous.
+        removePlacementCommand: {
+            type: Function,
+            default: null
+        },
+        // Bumped by the host after it changes a placement, so the list re-reads.
+        placementsRevision: {
+            type: Number,
+            default: 0
         }
     },
     data() {
@@ -236,6 +252,8 @@ export default {
             // the order returned, never sorted, deduplicated or reduced; [] is a real
             // result.
             publicationPlacements: [],
+            // The one row whose Remove is awaiting confirmation, by placementId.
+            pendingRemovalPlacementId: null,
             // NO_PLACEMENTS ≠ DISCOVERY_FAILED: a failed refresh sets only this, so []
             // with no error stays distinct from a failed read.
             publicationPlacementsError: null
@@ -284,6 +302,10 @@ export default {
         }
     },
     watch: {
+        placementsRevision() {
+            this.pendingRemovalPlacementId = null;
+            this.refreshPublicationPlacements();
+        },
         // A different Publication resets every family below: in-flight calls, errors
         // and results all belonged to the previous one.
         publication(next, prev) {
@@ -336,6 +358,7 @@ export default {
             this.pendingCommentaryDraft = null;
             this.publicationPlacements = [];
             this.publicationPlacementsError = null;
+            this.pendingRemovalPlacementId = null;
             // Test contexts for other families call this watcher without these methods.
             if (typeof this.refreshPublicationCommentaries === 'function') {
                 this.refreshPublicationCommentaries();

@@ -343,7 +343,7 @@ async function run() {
             'J1. OwnPublicationPanel.js declares an optional placePublicationCommand prop, mirroring unpublishCommand\'s own shape.');
         assert(/placeOwnPublication\(\) \{/.test(panelSrc), 'J2. OwnPublicationPanel.js defines placeOwnPublication().');
 
-        const placementsSection = panelSrc.split('own-publication-placements"')[1].split('</div>')[0];
+        const placementsSection = panelSrc.split('own-publication-placements"')[1].split('</div>`')[0];
         assert(/@click="placeOwnPublication"/.test(placementsSection),
             'J3. The "Place" button lives inside the EXISTING .own-publication-placements listing — never a new panel.');
 

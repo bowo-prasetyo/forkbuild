@@ -732,15 +732,23 @@ actually placed at, in whatever order they were found — position,
 revision, and (when known) owner, one row per placement. Nothing here is
 reduced to "the latest one": a Publication can genuinely sit in more than
 one place, and every placement this device can discover is listed, never
-just a single, most-recently-updated stand-in for the rest. Its **Place
-Copy Here** button, and **Move Placement** for the placement you have
-selected, sit right under the list. **Place Copy Here** adds *another*
-copy of the build at your avatar's (or, without one, the camera's)
-position — it never moves an existing one; use **Move Placement** for
-that. The confirmation names where the copy went and how many placements
-the Publication now has. If a copy already sits exactly where you are,
-the button refuses and asks you to move first, so repeated clicks can't
-pile invisible duplicates onto one spot. An empty list
+just a single, most-recently-updated stand-in for the rest.
+
+Each row has its own **Move…** and **Remove…**, acting on exactly that
+copy and no other. **Move…** opens the same X/Y/Z Move Placement dialog
+(with its overlap warning) for that copy. **Remove…** asks once before
+taking that copy out of the World; the Publication, its Document and the
+other copies stay, and removing the last copy only means the build no
+longer appears anywhere until you place it again. Both are disabled on a
+copy someone else placed: only its owner can move or remove it.
+
+**Place Copy Here**, under the list, adds *another* copy of the build at
+your avatar's (or, without one, the camera's) position — it never moves
+an existing one; use that copy's **Move…** for that. The confirmation
+names where the copy went and how many placements the Publication now
+has. If a copy already sits exactly where you are, the button refuses and
+asks you to move first, so repeated clicks can't pile invisible
+duplicates onto one spot. An empty list
 just means this Publication hasn't been placed anywhere yet; a read
 failure shows its own plain error instead.
 

@@ -714,6 +714,22 @@
     border-top: 1px solid #2a2a2a;
 }
 
+/* Each placement row's own Move / Remove, and Remove's one-step confirmation. */
+.own-publication-placement-row-actions,
+.own-publication-placement-remove-confirm {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.3rem;
+}
+
+.own-publication-placement-remove-confirm-text {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.8rem !important;
+    color: #e0a34c !important;
+}
+
 .own-publication-placement-actions {
     display: flex;
     flex-wrap: wrap;

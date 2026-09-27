@@ -177,6 +177,10 @@ export const placementMethods = {
         if (!this._placementRegistry) return null;
         const record = this._resolvePlacementRecord(id);
         if (!record) return null;
+        return this._checkRecordOverlap(record, newPosition);
+    },
+
+    _checkRecordOverlap(record, newPosition) {
         const overlap = detectSpatialOverlap(newPosition, this._placementRegistry.list(), { excludePlacementId: record.placementId });
         const decision = evaluateSpatialAllocation(this._spatialAllocationPolicy, overlap);
         return {
@@ -435,6 +439,47 @@ export const placementMethods = {
         if (expectedPlacementId && record.placementId !== expectedPlacementId) {
             throw new Error('WorldNavigationSession: this placement has changed since it was selected — refusing to remove a different placement');
         }
+        this._removeWorldPlacementUseCase.execute(record.placementId);
+    },
+
+    // One placement named by its own id, for acting on one row of a
+    // Publication's Placements list. Unlike _resolvePlacementRecord(), never
+    // picks "the latest": a Publication placed several times needs the exact
+    // copy the person chose. Throws when that placement is gone or belongs to
+    // another Publication, so a stale row never acts on a different one.
+    _resolvePublicationPlacementRecord(publicationId, placementId) {
+        if (!this._placementRegistry) {
+            throw new Error('WorldNavigationSession: no placement registry wired');
+        }
+        const record = this._placementRegistry.findByPublicationId(publicationId)
+            .find((r) => r.placementId === placementId);
+        if (!record) {
+            throw new Error('WorldNavigationSession: this placement no longer exists — refusing to act on a different one');
+        }
+        return record;
+    },
+
+    // Placement-id siblings of checkPlacementOverlap()/movePlacement()/
+    // removePlacement(), same semantics, for the Placements list's per-row
+    // Move and Remove.
+    checkPublicationPlacementOverlap(publicationId, placementId, newPosition) {
+        const record = this._resolvePublicationPlacementRecord(publicationId, placementId);
+        return this._checkRecordOverlap(record, newPosition);
+    },
+
+    movePublicationPlacement(publicationId, placementId, newPosition) {
+        if (!this._moveWorldPlacementUseCase) {
+            throw new Error('WorldNavigationSession: placement cannot be moved — no MoveWorldPlacementUseCase wired');
+        }
+        const record = this._resolvePublicationPlacementRecord(publicationId, placementId);
+        return this._moveWorldPlacementUseCase.execute(record.placementId, newPosition);
+    },
+
+    removePublicationPlacement(publicationId, placementId) {
+        if (!this._removeWorldPlacementUseCase) {
+            throw new Error('WorldNavigationSession: placement cannot be removed — no RemoveWorldPlacementUseCase wired');
+        }
+        const record = this._resolvePublicationPlacementRecord(publicationId, placementId);
         this._removeWorldPlacementUseCase.execute(record.placementId);
     },
 

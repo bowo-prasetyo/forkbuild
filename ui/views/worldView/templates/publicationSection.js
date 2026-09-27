@@ -1,4 +1,5 @@
-// World view template: the Own Publication panel, with Move Placement beside its Place action.
+// World view template: the Own Publication panel. Each row of its Placements list
+// carries its own Move and Remove, so the panel needs no host Move Placement.
 // It renders in WorldView's scope, so it uses the names its setup() returns.
 export const publicationSectionTemplate = `<!--
                     Outside the Explore-only content, so distributing your own Snapshot never
@@ -26,17 +27,11 @@ export const publicationSectionTemplate = `<!--
                         :addPublicationCommentaryCommand="addPublicationCommentaryCommand"
                         :viewerIdentityId="myIdentityId"
                         :getPublicationPlacementsCommand="getPublicationPlacementsCommand"
+                        :movePlacementCommand="openPlacementEditor"
+                        :removePlacementCommand="removePublicationPlacement"
+                        :placementsRevision="placementsRevision"
                         :discoverSnapshotCandidatesWithOutcomeCommand="discoverSnapshotCandidatesWithOutcomeCommand"
-                    >
-                        <template #placement-actions>
-                            <button
-                                v-if="activePlacementInfo"
-                                class="action-btn"
-                                :disabled="!activePlacementInfo.movable"
-                                @click="openPlacementEditor(activePlacementInfo)"
-                            >Move Placement</button>
-                        </template>
-                    </OwnPublicationPanel>
+                    />
                 </div>
                 <div v-else-if="activePlacementInfo" class="world-view-actions">
                     <button

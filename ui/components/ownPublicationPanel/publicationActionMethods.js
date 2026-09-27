@@ -33,6 +33,31 @@ export const publicationActionMethods = {
             this.refreshPublicationPlacements();
         }
     },
+    movePublicationPlacement(placement) {
+        if (!placement || !placement.movable || !this.movePlacementCommand) {
+            return;
+        }
+        this.pendingRemovalPlacementId = null;
+        this.movePlacementCommand(placement);
+    },
+    // Two steps, like Unpublish: the first click only asks.
+    requestPlacementRemoval(placement) {
+        if (!placement || !placement.removable || !this.removePlacementCommand) {
+            return;
+        }
+        this.pendingRemovalPlacementId = placement.placementId;
+    },
+    // Synchronous; re-reads the placement list afterwards.
+    confirmPlacementRemoval(placement) {
+        this.pendingRemovalPlacementId = null;
+        if (!placement || !placement.removable || !this.removePlacementCommand) {
+            return;
+        }
+        this.removePlacementCommand(placement);
+        if (typeof this.refreshPublicationPlacements === 'function') {
+            this.refreshPublicationPlacements();
+        }
+    },
     // No-op without a publication or command, or while busy.
     distributeOwnSnapshot() {
         const publication = this.publication;
