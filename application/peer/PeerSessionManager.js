@@ -7,6 +7,7 @@ import { DiscoverPeersUseCase } from './DiscoverPeersUseCase.js';
 
 const DEFAULT_INVITATION_TTL_MS = 10 * 60 * 1000; // 10 minutes — matches peer/PeerInvitation.js's own default
 const SIGNAL_TIMEOUT_MS = 30 * 1000; // ICE gathering ordinarily resolves in well under this on a working network
+const DEFAULT_ANSWER_POLL_INTERVAL_MS = 2 * 1000;
 
 // 0.2.55 — the one small application abstraction the design doc asked
 // for: a UI-facing surface over the exact four-stage pipeline 0.2.49
@@ -52,7 +53,12 @@ const SIGNAL_TIMEOUT_MS = 30 * 1000; // ICE gathering ordinarily resolves in wel
 // agrees with it — see application/peer/FindPeerUseCase.js, the one caller
 // that ever calls these three methods, for that.
 export class PeerSessionManager {
-    constructor({ identityProvider, peerConnectionProvider = new WebRtcPeerConnectionProvider(), discoveryProvider = new LocalPeerDiscoveryProvider() } = {}) {
+    constructor({
+        identityProvider,
+        peerConnectionProvider = new WebRtcPeerConnectionProvider(),
+        discoveryProvider = new LocalPeerDiscoveryProvider(),
+        answerPollIntervalMs = DEFAULT_ANSWER_POLL_INTERVAL_MS
+    } = {}) {
         if (!identityProvider) {
             throw new Error('PeerSessionManager: identityProvider is required');
         }
@@ -64,6 +70,8 @@ export class PeerSessionManager {
         // publishSelf() — { connectionId, invitation } — or null. See
         // isPublishing() below.
         this._publishedOffer = null;
+        this._answerPollIntervalMs = answerPollIntervalMs;
+        this._answerTimer = null;
         // Harmless for peer/WebRtcPeerConnectionProvider.js today (its own
         // onIncomingConnection() never fires — see that file's header) and
         // free forward-compatibility for any future transport that DOES
@@ -208,7 +216,56 @@ export class PeerSessionManager {
         const { invitation, connectedPeer } = await this.createInvitation({ ttlMs });
         const publication = await this._discoverPeersUseCase.publish(invitation, { ttlMs });
         this._publishedOffer = publication ? { connectionId: connectedPeer.connectionId, invitation } : null;
+        if (this._publishedOffer && this._discoverPeersUseCase.canFetchAnswers()) {
+            this._watchForAnswer(this._publishedOffer);
+        }
         return publication;
+    }
+
+    // Polls the rendezvous answer mailbox while `offer` is still waiting,
+    // and completes the connection with the first answer that arrives, so
+    // whoever found this device never has to send a reply back by hand.
+    _watchForAnswer(offer) {
+        this._clearAnswerTimer();
+        const poll = async () => {
+            this._answerTimer = null;
+            if (this._publishedOffer !== offer || !this.isPublishing()) {
+                return;
+            }
+            let found = null;
+            try {
+                found = await this._discoverPeersUseCase.fetchAnswer();
+            } catch {
+                found = null;
+            }
+            if (this._publishedOffer !== offer) {
+                return;
+            }
+            if (found && found.answer) {
+                try {
+                    await this.completeConnection(offer.connectionId, found.answer);
+                } catch {
+                    // A bad or expired answer leaves the offer to expire on its own.
+                }
+                return;
+            }
+            schedule();
+        };
+        const schedule = () => {
+            this._answerTimer = setTimeout(poll, this._answerPollIntervalMs);
+            // Never keeps a Node test process alive on its own.
+            if (this._answerTimer && typeof this._answerTimer.unref === 'function') {
+                this._answerTimer.unref();
+            }
+        };
+        schedule();
+    }
+
+    _clearAnswerTimer() {
+        if (this._answerTimer) {
+            clearTimeout(this._answerTimer);
+            this._answerTimer = null;
+        }
     }
 
     // Whether the last publishSelf() can still answer someone: its offer's
@@ -237,6 +294,7 @@ export class PeerSessionManager {
     // failing to answer.
     async stopPublishing() {
         this._publishedOffer = null;
+        this._clearAnswerTimer();
         return this._discoverPeersUseCase.unpublish();
     }
 
@@ -249,11 +307,21 @@ export class PeerSessionManager {
     // `expectedIdentityId` gate 0.2.62 already built — a mismatch closes
     // the connection and is reported through this class's own
     // onIdentityMismatch(), completely unmodified.
+    //
+    // When the candidate came from a rendezvous network with an answer
+    // mailbox, the answer is left there for the publisher to collect and
+    // `delivered` is true; otherwise `reply` still has to be handed over.
     async connectToDiscovered(discoveryRecord, { expectedIdentityId = null } = {}) {
         await this._prepareIceServers();
         const connectedPeer = this._connectToPeerUseCase.connect(discoveryRecord, { expectedIdentityId });
         const answer = await waitForLocalSignal(connectedPeer.connection, connectedPeer);
-        return { connectedPeer, reply: JSON.stringify(answer.toJSON()) };
+        let delivered = false;
+        try {
+            delivered = await this._discoverPeersUseCase.deliverAnswer(discoveryRecord, answer.toJSON());
+        } catch {
+            delivered = false;
+        }
+        return { connectedPeer, reply: JSON.stringify(answer.toJSON()), delivered: Boolean(delivered) };
     }
 
     // Lets the connection provider fetch TURN credentials just before a
@@ -278,6 +346,8 @@ export class PeerSessionManager {
     }
 
     dispose() {
+        this._publishedOffer = null;
+        this._clearAnswerTimer();
         if (this._stopListening) {
             this._stopListening();
             this._stopListening = null;

@@ -3,7 +3,12 @@ import { PeerDiscoveryRecord } from './PeerDiscoveryRecord.js';
 import { PeerDiscoverySource } from './PeerDiscoverySource.js';
 import { PeerInvitation } from './PeerInvitation.js';
 import { RendezvousPublication } from './RendezvousPublication.js';
-import { signRendezvousPublication, signRendezvousRemoval } from './RendezvousPublicationSigning.js';
+import {
+    signRendezvousAnswer,
+    signRendezvousAnswerFetch,
+    signRendezvousPublication,
+    signRendezvousRemoval
+} from './RendezvousPublicationSigning.js';
 import { LocalAuthorizationVerifier } from '../identity/LocalAuthorizationVerifier.js';
 
 // 0.2.65 — Distributed Peer Rendezvous.
@@ -94,6 +99,7 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
         this._discoveredListeners = new Set();
         this._ownPublicationId = null; // this node's own most recent PUBLISH, for a bare unpublish() call
         this._ownIdentityHint = null; // ...and the identity it was published for, which signs its REMOVE
+        this._publicationsByRecord = new Map(); // peerDiscoveryId -> { identityId, publicationId }, for deliverAnswer()
     }
 
     // Out-of-band import path — identical in every respect to peer/
@@ -167,6 +173,45 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
         return removed;
     }
 
+    // Leaves this device's WebRTC `answer` (a PeerConnectionAnswer's JSON)
+    // in the mailbox of the publication `record` was discovered from.
+    // Resolves to false, never throws, when that is impossible: the record
+    // did not come from this provider's network, the transport has no
+    // mailbox, or this device cannot sign. The caller then falls back to
+    // handing the reply over by hand.
+    async deliverAnswer(record, answer) {
+        const origin = record ? this._publicationsByRecord.get(record.peerDiscoveryId) : null;
+        if (!origin || typeof this._transport.postAnswer !== 'function') {
+            return false;
+        }
+        const signed = signRendezvousAnswer({ ...origin, answer }, this._identityProvider);
+        if (!signed) {
+            return false;
+        }
+        try {
+            return Boolean(await this._transport.postAnswer({ ...origin, answer, ...signed }));
+        } catch {
+            return false;
+        }
+    }
+
+    // The answer waiting for this device's own last publish(), as
+    // { answer, answererId }, or null when none has arrived (or it cannot
+    // be asked for).
+    async fetchAnswer() {
+        const publicationId = this._ownPublicationId;
+        const identityId = this._ownIdentityHint;
+        if (!publicationId || !identityId || typeof this._transport.fetchAnswer !== 'function') {
+            return null;
+        }
+        const proof = signRendezvousAnswerFetch(publicationId, identityId, this._identityProvider);
+        try {
+            return await this._transport.fetchAnswer({ identityId, publicationId, signature: proof ? proof.signature : undefined }) || null;
+        } catch {
+            return null;
+        }
+    }
+
     _signedInIdentityId() {
         try {
             return this._identityProvider && typeof this._identityProvider.getSigningIdentity === 'function'
@@ -215,6 +260,7 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
 
     forget(peerDiscoveryId) {
         this._records.delete(peerDiscoveryId);
+        this._publicationsByRecord.delete(peerDiscoveryId);
     }
 
     onDiscovered(callback) {
@@ -224,6 +270,7 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
 
     dispose() {
         this._records.clear();
+        this._publicationsByRecord.clear();
         this._discoveredListeners.clear();
     }
 
@@ -253,12 +300,16 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
                 return;
             }
         }
-        this._mergeLocalRecord({
+        const record = this._mergeLocalRecord({
             candidateEndpoint: publication.endpoint,
             identityHint: publication.identityHint,
             source: PeerDiscoverySource.RENDEZVOUS_SERVICE,
             discoveredAt: now,
             expiresAt: publication.expiresAt
+        });
+        this._publicationsByRecord.set(record.peerDiscoveryId, {
+            identityId: publication.identityHint,
+            publicationId: publication.publicationId
         });
     }
 
@@ -294,6 +345,7 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
         for (const [id, record] of this._records) {
             if (record.isExpired(now)) {
                 this._records.delete(id);
+                this._publicationsByRecord.delete(id);
             }
         }
     }

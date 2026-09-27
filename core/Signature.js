@@ -92,6 +92,18 @@ export const SignatureType = Object.freeze({
     // anyone can LOOKUP a publication's id. See core/
     // RendezvousPublicationEnvelope.js's getRendezvousRemovalSigningDescriptor().
     RENDEZVOUS_REMOVAL: 'rendezvous-removal',
+    // REQUIRED signatures for the rendezvous answer mailbox. The answering
+    // identity signs the WebRTC answer it leaves for one publication, and
+    // the publishing identity signs its request to collect it, since an
+    // answer carries the answerer's network addresses. See core/
+    // RendezvousPublicationEnvelope.js.
+    RENDEZVOUS_ANSWER: 'rendezvous-answer',
+    RENDEZVOUS_ANSWER_FETCH: 'rendezvous-answer-fetch',
+    // REQUIRED signatures for the public lobby: a card announcing that an
+    // identity is present in one lobby, and its withdrawal. See core/
+    // LobbyCard.js.
+    LOBBY_CARD: 'lobby-card',
+    LOBBY_LEAVE: 'lobby-leave',
     // 0.2.67 — a REQUIRED signature (never optional, like PEER_AUTHENTICATION
     // and FRIENDSHIP above, and unlike the AVATAR_*/RENDEZVOUS_PUBLICATION
     // types), over a self-revocation record (core/

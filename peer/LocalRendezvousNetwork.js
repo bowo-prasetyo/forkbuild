@@ -29,6 +29,7 @@ export class LocalRendezvousNetwork extends RendezvousTransport {
     constructor() {
         super();
         this._publications = new Map(); // identityHint -> RendezvousPublication
+        this._answers = new Map(); // publicationId -> { answer, answererId }
         this._available = true;
     }
 
@@ -51,7 +52,8 @@ export class LocalRendezvousNetwork extends RendezvousTransport {
         this._assertAvailable();
         this._pruneExpired();
         const publication = this._publications.get(identityId);
-        return publication ? [publication] : [];
+        // An answered offer is spent, as on the reference server.
+        return publication && !this._answers.has(publication.publicationId) ? [publication] : [];
     }
 
     async remove(publicationId) {
@@ -63,6 +65,31 @@ export class LocalRendezvousNetwork extends RendezvousTransport {
             }
         }
         return false;
+    }
+
+    // The answer mailbox, without the reference server's signature checks
+    // (this network accepts unsigned publications too).
+    async postAnswer({ identityId, publicationId, answer, answererId = null } = {}) {
+        this._assertAvailable();
+        this._pruneExpired();
+        const publication = this._publications.get(identityId);
+        if (!publication || publication.publicationId !== publicationId) {
+            throw new Error('LocalRendezvousNetwork: that publication is no longer available');
+        }
+        if (this._answers.has(publicationId)) {
+            throw new Error('LocalRendezvousNetwork: that publication was already answered');
+        }
+        this._answers.set(publicationId, { answer, answererId });
+        return true;
+    }
+
+    async fetchAnswer({ identityId, publicationId } = {}) {
+        this._assertAvailable();
+        const publication = this._publications.get(identityId);
+        if (!publication || publication.publicationId !== publicationId) {
+            return null;
+        }
+        return this._answers.get(publicationId) || null;
     }
 
     // Defensive against more than mere expiry: an entry that doesn't even
@@ -77,6 +104,7 @@ export class LocalRendezvousNetwork extends RendezvousTransport {
         for (const [identityHint, publication] of this._publications) {
             if (typeof publication.isExpired !== 'function' || publication.isExpired(now)) {
                 this._publications.delete(identityHint);
+                this._answers.delete(publication.publicationId);
             }
         }
     }

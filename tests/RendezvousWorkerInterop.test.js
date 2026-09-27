@@ -123,6 +123,26 @@ const offer = (identityHint, text = 'v=0\r\no=alice 1 1 IN IP4 127.0.0.1\r\n') =
     console.log('✓ unpublish() sends a REMOVE the server accepts');
 }
 
+// The answer mailbox: Bob's client leaves a signed answer for the candidate
+// it discovered, and only Alice's client can collect it.
+{
+    await alice.provider.publish(offer(aliceId), { ttlMs: 10 * 60 * 1000 });
+    const [candidate] = await bob.provider.discover(aliceId);
+    assert(await alice.provider.fetchAnswer() === null, 'Alice\'s mailbox starts empty');
+    const answer = { connectionId: 'c1', sdp: 'v=0\r\no=bob\r\n' };
+    assert(await bob.provider.deliverAnswer(candidate, answer) === true, 'the server accepts the answer the app signs');
+    assert(await bob.provider.deliverAnswer(candidate, answer) === false, 'a second answer to the same publication is not accepted');
+    assert((await bob.transport.lookup(aliceId)).length === 0, 'an answered publication is no longer offered');
+
+    const alicePublicationId = alice.provider._ownPublicationId;
+    await rejects(bob.transport.fetchAnswer({ identityId: aliceId, publicationId: alicePublicationId }), /must be signed/,
+        'nobody can read Alice\'s answer without her signature');
+    const collected = await alice.provider.fetchAnswer();
+    assert(collected && collected.answererId === bob.provider._signedInIdentityId() && collected.answer.sdp.includes('o=bob'),
+        'Alice collects Bob\'s answer');
+    console.log('✓ the answer mailbox carries a signed answer from the connecting client to the publisher only');
+}
+
 // A locked identity cannot sign, so the server refuses its publication
 // with a message the Find Peer panel can show.
 {

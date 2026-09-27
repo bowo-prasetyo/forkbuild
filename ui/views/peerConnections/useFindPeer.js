@@ -39,6 +39,7 @@ export function useFindPeer({ findPeerUseCase, peers, now }) {
     const findError = ref('');
     const findConnectingId = ref(null);
     const findReplies = reactive({});
+    const findDelivered = reactive({});
     // Set by the view's onCandidateRejected subscription.
     const findRejectedError = ref('');
 
@@ -107,8 +108,12 @@ export function useFindPeer({ findPeerUseCase, peers, now }) {
         findError.value = '';
         findConnectingId.value = record.peerDiscoveryId;
         try {
-            const { reply } = await findPeerUseCase.connect(record, findIdentityId.value.trim());
-            findReplies[record.peerDiscoveryId] = reply;
+            const { reply, delivered } = await findPeerUseCase.connect(record, findIdentityId.value.trim());
+            if (delivered) {
+                findDelivered[record.peerDiscoveryId] = true;
+            } else {
+                findReplies[record.peerDiscoveryId] = reply;
+            }
         } catch (e) {
             findError.value = stripPrefix(e.message);
         } finally {
@@ -118,7 +123,7 @@ export function useFindPeer({ findPeerUseCase, peers, now }) {
 
     return {
         findImportText, findImportError, findImportSuccess, submitFindImport,
-        findIdentityId, findCandidates, findSearched, findError, findConnectingId, findReplies,
+        findIdentityId, findCandidates, findSearched, findError, findConnectingId, findReplies, findDelivered,
         findRejectedError, submitFind, candidateExpiry, connectToCandidate,
         publishPending, publishError, isPublished, togglePublish
     };

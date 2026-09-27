@@ -58,3 +58,29 @@ export function getRendezvousRemovalSigningDescriptor({ identityId, publicationI
         payload: { publicationId, identityHint: identityId }
     };
 }
+
+// The envelope an answer left in the rendezvous mailbox is signed over:
+// identity `answererId` answers publication `publicationId` of identity
+// `identityId` with `answer` (a PeerConnectionAnswer's JSON). The server
+// checks it so each answer has an accountable identity; who is actually on
+// the other end is still decided by the peer handshake.
+export function getRendezvousAnswerSigningDescriptor({ answererId, identityId, publicationId, answer }) {
+    return {
+        type: SignatureType.RENDEZVOUS_ANSWER,
+        id: answererId,
+        revision: publicationId,
+        payload: { publicationId, identityHint: identityId, answer }
+    };
+}
+
+// The envelope a request to collect the answer to `publicationId` is signed
+// over, by the identity that published it: nobody else may read the
+// answerer's addresses.
+export function getRendezvousAnswerFetchSigningDescriptor({ identityId, publicationId }) {
+    return {
+        type: SignatureType.RENDEZVOUS_ANSWER_FETCH,
+        id: identityId,
+        revision: publicationId,
+        payload: { publicationId, identityHint: identityId }
+    };
+}

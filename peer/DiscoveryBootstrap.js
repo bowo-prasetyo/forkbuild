@@ -208,6 +208,26 @@ export class DiscoveryBootstrap extends PeerDiscoveryProvider {
         }
     }
 
+    // Hands `answer` to whichever bootstrap provider `record` was
+    // discovered through. Resolves to true once one accepts it.
+    async deliverAnswer(record, answer) {
+        for (const provider of this._bootstrapUnsubscribes.keys()) {
+            if (typeof provider.deliverAnswer === 'function' && await provider.deliverAnswer(record, answer)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // The first answer any bootstrap provider holds for this device's own
+    // publication, or null. Asked concurrently, like discover().
+    async fetchAnswer() {
+        const providers = Array.from(this._bootstrapUnsubscribes.keys()).filter((provider) => typeof provider.fetchAnswer === 'function');
+        const settled = await Promise.allSettled(providers.map((provider) => provider.fetchAnswer()));
+        const found = settled.find((outcome) => outcome.status === 'fulfilled' && outcome.value);
+        return found ? found.value : null;
+    }
+
     dispose() {
         this._localUnsubscribe();
         for (const unsubscribe of this._bootstrapUnsubscribes.values()) {

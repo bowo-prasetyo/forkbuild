@@ -13,6 +13,12 @@
 //     { v: 1, type: 'REMOVE',  requestId, identityId, publicationId, signature }
 //         signature: the identity's signature over a rendezvous-removal
 //         envelope naming that publication
+//     { v: 1, type: 'POST_ANSWER', requestId, identityId, publicationId, answer, answererId, signature }
+//         leaves a WebRTC answer to identityId's current publication;
+//         signature: answererId's signature over a rendezvous-answer envelope
+//     { v: 1, type: 'FETCH_ANSWER', requestId, identityId, publicationId, signature }
+//         collects that answer; signature: identityId's signature over a
+//         rendezvous-answer-fetch envelope
 //
 //   Server -> Client, exactly one response per request, in any order:
 //     { v: 1, type: 'OK',    requestId, result }
@@ -61,6 +67,8 @@ const PROTOCOL_VERSION = 1;
 const SIGNING_DOMAIN = 'forkbuild';
 const PUBLICATION_SIGNATURE_TYPE = 'rendezvous-publication';
 const REMOVAL_SIGNATURE_TYPE = 'rendezvous-removal';
+const ANSWER_SIGNATURE_TYPE = 'rendezvous-answer';
+const ANSWER_FETCH_SIGNATURE_TYPE = 'rendezvous-answer-fetch';
 
 export const LIMITS = Object.freeze({
     // Largest accepted frame. A publication carries a WebRTC offer, a few
@@ -200,6 +208,25 @@ function publicationDescriptor(publication) {
 function removalDescriptor(identityId, publicationId) {
     return {
         type: REMOVAL_SIGNATURE_TYPE,
+        id: identityId,
+        revision: publicationId,
+        payload: { publicationId, identityHint: identityId }
+    };
+}
+
+// Mirrors core/RendezvousPublicationEnvelope.js#getRendezvousAnswerSigningDescriptor.
+function answerDescriptor({ answererId, identityId, publicationId, answer }) {
+    return {
+        type: ANSWER_SIGNATURE_TYPE,
+        id: answererId,
+        revision: publicationId,
+        payload: { publicationId, identityHint: identityId, answer }
+    };
+}
+
+function answerFetchDescriptor(identityId, publicationId) {
+    return {
+        type: ANSWER_FETCH_SIGNATURE_TYPE,
         id: identityId,
         revision: publicationId,
         payload: { publicationId, identityHint: identityId }
@@ -353,6 +380,12 @@ export class RendezvousNode {
                 case 'REMOVE':
                     result = await this._handleRemove(message);
                     break;
+                case 'POST_ANSWER':
+                    result = await this._handlePostAnswer(message);
+                    break;
+                case 'FETCH_ANSWER':
+                    result = await this._handleFetchAnswer(message);
+                    break;
                 default:
                     throw new Error(`unknown request type "${String(type).slice(0, 32)}"`);
             }
@@ -431,7 +464,9 @@ export class RendezvousNode {
             await this._deleteEntry(key);
             return [];
         }
-        return entry.removed ? [] : [entry.publication];
+        // An answered publication's offer is spent: a second caller could
+        // never complete a connection with it.
+        return entry.removed || entry.answer ? [] : [entry.publication];
     }
 
     // REMOVE withdraws one publication. It needs the identity's signature
@@ -456,6 +491,54 @@ export class RendezvousNode {
         }
         await this.ctx.storage.put(key, { ...entry, removed: true });
         return true;
+    }
+
+    // POST_ANSWER leaves a WebRTC answer to one current publication, for its
+    // publisher to collect with FETCH_ANSWER. The first answer wins: one
+    // offer can complete one connection. The answer is signed by the
+    // identity leaving it, so every answer has an accountable sender; the
+    // peer handshake still decides who is really on the other end.
+    async _handlePostAnswer({ identityId, publicationId, answer, answererId, signature } = {}, now = Date.now()) {
+        if (!isShortString(identityId) || !isShortString(publicationId) || !isShortString(answererId)
+            || !answer || typeof answer !== 'object' || Array.isArray(answer)) {
+            throw new Error('POST_ANSWER: identityId, publicationId, answererId and an answer are required');
+        }
+        if (!signature) {
+            throw new Error('POST_ANSWER: the answer must be signed by the identity leaving it; unlock your identity and try again');
+        }
+        if (!await verifySignature(answerDescriptor({ answererId, identityId, publicationId, answer }), signature, answererId)) {
+            throw new Error('POST_ANSWER: the signature does not match the answer or its identity');
+        }
+        const key = STORAGE_KEY_PREFIX + identityId;
+        const entry = await this.ctx.storage.get(key);
+        if (!entry || entry.removed || entry.expiresAtMs <= now || entry.publication.publicationId !== publicationId) {
+            throw new Error('POST_ANSWER: that publication is no longer available');
+        }
+        if (entry.answer) {
+            throw new Error('POST_ANSWER: that publication was already answered');
+        }
+        await this.ctx.storage.put(key, { ...entry, answer: { answer, answererId, postedAtMs: now } });
+        return true;
+    }
+
+    // FETCH_ANSWER returns { answer, answererId } once someone has answered
+    // the publication, otherwise null. Only the publishing identity may read
+    // it, because an answer carries the answerer's network addresses.
+    async _handleFetchAnswer({ identityId, publicationId, signature } = {}, now = Date.now()) {
+        if (!isShortString(identityId) || !isShortString(publicationId)) {
+            throw new Error('FETCH_ANSWER: identityId and publicationId are required');
+        }
+        if (!signature) {
+            throw new Error('FETCH_ANSWER: the request must be signed by the identity it names');
+        }
+        if (!await verifySignature(answerFetchDescriptor(identityId, publicationId), signature, identityId)) {
+            throw new Error('FETCH_ANSWER: the signature does not match the request or its identity');
+        }
+        const entry = await this.ctx.storage.get(STORAGE_KEY_PREFIX + identityId);
+        if (!entry || entry.removed || entry.expiresAtMs <= now || entry.publication.publicationId !== publicationId || !entry.answer) {
+            return null;
+        }
+        return { answer: entry.answer.answer, answererId: entry.answer.answererId };
     }
 
     async _entryCount() {
@@ -703,7 +786,7 @@ export default {
             return new Response(
                 'ForkBuild rendezvous worker is running.\n\n' +
                 'This endpoint only understands WebSocket connections speaking the\n' +
-                'PUBLISH / LOOKUP / REMOVE protocol documented in\n' +
+                'rendezvous protocol documented in\n' +
                 'peer/WebSocketRendezvousTransport.js (ForkBuild repo) and in this\n' +
                 'folder\'s own README.md.\n',
                 { status: 200, headers: { 'content-type': 'text/plain; charset=utf-8' } }

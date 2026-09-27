@@ -248,6 +248,67 @@ const MINUTE = 60 * 1000;
     console.log('✓ REMOVE needs the identity\'s signature, and a withdrawn publication stays withdrawn');
 }
 
+async function answerFor(answerer, publisher, publicationId, answer = { sdp: 'fake-sdp-answer' }) {
+    const signature = await answerer.sign({
+        type: 'rendezvous-answer',
+        id: answerer.id,
+        revision: publicationId,
+        payload: { publicationId, identityHint: publisher.id, answer }
+    });
+    return { identityId: publisher.id, publicationId, answer, answererId: answerer.id, signature };
+}
+
+async function answerFetch(publisher, publicationId, signer = publisher) {
+    const signature = await signer.sign({
+        type: 'rendezvous-answer-fetch',
+        id: publisher.id,
+        revision: publicationId,
+        payload: { publicationId, identityHint: publisher.id }
+    });
+    return { identityId: publisher.id, publicationId, signature };
+}
+
+// The answer mailbox: the connecting side leaves a signed answer, and only
+// the publisher can collect it.
+{
+    const carol = await createIdentity();
+    const node = new RendezvousNode(fakeDurableObjectState());
+    const publication = await signedPublication(alice);
+    await node._handlePublish(publication);
+    const { publicationId } = publication;
+
+    assert(await node._handleFetchAnswer(await answerFetch(alice, publicationId)) === null, 'before anyone answers, FETCH_ANSWER returns null');
+    const unsigned = await answerFor(bob, alice, publicationId);
+    delete unsigned.signature;
+    await assertRejects(node._handlePostAnswer(unsigned), /must be signed/, 'an unsigned answer is refused');
+    const forged = await answerFor(bob, alice, publicationId);
+    await assertRejects(node._handlePostAnswer({ ...forged, answer: { sdp: 'swapped' } }), /signature does not match/,
+        'an answer changed after signing is refused');
+    await assertRejects(node._handlePostAnswer(await answerFor(bob, alice, 'some-old-publication')), /no longer available/,
+        'an answer to a publication that is not the current one is refused');
+
+    assert(await node._handlePostAnswer(await answerFor(bob, alice, publicationId)) === true, 'Bob can answer Alice\'s publication');
+    await assertRejects(node._handlePostAnswer(await answerFor(carol, alice, publicationId)), /already answered/,
+        'a second answer to the same publication is refused');
+    assert((await node._handleLookup(alice.id)).length === 0, 'LOOKUP no longer offers an answered publication');
+
+    await assertRejects(node._handleFetchAnswer(await answerFetch(alice, publicationId, bob)), /signature does not match/,
+        'nobody but Alice can collect the answer to her publication');
+    const collected = await node._handleFetchAnswer(await answerFetch(alice, publicationId));
+    assert(collected && collected.answererId === bob.id && collected.answer.sdp === 'fake-sdp-answer', 'Alice collects Bob\'s answer');
+
+    const next = await signedPublication(alice);
+    await node._handlePublish(next);
+    assert((await node._handleLookup(alice.id)).length === 1, 'a fresh publication is offered again');
+    assert(await node._handleFetchAnswer(await answerFetch(alice, next.publicationId)) === null, '...with an empty mailbox');
+
+    const ws = fakeSocket();
+    await node.webSocketMessage(ws, JSON.stringify({ v: 1, type: 'POST_ANSWER', requestId: 'a', ...(await answerFor(carol, alice, next.publicationId)) }));
+    await node.webSocketMessage(ws, JSON.stringify({ v: 1, type: 'FETCH_ANSWER', requestId: 'f', ...(await answerFetch(alice, next.publicationId)) }));
+    assert(ws.sent[0].type === 'OK' && ws.sent[1].type === 'OK' && ws.sent[1].result.answererId === carol.id, 'both requests work over the socket');
+    console.log('✓ the answer mailbox takes one signed answer per publication, readable only by its publisher');
+}
+
 // The alarm sweeps expired entries and tombstones and recounts.
 {
     const ctx = fakeDurableObjectState();

@@ -102,6 +102,24 @@ export class DiscoverPeersUseCase {
     }
 
     // Returns an unsubscribe function.
+    // The rendezvous answer mailbox (peer/RendezvousTransport.js). Providers
+    // without one report false/null, and the reply is handed over by hand.
+    async deliverAnswer(record, answer) {
+        return typeof this._provider.deliverAnswer === 'function'
+            ? this._provider.deliverAnswer(record, answer)
+            : false;
+    }
+
+    async fetchAnswer() {
+        return typeof this._provider.fetchAnswer === 'function'
+            ? this._provider.fetchAnswer()
+            : null;
+    }
+
+    canFetchAnswers() {
+        return typeof this._provider.fetchAnswer === 'function';
+    }
+
     onDiscovered(callback) {
         return this._provider.onDiscovered(callback);
     }

@@ -51,11 +51,16 @@ import { createId } from '../core/createId.js';
 //     { v: 1, type: 'REMOVE',  requestId, identityId, publicationId, signature }
 //                                  // signature: core/RendezvousPublicationEnvelope.js's
 //                                  // getRendezvousRemovalSigningDescriptor(), signed by identityId
+//     { v: 1, type: 'POST_ANSWER',  requestId, identityId, publicationId, answer, answererId, signature }
+//                                  // signature: getRendezvousAnswerSigningDescriptor(), signed by answererId
+//     { v: 1, type: 'FETCH_ANSWER', requestId, identityId, publicationId, signature }
+//                                  // signature: getRendezvousAnswerFetchSigningDescriptor(), signed by identityId
 //
 //   Server -> Client, exactly one response per request, in any order:
 //     { v: 1, type: 'OK',    requestId, result }   // publish(): the stored publication;
 //                                                    // lookup(): an array of publications;
-//                                                    // remove(): a boolean
+//                                                    // remove(), postAnswer(): a boolean;
+//                                                    // fetchAnswer(): { answer, answererId } or null
 //     { v: 1, type: 'ERROR', requestId, message }
 //
 // A server is free to also push unsolicited messages (no matching
@@ -137,6 +142,20 @@ export class WebSocketRendezvousTransport extends RendezvousTransport {
             ...(identityId ? { identityId } : {}),
             ...(signature ? { signature } : {})
         }));
+    }
+
+    async postAnswer({ identityId, publicationId, answer, answererId, signature } = {}) {
+        return Boolean(await this._request('POST_ANSWER', { identityId, publicationId, answer, answererId, signature }));
+    }
+
+    // A reply that is not an object with an answer object is treated as "no
+    // answer yet", like a malformed LOOKUP entry.
+    async fetchAnswer({ identityId, publicationId, signature } = {}) {
+        const result = await this._request('FETCH_ANSWER', { identityId, publicationId, signature });
+        if (!result || typeof result !== 'object' || !result.answer || typeof result.answer !== 'object') {
+            return null;
+        }
+        return { answer: result.answer, answererId: typeof result.answererId === 'string' ? result.answererId : null };
     }
 
     // Not part of peer/RendezvousTransport.js's own formal contract —

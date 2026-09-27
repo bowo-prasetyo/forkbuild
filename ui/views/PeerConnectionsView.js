@@ -208,7 +208,7 @@ export default {
 
         const {
             findImportText, findImportError, findImportSuccess, submitFindImport,
-            findIdentityId, findCandidates, findSearched, findError, findConnectingId, findReplies,
+            findIdentityId, findCandidates, findSearched, findError, findConnectingId, findReplies, findDelivered,
             findRejectedError, submitFind, candidateExpiry, connectToCandidate,
             publishPending, publishError, isPublished, togglePublish
         } = useFindPeer({ findPeerUseCase, peers, now });
@@ -325,7 +325,7 @@ export default {
             rejectFriendRequest, cancelFriendRequest, unfriendPeer, unfriendByIdentity,
             blocked, blockError, isBlockedIdentity, blockIdentity, unblockIdentity,
             findImportText, findImportError, findImportSuccess, submitFindImport,
-            findIdentityId, findCandidates, findSearched, findError, findConnectingId, findReplies,
+            findIdentityId, findCandidates, findSearched, findError, findConnectingId, findReplies, findDelivered,
             findRejectedError, submitFind, candidateExpiry, connectToCandidate,
             publishPending, publishError, isPublished, togglePublish
         };
