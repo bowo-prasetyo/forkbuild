@@ -692,6 +692,40 @@ and the **Move** button is disabled. You can still **Focus** it, inspect it,
 and use **Edit a Copy** to build on what's there; only *where it sits in
 shared space* is theirs to move.
 
+### Why can I place other people's builds?
+
+A real building can't be picked up and put somewhere else, so it may seem
+odd that ForkBuild lets you place anyone's published build wherever you
+like. A published build isn't one physical object. It's fixed content,
+identified by its content hash, that anyone can hold a copy of, much like a
+file or a Git repository. A **placement** is a separate, signed record that
+says where one copy sits.
+
+So placing someone else's build never moves or changes theirs:
+
+- **Their placement stays where they put it.** Only they can move it (see
+  [Placements you don't own](#placements-you-dont-own) above).
+- **Your placement is signed by you**, and it only says where *you* put your
+  copy.
+- **The build keeps its author and history.** It's still exactly the content
+  they published, and anyone can check that against its hash and signature.
+
+There's also no single, central world that decides who owns which plot of
+land. Each World shows the placements it has accepted. That's why a build
+someone announces near you shows up only as a ghost until you choose
+**Accept Position** (see
+[Claimed Builds](#claimed-builds--other-peoples-builds-where-their-publishers-say-they-stand)).
+Nobody can drop a build into your World without your say-so.
+
+Some reasons to place a build you didn't make:
+
+- **Curating**, such as a gallery World that gathers builds you like.
+- **Composing a scene**, such as putting a friend's castle next to your
+  village.
+- **Reusing it as it is.** Place it when you want it unchanged, and use
+  [Edit a Copy](#edit-a-copy--taking-something-into-the-editor) only when
+  you want to change it.
+
 ## World View is read-only — building happens in the Editor
 
 There's no Place tool, no transform gizmo, no copy/paste, and no groups
