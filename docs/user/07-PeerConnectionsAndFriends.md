@@ -4,72 +4,94 @@ ForkBuild connects you directly to other people's browsers — there's no
 central server holding a friends list. Open **Peers** in the top bar to
 manage who you're connected, known, and friends with.
 
-## The four lists
+## The page at a glance
 
-| List | What's in it |
-|---|---|
-| **My Peers** | Live connections right now. Ephemeral — disappears the moment a connection closes. |
-| **Known Peers** | Identities you've chosen to **Remember**. Persists across reloads; a private, one-sided note, never shared with the other side. |
-| **Friends** | Mutual, signed relationships. Persists across reloads. |
-| **Blocked** | Identities you've blocked. Persists across reloads. |
+```
+Peers                                   Your ID …N6KbN  [Copy full ID]
 
-These are independent: a peer can be Known without being a Friend, a Friend
-without being Known, and so on.
+Needs your attention      connections waiting for you, friend requests
+People  [All|Friends|Online]   one row per person
+Connect with someone new  [Invite|Paste an invitation|Find by ID|Public lobby]
+▸ Blocked (N)             only when you've blocked someone
+```
+
+- **Needs your attention** appears only when something is waiting: a
+  connection in progress (with its step, e.g. "step 2 of 5: WebRTC
+  connecting"), a connection waiting for you to paste the other side's
+  reply, a failed one to dismiss, or someone asking to be your friend
+  (**Accept** / **Decline**).
+- **People** has one row per person, however many things you know about
+  them. Tags say what they are to you — **Friend**, **Remembered**,
+  **Blocked**, **Request sent**, **Wants to be friends** — and a green dot
+  means online. Online people come first, then friends, then everyone else.
+  Each row has its main action (**Chat** for a friend, **Reconnect** when
+  they're offline, **Add Friend** for someone you're connected to), and
+  the **⋯** menu holds the rest: **Rename** (or **Name & Remember**),
+  **Remember** / **Forget**, **Unfriend**, **Connection Details**,
+  **Disconnect**, and **Block** / **Unblock**.
+- **Blocked** is folded at the bottom and only shows when you've blocked
+  someone.
+
+Behind the list are four independent records — live connections, Known
+Peers (people you chose to **Remember**, a private note never shared with
+them), Friends (mutual and signed) and Blocked. A person can be a Friend
+without being Remembered, and so on; the row just shows whichever apply.
 
 ## Finding and connecting to someone
 
 There are no usernames to search — every peer is addressed by their
 cryptographic identity, so connecting always starts with exchanging identity
-information through some channel you already trust (chat, email, in person):
+information through some channel you already trust (chat, email, in person).
+**Connect with someone new** shows one way at a time:
 
-- **Invite Someone** — generates an invitation you copy and send to someone.
-  It appears in My Peers as "Connecting…"; once they reply, paste their
-  reply back in to complete the connection.
-- **Connect to Peer** — the receiving side: paste an invitation someone sent
-  you, and get a reply to send back.
-- **Find Someone** — search by identity ID among candidates you or others
-  have published, then **Connect**. Your reply travels back through the
-  rendezvous server, so the connection completes on its own; you only copy a
-  reply by hand when that isn't possible (your identity is locked, or the
-  candidate came from a pasted invitation).
-- **Be Discoverable** — publishes your own identity to a rendezvous network
-  so someone who already knows your identity ID can find and connect to you
-  without a direct invitation. One publication answers one connection
-  attempt — republish to be found again. The button reads **Stop Being
-  Discoverable** while your publication is still waiting for someone to
-  answer it; it flips back to **Be Discoverable** on its own once someone
-  connects, or once the offer closes or its invitation expires. Your
-  identity must be unlocked to publish: the rendezvous server only accepts
-  a publication signed by the identity it names, so nobody else can
-  publish or withdraw one for you. The default rendezvous server only
-  answers the hosted ForkBuild site; if you run ForkBuild from your own
-  address (including `localhost`), use invitations or add your own server
-  under **Rendezvous Servers** in **Network Settings**. That state
-  is kept app-wide, so leaving the Peers page and coming back doesn't
-  reset it. Opening this panel also shows
-  **Your Identity** — your full ID, with a **Copy** button — which is what
-  you actually need to send someone for **Find Someone** to work. It's
-  deliberately different from the shortened `…last14chars` shown elsewhere
-  in this app (on peer cards, Known Peers, Friends) — that shortened form
-  is only for telling entries apart at a glance and will never match a
-  real search.
+- **Invite** — **Create Invitation**, then copy it and send it to someone.
+  The connection waits under **Needs your attention**; once they reply,
+  paste their reply there and click **Finish Connecting**.
+- **Paste an invitation** — the receiving side: paste an invitation someone
+  sent you, click **Connect**, and send back the reply you're given.
+- **Find by ID** — search by someone's full identity ID among candidates you
+  or others have published, then **Connect**. Your reply travels back through
+  the rendezvous server, so the connection completes on its own; you only
+  copy a reply by hand when that isn't possible (your identity is locked, or
+  the candidate came from a saved invitation). **Save an invitation for
+  later**, folded underneath, adds an invitation to these search results
+  without connecting.
+- **Be Discoverable** (in the same tab, under **Let others find you**) —
+  publishes your own identity to a rendezvous network so someone who already
+  knows your identity ID can find and connect to you without a direct
+  invitation. One publication answers one connection attempt — turn it on
+  again to be found again. The button reads **Stop Being Discoverable** while
+  your publication is still waiting for someone to answer it; it flips back
+  to **Be Discoverable** on its own once someone connects, or once the offer
+  closes or its invitation expires. Your identity must be unlocked to
+  publish: the rendezvous server only accepts a publication signed by the
+  identity it names, so nobody else can publish or withdraw one for you. The
+  default rendezvous server only answers the hosted ForkBuild site; if you
+  run ForkBuild from your own address (including `localhost`), use
+  invitations or add your own server under **Rendezvous Servers** in
+  **Network Settings**. That state is kept app-wide, so leaving the Peers
+  page and coming back doesn't reset it.
+- **Public lobby** — meet people whose ID you don't have; see below.
 
-Whichever path you use, a peer's card shows its progress through the same
-steps: **Rendezvous discovered → WebRTC connecting → Peer connected →
-Authenticating identity → Authenticated** (or **Failed**). An authenticated
-peer's card shows its identity, public key, and a reminder that the
-*connection* itself is session-only — "gone when this connection closes" —
-even though a Known Peer or Friend record survives it. Each card's
-"connected …" timer counts from when that connection was actually made,
-not from when you opened the page, so it keeps counting correctly if you
-navigate away and come back.
+**Your ID** at the top of the page, with **Copy full ID**, is what someone
+needs for **Find by ID**. The shortened `…last14chars` shown on rows is only
+for telling people apart at a glance and will never match a real search.
+
+Whichever path you use, a connection goes through the same steps:
+**Rendezvous discovered → WebRTC connecting → Peer connected →
+Authenticating identity → Authenticated** (or **Failed**). **Connection
+Details** in a connected person's **⋯** menu shows their identity, public
+key, and a reminder that the *connection* itself is session-only, even
+though a Known Peer or Friend record survives it. The "online for …" and
+"started … ago" timers count from when that connection was actually made,
+so they keep counting correctly if you navigate away and come back.
 
 ## The public lobby: meeting people you don't know yet
 
-Find Someone needs someone's full identity ID. The **Public Lobby** is for
+Find by ID needs someone's full identity ID. The **Public Lobby** is for
 meeting people whose ID you don't have. There is one lobby for everyone, on
-the **Peers** page under **Public Lobby**, and one for each World, under
-**Lobby** in World View.
+the **Peers** page under **Connect with someone new → Public lobby**, and
+one for each World, under **Lobby** in World View.
 
 - **Join Lobby** lists you there under a display name you choose, next to
   the end of your identity ID. Anyone can pick any name; the identity is
@@ -78,7 +100,7 @@ the **Peers** page under **Public Lobby**, and one for each World, under
   click **Connect** on you, and when someone does, it gets ready for the
   next person straight away.
 - **Connect** on someone in the list connects to them the same way Find
-  Someone does, with nothing to copy. Their card shows **Connecting…**, then
+  by ID does, with nothing to copy. Their card shows **Connecting…**, then
   **Connected** once the handshake proves who they are. Seeing someone in the
   lobby never connects to them on its own.
 - **Block** hides someone from your lobby lists and blocks them as it does
@@ -110,18 +132,21 @@ Settings**) and an unlocked identity.
 
 ## Remembering, friending, blocking
 
-- **Remember** an authenticated peer to keep a private, local alias for them
-  — no consent from them required. **Forget** removes it, locally only.
-- **Send Friend Request** on an authenticated peer's card to ask for a
-  mutual relationship; they see **Accept** / **Reject** on their end, and you
-  can **Cancel** a request you're still waiting on. **Unfriend** ends it.
-  Friends get a **Chat** link — see
+- **Remember** someone (in their **⋯** menu) to keep a private, local note
+  about them — no consent from them required. **Rename** gives them a name
+  only you see; for someone you haven't remembered, **Name & Remember** does
+  both. **Forget** removes the note, locally only.
+- **Add Friend** on a connected person's row asks for a mutual relationship;
+  they see it under **Needs your attention** with **Accept** / **Decline**,
+  and you can **Cancel Friend Request** from the **⋯** menu while you wait.
+  **Unfriend** ends it; it needs them connected, because they have to
+  receive it. Friends get a **Chat** button — see
   [Chat & Conversations](08-ChatAndConversations.md).
 - **Block** stops everything from that identity — presence, profile, chat,
   even friend requests — without notifying them. Blocking a friend doesn't
-  remove the friendship, it just silences it; **Unblock** restores hearing
-  from them again, but never restores anything blocking silenced in the
-  meantime.
+  remove the friendship, it just silences it; **Unblock** (in the **⋯** menu,
+  or the **Blocked** list) restores hearing from them again, but never
+  restores anything blocking silenced in the meantime.
 
 ## TURN: relaying peer connections that can't find a direct path
 
@@ -184,9 +209,10 @@ app load.
 
 ## Reconnecting
 
-A Known Peer or Friend who isn't currently in My Peers shows a **Reconnect**
-button — this always performs a full, fresh handshake rather than reusing
-old connection details. If a reconnect attempt authenticates as a
+A Known Peer or Friend who isn't online shows a **Reconnect** button, even a
+friend you never remembered. It opens the same invitation exchange as
+**Invite** / **Paste an invitation**, right on their row, and always performs
+a full, fresh handshake rather than reusing old connection details. If a reconnect attempt authenticates as a
 *different* identity than expected, ForkBuild rejects it and closes the
 connection with an explicit error, rather than silently trusting whoever
 answered.

@@ -656,7 +656,7 @@ completeConnection() runs on whichever of push or check comes first. The
 worker keeps the watch in the socket attachment, which survives
 hibernation, so a waiting publisher costs the server nothing between
 answers. Checks continue as a fallback: every 30 seconds while every server
-confirmed the watch, every 2 seconds otherwise. Find Someone and the automatic Known Peer
+confirmed the watch, every 2 seconds otherwise. Find by ID and the automatic Known Peer
 connection (AutoConnectKnownPeersUseCase) therefore complete with nothing
 copied by hand; when the mailbox can't be used (a locked identity, a pasted
 invitation) the reply is returned to hand over as before.

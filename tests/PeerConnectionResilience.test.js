@@ -1,3 +1,4 @@
+import { FriendshipState } from '../core/FriendshipState.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
 import { PeerLifecycleState } from '../peer/PeerLifecycleState.js';
 import { LocalPeerNetwork, LocalPeerConnectionProvider } from '../peer/LocalPeerConnectionProvider.js';
@@ -249,6 +250,58 @@ async function runTests() {
     }
     assert(threw, 'reconnecting to an identity this device never "Remembered" throws rather than silently dialing nothing');
     console.log('✓ Reconnect refuses an identity this device was never asked to remember');
+}
+
+// ---------------------------------------------------------------------
+// A current friend can be reconnected without ever being remembered as a
+// Known Peer, with the same identity check; a pending request cannot.
+// ---------------------------------------------------------------------
+{
+    const { Gina, Hal, Ivan } = connectDevices(['Gina', 'Hal', 'Ivan']);
+    const setup = await authenticate(Gina, Hal);
+    Ivan.connect.listen();
+    const relationships = new PeerRelationshipUseCase(Gina.storage, Gina.identityProvider);
+    const friendships = new Map([
+        [Hal.id, { identityId: Hal.id, status: FriendshipState.FRIEND }],
+        [Ivan.id, { identityId: Ivan.id, status: FriendshipState.REQUESTED }]
+    ]);
+    const getFriendship = (identityId) => friendships.get(identityId) || null;
+    setup.peerFromA.close();
+    await wait(20);
+
+    const toHal = new PeerReconnectionUseCase({
+        peerSessionManager: makeFakeSessionManager(Gina.connect, Hal.transport.address),
+        peerRelationshipUseCase: relationships,
+        getFriendship
+    });
+    const { connectedPeer } = await toHal.reconnectAsInviter(Hal.id);
+    await wait(30);
+    assert(connectedPeer.getLifecycleState() === PeerLifecycleState.AUTHENTICATED, 'a friend who was never remembered reconnects and authenticates');
+    assert(connectedPeer.remoteIdentity.identityId === Hal.id, 'the reconnect proves the friend\'s own identity');
+    assert(relationships.getRelationship(Hal.id) === null, 'reconnecting a friend never remembers them as a side effect');
+
+    const rejected = [];
+    const toIvanInstead = new PeerReconnectionUseCase({
+        peerSessionManager: makeFakeSessionManager(Gina.connect, Ivan.transport.address),
+        peerRelationshipUseCase: relationships,
+        getFriendship
+    });
+    toIvanInstead.onReconnectRejected((detail) => rejected.push(detail));
+    const { connectedPeer: wrong } = await toIvanInstead.reconnectAsInviter(Hal.id);
+    await wait(30);
+    assert(wrong.getLifecycleState() === PeerLifecycleState.CLOSED, 'a friend reconnect that authenticates as someone else is closed');
+    assert(rejected.length === 1 && rejected[0].target.identityId === Hal.id && rejected[0].relationship === null,
+        'the rejection names the friend it was for, with no Known Peer record attached');
+
+    let threw = false;
+    try {
+        await toHal.reconnectAsInviter(Ivan.id);
+    } catch (e) {
+        threw = /no known peer or friend/.test(e.message);
+    }
+    assert(threw, 'a pending friend request is not enough to reconnect to someone');
+    setup.stopListening();
+    console.log('✓ a current friend reconnects with the same identity check; a pending request does not qualify');
 }
 
 console.log('\nAll Peer Connection Resilience & Reconnection (0.2.62) tests passed.');

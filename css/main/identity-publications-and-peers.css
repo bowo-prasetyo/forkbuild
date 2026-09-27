@@ -263,26 +263,13 @@
     margin-top: 0.5rem;
 }
 
-/* 0.2.55 — Peer Connections & Rendezvous UI. Reuses .identity-mgmt-*,
-   .form-*, .action-btn*, and .modal-* wholesale (same card/form/modal
-   language IdentityManagementView already established) and adds only
-   what is genuinely new: the lifecycle badge, the signaling
-   copy/paste boxes, and the step-by-step connection progression. */
+/* Peers page basics: the page width, the lifecycle badge and the
+   invitation copy/paste boxes. The page's own layout is in peers-page.css. */
 .peer-connections-view {
     padding: 2rem 2.5rem 3rem;
     max-width: 720px;
     margin: 0 auto;
     width: 100%;
-}
-
-.peer-actions {
-    display: flex;
-    gap: 0.6rem;
-    margin: 1rem 0;
-}
-
-.peer-my-peers-heading {
-    margin-top: 2rem;
 }
 
 .peer-signal-box {
@@ -298,11 +285,6 @@
     margin: 0 0 0.5rem;
     font-size: 1.05rem;
     color: #e0e0e0;
-}
-
-.peer-signal-box--nested {
-    margin-top: 1rem;
-    margin-bottom: 0;
 }
 
 .peer-signal-json {
@@ -336,41 +318,10 @@
     color: #e05a5a;
 }
 
-.peer-progression {
-    list-style: none;
-    margin: 0.5rem 0 0.75rem;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    font-size: 0.78rem;
-    color: #707070;
-}
-
-.peer-progression-step--done {
-    color: #4caf7d;
-}
-
-.peer-progression li::before {
-    content: '○ ';
-}
-
-.peer-progression-step--done::before {
-    content: '● ';
-}
-
 .peer-alias-field {
     display: block;
     margin: 0.5rem 0 0.75rem;
     max-width: 320px;
-}
-
-.peer-complete-box {
-    margin: 0.5rem 0 0.75rem;
-    padding: 0.75rem;
-    background: #121212;
-    border: 1px solid #2a2a2a;
-    border-radius: 6px;
 }
 
 .peer-detail-panel {

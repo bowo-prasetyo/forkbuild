@@ -241,6 +241,13 @@ export class PeerPresenceUseCase {
         return this._liveConnectedPeers(identityId)[0] || null;
     }
 
+    // Every live, AUTHENTICATED connection whose resolved social identity
+    // is `identityId` (one per connected device), for a list that must
+    // account for each connection exactly once.
+    findConnectedPeers(identityId) {
+        return this._liveConnectedPeers(identityId);
+    }
+
     // 0.2.85 — the Identity Presence boolean on its own, for a caller
     // that only needs "online or not" (e.g. a peer-list badge) without
     // the rest of getSummary()'s relationship/friendship/conversation

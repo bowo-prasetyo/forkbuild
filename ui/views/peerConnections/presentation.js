@@ -18,12 +18,10 @@ export const LIFECYCLE_CLASSES = {
     [PeerLifecycleState.FAILED]: 'peer-badge--failed'
 };
 
-// The five-step progression the design doc asked for, each step read
-// from a peer's getLifecycleState(). The first two are always reached
-// for any card "My Peers" can show: a card only exists once an
-// invitation was imported (rendezvous) and a real WebRtcPeerConnection
-// was created for it (connecting) — neither has a separately-observable
-// "not yet" moment of its own.
+// The five-step connection progression, each step read from a peer's
+// getLifecycleState(). The first two are always reached: a connection only
+// exists once an invitation was imported and its WebRtcPeerConnection
+// created, so neither has an observable "not yet" moment.
 export const PROGRESSION_STEPS = [
     { label: 'Rendezvous discovered', reached: () => true },
     { label: 'WebRTC connecting', reached: () => true },

@@ -1,5 +1,6 @@
 import { EventBus } from '../../core/events/EventBus.js';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
+import { FriendshipState } from '../../core/FriendshipState.js';
 
 const REJECTED_EVENT = 'PeerReconnectionRejected';
 
@@ -43,8 +44,13 @@ const REJECTED_EVENT = 'PeerReconnectionRejected';
 // context to explain why, and Alice's remembered relationship with Bob
 // is never touched — it was never this connection's to touch in the
 // first place.
+//
+// A friend can be reconnected too, even one never remembered as a Known
+// Peer: a friendship record is signed evidence of exactly which identity
+// to expect. `getFriendship` is a lookup (not the use case itself) because
+// the friendship use case is composed after this one.
 export class PeerReconnectionUseCase {
-    constructor({ peerSessionManager, peerRelationshipUseCase } = {}) {
+    constructor({ peerSessionManager, peerRelationshipUseCase, getFriendship = null } = {}) {
         if (!peerSessionManager || typeof peerSessionManager.createInvitation !== 'function') {
             throw new Error('PeerReconnectionUseCase: a PeerSessionManager is required');
         }
@@ -53,6 +59,7 @@ export class PeerReconnectionUseCase {
         }
         this._peerSessionManager = peerSessionManager;
         this._peerRelationshipUseCase = peerRelationshipUseCase;
+        this._getFriendship = typeof getFriendship === 'function' ? getFriendship : () => null;
         this._eventBus = new EventBus();
         this._unsubscribeMismatch = peerSessionManager.onIdentityMismatch((detail) => this._handleMismatch(detail));
     }
@@ -69,12 +76,12 @@ export class PeerReconnectionUseCase {
     // "reconnecting to Bob" instead of "Unknown peer" while it waits for
     // the other side's reply.
     async reconnectAsInviter(identityId, { ttlMs } = {}) {
-        const relationship = this._requireRelationship(identityId);
+        const target = this._requireTarget(identityId);
         const { invitation, connectedPeer } = await this._peerSessionManager.createInvitation({
             ...(ttlMs ? { ttlMs } : {}),
-            expectedIdentityId: relationship.identityId
+            expectedIdentityId: target.identityId
         });
-        connectedPeer.setAlias(relationship.alias);
+        connectedPeer.setAlias(target.alias);
         this._noteAuthenticatedWhenMatched(connectedPeer);
         return { invitation, connectedPeer };
     }
@@ -83,16 +90,16 @@ export class PeerReconnectionUseCase {
     // exactly like application/peer/PeerSessionManager.js#acceptInvitation,
     // tagged the same way.
     async reconnectViaInvitation(identityId, invitationInput) {
-        const relationship = this._requireRelationship(identityId);
+        const target = this._requireTarget(identityId);
         const { connectedPeer, reply } = await this._peerSessionManager.acceptInvitation(invitationInput, {
-            expectedIdentityId: relationship.identityId
+            expectedIdentityId: target.identityId
         });
-        connectedPeer.setAlias(relationship.alias);
+        connectedPeer.setAlias(target.alias);
         this._noteAuthenticatedWhenMatched(connectedPeer);
         return { connectedPeer, reply };
     }
 
-    // Returns an unsubscribe function. Fires `{ relationship,
+    // Returns an unsubscribe function. Fires `{ relationship, target,
     // expectedIdentityId, actualIdentityId, connectionId }` the instant
     // a reconnect attempt authenticates as someone OTHER than the
     // identity it was started for. application/peer/ConnectToPeerUseCase.js
@@ -123,11 +130,13 @@ export class PeerReconnectionUseCase {
         // application/peer/ConnectToPeerUseCase.js's own gate directly)
         // resolves to no relationship here and is silently not this
         // class's event to publish.
-        const relationship = this._peerRelationshipUseCase.getRelationship(expectedIdentityId);
-        if (!relationship) {
+        const target = this._findTarget(expectedIdentityId);
+        if (!target) {
             return;
         }
-        this._eventBus.publish(REJECTED_EVENT, { relationship, expectedIdentityId, actualIdentityId, connectionId });
+        this._eventBus.publish(REJECTED_EVENT, {
+            relationship: target.relationship, target, expectedIdentityId, actualIdentityId, connectionId
+        });
     }
 
     // 0.2.56 built application/peer/PeerRelationshipUseCase.js#noteAuthenticated
@@ -166,11 +175,26 @@ export class PeerReconnectionUseCase {
         });
     }
 
-    _requireRelationship(identityId) {
+    // { identityId, alias, relationship } for a Known Peer, or for a
+    // current friend (relationship null, so no alias and no
+    // noteAuthenticated() bookkeeping), else null.
+    _findTarget(identityId) {
         const relationship = this._peerRelationshipUseCase.getRelationship(identityId);
-        if (!relationship) {
-            throw new Error('PeerReconnectionUseCase: no known peer with that identity — remember them first');
+        if (relationship) {
+            return { identityId: relationship.identityId, alias: relationship.alias, relationship };
         }
-        return relationship;
+        const friendship = this._getFriendship(identityId);
+        if (friendship && friendship.status === FriendshipState.FRIEND) {
+            return { identityId: friendship.identityId, alias: null, relationship: null };
+        }
+        return null;
+    }
+
+    _requireTarget(identityId) {
+        const target = this._findTarget(identityId);
+        if (!target) {
+            throw new Error('PeerReconnectionUseCase: no known peer or friend with that identity — remember them first');
+        }
+        return target;
     }
 }
