@@ -271,8 +271,8 @@ in the order they said it.
 The moment someone comments on a publication you published, a
 **Publication commented** entry appears in your
 [Notification History](03-WorldView.md#orientation-and-locations) — a
-durable, cross-session record you can revisit any time from the
-**Notifications** button in World View's toolbar, even long after the
+durable, cross-session record you can revisit any time from
+the 🔔 **Notifications** button in the app's header, even long after the
 comment itself scrolled out of view. It's the only kind of notification
 ForkBuild produces today.
 

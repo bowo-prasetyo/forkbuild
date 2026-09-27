@@ -6,6 +6,8 @@ import { nearbySectionTemplate } from '../ui/views/worldView/templates/nearbySec
 import { worldListsSectionTemplate } from '../ui/views/worldView/templates/worldListsSection.js';
 import { inspectionPanelsTemplate } from '../ui/views/worldView/templates/inspectionPanels.js';
 import { hoverCardTemplate } from '../ui/views/worldView/templates/hoverCard.js';
+import { avatarSectionTemplate } from '../ui/views/worldView/templates/avatarSection.js';
+import { CameraPerspective } from '../core/CameraPerspective.js';
 import { WorldViewPrimaryMode } from '../application/world/WorldViewNavigationState.js';
 import { assert } from './support/Assert.js';
 
@@ -37,10 +39,11 @@ function mount(component, { route = null } = {}) {
 
 const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b) => b.textContent.trim());
 
-// Nearby: short group titles, with Explore Here / What's Here? inside it.
+// Nearby: short group titles, empty groups folded into one line, and
+// Explore Here / What's Here? inside it.
 {
     const calls = [];
-    const { host, unmount } = mount({
+    const { host, vm, unmount } = mount({
         components: { CollapsibleSection, WorldEncounterCanvas: { template: '<div class="stub-canvas"></div>' } },
         data: () => ({
             cameraPosition: { x: 0, y: 0, z: 0 },
@@ -61,9 +64,17 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
         template: nearbySectionTemplate
     });
     const section = host.querySelector('.world-view-section--nearby');
-    const titles = [...section.querySelectorAll('.collapsible-section-title')].map((t) => t.textContent.trim());
-    assert(JSON.stringify(titles) === JSON.stringify(['Places', 'Landmarks', 'People', 'Place Names', 'World Encounters']),
-        `the Nearby groups drop the repeated "Nearby" prefix — got ${titles.join(', ')}`);
+    const titles = () => [...section.querySelectorAll('.collapsible-section-title')].map((t) => t.textContent.trim());
+    assert(JSON.stringify(titles()) === JSON.stringify(['Place Names', 'World Encounters']),
+        `with nothing nearby, only Place Names and World Encounters show as groups — got ${titles().join(', ')}`);
+    assert(section.textContent.includes('No places, landmarks or people nearby yet.'), 'one line says the other three are empty');
+
+    vm.nearbyLandmarkRows.push({ id: 'l1', title: 'Old Well', distance: 12, direction: 'N' });
+    vm.nearbyPeopleRows.push({ identityId: 'p1', displayName: 'Bob', distance: 5, direction: 'E' });
+    await nextTick();
+    assert(JSON.stringify(titles()) === JSON.stringify(['Landmarks', 'People', 'Place Names', 'World Encounters']),
+        `groups appear once they have something, without the "Nearby" prefix — got ${titles().join(', ')}`);
+    assert(!section.textContent.includes('No places, landmarks or people nearby yet.'), 'and the empty line goes');
 
     const exploreActions = section.querySelector('.world-view-actions--explore');
     assert(exploreActions && JSON.stringify(buttonLabels(exploreActions)) === JSON.stringify(['Explore Here', "What's Here?"]),
@@ -71,7 +82,41 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     exploreActions.querySelectorAll('button').forEach((b) => b.click());
     assert(JSON.stringify(calls) === JSON.stringify(['exploreHere', 'whatsHere']), 'both still run their camera queries');
     unmount();
-    console.log('✓ Nearby shows short group titles and holds the camera queries');
+    console.log('✓ Nearby shows short group titles, folds empty ones, and holds the camera queries');
+}
+
+// Avatar: without an avatar of your own, only what works shows.
+{
+    const avatarState = (hasLocalAvatar) => ({
+        hasLocalAvatar, showMyAvatar: hasLocalAvatar, showOtherAvatars: true, avatarControlMode: false,
+        followAvatar: false, cameraPerspective: null, CameraPerspective,
+        remoteAvatarDiagnostics: { total: 0 }, nearbyAvatars: []
+    });
+    const avatarMethods = {
+        toggleShowMyAvatar() {}, toggleShowOtherAvatars() {}, toggleAvatarControlMode() {},
+        toggleFollowAvatar() {}, setCameraPerspective() {}, selectNearbyAvatar() {}
+    };
+    const toggleLabels = (host) => [...host.querySelectorAll('.world-view-avatar-toggle')].map((l) => l.textContent.trim());
+
+    const loggedOut = mount({
+        components: { NearbyAvatarsPanel: { template: '<div></div>' } },
+        data: () => avatarState(false), methods: avatarMethods, template: avatarSectionTemplate
+    });
+    assert(JSON.stringify(toggleLabels(loggedOut.host)) === JSON.stringify(['Show Other Avatars']),
+        `without an avatar only Show Other Avatars shows — got ${toggleLabels(loggedOut.host).join(', ')}`);
+    assert(!loggedOut.host.querySelector('.world-view-camera-perspective'), 'and no camera perspective buttons');
+    assert(loggedOut.host.textContent.includes('create an avatar'), 'the hint says how to get an avatar');
+    assert(!loggedOut.host.querySelector('input:disabled, button:disabled'), 'nothing disabled is left on screen');
+    loggedOut.unmount();
+
+    const withAvatar = mount({
+        components: { NearbyAvatarsPanel: { template: '<div></div>' } },
+        data: () => avatarState(true), methods: avatarMethods, template: avatarSectionTemplate
+    });
+    assert(toggleLabels(withAvatar.host).length === 4 && withAvatar.host.querySelector('.world-view-camera-perspective'),
+        'with an avatar, all four toggles and the camera perspectives show');
+    withAvatar.unmount();
+    console.log('✓ Avatar shows only usable controls');
 }
 
 // Worlds in View is hidden while it would only repeat the header's World.
@@ -145,4 +190,70 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     assert(getComputedStyle(detail).display === 'grid', 'placement details lay out as a compact label/value grid');
     unmount();
     console.log('✓ Move Placement sits beside Place');
+}
+
+// The publication panel: Distribute up front, the rest behind More, Unpublish
+// only after a confirmation, and Commentary collapsed to one line.
+{
+    // Unsigned (legacy) Publications count as the viewer's own.
+    const publication = { id: 'pub-2', title: 'A Pyramid with Stair', author: 'forkbuild', publisherIdentity: null };
+    const unpublished = [];
+    const { host, unmount } = mount({
+        components: { OwnPublicationPanel },
+        data: () => ({ publication }),
+        methods: {
+            distribute() {},
+            exportSnapshot() {},
+            discoverSnapshot() {},
+            discoverCandidates() {},
+            unpublish(p) { unpublished.push(p.id); return true; },
+            commentaries() { return [{ commentaryId: 'c1', authorIdentityId: 'bob', content: 'nice stairs' }]; }
+        },
+        template: `
+            <OwnPublicationPanel
+                :publication="publication"
+                :snapshotDistributionCommand="distribute"
+                :exportSnapshotCommand="exportSnapshot"
+                :discoverSnapshotCommand="discoverSnapshot"
+                :discoverSnapshotCandidatesCommand="discoverCandidates"
+                :unpublishCommand="unpublish"
+                :getPublicationCommentariesCommand="commentaries"
+            />`
+    });
+    await nextTick();
+    const panel = host.querySelector('.own-publication-panel');
+    const directButtons = () => [...panel.children].filter((e) => e.tagName === 'BUTTON').map((b) => b.textContent.trim());
+    assert(JSON.stringify(directButtons()) === JSON.stringify(['Distribute', 'More ▾']),
+        `only Distribute and More show up front — got ${directButtons().join(', ')}`);
+    assert(!panel.querySelector('.own-publication-export-action'), 'Export Snapshot waits behind More');
+
+    panel.querySelector('.own-publication-more-trigger').click();
+    await nextTick();
+    const more = panel.querySelector('.own-publication-more-actions');
+    assert(JSON.stringify(buttonLabels(more)) === JSON.stringify(['Export Snapshot', 'Check Snapshot Match', 'Diagnostic Tools', 'Unpublish…']),
+        `More holds the less frequent actions — got ${buttonLabels(more).join(', ')}`);
+    assert(panel.querySelector('.own-publication-more-trigger').getAttribute('aria-expanded') === 'true', 'More reports it is open');
+
+    more.querySelector('.own-publication-unpublish-request-action').click();
+    await nextTick();
+    assert(unpublished.length === 0, 'the first Unpublish click only asks');
+    assert(more.textContent.includes('Remove this World from the catalog?'), 'and says what unpublishing does');
+    more.querySelector('.own-publication-unpublish-cancel-action').click();
+    await nextTick();
+    assert(unpublished.length === 0 && more.querySelector('.own-publication-unpublish-request-action'), 'Cancel backs out without unpublishing');
+    more.querySelector('.own-publication-unpublish-request-action').click();
+    await nextTick();
+    more.querySelector('.own-publication-unpublish-action').click();
+    await nextTick();
+    assert(JSON.stringify(unpublished) === JSON.stringify(['pub-2']), 'confirming unpublishes exactly once');
+
+    const toggle = panel.querySelector('.own-publication-commentary-toggle');
+    const body = panel.querySelector('.own-publication-commentary-body');
+    assert(toggle.textContent.includes('Commentary (1)') && getComputedStyle(body).display === 'none',
+        'Commentary starts as one line that still counts the comments');
+    toggle.click();
+    await nextTick();
+    assert(getComputedStyle(body).display !== 'none' && body.textContent.includes('nice stairs'), 'opening it shows them');
+    unmount();
+    console.log('✓ the publication panel keeps rare actions behind More and confirms Unpublish');
 }

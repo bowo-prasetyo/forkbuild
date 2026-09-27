@@ -56,7 +56,10 @@ they only affect *future* updates: someone who already received your
 position or appearance keeps what they have; there's no remote "forget me."
 
 You can also toggle **Show My Avatar** and **Show Other Avatars** directly in
-World View, as simple client-side display switches.
+World View, as simple client-side display switches. Until you have an avatar
+of your own, World View's Avatar section shows only **Show Other Avatars** and
+a note on how to create one; the controls that need your avatar appear once
+you have it.
 
 ## Seeing other people in World View
 

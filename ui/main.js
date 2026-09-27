@@ -9,6 +9,9 @@ import { PublicationCommentaryArweaveDistribution } from '../application/publica
 import { DiscoverPublicationCommentaryFromArweaveUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryFromArweaveUseCase.js';
 import { DiscoverPublicationCommentaryUseCase } from '../application/publication/commentary/DiscoverPublicationCommentaryUseCase.js';
 import { NotificationEventStore } from '../storage/NotificationEventStore.js';
+import { GetRecipientNotificationEventsUseCase } from '../application/chat/GetRecipientNotificationEventsUseCase.js';
+import { NotificationHistoryAccess } from '../application/chat/NotificationHistoryAccess.js';
+import { CompositeDiscoveryProvider } from '../discovery/CompositeDiscoveryProvider.js';
 import { FriendshipState } from '../core/FriendshipState.js';
 import { SharePublicationWithPeersUseCase } from '../application/publication/sharing/SharePublicationWithPeersUseCase.js';
 import { RetrieveSharedPublicationUseCase } from '../application/publication/sharing/RetrieveSharedPublicationUseCase.js';
@@ -292,6 +295,18 @@ app.provide('publicationResolutionCoordinator', publicationResolutionCoordinator
 app.provide('publicationDisplayKindPlugins', publicationDisplayKindPlugins);
 app.provide('decentralizedPublicationDiscoveryProvider', decentralizedPublicationDiscoveryProvider);
 app.provide('worldEncounterPublicationAdmissionLog', worldEncounterPublicationAdmissionLog);
+// The app header's Notifications panel, open on every page. Reads the
+// same storage World View's session reads, and resolves a notification's
+// Publication the way that session does (local catalog, then Repository-admitted).
+app.provide('notificationHistoryAccess', new NotificationHistoryAccess({
+    getRecipientNotificationEventsUseCase: identityProvider
+        ? new GetRecipientNotificationEventsUseCase(new NotificationEventStore(new LocalStorageProvider()), identityProvider)
+        : null,
+    publicationLookup: new CompositeDiscoveryProvider([
+        new LocalDiscoveryProvider(new LocalStorageProvider()),
+        decentralizedPublicationDiscoveryProvider
+    ])
+}));
 app.provide('getPublicationCommentariesCommand', getPublicationCommentariesCommand);
 app.provide('addPublicationCommentaryCommand', addPublicationCommentaryCommand);
 app.provide('publicationAnchorCatalog', publicationAnchorCatalog);

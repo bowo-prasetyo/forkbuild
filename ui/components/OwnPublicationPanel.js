@@ -170,6 +170,11 @@ export default {
             sessionIdentityId: null,
             // Visibility only; never touches pipeline state.
             diagnosticToolsOpen: false,
+            // Visibility only: the More… menu and the Commentary section.
+            moreActionsOpen: false,
+            commentaryOpen: false,
+            // Unpublish asks once before acting; reset when the Publication changes.
+            unpublishConfirming: false,
             snapshotDistributionExecuting: false,
             snapshotDistributionError: null,
             snapshotDistributionResult: null,
@@ -237,6 +242,12 @@ export default {
         };
     },
     computed: {
+        // Whether the More menu has anything to offer.
+        hasMoreActions() {
+            return Boolean(this.exportSnapshotCommand || this.discoverSnapshotCommand
+                || this.discoverSnapshotCandidatesCommand || this.resolveSelectedSnapshotCommand
+                || this.materializeSelectedSnapshotCommand || (this.isOwnPublication && this.unpublishCommand));
+        },
         // True for a Publication the signed-in identity signed, and for an
         // unsigned (legacy) one, which can only have been published on this
         // device: sharing between peers requires a signature.
@@ -290,6 +301,7 @@ export default {
             this.publicationDistributionResult = null;
             this.publicationDistributionRequestId += 1;
             this.distributionDialogOpen = false;
+            this.unpublishConfirming = false;
             this.snapshotDiscoveryExecuting = false;
             this.snapshotDiscoveryError = null;
             this.snapshotDiscoveryResult = null;

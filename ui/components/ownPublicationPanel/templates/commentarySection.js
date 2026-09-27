@@ -1,7 +1,20 @@
-// Own Publication panel template: the Publication's Commentary list and form.
+// Own Publication panel template: the Publication's Commentary, collapsed to one line until opened.
 // It renders in OwnPublicationPanel's scope, so it uses the component's props, data, computed properties and methods.
 export const commentarySectionTemplate = `<div v-if="getPublicationCommentariesCommand" class="own-publication-commentary">
-                <h5 class="own-publication-commentary-title">Commentary ({{ publicationCommentaries.length }})</h5>
+                <h5 class="own-publication-commentary-title">
+                    <button
+                        type="button"
+                        class="own-publication-commentary-toggle"
+                        :aria-expanded="commentaryOpen ? 'true' : 'false'"
+                        @click="commentaryOpen = !commentaryOpen"
+                    >{{ commentaryOpen ? '▾' : '▸' }} Commentary ({{ publicationCommentaries.length }})</button>
+                </h5>
+
+                <!--
+                    v-show, not v-if: collapsing hides the section but keeps the remote check
+                    mounted, so it still fetches new comments and the count stays current.
+                -->
+                <div v-show="commentaryOpen" class="own-publication-commentary-body">
 
                 <p v-if="publicationCommentaryError" class="own-publication-commentary-error">{{ publicationCommentaryError }}</p>
 
@@ -43,4 +56,5 @@ export const commentarySectionTemplate = `<div v-if="getPublicationCommentariesC
                         :disabled="!publication || !newCommentaryText.trim() || publicationCommentarySubmitting"
                     >{{ publicationCommentarySubmitting ? 'Posting…' : 'Post Comment' }}</button>
                 </form>
+                </div>
             </div>`;

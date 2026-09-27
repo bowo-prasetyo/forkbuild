@@ -1,10 +1,11 @@
 
 
 // The active World's own publication: the placement editor, unpublish/place,
-// commentary and placement commands, and the notification history panel.
+// and commentary and placement commands. (Notification History lives in the app's
+// header: ui/App.js.)
 export function useOwnPublicationActions({
-    feedback, focusWorld, guarded, placementEditTarget, placementOverlapWarning, refreshSpatialUI, session,
-    showNotificationHistoryPanel, showPlacementEditor
+    feedback, guarded, placementEditTarget, placementOverlapWarning, refreshSpatialUI, session,
+    showPlacementEditor
 }) {
     // Moving a placement is not a document mutation (docs/Principles.md, "Moving A
     // Placement Is Not Editing A Document"), so it skips fork-on-write; guarded()
@@ -110,38 +111,9 @@ export function useOwnPublicationActions({
         return session.getPlacementsForPublication(publicationId);
     }
 
-    // Errors are left for NotificationHistoryPanel to show.
-    function getRecipientNotificationEventsCommand() {
-        return session.getRecipientNotificationEvents();
-    }
-
-    function openNotificationHistoryPanel() {
-        showNotificationHistoryPanel.value = true;
-    }
-
-    function closeNotificationHistoryPanel() {
-        showNotificationHistoryPanel.value = false;
-    }
-
-    // Navigates via focusWorld(), the one mechanism that changes the active
-    // document inside a live WorldView; a bare router.push() would do nothing here
-    // because route changes follow session state, not the reverse. An unknown
-    // Publication returns false.
-    function viewNotificationPublicationCommand(publicationId) {
-        const publication = session.findPublicationById(publicationId);
-        if (!publication || !publication.documentId) {
-            return false;
-        }
-        focusWorld(publication.documentId);
-        closeNotificationHistoryPanel();
-        return true;
-    }
-
     return {
         openPlacementEditor, closePlacementEditor, onMovePlacement, removePlacementFromPanel,
         unpublishOwnPublication, placeOwnPublication, getPublicationCommentariesCommand,
-        addPublicationCommentaryCommand, getPublicationPlacementsCommand,
-        getRecipientNotificationEventsCommand, openNotificationHistoryPanel, closeNotificationHistoryPanel,
-        viewNotificationPublicationCommand
+        addPublicationCommentaryCommand, getPublicationPlacementsCommand
     };
 }

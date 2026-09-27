@@ -213,6 +213,17 @@
         gap: 0.5rem;
     }
 
+    /* Notifications sits just before the account, on the same row. */
+    .app-notifications-button {
+        order: 1;
+        min-height: 40px;
+        margin-left: auto;
+    }
+
+    .app-notifications-button + .user-widget {
+        margin-left: 0;
+    }
+
     .user-name {
         max-width: 8rem;
         overflow: hidden;

@@ -11,13 +11,22 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                     <button class="action-btn" @click="exploreHere">Explore Here</button>
                     <button class="action-btn" @click="whatsHere">What's Here?</button>
                 </div>
+                <!--
+                    Places, Landmarks and People show only when they have something; while all
+                    three are empty, one line says so. Place Names and World Encounters always
+                    show: their emptiness is a discovery result of its own.
+                -->
+                <p
+                    v-if="nearbyGeographicPlaces.length === 0 && nearbyLandmarkRows.length === 0 && nearbyPeopleRows.length === 0"
+                    class="world-view-nearby-empty"
+                >No places, landmarks or people nearby yet.</p>
                 <CollapsibleSection
+                    v-if="nearbyGeographicPlaces.length > 0"
                     title="Places"
                     :count="nearbyGeographicPlaces.length"
                     :collapsed="nearbySectionsCollapsed.places"
                     @toggle="setNearbySectionCollapsed('places', NEARBY_PLACES_SECTION, $event)"
                 >
-                    <p v-if="nearbyGeographicPlaces.length === 0" class="world-view-nearby-empty">Nothing nearby yet.</p>
                     <div v-for="place in nearbyGeographicPlaces" :key="place.fingerprintKey" class="world-view-nearby-row">
                         <span class="world-view-nearby-row-label">⬢ {{ place.displayName }}</span>
                         <span class="world-view-nearby-row-distance">{{ place.distance }}m {{ place.direction }}</span>
@@ -26,12 +35,12 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                     </div>
                 </CollapsibleSection>
                 <CollapsibleSection
+                    v-if="nearbyLandmarkRows.length > 0"
                     title="Landmarks"
                     :count="nearbyLandmarkRows.length"
                     :collapsed="nearbySectionsCollapsed.landmarks"
                     @toggle="setNearbySectionCollapsed('landmarks', NEARBY_LANDMARKS_SECTION, $event)"
                 >
-                    <p v-if="nearbyLandmarkRows.length === 0" class="world-view-nearby-empty">Nothing nearby yet.</p>
                     <div v-for="landmark in nearbyLandmarkRows" :key="landmark.id" class="world-view-nearby-row">
                         <span class="world-view-nearby-row-label">★ {{ landmark.title }}</span>
                         <span class="world-view-nearby-row-distance">{{ landmark.distance }}m {{ landmark.direction }}</span>
@@ -40,12 +49,12 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                     </div>
                 </CollapsibleSection>
                 <CollapsibleSection
+                    v-if="nearbyPeopleRows.length > 0"
                     title="People"
                     :count="nearbyPeopleRows.length"
                     :collapsed="nearbySectionsCollapsed.people"
                     @toggle="setNearbySectionCollapsed('people', NEARBY_PEOPLE_SECTION, $event)"
                 >
-                    <p v-if="nearbyPeopleRows.length === 0" class="world-view-nearby-empty">Nobody nearby yet.</p>
                     <div v-for="person in nearbyPeopleRows" :key="person.identityId" class="world-view-nearby-row">
                         <span class="world-view-nearby-row-label">{{ person.displayName }}</span>
                         <span class="world-view-nearby-row-distance">{{ person.distance }}m {{ person.direction }}</span>

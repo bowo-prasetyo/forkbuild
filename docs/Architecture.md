@@ -1088,7 +1088,10 @@ the rest.
   `/reconciliation-*` and `/evidence-export-comparison` routes).
 - **Notifications.** core/NotificationEvent.js,
   storage/NotificationEventStore.js, GetRecipientNotificationEventsUseCase
-  and ui/components/NotificationHistoryPanel.js. Only persistence is
+  and ui/components/NotificationHistoryPanel.js, which ui/App.js hosts from
+  its header's 🔔 button through application/chat/NotificationHistoryAccess.js
+  (composed in ui/main.js). A mounted World View registers its focusWorld()
+  so a notification's Explore moves within it. Only persistence is
   claimed: not delivery, seen or read.
 
 The user-facing entry point is the Publications page (`/publications`,

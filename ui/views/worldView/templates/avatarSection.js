@@ -2,15 +2,15 @@
 // It renders in WorldView's scope, so it uses the names its setup() returns.
 export const avatarSectionTemplate = `<!--
                     Client rendering preferences. Control/Follow are explicit toggles, never
-                    implied by focus. Show Other Avatars does not require an avatar of your own.
+                    implied by focus. Show Other Avatars does not require an avatar of your own;
+                    every other control here does, so without one only it and the hint show.
                 -->
                 <div class="world-view-section world-view-section--avatar">
                     <h4>Avatar</h4>
-                    <label class="world-view-avatar-toggle">
+                    <label v-if="hasLocalAvatar" class="world-view-avatar-toggle">
                         <input
                             type="checkbox"
                             :checked="showMyAvatar"
-                            :disabled="!hasLocalAvatar"
                             @change="toggleShowMyAvatar($event)"
                         />
                         Show My Avatar
@@ -39,20 +39,18 @@ export const avatarSectionTemplate = `<!--
                         :entries="nearbyAvatars"
                         @select="selectNearbyAvatar"
                     />
-                    <label class="world-view-avatar-toggle">
+                    <label v-if="hasLocalAvatar" class="world-view-avatar-toggle">
                         <input
                             type="checkbox"
                             :checked="avatarControlMode"
-                            :disabled="!hasLocalAvatar"
                             @change="toggleAvatarControlMode($event)"
                         />
                         Control My Avatar (WASD, Shift, Space)
                     </label>
-                    <label class="world-view-avatar-toggle">
+                    <label v-if="hasLocalAvatar" class="world-view-avatar-toggle">
                         <input
                             type="checkbox"
                             :checked="followAvatar"
-                            :disabled="!hasLocalAvatar"
                             @change="toggleFollowAvatar($event)"
                         />
                         Follow Avatar
@@ -64,35 +62,31 @@ export const avatarSectionTemplate = `<!--
                         Fixed offsets around the avatar; clicking the active one returns to Free.
                         Local only.
                     -->
-                    <div class="world-view-camera-perspective">
+                    <div v-if="hasLocalAvatar" class="world-view-camera-perspective">
                         <span class="world-view-camera-perspective-label">Camera</span>
                         <div class="world-view-camera-perspective-buttons">
                             <button
                                 type="button"
                                 class="action-btn"
                                 :class="{ 'action-btn--active': !cameraPerspective }"
-                                :disabled="!hasLocalAvatar"
                                 @click="setCameraPerspective(null)"
                             >Free</button>
                             <button
                                 type="button"
                                 class="action-btn"
                                 :class="{ 'action-btn--active': cameraPerspective === CameraPerspective.FIRST_PERSON }"
-                                :disabled="!hasLocalAvatar"
                                 @click="setCameraPerspective(CameraPerspective.FIRST_PERSON)"
                             >First Person</button>
                             <button
                                 type="button"
                                 class="action-btn"
                                 :class="{ 'action-btn--active': cameraPerspective === CameraPerspective.THIRD_PERSON }"
-                                :disabled="!hasLocalAvatar"
                                 @click="setCameraPerspective(CameraPerspective.THIRD_PERSON)"
                             >Third Person</button>
                             <button
                                 type="button"
                                 class="action-btn"
                                 :class="{ 'action-btn--active': cameraPerspective === CameraPerspective.BIRD_EYE }"
-                                :disabled="!hasLocalAvatar"
                                 @click="setCameraPerspective(CameraPerspective.BIRD_EYE)"
                             >Bird's-Eye</button>
                         </div>

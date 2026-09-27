@@ -56,6 +56,22 @@ html, body {
     color: #ffffff;
 }
 
+/* Notifications, beside the account widget: a compact icon button that
+   opens a panel rather than a page. */
+.app-notifications-button {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #2a2a2a;
+    border-radius: 999px;
+    background: none;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.app-notifications-button:hover {
+    background: #232323;
+}
+
 .router-link-active {
     background: #234433;
     color: #4caf7d;

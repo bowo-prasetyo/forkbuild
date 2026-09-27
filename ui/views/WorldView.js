@@ -42,7 +42,6 @@ import OwnPublicationPanel from '../components/OwnPublicationPanel.js';
 import VehicleInteractionPrompt from '../components/VehicleInteractionPrompt.js';
 import AnimalInteractionPrompt from '../components/AnimalInteractionPrompt.js';
 import HistoryTimelinePanel from '../components/HistoryTimelinePanel.js';
-import NotificationHistoryPanel from '../components/NotificationHistoryPanel.js';
 import TouchMovementPad from '../components/TouchMovementPad.js';
 import { useMediaQuery, COMPACT_LAYOUT_QUERY, TOUCH_INPUT_QUERY } from '../composables/useMediaQuery.js';
 import { CameraPerspective } from '../../core/CameraPerspective.js';
@@ -99,7 +98,7 @@ export default {
         WorldWelcomePanel, WorldMapPanel, PlaceNamingPanel,
         GeographicPlaceDirectoryPanel, GeographicPlacePanel, CollapsibleSection,
         WorldFocusPanel, WorldEncounterCanvas, OwnPublicationPanel, VehicleInteractionPrompt, AnimalInteractionPrompt,
-        HistoryTimelinePanel, NotificationHistoryPanel, TouchMovementPad
+        HistoryTimelinePanel, TouchMovementPad
     },
     setup() {
         const route = useRoute();
@@ -391,8 +390,6 @@ export default {
             activeDocumentInfo, feedback, guarded, metadataEditTarget, refreshSpatialUI, session, showMetadataEditor
         });
 
-        // Recipient-scoped, unlike the document-scoped History panel.
-        const showNotificationHistoryPanel = ref(false);
         const {
             showHistoryPanel, historyPanelDocumentId, historyTimeline, selectedHistoryEntryId,
             historyPreviewCursor, canUndo, canRedo, undoLabel, redoLabel, openHistoryPanel, closeHistoryPanel,
@@ -418,12 +415,27 @@ export default {
         const {
             openPlacementEditor, closePlacementEditor, onMovePlacement, removePlacementFromPanel,
             unpublishOwnPublication, placeOwnPublication, getPublicationCommentariesCommand,
-            addPublicationCommentaryCommand, getPublicationPlacementsCommand,
-            getRecipientNotificationEventsCommand, openNotificationHistoryPanel, closeNotificationHistoryPanel,
-            viewNotificationPublicationCommand
+            addPublicationCommentaryCommand, getPublicationPlacementsCommand
         } = useOwnPublicationActions({
-            feedback, focusWorld, guarded, placementEditTarget, placementOverlapWarning, refreshSpatialUI,
-            session, showNotificationHistoryPanel, showPlacementEditor
+            feedback, guarded, placementEditTarget, placementOverlapWarning, refreshSpatialUI,
+            session, showPlacementEditor
+        });
+
+        // Notification History lives in the app's header (ui/App.js).
+        // While this view is mounted, a notification's Explore focuses its World here
+        // through focusWorld(), the one mechanism that changes the active document
+        // inside a live World View; a bare route change would not.
+        const notificationWorldNavigation = inject('notificationWorldNavigation', null);
+        let unregisterNotificationWorldNavigation = null;
+        onMounted(() => {
+            if (notificationWorldNavigation) {
+                unregisterNotificationWorldNavigation = notificationWorldNavigation.register(focusWorld);
+            }
+        });
+        onBeforeUnmount(() => {
+            if (unregisterNotificationWorldNavigation) {
+                unregisterNotificationWorldNavigation();
+            }
         });
 
         // -----------------------------------------------------------------
@@ -899,6 +911,8 @@ export default {
         const touchInput = useMediaQuery(TOUCH_INPUT_QUERY);
         const compactLayout = useMediaQuery(COMPACT_LAYOUT_QUERY);
         const panelOpen = ref(!compactLayout.value);
+        // The camera and walking controls hint, behind the panel's ? button.
+        const controlsHintOpen = ref(false);
         const touchPadVisible = computed(() => touchInput.value && hasLocalAvatar.value && avatarControlMode.value);
         function togglePanel() {
             panelOpen.value = !panelOpen.value;
@@ -1042,6 +1056,7 @@ export default {
             touchPadVisible,
             panelOpen,
             togglePanel,
+            controlsHintOpen,
             toggleFollowAvatar,
             toggleShowOtherAvatars,
             avatarInfo,
@@ -1078,11 +1093,6 @@ export default {
             getPublicationCommentariesCommand,
             getPublicationPlacementsCommand,
             addPublicationCommentaryCommand,
-            getRecipientNotificationEventsCommand,
-            viewNotificationPublicationCommand,
-            showNotificationHistoryPanel,
-            openNotificationHistoryPanel,
-            closeNotificationHistoryPanel,
             searchResults,
             catalogEmpty,
             performSearch,
@@ -1281,8 +1291,8 @@ export default {
                 <!--
                     Panel order: what you're looking at, where to go, what's around, then your
                     own tools (Search, Avatar, Publication). Home, Locations and Members are
-                    plain utilities; Explore / Map / Places are the three mutually exclusive
-                    primary modes.
+                    plain utilities (Notifications is in the app's header);
+                    Explore / Map / Places are the three mutually exclusive primary modes.
                 -->
                 <div v-if="cameraPosition || activeDocumentInfo" class="world-view-actions world-view-actions--navigation">
                     <button v-if="cameraPosition" class="action-btn" @click="goHome">Home</button>
@@ -1292,13 +1302,6 @@ export default {
                         title="Landmarks, regions, and every structure this session knows about"
                         @click="openLocationsPanel"
                     >Locations</button>
-                    <!-- Scoped to the signed-in identity, not the open document. -->
-                    <button
-                        v-if="cameraPosition"
-                        class="action-btn"
-                        title="A durable record of notification facts addressed to you"
-                        @click="openNotificationHistoryPanel"
-                    >Notifications</button>
                     <!--
                         The online count is the Members button. Subtle, so the World stays
                         dominant (docs/Principles.md, "The UI Displays Authorization; It Never
@@ -1306,7 +1309,24 @@ export default {
                     -->
                     <WorldPresenceIndicator v-if="activeDocumentInfo" :online-count="worldOnlineCount" @open="openMembersPanel" />
                     <button v-if="activeDocumentInfo && activeWorldLobby" class="action-btn" @click="openLobbyPanel">Lobby</button>
+                    <button
+                        v-if="cameraPosition"
+                        type="button"
+                        :class="['action-btn', 'world-view-controls-toggle', { 'action-btn--active': controlsHintOpen }]"
+                        title="Controls"
+                        aria-label="Controls"
+                        :aria-expanded="controlsHintOpen ? 'true' : 'false'"
+                        @click="controlsHintOpen = !controlsHintOpen"
+                    >?</button>
                 </div>
+                <template v-if="cameraPosition && controlsHintOpen">
+                    <p v-if="touchInput" class="world-view-hint world-view-hint--controls">
+                        Drag to orbit • Pinch to zoom • Two fingers to pan • Tap to inspect<template v-if="avatarControlMode"> • Joystick to walk, push to the edge to run</template>
+                    </p>
+                    <p v-else class="world-view-hint world-view-hint--controls">
+                        Drag to orbit • Scroll to zoom • Home to reset • Click to inspect<template v-if="avatarControlMode"> • WASD to walk • Shift to run • Space to jump</template>
+                    </p>
+                </template>
                 <WorldCollaboratorIndicator v-if="activeDocumentInfo" :rows="spatialCollaboratorRows" @follow="followCollaborator" />
                 <div v-if="cameraPosition" class="world-view-primary-nav">
                     <button
@@ -1340,12 +1360,6 @@ export default {
                 </div>
 
                 ${avatarSectionTemplate}
-                <p v-if="touchInput" class="world-view-hint">
-                    Drag to orbit • Pinch to zoom • Two fingers to pan • Tap to inspect<template v-if="avatarControlMode"> • Joystick to walk, push to the edge to run</template>
-                </p>
-                <p v-else class="world-view-hint">
-                    Drag to orbit • Scroll to zoom • Home to reset • Click to inspect<template v-if="avatarControlMode"> • WASD to walk • Shift to run • Space to jump</template>
-                </p>
 
                 ${publicationSectionTemplate}
 

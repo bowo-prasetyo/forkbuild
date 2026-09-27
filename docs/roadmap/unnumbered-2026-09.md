@@ -1762,3 +1762,34 @@ a phone, Explore / Map / Places and everything below them started off-screen.
   Place, the placement grid). The browser runner's import map gains `vue` and serves CSS as `text/css`. Four tests
   that found the Place Names section by its old title, the commentary-surface allow-list, and the check that the
   publication panel is never nested in World Encounters follow the moved files.
+
+## World View panel layout, steps 2 and 3 (unnumbered, 2026-09-27)
+
+**World View's panel stops showing controls you can't use or rarely need, and Notifications moves to the app
+header.** Follows step 1's reorder (above).
+
+- Empty states: Places, Landmarks and People show only when they have something, with one line while all three are
+  empty (Place Names and World Encounters always show; their emptiness is a discovery result of its own). Without an
+  avatar of your own, the Avatar section shows only Show Other Avatars and the hint, not four disabled toggles and
+  four disabled camera buttons.
+- The publication panel shows Distribute and the share link up front; **More** holds Export Snapshot, Check Snapshot
+  Match, Diagnostic Tools and Unpublish. Unpublish now asks once (`unpublishConfirming`, reset when the Publication
+  changes). Export and Check stay on the primary screen, only folded, not moved into Diagnostic Tools: 0.9.324 kept
+  that popup for the manual recovery pipeline, and these are ordinary checks on the active Publication. Their results
+  render outside the menu. Commentary folds to "▸ Commentary (N)"; its body uses `v-show`, so the remote check still
+  runs and the count stays current.
+- Notifications is a 🔔 button in the app header beside the account, on every page (a text link in the nav wrapped
+  it onto a second line at 1440px). ui/App.js hosts NotificationHistoryPanel
+  through the new `application/chat/NotificationHistoryAccess.js` (composed in ui/main.js over the same storage World
+  View's session uses; NotificationEventStore keeps no cache). Explore resolves the Publication the way
+  `WorldNavigationSession#findPublicationById()` does; a mounted World View registers its `focusWorld()` so Explore
+  moves within it, since a bare route change would not; elsewhere Explore routes to `/world/:documentId`. World View
+  drops its own Notifications button, dialog and wrappers. Signed out, the panel now says "Sign in to view your
+  notifications" without the use case's class name in front.
+- The controls hint is behind a **?** button at the end of the utility row, readable when shown, instead of
+  low-contrast text in the middle of the panel.
+- Tests: `tests/NotificationHistoryAccess.test.js` (a real comment's notification read through a second store over
+  the same storage, recipient-only; the signed-out message; Publication resolution through both providers; failure and no-identity cases).
+  `tests/WorldViewPanelLayoutBrowser.test.js` adds the folded empty groups, the logged-out Avatar section, the More
+  menu, Unpublish's confirmation and Commentary's fold. `tests/NotificationHistoryUILifecycle.test.js` checks the
+  panel's wiring in ui/App.js instead of World View.

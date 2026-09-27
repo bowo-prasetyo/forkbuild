@@ -63,8 +63,8 @@ nothing about it is editable or ever moves on its own.
 ## Orientation and Locations
 
 Next to your camera coordinates, a small **compass** shows which way you're
-facing (it's read-only — it never moves the camera). Three buttons sit
-beside it:
+facing (it's read-only — it never moves the camera). A row of buttons near
+the top of the panel handles getting around:
 
 - **Home** takes you — camera and avatar both — back to your own current
   world, the one you have open or last had focused, rather than the
@@ -81,20 +81,27 @@ beside it:
   each with one **Focus** button. Like Search and Explore Here/What's Here?,
   Focus only ever moves the camera; it never loads, selects, or edits
   anything.
-- **Notifications** opens your **Notification History** — a durable record
-  of notification facts addressed to your identity, most recent activity
-  first. Today the only thing that produces one is someone commenting on a
-  publication you published (see
-  [Commentary](09-PublicationsAndEvidence.md#commentary) below) — each
-  entry shows what happened and when. It's a plain read-only log, not an
-  inbox: there's no read/unread state, no dismissing an entry, and no
-  count badge on the button itself. It loads once when you open it and
-  again only if you click **Refresh**; it never updates live in the
-  background. Unlike Locations, it's tied to your signed-in identity, not
-  to whatever World or document you currently have open.
 - **👥 N online** is the **Members** button: it counts who's here, and
   clicking it opens the World's Members panel. A **Lobby** button follows
   it when the World has a public lobby.
+- **?** shows the camera and walking controls (drag to orbit, scroll to
+  zoom, and WASD, Shift and Space while you control your avatar); click it
+  again to hide them.
+
+**Notifications** is the 🔔 button in the app's header, beside Login, so it's there on
+every page, not just in World View. It opens your **Notification History** —
+a durable record of notification facts addressed to your identity, most
+recent activity first. Today the only thing that produces one is someone
+commenting on a publication you published (see
+[Commentary](09-PublicationsAndEvidence.md#commentary) below) — each entry
+shows what happened and when, and an **Explore** button takes you to that
+publication's World: inside World View it flies you there, anywhere else it
+opens World View at it. It's a plain read-only log, not an inbox: there's no
+read/unread state, no dismissing an entry, and no count badge on the button
+itself. It loads once when you open it and again only if you click
+**Refresh**; it never updates live in the background. It's tied to your
+signed-in identity, not to whatever World or document you currently have
+open.
 
 The compass shows cardinal directions (N, E, S, W) and your current heading
 in degrees, plus small dots for nearby structures, collaborators, and
@@ -118,7 +125,9 @@ same time.
   [World Encounters](#world-encounters--publications-and-avatars-your-peers-are-sharing)
   below) — each just a name, a distance, and a compact **Go** button
   (World Encounters and Place Names instead show their own,
-  differently-shaped content, described below). Click a group's title to
+  differently-shaped content, described below). Places, Landmarks and
+  People appear only when they have something in them; while all three are
+  empty, a single line says so. Click a group's title to
   expand it — World View remembers which groups you left open even after
   you switch to Map or Places and come back.
 - **Map** opens the same flat, top-down World Map described below.
@@ -695,6 +704,13 @@ always here whenever you have a world open, whether or not anyone else is nearby
 whether or not it's currently published (until you publish it, the button
 is simply disabled, with a note that there's nothing to distribute yet).
 
+**Distribute** and the share link sit up front. The less frequent actions
+wait behind **More ▾**: **Export Snapshot**, **Check Snapshot Match**,
+**Diagnostic Tools** (below), and **Unpublish…**. Unpublish asks once before
+acting — it removes the World from the catalog, while its placements, the
+Document and any distributed copies stay — and **Cancel** backs out. Results
+from Export and Check stay on the panel after you close the menu.
+
 When the World you have open was published by someone else (one a peer
 shared with you, say), the panel is titled **Publication** instead, and
 leaves out **Unpublish** and **Distribute**: only a World's own publisher
@@ -702,8 +718,10 @@ can retract or distribute it. Its placements, Snapshot tools, share link
 and **Commentary** stay, so you can still read and post comments on
 anyone's World.
 
-Below all of that sits a **Commentary** section, same as everything else
-on this panel scoped to your current world — see
+Below all of that sits a **Commentary** section, folded to a single
+**▸ Commentary (N)** line until you click it (the count stays current while
+it's folded), and like everything else on this panel scoped to your current
+world — see
 [Commentary](09-PublicationsAndEvidence.md#commentary) for the full
 picture of who can comment and what happens when they do. Like Distribute
 Snapshot, actually posting a comment needs your world published first;
@@ -720,7 +738,7 @@ right under the list. An empty list
 just means this Publication hasn't been placed anywhere yet; a read
 failure shows its own plain error instead.
 
-Further down, a **Diagnostic Tools** button — present only when at least
+Inside **More**, a **Diagnostic Tools** button — present only when at least
 one of the capabilities behind it is available — opens a small popup of
 manual, step-by-step recovery tools for when automatic Snapshot discovery
 or placement doesn't produce what you expect: **Discover Snapshots**
