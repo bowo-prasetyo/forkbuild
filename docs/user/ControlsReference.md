@@ -342,10 +342,11 @@ the scene. The bar at the bottom of the viewport stands in for the keys:
 | **Rotate** | `R` | While placing, turns the next brick or structure before you tap; otherwise rotates the selection |
 | **Delete** | `Delete` | |
 | **Multi** | `Ctrl/Cmd`-click | While on, each tap adds a brick to the selection or removes it |
+| **Box** | `Shift`-drag | While on, a one-finger drag draws a selection box instead of moving the camera; with **Multi** also on, the box adds to the selection (`Ctrl/Cmd+Shift`-drag). The camera stays still while Box is on (a second finger cancels the box rather than zooming), so turn it off to move around again |
 | **More** | `Ctrl/Cmd+K` | The Command Palette, which reaches every other editing action |
 
-Gizmo handles work by touch as they do with a mouse: drag a handle. The
-Shift-drag marquee has no touch equivalent; use **Multi** instead.
+Gizmo handles work by touch as they do with a mouse, **Box** on or off:
+drag a handle.
 
 ## Escape priority (Editor)
 

@@ -1513,3 +1513,24 @@ player can travel without holding the joystick.
     without an avatar.
   - `tests/TouchMovementInput.test.js` adds the chord for each state, and a chord's order and its respect for
     keys the joystick holds.
+
+## Phones and tablets: box selection by touch (unnumbered, 2026-09-27)
+
+**The Editor's touch bar has a Box button, the touch form of the Shift-drag marquee**, the last of the four
+keyboard-only actions the first touch release left out.
+
+- While **Box** is on, a one-finger drag draws the selection box (`application/editorSession/pointerInputMethods.js`
+  reuses the Shift-drag marquee state, `marqueeSelect()` and the overlay). With **Multi** also on the box adds to
+  the selection, as `Ctrl/Cmd+Shift`-drag does. A still tap is still a tap, and gizmo handles still take a touch
+  first.
+- The camera controls are off while the box is drawn, as for Shift-drag, so the camera never sees that finger and
+  a second finger cannot become a pinch. A second finger or a pointercancel cancels the box and turns the controls
+  back on. So the scene works like a drawing surface while Box is on, and the player turns Box off to move the
+  camera; turning it off cancels any box in progress.
+- Fixed from the first touch release: on phones narrower than about 380 px the open Tools drawer (85% of the
+  width) covered its own Hide Tools button, so it could not be closed. The drawer is now at most the width less
+  7rem.
+- The touch bar's buttons are a little narrower so all seven fit a 360 px-wide phone; narrower screens scroll it.
+- Tests: `tests/EditorTouchTap.test.js` adds a box drag (rect, replace, camera off then on), Box with Multi
+  (additive), a still tap in Box mode, cancellation by a second finger and by pointercancel, and gizmo handles
+  winning over the box.

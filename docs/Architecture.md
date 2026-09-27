@@ -159,6 +159,8 @@ docs/CapabilityMatrix.md for exactly what each surface may do.
   until it lifts, drops it if it moved or a second finger joined (the
   camera's orbit, pan or pinch), and otherwise replays it as a hover,
   press and release at the lift point, so tools need no touch handling.
+  In touch Box-select mode a one-finger drag is the same marquee as
+  Shift-drag, with the camera controls off while it is drawn.
 - **Commands and history.** Every document change is a Command executed
   through CommandHistory (application/editor/CommandHistory.js): a linear
   history where executing after an undo clears redo. Commands carry an

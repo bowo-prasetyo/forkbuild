@@ -15,6 +15,11 @@ const TOUCH_TAP_SLOP_PX = 10;
 // last hover, which touch never had. Multi-select mode makes each tap a
 // Ctrl-click, toggling a brick in or out of the selection. Gizmo handles still
 // take the touch at once, as they do a mouse.
+//
+// Box-select mode makes a one-finger drag the Shift-drag marquee (additive with
+// Multi-select on, like Ctrl+Shift). As for Shift-drag, the camera controls are
+// off while the box is drawn, so they never see that finger: a second finger
+// cancels the box rather than becoming a pinch.
 export const pointerInputMethods = {
     onPointerDown(event) {
         if (event.pointerType === 'touch') {
@@ -123,6 +128,9 @@ export const pointerInputMethods = {
             return;
         }
         this._touchPointerIds.delete(event.pointerId);
+        if (this._marqueeState && this._marqueeState.pointerId === event.pointerId) {
+            this.cancelMarquee();
+        }
         if (this._touchTap && this._touchTap.pointerId === event.pointerId) {
             this._touchTap = null;
         }
@@ -136,6 +144,14 @@ export const pointerInputMethods = {
         return this._touchMultiSelect;
     },
 
+    setTouchBoxSelect(active) {
+        this._touchBoxSelect = Boolean(active);
+    },
+
+    isTouchBoxSelect() {
+        return this._touchBoxSelect;
+    },
+
     _onTouchPointerDown(event) {
         // The first finger down starts afresh, so an id whose pointerup was never
         // delivered cannot turn every later tap into a pinch.
@@ -144,8 +160,9 @@ export const pointerInputMethods = {
         }
         this._touchPointerIds.add(event.pointerId);
         if (this._touchPointerIds.size > 1) {
-            // A second finger: pinch or pan, never a tap.
+            // A second finger: pinch or pan, never a tap or a box.
             this._touchTap = null;
+            this.cancelMarquee();
             return null;
         }
         if (this._session
@@ -153,11 +170,35 @@ export const pointerInputMethods = {
             this._touchTap = null;
             return null;
         }
+        if (this._touchBoxSelect) {
+            this._marqueeState = {
+                pointerId: event.pointerId,
+                additive: this._touchMultiSelect,
+                x0: event.clientX,
+                y0: event.clientY,
+                x1: event.clientX,
+                y1: event.clientY,
+                moved: false
+            };
+            if (this._session) {
+                this._session.setControlsEnabled(false);
+            }
+            return null;
+        }
         this._touchTap = { pointerId: event.pointerId, x0: event.clientX, y0: event.clientY };
         return null;
     },
 
     _onTouchPointerMove(event) {
+        const marquee = this._marqueeState;
+        if (marquee && marquee.pointerId === event.pointerId) {
+            marquee.x1 = event.clientX;
+            marquee.y1 = event.clientY;
+            if (Math.hypot(marquee.x1 - marquee.x0, marquee.y1 - marquee.y0) > TOUCH_TAP_SLOP_PX) {
+                marquee.moved = true;
+            }
+            return null;
+        }
         const tap = this._touchTap;
         if (tap && tap.pointerId === event.pointerId
             && Math.hypot(event.clientX - tap.x0, event.clientY - tap.y0) > TOUCH_TAP_SLOP_PX) {
@@ -180,6 +221,18 @@ export const pointerInputMethods = {
 
     _onTouchPointerUp(event) {
         this._touchPointerIds.delete(event.pointerId);
+        const marquee = this._marqueeState;
+        if (marquee && marquee.pointerId === event.pointerId) {
+            this.cancelMarquee();
+            if (marquee.moved) {
+                const { x0, y0, x1, y1, additive } = marquee;
+                this.marqueeSelect({ x0, y0, x1, y1 }, { additive });
+            } else {
+                // Never passed the slop: an ordinary tap.
+                this._replayTouchTap(event);
+            }
+            return null;
+        }
         if (this._session) {
             const result = this._session.gizmoPointerUp(
                 event.clientX,
@@ -197,6 +250,11 @@ export const pointerInputMethods = {
             return null;
         }
         this._touchTap = null;
+        this._replayTouchTap(event);
+        return null;
+    },
+
+    _replayTouchTap(event) {
         if (this._inputDispatcher) {
             const click = {
                 pointerType: 'touch',
@@ -213,7 +271,6 @@ export const pointerInputMethods = {
             this._inputDispatcher.dispatchPointerDown({ ...click, buttons: 1 });
             this._inputDispatcher.dispatchPointerUp(click);
         }
-        return null;
     },
 
     // Marquee UI: read by EditorView to draw the overlay and to route Escape
