@@ -1,5 +1,7 @@
 import { describeDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
 import { withTimeout } from '../../utils/withTimeout.js';
+import { publicationRecordTag } from '../../core/NarrowDiscoveryTags.js';
+import { WorldEncounterKind } from '../../core/WorldEncounter.js';
 
 const DEFAULT_GATEWAY_URL = 'https://arweave.net';
 // Deliberately the exact literal application/arweave/ArweaveGraphqlDiscoveryQueryService.js's
@@ -320,8 +322,12 @@ export class ArweaveAnnouncementPublisher {
 
         const material = JSON.stringify(described);
         const tag = Object.freeze({ name: this._tagName, value: this._discoveryTag });
+        // A Publication's announcement also carries its own record tag
+        // (docs/AnnouncementIndex.md, "Phase 6").
+        const recordTag = described.kind === WorldEncounterKind.PUBLICATION ? publicationRecordTag(described.objectId) : null;
+        const extraTags = recordTag ? [Object.freeze({ name: this._tagName, value: recordTag })] : [];
 
-        const result = await withTimeout(this._uploadTaggedTransaction(material, tag), this._timeoutMs, 'ArweaveAnnouncementPublisher: uploadTaggedTransaction timed out');
+        const result = await withTimeout(this._uploadTaggedTransaction(material, tag, extraTags), this._timeoutMs, 'ArweaveAnnouncementPublisher: uploadTaggedTransaction timed out');
 
         if (result === null || result === undefined) {
             return null;

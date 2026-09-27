@@ -239,6 +239,22 @@ export class ArweaveGraphqlDiscoveryQueryService extends DecentralizedDiscoveryQ
         return candidates;
     }
 
+    // Like search(), but each result is the whole announcement envelope
+    // ({ kind, objectId, uri }) plus `origin`. `objectId` is only what the
+    // announcer claimed: a caller may use it to choose what to fetch, never
+    // as evidence (see application/snapshot/claimed/VerifyClaimedBuildPublication.js).
+    async searchEnvelopes(discoveryTag) {
+        const announcementIds = await this._searchAnnouncementTransactionIds(discoveryTag);
+        const envelopes = [];
+        for (const announcementId of announcementIds) {
+            const envelope = await this._fetchAnnouncementEnvelope(announcementId);
+            if (envelope !== null) {
+                envelopes.push({ origin: this.origin, kind: envelope.kind, objectId: envelope.objectId, uri: envelope.uri });
+            }
+        }
+        return envelopes;
+    }
+
     // Pure I/O, private. The original 0.9.25 GraphQL step, unchanged in
     // behavior: resolves to the list of Arweave transaction ids the
     // gateway reports carrying this service's own `tagName` set to

@@ -310,6 +310,12 @@ reaches its 2,000-record cap. The tags come from `core/NarrowDiscoveryTags.js`.
     around the player.
   - The index stores a Snapshot under a cell tag only when its claimed
     position lies in that cell.
+- **Publications.** Each Publication announcement (not an avatar's) also
+  carries `forkbuild-publication:<publicationId>`, on Nostr and Arweave.
+  World View reads it when verifying a claimed build, so one Publication's
+  signed record is found however far back it was announced. Reading goes
+  straight to the network: these lookups are rare and user-initiated, so
+  nothing is watched or stored in the index for them.
 - **Steem.** Steem posts do carry tags (`json_metadata.tags`), but
   ForkBuild announces as replies to monthly discovery threads, and Steem's
   tag feeds list only top-level posts, so a tag on a reply cannot be

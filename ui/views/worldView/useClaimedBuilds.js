@@ -6,6 +6,7 @@ import { SnapshotWorldPlacementOutcome } from '../../../application/snapshot/pla
 import {
     ClaimedBuildStore, ClaimedBuildAcceptance, describeClaimedBuildAcceptance, selectVisibleClaimedBuilds
 } from '../../../application/snapshot/claimed/ClaimedBuilds.js';
+import { ClaimedBuildVerificationOutcome } from '../../../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
 
 // refreshSpatialUI() runs as the camera moves; the ghost set changes far less
 // often, so an unforced reconcile runs at most this often.
@@ -13,9 +14,23 @@ const RECONCILE_INTERVAL_MS = 1000;
 
 const ACCEPTANCE_HINTS = Object.freeze({
     [ClaimedBuildAcceptance.ACCEPTABLE]: 'Places your own copy of this build at the claimed position.',
-    [ClaimedBuildAcceptance.PUBLICATION_UNKNOWN]: 'Its publisher\'s signed Publication isn\'t on this device yet. It arrives when they share it with you (it then shows in your Repository), or from a connected peer in World Encounters.',
+    [ClaimedBuildAcceptance.PUBLICATION_UNKNOWN]: 'Its publisher\'s signed Publication isn\'t on this device yet. Verify fetches it from the network; it also arrives when they share it with you, or from a connected peer in World Encounters.',
     [ClaimedBuildAcceptance.CONTENT_MISMATCH]: 'The verified Publication names different content than this ghost shows, so accepting it could place something else.'
 });
+
+const VERIFICATION_MESSAGES = Object.freeze({
+    [ClaimedBuildVerificationOutcome.NOT_FOUND]: 'No announcement of this build\'s signed Publication was found. Its publisher may have distributed only the Snapshot.',
+    [ClaimedBuildVerificationOutcome.UNVERIFIED]: 'Its Publication was found, but no copy was validly signed for this build.',
+    [ClaimedBuildVerificationOutcome.CONTENT_MISMATCH]: 'Its signed Publication names different content than this ghost shows, so it can\'t be accepted.',
+    failed: 'Verification could not be completed. Try again later.'
+});
+
+// "did:key:z6MkhaXgBZDv…a1b2c3": enough to recognise a key again, short
+// enough for a row.
+function abbreviateKey(id) {
+    if (typeof id !== 'string') return null;
+    return id.length > 26 ? `${id.slice(0, 18)}…${id.slice(-6)}` : id;
+}
 
 // World View's claimed builds (application/snapshot/claimed/ClaimedBuilds.js):
 // records the claimed position of every Snapshot the automatic cascade
@@ -25,6 +40,7 @@ const ACCEPTANCE_HINTS = Object.freeze({
 // session.placePublication() path. Scoped to this mount.
 export function useClaimedBuilds({
     session, publicationContentStore, feedback, guarded, refreshSpatialUI, getViewerPosition,
+    verifyClaimedBuildPublicationCommand = null,
     now = () => Date.now(), documentSerializer = new DocumentSerializer()
 }) {
     const store = new ClaimedBuildStore();
@@ -32,6 +48,8 @@ export function useClaimedBuilds({
     // key -> { status: 'loading' | 'ready' | 'failed', world?, title?, author? }
     const contents = new Map();
     const shown = new Set();
+    // key -> { verifying: boolean, message: string | null }
+    const verifications = new Map();
     let lastReconcileAt = -Infinity;
     let active = true;
 
@@ -127,6 +145,9 @@ export function useClaimedBuilds({
                 shown.add(claim.key);
             }
             const acceptance = describeClaimedBuildAcceptance(claim, findPublicationById);
+            const publication = acceptance === ClaimedBuildAcceptance.ACCEPTABLE ? findPublicationById(claim.publicationId) : null;
+            const identity = publication ? publication.publisherIdentity : null;
+            const verification = verifications.get(claim.key) || null;
             rows.push({
                 key: claim.key,
                 publicationId: claim.publicationId,
@@ -136,11 +157,49 @@ export function useClaimedBuilds({
                 author: content.author,
                 distance: Math.round(distanceBetween(claim.position, viewerPosition)),
                 acceptable: acceptance === ClaimedBuildAcceptance.ACCEPTABLE,
-                acceptanceHint: ACCEPTANCE_HINTS[acceptance]
+                acceptanceHint: ACCEPTANCE_HINTS[acceptance],
+                // Once verified: who signed it, as the key itself. The name is
+                // the publisher's own label; the key is what was checked.
+                signedBy: publication ? (publication.author || null) : null,
+                publisherKey: identity ? abbreviateKey(identity.id) : null,
+                canVerify: acceptance === ClaimedBuildAcceptance.PUBLICATION_UNKNOWN && typeof verifyClaimedBuildPublicationCommand === 'function',
+                verifying: !!(verification && verification.verifying),
+                verificationMessage: verification ? verification.message : null
             });
         }
         rows.sort((a, b) => a.distance - b.distance);
         claimedBuildRows.value = rows;
+    }
+
+    // Fetches and checks the build's signed Publication from the network
+    // (VerifyClaimedBuildPublication.js). On success it is admitted, so the
+    // next reconcile finds it and enables Accept Position. Never accepts.
+    function verifyClaimedBuild(row) {
+        if (!row || typeof verifyClaimedBuildPublicationCommand !== 'function') {
+            return Promise.resolve(null);
+        }
+        const current = verifications.get(row.key);
+        if (current && current.verifying) {
+            return Promise.resolve(null);
+        }
+        verifications.set(row.key, { verifying: true, message: null });
+        reconcileClaimedBuilds({ force: true });
+        return Promise.resolve()
+            .then(() => verifyClaimedBuildPublicationCommand({ publicationId: row.publicationId, contentHash: row.contentHash }))
+            .then((result) => (result && result.outcome) || 'failed', () => 'failed')
+            .then((outcome) => {
+                verifications.set(row.key, {
+                    verifying: false,
+                    message: outcome === ClaimedBuildVerificationOutcome.VERIFIED ? null : VERIFICATION_MESSAGES[outcome] || VERIFICATION_MESSAGES.failed
+                });
+                if (outcome === ClaimedBuildVerificationOutcome.VERIFIED) {
+                    feedback.show(`Verified "${row.title}" — you can now accept its position`);
+                }
+                if (active) {
+                    reconcileClaimedBuilds({ force: true });
+                }
+                return outcome;
+            });
     }
 
     function navigateToClaimedBuild(row) {
@@ -192,6 +251,6 @@ export function useClaimedBuilds({
 
     return {
         claimedBuildRows, noteSnapshotCandidateResult, reconcileClaimedBuilds,
-        navigateToClaimedBuild, acceptClaimedBuild, dismissClaimedBuild, disposeClaimedBuilds
+        navigateToClaimedBuild, verifyClaimedBuild, acceptClaimedBuild, dismissClaimedBuild, disposeClaimedBuilds
     };
 }

@@ -198,6 +198,9 @@ export function composeWorldDiscovery({
         setIpfsNodeConfigurationUseCase, nostrRelayConfigurationStore, resolvedNostrRelayUrls,
         setNostrRelayConfigurationUseCase, nostrRelayQueryClient, worldDiscoveryLeadRegistry,
         worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand,
+        // The unwrapped Nostr/Arweave announcement queries, for looking up one
+        // Publication's signed record (application/snapshot/claimed/VerifyClaimedBuildPublication.js).
+        publicationRecordQueryServices: [networkWorldDiscoveryServices.nostr, networkWorldDiscoveryServices.arweave],
         worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
         steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
         steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress,
