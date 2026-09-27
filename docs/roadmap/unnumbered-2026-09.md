@@ -1534,3 +1534,37 @@ keyboard-only actions the first touch release left out.
 - Tests: `tests/EditorTouchTap.test.js` adds a box drag (rect, replace, camera off then on), Box with Multi
   (additive), a still tap in Box mode, cancellation by a second finger and by pointercancel, and gizmo handles
   winning over the box.
+
+## Snapshot bytes: read locally first, fetched only nearby (unnumbered, 2026-09-27)
+
+**World View no longer downloads every Snapshot the Announcement Index knows about, and never downloads one this
+device already holds.** Content bytes are the expensive part of discovery. Before, opening World View handed every
+indexed Snapshot under the global tag (up to 2,000) to the automatic cascade at once, with no limit on how many
+downloaded in parallel. And the resolve step always fetched from the store the announcement's locator names, so a
+Snapshot already stored locally was downloaded again on every visit; the store step only noticed afterwards
+(`ALREADY_AVAILABLE`).
+
+- Local first: `DecentralizedSnapshotResolver#resolveCandidate()` (and `resolve()`) take an optional
+  `localContentStore`. When it holds the candidate's content hash and those bytes verify, they are returned as
+  `RESOLVED` without asking the network, or even needing a network store. A miss, a failing read or a mismatch
+  falls through to the network as before, so a bad local copy is never trusted and never blocks. Both
+  `executeResolveSelectedSnapshotCommand()` and `executeDiscoverSnapshotCommand()` forward it, and
+  `ui/main/composeSnapshotDiscovery.js` passes `publicationContentStore`, the IndexedDB-backed store Snapshots are
+  materialized into. So the manual Resolve button and link opening benefit too.
+- Nearby only: `application/snapshot/NearbySnapshotCandidates.js` picks which candidates World View's cascade
+  gets. A candidate is kept when its position lies in the 3×3 map cells around the viewer, the block discovery
+  already reads. The position is the local placement for its Publication when there is one, otherwise the
+  announcement's `claimedPosition`; this decides only what is worth fetching, never where anything is placed,
+  so the cascade still never reads `claimedPosition`. Candidates with no position (announcements from before
+  claimed positions) are kept up to 20 per call, newest first, the cap the global tag's network query used to
+  impose. A candidate skipped now is offered again as the viewer moves near it.
+- A few at a time: World View wraps the cascade's resolve command in `limitConcurrency()` (`utils/`), four at
+  once. A fetch still waiting when the view closes is skipped.
+- Not done: removing fetched Snapshots when storage runs short. They share the store with the player's own
+  published content, so removal needs to know which entries were fetched from elsewhere.
+- Tests:
+  - `tests/LocalFirstSnapshotResolution.test.js`: a local hit skips the network (even without a network store), a
+    miss fetches, a mismatching, failing, throwing or vanished local copy falls through, both commands forward the
+    store, and a Snapshot fetched and stored once is read locally the next time.
+  - `tests/NearbySnapshotCandidates.test.js`: the cell block, a placement winning over a claim, the cap on
+    candidates with no position, no viewer position, and `limitConcurrency()`'s limit, order and error handling.

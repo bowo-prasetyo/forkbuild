@@ -91,11 +91,12 @@ export function executeResolveSelectedSnapshotCommand({
     candidate,
     resolver,
     contentStore = null,
-    storeRegistry = null
+    storeRegistry = null,
+    localContentStore = null
 } = {}) {
     if (!resolver || typeof resolver.resolveCandidate !== 'function') {
         throw new Error('executeResolveSelectedSnapshotCommand: a resolver with resolveCandidate() is required');
     }
 
-    return resolver.resolveCandidate(candidate, { contentStore, storeRegistry });
+    return resolver.resolveCandidate(candidate, { contentStore, storeRegistry, localContentStore });
 }

@@ -8,6 +8,8 @@ import { AutomaticSnapshotEncounterCascade } from '../../application/snapshot/Au
 import { AutomaticSnapshotEncounterRetentionReconciliation } from '../../application/snapshot/AutomaticSnapshotEncounterRetentionReconciliation.js';
 import { SnapshotWorldRegistrationOutcome } from '../../application/snapshot/placement/SnapshotWorldRegistrationOutcome.js';
 import { ObserverLocalEncounterStore } from '../../application/worldEncounter/ObserverLocalEncounterStore.js';
+import { selectNearbySnapshotCandidates } from '../../application/snapshot/NearbySnapshotCandidates.js';
+import { limitConcurrency } from '../../utils/limitConcurrency.js';
 import ActionFeedback from '../components/ActionFeedback.js';
 import DocumentInfoPanel from '../components/DocumentInfoPanel.js';
 import MetadataEditorDialog from '../components/MetadataEditorDialog.js';
@@ -71,6 +73,9 @@ import { dialogsTemplate } from './worldView/templates/dialogs.js';
 import { headerSectionTemplate } from './worldView/templates/headerSection.js';
 import { worldListsSectionTemplate } from './worldView/templates/worldListsSection.js';
 import { navigationHudSectionTemplate } from './worldView/templates/navigationHudSection.js';
+
+// Snapshot fetches the automatic cascade runs at once.
+const AUTOMATIC_SNAPSHOT_FETCH_CONCURRENCY = 4;
 
 // World View observes and navigates; brick editing lives in the Editor (see
 // docs/Principles.md, "World View Observes and Navigates; Editor Mutates and
@@ -255,8 +260,13 @@ export default {
         // Scoped to this mount: a fresh, empty store per session, never surviving a remount or
         // shared with any other Wanderer's own session (see ObserverLocalEncounterStore).
         const observerLocalEncounterStore = new ObserverLocalEncounterStore();
+        // At most a few Snapshots are fetched at once; one still waiting when this
+        // view closes is never fetched (a null resolution ends that run).
+        const automaticResolveSelectedSnapshotCommand = resolveSelectedSnapshotCommand
+            ? limitConcurrency((candidate) => (automaticCascadeSessionActive ? resolveSelectedSnapshotCommand(candidate) : null), AUTOMATIC_SNAPSHOT_FETCH_CONCURRENCY)
+            : null;
         const automaticSnapshotEncounterCascade = new AutomaticSnapshotEncounterCascade({
-            resolveSelectedSnapshotCommand,
+            resolveSelectedSnapshotCommand: automaticResolveSelectedSnapshotCommand,
             materializeSelectedSnapshotCommand,
             worldDiscoverySourceRegistry,
             resolvePlacementInfo: (publicationId) => session.getPlacementInfoForPublication(publicationId),
@@ -410,11 +420,19 @@ export default {
         // Spatial UI refresh
         // -----------------------------------------------------------------
 
+        // Only Snapshots near the viewer are fetched (see NearbySnapshotCandidates);
+        // one skipped now is offered again once the viewer comes near it.
         function handleDiscoveredSnapshotCandidates(candidates) {
             if (!Array.isArray(candidates)) {
                 return;
             }
-            candidates.forEach((candidate) => automaticSnapshotEncounterCascade.processCandidate(candidate).then((result) => {
+            selectNearbySnapshotCandidates(candidates, {
+                viewerPosition: spatialContext.value ? spatialContext.value.position : null,
+                placementPositionOf: (publicationId) => {
+                    const placement = session.getPlacementInfoForPublication(publicationId);
+                    return placement ? placement.position : null;
+                }
+            }).forEach((candidate) => automaticSnapshotEncounterCascade.processCandidate(candidate).then((result) => {
                 // The only place a Snapshot becomes watched for retention; manual
                 // registrations never pass through here.
                 if (result && result.outcome === SnapshotWorldRegistrationOutcome.REGISTERED) {

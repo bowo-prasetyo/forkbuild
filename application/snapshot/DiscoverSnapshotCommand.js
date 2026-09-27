@@ -141,11 +141,12 @@ export function executeDiscoverSnapshotCommand({
     contentHash,
     resolver,
     contentStore = null,
-    storeRegistry = null
+    storeRegistry = null,
+    localContentStore = null
 } = {}) {
     if (!resolver || typeof resolver.resolve !== 'function') {
         throw new Error('executeDiscoverSnapshotCommand: a resolver with resolve() is required');
     }
 
-    return resolver.resolve(discoveryTag, contentHash, { contentStore, storeRegistry });
+    return resolver.resolve(discoveryTag, contentHash, { contentStore, storeRegistry, localContentStore });
 }

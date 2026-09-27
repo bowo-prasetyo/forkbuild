@@ -732,6 +732,14 @@ Diagnostic Tools' own manual buttons above still work exactly as
 described, unchanged, for whenever this passive path doesn't turn up
 what you're looking for yourself.
 
+The automatic path only downloads Snapshots near you: those placed, or
+announced as placed, in your map cell or the ones around it (about 1,000
+units each way), plus the 20 newest that don't say where they belong. A
+Snapshot further away is downloaded once you walk near it. At most four
+download at a time. A Snapshot this device has already downloaded is read
+from its own storage instead of downloaded again, after the same content
+check.
+
 ## History — previewing and restoring earlier states
 
 Every change you make here — adding, renaming, or removing a landmark or

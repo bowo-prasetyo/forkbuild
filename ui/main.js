@@ -503,7 +503,7 @@ const {
     roleProviderPreferenceStore, resolvedAnnouncementDiscoveryProvider, storeSnapshotContentUseCase,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, nostrRelayQueryClient, nostrHostPublisher,
     arweaveAnnouncementUploadTaggedTransaction, snapshotDistributionAvailableStorageTypes, steemRuntime,
-    announcementIndex
+    announcementIndex, publicationContentStore
 });
 app.provide('defaultContentDistributionProvider', resolvedContentDistributionProvider);
 app.provide('publishPlaceNamingClaimToNostrCommand', publishPlaceNamingClaimToNostrCommand);

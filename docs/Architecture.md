@@ -296,7 +296,11 @@ already reading it (`retryWhenLoaded()` wraps a synchronous reader for an
 async caller). LocalContentStore's `get()` is therefore asynchronous, like
 every ContentStore, with `getSync()` for World View streaming, which skips
 a world whose content is still being read and loads it on a later
-refresh, staying synchronous itself. Editable documents stay in memory:
+refresh, staying synchronous itself. Snapshot resolution
+(`DecentralizedSnapshotResolver#resolveCandidate()`, given a
+`localContentStore`) asks this store by content hash before the network,
+so bytes fetched once are read locally from then on, verified the same
+way. Editable documents stay in memory:
 about twenty places read them synchronously (collision, selection,
 search, catalogs). Writes change the copy at once and are
 committed in the background, one transaction per task. flushLocalStorage()
