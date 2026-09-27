@@ -1,5 +1,7 @@
 import { describeDecentralizedDiscoveryEnvelope } from '../../core/DecentralizedDiscoveryEnvelope.js';
 import { withTimeout } from '../../utils/withTimeout.js';
+import { publicationRecordTag } from '../../core/NarrowDiscoveryTags.js';
+import { WorldEncounterKind } from '../../core/WorldEncounter.js';
 
 const DEFAULT_RELAY_URL = 'wss://relay.damus.io';
 const DEFAULT_TAG_NAME = 't';
@@ -309,9 +311,12 @@ export class NostrPublicationDiscoveryPublisher {
             return null;
         }
 
+        // A Publication's announcement also carries its own record tag
+        // (docs/AnnouncementIndex.md, "Phase 6").
+        const recordTag = described.kind === WorldEncounterKind.PUBLICATION ? publicationRecordTag(described.objectId) : null;
         const eventTemplate = Object.freeze({
             kind: this._kind,
-            tags: [[this._tagName, this._discoveryTag]],
+            tags: [[this._tagName, this._discoveryTag], ...(recordTag ? [[this._tagName, recordTag]] : [])],
             content: JSON.stringify(described)
         });
 

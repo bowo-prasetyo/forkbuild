@@ -491,7 +491,7 @@ tag) are grouped into families, and a reader only queries its own:
 
 | Family | Tag | Envelope |
 |--------|-----|----------|
-| Publications | `forkbuild-publication` | `{ protocol: 'forkbuild', version: 1, kind, objectId, uri }` (core/DecentralizedDiscoveryEnvelope.js) |
+| Publications | `forkbuild-publication`, plus `forkbuild-publication:<publicationId>` for a Publication (not an avatar) | `{ protocol: 'forkbuild', version: 1, kind, objectId, uri }` (core/DecentralizedDiscoveryEnvelope.js) |
 | Snapshots | `forkbuild-snapshot`, plus `forkbuild-snapshot:cell:<cx>:<cz>` when there is a `claimedPosition` | `{ protocol: 'forkbuild-snapshot-discovery', version: 1, publicationId, contentHash, storage, locator, claimedPosition }` (core/SnapshotDiscoveryEnvelope.js) |
 | Place naming | per region, from `derivePlaceNamingDiscoveryTag(worldId, regionId)` | `{ protocol: 'forkbuild-place-naming-discovery', version: 1, worldId, regionId, claim }` (core/PlaceNamingDiscoveryEnvelope.js) |
 | Commentary | `forkbuild-commentary`, plus `forkbuild-commentary:<publicationId>` | see "Publication Commentary Distribution" |
@@ -506,6 +506,13 @@ carried on the same Nostr event (a second `t` tag) or Arweave transaction
   - World View reads the player's cell beside `forkbuild-snapshot`.
   - A Commentary refresh reads its Publication's tag beside
     `forkbuild-commentary`.
+  - Verifying a claimed build (World View's Claimed Builds, see
+    application/snapshot/claimed/VerifyClaimedBuildPublication.js) reads
+    `forkbuild-publication:<publicationId>` beside `forkbuild-publication`
+    to find that one Publication's signed record. An announcement's
+    `objectId` only chooses which records to fetch; a record counts only
+    if it is validly signed, has exactly that id, and names exactly the
+    Snapshot's content hash.
   - Readers still read the global tags, so announcements made before the
     narrow tags existed are still found.
   - A reader stores a Snapshot under a cell tag only when its claimed

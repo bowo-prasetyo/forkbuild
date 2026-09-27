@@ -134,11 +134,22 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                     >
                         <span class="world-view-nearby-row-label">◌ {{ build.title }}</span>
                         <span class="world-view-nearby-row-distance">{{ build.distance }}m · at ({{ Math.round(build.position.x) }}, {{ Math.round(build.position.z) }})</span>
-                        <span class="world-view-claimed-build-author">claimed{{ build.author ? ' by ' + build.author : '' }} · unverified position</span>
+                        <span v-if="build.publisherKey" class="world-view-claimed-build-author">
+                            signed by {{ build.signedBy || 'an unnamed publisher' }} (key {{ build.publisherKey }}) · unverified position
+                        </span>
+                        <span v-else class="world-view-claimed-build-author">claimed{{ build.author ? ' by ' + build.author : '' }} · unverified position</span>
                         <button
                             class="action-btn world-view-nearby-row-go"
                             @click="navigateToClaimedBuild(build)"
                         >Navigate</button>
+                        <!-- Fetches and checks the signed Publication; never accepts by itself. -->
+                        <button
+                            v-if="build.canVerify"
+                            class="action-btn world-view-claimed-build-verify"
+                            :disabled="build.verifying"
+                            title="Fetch this build's signed Publication and check it matches what you see"
+                            @click="verifyClaimedBuild(build)"
+                        >{{ build.verifying ? 'Verifying…' : 'Verify' }}</button>
                         <button
                             class="action-btn world-view-claimed-build-accept"
                             :disabled="!build.acceptable"
@@ -150,7 +161,8 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                             title="Hide this ghost for the rest of this visit"
                             @click="dismissClaimedBuild(build)"
                         >Hide</button>
-                        <span v-if="!build.acceptable" class="world-view-claimed-build-hint">{{ build.acceptanceHint }}</span>
+                        <span v-if="build.verificationMessage" class="world-view-claimed-build-hint">{{ build.verificationMessage }}</span>
+                        <span v-else-if="!build.acceptable" class="world-view-claimed-build-hint">{{ build.acceptanceHint }}</span>
                     </div>
                 </CollapsibleSection>
                 <!--

@@ -334,7 +334,12 @@ async function run() {
         assert(ledger.has(published.id), 'G3. a real transaction record actually exists on the simulated substrate under that id');
         const ledgerEntry = ledger.get(published.id);
         assert(JSON.parse(decodeBase64Url(ledgerEntry.data)).objectId === 'pub-g-flagship', 'G4. the announced envelope\'s own data, base64url-decoded off the real transaction, is byte-identical to what was published');
-        assert(ledgerEntry.tags.length === 1, 'G5. exactly one Arweave Tag reached the real signed transaction');
+        // Amended: a Publication announcement also carries its narrow record tag
+        // (core/NarrowDiscoveryTags.js#publicationRecordTag) as a second tag.
+        assert(ledgerEntry.tags.length === 2, 'G5. exactly two Arweave Tags reached the real signed transaction: the discovery tag and the Publication\'s record tag');
+        assert(decodeBase64Url(ledgerEntry.tags[1].name) === ArweaveAnnouncementPublisher.DEFAULT_TAG_NAME
+            && decodeBase64Url(ledgerEntry.tags[1].value) === 'forkbuild-publication:pub-g-flagship',
+            'G5b. the second tag is the Publication\'s own record tag, under the same tag name');
         const decodedTagName = decodeBase64Url(ledgerEntry.tags[0].name);
         const decodedTagValue = decodeBase64Url(ledgerEntry.tags[0].value);
         assert(decodedTagName === ArweaveAnnouncementPublisher.DEFAULT_TAG_NAME, 'G6. the tag NAME on the real signed transaction is exactly the literal the real reader already expects');

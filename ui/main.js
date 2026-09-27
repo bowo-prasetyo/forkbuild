@@ -48,6 +48,7 @@ import { composeInjectedWalletServices } from './main/composeInjectedWalletServi
 import { composePublicationDistribution } from './main/composePublicationDistribution.js';
 import { composeSnapshotDiscovery } from './main/composeSnapshotDiscovery.js';
 import { openPublicationLink } from '../application/publication/OpenPublicationLink.js';
+import { verifyClaimedBuildPublication } from '../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
 
 const {
     identityProvider, identityUseCase, createPublicationCommentaryCommand, getPublicationCommentariesCommand,
@@ -380,7 +381,7 @@ const {
     resolvedArweaveGatewayUrl, setArweaveGatewayConfigurationUseCase, setIpfsGatewayConfigurationUseCase,
     setIpfsNodeConfigurationUseCase, nostrRelayConfigurationStore, resolvedNostrRelayUrls,
     setNostrRelayConfigurationUseCase, nostrRelayQueryClient, worldDiscoveryLeadRegistry,
-    worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand,
+    worldEncounterMaterialSources, discoverWorldEncounterPublicationCommand, publicationRecordQueryServices,
     worldEncounterLeadAssociationsQuery, PUBLICATION_DISCOVERY_TAG, publicationDistributionLifecycleStore,
     steemReadingConfigurationStore, setSteemReadingConfigurationUseCase, steemRuntime,
     steemAnnouncingConfigurationStore, setSteemAnnouncingConfigurationUseCase, steemContentUploadProgress,
@@ -429,6 +430,22 @@ app.provide('worldEncounterMaterialSources', worldEncounterMaterialSources);
 app.provide('worldEncounterMaterialVerifier', worldEncounterMaterialVerifier);
 app.provide('worldDiscoveryLeadRegistry', worldDiscoveryLeadRegistry);
 app.provide('discoverWorldEncounterPublicationCommand', discoverWorldEncounterPublicationCommand);
+// Verifies a claimed build's signed Publication from the network and, only when it
+// is valid and names the ghost's own content, admits it like a verified World
+// Encounter, so Accept Position can place it.
+app.provide('verifyClaimedBuildPublicationCommand', ({ publicationId, contentHash }) => verifyClaimedBuildPublication({
+    publicationId,
+    contentHash,
+    services: publicationRecordQueryServices,
+    globalDiscoveryTag: PUBLICATION_DISCOVERY_TAG,
+    materialSources: worldEncounterMaterialSources,
+    verifier: worldEncounterMaterialVerifier,
+    // Each sink isolated, as WorldEncounterCanvas's admitToRepositoryDiscovery() does.
+    admit: (publication) => {
+        try { decentralizedPublicationDiscoveryProvider.add(publication); } catch { /* see above */ }
+        try { worldEncounterPublicationAdmissionLog.add(publication); } catch { /* see above */ }
+    }
+}));
 app.provide('worldEncounterLeadAssociationsQuery', worldEncounterLeadAssociationsQuery);
 app.provide('publicationDiscoveryTag', PUBLICATION_DISCOVERY_TAG);
 app.provide('publicationDistributionLifecycleStore', publicationDistributionLifecycleStore);

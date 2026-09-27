@@ -358,17 +358,34 @@ position. Each row has:
 
 - **Navigate** — moves the camera to look at the claimed spot. Nothing
   else changes.
+- **Verify** — shown while this device doesn't have the build's signed
+  Publication record yet. It looks the record up on Nostr and Arweave,
+  checks its signature, and checks it's exactly this build's Publication
+  and names exactly the content the ghost shows. If everything checks
+  out, the Publication is added to your Repository and the row changes to
+  "signed by *name* (key did:key:…)". If not, the row says why: nothing
+  was announced (the publisher may have distributed only the Snapshot —
+  the combined **Distribute** button announces both), no copy was validly
+  signed, or the signed Publication names different content. Verify never
+  accepts anything by itself.
 - **Accept Position** — the one way to trust a claim. It places *your own*
   copy of the build at the claimed position, signed by you like any other
   placement, and from then on it's a normal build in your World. It's only
   enabled once this device holds the publisher's signed, verified
-  Publication record — it arrives when they share the World with you (see
+  Publication record — through **Verify**, when they share the World with
+  you (see
   [Sharing with connected peers](04-PublishingAndForking.md#sharing-with-connected-peers);
   it then shows in your Repository), or when a connected peer's
   [World Encounter](#world-encounters--publications-and-avatars-your-peers-are-sharing)
   for it reaches **Available** — and only if that Publication names
   exactly the content the ghost shows. Otherwise the row says which of the
   two is missing.
+
+  **What verified means.** It proves the build is exactly the content of a
+  Publication signed by the key shown. It doesn't prove who holds that key
+  — anyone can make one and call themselves "bob" — and it doesn't prove
+  the position, which is still only claimed. Accept Position works for
+  keys you don't know too; whether to trust one is your call.
 - **Hide** — removes that ghost and its row until you leave World View.
   Nothing is reported or deleted.
 

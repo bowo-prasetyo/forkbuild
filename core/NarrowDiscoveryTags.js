@@ -6,6 +6,7 @@
 
 export const COMMENTARY_PUBLICATION_TAG_PREFIX = 'forkbuild-commentary:';
 export const SNAPSHOT_CELL_TAG_PREFIX = 'forkbuild-snapshot:cell:';
+export const PUBLICATION_RECORD_TAG_PREFIX = 'forkbuild-publication:';
 // World units per map cell side. Discovery reads a 3×3 block of cells around
 // the player, so this is also roughly how far ahead it looks.
 export const SNAPSHOT_CELL_SIZE = 1000;
@@ -14,6 +15,16 @@ export const SNAPSHOT_CELL_SIZE = 1000;
 export function commentaryPublicationTag(publicationId) {
     return typeof publicationId === 'string' && publicationId.length > 0
         ? COMMENTARY_PUBLICATION_TAG_PREFIX + publicationId
+        : null;
+}
+
+// Carried by a Publication announcement beside the global
+// 'forkbuild-publication' tag, so a reader looking for one Publication's
+// signed record (a claimed build's, see application/snapshot/claimed/) can
+// ask for exactly its announcements, however old. Null for a missing id.
+export function publicationRecordTag(publicationId) {
+    return typeof publicationId === 'string' && publicationId.length > 0
+        ? PUBLICATION_RECORD_TAG_PREFIX + publicationId
         : null;
 }
 

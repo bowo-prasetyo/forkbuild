@@ -63,6 +63,7 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
             whatsHere() { calls.push('whatsHere'); },
             navigateToClaimedBuild(build) { calls.push(['navigate', build.key]); },
             acceptClaimedBuild(build) { calls.push(['accept', build.key]); },
+            verifyClaimedBuild(build) { calls.push(['verify', build.key]); },
             dismissClaimedBuild(build) { calls.push(['hide', build.key]); }
         },
         template: nearbySectionTemplate
@@ -110,6 +111,22 @@ const buttonLabels = (element) => [...element.querySelectorAll('button')].map((b
     claimRow.querySelectorAll('button')[1].click();
     assert(JSON.stringify(calls) === JSON.stringify([['navigate', 'pub-b:h'], ['hide', 'pub-b:h'], ['accept', 'pub-b:h']]),
         `the row's buttons act on that claim — got ${JSON.stringify(calls)}`);
+    // Unverified with a Verify path: Verify sits beside Accept; once verified, the signer's key shows.
+    calls.length = 0;
+    Object.assign(vm.claimedBuildRows[0], { acceptable: false, canVerify: true });
+    await nextTick();
+    assert(JSON.stringify(buttonLabels(claimRow)) === JSON.stringify(['Navigate', 'Verify', 'Accept Position', 'Hide']),
+        `Verify appears while the Publication is unknown — got ${buttonLabels(claimRow).join(', ')}`);
+    claimRow.querySelector('.world-view-claimed-build-verify').click();
+    assert(calls[0] && calls[0][0] === 'verify', 'Verify acts on that claim');
+    Object.assign(vm.claimedBuildRows[0], { verifying: true });
+    await nextTick();
+    assert(claimRow.querySelector('.world-view-claimed-build-verify').disabled
+        && claimRow.querySelector('.world-view-claimed-build-verify').textContent.trim() === 'Verifying…', 'and shows its progress');
+    Object.assign(vm.claimedBuildRows[0], { verifying: false, canVerify: false, acceptable: true, signedBy: 'bob', publisherKey: 'did:key:z6MkhaXgBZDv…a1b2c3' });
+    await nextTick();
+    assert(claimRow.textContent.includes('signed by bob (key did:key:z6MkhaXgBZDv…a1b2c3)') && !claimRow.querySelector('.world-view-claimed-build-verify'),
+        'once verified, the row names the signing key and Verify goes');
     unmount();
     console.log('✓ Nearby shows short group titles, folds empty ones, and holds the camera queries');
     console.log('✓ Claimed Builds lists nearby claims with Navigate, Accept Position and Hide');

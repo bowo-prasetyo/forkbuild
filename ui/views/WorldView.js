@@ -424,9 +424,10 @@ export default {
 
         const {
             claimedBuildRows, noteSnapshotCandidateResult, reconcileClaimedBuilds,
-            navigateToClaimedBuild, acceptClaimedBuild, dismissClaimedBuild, disposeClaimedBuilds
+            navigateToClaimedBuild, verifyClaimedBuild, acceptClaimedBuild, dismissClaimedBuild, disposeClaimedBuilds
         } = useClaimedBuilds({
             session, publicationContentStore, feedback, guarded, refreshSpatialUI,
+            verifyClaimedBuildPublicationCommand: inject('verifyClaimedBuildPublicationCommand', null),
             getViewerPosition: () => (spatialContext.value ? spatialContext.value.position : null)
         });
 
@@ -1106,6 +1107,7 @@ export default {
             placementsRevision,
             claimedBuildRows,
             navigateToClaimedBuild,
+            verifyClaimedBuild,
             acceptClaimedBuild,
             dismissClaimedBuild,
             unpublishOwnPublication,

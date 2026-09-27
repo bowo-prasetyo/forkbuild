@@ -194,4 +194,16 @@ export class NostrPublicationRelaySetDiscoveryQueryService extends Decentralized
         }
         return candidates;
     }
+
+    // Every relay's searchEnvelopes(), concatenated like search(). Never throws.
+    async searchEnvelopes(discoveryTag) {
+        const settled = await Promise.allSettled(this._services.map((service) => service.searchEnvelopes(discoveryTag)));
+        const envelopes = [];
+        for (const outcome of settled) {
+            if (outcome.status === 'fulfilled' && Array.isArray(outcome.value)) {
+                envelopes.push(...outcome.value);
+            }
+        }
+        return envelopes;
+    }
 }

@@ -238,6 +238,32 @@ export class NostrDiscoveryQueryService extends DecentralizedDiscoveryQueryServi
 
         return parseEnvelopeCandidates(events);
     }
+
+    // Like search(), but each result is the whole announcement envelope
+    // ({ kind, objectId, uri }) plus `origin`. `objectId` is only what the
+    // announcer claimed: a caller may use it to choose what to fetch, never
+    // as evidence (see application/snapshot/claimed/VerifyClaimedBuildPublication.js).
+    // Never throws.
+    async searchEnvelopes(discoveryTag) {
+        const filter = buildDiscoveryFilter(this._tagName, this._kinds, discoveryTag, this._maxResults);
+        let events;
+        try {
+            events = await withTimeout(this._queryImpl(this._relayUrl, filter), this._timeoutMs, 'NostrDiscoveryQueryService: queryImpl timed out');
+        } catch {
+            return [];
+        }
+        if (!Array.isArray(events)) {
+            return [];
+        }
+        const envelopes = [];
+        for (const event of events) {
+            const envelope = parseDecentralizedDiscoveryEnvelope(event && event.content);
+            if (envelope !== null) {
+                envelopes.push({ origin: this.origin, kind: envelope.kind, objectId: envelope.objectId, uri: envelope.uri });
+            }
+        }
+        return envelopes;
+    }
 }
 
 NostrDiscoveryQueryService.DEFAULT_RELAY_URL = DEFAULT_RELAY_URL;

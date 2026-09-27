@@ -106,9 +106,12 @@ async function run() {
         const { relayUrl, eventTemplate } = relay.calls[0];
         assert(relayUrl === 'wss://custom-relay.example', '7. publishImpl is invoked against the configured relay');
         assert(eventTemplate.kind === 30078, '8. the event template carries the configured kind');
+        // Amended: a Publication announcement also carries its narrow record tag
+        // (core/NarrowDiscoveryTags.js#publicationRecordTag), under the same tag name.
         assert(
-            eventTemplate.tags.length === 1 && eventTemplate.tags[0][0] === 'x' && eventTemplate.tags[0][1] === 'forkbuild_campaign_42',
-            '9. the event template carries exactly one tag: the configured tag name and discovery tag'
+            eventTemplate.tags.length === 2 && eventTemplate.tags[0][0] === 'x' && eventTemplate.tags[0][1] === 'forkbuild_campaign_42'
+                && eventTemplate.tags[1][0] === 'x' && eventTemplate.tags[1][1] === 'forkbuild-publication:pub-99',
+            '9. the event template carries the configured tag name with the discovery tag, then the Publication\'s own record tag'
         );
         const parsedContent = JSON.parse(eventTemplate.content);
         assert(
