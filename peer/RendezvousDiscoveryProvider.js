@@ -100,6 +100,13 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
         this._ownPublicationId = null; // this node's own most recent PUBLISH, for a bare unpublish() call
         this._ownIdentityHint = null; // ...and the identity it was published for, which signs its REMOVE
         this._publicationsByRecord = new Map(); // peerDiscoveryId -> { identityId, publicationId }, for deliverAnswer()
+        this._answerListeners = new Set();
+        // Answers the server pushes for this provider's own current
+        // publication; a push for anything else (an older publication, or
+        // another device's on a shared in-memory network) is ignored.
+        this._unsubscribePush = typeof transport.onAnswerPushed === 'function'
+            ? transport.onAnswerPushed((pushed) => this._handlePushedAnswer(pushed))
+            : null;
     }
 
     // Out-of-band import path — identical in every respect to peer/
@@ -196,9 +203,11 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
     }
 
     // The answer waiting for this device's own last publish(), as
-    // { answer, answererId }, or null when none has arrived (or it cannot
-    // be asked for).
-    async fetchAnswer() {
+    // { answer, answererId, watching }, or null when none has arrived and
+    // nothing is watching (or it cannot be asked for). With `watch`, the
+    // server is also asked to push a later answer to onAnswer() listeners;
+    // `watching` says whether it agreed.
+    async fetchAnswer({ watch = false } = {}) {
         const publicationId = this._ownPublicationId;
         const identityId = this._ownIdentityHint;
         if (!publicationId || !identityId || typeof this._transport.fetchAnswer !== 'function') {
@@ -206,9 +215,27 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
         }
         const proof = signRendezvousAnswerFetch(publicationId, identityId, this._identityProvider);
         try {
-            return await this._transport.fetchAnswer({ identityId, publicationId, signature: proof ? proof.signature : undefined }) || null;
+            return await this._transport.fetchAnswer({ identityId, publicationId, signature: proof ? proof.signature : undefined, watch }) || null;
         } catch {
             return null;
+        }
+    }
+
+    // Returns an unsubscribe function. `callback({ answer, answererId })`
+    // fires when the server pushes the answer to this device's own current
+    // publication.
+    onAnswer(callback) {
+        this._answerListeners.add(callback);
+        return () => this._answerListeners.delete(callback);
+    }
+
+    _handlePushedAnswer(pushed) {
+        if (!pushed || !pushed.answer
+            || pushed.identityId !== this._ownIdentityHint || pushed.publicationId !== this._ownPublicationId) {
+            return;
+        }
+        for (const listener of this._answerListeners) {
+            listener({ answer: pushed.answer, answererId: pushed.answererId || null });
         }
     }
 
@@ -271,6 +298,11 @@ export class RendezvousDiscoveryProvider extends PeerDiscoveryProvider {
     dispose() {
         this._records.clear();
         this._publicationsByRecord.clear();
+        this._answerListeners.clear();
+        if (this._unsubscribePush) {
+            this._unsubscribePush();
+            this._unsubscribePush = null;
+        }
         this._discoveredListeners.clear();
     }
 

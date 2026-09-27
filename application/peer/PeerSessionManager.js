@@ -8,6 +8,9 @@ import { DiscoverPeersUseCase } from './DiscoverPeersUseCase.js';
 const DEFAULT_INVITATION_TTL_MS = 10 * 60 * 1000; // 10 minutes — matches peer/PeerInvitation.js's own default
 const SIGNAL_TIMEOUT_MS = 30 * 1000; // ICE gathering ordinarily resolves in well under this on a working network
 const DEFAULT_ANSWER_POLL_INTERVAL_MS = 2 * 1000;
+// Checks while every rendezvous server pushes answers only catch a push
+// lost to a dropped connection.
+const DEFAULT_ANSWER_WATCH_INTERVAL_MS = 30 * 1000;
 
 // 0.2.55 — the one small application abstraction the design doc asked
 // for: a UI-facing surface over the exact four-stage pipeline 0.2.49
@@ -57,7 +60,8 @@ export class PeerSessionManager {
         identityProvider,
         peerConnectionProvider = new WebRtcPeerConnectionProvider(),
         discoveryProvider = new LocalPeerDiscoveryProvider(),
-        answerPollIntervalMs = DEFAULT_ANSWER_POLL_INTERVAL_MS
+        answerPollIntervalMs = DEFAULT_ANSWER_POLL_INTERVAL_MS,
+        answerWatchIntervalMs = DEFAULT_ANSWER_WATCH_INTERVAL_MS
     } = {}) {
         if (!identityProvider) {
             throw new Error('PeerSessionManager: identityProvider is required');
@@ -71,7 +75,14 @@ export class PeerSessionManager {
         // isPublishing() below.
         this._publishedOffer = null;
         this._answerPollIntervalMs = answerPollIntervalMs;
+        this._answerWatchIntervalMs = answerWatchIntervalMs;
         this._answerTimer = null;
+        this._unsubscribeAnswers = this._discoverPeersUseCase.onAnswer(({ answer }) => {
+            const offer = this._publishedOffer;
+            if (offer && answer && this.isPublishing()) {
+                this._applyAnswer(offer, answer);
+            }
+        });
         // Harmless for peer/WebRtcPeerConnectionProvider.js today (its own
         // onIncomingConnection() never fires — see that file's header) and
         // free forward-compatibility for any future transport that DOES
@@ -230,47 +241,61 @@ export class PeerSessionManager {
         return publication;
     }
 
-    // Polls the rendezvous answer mailbox while `offer` is still waiting,
-    // and completes the connection with the first answer that arrives, so
-    // whoever found this device never has to send a reply back by hand.
+    // Collects the answer to `offer` from the rendezvous mailbox and
+    // completes the connection with it, so whoever found this device never
+    // has to send a reply back by hand. Each check also asks the servers to
+    // push a later answer (see the onAnswer() subscription in the
+    // constructor). While every server has agreed to push, checks are only
+    // a slow fallback for a push lost to a dropped connection; otherwise
+    // (a server from before pushes) they stay frequent. The first check runs
+    // at once so the watch is in place before anyone can answer.
     _watchForAnswer(offer) {
         this._clearAnswerTimer();
-        const poll = async () => {
+        const check = async () => {
             this._answerTimer = null;
             if (this._publishedOffer !== offer || !this.isPublishing()) {
                 return;
             }
             let found = null;
             try {
-                found = await this._discoverPeersUseCase.fetchAnswer();
+                found = await this._discoverPeersUseCase.fetchAnswer({ watch: true });
             } catch {
                 found = null;
             }
-            if (this._publishedOffer !== offer) {
+            if (this._publishedOffer !== offer || offer.answered) {
                 return;
             }
             if (found && found.answer) {
-                try {
-                    await this.completeConnection(offer.connectionId, found.answer);
-                } catch {
-                    // The server will not offer this publication again, so an
-                    // answer that cannot be applied (malformed, or someone
-                    // else's) must not leave it looking available: closing it
-                    // ends isPublishing() and lets the caller publish anew.
-                    this.disconnect(offer.connectionId);
-                }
+                await this._applyAnswer(offer, found.answer);
                 return;
             }
-            schedule();
-        };
-        const schedule = () => {
-            this._answerTimer = setTimeout(poll, this._answerPollIntervalMs);
+            const delay = found && found.watching ? this._answerWatchIntervalMs : this._answerPollIntervalMs;
+            this._answerTimer = setTimeout(check, delay);
             // Never keeps a Node test process alive on its own.
             if (this._answerTimer && typeof this._answerTimer.unref === 'function') {
                 this._answerTimer.unref();
             }
         };
-        schedule();
+        check();
+    }
+
+    // Applies the first answer to arrive for `offer`, by push or by check;
+    // any later one for the same offer is ignored.
+    async _applyAnswer(offer, answer) {
+        if (offer.answered || this._publishedOffer !== offer) {
+            return;
+        }
+        offer.answered = true;
+        this._clearAnswerTimer();
+        try {
+            await this.completeConnection(offer.connectionId, answer);
+        } catch {
+            // The server will not offer this publication again, so an
+            // answer that cannot be applied (malformed, or someone else's)
+            // must not leave it looking available: closing it ends
+            // isPublishing() and lets the caller publish anew.
+            this.disconnect(offer.connectionId);
+        }
     }
 
     _clearAnswerTimer() {
@@ -360,6 +385,10 @@ export class PeerSessionManager {
     dispose() {
         this._publishedOffer = null;
         this._clearAnswerTimer();
+        if (this._unsubscribeAnswers) {
+            this._unsubscribeAnswers();
+            this._unsubscribeAnswers = null;
+        }
         if (this._stopListening) {
             this._stopListening();
             this._stopListening = null;

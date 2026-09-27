@@ -16,11 +16,11 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 // the server requires, and that someone else's client cannot change an
 // identity's entry.
 
-function fakeDurableObjectState() {
+function fakeDurableObjectState(serverSockets = []) {
     const store = new Map();
     return {
         blockConcurrencyWhile: async (fn) => fn(),
-        getWebSockets: () => [],
+        getWebSockets: () => serverSockets,
         storage: {
             async get(key) { return store.get(key); },
             async put(key, value) { store.set(key, value); },
@@ -34,7 +34,8 @@ function fakeDurableObjectState() {
     };
 }
 
-// A browser-style WebSocket whose server end is a RendezvousNode.
+// A browser-style WebSocket whose server end is a RendezvousNode. Each
+// server end joins `serverSockets`, which the node lists to push answers.
 function socketClassFor(node) {
     return class NodeBackedWebSocket extends EventTarget {
         constructor(url) {
@@ -51,6 +52,7 @@ function socketClassFor(node) {
                 serializeAttachment: (value) => { attachment = structuredClone(value); },
                 deserializeAttachment: () => attachment
             };
+            serverSockets.push(this._serverSide);
             setTimeout(() => {
                 this.readyState = 1;
                 this.dispatchEvent(new Event('open'));
@@ -83,7 +85,8 @@ async function rejects(promise, pattern, message) {
     throw new Error(`ASSERT FAILED: ${message} (it did not throw)`);
 }
 
-const node = new RendezvousNode(fakeDurableObjectState());
+const serverSockets = [];
+const node = new RendezvousNode(fakeDurableObjectState(serverSockets));
 
 const aliceDevice = new LocalIdentityProvider(new InMemoryStorageProvider());
 aliceDevice.login('alice');
@@ -159,6 +162,24 @@ const offer = (identityHint, text = 'v=0\r\no=alice 1 1 IN IP4 127.0.0.1\r\n') =
     assert(await alice.transport.leaveLobby({ ...card.toJSON(), signature: signLobbyLeave(card, aliceDevice) }) === true, 'Alice\'s signed leave is accepted');
     assert((await bob.transport.listLobby(worldLobby('w-7'))).total === 0, '...and she is gone');
     console.log('✓ the lobby accepts, lists and withdraws the cards the app signs');
+}
+
+// A watching publisher's client receives the answer as a push.
+{
+    await alice.provider.publish(offer(aliceId), { ttlMs: 10 * 60 * 1000 });
+    const pushed = [];
+    const stop = alice.provider.onAnswer((found) => pushed.push(found));
+    const watch = await alice.provider.fetchAnswer({ watch: true });
+    assert(watch && watch.watching === true && watch.answer === null, 'the server acknowledges the app\'s signed watch');
+    const [candidate] = await bob.provider.discover(aliceId);
+    assert(await bob.provider.deliverAnswer(candidate, { connectionId: 'c2', sdp: 'v=0\r\no=bob-again\r\n' }) === true, 'Bob leaves an answer');
+    const started = Date.now();
+    while (pushed.length === 0 && Date.now() - started < 2000) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    assert(pushed.length === 1 && pushed[0].answer.sdp.includes('o=bob-again'), 'Alice\'s client receives the pushed answer');
+    stop();
+    console.log('✓ the server pushes the answer to the watching client');
 }
 
 // A locked identity cannot sign, so the server refuses its publication

@@ -875,8 +875,9 @@ device presence and identity presence stay distinct.
 
 The rendezvous server carries a WebRTC answer back to the publisher, so
 nobody returns a reply by hand. The answerer signs it, only the publisher
-can read it, and the first answer wins. It proves nothing about who is on
-the other end; the handshake does.
+can read it (or have it pushed, to a connection that signed a watch), and
+the first answer wins. It proves nothing about who is on the other end;
+the handshake does.
 
 [Full text](history/0.9.md#a-rendezvous-answer-is-signed-and-readable-only-by-the-publisher-2026-09-27)
 

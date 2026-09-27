@@ -16,9 +16,11 @@
 //     { v: 1, type: 'POST_ANSWER', requestId, identityId, publicationId, answer, answererId, signature }
 //         leaves a WebRTC answer to identityId's current publication;
 //         signature: answererId's signature over a rendezvous-answer envelope
-//     { v: 1, type: 'FETCH_ANSWER', requestId, identityId, publicationId, signature }
+//     { v: 1, type: 'FETCH_ANSWER', requestId, identityId, publicationId, signature, watch? }
 //         collects that answer; signature: identityId's signature over a
-//         rendezvous-answer-fetch envelope
+//         rendezvous-answer-fetch envelope. With `watch: true` the result is
+//         { answer|null, answererId, watching: true }, and an answer that
+//         arrives later is pushed to this connection (see below)
 //     { v: 1, type: 'JOIN_LOBBY',  requestId, card }
 //         a signed core/LobbyCard.js toJSON(): "this identity is in this lobby"
 //     { v: 1, type: 'LEAVE_LOBBY', requestId, identityId, lobby, cardId, signature }
@@ -28,6 +30,8 @@
 //   Server -> Client, exactly one response per request, in any order:
 //     { v: 1, type: 'OK',    requestId, result }
 //     { v: 1, type: 'ERROR', requestId, message }
+//   and, unrequested, to a connection watching a publication:
+//     { v: 1, type: 'ANSWER', identityId, publicationId, answer, answererId }
 //
 // What the server enforces:
 //
@@ -468,7 +472,7 @@ export class RendezvousNode {
                     result = await this._handlePostAnswer(message);
                     break;
                 case 'FETCH_ANSWER':
-                    result = await this._handleFetchAnswer(message);
+                    result = await this._handleFetchAnswer(message, Date.now(), ws);
                     break;
                 case 'JOIN_LOBBY':
                     result = await this._handleJoinLobby(message.card);
@@ -503,7 +507,7 @@ export class RendezvousNode {
         const saved = state && typeof state.tokens === 'number' ? state.tokens : LIMITS.requestBurst;
         const tokens = Math.min(LIMITS.requestBurst, saved + ((now - last) / 1000) * LIMITS.requestsPerSecond);
         const allowed = tokens >= 1;
-        ws.serializeAttachment({ tokens: allowed ? tokens - 1 : tokens, at: now });
+        ws.serializeAttachment({ ...(state || {}), tokens: allowed ? tokens - 1 : tokens, at: now });
         return allowed;
     }
 
@@ -611,13 +615,47 @@ export class RendezvousNode {
             throw new Error('POST_ANSWER: that publication was already answered');
         }
         await this.ctx.storage.put(key, { ...entry, answer: { answer, answererId, postedAtMs: now } });
+        this._pushAnswer({ identityId, publicationId, answer, answererId });
         return true;
+    }
+
+    // Sends a stored answer to every connection whose publisher asked, with
+    // a signed FETCH_ANSWER, to watch that publication, and ends the watch.
+    // The watch lives in the socket's attachment, so it survives
+    // hibernation. Answers are rare next to requests, so scanning the
+    // connections here costs far less than the polling it replaces. A
+    // connection that dropped misses the push; its client still polls,
+    // slowly, as a fallback.
+    _pushAnswer({ identityId, publicationId, answer, answererId }) {
+        const pushed = JSON.stringify({ v: PROTOCOL_VERSION, type: 'ANSWER', identityId, publicationId, answer, answererId });
+        for (const ws of this.ctx.getWebSockets()) {
+            let state = null;
+            try { state = ws.deserializeAttachment(); } catch { /* none yet */ }
+            const watch = state && state.watch;
+            if (!watch || watch.identityId !== identityId || watch.publicationId !== publicationId) {
+                continue;
+            }
+            try {
+                ws.serializeAttachment({ ...state, watch: null });
+                ws.send(pushed);
+            } catch {
+                // Closing already; the client's fallback poll collects it.
+            }
+        }
     }
 
     // FETCH_ANSWER returns { answer, answererId } once someone has answered
     // the publication, otherwise null. Only the publishing identity may read
     // it, because an answer carries the answerer's network addresses.
-    async _handleFetchAnswer({ identityId, publicationId, signature } = {}, now = Date.now()) {
+    //
+    // With `watch: true` it also marks `ws` as watching that publication, so
+    // POST_ANSWER pushes the answer there, and always returns
+    // { answer, answererId, watching } (answer null while none has arrived),
+    // so a client can tell a server that pushes from one that ignores the
+    // flag. One connection watches one publication; a newer watch replaces
+    // it. Registering and reading in one request means an answer that
+    // arrives just before the watch is still returned.
+    async _handleFetchAnswer({ identityId, publicationId, signature, watch = false } = {}, now = Date.now(), ws = null) {
         if (!isShortString(identityId) || !isShortString(publicationId)) {
             throw new Error('FETCH_ANSWER: identityId and publicationId are required');
         }
@@ -628,10 +666,18 @@ export class RendezvousNode {
             throw new Error('FETCH_ANSWER: the signature does not match the request or its identity');
         }
         const entry = await this.ctx.storage.get(STORAGE_KEY_PREFIX + identityId);
-        if (!entry || entry.removed || entry.expiresAtMs <= now || entry.publication.publicationId !== publicationId || !entry.answer) {
-            return null;
+        const current = entry && !entry.removed && entry.expiresAtMs > now && entry.publication.publicationId === publicationId;
+        const found = current && entry.answer ? { answer: entry.answer.answer, answererId: entry.answer.answererId } : null;
+        if (watch !== true) {
+            return found;
         }
-        return { answer: entry.answer.answer, answererId: entry.answer.answererId };
+        const watching = Boolean(current && !found && ws);
+        if (watching) {
+            let state = null;
+            try { state = ws.deserializeAttachment(); } catch { /* none yet */ }
+            ws.serializeAttachment({ ...(state || {}), watch: { identityId, publicationId } });
+        }
+        return { answer: found ? found.answer : null, answererId: found ? found.answererId : null, watching: watching || Boolean(found) };
     }
 
     // JOIN_LOBBY stores a card signed by the identity it names, replacing

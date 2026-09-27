@@ -17,13 +17,13 @@ import { assert } from './support/Assert.js';
 // connection. Real identities, real WebRTC (node-datachannel), and the app's
 // own discovery stack over an in-memory rendezvous network.
 
-function makeDevice(label, network) {
+function makeDevice(label, network, { answerPollIntervalMs = 50, answerWatchIntervalMs = 50 } = {}) {
     const identityProvider = new LocalIdentityProvider(new InMemoryStorageProvider());
     identityProvider.login(label);
     const discovery = new DiscoveryBootstrap({
         bootstrapProviders: [new RendezvousDiscoveryProvider({ transport: network, identityProvider })]
     });
-    const sessions = new PeerSessionManager({ identityProvider, discoveryProvider: discovery, answerPollIntervalMs: 50 });
+    const sessions = new PeerSessionManager({ identityProvider, discoveryProvider: discovery, answerPollIntervalMs, answerWatchIntervalMs });
     return { identityProvider, sessions, id: identityProvider.getSigningIdentity().id };
 }
 
@@ -117,6 +117,54 @@ async function waitFor(condition, message, timeoutMs = 15000) {
 
     alice.sessions.dispose();
     carolSessions.dispose();
+}
+
+// The answer is pushed: with every check an hour apart, only the push can
+// complete the connection promptly, and Alice checks the mailbox once.
+{
+    const network = new LocalRendezvousNetwork();
+    const fetches = [];
+    const fetchAnswer = network.fetchAnswer.bind(network);
+    network.fetchAnswer = (request) => { fetches.push(request); return fetchAnswer(request); };
+    const hourly = { answerPollIntervalMs: 60 * 60 * 1000, answerWatchIntervalMs: 60 * 60 * 1000 };
+    const alice = makeDevice('mailbox-push-alice', network, hourly);
+    const bob = makeDevice('mailbox-push-bob', network, hourly);
+
+    await alice.sessions.publishSelf();
+    await waitFor(() => fetches.length === 1, 'Alice registers her watch straight away');
+    assert(fetches[0].watch === true && fetches[0].identityId === alice.id, 'the first check asks the network to push');
+    const bobFind = new FindPeerUseCase({ peerSessionManager: bob.sessions });
+    const [candidate] = await bobFind.search(alice.id);
+    await bobFind.connect(candidate, alice.id);
+    await waitFor(() => authenticatedTo(alice.sessions, bob.id) && authenticatedTo(bob.sessions, alice.id),
+        'the pushed answer completes the connection', 10000);
+    assert(fetches.length === 1, 'no further check was needed');
+    console.log('✓ a pushed answer completes the connection without polling');
+
+    alice.sessions.dispose();
+    bob.sessions.dispose();
+}
+
+// A network that never pushes (a server from before pushes) is still
+// checked at the frequent rate, never the slow one.
+{
+    const network = new LocalRendezvousNetwork();
+    const fetchAnswer = network.fetchAnswer.bind(network);
+    network.fetchAnswer = ({ watch, ...rest }) => fetchAnswer(rest);
+    network.onAnswerPushed = () => () => {};
+    const settings = { answerPollIntervalMs: 50, answerWatchIntervalMs: 60 * 60 * 1000 };
+    const alice = makeDevice('mailbox-nopush-alice', network, settings);
+    const bob = makeDevice('mailbox-nopush-bob', network, settings);
+    await alice.sessions.publishSelf();
+    const bobFind = new FindPeerUseCase({ peerSessionManager: bob.sessions });
+    const [candidate] = await bobFind.search(alice.id);
+    await bobFind.connect(candidate, alice.id);
+    await waitFor(() => authenticatedTo(alice.sessions, bob.id) && authenticatedTo(bob.sessions, alice.id),
+        'polling completes the connection when no server pushes', 10000);
+    console.log('✓ without pushes, the mailbox is still polled frequently');
+
+    alice.sessions.dispose();
+    bob.sessions.dispose();
 }
 
 console.log('\n✅ All RendezvousAnswerMailbox tests passed.');

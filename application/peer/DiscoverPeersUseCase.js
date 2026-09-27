@@ -110,10 +110,18 @@ export class DiscoverPeersUseCase {
             : false;
     }
 
-    async fetchAnswer() {
+    async fetchAnswer(options = {}) {
         return typeof this._provider.fetchAnswer === 'function'
-            ? this._provider.fetchAnswer()
+            ? this._provider.fetchAnswer(options)
             : null;
+    }
+
+    // Answers the rendezvous network pushes for this device's own
+    // publication. Returns an unsubscribe function.
+    onAnswer(callback) {
+        return typeof this._provider.onAnswer === 'function'
+            ? this._provider.onAnswer(callback)
+            : () => {};
     }
 
     canFetchAnswers() {

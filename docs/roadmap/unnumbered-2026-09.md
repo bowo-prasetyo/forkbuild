@@ -1623,3 +1623,35 @@ existing rules: a list of only those who chose to join, holding no addresses.
     mailbox (the spent offer is closed and replaced at once, so the joiner is never stranded), World lobbies kept
     apart, blocked, forged and expired cards dropped, a locked identity, no server, an unreachable server and a
     server from before the lobby.
+
+## Rendezvous answers pushed, not polled (unnumbered, 2026-09-27)
+
+**A publisher waiting for someone to connect now gets the answer pushed down its open rendezvous connection
+instead of polling for it every 2 seconds.** Polling was the main cost of the public lobby: every waiting device
+sent 30 requests a minute to every server and kept its Durable Object from hibernating, so 1,000 people waiting
+meant about 500 requests a second. It also added about a second, on average, before a connection could complete.
+
+- Worker: FETCH_ANSWER takes `watch: true`. The signed request returns an answer already waiting, acknowledges
+  with `watching: true`, and records the watch in the socket's attachment, which survives hibernation. When
+  POST_ANSWER stores an answer, the worker pushes `{ type: 'ANSWER', identityId, publicationId, answer,
+  answererId }` to the connections watching that publication and ends their watch. Only a connection whose watch
+  carried the publisher's signature ever receives it, as FETCH_ANSWER already required. The rate limiter now
+  merges into the attachment instead of overwriting it.
+- Client: `WebSocketRendezvousTransport` raises pushed answers (`onAnswerPushed()`), `RendezvousDiscoveryProvider`
+  keeps those for its own current publication (`onAnswer()`), `DiscoveryBootstrap` merges its providers, and
+  `PeerSessionManager` completes the connection on whichever of push or check comes first, and only once. The
+  first check runs as soon as it publishes, so the watch is in place before anyone can answer.
+- Fallback: checks continue every 30 seconds while every server replied `watching: true`, to catch a push lost to
+  a dropped connection, and every 2 seconds otherwise, so a server from before pushes still works.
+- Result: about 2 requests a minute per waiting publisher instead of 30 (about 33 a second for 1,000 people), an
+  idle Durable Object, and a connection that completes one round trip after the answer is posted.
+- Tests:
+  - `server/rendezvous-worker/worker.test.js`: a signed watch is acknowledged and stored beside the rate limiter,
+    an unsigned one is refused, the answer is pushed to the watching connection only and ends the watch, a late
+    watch returns the answer at once, a stale publication is not watched, and FETCH_ANSWER without `watch` is
+    unchanged.
+  - `tests/RendezvousWorkerInterop.test.js`: the app's client registers a watch with the real worker and receives
+    the push.
+  - `tests/RendezvousAnswerMailbox.test.js`: with checks an hour apart a connection still completes promptly,
+    after exactly one check (the test fails when the push is ignored), and a network that never pushes is still
+    polled at the frequent rate.

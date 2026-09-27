@@ -53,7 +53,7 @@ import { createId } from '../core/createId.js';
 //                                  // getRendezvousRemovalSigningDescriptor(), signed by identityId
 //     { v: 1, type: 'POST_ANSWER',  requestId, identityId, publicationId, answer, answererId, signature }
 //                                  // signature: getRendezvousAnswerSigningDescriptor(), signed by answererId
-//     { v: 1, type: 'FETCH_ANSWER', requestId, identityId, publicationId, signature }
+//     { v: 1, type: 'FETCH_ANSWER', requestId, identityId, publicationId, signature, watch? }
 //                                  // signature: getRendezvousAnswerFetchSigningDescriptor(), signed by identityId
 //     { v: 1, type: 'JOIN_LOBBY',  requestId, card }    // a signed core/LobbyCard.js toJSON()
 //     { v: 1, type: 'LEAVE_LOBBY', requestId, identityId, lobby, cardId, signature }
@@ -68,11 +68,12 @@ import { createId } from '../core/createId.js';
 //                                                    // listLobby(): { cards, total }
 //     { v: 1, type: 'ERROR', requestId, message }
 //
-// A server is free to also push unsolicited messages (no matching
-// `requestId`) — this class silently ignores anything it cannot
-// correlate to a pending request (see _handleMessage below), leaving
-// room for a future server-push "something changed" notification without
-// this class needing to change first.
+// A server may also push unsolicited messages (no `requestId`). The one
+// this class understands is
+//   { v: 1, type: 'ANSWER', identityId, publicationId, answer, answererId }
+// sent to a connection that asked to watch a publication (fetchAnswer()
+// with `watch: true`); it reaches onAnswerPushed() listeners. Anything
+// else it cannot correlate to a pending request is ignored.
 export const RENDEZVOUS_PROTOCOL_VERSION = 1;
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 10 * 1000;
@@ -99,6 +100,7 @@ export class WebSocketRendezvousTransport extends RendezvousTransport {
         this._socket = null;
         this._connectPromise = null;
         this._pending = new Map(); // requestId -> { resolve, reject, timeout }
+        this._answerListeners = new Set();
     }
 
     get url() { return this._url; }
@@ -153,14 +155,32 @@ export class WebSocketRendezvousTransport extends RendezvousTransport {
         return Boolean(await this._request('POST_ANSWER', { identityId, publicationId, answer, answererId, signature }));
     }
 
-    // A reply that is not an object with an answer object is treated as "no
-    // answer yet", like a malformed LOOKUP entry.
-    async fetchAnswer({ identityId, publicationId, signature } = {}) {
-        const result = await this._request('FETCH_ANSWER', { identityId, publicationId, signature });
-        if (!result || typeof result !== 'object' || !result.answer || typeof result.answer !== 'object') {
+    // Resolves to { answer, answererId, watching } or null. With `watch`,
+    // the server also pushes a later answer down this connection, and says
+    // so with `watching: true`; a server that ignores the flag never does,
+    // so a caller knows to keep polling. A reply that is not an object with
+    // an answer object reads as "no answer yet", like a malformed LOOKUP
+    // entry.
+    async fetchAnswer({ identityId, publicationId, signature, watch = false } = {}) {
+        const result = await this._request('FETCH_ANSWER', { identityId, publicationId, signature, ...(watch ? { watch: true } : {}) });
+        const watching = Boolean(watch && result && typeof result === 'object' && result.watching === true);
+        const hasAnswer = Boolean(result && typeof result === 'object' && result.answer && typeof result.answer === 'object');
+        if (!hasAnswer && !watching) {
             return null;
         }
-        return { answer: result.answer, answererId: typeof result.answererId === 'string' ? result.answererId : null };
+        return {
+            answer: hasAnswer ? result.answer : null,
+            answererId: hasAnswer && typeof result.answererId === 'string' ? result.answererId : null,
+            watching
+        };
+    }
+
+    // Returns an unsubscribe function. `callback({ identityId,
+    // publicationId, answer, answererId })` fires for each answer the
+    // server pushes to this connection.
+    onAnswerPushed(callback) {
+        this._answerListeners.add(callback);
+        return () => this._answerListeners.delete(callback);
     }
 
     // peer/RendezvousLobbyTransport.js, over the same connection.
@@ -287,7 +307,11 @@ export class WebSocketRendezvousTransport extends RendezvousTransport {
         } catch {
             return; // not valid JSON — ignored, never crashes the transport
         }
-        if (!message || typeof message !== 'object' || !message.requestId) {
+        if (!message || typeof message !== 'object') {
+            return;
+        }
+        if (!message.requestId) {
+            this._handlePush(message);
             return;
         }
         const pending = this._pending.get(message.requestId);
@@ -300,6 +324,23 @@ export class WebSocketRendezvousTransport extends RendezvousTransport {
             pending.reject(new Error('WebSocketRendezvousTransport: ' + (message.message || 'rendezvous service reported an error')));
         } else {
             pending.resolve(message.result);
+        }
+    }
+
+    _handlePush(message) {
+        if (message.type !== 'ANSWER'
+            || typeof message.identityId !== 'string' || typeof message.publicationId !== 'string'
+            || !message.answer || typeof message.answer !== 'object') {
+            return;
+        }
+        const pushed = {
+            identityId: message.identityId,
+            publicationId: message.publicationId,
+            answer: message.answer,
+            answererId: typeof message.answererId === 'string' ? message.answererId : null
+        };
+        for (const listener of this._answerListeners) {
+            try { listener(pushed); } catch { /* one listener never stops the others */ }
         }
     }
 

@@ -244,7 +244,7 @@ only identities that joined it.
 | `LOOKUP` | `identityId` | the identity's current publication in an array, or `[]` (also once it has been answered) |
 | `REMOVE` | `identityId`, `publicationId`, `signature` | whether one was withdrawn |
 | `POST_ANSWER` | `identityId`, `publicationId`, `answer` (a PeerConnectionAnswer's JSON), `answererId`, `signature` | `true`; refused if the publication is not current or already answered |
-| `FETCH_ANSWER` | `identityId`, `publicationId`, `signature` | `{ answer, answererId }`, or `null` while none has arrived |
+| `FETCH_ANSWER` | `identityId`, `publicationId`, `signature`, optional `watch: true` | `{ answer, answererId }`, or `null` while none has arrived; with `watch`, always `{ answer, answererId, watching }` (`answer` null while none has arrived) |
 | `JOIN_LOBBY` | `card`: a signed core/LobbyCard.js | the stored card |
 | `LEAVE_LOBBY` | `identityId`, `lobby`, `cardId`, `signature` | whether one was withdrawn |
 | `LIST_LOBBY` | `lobby` | `{ cards, total }`: at most 50 current cards, a random sample, and how many there are |
@@ -269,11 +269,25 @@ cannot replace a newer one for the same identity (and lobby), and a
 withdrawn one cannot be sent again. Receivers verify every listed card by
 its own signature, whatever the server says.
 
+The server also sends one unrequested message, with no `requestId`:
+
+    { v: 1, type: 'ANSWER', identityId, publicationId, answer, answererId }
+
+It goes only to a connection that sent a signed `FETCH_ANSWER` with
+`watch: true` for that publication (`watching: true` in the reply), once,
+when the answer arrives. The watch is kept with the connection, one
+publication per connection, and ends with the push or the connection.
+
 Connecting through rendezvous: the finder LOOKUPs the identity, answers the
-offer, and leaves its answer with POST_ANSWER; the publisher polls
-FETCH_ANSWER (every 2 seconds while its offer waits) and completes the
-connection. Only then does the peer handshake below run. Without a signing
-identity the finder gets the answer back to hand over itself.
+offer, and leaves its answer with POST_ANSWER. The publisher sends
+FETCH_ANSWER with `watch: true` as soon as it publishes, which returns an
+answer already waiting and registers the watch; the server then pushes the
+answer and the publisher completes the connection. The publisher checks
+again every 30 seconds in case a push was lost to a dropped connection, or
+every 2 seconds when any of its servers did not reply `watching: true` (a
+server from before pushes). Only then does the peer handshake below run.
+Without a signing identity the finder gets the answer back to hand over
+itself.
 
 ## Peer messages
 

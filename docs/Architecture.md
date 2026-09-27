@@ -644,9 +644,17 @@ authenticated ones.
 the server also carries the answer back (POST_ANSWER, FETCH_ANSWER; see
 docs/Protocol.md, "Rendezvous"). PeerSessionManager#connectToDiscovered()
 leaves the answer through RendezvousDiscoveryProvider#deliverAnswer(), which
-knows which publication each discovered record came from, and
-publishSelf() polls fetchAnswer() while its offer waits and calls
-completeConnection() itself. Find Someone and the automatic Known Peer
+knows which publication each discovered record came from. publishSelf()
+then asks every server, in one signed FETCH_ANSWER with `watch`, for an
+answer already waiting and to push a later one down its open WebSocket;
+the push reaches PeerSessionManager through the transport's
+onAnswerPushed(), RendezvousDiscoveryProvider#onAnswer() (kept to this
+device's own current publication) and DiscoveryBootstrap#onAnswer(), and
+completeConnection() runs on whichever of push or check comes first. The
+worker keeps the watch in the socket attachment, which survives
+hibernation, so a waiting publisher costs the server nothing between
+answers. Checks continue as a fallback: every 30 seconds while every server
+confirmed the watch, every 2 seconds otherwise. Find Someone and the automatic Known Peer
 connection (AutoConnectKnownPeersUseCase) therefore complete with nothing
 copied by hand; when the mailbox can't be used (a locked identity, a pasted
 invitation) the reply is returned to hand over as before.

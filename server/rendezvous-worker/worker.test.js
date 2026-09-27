@@ -9,10 +9,14 @@ import worker, { RendezvousNode, LIMITS } from './worker.js';
 
 function fakeDurableObjectState({ socketsPerAddress = 0 } = {}) {
     const store = new Map();
+    const sockets = [];
     let alarmAt = null;
     return {
         blockConcurrencyWhile: async (fn) => fn(),
-        getWebSockets: () => new Array(socketsPerAddress),
+        // With a tag (an address): the per-address count. Without: every
+        // accepted socket, which tests add to `_sockets`.
+        getWebSockets: (tag) => (tag === undefined ? sockets : new Array(socketsPerAddress)),
+        _sockets: sockets,
         storage: {
             async get(key) { return store.has(key) ? store.get(key) : undefined; },
             async put(key, value) { store.set(key, value); },
@@ -307,6 +311,46 @@ async function answerFetch(publisher, publicationId, signer = publisher) {
     await node.webSocketMessage(ws, JSON.stringify({ v: 1, type: 'FETCH_ANSWER', requestId: 'f', ...(await answerFetch(alice, next.publicationId)) }));
     assert(ws.sent[0].type === 'OK' && ws.sent[1].type === 'OK' && ws.sent[1].result.answererId === carol.id, 'both requests work over the socket');
     console.log('✓ the answer mailbox takes one signed answer per publication, readable only by its publisher');
+}
+
+// A watching publisher gets the answer pushed to its own connection only.
+{
+    const ctx = fakeDurableObjectState();
+    const node = new RendezvousNode(ctx);
+    const carol = await createIdentity();
+    const publication = await signedPublication(alice);
+    await node._handlePublish(publication);
+    const aliceSocket = fakeSocket();
+    const bystander = fakeSocket();
+    const bobSocket = fakeSocket();
+    ctx._sockets.push(aliceSocket, bystander, bobSocket);
+
+    await node.webSocketMessage(bystander, JSON.stringify({ v: 1, type: 'FETCH_ANSWER', requestId: 'x', watch: true, ...(await answerFetch(alice, publication.publicationId, carol)) }));
+    assert(bystander.sent[0].type === 'ERROR', 'a watch not signed by the publisher is refused');
+    await node.webSocketMessage(aliceSocket, JSON.stringify({ v: 1, type: 'FETCH_ANSWER', requestId: 'w', watch: true, ...(await answerFetch(alice, publication.publicationId)) }));
+    const ack = aliceSocket.sent[0];
+    assert(ack.type === 'OK' && ack.result.watching === true && ack.result.answer === null, 'a signed watch is acknowledged with no answer yet');
+    const attachment = aliceSocket.deserializeAttachment();
+    assert(attachment.watch.publicationId === publication.publicationId && typeof attachment.tokens === 'number',
+        'the watch is kept in the socket attachment, beside the rate limiter');
+    await node.webSocketMessage(aliceSocket, JSON.stringify({ v: 1, type: 'LOOKUP', requestId: 'l', identityId: bob.id }));
+    assert(aliceSocket.deserializeAttachment().watch, 'the rate limiter no longer overwrites the watch');
+
+    await node.webSocketMessage(bobSocket, JSON.stringify({ v: 1, type: 'POST_ANSWER', requestId: 'a', ...(await answerFor(bob, alice, publication.publicationId)) }));
+    const pushed = aliceSocket.sent.find((m) => m.type === 'ANSWER');
+    assert(pushed && pushed.publicationId === publication.publicationId && pushed.answererId === bob.id && pushed.answer.sdp === 'fake-sdp-answer' && !pushed.requestId,
+        'the answer is pushed to Alice\'s watching connection, unrequested');
+    assert(!bystander.sent.some((m) => m.type === 'ANSWER') && !bobSocket.sent.some((m) => m.type === 'ANSWER'), 'no other connection receives it');
+    assert(!aliceSocket.deserializeAttachment().watch, 'the watch ends once the answer is pushed');
+
+    const late = await node._handleFetchAnswer({ ...(await answerFetch(alice, publication.publicationId)), watch: true }, Date.now(), fakeSocket());
+    assert(late.watching === true && late.answererId === bob.id, 'watching after the answer arrived returns it at once');
+    const stale = await node._handleFetchAnswer({ ...(await answerFetch(alice, 'old-publication')), watch: true }, Date.now(), fakeSocket());
+    assert(stale.watching === false && stale.answer === null, 'a publication that is not current is not watched');
+    assert(await node._handleFetchAnswer(await answerFetch(alice, publication.publicationId)) !== null
+        && !('watching' in await node._handleFetchAnswer(await answerFetch(alice, publication.publicationId))),
+        'without watch, FETCH_ANSWER answers as before');
+    console.log('✓ a watching publisher gets its answer pushed, and only its own connection does');
 }
 
 let cardCounter = 0;

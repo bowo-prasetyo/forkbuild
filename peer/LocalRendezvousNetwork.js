@@ -30,6 +30,8 @@ export class LocalRendezvousNetwork extends RendezvousTransport {
         super();
         this._publications = new Map(); // identityHint -> RendezvousPublication
         this._answers = new Map(); // publicationId -> { answer, answererId }
+        this._watched = new Set(); // publicationIds someone is watching
+        this._answerListeners = new Set();
         this._lobbies = new Map(); // lobby -> Map(identityId -> LobbyCard)
         this._available = true;
     }
@@ -81,16 +83,38 @@ export class LocalRendezvousNetwork extends RendezvousTransport {
             throw new Error('LocalRendezvousNetwork: that publication was already answered');
         }
         this._answers.set(publicationId, { answer, answererId });
+        if (this._watched.delete(publicationId)) {
+            // Pushed after this call returns, as a server's push arrives
+            // after its reply to POST_ANSWER.
+            const pushed = { identityId, publicationId, answer, answererId };
+            queueMicrotask(() => {
+                for (const listener of this._answerListeners) {
+                    listener(pushed);
+                }
+            });
+        }
         return true;
     }
 
-    async fetchAnswer({ identityId, publicationId } = {}) {
+    async fetchAnswer({ identityId, publicationId, watch = false } = {}) {
         this._assertAvailable();
         const publication = this._publications.get(identityId);
-        if (!publication || publication.publicationId !== publicationId) {
-            return null;
+        const current = Boolean(publication && publication.publicationId === publicationId);
+        const found = current ? this._answers.get(publicationId) || null : null;
+        if (!watch) {
+            return found;
         }
-        return this._answers.get(publicationId) || null;
+        if (current && !found) {
+            this._watched.add(publicationId);
+        }
+        return { answer: found ? found.answer : null, answererId: found ? found.answererId : null, watching: current };
+    }
+
+    // One in-process network stands in for every connection, so every
+    // listener hears every push; providers keep only their own.
+    onAnswerPushed(callback) {
+        this._answerListeners.add(callback);
+        return () => this._answerListeners.delete(callback);
     }
 
     // peer/RendezvousLobbyTransport.js, in memory and, like publish(),

@@ -27,8 +27,11 @@ change against the id itself.
 - **Answers reach only the publisher.** Someone connecting to a
   publication leaves their WebRTC answer with POST_ANSWER, signed by their
   own identity; the publisher collects it with FETCH_ANSWER, signed by the
-  publisher. The first answer wins, and an answered publication is no
-  longer returned by LOOKUP.
+  publisher. With `watch: true`, that signed request also marks the
+  publisher's connection, and the answer is pushed to that connection (and
+  no other) as it arrives, so a waiting publisher need not poll and the
+  Durable Object can hibernate. The first answer wins, and an answered
+  publication is no longer returned by LOOKUP.
 - **The public lobby lists only those who join it.** JOIN_LOBBY stores a
   card signed by the identity it names (lobby `public` or `world:<id>`, a
   display name of at most 40 characters, no address); LEAVE_LOBBY needs
