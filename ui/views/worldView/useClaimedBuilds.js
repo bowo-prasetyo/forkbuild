@@ -15,7 +15,8 @@ const RECONCILE_INTERVAL_MS = 1000;
 const ACCEPTANCE_HINTS = Object.freeze({
     [ClaimedBuildAcceptance.ACCEPTABLE]: 'Places your own copy of this build at the claimed position.',
     [ClaimedBuildAcceptance.PUBLICATION_UNKNOWN]: 'Its publisher\'s signed Publication isn\'t on this device yet. Verify fetches it from the network; it also arrives when they share it with you, or from a connected peer in World Encounters.',
-    [ClaimedBuildAcceptance.CONTENT_MISMATCH]: 'The verified Publication names different content than this ghost shows, so accepting it could place something else.'
+    [ClaimedBuildAcceptance.CONTENT_MISMATCH]: 'The verified Publication names different content than this ghost shows, so accepting it could place something else.',
+    [ClaimedBuildAcceptance.PUBLISHER_ONLY]: 'Its publisher allows only their own placements of this build, so you can\'t place a copy.'
 });
 
 const VERIFICATION_MESSAGES = Object.freeze({
@@ -105,6 +106,13 @@ export function useClaimedBuilds({
         return typeof session.findPublicationById === 'function' ? session.findPublicationById(publicationId) : null;
     }
 
+    function isPlacementPermitted(publication) {
+        if (!publication || typeof session.getPublicationPlacementPermission !== 'function') {
+            return true;
+        }
+        return session.getPublicationPlacementPermission(publication).allowed;
+    }
+
     function reconcileClaimedBuilds({ force = false } = {}) {
         if (!active) {
             return;
@@ -144,7 +152,7 @@ export function useClaimedBuilds({
                 session.showClaimedBuild(claim.key, content.world, claim.position);
                 shown.add(claim.key);
             }
-            const acceptance = describeClaimedBuildAcceptance(claim, findPublicationById);
+            const acceptance = describeClaimedBuildAcceptance(claim, findPublicationById, isPlacementPermitted);
             const publication = acceptance === ClaimedBuildAcceptance.ACCEPTABLE ? findPublicationById(claim.publicationId) : null;
             const identity = publication ? publication.publisherIdentity : null;
             const verification = verifications.get(claim.key) || null;
@@ -219,7 +227,7 @@ export function useClaimedBuilds({
         if (!claim) {
             return;
         }
-        const acceptance = describeClaimedBuildAcceptance(claim, findPublicationById);
+        const acceptance = describeClaimedBuildAcceptance(claim, findPublicationById, isPlacementPermitted);
         if (acceptance !== ClaimedBuildAcceptance.ACCEPTABLE) {
             feedback.show(ACCEPTANCE_HINTS[acceptance]);
             reconcileClaimedBuilds({ force: true });

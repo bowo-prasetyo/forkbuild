@@ -531,6 +531,11 @@ the signer allowed.
 - PlacementRecords carry `ownerIdentity`, `signature`, `causalStamp`
   (core/CausalStamp.js, a vector clock) and `parents`, all inside the
   signed envelope (PlacePublicationUseCase, MoveWorldPlacementUseCase).
+- A Publication may carry a signed `placementPolicy`
+  (core/PlacementPolicy.js), copied from the document's metadata at
+  publish. PlacePublicationUseCase refuses a placement it doesn't allow
+  (`PlacementNotPermittedError`), and `checkPermission()` lets World View
+  disable Accept Position before anyone clicks.
 - The same verifier checks identity lifecycle records, device
   authorizations, world edit grants, naming claims and the other signed
   records later milestones added.
@@ -544,7 +549,9 @@ the signer allowed.
   ConflictResolver compares two causal stamps (EQUAL, BEFORE, AFTER,
   CONCURRENT), ConflictPolicy picks a deterministic presentation winner
   among concurrent revisions (smallest content hash), and core/ConflictSet.js
-  records the competitors without discarding either history;
+  records the competitors without discarding either history. Given a
+  `findPublicationById`, the merge also rejects a placement its
+  Publication's placement policy doesn't allow;
 - the trust layer around it: core/TrustObservation.js (what a check
   found), identity/TrustPolicy.js (what to do about it; the defaults
   reproduce the pre-0.2.19 behavior), core/FreshnessProof.js and

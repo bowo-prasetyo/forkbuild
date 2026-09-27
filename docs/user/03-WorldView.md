@@ -378,8 +378,10 @@ position. Each row has:
   it then shows in your Repository), or when a connected peer's
   [World Encounter](#world-encounters--publications-and-avatars-your-peers-are-sharing)
   for it reaches **Available** — and only if that Publication names
-  exactly the content the ghost shows. Otherwise the row says which of the
-  two is missing.
+  exactly the content the ghost shows. It also stays disabled when that
+  Publication's publisher chose **Only I may place it** (see
+  [Choosing who can place it](04-PublishingAndForking.md#choosing-who-can-place-it)).
+  Whenever it's disabled, the row says why.
 
   **What verified means.** It proves the build is exactly the content of a
   Publication signed by the key shown. It doesn't prove who holds that key
@@ -662,9 +664,10 @@ structure's own Focus panel — is the same action; see
 Below the header you'll find two panels for whichever document you're
 currently editing:
 
-- **Document Information** — title, description, license, status, and (if
-  it's a fork) which world it was forked from. Click **Edit Metadata** to
-  change the title, description, or license.
+- **Document Information** — title, description, license, who can place
+  it, status, and (if it's a fork) which world it was forked from. Click
+  **Edit Metadata** to change the title, description, license, or who can
+  place it.
 - **Placement** — *where* that document sits in shared space, in **World
   Units** (ForkBuild's own coordinate system, not GPS coordinates — one
   World Unit represents one meter of real-world length). Click
@@ -725,6 +728,12 @@ Some reasons to place a build you didn't make:
 - **Reusing it as it is.** Place it when you want it unchanged, and use
   [Edit a Copy](#edit-a-copy--taking-something-into-the-editor) only when
   you want to change it.
+
+A publisher who doesn't want this can choose **Only I may place it** when
+they publish (see
+[Choosing who can place it](04-PublishingAndForking.md#choosing-who-can-place-it)).
+You can still find, view and, if the license allows, fork their build, but
+you can't place a copy of it.
 
 ## World View is read-only — building happens in the Editor
 

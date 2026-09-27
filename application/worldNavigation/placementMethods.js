@@ -46,6 +46,7 @@ export const placementMethods = {
             // so a Members panel can label the owner's row. Null for older documents.
             authorIdentityId: doc.metadata.authorIdentityId || null,
             license: doc.metadata.license,
+            placementPolicy: doc.metadata.placementPolicy,
             parentDocumentId: doc.metadata.parentDocumentId,
             status,
             statusLabel: describeLifecycleStatus(status, { dirty }),
@@ -386,8 +387,8 @@ export const placementMethods = {
     // placed" guard. The PlacementRecord's owner is the caller, never the
     // Publication's author: placing a Publication never makes you its owner.
     //
-    // Authorization is ungated, as for automatic initial placement; whether it
-    // should be gated is an open product decision.
+    // Refused (PlacementNotPermittedError) when the publisher allows only their
+    // own placements and the current user isn't the publisher.
     //
     // Throws when no placePublicationUseCase is wired, like
     // movePlacement()/removePlacement().
@@ -399,6 +400,18 @@ export const placementMethods = {
             throw new Error('WorldNavigationSession: placePublication requires a publicationId');
         }
         return this._placePublicationUseCase.execute(publicationId, position);
+    },
+
+    // { allowed, reason } for placing this Publication as the current user,
+    // per its publisher's placement policy (core/PlacementPolicy.js). Allowed
+    // when no PlacePublicationUseCase is wired: placing would fail anyway.
+    // Takes a Publication or its id.
+    getPublicationPlacementPermission(publication) {
+        if (!this._placePublicationUseCase || typeof this._placePublicationUseCase.checkPermission !== 'function') {
+            return { allowed: true, reason: 'allowed' };
+        }
+        const resolved = typeof publication === 'string' ? this.findPublicationById(publication) : publication;
+        return this._placePublicationUseCase.checkPermission(resolved || publication);
     },
 
     // Moves a placement. Not a document mutation: it never touches the

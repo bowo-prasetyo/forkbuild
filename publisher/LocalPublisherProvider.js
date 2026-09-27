@@ -5,6 +5,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
+import { PlacementPolicy } from '../core/PlacementPolicy.js';
 
 const PUBLICATIONS_KEY = 'forkbuild-publications';
 const SNAPSHOT_KEY_PREFIX = 'snapshot:';
@@ -75,7 +76,10 @@ export class LocalPublisherProvider extends PublisherProvider {
             license: document.metadata.license,
             contentReference,
             publisherIdentity,
-            signature: null
+            signature: null,
+            placementPolicy: document.metadata.placementPolicy === PlacementPolicy.ANYONE
+                ? null
+                : document.metadata.placementPolicy
         });
         if (canSign) {
             publication = publication.withSignature(

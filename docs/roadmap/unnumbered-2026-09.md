@@ -1868,3 +1868,35 @@ ways to connect into one tabbed panel.** Same approach as the World View and Edi
   from the attention list, filters, tabs, no sideways scroll at 390px with a menu open); `tests/PeersPeopleList.test.js`
   (`buildPeople()`, including a friend online from another device); `tests/PeerConnectionResilience.test.js` adds
   reconnecting a friend, the identity check on it, and refusing a pending request.
+
+## Choosing who can place a publication (unnumbered, 2026-09-27)
+
+**A publisher can now choose that only they may place their publication in the World.** Until now, placing a
+Publication had no permission check at all (`placePublication()` called it "an open product decision"), so anyone
+who held a build could place a copy of it anywhere in their own World.
+
+- `core/PlacementPolicy.js` (new): `PlacementPolicy.ANYONE` (`'anyone'`, the default) and `PUBLISHER_ONLY`
+  (`'publisher-only'`), `evaluatePlacementPermission()` and `PlacementNotPermittedError`. The placer is compared by
+  did:key with the Publication's `publisherIdentity`, or by name for an unsigned legacy Publication. A value this
+  version doesn't know is treated as publisher-only, so a newer, stricter setting is never read as permission.
+- The setting lives on `DocumentMetadata.placementPolicy`, is chosen in **Document Properties** ("Who can place it
+  in the World") and shown in the Document Information panel. `LocalPublisherProvider` copies it onto the
+  Publication, inside the signed payload, so it can't be stripped or loosened without breaking the signature.
+  Both the metadata and the Publication write it only when it isn't the default, so existing documents keep their
+  content hash and existing Publications keep their signatures. Forks start from the default (the new author
+  chooses for themselves); importing an exported document keeps it.
+- Enforced where placements come into being: `PlacePublicationUseCase` throws `PlacementNotPermittedError` (and
+  `checkPermission()` answers ahead of time); `ReplicaMergeService` takes an optional `findPublicationById` and
+  rejects a peer's placement the policy doesn't allow (`REJECTED`, reason `PLACEMENT_POLICY`); Claimed Builds get a
+  new `ClaimedBuildAcceptance.PUBLISHER_ONLY` state, so Accept Position is disabled with a reason instead of
+  failing on click.
+- Like the license's fork permission, this binds honest clients only; the docs say so plainly. New principle:
+  "A Publisher Decides Who May Place Their Publication".
+- Docs: `docs/Protocol.md` (the optional field on the document envelope and the Publication, and the placement-record
+  rule), `docs/Architecture.md`, `docs/user/04-PublishingAndForking.md` ("Choosing who can place it") and
+  `docs/user/03-WorldView.md` (Accept Position, and "Why can I place other people's builds?").
+- Tests: `tests/PublicationPlacementPolicy.test.js` (the default and its serialization, signing and tamper
+  detection, who may place, `PlacePublicationUseCase` refusing and writing nothing, merge rejection, the Accept
+  Position state, the Document Properties dialog, and forks versus imports).
+  `WorldCreationPublicationLifecycleProductReassessment` now lists `placementPolicy` in DocumentMetadata's expected
+  fields.

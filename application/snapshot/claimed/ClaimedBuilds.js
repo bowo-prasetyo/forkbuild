@@ -114,15 +114,19 @@ export const ClaimedBuildAcceptance = Object.freeze({
     // so there is nothing verified to place.
     PUBLICATION_UNKNOWN: 'publication-unknown',
     // The known Publication names different content than the ghost shows.
-    CONTENT_MISMATCH: 'content-mismatch'
+    CONTENT_MISMATCH: 'content-mismatch',
+    // Its publisher allows only their own placements (core/PlacementPolicy.js).
+    PUBLISHER_ONLY: 'publisher-only'
 });
 
 // Whether "Accept Position" may place this claim. Only a Publication this
 // device already knows (verified and admitted, e.g. by inspecting its World
 // Encounter) can be placed, and only when that Publication's own content is
 // exactly the content the ghost shows, so accepting never places something
-// other than what the Wanderer saw.
-export function describeClaimedBuildAcceptance(claim, findPublicationById) {
+// other than what the Wanderer saw, and only when its publisher's placement
+// policy lets this Wanderer place it (`isPlacementPermitted`, which defaults
+// to allowed).
+export function describeClaimedBuildAcceptance(claim, findPublicationById, isPlacementPermitted = () => true) {
     const publication = typeof findPublicationById === 'function' ? findPublicationById(claim.publicationId) : null;
     if (!publication) {
         return ClaimedBuildAcceptance.PUBLICATION_UNKNOWN;
@@ -130,6 +134,9 @@ export function describeClaimedBuildAcceptance(claim, findPublicationById) {
     const hash = publication.contentReference ? publication.contentReference.hash : null;
     if (hash !== claim.contentHash) {
         return ClaimedBuildAcceptance.CONTENT_MISMATCH;
+    }
+    if (!isPlacementPermitted(publication)) {
+        return ClaimedBuildAcceptance.PUBLISHER_ONLY;
     }
     return ClaimedBuildAcceptance.ACCEPTABLE;
 }

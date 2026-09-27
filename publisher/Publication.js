@@ -3,6 +3,12 @@ import { License } from '../core/License.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { Signature, SignatureType } from '../core/Signature.js';
 
+// Written only when set, so a Publication without one signs and serializes
+// exactly as it did before the field existed.
+function placementPolicyField(placementPolicy) {
+    return placementPolicy ? { placementPolicy } : {};
+}
+
 // Pure data: the result of publishing a Document.
 //
 // As of 0.2.14 a Publication references immutable content through a
@@ -37,7 +43,8 @@ export class Publication {
         license = null,
         contentReference = null,
         publisherIdentity = null,
-        signature = null
+        signature = null,
+        placementPolicy = null
     } = {}) {
         this._id = id;
         this._documentId = documentId;
@@ -56,6 +63,8 @@ export class Publication {
             : (contentReference ? ContentReference.fromJSON(contentReference) : null);
         this._publisherIdentity = publisherIdentity ? { ...publisherIdentity } : null;
         this._signature = signature instanceof Signature ? signature : Signature.fromJSON(signature);
+        // Null (not stored) means "anyone may place copies": see core/PlacementPolicy.js.
+        this._placementPolicy = typeof placementPolicy === 'string' && placementPolicy.length > 0 ? placementPolicy : null;
     }
 
     get id() { return this._id; }
@@ -73,6 +82,7 @@ export class Publication {
     get contentReference() { return this._contentReference; }
     get publisherIdentity() { return this._publisherIdentity ? { ...this._publisherIdentity } : null; }
     get signature() { return this._signature; }
+    get placementPolicy() { return this._placementPolicy; }
 
     withSignature(signature) {
         return new Publication({
@@ -90,7 +100,8 @@ export class Publication {
             license: this._license,
             contentReference: this._contentReference,
             publisherIdentity: this._publisherIdentity,
-            signature
+            signature,
+            placementPolicy: this._placementPolicy
         });
     }
 
@@ -117,10 +128,12 @@ export class Publication {
                 schemaVersion: this._schemaVersion,
                 license: this._license ? this._license.toJSON() : null,
                 contentReference: this._contentReference ? this._contentReference.toJSON() : null,
-                publisherIdentity: this._publisherIdentity
+                publisherIdentity: this._publisherIdentity,
+                ...placementPolicyField(this._placementPolicy)
             }
         };
     }
+
 
     toJSON() {
         return {
@@ -138,6 +151,7 @@ export class Publication {
             license: this._license ? this._license.toJSON() : null,
             contentReference: this._contentReference ? this._contentReference.toJSON() : null,
             publisherIdentity: this._publisherIdentity ? { ...this._publisherIdentity } : null,
+            ...placementPolicyField(this._placementPolicy),
             signature: this._signature ? this._signature.toJSON() : null
         };
     }
@@ -159,7 +173,8 @@ export class Publication {
             license: json.license,
             contentReference: json.contentReference,
             publisherIdentity: json.publisherIdentity || null,
-            signature: json.signature || null
+            signature: json.signature || null,
+            placementPolicy: json.placementPolicy || null
         });
     }
 }

@@ -45,7 +45,7 @@ export const forkOnWriteMethods = {
     // Document Properties entry point. Metadata edits are mutations, so they go
     // through the same fork-on-first-mutation gate (_ensureEditableDocumentId).
     // Returns the documentId the edit landed on (the fork's, if one was made).
-    updateDocumentMetadata(documentId, { title, description, license } = {}) {
+    updateDocumentMetadata(documentId, { title, description, license, placementPolicy } = {}) {
         const id = this._ensureEditableDocumentId(documentId || this._activeDocumentId);
         const doc = this.getDocument(id);
         if (!doc) {
@@ -55,6 +55,7 @@ export const forkOnWriteMethods = {
         if (title !== undefined) metadata.title = title;
         if (description !== undefined) metadata.description = description;
         if (license !== undefined) metadata.license = license;
+        if (placementPolicy !== undefined) metadata.placementPolicy = placementPolicy;
         metadata.touch();
         let history = this._commandHistories.get(id);
         if (!history) {

@@ -1,6 +1,7 @@
 import { ConflictRelation } from './ConflictResolver.js';
 import { ConflictSet } from '../core/ConflictSet.js';
 import { PlacementRecord } from '../core/PlacementRecord.js';
+import { evaluatePlacementPermission } from '../core/PlacementPolicy.js';
 
 export const MergeResult = Object.freeze({
     IGNORED: 'IGNORED',
@@ -30,7 +31,7 @@ export const MergeResult = Object.freeze({
 export class ReplicaMergeService {
     constructor({
         resolver, policy, verifier = null, registry, replicationStore, spatialIndexBuilder = null,
-        replayGuard = null
+        replayGuard = null, findPublicationById = null
     }) {
         this._resolver = resolver;
         this._policy = policy;
@@ -39,6 +40,7 @@ export class ReplicaMergeService {
         this._replicationStore = replicationStore;
         this._spatialIndexBuilder = spatialIndexBuilder;
         this._replayGuard = replayGuard;
+        this._findPublicationById = findPublicationById;
     }
 
     async merge(incomingJson) {
@@ -70,6 +72,23 @@ export class ReplicaMergeService {
             const authResult = await this._verifier.verifyPlacement(incomingRecord);
             if (!authResult.valid) {
                 return { result: MergeResult.REJECTED, reason: 'AUTHORIZATION', detail: authResult.reason };
+            }
+        }
+
+        // 2b. The publisher's placement policy. Checked on every merge, not
+        // skipped by the replay guard: the Publication may have become known
+        // since this record was first accepted. An unknown Publication can't
+        // be judged, so its placements are accepted as before.
+        const publication = this._findPublicationById
+            ? this._findPublicationById(incomingRecord.publicationId)
+            : null;
+        if (publication) {
+            const permission = evaluatePlacementPermission(publication, {
+                identityId: incomingRecord.ownerIdentity ? incomingRecord.ownerIdentity.id : null,
+                username: incomingRecord.ownerIdentity ? null : incomingRecord.owner
+            });
+            if (!permission.allowed) {
+                return { result: MergeResult.REJECTED, reason: 'PLACEMENT_POLICY', detail: permission.reason };
             }
         }
 

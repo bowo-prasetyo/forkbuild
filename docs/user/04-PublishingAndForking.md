@@ -123,6 +123,30 @@ A published creation is always shown with a license, chosen from the
 If you leave a creation unlicensed, people can still open and explore it —
 they just can't fork it until you pick a license that allows it.
 
+## Choosing who can place it
+
+Other people can normally place copies of your published creation in their
+own Worlds. That never moves or changes yours (see
+[Why can I place other people's builds?](03-WorldView.md#why-can-i-place-other-peoples-builds)).
+If you'd rather they didn't, open **Document Properties** and set **Who can
+place it in the World**:
+
+| Setting | Meaning |
+|---|---|
+| **Anyone may place copies** | The default. Anyone can place a copy of it wherever they like in their own World |
+| **Only I may place it** | Only you can place it. Other people can still find, view and (if the license allows) fork it, but ForkBuild won't let them place copies of it |
+
+The setting is signed as part of the publication when you publish, so
+nobody can remove or change it afterwards. That also means it applies only
+to what you publish after choosing it. A publication that's already out
+keeps the setting it was published with, so publish again if you want the
+new one to apply.
+
+It works the same way the license's fork permission does: every copy of
+ForkBuild honors it, but it isn't a lock. Someone who changed the app's code
+could ignore it, and it can't take back a copy someone already placed
+before you chose it.
+
 ## Editing a published creation
 
 A published creation is **immutable** — it can never change after the

@@ -1,5 +1,7 @@
 import { LICENSE_OPTIONS } from '../../application/document/LicenseLabels.js';
 import { License, LicenseId } from '../../core/License.js';
+import { PLACEMENT_POLICY_OPTIONS } from '../../application/document/PlacementPolicyLabels.js';
+import { PlacementPolicy } from '../../core/PlacementPolicy.js';
 
 // 0.2.21: the Document Properties editor — title/description/license,
 // the "New Document dialog" and "Document Properties" surfaces from
@@ -9,7 +11,7 @@ import { License, LicenseId } from '../../core/License.js';
 // CommandPalette's existing convention (fixed inset, click-outside/
 // Escape to cancel) rather than inventing a second dialog pattern.
 //
-// Emits save({ title, description, license: License }) — a License
+// Emits save({ title, description, license: License, placementPolicy }) — a License
 // instance, not a bare id, so callers (UpdateDocumentMetadataUseCase /
 // WorldNavigationSession.updateDocumentMetadata) can pass it straight
 // through to DocumentMetadata's license setter unchanged. Emits cancel
@@ -28,7 +30,9 @@ export default {
             title: this.info ? this.info.title : '',
             description: this.info ? this.info.description : '',
             licenseId: this.info && this.info.license ? this.info.license.id : LicenseId.UNSPECIFIED,
-            licenseOptions: LICENSE_OPTIONS
+            licenseOptions: LICENSE_OPTIONS,
+            placementPolicy: this.info && this.info.placementPolicy ? this.info.placementPolicy : PlacementPolicy.ANYONE,
+            placementPolicyOptions: PLACEMENT_POLICY_OPTIONS
         };
     },
     methods: {
@@ -49,7 +53,8 @@ export default {
             this.$emit('save', {
                 title: trimmedTitle,
                 description: this.description,
-                license: new License({ id: this.licenseId, attribution })
+                license: new License({ id: this.licenseId, attribution }),
+                placementPolicy: this.placementPolicy
             });
         },
         onKeydown(event) {
@@ -101,6 +106,18 @@ export default {
                 </label>
                 <p class="form-hint" v-if="licenseId === 'UNSPECIFIED'">
                     No license means forking is not permitted until one is set.
+                </p>
+
+                <label class="form-field">
+                    <span class="form-label">Who can place it in the World</span>
+                    <select v-model="placementPolicy" class="form-select">
+                        <option v-for="opt in placementPolicyOptions" :key="opt.id" :value="opt.id">
+                            {{ opt.label }}
+                        </option>
+                    </select>
+                </label>
+                <p class="form-hint" v-if="placementPolicy !== 'anyone'">
+                    Others can still find, view and (if the license allows) fork it, but ForkBuild won't let them place copies of it in their World. Applies from your next publish.
                 </p>
 
                 <div class="modal-actions">
