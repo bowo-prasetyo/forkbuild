@@ -4,6 +4,7 @@ import { PeerInvitation } from '../../peer/PeerInvitation.js';
 import { PeerConnectionState } from '../../peer/PeerConnectionState.js';
 import { ConnectToPeerUseCase } from './ConnectToPeerUseCase.js';
 import { DiscoverPeersUseCase } from './DiscoverPeersUseCase.js';
+import { signingIdentityId } from '../../peer/RendezvousPublicationSigning.js';
 
 const DEFAULT_INVITATION_TTL_MS = 10 * 60 * 1000; // 10 minutes — matches peer/PeerInvitation.js's own default
 const SIGNAL_TIMEOUT_MS = 30 * 1000; // ICE gathering ordinarily resolves in well under this on a working network
@@ -231,9 +232,27 @@ export class PeerSessionManager {
     // only needs "did this work at all" (see ui/views/PeerConnectionsView.js#togglePublish)
     // can check truthiness either way; one that needs a specific
     // publication's own fields must know which shape it is holding.
+    //
+    // Checks first that the signed-in identity can sign: a publication is
+    // looked up by identity and servers require its signature, and a
+    // locked identity can do neither. When publishing fails or publishes
+    // nothing, the offer made for it is closed rather than left behind as
+    // a pending "Unknown peer" nobody can ever answer.
     async publishSelf({ ttlMs = DEFAULT_INVITATION_TTL_MS, prepareRelay = true } = {}) {
+        if (!signingIdentityId(this._identityProvider)) {
+            throw new Error('PeerSessionManager: unlock your identity to be discoverable — a locked or signed-out identity cannot sign a publication');
+        }
         const { invitation, connectedPeer } = await this.createInvitation({ ttlMs, prepareRelay });
-        const publication = await this._discoverPeersUseCase.publish(invitation, { ttlMs });
+        let publication;
+        try {
+            publication = await this._discoverPeersUseCase.publish(invitation, { ttlMs });
+        } catch (error) {
+            this.disconnect(connectedPeer.connectionId);
+            throw error;
+        }
+        if (!publication) {
+            this.disconnect(connectedPeer.connectionId);
+        }
         this._publishedOffer = publication ? { connectionId: connectedPeer.connectionId, invitation } : null;
         if (this._publishedOffer && this._discoverPeersUseCase.canFetchAnswers()) {
             this._watchForAnswer(this._publishedOffer);

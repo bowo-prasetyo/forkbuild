@@ -89,7 +89,7 @@ export function useFindPeer({ findPeerUseCase, peers, now }) {
             } else {
                 const publication = await findPeerUseCase.publishSelf();
                 if (!publication) {
-                    publishError.value = 'No rendezvous network is configured on this device — see peer/RendezvousConfig.js.';
+                    publishError.value = 'No rendezvous server is configured on this device. Add one under Network Settings → Rendezvous Servers.';
                 }
             }
         } catch (e) {
