@@ -321,7 +321,7 @@ whatever it returns.
   endpoint until every announcement under a tag has been read, a few
   pages per run.
 - **Background sync.** `BackgroundAnnouncementSync` runs the sync in the
-  background, once World View has opened in the session.
+  background from the moment the app opens.
 - **Peers.** The `forkbuild:announcement-index` peer protocol shares
   Snapshot and Place Naming records between connected peers.
 

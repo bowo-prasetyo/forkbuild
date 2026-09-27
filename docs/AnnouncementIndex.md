@@ -219,11 +219,11 @@ it came from. Phase 1 already keeps every lead those searches find.
 gateway and Steem reader discovery already uses.
 
 - **When it runs.**
-  - It starts the first time World View opens in a session, and keeps
-    running after World View closes. It does not start when the app
-    opens, because docs/Privacy.md promises that opening the app
-    contacts no server except the site it is served from.
-  - First, 10 seconds after it starts.
+  - It starts when the app opens, whichever page is shown, so the index
+    is already fuller by the time World View opens. It reads only
+    announcements, never content bytes, and publishes nothing;
+    docs/Privacy.md lists it among the servers the app contacts.
+  - First, 10 seconds after the app opens.
   - Then every 5 minutes, or every 30 seconds while any endpoint is still
     behind (a head not caught up, or a backfill not finished).
   - Nothing runs while the tab is hidden.

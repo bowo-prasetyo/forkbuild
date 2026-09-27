@@ -470,10 +470,10 @@ const { backgroundAnnouncementSync, announcementIndexChanges } = composeAnnounce
     publicationCommentaryDistributionExchange, publicationCommentaryRemoteNotificationBridge,
     peerMessageBus, connectedPeerRegistry: peerSessionManager.registry
 });
+// Starts with the app: it reads announcements only, never content bytes, so
+// the index is already fuller by the time World View opens (docs/Privacy.md).
+backgroundAnnouncementSync.start();
 app.provide('announcementIndexChanges', announcementIndexChanges);
-// Opening the app contacts no server but its own site (docs/Privacy.md), so the
-// background sync starts the first time World View, the discovery feature, opens.
-app.provide('startAnnouncementSync', () => backgroundAnnouncementSync.start());
 
 const {
     arweaveAnnouncementUploadTaggedTransaction, publicationDistributionCommand,

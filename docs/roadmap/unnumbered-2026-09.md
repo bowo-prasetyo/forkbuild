@@ -1416,3 +1416,15 @@ one Publication.
   - both Commentary distributions tagging and reading the Publication tag;
   - the monitor passing its context;
   - the index refusing a Snapshot filed under the wrong cell.
+
+## Announcement Index: background sync starts with the app (unnumbered, 2026-09-27)
+
+**The background announcement sync now starts when the app opens**, whichever page is shown, instead of the first
+time World View opens. It reads only announcements (small pointers and signed claims, at most 48 KiB each), never
+content bytes, and publishes nothing, so starting it early costs little. In return, the index is already fuller
+by the time a player reaches World View.
+
+- `ui/main.js` starts `BackgroundAnnouncementSync` at load; World View no longer starts it.
+- docs/Privacy.md no longer says that opening the app contacts only its own site. It names this one automatic
+  exception, and adds a row for the background sync to the table of servers: which relays, gateway and Steem
+  nodes it queries, and for which tags.
