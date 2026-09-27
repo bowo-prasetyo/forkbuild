@@ -26,12 +26,12 @@ function isBrowserTest(fileName) {
     return readFileSync(join(testsDir, fileName), 'utf8').startsWith(BROWSER_MARKER);
 }
 
-const MIME_TYPES = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.html': 'text/html' };
+const MIME_TYPES = { '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.html': 'text/html', '.css': 'text/css' };
 
 const RUNNER_PAGE = `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <script type="importmap">
-{ "imports": { "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }
+{ "imports": { "vue": "/vendor/vue/dist/vue.esm-browser.prod.js", "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }
 </script>
 </head><body></body></html>`;
 

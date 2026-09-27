@@ -10,7 +10,8 @@ export const worldListsSectionTemplate = `<div v-if="failedWorlds.length > 0" cl
                     </ul>
                 </div>
 
-                <div v-if="loadedWorlds.length > 0" class="world-view-section">
+                <!-- Hidden while it would only repeat the header's own World. -->
+                <div v-if="loadedWorlds.some((w) => w.documentId !== $route.params.documentId)" class="world-view-section">
                     <h4>Worlds in View ({{ loadedWorlds.length }})</h4>
                     <ul class="world-list world-list--loaded">
                         <li

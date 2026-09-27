@@ -671,7 +671,7 @@ async function runTests() {
         assert(worldViewCode.includes('placeNamingDiscoveryMonitor.observe(spatialContext.value.position).then(('),
             '37. WorldView.js observes with a raw position, not the whole spatialContext object — see ShouldRefreshPlaceNamingDiscovery.js\'s own raw-position contract');
         assert(worldViewCode.includes('placeNamingDiscoveryMonitor.dispose();'), '38. WorldView.js disposes the monitor on unmount');
-        assert(worldViewCode.includes('title="Nearby Place Names"'), '39. WorldView.js renders a "Nearby Place Names" section');
+        assert(worldViewCode.includes('title="Place Names"'), '39. WorldView.js renders a "Nearby Place Names" section');
         assert(worldViewCode.includes('No nearby place naming claims were discovered.'),
             '40. the empty state reads "no claims were discovered," never "this place has no name" — a decentralized naming system must not conflate the two');
         assert(!worldViewCode.includes('This place has no name'), '41. the forbidden empty-state wording never appears');

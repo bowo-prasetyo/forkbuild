@@ -29,15 +29,19 @@ export const placementsSectionTemplate = `<!--
                     </li>
                 </ul>
 
-                <!--
-                    Always enabled with a publication: a Publication can be placed any number of
-                    times.
-                -->
-                <button
-                    v-if="placePublicationCommand"
-                    type="button"
-                    class="action-btn own-publication-place-action"
-                    :disabled="!publication"
-                    @click="placeOwnPublication"
-                >Place</button>
+                <div class="own-publication-placement-actions">
+                    <!--
+                        Always enabled with a publication: a Publication can be placed any number of
+                        times.
+                    -->
+                    <button
+                        v-if="placePublicationCommand"
+                        type="button"
+                        class="action-btn own-publication-place-action"
+                        :disabled="!publication"
+                        @click="placeOwnPublication"
+                    >Place</button>
+                    <!-- The host's own placement actions (World View's Move Placement). -->
+                    <slot name="placement-actions"></slot>
+                </div>
             </div>`;

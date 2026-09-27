@@ -25,15 +25,24 @@ world's URL directly. You'll appear next to that creation in the shared world.
 - **Scroll** — zoom in and out
 - **Home** — return to your own world (see below)
 
-As you move, nearby worlds **stream in and out** automatically. The overlay in
-the corner shows you:
+As you move, nearby worlds **stream in and out** automatically. The panel on
+the left reads top to bottom: what you're looking at (the header), where you
+can go (Home, Locations, and the Explore / Map / Places tabs), what's around
+you (Nearby), then your own tools — Search, Avatar, and My Publication. At the
+bottom it shows:
 
-- **Worlds in View** — what's currently loaded around you
+- **Worlds in View** — the other worlds currently loaded around you (hidden
+  while the only one loaded is the world you're in, which the header already
+  names)
 - **Nearby Worlds** — click one to fly straight to it
 
-Right under your camera's coordinates you'll also find two buttons,
+At the top of Explore's **Nearby** section you'll also find two buttons,
 **Explore Here** and **What's Here?** — see [Finding worlds](#finding-worlds)
 below.
+
+Hovering over the World shows what's under the pointer in a small card at the
+bottom-right corner of the view, so the panel itself never jumps as you move
+the mouse.
 
 The ground itself is generated the same way for everyone from a shared seed
 — grass, beach, rock, forest and farmland, lakes and winding rivers all
@@ -83,6 +92,9 @@ beside it:
   again only if you click **Refresh**; it never updates live in the
   background. Unlike Locations, it's tied to your signed-in identity, not
   to whatever World or document you currently have open.
+- **👥 N online** is the **Members** button: it counts who's here, and
+  clicking it opens the World's Members panel. A **Lobby** button follows
+  it when the World has a public lobby.
 
 The compass shows cardinal directions (N, E, S, W) and your current heading
 in degrees, plus small dots for nearby structures, collaborators, and
@@ -99,13 +111,13 @@ same time.
 
 - **Explore** is the default. It shows the arrival/welcome panel (who's
   here, and a few suggested destinations) plus a **Nearby** section with
-  five collapsible groups — **Nearby Places**, **Nearby Landmarks**,
-  **Nearby People**, **World Encounters** (see
-  [World Encounters](#world-encounters--publications-and-avatars-your-peers-are-sharing)
-  below), and **Nearby Place Names** (see
+  five collapsible groups — **Places**, **Landmarks**, **People**,
+  **Place Names** (see
   [Nearby Place Names](#nearby-place-names--discovering-claims-from-anyone)
+  below), and **World Encounters** (see
+  [World Encounters](#world-encounters--publications-and-avatars-your-peers-are-sharing)
   below) — each just a name, a distance, and a compact **Go** button
-  (World Encounters and Nearby Place Names instead show their own,
+  (World Encounters and Place Names instead show their own,
   differently-shaped content, described below). Click a group's title to
   expand it — World View remembers which groups you left open even after
   you switch to Map or Places and come back.
@@ -276,7 +288,7 @@ for connecting to someone.
 
 ### Nearby Place Names — discovering claims from anyone
 
-**Nearby Place Names**, the fifth Nearby group, shows signed place-naming
+**Place Names**, the fourth Nearby group, shows signed place-naming
 claims for the World Regions currently around you — without needing a
 connected peer at all. Like Discover Publication above, it searches a
 decentralized network (Nostr) directly for claims tagged to a region you're
@@ -494,7 +506,7 @@ Click **Focus** to fly there.
 
 ### Explore Here / What's Here? — "what's around me right now?"
 
-These two buttons, next to your camera coordinates, search **from wherever
+These two buttons, at the top of Explore's Nearby section, search **from wherever
 your camera currently is** — you don't have to already know a title or type
 coordinates.
 
@@ -650,7 +662,7 @@ fork (see [Publishing & Forking](04-PublishingAndForking.md#forking-make-it-your
 
 ### My Publication — distributing your own Snapshot, no peers required
 
-Right beside Save/Publish sits a **My Publication** panel, showing your
+Further down the panel, below Search and Avatar, sits a **My Publication** panel, showing your
 current world's title and author once it's actually published, plus its
 own **Distribute** button, which opens the exact same kind of
 **Distribute** dialog described above for World Encounters — sharing the
@@ -702,7 +714,9 @@ actually placed at, in whatever order they were found — position,
 revision, and (when known) owner, one row per placement. Nothing here is
 reduced to "the latest one": a Publication can genuinely sit in more than
 one place, and every placement this device can discover is listed, never
-just a single, most-recently-updated stand-in for the rest. An empty list
+just a single, most-recently-updated stand-in for the rest. Its **Place**
+button, and **Move Placement** for the placement you have selected, sit
+right under the list. An empty list
 just means this Publication hasn't been placed anywhere yet; a read
 failure shows its own plain error instead.
 

@@ -1737,3 +1737,28 @@ relationship changes, so neither side ever looked the other up.
   public lobby's frequent republishing goes to `PeerSessionManager` directly and triggers no lookups.
 - Tests: `tests/RendezvousAnswerMailbox.test.js` adds two running Known Peers who connect once both have clicked
   Be Discoverable, with no lookup from a direct (lobby-style) publish; it fails when the new trigger is removed.
+
+## World View panel layout, step 1 (unnumbered, 2026-09-27)
+
+**World View's left panel now reads top to bottom as look, go, around, then your own tools.** An audit found it ran
+about 2,000px in a 280px column, with publication management filling the first ~700px: on a 900px-tall screen, and on
+a phone, Explore / Map / Places and everything below them started off-screen.
+
+- New order: header (title, byline, status, Camera · Editing), then one utility row (Home, Locations, Notifications,
+  👥 N online, Lobby), the Explore / Map / Places tabs, Nearby, inspection panels, Search, Avatar, the controls hint,
+  and the publication section (`ui/views/worldView/templates/publicationSection.js`), with other Worlds in view last.
+  The publication panel is still outside the Explore-only content, so it never depends on primary mode or a peer.
+- Less repetition: the byline moved up under the title; the 👥 N online indicator is now the only Members button (it
+  already opened the same panel); Worlds in View shows only when it lists a World besides the one in the header; the
+  Nearby groups drop their repeated prefix (Places, Landmarks, People, Place Names, World Encounters).
+- Things sit with what they act on: Explore Here / What's Here? open the Nearby section, and Move Placement renders
+  beside Place through `OwnPublicationPanel`'s new `placement-actions` slot.
+- The hover card (`templates/hoverCard.js`) floats over the viewport's bottom-right corner, so hovering no longer
+  shifts the panel's content up and down.
+- The publication panel had no styles of its own: its label/value lists used the browser's 40px indent and its
+  buttons wrapped raggedly. It now has compact grids, a wrapping button row, and a heading styled like the rest.
+- Tests: `tests/WorldViewPanelLayoutBrowser.test.js` mounts the real templates with Vue in Chromium (group titles and
+  the camera queries in Nearby, Worlds in View's visibility, the hover card out of the panel, Move Placement beside
+  Place, the placement grid). The browser runner's import map gains `vue` and serves CSS as `text/css`. Four tests
+  that found the Place Names section by its old title, the commentary-surface allow-list, and the check that the
+  publication panel is never nested in World Encounters follow the moved files.

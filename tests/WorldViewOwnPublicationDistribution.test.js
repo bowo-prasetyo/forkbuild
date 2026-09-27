@@ -490,11 +490,12 @@ async function runTests() {
             '36. WorldView.js reads ownPublication from session.getPublicationForDocument, never from a World Encounters selection');
 
         const ownPanelIndex = viewCode.indexOf('<OwnPublicationPanel');
-        const worldEncountersSectionIndex = viewCode.indexOf('title="World Encounters"');
-        const primaryNavIndex = viewCode.indexOf('world-view-primary-nav');
         assert(ownPanelIndex !== -1, '37. WorldView.js mounts OwnPublicationPanel');
-        assert(ownPanelIndex < worldEncountersSectionIndex,
-            '39. OwnPublicationPanel is mounted entirely separately from, and before, the World Encounters section — never nested inside it');
+        const { nearbySectionTemplate } = await import('../ui/views/worldView/templates/nearbySection.js');
+        const { publicationSectionTemplate } = await import('../ui/views/worldView/templates/publicationSection.js');
+        assert(publicationSectionTemplate.includes('<OwnPublicationPanel') && !nearbySectionTemplate.includes('<OwnPublicationPanel')
+            && !publicationSectionTemplate.includes('primaryMode') && !publicationSectionTemplate.includes('World Encounters'),
+            '39. OwnPublicationPanel is mounted in its own section, never nested inside the World Encounters section or gated on primary mode');
 
         const canvasCode = (await Promise.all(worldEncounterCanvasFiles().map((file) => codeOnlySource(file)))).join('\n');
         assert(!canvasCode.includes('OwnPublicationPanel'), '40. WorldEncounterCanvas.js is untouched by this milestone — it knows nothing of OwnPublicationPanel');

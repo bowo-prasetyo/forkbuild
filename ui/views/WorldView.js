@@ -75,6 +75,8 @@ import { dialogsTemplate } from './worldView/templates/dialogs.js';
 import { headerSectionTemplate } from './worldView/templates/headerSection.js';
 import { worldListsSectionTemplate } from './worldView/templates/worldListsSection.js';
 import { navigationHudSectionTemplate } from './worldView/templates/navigationHudSection.js';
+import { publicationSectionTemplate } from './worldView/templates/publicationSection.js';
+import { hoverCardTemplate } from './worldView/templates/hoverCard.js';
 
 // Snapshot fetches the automatic cascade runs at once.
 const AUTOMATIC_SNAPSHOT_FETCH_CONCURRENCY = 4;
@@ -1276,70 +1278,56 @@ export default {
               >{{ panelOpen ? 'Hide Panel' : 'Panel' }}</button>
               <div class="world-view-overlay-scroll">
                 ${headerSectionTemplate}
-            <!--
-                Home and Locations are plain utilities; Explore / Map / Places are the three
-                mutually exclusive primary modes.
-            -->
-            <div v-if="cameraPosition" class="world-view-actions world-view-actions--navigation">
-                <button class="action-btn" @click="goHome">Home</button>
-                <button
-                    v-if="activeDocumentInfo"
-                    class="action-btn"
-                    title="Landmarks, regions, and every structure this session knows about"
-                    @click="openLocationsPanel"
-                >Locations</button>
-                <!-- Scoped to the signed-in identity, not the open document. -->
-                <button
-                    class="action-btn"
-                    title="A durable record of notification facts addressed to you"
-                    @click="openNotificationHistoryPanel"
-                >Notifications</button>
-            </div>
-            <div v-if="cameraPosition" class="world-view-primary-nav">
-                <button
-                    :class="['action-btn', { 'action-btn--active': primaryMode === WorldViewPrimaryMode.EXPLORE }]"
-                    title="What's around me, and where can I go?"
-                    @click="setPrimaryMode(WorldViewPrimaryMode.EXPLORE)"
-                >Explore</button>
-                <button
-                    :class="['action-btn', { 'action-btn--active': primaryMode === WorldViewPrimaryMode.MAP }]"
-                    title="Where is everything?"
-                    @click="setPrimaryMode(WorldViewPrimaryMode.MAP)"
-                >Map</button>
-                <button
-                    :class="['action-btn', { 'action-btn--active': primaryMode === WorldViewPrimaryMode.PLACES }]"
-                    title="What places exist?"
-                    @click="setPrimaryMode(WorldViewPrimaryMode.PLACES)"
-                >Places</button>
-            </div>
-            ${nearbySectionTemplate}
                 <!--
-                    Subtle, so the World stays dominant (docs/Principles.md, "The UI Displays
-                    Authorization; It Never Decides It").
+                    Panel order: what you're looking at, where to go, what's around, then your
+                    own tools (Search, Avatar, Publication). Home, Locations and Members are
+                    plain utilities; Explore / Map / Places are the three mutually exclusive
+                    primary modes.
                 -->
-                <div v-if="activeDocumentInfo" class="world-view-actions world-view-actions--collaboration">
-                    <WorldPresenceIndicator :online-count="worldOnlineCount" @open="openMembersPanel" />
-                    <button class="action-btn" @click="openMembersPanel">Members</button>
-                    <button v-if="activeWorldLobby" class="action-btn" @click="openLobbyPanel">Lobby</button>
+                <div v-if="cameraPosition || activeDocumentInfo" class="world-view-actions world-view-actions--navigation">
+                    <button v-if="cameraPosition" class="action-btn" @click="goHome">Home</button>
+                    <button
+                        v-if="activeDocumentInfo"
+                        class="action-btn"
+                        title="Landmarks, regions, and every structure this session knows about"
+                        @click="openLocationsPanel"
+                    >Locations</button>
+                    <!-- Scoped to the signed-in identity, not the open document. -->
+                    <button
+                        v-if="cameraPosition"
+                        class="action-btn"
+                        title="A durable record of notification facts addressed to you"
+                        @click="openNotificationHistoryPanel"
+                    >Notifications</button>
+                    <!--
+                        The online count is the Members button. Subtle, so the World stays
+                        dominant (docs/Principles.md, "The UI Displays Authorization; It Never
+                        Decides It").
+                    -->
+                    <WorldPresenceIndicator v-if="activeDocumentInfo" :online-count="worldOnlineCount" @open="openMembersPanel" />
+                    <button v-if="activeDocumentInfo && activeWorldLobby" class="action-btn" @click="openLobbyPanel">Lobby</button>
                 </div>
-
                 <WorldCollaboratorIndicator v-if="activeDocumentInfo" :rows="spatialCollaboratorRows" @follow="followCollaborator" />
-                <!--
-                    Browse by camera position (docs/Principles.md, "Exploring A Location Is Not
-                    A Second Search").
-                -->
-                <div v-if="cameraPosition" class="world-view-actions world-view-actions--explore">
-                    <button class="action-btn" @click="exploreHere">Explore Here</button>
-                    <button class="action-btn" @click="whatsHere">What's Here?</button>
+                <div v-if="cameraPosition" class="world-view-primary-nav">
+                    <button
+                        :class="['action-btn', { 'action-btn--active': primaryMode === WorldViewPrimaryMode.EXPLORE }]"
+                        title="What's around me, and where can I go?"
+                        @click="setPrimaryMode(WorldViewPrimaryMode.EXPLORE)"
+                    >Explore</button>
+                    <button
+                        :class="['action-btn', { 'action-btn--active': primaryMode === WorldViewPrimaryMode.MAP }]"
+                        title="Where is everything?"
+                        @click="setPrimaryMode(WorldViewPrimaryMode.MAP)"
+                    >Map</button>
+                    <button
+                        :class="['action-btn', { 'action-btn--active': primaryMode === WorldViewPrimaryMode.PLACES }]"
+                        title="What places exist?"
+                        @click="setPrimaryMode(WorldViewPrimaryMode.PLACES)"
+                    >Places</button>
                 </div>
-                <p v-if="touchInput" class="world-view-hint">
-                    Drag to orbit • Pinch to zoom • Two fingers to pan • Tap to inspect<template v-if="avatarControlMode"> • Joystick to walk, push to the edge to run</template>
-                </p>
-                <p v-else class="world-view-hint">
-                    Drag to orbit • Scroll to zoom • Home to reset • Click to inspect<template v-if="avatarControlMode"> • WASD to walk • Shift to run • Space to jump</template>
-                </p>
+                ${nearbySectionTemplate}
 
-                ${avatarSectionTemplate}
+                ${inspectionPanelsTemplate}
 
                 <div class="world-view-section world-view-section--search">
                     <h4>Search</h4>
@@ -1351,7 +1339,15 @@ export default {
                     />
                 </div>
 
-                ${inspectionPanelsTemplate}
+                ${avatarSectionTemplate}
+                <p v-if="touchInput" class="world-view-hint">
+                    Drag to orbit • Pinch to zoom • Two fingers to pan • Tap to inspect<template v-if="avatarControlMode"> • Joystick to walk, push to the edge to run</template>
+                </p>
+                <p v-else class="world-view-hint">
+                    Drag to orbit • Scroll to zoom • Home to reset • Click to inspect<template v-if="avatarControlMode"> • WASD to walk • Shift to run • Space to jump</template>
+                </p>
+
+                ${publicationSectionTemplate}
 
                 ${worldListsSectionTemplate}
               </div>
@@ -1359,6 +1355,7 @@ export default {
             <div ref="viewport" class="world-viewport"></div>
             ${dialogsTemplate}
             ${navigationHudSectionTemplate}
+            ${hoverCardTemplate}
             <TouchMovementPad
                 v-if="touchPadVisible"
                 :vehicle-state="vehicleInteractionState"

@@ -1,9 +1,18 @@
-// World view template: the Explore mode's Nearby section (places, landmarks, people, place names, encounters).
+// World view template: the Explore mode's Nearby section (Explore Here / What's Here?, then places,
+// landmarks, people, place names and encounters).
 // It renders in WorldView's scope, so it uses the names its setup() returns.
 export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode === WorldViewPrimaryMode.EXPLORE" class="world-view-section world-view-section--nearby">
                 <h4>Nearby</h4>
+                <!--
+                    Browse by camera position (docs/Principles.md, "Exploring A Location Is Not
+                    A Second Search").
+                -->
+                <div class="world-view-actions world-view-actions--explore">
+                    <button class="action-btn" @click="exploreHere">Explore Here</button>
+                    <button class="action-btn" @click="whatsHere">What's Here?</button>
+                </div>
                 <CollapsibleSection
-                    title="Nearby Places"
+                    title="Places"
                     :count="nearbyGeographicPlaces.length"
                     :collapsed="nearbySectionsCollapsed.places"
                     @toggle="setNearbySectionCollapsed('places', NEARBY_PLACES_SECTION, $event)"
@@ -17,7 +26,7 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                     </div>
                 </CollapsibleSection>
                 <CollapsibleSection
-                    title="Nearby Landmarks"
+                    title="Landmarks"
                     :count="nearbyLandmarkRows.length"
                     :collapsed="nearbySectionsCollapsed.landmarks"
                     @toggle="setNearbySectionCollapsed('landmarks', NEARBY_LANDMARKS_SECTION, $event)"
@@ -31,7 +40,7 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                     </div>
                 </CollapsibleSection>
                 <CollapsibleSection
-                    title="Nearby People"
+                    title="People"
                     :count="nearbyPeopleRows.length"
                     :collapsed="nearbySectionsCollapsed.people"
                     @toggle="setNearbySectionCollapsed('people', NEARBY_PEOPLE_SECTION, $event)"
@@ -57,7 +66,7 @@ export const nearbySectionTemplate = `<div v-if="cameraPosition && primaryMode =
                     has no name. The error never hides the last successful results.
                 -->
                 <CollapsibleSection
-                    title="Nearby Place Names"
+                    title="Place Names"
                     :count="nearbyPlaceNamingClaimRows.length"
                     :collapsed="nearbySectionsCollapsed.placeNaming"
                     @toggle="setNearbySectionCollapsed('placeNaming', NEARBY_PLACE_NAMING_SECTION, $event)"
