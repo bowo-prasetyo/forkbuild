@@ -1,4 +1,6 @@
 import { deriveTouchJoystickKeys } from '../../core/TouchJoystickKeys.js';
+import { AvatarContinuousMovementIntent } from '../../core/AvatarContinuousMovementIntent.js';
+import { AvatarContinuousMovementMode } from '../../core/AvatarContinuousMovementMode.js';
 
 // Turns the World View touch pad (a joystick and held buttons) into the same
 // key presses a keyboard sends, through `keyDown(key)`/`keyUp(key)` (the
@@ -26,6 +28,22 @@ const defaultClock = {
 
 function buttonSource(key) {
     return `button:${key}`;
+}
+
+// The Cruise button's next step, as the keys a keyboard would press: not
+// cruising -> walk (Alt+W), walking forward -> run (Alt+Shift+W), anything else
+// -> stop (a plain W, which ends any hands-free movement). `state` is the
+// session's avatarContinuousMovementState(), or null.
+export function cruiseChord(state) {
+    const intent = state ? state.intent : AvatarContinuousMovementIntent.NONE;
+    const mode = state ? state.mode : AvatarContinuousMovementMode.NONE;
+    if (intent === AvatarContinuousMovementIntent.NONE) {
+        return ['Alt', 'w'];
+    }
+    if (intent === AvatarContinuousMovementIntent.FORWARD && mode === AvatarContinuousMovementMode.WALK) {
+        return ['Alt', 'Shift', 'w'];
+    }
+    return ['w'];
 }
 
 export class TouchMovementInput {
@@ -88,6 +106,21 @@ export class TouchMovementInput {
     tapButton(key) {
         this.holdButton(key);
         this.releaseButton(key);
+    }
+
+    // Presses `keys` down in order and releases them in reverse at once, like a
+    // keyboard chord. The session reads a chord on its keydowns, so, unlike a
+    // button, it needs no minimum hold. A key another source already holds (the
+    // joystick's W or Shift) stays down.
+    pressChord(keys) {
+        for (const key of keys) {
+            this._keyDown(key);
+        }
+        for (const key of [...keys].reverse()) {
+            if (!this._holders.has(key)) {
+                this._keyUp(key);
+            }
+        }
     }
 
     // Lets go of everything at once, e.g. when the pad closes mid-press, so no

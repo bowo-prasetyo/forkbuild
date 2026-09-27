@@ -1,5 +1,7 @@
 import { ref, computed, onBeforeUnmount } from 'vue';
-import { TouchMovementInput } from '../../application/avatar/TouchMovementInput.js';
+import { TouchMovementInput, cruiseChord } from '../../application/avatar/TouchMovementInput.js';
+import { AvatarContinuousMovementIntent } from '../../core/AvatarContinuousMovementIntent.js';
+import { AvatarContinuousMovementMode } from '../../core/AvatarContinuousMovementMode.js';
 import { clampTouchJoystickOffset } from '../../core/TouchJoystickKeys.js';
 import { describeAnimalDecorationAction, describeVehicleStoreAction } from './avatarInteractionLabels.js';
 
@@ -19,7 +21,9 @@ export default {
         vehicleState: { type: Object, default: null },
         storeState: { type: Object, default: null },
         animalState: { type: Object, default: null },
-        decorationState: { type: Object, default: null }
+        decorationState: { type: Object, default: null },
+        // The session's avatarContinuousMovementState(), or null.
+        cruiseState: { type: Object, default: null }
     },
     emits: ['key-down', 'key-up', 'decorate'],
     setup(props, { emit }) {
@@ -85,10 +89,29 @@ export default {
         const animalVisible = computed(() => Boolean(props.animalState)
             && (props.animalState.canCatch || props.animalState.canRelease));
 
+        // Hands-free movement, as Alt+W on a keyboard: each tap walks, then runs,
+        // then stops. Pushing the joystick forward or back also stops it, as W/S do.
+        const cruise = computed(() => {
+            const state = props.cruiseState;
+            if (!state || state.intent === AvatarContinuousMovementIntent.NONE) {
+                return { active: false, label: 'Cruise', next: 'Walk hands-free' };
+            }
+            if (state.intent === AvatarContinuousMovementIntent.BACKWARD) {
+                return { active: true, label: 'Cruise: Back', next: 'Stop' };
+            }
+            return state.mode === AvatarContinuousMovementMode.RUN
+                ? { active: true, label: 'Cruise: Run', next: 'Stop' }
+                : { active: true, label: 'Cruise: Walk', next: 'Run hands-free' };
+        });
+        function tapCruise() {
+            input.pressChord(cruiseChord(props.cruiseState));
+        }
+
         onBeforeUnmount(() => input.releaseAll());
 
         return {
             thumb, mounted, mountVisible, store, animalVisible, decoration,
+            cruise, tapCruise,
             onStickDown, onStickMove, onStickUp, holdButton, releaseButton, tapButton
         };
     },
@@ -170,6 +193,13 @@ export default {
                         @lostpointercapture="releaseButton('Control')"
                     >Brake</button>
                 </template>
+                <button
+                    type="button"
+                    :class="['touch-pad-btn', { 'touch-pad-btn--active': cruise.active }]"
+                    :aria-pressed="cruise.active ? 'true' : 'false'"
+                    :title="cruise.next"
+                    @click="tapCruise"
+                >{{ cruise.label }}</button>
                 <button
                     type="button"
                     class="touch-pad-btn touch-pad-btn--primary"

@@ -1,7 +1,9 @@
 import {
     deriveTouchJoystickKeys, clampTouchJoystickOffset, TOUCH_JOYSTICK_DEAD_ZONE, TOUCH_JOYSTICK_RUN_THRESHOLD
 } from '../core/TouchJoystickKeys.js';
-import { TouchMovementInput, BUTTON_MIN_HOLD_MS } from '../application/avatar/TouchMovementInput.js';
+import { TouchMovementInput, BUTTON_MIN_HOLD_MS, cruiseChord } from '../application/avatar/TouchMovementInput.js';
+import { AvatarContinuousMovementIntent as Intent } from '../core/AvatarContinuousMovementIntent.js';
+import { AvatarContinuousMovementMode as Mode } from '../core/AvatarContinuousMovementMode.js';
 import { assert } from './support/Assert.js';
 
 function pressed(keys) {
@@ -127,4 +129,32 @@ function recorder() {
     clock.advance(BUTTON_MIN_HOLD_MS * 2);
     assert(rec.events.length === 6, 'the cancelled tap timer sends nothing later');
     console.log('✓ releaseAll');
+}
+
+// 7. Cruise cycles walk -> run -> stop, as the keyboard chords.
+{
+    assert(cruiseChord(null).join('+') === 'Alt+w', 'with no state, Cruise starts a walk');
+    assert(cruiseChord({ intent: Intent.NONE, mode: Mode.NONE }).join('+') === 'Alt+w', 'not cruising -> walk');
+    assert(cruiseChord({ intent: Intent.FORWARD, mode: Mode.WALK }).join('+') === 'Alt+Shift+w', 'walking -> run');
+    assert(cruiseChord({ intent: Intent.FORWARD, mode: Mode.RUN }).join('+') === 'w', 'running -> stop');
+    assert(cruiseChord({ intent: Intent.BACKWARD, mode: Mode.WALK }).join('+') === 'w', 'a backward cruise from the keyboard -> stop');
+    console.log('✓ cruise chord');
+}
+
+// 8. A chord presses in order and releases in reverse, at once, but never
+// releases a key the joystick holds.
+{
+    const rec = recorder();
+    const input = new TouchMovementInput({ ...rec, clock: fakeClock() });
+    input.pressChord(['Alt', 'Shift', 'w']);
+    assert(rec.events.join(' ') === '+Alt +Shift +w -w -Shift -Alt', `chord order, got ${rec.events.join(' ')}`);
+    assert(input.heldKeys().length === 0, 'a chord leaves nothing held');
+
+    rec.events.length = 0;
+    input.setJoystick({ dx: 0, dy: -50, radius: 50 });
+    rec.events.length = 0;
+    input.pressChord(['Alt', 'Shift', 'w']);
+    assert(rec.events.join(' ') === '+Alt +Shift +w -Alt', `joystick-held W and Shift stay down, got ${rec.events.join(' ')}`);
+    assert(input.heldKeys().sort().join(',') === 'Shift,w', 'the joystick still holds its keys');
+    console.log('✓ chord');
 }

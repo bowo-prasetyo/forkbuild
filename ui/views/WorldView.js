@@ -310,6 +310,7 @@ export default {
         const storeInteractionState = ref(null);
         const animalInteractionState = ref(null);
         const decorationInteractionState = ref(null);
+        const cruiseState = ref(null);
         // null means the free orbit camera.
         const cameraPerspective = ref(null);
         // Not gated on having an avatar (docs/Principles.md, "Watching Presence Never
@@ -950,6 +951,9 @@ export default {
                 decorationInteractionState.value = (hasLocalAvatar.value && avatarControlMode.value)
                     ? session.animalDecorationInteractionState()
                     : null;
+                cruiseState.value = (hasLocalAvatar.value && avatarControlMode.value)
+                    ? session.avatarContinuousMovementState()
+                    : null;
             }, 150);
         });
 
@@ -996,6 +1000,7 @@ export default {
             animalInteractionState,
             decorationInteractionState,
             toggleAnimalDecoration,
+            cruiseState,
             cameraPerspective,
             CameraPerspective,
             setCameraPerspective,
@@ -1331,6 +1336,7 @@ export default {
                 :store-state="storeInteractionState"
                 :animal-state="animalInteractionState"
                 :decoration-state="decorationInteractionState"
+                :cruise-state="cruiseState"
                 @key-down="pressAvatarKey"
                 @key-up="releaseAvatarKey"
                 @decorate="toggleAnimalDecoration"

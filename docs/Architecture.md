@@ -705,7 +705,8 @@ who you are, what your avatar looks like, and where it is right now.
   (application/avatar/TouchMovementInput.js) turns World View's joystick
   (core/TouchJoystickKeys.js) and buttons into the session's
   avatarKeyDown/avatarKeyUp calls, holding each button for at least one
-  frame's sampling. PresenceSyncService
+  frame's sampling. Its Cruise button sends the Alt+W chords, choosing the
+  next one from avatarContinuousMovementState(). PresenceSyncService
   broadcasts it as a core/AvatarPresenceAdvertisement.js, signed when the
   identity provider can sign (PresenceSigning), through a
   presence/ broadcast provider: PeerAvatarPresenceBroadcastProvider over

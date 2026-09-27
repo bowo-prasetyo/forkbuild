@@ -156,8 +156,14 @@ continuously — it keeps going even after you release every key, exactly
 like a cruise control. Tapping **W** or **S** again *without* Alt
 held cancels it and returns to ordinary key-held movement; tapping the
 opposite direction the same way also cancels it, rather than reversing
-it. There's no on-screen indicator that it's active — the only sign is
-that your avatar keeps walking on its own.
+it. On a keyboard there's no on-screen indicator that it's active — the
+only sign is that your avatar keeps walking on its own.
+
+On a phone or tablet, the touch pad's **Cruise** button does the same:
+tap it once to walk forward hands-free, again to run, and a third time to
+stop. It reads **Cruise: Walk** or **Cruise: Run** while active. Pushing
+the joystick forward or back also stops it, just as tapping **W** or **S**
+does; pushing it sideways only turns you, so you can steer while cruising.
 
 ### Vehicles
 

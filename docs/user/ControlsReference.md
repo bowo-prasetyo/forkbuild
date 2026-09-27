@@ -314,6 +314,7 @@ above the joystick turns the mode, and with it the pad, on and off.
 | Joystick | `W` / `A` / `S` / `D` | Push up to walk forward, sideways to turn; diagonals press both keys |
 | Joystick pushed to the rim | `Shift` | Run |
 | **Jump** | `Space` | |
+| **Cruise** | `Alt` + `W`, then `Alt` + `Shift` + `W`, then `W` | Each tap: walk forward hands-free, then run, then stop. Shows **Cruise: Walk** / **Cruise: Run** while active. Pushing the joystick forward or back also stops it; sideways only steers |
 | **Ride** / **Get Off** | `E` | Shown when a vehicle is in range, or while riding |
 | **Store** / **Deploy** | `Q` | Shown when you can store the vehicle you're on, or deploy a stored one. Deploy names the vehicle, and its place in the list (such as 2/3) when you carry more than one |
 | **‹** / **›** beside Deploy | `[` / `]` | Carrying 2+ vehicles: choose an older or newer one to deploy |
@@ -323,8 +324,8 @@ above the joystick turns the mode, and with it the pad, on and off.
 | **Brake** | `Ctrl` (held) | While riding |
 
 The pad's buttons replace the keyboard prompts, which are hidden while it
-shows. Hands-free continuous movement (`Alt` + `W`/`S`) has no touch control
-yet.
+shows. A hands-free walk backward (`Alt` + `S`) has no touch button; one
+started from a keyboard shows as **Cruise: Back**, and tapping it stops.
 
 ### Editing (Editor)
 

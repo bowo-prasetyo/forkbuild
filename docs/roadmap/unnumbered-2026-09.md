@@ -1492,3 +1492,24 @@ four keyboard actions the first touch release left out. Desktop gets a prompt fo
 - Hands-free continuous movement and Editor box selection still have no touch control; they are next.
 - Tests: `tests/AvatarInteractionLabels.test.js` covers store vs deploy, the position shown only with several
   vehicles, no cycling while riding, decorate winning a tie as `G` does, and fallback names.
+
+## Phones and tablets: hands-free Cruise (unnumbered, 2026-09-27)
+
+**The touch pad has a Cruise button for the hands-free walk and run** that `Alt` + `W` starts on a keyboard, so a
+player can travel without holding the joystick.
+
+- Each tap takes the next step: walk forward, then run, then stop. The button sends the keyboard's own chords
+  (`Alt`+`W`, `Alt`+`Shift`+`W`, then a plain `W`, which ends any hands-free movement) through
+  `avatarKeyDown`/`avatarKeyUp`, so the continuous-movement rules stay in the session alone. `cruiseChord()` in
+  `application/avatar/TouchMovementInput.js` picks the chord; `pressChord()` sends it at once (a chord is read on
+  keydown and needs no minimum hold), without releasing a W or Shift the joystick is holding.
+- `WorldNavigationSession#avatarContinuousMovementState()` reads the current intent and mode, which World View
+  polls with the other interaction states so the button shows **Cruise: Walk**, **Cruise: Run** or, for a backward
+  cruise started from a keyboard, **Cruise: Back**.
+- As on a keyboard, pushing the joystick forward or back stops a cruise, and pushing it sideways steers it.
+- Tests:
+  - `tests/TouchCruiseIntegration.test.js` drives a real `WorldNavigationSession` through walk, run and stop,
+    checks that the joystick turns without stopping and stops when pushed forward, and that there is no state
+    without an avatar.
+  - `tests/TouchMovementInput.test.js` adds the chord for each state, and a chord's order and its respect for
+    keys the joystick holds.

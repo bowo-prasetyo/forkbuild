@@ -107,6 +107,11 @@
     background: rgba(76, 175, 125, 0.6);
 }
 
+.touch-pad-btn--active {
+    background: rgba(58, 110, 165, 0.85);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
 .touch-pad-btn--primary {
     min-width: 72px;
     min-height: 72px;
