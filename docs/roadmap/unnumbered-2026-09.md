@@ -1400,7 +1400,8 @@ one Publication.
 - Publishing: the narrow tag rides on the same Nostr event (a second `t` tag) or Arweave transaction.
   `createArweaveTaggedTransactionUpload()`'s `uploadTaggedTransaction(material, tag, extraTags = [])` signs every
   tag. The Nostr and Arweave Snapshot publishers add the cell tag when there is a claimed position; both Commentary
-  distributions add the Publication tag. Steem has no tags and is unchanged.
+  distributions add the Publication tag. Steem is unchanged: announcements there are replies to monthly threads,
+  which tag feeds don't list, and readers fetch each thread whole and filter on the device.
 - Reading:
   - Commentary `discover(publicationId)` reads both tags on Nostr and Arweave, and returns an event found under
     both only once.

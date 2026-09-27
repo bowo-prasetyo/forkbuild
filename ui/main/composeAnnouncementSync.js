@@ -47,7 +47,7 @@ export function composeAnnouncementSync({
         targets: () => ({
             core: coreTargets,
             rotating: [
-                // Map cells World View has searched; Steem has no cell tags.
+                // Map cells World View has searched. Steem reads threads whole, not by tag.
                 ...announcementIndex.watchedTags(AnnouncementKind.SNAPSHOT)
                     .filter((tag) => tag.startsWith(SNAPSHOT_CELL_TAG_PREFIX))
                     .map((tag) => snapshotSyncTarget({ index: announcementIndex, tag })),

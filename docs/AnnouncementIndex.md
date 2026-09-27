@@ -310,8 +310,16 @@ reaches its 2,000-record cap. The tags come from `core/NarrowDiscoveryTags.js`.
     around the player.
   - The index stores a Snapshot under a cell tag only when its claimed
     position lies in that cell.
-- **Steem.** Steem has no tags: its threads are read whole, and its
-  Snapshot reader answers only for the global tag.
+- **Steem.** Steem posts do carry tags (`json_metadata.tags`), but
+  ForkBuild announces as replies to monthly discovery threads, and Steem's
+  tag feeds list only top-level posts, so a tag on a reply cannot be
+  searched. Readers instead fetch each thread's replies whole
+  (`get_content_replies` has no page cap) and filter on the device, so a
+  narrow tag would not make a Steem read more complete. The cell tags
+  would not be valid Steem tags anyway: those allow only lowercase
+  letters, digits and dashes. The Steem Snapshot reader answers only for
+  the global tag. Steem's limit is the 2,000 replies read per thread and
+  month; a family outgrowing that needs smaller threads, not tags.
 - **Old announcements.** Anything announced before this phase carries
   only the global tag. Readers keep reading the global tags, so nothing
   already announced is lost.
