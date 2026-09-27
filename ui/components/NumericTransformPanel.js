@@ -133,8 +133,7 @@ export default {
                 border: '1px solid ' + (active ? '#4caf7d' : '#3a3a3a'),
                 borderRadius: '3px',
                 color: active ? '#ffffff' : '#b0b0b0',
-                fontSize: '11px',
-                fontFamily: 'monospace',
+                fontSize: '12px',
                 cursor: this.enabled ? 'pointer' : 'not-allowed'
             };
         },
@@ -146,15 +145,14 @@ export default {
                 border: '1px solid ' + (primary ? '#4caf7d' : '#3a3a3a'),
                 borderRadius: '3px',
                 color: primary ? '#121212' : '#b0b0b0',
-                fontSize: '11px',
-                fontFamily: 'monospace',
+                fontSize: '12px',
                 fontWeight: primary ? '600' : '400',
                 cursor: this.enabled ? 'pointer' : 'not-allowed'
             };
         }
     },
     template: `
-        <div :style="{ display: 'flex', flexDirection: 'column', gap: '6px', opacity: enabled ? 1 : 0.55 }">
+        <div class="numeric-transform-panel" :style="{ display: 'flex', flexDirection: 'column', gap: '6px', opacity: enabled ? 1 : 0.55 }">
             <div :style="{ display: 'flex', gap: '4px' }">
                 <button
                     :disabled="!enabled"
@@ -227,9 +225,9 @@ export default {
                 <button
                     :disabled="!enabled"
                     :style="actionButtonStyle(false)"
-                    title="Clear the fields"
+                    title="Empty the fields without changing the selection (Esc)"
                     @click="onClear"
-                >Clear</button>
+                >Reset fields</button>
             </div>
         </div>
     `

@@ -1,71 +1,20 @@
-import CollapsibleSection from './CollapsibleSection.js';
 import { fromCssHex } from '../../core/ColorHex.js';
 
-// 0.6.2 — Editor UX Consolidation.
-//
-// "Selection is the central Editor state" (see docs/Roadmap.md, 0.6.2):
-// this is the compact card that makes that true for an ordinary BRICK
-// selection, the same job ui/components/StructureInstancePanel.js has
-// done for a StructurePlacement selection since 0.2.91. The two stay
-// deliberately separate components (see application/editor/EditorSession.js#
-// getSelectionSummary()'s own header on why their data shapes don't
-// merge) — EditorView renders whichever one applies, never both.
-//
-// Replaces the old EditingSidebar "Selection" section's bare "N
-// brick(s) selected" paragraph plus its own Duplicate/Delete/Clear
-// buttons — moved here so the actions live next to the live position
-// readout that explains what they'd act on, instead of a separate
-// section a scroll away. Select All stays behind (EditingSidebar still
-// offers it) — it's about growing the selection, not acting on it, so
-// it belongs with "nothing is selected yet" rather than with an
-// inspector for one that already exists.
-//
-// Runs its own tiny run()/isDisabled()/reasonFor() against the SAME
-// registry + context every other action surface in this file family
-// uses (EditingSidebar, CommandPalette) — no second enablement rule,
-// just a second, smaller place buttons are drawn.
-//
-// 0.6.3 — Blueprint Authoring & Versioning UX. Gains an "Advanced"
-// CollapsibleSection (collapsed by default, same convention
-// ui/components/EditingSidebar.js's own Align/Distribute/Repeat
-// section already established in 0.6.2) holding one button: Create
-// Blueprint (`structure.createFromSelection`, tier 'advanced' as of
-// this milestone) — promoting it out of "Command Palette only" into
-// the normal selection workflow the design conversation asked for:
-// Select -> (Common: Duplicate/Delete) -> (Advanced: Create Blueprint).
-// Runs through the exact same run()/isDisabled()/reasonFor() as
-// Duplicate/Delete/Clear above it — no second enablement rule for one
-// more button.
-//
-// 0.9.661 — Add Editor Selection Focus Action. A fourth actions-row
-// button, "Focus Selection" (`selection.focus`), joining Duplicate/
-// Delete/Clear rather than the Advanced section below — like them, it's
-// a common, always-reachable entry point, not an occasional operation.
-// Disabled under the exact same isDisabled('selection.focus') call as
-// every other button here; the action itself already resolves to
-// disabled whenever `summary` (and so this whole template) wouldn't be
-// rendering in the first place.
+// The card for an ordinary BRICK selection: count, live position and the
+// everyday actions. StructureInstancePanel is the card for a
+// StructurePlacement selection; their data shapes differ (see
+// EditorSession#getSelectionSummary()), so EditorView never shows both.
+// EditingSidebar fills the default slot with its collapsed sections.
 export default {
     name: 'SelectionInspector',
-    components: { CollapsibleSection },
     props: {
         registry: { type: Object, required: true },
         getContext: { type: Function, required: true },
-        // application/editor/EditorSession.js#getSelectionSummary()'s return
-        // value — { count, bounds } — or null (empty selection, or a
-        // StructurePlacement selection, which this component never
-        // renders for; EditorView gates that case out already).
+        // EditorSession#getSelectionSummary(): { count, bounds }, or null.
         summary: { type: Object, default: null },
-        // Choose Your Brick Color — EditorView's own recolorSelection(),
-        // bound directly (no action-registry entry) the same way
-        // ui/components/RepeatPanel.js's `repeat` prop calls its session
-        // method: a live color-picker widget, not a no-argument command.
+        // A live color picker, not a no-argument command, so it is bound
+        // directly rather than going through the action registry.
         recolor: { type: Function, default: null }
-    },
-    data() {
-        return {
-            advancedCollapsed: true
-        };
     },
     computed: {
         context() {
@@ -73,16 +22,6 @@ export default {
         },
         center() {
             return this.summary ? this.summary.bounds.center : null;
-        },
-        // "What happens next" — the same contextual-hint posture the
-        // placement/collision feedback toasts already established
-        // elsewhere; this one is live (no auto-hide) since the
-        // selection itself is live.
-        hint() {
-            if (!this.summary) return '';
-            return this.summary.count > 1
-                ? 'R to rotate · Ctrl/Cmd+D to duplicate · Delete to remove'
-                : 'R to rotate · Ctrl/Cmd+D to duplicate · Delete to remove · drag to move';
         }
     },
     methods: {
@@ -101,67 +40,79 @@ export default {
             const action = this.registry.get(id);
             return !action || !action.enabled(this.context);
         },
-        reasonFor(id) {
-            const action = this.registry.get(id);
-            if (!action || !action.disabledReason) {
-                return null;
+        titleFor(id, enabledTitle) {
+            if (!this.isDisabled(id)) {
+                return enabledTitle;
             }
-            return action.disabledReason(this.context);
+            const action = this.registry.get(id);
+            return action && action.disabledReason ? action.disabledReason(this.context) : null;
         }
     },
     template: `
-        <div v-if="summary" class="structure-instance-panel selection-inspector">
-            <h4 class="structure-instance-heading">
+        <section v-if="summary" class="editor-panel selection-inspector">
+            <h4 class="editor-panel-title">
                 {{ summary.count }} {{ summary.count === 1 ? 'brick' : 'bricks' }} selected
             </h4>
-            <p class="structure-instance-hint">
-                Position (center) X {{ round1(center.x) }} · Y {{ round1(center.y) }} · Z {{ round1(center.z) }}
+            <p class="editor-panel-hint">
+                X {{ round1(center.x) }} · Y {{ round1(center.y) }} · Z {{ round1(center.z) }}
             </p>
-            <p class="structure-instance-hint selection-inspector-next">{{ hint }}</p>
-            <div class="structure-instance-actions">
+            <p class="editor-panel-hint selection-inspector-next">Drag the gizmo to move · R rotates</p>
+            <div class="editor-panel-actions">
                 <button
-                    type="button" class="structure-instance-btn"
+                    type="button" class="editor-panel-btn"
+                    :disabled="isDisabled('transform.rotateClockwise')"
+                    :title="titleFor('transform.rotateClockwise', 'Rotate +90° (R)')"
+                    @click="run('transform.rotateClockwise')"
+                >Rotate ↻</button>
+                <button
+                    type="button" class="editor-panel-btn"
+                    :disabled="isDisabled('transform.rotateCounterClockwise')"
+                    :title="titleFor('transform.rotateCounterClockwise', 'Rotate −90° (Shift+R)')"
+                    @click="run('transform.rotateCounterClockwise')"
+                >Rotate ↺</button>
+                <button
+                    type="button" class="editor-panel-btn"
                     :disabled="isDisabled('selection.duplicate')"
-                    :title="isDisabled('selection.duplicate') ? reasonFor('selection.duplicate') : 'Duplicate the selection'"
+                    :title="titleFor('selection.duplicate', 'Duplicate the selection (Ctrl/Cmd+D)')"
                     @click="run('selection.duplicate')"
                 >Duplicate</button>
                 <button
-                    type="button" class="structure-instance-btn structure-instance-btn--danger"
+                    type="button" class="editor-panel-btn editor-panel-btn--danger"
                     :disabled="isDisabled('selection.delete')"
-                    :title="isDisabled('selection.delete') ? reasonFor('selection.delete') : 'Delete the selection'"
+                    :title="titleFor('selection.delete', 'Delete the selection (Del)')"
                     @click="run('selection.delete')"
                 >Delete</button>
                 <button
-                    type="button" class="structure-instance-btn"
-                    :disabled="isDisabled('selection.clear')"
-                    :title="isDisabled('selection.clear') ? reasonFor('selection.clear') : 'Clear the selection'"
-                    @click="run('selection.clear')"
-                >Clear</button>
+                    type="button" class="editor-panel-btn"
+                    :disabled="isDisabled('clipboard.copy')"
+                    :title="titleFor('clipboard.copy', 'Copy the selected bricks (Ctrl/Cmd+C)')"
+                    @click="run('clipboard.copy')"
+                >Copy</button>
                 <button
-                    type="button" class="structure-instance-btn"
-                    :disabled="isDisabled('selection.focus')"
-                    :title="isDisabled('selection.focus') ? reasonFor('selection.focus') : 'Frame the camera on the selection'"
-                    @click="run('selection.focus')"
-                >Focus Selection</button>
-                <label v-if="recolor" class="structure-instance-btn selection-inspector-color" title="Recolor the selected bricks">
+                    v-if="!context.clipboardEmpty"
+                    type="button" class="editor-panel-btn"
+                    :disabled="isDisabled('clipboard.paste')"
+                    :title="titleFor('clipboard.paste', 'Paste the clipboard contents (Ctrl/Cmd+V)')"
+                    @click="run('clipboard.paste')"
+                >Paste</button>
+                <label v-if="recolor" class="editor-panel-btn selection-inspector-color" title="Recolor the selected bricks">
                     Color
                     <input type="color" class="selection-inspector-color-input" @input="onColorInput" />
                 </label>
+                <button
+                    type="button" class="editor-panel-btn"
+                    :disabled="isDisabled('selection.focus')"
+                    :title="titleFor('selection.focus', 'Frame the camera on the selection')"
+                    @click="run('selection.focus')"
+                >Focus</button>
+                <button
+                    type="button" class="editor-panel-btn"
+                    :disabled="isDisabled('selection.clear')"
+                    :title="titleFor('selection.clear', 'Deselect everything (Esc)')"
+                    @click="run('selection.clear')"
+                >Deselect</button>
             </div>
-            <CollapsibleSection
-                title="Advanced"
-                :collapsed="advancedCollapsed"
-                @toggle="advancedCollapsed = $event"
-            >
-                <div class="structure-instance-actions">
-                    <button
-                        type="button" class="structure-instance-btn"
-                        :disabled="isDisabled('structure.createFromSelection')"
-                        :title="isDisabled('structure.createFromSelection') ? reasonFor('structure.createFromSelection') : 'Create a reusable Structure from this selection'"
-                        @click="run('structure.createFromSelection')"
-                    >Create Blueprint</button>
-                </div>
-            </CollapsibleSection>
-        </div>
+            <slot></slot>
+        </section>
     `
 };

@@ -126,7 +126,7 @@ device and survive a reload — see
 | `Ctrl/Cmd+A` | Select All | |
 | `Esc` | Clear Selection | Editor's own Escape chain, below — World View's own Escape only ever closes whichever panel is open |
 | `Delete` / `Backspace` | Delete Selection — **Editor only** | one undo step; no keyboard binding at all in World View |
-| Selection panel's **Focus Selection** button — **Editor only** | Frame the camera on the selected brick(s), instantly | no keyboard shortcut; camera-only — never touches the document, selection, or undo history; brick selections only, not structure placements |
+| Selection panel's **Focus** button — **Editor only** | Frame the camera on the selected brick(s), instantly | no keyboard shortcut; camera-only — never touches the document, selection, or undo history; brick selections only, not structure placements |
 
 ## Transform — keyboard (Editor only)
 
@@ -158,23 +158,25 @@ collision.
 
 ## Transform — numeric panel (Editor only)
 
+In the Selection panel's **Exact position & rotation** section.
+
 | Input | Action |
 |---|---|
 | Type in X/Y/Z/R fields | Exact values; empty field = unchanged |
 | Absolute / Offset toggle | Target-the-pivot vs. plain delta |
 | `Enter` or Apply | One operation, one undo step — never snapped |
-| `Esc` in a field | Clear the field (never clears the selection) |
+| `Esc` in a field, or **Reset fields** | Empty the fields (never clears the selection) |
 
 ## Alignment & Distribution (Editor only)
 
-Available in the sidebar's Transform section (under **Advanced**) and
+Available in the Selection panel's **Align, distribute, repeat** section and
 through the palette. Alignment needs **2+ bricks**; distribution needs
 **3+**. Both operate on the whole selection bounds in **world axes** and
 commit one command.
 
 ## Repeat (Editor only)
 
-Also in the sidebar's Transform **Advanced** section. Creates **N**
+Also in the Selection panel's **Align, distribute, repeat** section. Creates **N**
 additional copies of the selection, evenly offset along one axis, as
 **one undo step** — the whole batch is collision-checked before anything
 is created, so a mid-batch collision blocks the entire repeat rather than
@@ -200,7 +202,7 @@ Composing, forking, and your personal library — see
 | Card's **⋮** menu, **Fork As New Document** | Start a brand-new document that begins as a copy of that structure | never modifies the library entry |
 | Built-in card's **⋮** menu, **Fork to My Structures** | Add it to My Structures as-is | no document created, nothing extracted |
 | Any card's **⋮** menu, **Info** | Show a read-only name/category/bricks/footprint/height/source/description panel | never editable |
-| Selection with **1+ bricks**, then **Create Blueprint** (Selection panel's Advanced section, or Command Palette) | Open a small dialog (name / category / description + preview); save the selection as a new entry in **My Structures** | |
+| Selection with **1+ bricks**, then **Create Blueprint** (Selection panel's **Groups & blueprint** section, or Command Palette) | Open a small dialog (name / category / description + preview); save the selection as a new entry in **My Structures** | |
 | **My Structures** card's **⋮** menu, **Rename** | Edit a personal structure's name/category/tags/description | personal structures only |
 | **My Structures** card's **⋮** menu, **Remove** | Delete it from your library | never touches bricks already composed or forked from it |
 | Any card's **⋮** menu, **Export Blueprint** | Download it as a portable JSON file | built-in or personal |
@@ -225,11 +227,14 @@ selectable unit — a live reference, not a copy — see
 
 ## Groups (Editor only)
 
+In the Selection panel's **Groups & blueprint** section; with nothing
+selected, the panel lists your groups so you can click one to select it.
+
 | Operation | Availability |
 |---|---|
-| Create Group | bricks selected |
-| Rename / Duplicate / Delete Group | a group selected |
-| Add Selection / Remove Selection | bricks selected and a group selected |
+| New group | bricks selected |
+| Rename / Duplicate / Delete group | a group selected |
+| Add to group / Remove from group | bricks selected and a group selected |
 
 Group transforms (move/rotate/align/distribute/numeric) operate on the
 resolved member bricks; membership itself is never changed by a
@@ -239,8 +244,8 @@ transform.
 
 | Input | Action | Notes |
 |---|---|---|
-| `Ctrl/Cmd+C` | Copy | requires a selection |
-| `Ctrl/Cmd+V` | Paste | disabled while the clipboard is empty |
+| `Ctrl/Cmd+C`, or the Selection panel's **Copy** | Copy | requires a selection |
+| `Ctrl/Cmd+V`, or the Selection panel's **Paste** | Paste | the button appears once the clipboard has something |
 
 ## Duplicate (Editor only)
 

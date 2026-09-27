@@ -60,6 +60,7 @@
 export class EditorActionRegistry {
     constructor(actions = []) {
         this._actions = new Map();
+        this._executeListeners = new Set();
         for (const action of actions) {
             this.register(action);
         }
@@ -132,7 +133,17 @@ export class EditorActionRegistry {
             return false;
         }
         action.execute({ context });
+        for (const listener of this._executeListeners) {
+            listener(id);
+        }
         return true;
+    }
+
+    // Lets a view refresh state an action changed outside the document,
+    // such as the clipboard, which no document event reports.
+    onExecute(listener) {
+        this._executeListeners.add(listener);
+        return () => this._executeListeners.delete(listener);
     }
 
     static normalizeQuery(query) {

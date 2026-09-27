@@ -1793,3 +1793,37 @@ header.** Follows step 1's reorder (above).
   `tests/WorldViewPanelLayoutBrowser.test.js` adds the folded empty groups, the logged-out Avatar section, the More
   menu, Unpublish's confirmation and Commentary's fold. `tests/NotificationHistoryUILifecycle.test.js` checks the
   panel's wiring in ui/App.js instead of World View.
+
+## Editor sidebar layout (unnumbered, 2026-09-27)
+
+**The Editor's left sidebar shows only what can act on the current selection, and the selection tools sit above the
+Build Library instead of below fifteen bricks.** Same approach as World View's panel layout (above).
+
+- One contextual Selection panel (`ui/components/EditingSidebar.js`, which now renders `SelectionInspector` inside
+  it) replaces the separate Selection, Transform, Groups and Clipboard sections. With nothing selected it shows a
+  hint, Select All, Paste once the clipboard has something, and the group list; with bricks selected, Rotate,
+  Duplicate, Delete, Copy, Paste, Color, Focus and Deselect, with three collapsed sections named for what they hold
+  (Exact position & rotation; Align, distribute, repeat; Groups & blueprint) in place of three "Advanced" toggles.
+  Previously about fifteen disabled controls showed with an empty selection.
+- A StructurePlacement selection shows only StructureInstancePanel. The generic numeric panel used to render beside
+  it, a second X/Y/Z/R form (with a Y the placement never takes) next to the instance's own X/Z/Rotation.
+- Ambiguous labels: the selection's Clear is **Deselect**, the numeric panel's Clear is **Reset fields**, and the
+  group buttons say "group" (Add to group, Delete group, …) so they don't read as acting on the selection.
+- Document Information takes a `compact` prop: the Editor shows the title and an edit button, plus fork origin and
+  the editability notice when they apply. The status row is left out because the toolbar's Saved / Unsaved indicator
+  already shows it, except that a never-saved document gets a small Draft chip (the toolbar says "Saved" for it).
+  World View keeps the full panel.
+- The Place button stays highlighted while placing a structure (`PLACE_STRUCTURE`, `COMPOSE_STRUCTURE`), not only a
+  brick.
+- Bricks show as a two-column tile grid in five display sections (Basic, Structure, Roofs & Stairs, Openings,
+  Details) via `groupBricksForDisplay()` in BuildLibraryPanel.js. Eleven of the fifteen bricks had a registry category
+  to themselves; the sections are display only and `BrickDefinition.category` is unchanged. Both windows now sit
+  together under Openings.
+- The sidebar is 248px wide (was 220px). Its panels share `css/main/editor-sidebar.css` instead of inline styles, and
+  the Align, Repeat and numeric buttons no longer use a monospace font.
+- `EditorActionRegistry#onExecute()`: EditorView refreshes its action context after any action runs. Copy changes
+  the clipboard and not the document, so Paste used to stay disabled after Copy until something else changed.
+- Tests: `tests/EditorSidebarLayoutBrowser.test.js` (empty, brick and placement states, section titles, the numeric
+  focus hook, no sideways overflow with every section open, the compact header against the full one);
+  `tests/BuildLibraryUX.test.js` Section F (display sections over the real brick registry); `tests/EditorUX.test.js`
+  Section E (`onExecute`).

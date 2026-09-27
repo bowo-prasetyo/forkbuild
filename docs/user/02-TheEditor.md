@@ -10,24 +10,29 @@ transform bricks, and how to organize your build with groups.
 │ Toolbar: Save · Publish · New · Export · Import · Recent ·  │
 │          ⌨ Shortcuts                                        │
 ├──────────────────────┬──────────────────────────────────────┤
-│ Tools                │                                      │
-│   Select · Place     │                                      │
-│ Build Library        │            3D Viewport               │
+│ [Select | Place]     │                                      │
+│ Document title    ✎  │                                      │
+│ Selection            │            3D Viewport               │
+│ Build Library        │                                      │
 │   [Bricks|Structures]│                                      │
-│ Selection            │                                      │
-│ Transform            │                                      │
-│ Groups               │                                      │
-│ Clipboard            │                                      │
+│                      │                                      │
 └──────────────────────┴──────────────────────────────────────┘
 ```
 
 - **Toolbar** — save, publish, start a new creation, export or import a
   document as a file, reopen recent ones, and open the **⌨ Shortcuts**
   overlay (also `?`).
-- **Tools** — switch between **Select** (`1`) and **Place** (`2`).
+- **Tools** — switch between **Select** (`1`) and **Place** (`2`). **Place**
+  stays highlighted while you're placing a brick or a structure.
+- **Document title** — the open creation's name. Click **✎** to edit its
+  title, description and license. Whether it's saved is shown in the
+  toolbar.
+- **Selection** — only shows what can act on your current selection; see
+  [The Selection panel](#the-selection-panel) below.
 - **Build Library** — a search box and two tabs:
-  - **Bricks** — everything you can place with the Place tool, grouped by
-    category. Click one to select it (and switch to the Place tool); a
+  - **Bricks** — everything you can place with the Place tool, as tiles in
+    five sections (Basic, Structure, Roofs & Stairs, Openings, Details).
+    Click one to select it (and switch to the Place tool); a
     **Color** swatch then appears for choosing its color — see
     [Brick colors](#brick-colors) below.
   - **Structures** — twenty ready-made structures across five categories
@@ -35,8 +40,23 @@ transform bricks, and how to organize your build with groups.
     plus your own **My Structures**. Click a card to place it — see
     [Structures: composing, forking, and your personal library](#structures-composing-forking-and-your-personal-library)
     below.
-- **Selection / Transform / Groups / Clipboard** — the editing sidebar,
-  covered in the sections below.
+
+### The Selection panel
+
+The panel changes with what you have selected, so it never shows buttons
+that can't do anything yet:
+
+- **Nothing selected** — a short hint, **Select All**, **Paste** once
+  you've copied something, and your groups (click one to select its
+  bricks).
+- **Bricks selected** — how many, where they are, and the everyday
+  actions: **Rotate ↻ / ↺**, **Duplicate**, **Delete**, **Copy**,
+  **Paste**, **Color**, **Focus** and **Deselect**. Less frequent tools are
+  folded into three sections underneath: **Exact position & rotation**,
+  **Align, distribute, repeat**, and **Groups & blueprint**.
+- **A structure instance selected** — its own card instead, with its
+  position, rotation and actions (see
+  [Structure instances](#structure-instances-a-live-reference)).
 
 > **Tip:** Press `Ctrl/Cmd+K` anywhere to open the **Command Palette** — a
 > searchable list of every action in this guide, by name.
@@ -110,20 +130,21 @@ publish or share it.
 
 ## Precise transforms: numeric input, alignment, and repeat
 
-The sidebar's **Transform** section (below Selection) gives you more exact
-ways to move a selection, alongside the gizmo and the keys above:
+The Selection panel's folded sections give you more exact ways to move a
+selection, alongside the gizmo and the keys above:
 
-- **Numeric Transform** — type exact X/Y/Z/Rotation values instead of
+- **Exact position & rotation** — type exact X/Y/Z/Rotation values instead of
   dragging. Toggle **Absolute** (the values are a target for the selection's
   pivot/orientation) or **Offset** (the values are added as a delta), then
   press **Apply** (or `Enter` in a field). An empty field means "leave this
-  unchanged," never zero.
-- **Alignment & Distribution** (under **Advanced**) — nine buttons to align
+  unchanged," never zero. **Reset fields** empties the fields without
+  touching the selection.
+- **Alignment & Distribution** (under **Align, distribute, repeat**) — nine buttons to align
   the whole selection's edges or centers on a world axis (Left/Center/Right,
   Bottom/Center/Top, Front/Center/Back), plus three to spread it evenly
   (Distribute X/Y/Z). Alignment needs **2+ bricks** selected; distribution
   needs **3+**.
-- **Repeat** (under **Advanced**) — makes **N** more copies of the
+- **Repeat** (also under **Align, distribute, repeat**) — makes **N** more copies of the
   selection, evenly spaced along one axis. If any copy would collide, no
   copies are made at all.
 
@@ -132,7 +153,7 @@ nudge — see the
 [Controls Reference](ControlsReference.md#transform--numeric-panel-editor-only) for the
 full field-by-field behavior.
 
-The Selection section's **Focus Selection** button frames the camera on
+The Selection panel's **Focus** button frames the camera on
 the selected bricks without changing anything.
 
 > **Collisions are blocked.** Dragging the gizmo or nudging with the keyboard
@@ -178,20 +199,21 @@ Groups let you name and reuse collections of bricks — like "Roof" or "Windows"
 
 **Create a group:**
 1. Select some bricks.
-2. In the **Groups** panel, click **Create**, then give it a name with
-   **Rename** (below).
+2. Open the Selection panel's **Groups & blueprint** section and click
+   **New group**, then give it a name with **Rename group** (below).
 
 **Use a group:** click a group's name in the list to select it (and its
-bricks). The buttons under the panel's **Advanced** section act on
-whichever group is selected:
+bricks) — the list is in the Selection panel when nothing is selected, and
+in **Groups & blueprint** otherwise. These buttons act on whichever group
+is selected:
 
 | Button | What it does |
 |---|---|
-| **Rename** | Change the group's name |
-| **Duplicate** | Copy the whole group *and* its bricks |
-| **Delete** | Delete the group (the bricks themselves are kept) |
-| **+Sel** | Adds your current selection to the group |
-| **−Sel** | Removes your current selection from the group |
+| **Rename group** | Change the group's name |
+| **Duplicate group** | Copy the whole group *and* its bricks |
+| **Delete group** | Delete the group (the bricks themselves are kept) |
+| **Add to group** | Adds your current selection to the group |
+| **Remove from group** | Removes your current selection from the group |
 
 > **Good to know:** Selecting a group just selects its bricks — it never
 > changes the group. And deleting a group only removes the *label*, not the
@@ -258,7 +280,7 @@ click Fork.
 
 Built something worth reusing? Select the bricks that make it up (a whole
 building, or just a section) and click **Create Blueprint** — it's in the
-Selection panel's **Advanced** section once you have bricks selected, and
+Selection panel's **Groups & blueprint** section once you have bricks selected, and
 in the Command Palette (`Ctrl/Cmd+K`) either way. A small dialog asks for a
 **name**, a **category**, and an optional **description**, with a live
 preview of what you're about to save; click **Create Blueprint** and it's
