@@ -5,9 +5,8 @@
 // CompassIndicator.js (0.2.94): a single glanceable fact
 // ("👥 N online"), never a roster of its own. Clicking it is the one
 // interaction it offers; ui/views/WorldView.js wires that click to
-// opening ui/components/WorldMembersPanel.js, the same panel a
-// "Members" button elsewhere in the toolbar also opens — one
-// collaboration surface, two entry points, never two implementations.
+// opening ui/components/WorldMembersPanel.js, and it is World View's
+// only Members button.
 //
 // `onlineCount` is handed down already computed (see WorldView.js's
 // own worldOnlineCount) — this component never counts anything itself,
@@ -27,6 +26,7 @@ export default {
             type="button"
             class="world-presence-indicator"
             aria-label="World presence — open Members panel"
+            title="Members"
             @click="$emit('open')"
         >
             👥 <span class="world-presence-indicator-count">{{ onlineCount }}</span> online

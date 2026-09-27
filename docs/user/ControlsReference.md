@@ -53,7 +53,8 @@ selection, or edit anything. See
 | Compass indicator | Read-only heading with contextual markers for nearby structures and terrain features |
 | **Home** | Return camera and avatar to your own current world (falls back to the shared origin if you haven't focused one of your own yet this session) — see [World View](03-WorldView.md#orientation-and-locations) |
 | **Locations** | Open a list of the World, its structures, landmarks, and places, each with a **Focus** button |
-| **Notifications** | Open your **Notification History** — a read-only log, not a camera action; see [World View](03-WorldView.md#orientation-and-locations) |
+| **?** | Show or hide the camera and walking controls |
+| 🔔 **Notifications** (app header, every page) | Open your **Notification History** — a read-only log, not a camera action; see [World View](03-WorldView.md#orientation-and-locations) |
 | **Camera**: Free / First Person / Third Person / Bird's-Eye | Lock the camera to a fixed offset from your own avatar instead of flying it yourself; click the active one again to return to Free — see [Avatars & Presence](06-AvatarsAndPresence.md#camera-perspective) |
 
 ### Contextual location descriptions

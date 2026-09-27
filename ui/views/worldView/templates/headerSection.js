@@ -1,7 +1,8 @@
-// World view template: the title, context line, document and placement actions, and the
-// Own Publication panel.
+// World view template: the title, byline, status and context lines, and the active document's
+// actions. The Own Publication panel lives in ./publicationSection.js, lower in the panel.
 // It renders in WorldView's scope, so it uses the names its setup() returns.
 export const headerSectionTemplate = `<h2>{{ title }}</h2>
+                <p v-if="author" class="world-view-byline">by {{ author }}</p>
                 <p
                     v-if="activeDocumentInfo"
                     :class="['world-view-status', { 'world-view-status--published': activeDocumentInfo.status === 'published' }]"
@@ -45,41 +46,4 @@ export const headerSectionTemplate = `<h2>{{ title }}</h2>
                         title="Inspect, preview, and restore this document's command history"
                         @click="openHistoryPanel"
                     >History</button>
-                </div>
-                <div v-if="activePlacementInfo" class="world-view-actions">
-                    <button
-                        class="action-btn"
-                        :disabled="!activePlacementInfo.movable"
-                        @click="openPlacementEditor(activePlacementInfo)"
-                    >Move Placement</button>
-                </div>
-                <p v-if="author">by {{ author }}</p>
-                <!--
-                    Mounted beside Save/Publish rather than inside World Encounters, so
-                    distributing your own Snapshot never depends on primary mode, a peer or
-                    Encounters. The commands are this view's thin wrappers, shared with
-                    WorldEncounterCanvas where they overlap.
-                -->
-                <OwnPublicationPanel
-                    v-if="cameraPosition"
-                    :publication="ownPublication"
-                    :unpublishCommand="unpublishOwnPublication"
-                    :placePublicationCommand="placeOwnPublication"
-                    :snapshotDistributionCommand="distributeWorldEncounterSnapshot"
-                    :snapshotDistributionStorageTypes="snapshotDistributionStorageTypes"
-                    :defaultContentDistributionProvider="defaultContentDistributionProvider"
-                    :publicationDistributionCommand="distributeWorldEncounterPublication"
-                    :defaultDiscoveryDistributionProvider="defaultAnnouncementDiscoveryProvider"
-                    :discoverSnapshotCommand="discoverOwnSnapshot"
-                    :exportSnapshotCommand="exportOwnSnapshot"
-                    :discoverSnapshotCandidatesCommand="discoverSnapshotCandidatesCommand"
-                    :worldDiscoverySourceRegistry="worldDiscoverySourceRegistry"
-                    :resolveSelectedSnapshotCommand="resolveSelectedSnapshotCommand"
-                    :materializeSelectedSnapshotCommand="materializeSelectedSnapshotCommand"
-                    :placementInfo="activePlacementInfo"
-                    :getPublicationCommentariesCommand="getPublicationCommentariesCommand"
-                    :addPublicationCommentaryCommand="addPublicationCommentaryCommand"
-                    :viewerIdentityId="myIdentityId"
-                    :getPublicationPlacementsCommand="getPublicationPlacementsCommand"
-                    :discoverSnapshotCandidatesWithOutcomeCommand="discoverSnapshotCandidatesWithOutcomeCommand"
-                />`;
+                </div>`;

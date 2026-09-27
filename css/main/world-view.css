@@ -628,3 +628,151 @@
 .world-view-actions--explore {
     margin-top: 0.4rem;
 }
+
+/* World View panel layout. The byline sits under the title, where the
+   header's other facts about the World are. */
+.world-view-byline {
+    margin: 0 0 0.15rem !important;
+    font-size: 0.8rem !important;
+    color: #909090 !important;
+}
+
+/* The controls hint, shown on request under the ? button, so it reads as
+   an answer rather than background text. */
+.world-view-hint--controls {
+    margin-top: 0.4rem !important;
+    color: #b0b0b0 !important;
+    font-style: normal;
+}
+
+.world-view-controls-toggle {
+    min-width: 2rem;
+}
+
+/* Explore Here / What's Here? open the Nearby section they belong to. */
+.world-view-section--nearby .world-view-actions--explore {
+    margin: 0 0 0.5rem;
+}
+
+/* The Own Publication panel (ui/components/OwnPublicationPanel.js), in
+   the World View panel's own publication section. Its heading matches
+   every other section heading; its detail lists and action buttons are
+   compact enough for the 280px panel. */
+.own-publication-panel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.4rem;
+}
+
+/* Buttons flow as a wrapping row; everything else takes a full line. */
+.own-publication-panel > :not(button) {
+    flex-basis: 100%;
+}
+
+.own-publication-panel h4.own-publication-panel-title {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #909090;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.own-publication-panel h5 {
+    margin: 0.5rem 0 0.35rem;
+    font-size: 0.8rem;
+    color: #b0b0b0;
+}
+
+.own-publication-panel dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.15rem 0.6rem;
+    margin: 0;
+    font-size: 0.8rem;
+}
+
+.own-publication-panel dt {
+    color: #707070;
+}
+
+.own-publication-panel dd {
+    margin: 0;
+    color: #d0d0d0;
+    overflow-wrap: anywhere;
+}
+
+.own-publication-placements-list {
+    list-style: none;
+    margin: 0 0 0.5rem;
+    padding: 0;
+}
+
+.own-publication-placement-entry + .own-publication-placement-entry {
+    margin-top: 0.4rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+.own-publication-placement-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.own-publication-panel .own-publication-commentary {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #2a2a2a;
+}
+
+/* The More menu: less frequent actions in a wrapping row, and Unpublish's
+   one-step confirmation. */
+.own-publication-more-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+}
+
+.own-publication-unpublish-confirm {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    flex-basis: 100%;
+}
+
+.own-publication-unpublish-confirm-text {
+    flex-basis: 100%;
+    font-size: 0.8rem !important;
+    color: #e0a34c !important;
+}
+
+/* Commentary collapses to its title line, which is the toggle. */
+.own-publication-commentary-toggle {
+    padding: 0;
+    background: none;
+    border: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.own-publication-commentary-toggle:hover {
+    color: #e0e0e0;
+}
+
+/* The hover card floats over the viewport's bottom-right corner, out of
+   the left panel's flow, so hovering never shifts the panel's content. */
+.world-view-hover-card {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 10;
+    max-width: 260px;
+    margin: 0;
+    pointer-events: none;
+}

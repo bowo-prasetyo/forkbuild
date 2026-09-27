@@ -1,20 +1,8 @@
-// Own Publication panel template: place, unpublish and distribute actions, Snapshot export,
-// and the Publication's own Snapshot discovery and attribution results.
+// Own Publication panel template: Distribute, the More menu (Snapshot export and match check,
+// Diagnostic Tools, Unpublish with a confirmation), the share link, and the results of those actions.
 // It renders in OwnPublicationPanel's scope, so it uses the component's props, data, computed properties and methods.
-export const publicationActionsSectionTemplate = `<!--
-                Retracts the Publication from the catalog only; never a placement, the
-                Document or distributed material.
-            -->
-            <!-- Unpublish and Distribute act as the publisher: offered on the viewer's own Publication only. -->
+export const publicationActionsSectionTemplate = `<!-- Distribute acts as the publisher: offered on the viewer's own Publication only. -->
             <template v-if="isOwnPublication">
-                <button
-                    v-if="unpublishCommand"
-                    type="button"
-                    class="action-btn own-publication-unpublish-action"
-                    :disabled="!publication"
-                    @click="unpublishOwnPublication"
-                >Unpublish</button>
-
                 <!-- Opens WorldDistributionDialog, which holds every storage/substrate choice. -->
                 <button
                     v-if="snapshotDistributionCommand || publicationDistributionCommand"
@@ -24,6 +12,75 @@ export const publicationActionsSectionTemplate = `<!--
                     @click="distributionDialogOpen = true"
                 >Distribute</button>
             </template>
+
+            <!-- The less frequent actions, one click away; still on the primary screen. -->
+            <button
+                v-if="hasMoreActions"
+                type="button"
+                class="action-btn own-publication-more-trigger"
+                :aria-expanded="moreActionsOpen ? 'true' : 'false'"
+                @click="moreActionsOpen = !moreActionsOpen"
+            >More {{ moreActionsOpen ? '▴' : '▾' }}</button>
+
+            <div v-if="moreActionsOpen" class="own-publication-more-actions">
+                <!-- Shows the exported package's identity facts only. Deliberately no file save, download, or copy-to-clipboard. -->
+                <button
+                    v-if="exportSnapshotCommand"
+                    type="button"
+                    class="action-btn own-publication-export-action"
+                    :disabled="!publication || snapshotExportExecuting"
+                    @click="exportOwnSnapshot"
+                >{{ snapshotExportExecuting ? 'Exporting…' : 'Export Snapshot' }}</button>
+
+                <!-- Checks whether this Publication's own contentHash resolves. -->
+                <button
+                    v-if="discoverSnapshotCommand"
+                    type="button"
+                    class="action-btn own-publication-discovery-action"
+                    :disabled="!publication || !publication.contentReference || snapshotDiscoveryExecuting"
+                    @click="discoverOwnSnapshot"
+                >{{ snapshotDiscoveryExecuting ? 'Checking…' : 'Check Snapshot Match' }}</button>
+
+                <!-- Opens the manual diagnostic pipeline's popup (./diagnosticToolsSection.js). -->
+                <button
+                    v-if="discoverSnapshotCandidatesCommand || resolveSelectedSnapshotCommand || materializeSelectedSnapshotCommand"
+                    type="button"
+                    class="action-btn own-publication-diagnostic-trigger"
+                    @click="diagnosticToolsOpen = true"
+                >Diagnostic Tools</button>
+
+                <!--
+                    Retracts the Publication from the catalog only; never a placement, the
+                    Document or distributed material. Acts as the publisher, so it is offered on
+                    the viewer's own Publication only, and asks once before acting.
+                -->
+                <template v-if="isOwnPublication && unpublishCommand">
+                    <button
+                        v-if="!unpublishConfirming"
+                        type="button"
+                        class="action-btn own-publication-unpublish-request-action"
+                        :disabled="!publication"
+                        @click="unpublishConfirming = true"
+                    >Unpublish…</button>
+                    <div v-else class="own-publication-unpublish-confirm" role="alertdialog" aria-label="Confirm unpublish">
+                        <p class="own-publication-unpublish-confirm-text">
+                            Remove this World from the catalog? Its placements, the Document and any
+                            distributed copies stay.
+                        </p>
+                        <button
+                            type="button"
+                            class="action-btn own-publication-unpublish-action"
+                            :disabled="!publication"
+                            @click="unpublishConfirming = false; unpublishOwnPublication()"
+                        >Unpublish</button>
+                        <button
+                            type="button"
+                            class="action-btn own-publication-unpublish-cancel-action"
+                            @click="unpublishConfirming = false"
+                        >Cancel</button>
+                    </div>
+                </template>
+            </div>
 
             <!-- The link friends can open on any device, once the Signed Claim is on Steem. -->
             <PublicationShareLink v-if="publication" :publication-id="publication.id" :title="publication.title" />
@@ -51,15 +108,7 @@ export const publicationActionsSectionTemplate = `<!--
                 @distribute-snapshot="distributeOwnSnapshot"
             />
 
-            <!-- Shows the exported package's identity facts only. Deliberately no file save, download, or copy-to-clipboard. -->
-            <button
-                v-if="exportSnapshotCommand"
-                type="button"
-                class="action-btn own-publication-export-action"
-                :disabled="!publication || snapshotExportExecuting"
-                @click="exportOwnSnapshot"
-            >{{ snapshotExportExecuting ? 'Exporting…' : 'Export Snapshot' }}</button>
-
+            <!-- Results stay here, outside the More menu, so closing it never hides one. -->
             <p v-if="snapshotExportError" class="own-publication-export-error">{{ snapshotExportError }}</p>
             <dl v-else-if="snapshotExportResult" class="own-publication-export-detail">
                 <dt>Publication</dt>
@@ -67,15 +116,6 @@ export const publicationActionsSectionTemplate = `<!--
                 <dt>Content hash</dt>
                 <dd>{{ snapshotExportResult.contentHash }}</dd>
             </dl>
-
-            <!-- Checks whether this Publication's own contentHash resolves. -->
-            <button
-                v-if="discoverSnapshotCommand"
-                type="button"
-                class="action-btn own-publication-discovery-action"
-                :disabled="!publication || !publication.contentReference || snapshotDiscoveryExecuting"
-                @click="discoverOwnSnapshot"
-            >{{ snapshotDiscoveryExecuting ? 'Checking…' : 'Check Snapshot Match' }}</button>
 
             <p v-if="snapshotDiscoveryError" class="own-publication-discovery-error">{{ snapshotDiscoveryError }}</p>
             <dl v-else-if="snapshotDiscoveryResult" class="own-publication-discovery-detail">

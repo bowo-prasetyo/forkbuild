@@ -1,16 +1,11 @@
-// Own Publication panel template: the Diagnostic Tools popup for the manual Snapshot pipeline.
+// Own Publication panel template: the Diagnostic Tools popup for the manual Snapshot pipeline
+// (its trigger is in the More menu).
 // It renders in OwnPublicationPanel's scope, so it uses the component's props, data, computed properties and methods.
 export const diagnosticToolsSectionTemplate = `<!--
-                Groups the manual diagnostic pipeline in a popup. Presentation only: closing
-                and reopening shows the same state.
+                Groups the manual diagnostic pipeline in a popup, opened from the More menu
+                (./publicationActionsSection.js). Presentation only: closing and reopening
+                shows the same state.
             -->
-            <button
-                v-if="discoverSnapshotCandidatesCommand || resolveSelectedSnapshotCommand || materializeSelectedSnapshotCommand"
-                type="button"
-                class="action-btn own-publication-diagnostic-trigger"
-                @click="diagnosticToolsOpen = true"
-            >Diagnostic Tools</button>
-
             <div
                 v-if="diagnosticToolsOpen"
                 class="modal-overlay own-publication-diagnostic-overlay"

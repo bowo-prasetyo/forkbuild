@@ -1737,3 +1737,59 @@ relationship changes, so neither side ever looked the other up.
   public lobby's frequent republishing goes to `PeerSessionManager` directly and triggers no lookups.
 - Tests: `tests/RendezvousAnswerMailbox.test.js` adds two running Known Peers who connect once both have clicked
   Be Discoverable, with no lookup from a direct (lobby-style) publish; it fails when the new trigger is removed.
+
+## World View panel layout, step 1 (unnumbered, 2026-09-27)
+
+**World View's left panel now reads top to bottom as look, go, around, then your own tools.** An audit found it ran
+about 2,000px in a 280px column, with publication management filling the first ~700px: on a 900px-tall screen, and on
+a phone, Explore / Map / Places and everything below them started off-screen.
+
+- New order: header (title, byline, status, Camera · Editing), then one utility row (Home, Locations, Notifications,
+  👥 N online, Lobby), the Explore / Map / Places tabs, Nearby, inspection panels, Search, Avatar, the controls hint,
+  and the publication section (`ui/views/worldView/templates/publicationSection.js`), with other Worlds in view last.
+  The publication panel is still outside the Explore-only content, so it never depends on primary mode or a peer.
+- Less repetition: the byline moved up under the title; the 👥 N online indicator is now the only Members button (it
+  already opened the same panel); Worlds in View shows only when it lists a World besides the one in the header; the
+  Nearby groups drop their repeated prefix (Places, Landmarks, People, Place Names, World Encounters).
+- Things sit with what they act on: Explore Here / What's Here? open the Nearby section, and Move Placement renders
+  beside Place through `OwnPublicationPanel`'s new `placement-actions` slot.
+- The hover card (`templates/hoverCard.js`) floats over the viewport's bottom-right corner, so hovering no longer
+  shifts the panel's content up and down.
+- The publication panel had no styles of its own: its label/value lists used the browser's 40px indent and its
+  buttons wrapped raggedly. It now has compact grids, a wrapping button row, and a heading styled like the rest.
+- Tests: `tests/WorldViewPanelLayoutBrowser.test.js` mounts the real templates with Vue in Chromium (group titles and
+  the camera queries in Nearby, Worlds in View's visibility, the hover card out of the panel, Move Placement beside
+  Place, the placement grid). The browser runner's import map gains `vue` and serves CSS as `text/css`. Four tests
+  that found the Place Names section by its old title, the commentary-surface allow-list, and the check that the
+  publication panel is never nested in World Encounters follow the moved files.
+
+## World View panel layout, steps 2 and 3 (unnumbered, 2026-09-27)
+
+**World View's panel stops showing controls you can't use or rarely need, and Notifications moves to the app
+header.** Follows step 1's reorder (above).
+
+- Empty states: Places, Landmarks and People show only when they have something, with one line while all three are
+  empty (Place Names and World Encounters always show; their emptiness is a discovery result of its own). Without an
+  avatar of your own, the Avatar section shows only Show Other Avatars and the hint, not four disabled toggles and
+  four disabled camera buttons.
+- The publication panel shows Distribute and the share link up front; **More** holds Export Snapshot, Check Snapshot
+  Match, Diagnostic Tools and Unpublish. Unpublish now asks once (`unpublishConfirming`, reset when the Publication
+  changes). Export and Check stay on the primary screen, only folded, not moved into Diagnostic Tools: 0.9.324 kept
+  that popup for the manual recovery pipeline, and these are ordinary checks on the active Publication. Their results
+  render outside the menu. Commentary folds to "▸ Commentary (N)"; its body uses `v-show`, so the remote check still
+  runs and the count stays current.
+- Notifications is a 🔔 button in the app header beside the account, on every page (a text link in the nav wrapped
+  it onto a second line at 1440px). ui/App.js hosts NotificationHistoryPanel
+  through the new `application/chat/NotificationHistoryAccess.js` (composed in ui/main.js over the same storage World
+  View's session uses; NotificationEventStore keeps no cache). Explore resolves the Publication the way
+  `WorldNavigationSession#findPublicationById()` does; a mounted World View registers its `focusWorld()` so Explore
+  moves within it, since a bare route change would not; elsewhere Explore routes to `/world/:documentId`. World View
+  drops its own Notifications button, dialog and wrappers. Signed out, the panel now says "Sign in to view your
+  notifications" without the use case's class name in front.
+- The controls hint is behind a **?** button at the end of the utility row, readable when shown, instead of
+  low-contrast text in the middle of the panel.
+- Tests: `tests/NotificationHistoryAccess.test.js` (a real comment's notification read through a second store over
+  the same storage, recipient-only; the signed-out message; Publication resolution through both providers; failure and no-identity cases).
+  `tests/WorldViewPanelLayoutBrowser.test.js` adds the folded empty groups, the logged-out Avatar section, the More
+  menu, Unpublish's confirmation and Commentary's fold. `tests/NotificationHistoryUILifecycle.test.js` checks the
+  panel's wiring in ui/App.js instead of World View.

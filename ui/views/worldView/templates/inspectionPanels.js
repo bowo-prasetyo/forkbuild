@@ -1,23 +1,7 @@
-// World view template: the hover and inspection panels and the document, placement and avatar info panels.
+// World view template: the inspection panel and the document, placement and avatar info panels.
+// The hover card floats over the viewport instead (./hoverCard.js).
 // It renders in WorldView's scope, so it uses the names its setup() returns.
-export const inspectionPanelsTemplate = `<div v-if="spatialHover" class="spatial-panel spatial-panel--hover">
-                    <h4>Hover</h4>
-                    <p class="spatial-type">{{ spatialHover.type }}</p>
-                    <p v-if="spatialHover.worldTitle" class="spatial-world">
-                        World: {{ spatialHover.worldTitle }}
-                        <span class="spatial-author">by {{ spatialHover.worldAuthor }}</span>
-                    </p>
-                    <p v-if="spatialHover.brickId" class="spatial-id">
-                        Brick: {{ spatialHover.brickId.slice(0, 8) }}…
-                    </p>
-                    <p v-if="spatialHover.position" class="spatial-pos">
-                        {{ spatialHover.position.x.toFixed(2) }},
-                        {{ spatialHover.position.y.toFixed(2) }},
-                        {{ spatialHover.position.z.toFixed(2) }}
-                    </p>
-                </div>
-
-                <div v-if="spatialInspection" class="spatial-panel spatial-panel--inspection">
+export const inspectionPanelsTemplate = `<div v-if="spatialInspection" class="spatial-panel spatial-panel--inspection">
                     <h4>Inspection</h4>
                     <p class="spatial-type">{{ spatialInspection.type }}</p>
                     <div v-if="spatialInspection.type === 'brick'" class="inspection-fields">

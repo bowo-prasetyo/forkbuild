@@ -162,10 +162,4 @@ export const dialogsTemplate = `<ActionFeedback :message="feedbackMessage" :visi
                         <button class="action-btn" @click="closeLobbyPanel">Close</button>
                     </div>
                 </div>
-            </div>
-            <NotificationHistoryPanel
-                v-if="showNotificationHistoryPanel"
-                :getRecipientNotificationEventsCommand="getRecipientNotificationEventsCommand"
-                :viewPublicationCommand="viewNotificationPublicationCommand"
-                @cancel="closeNotificationHistoryPanel"
-            />`;
+            </div>`;

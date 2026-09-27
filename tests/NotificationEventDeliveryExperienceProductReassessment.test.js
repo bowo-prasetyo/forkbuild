@@ -56,7 +56,11 @@ import { makeIdentity } from './support/TestIdentity.js';
 //               share). Deliberately NOT a bare router.push() — see that
 //               function's own header for why 0.9.380 Section E's own
 //               "navigating to self inside WorldView" finding rules that
-//               out.)
+//               out.) The panel has since moved to the app's top
+//               navigation bar: ui/App.js#viewNotificationPublication
+//               resolves the Publication through NotificationHistoryAccess
+//               and, inside a mounted World View, still calls its
+//               focusWorld(); only on other pages does it route.
 //   Section F — Trust-language review.
 //   Section G — Stale/lifecycle experience.
 //   Section H — Cross-surface consistency.
@@ -117,8 +121,8 @@ function makeReaderFor(recipientIdentityProvider, backend) {
     };
 }
 
-// The exact logic ui/views/WorldView.js#viewNotificationPublicationCommand
-// carries in production, reproduced here so this file can exercise it
+// The logic ui/views/WorldView.js#viewNotificationPublicationCommand carried
+// (now ui/App.js#viewNotificationPublication), reproduced here so this file can exercise it
 // against a REAL WorldNavigationSession without pulling in the DOM/Vue
 // layer WorldView.js itself needs — Section E below separately proves,
 // via source assertion, that the real file's body matches this shape.

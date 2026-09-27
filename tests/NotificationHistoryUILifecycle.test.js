@@ -497,14 +497,15 @@ async function runTests() {
         assert(!/setInterval|setTimeout|WebSocket|subscribe\(/.test(panelCode),
             '37. the panel contains no timer, polling, or subscription machinery — refresh happens on mount and on explicit user action only.');
 
-        // K6. WorldView.js wires the command onto the panel, and its own
-        // command forwards to WorldNavigationSession, never a use case
-        // directly.
-        const viewCode = (await Promise.all(worldViewFiles().map((file) => codeOnlySource(file)))).join('\n');
-        assert(viewCode.includes(':getRecipientNotificationEventsCommand="getRecipientNotificationEventsCommand"'),
-            '38. WorldView.js wires getRecipientNotificationEventsCommand onto NotificationHistoryPanel.');
-        assert(viewCode.includes('session.getRecipientNotificationEvents()'),
-            '39. WorldView.js\'s own command forwards to WorldNavigationSession, never a use case directly.');
+        // K6. The app shell (the header's Notifications button) wires the
+        // command onto the panel, and its command forwards to the app-wide
+        // NotificationHistoryAccess, never a use case or store directly.
+        const appCode = await codeOnlySource('ui/App.js');
+        assert(appCode.includes(':getRecipientNotificationEventsCommand="getRecipientNotificationEventsCommand"'),
+            '38. ui/App.js wires getRecipientNotificationEventsCommand onto NotificationHistoryPanel.');
+        assert(appCode.includes('notificationHistoryAccess.getRecipientNotificationEvents()')
+            && !/NotificationEventStore|GetRecipientNotificationEventsUseCase/.test(appCode),
+            '39. ui/App.js\'s command forwards to NotificationHistoryAccess, never a use case or store directly.');
 
         // K7. WorldNavigationSession delegates to the unmodified use case.
         const sessionCode = (await Promise.all(worldNavigationSessionFiles().map((file) => codeOnlySource(file)))).join('\n');
@@ -522,7 +523,7 @@ async function runTests() {
             '42. the composition root wires GetRecipientNotificationEventsUseCase against the real notificationEventStore/identityProvider.');
 
 
-        console.log('✓ Section K: architectural boundary confirmed — the panel imports nothing, performs no storage access, deduplication, or NotificationEvent construction, determines no recipient of its own, carries no lifecycle vocabulary, and has no polling/timer machinery; the wiring through WorldView.js -> WorldNavigationSession -> CreateWorldViewUseCase is the one composed path; and every pre-existing application/core/storage file this milestone depends on remains unmodified.');
+        console.log('✓ Section K: architectural boundary confirmed — the panel imports nothing, performs no storage access, deduplication, or NotificationEvent construction, determines no recipient of its own, carries no lifecycle vocabulary, and has no polling/timer machinery; the panel is wired through ui/App.js -> NotificationHistoryAccess, and WorldNavigationSession -> CreateWorldViewUseCase still composes the session\'s own read; and every pre-existing application/core/storage file this milestone depends on remains unmodified.');
     }
 
     console.log('\n✅ All NotificationHistoryUILifecycle tests passed.');
