@@ -70,12 +70,13 @@ export function composePublicationDistribution({
         if (discoveryProvider === 'steem') return steemSnapshotDiscoveryPublisher;
         return nostrSnapshotDiscoveryPublisher;
     };
-    const snapshotDistributionCommand = (bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider) => executeSnapshotDistributionCommand({
+    const snapshotDistributionCommand = (bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider, placementRecord) => executeSnapshotDistributionCommand({
         bytes,
         contentStore: resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage),
         discoveryPublisher: resolveSnapshotDiscoveryPublisher(discoveryProvider),
         publicationId,
-        claimedPosition
+        claimedPosition,
+        placementRecord
     });
     // Lets a Remote IPFS CID be announced without re-uploading the bytes through
     // contentStore.put(). May be null.

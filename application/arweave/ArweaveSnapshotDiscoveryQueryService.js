@@ -1,4 +1,4 @@
-import { parseSnapshotDiscoveryEnvelope } from '../../core/SnapshotDiscoveryEnvelope.js';
+import { parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope } from '../../core/SnapshotDiscoveryEnvelope.js';
 import { SnapshotCandidateDiscoveryOutcome } from '../snapshot/SnapshotCandidateDiscoveryOutcome.js';
 import { responseContentLength, byteLength } from '../../utils/responseSize.js';
 
@@ -264,11 +264,7 @@ export class ArweaveSnapshotDiscoveryQueryService {
             if (envelope === null) {
                 continue;
             }
-            const candidate = { contentHash: envelope.contentHash, locator: envelope.locator, storage: envelope.storage };
-            if (envelope.publicationId !== undefined) {
-                candidate.publicationId = envelope.publicationId;
-                candidate.claimedPosition = envelope.claimedPosition;
-            }
+            const candidate = snapshotCandidateFromEnvelope(envelope);
             candidates.push(candidate);
         }
         return candidates;
@@ -343,11 +339,7 @@ export class ArweaveSnapshotDiscoveryQueryService {
             if (envelope === null) {
                 continue;
             }
-            const candidate = { contentHash: envelope.contentHash, locator: envelope.locator, storage: envelope.storage };
-            if (envelope.publicationId !== undefined) {
-                candidate.publicationId = envelope.publicationId;
-                candidate.claimedPosition = envelope.claimedPosition;
-            }
+            const candidate = snapshotCandidateFromEnvelope(envelope);
             candidates.push(candidate);
         }
 

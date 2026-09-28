@@ -536,6 +536,13 @@ the signer allowed.
   publish. PlacePublicationUseCase refuses a placement it doesn't allow
   (`PlacementNotPermittedError`), and `checkPermission()` lets World View
   disable Accept Position before anyone clicks.
+- A publisher's own signed PlacementRecord travels beside its Snapshot
+  announcement (`placementRecord` in core/SnapshotDiscoveryEnvelope.js;
+  World View's `placementClaimFor()` picks it through
+  `getPublisherPlacementRecord()`). A receiving World View adopts it
+  (application/placement/AdoptPublisherPlacementUseCase.js, from
+  useClaimedBuilds.js) straight into its placement registry once the
+  Publication is known, so the build appears where its publisher put it.
 - The same verifier checks identity lifecycle records, device
   authorizations, world edit grants, naming claims and the other signed
   records later milestones added.
@@ -551,7 +558,8 @@ the signer allowed.
   among concurrent revisions (smallest content hash), and core/ConflictSet.js
   records the competitors without discarding either history. Given a
   `findPublicationById`, the merge also rejects a placement its
-  Publication's placement policy doesn't allow;
+  Publication's placement policy doesn't allow. Publisher placements from
+  Snapshot announcements deliberately don't use it (see above);
 - the trust layer around it: core/TrustObservation.js (what a check
   found), identity/TrustPolicy.js (what to do about it; the defaults
   reproduce the pre-0.2.19 behavior), core/FreshnessProof.js and

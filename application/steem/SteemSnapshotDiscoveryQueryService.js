@@ -1,4 +1,4 @@
-import { parseSnapshotDiscoveryEnvelope } from '../../core/SnapshotDiscoveryEnvelope.js';
+import { parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope } from '../../core/SnapshotDiscoveryEnvelope.js';
 import { SnapshotCandidateDiscoveryOutcome } from '../snapshot/SnapshotCandidateDiscoveryOutcome.js';
 import { SteemDiscoveryReadOutcome } from './SteemDiscoveryThreadReader.js';
 
@@ -28,11 +28,7 @@ export class SteemSnapshotDiscoveryQueryService {
         for (const { envelope } of announcements) {
             const parsed = parseSnapshotDiscoveryEnvelope(envelope);
             if (parsed === null) continue;
-            const candidate = { contentHash: parsed.contentHash, locator: parsed.locator, storage: parsed.storage };
-            if (parsed.publicationId !== undefined) {
-                candidate.publicationId = parsed.publicationId;
-                candidate.claimedPosition = parsed.claimedPosition;
-            }
+            const candidate = snapshotCandidateFromEnvelope(parsed);
             candidates.push(candidate);
         }
         return {

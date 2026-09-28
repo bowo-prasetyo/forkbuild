@@ -62,6 +62,7 @@ export function useWorldEncounterCommands({
         if (!publicationContentStore || !publication.contentReference) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
+        const claim = placementClaimFor(publication);
         const snapshotBytes = await publicationContentStore.get(publication.contentReference);
         if (snapshotBytes === null || snapshotBytes === undefined) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
@@ -80,7 +81,7 @@ export function useWorldEncounterCommands({
                     if (!discoveryPublisher) {
                         return { contentReference, announcement: null, announcementError: 'Snapshot distribution is not available.' };
                     }
-                    return discoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs' })
+                    return discoveryPublisher.publish({ contentHash: outcome.contentHash, locator: outcome.locator, storage: 'ipfs', ...claim })
                         .then((announcement) => ({ contentReference, announcement }))
                         .catch((error) => {
                             // An announcement failure never fails the attempt (the content is already
@@ -97,14 +98,29 @@ export function useWorldEncounterCommands({
         if (!snapshotDistributionCommand) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        const placementInfo = session.getPlacementInfoForPublication(publication.id);
         return snapshotDistributionCommand(
             snapshotBytes,
             storage,
-            placementInfo ? placementInfo.publicationId : undefined,
-            placementInfo ? placementInfo.position : undefined,
-            discoveryProvider
+            claim.publicationId,
+            claim.claimedPosition,
+            discoveryProvider,
+            claim.placementRecord
         );
+    }
+
+    // What an announcement says about where the build is. The publisher's own
+    // signed placement, when this device holds it, so receivers can verify the
+    // position; otherwise this device's own placement, as an unsigned claim.
+    // Empty when it was never placed (never a substitute position).
+    function placementClaimFor(publication) {
+        const publisherRecord = typeof session.getPublisherPlacementRecord === 'function'
+            ? session.getPublisherPlacementRecord(publication.id)
+            : null;
+        if (publisherRecord) {
+            return { publicationId: publication.id, claimedPosition: { ...publisherRecord.position }, placementRecord: publisherRecord };
+        }
+        const placementInfo = session.getPlacementInfoForPublication(publication.id);
+        return placementInfo ? { publicationId: placementInfo.publicationId, claimedPosition: placementInfo.position } : {};
     }
 
     // Turns "which publication" into "which contentHash", using the Publication's

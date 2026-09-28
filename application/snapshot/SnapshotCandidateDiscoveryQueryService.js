@@ -169,7 +169,10 @@ function isWellFormedCandidate(candidate) {
 // Pure. The dedup identity this file's own header settles on — see
 // "deduplication key," above.
 function candidateIdentity(candidate) {
-    return `${candidate.storage} ${candidate.contentHash} ${candidate.locator}`;
+    // A signed placement's hash joins it, so a later revision (the publisher
+    // moved the build) is kept beside an earlier one rather than dropped.
+    const record = isPlainObject(candidate.placementRecord) ? candidate.placementRecord.contentHash : '';
+    return `${candidate.storage} ${candidate.contentHash} ${candidate.locator}${record ? ` ${record}` : ''}`;
 }
 
 export class SnapshotCandidateDiscoveryQueryService {

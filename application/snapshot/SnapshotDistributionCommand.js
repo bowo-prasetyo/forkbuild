@@ -254,7 +254,8 @@ export function executeSnapshotDistributionCommand({
     contentStore,
     discoveryPublisher,
     publicationId,
-    claimedPosition
+    claimedPosition,
+    placementRecord
 } = {}) {
     if (!contentStore || typeof contentStore.put !== 'function') {
         throw new Error('executeSnapshotDistributionCommand: a contentStore with a put() method is required');
@@ -266,7 +267,7 @@ export function executeSnapshotDistributionCommand({
         throw new Error('executeSnapshotDistributionCommand: discoveryPublisher must expose a non-empty discoveryTag');
     }
 
-    return runSnapshotDistribution({ bytes, contentStore, discoveryPublisher, publicationId, claimedPosition });
+    return runSnapshotDistribution({ bytes, contentStore, discoveryPublisher, publicationId, claimedPosition, placementRecord });
 }
 
 // The actual async sequence — split out of executeSnapshotDistributionCommand()
@@ -275,7 +276,7 @@ export function executeSnapshotDistributionCommand({
 // own first `await` ever suspends execution; see this file's own header,
 // "Collaborator contract violations are caught at the start, not
 // discovered mid-sequence."
-async function runSnapshotDistribution({ bytes, contentStore, discoveryPublisher, publicationId, claimedPosition }) {
+async function runSnapshotDistribution({ bytes, contentStore, discoveryPublisher, publicationId, claimedPosition, placementRecord }) {
     // A build larger than the chosen storage accepts (Arweave's single
     // transaction) is refused before anything is signed or uploaded, with
     // a message pointing to IPFS, which takes any size.
@@ -293,7 +294,8 @@ async function runSnapshotDistribution({ bytes, contentStore, discoveryPublisher
         locator: contentReference.uri,
         storage: contentReference.storage,
         publicationId,
-        claimedPosition
+        claimedPosition,
+        placementRecord
     });
 
     return { contentReference, announcement };

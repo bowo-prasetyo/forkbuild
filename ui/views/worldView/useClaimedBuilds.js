@@ -7,6 +7,7 @@ import {
     ClaimedBuildStore, ClaimedBuildAcceptance, describeClaimedBuildAcceptance, selectVisibleClaimedBuilds
 } from '../../../application/snapshot/claimed/ClaimedBuilds.js';
 import { ClaimedBuildVerificationOutcome } from '../../../application/snapshot/claimed/VerifyClaimedBuildPublication.js';
+import { PublisherPlacementAdoption } from '../../../application/placement/AdoptPublisherPlacementUseCase.js';
 
 // refreshSpatialUI() runs as the camera moves; the ghost set changes far less
 // often, so an unforced reconcile runs at most this often.
@@ -51,13 +52,21 @@ export function useClaimedBuilds({
     const shown = new Set();
     // key -> { verifying: boolean, message: string | null }
     const verifications = new Map();
+    // Publishers' signed placements waiting for their Publication to become
+    // known here: `${publicationId}:${record hash}` -> record JSON.
+    const pendingPlacements = new Map();
+    const adopting = new Set();
     let lastReconcileAt = -Infinity;
     let active = true;
 
-    // Called with every automatic cascade result. Only an UNPLACED run whose
-    // candidate carried a claimed position becomes a claim: the bytes are
-    // already downloaded and content-checked by then.
+    // Called with every automatic cascade result. A publisher's signed
+    // placement riding with the candidate is offered for adoption whatever the
+    // outcome. Only an UNPLACED run whose candidate carried a claimed position
+    // becomes a claim: the bytes are already downloaded and content-checked by then.
     function noteSnapshotCandidateResult(candidate, result) {
+        if (candidate && candidate.placementRecord) {
+            adoptPublisherPlacement(candidate.placementRecord);
+        }
         if (!candidate || !result || result.outcome !== SnapshotWorldPlacementOutcome.UNPLACED) {
             return;
         }
@@ -68,6 +77,44 @@ export function useClaimedBuilds({
         });
         if (recorded) {
             reconcileClaimedBuilds({ force: true });
+        }
+    }
+
+    // Once adopted, the build is a real placement where its publisher put it,
+    // and its ghost (if any) yields to it on the next reconcile. One the device
+    // can't judge yet waits until its Publication is known.
+    function adoptPublisherPlacement(record) {
+        if (typeof session.adoptPublisherPlacement !== 'function' || !record || !record.publicationId) {
+            return Promise.resolve(null);
+        }
+        const key = `${record.publicationId}:${record.contentHash}`;
+        if (adopting.has(key)) {
+            return Promise.resolve(null);
+        }
+        adopting.add(key);
+        return Promise.resolve().then(() => session.adoptPublisherPlacement(record)).then((adoption) => {
+            adopting.delete(key);
+            if (adoption && adoption.outcome === PublisherPlacementAdoption.PUBLICATION_UNKNOWN) {
+                pendingPlacements.set(key, record);
+            } else {
+                pendingPlacements.delete(key);
+            }
+            if (adoption && adoption.outcome === PublisherPlacementAdoption.ADOPTED && active) {
+                reconcileClaimedBuilds({ force: true });
+                refreshSpatialUI();
+            }
+            return adoption;
+        }, () => {
+            adopting.delete(key);
+            return null;
+        });
+    }
+
+    function retryPendingPlacements() {
+        for (const record of Array.from(pendingPlacements.values())) {
+            if (findPublicationById(record.publicationId)) {
+                adoptPublisherPlacement(record);
+            }
         }
     }
 
@@ -122,6 +169,7 @@ export function useClaimedBuilds({
             return;
         }
         lastReconcileAt = time;
+        retryPendingPlacements();
 
         const viewerPosition = getViewerPosition();
         const visible = selectVisibleClaimedBuilds(store.list(), {
@@ -201,7 +249,11 @@ export function useClaimedBuilds({
                     message: outcome === ClaimedBuildVerificationOutcome.VERIFIED ? null : VERIFICATION_MESSAGES[outcome] || VERIFICATION_MESSAGES.failed
                 });
                 if (outcome === ClaimedBuildVerificationOutcome.VERIFIED) {
-                    feedback.show(`Verified "${row.title}" — you can now accept its position`);
+                    const hasPublisherPlacement = Array.from(pendingPlacements.values())
+                        .some((record) => record.publicationId === row.publicationId);
+                    feedback.show(hasPublisherPlacement
+                        ? `Verified "${row.title}" — showing it where its publisher placed it`
+                        : `Verified "${row.title}" — you can now accept its position`);
                 }
                 if (active) {
                     reconcileClaimedBuilds({ force: true });
