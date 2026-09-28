@@ -564,7 +564,7 @@ async function run() {
     console.log('\nAll Decentralized Publication Repository Integration tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('DecentralizedPublicationRepositoryIntegration.test.js FAILED:', error);
     process.exitCode = 1;
 });

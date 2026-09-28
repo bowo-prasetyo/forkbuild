@@ -492,7 +492,7 @@ async function run() {
     console.log('\n✅ All Role-Aware Provider Resolution tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

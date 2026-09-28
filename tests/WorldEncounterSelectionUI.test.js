@@ -338,7 +338,7 @@ async function run() {
     console.log('\nAll WorldEncounterSelectionUI tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('WorldEncounterSelectionUI.test.js FAILED:', error);
     process.exitCode = 1;
 });

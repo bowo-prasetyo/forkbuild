@@ -594,7 +594,7 @@ async function run() {
     console.log('\n✅ All Selected Snapshot World Placement tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

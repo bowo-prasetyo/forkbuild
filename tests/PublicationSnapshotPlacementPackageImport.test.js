@@ -468,7 +468,7 @@ async function run() {
     console.log('\nAll Publication Snapshot Placement Package Import tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationSnapshotPlacementPackageImport.test.js FAILED:', error);
     process.exitCode = 1;
 });

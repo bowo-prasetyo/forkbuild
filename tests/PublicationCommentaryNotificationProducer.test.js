@@ -407,7 +407,7 @@ async function runTests() {
     console.log('\n✅ All PublicationCommentaryNotificationProducer tests passed.');
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All PublicationCommentaryNotificationProducer tests passed');
 }).catch((error) => {
     console.error('\n✗ PublicationCommentaryNotificationProducer tests failed:', error.message);

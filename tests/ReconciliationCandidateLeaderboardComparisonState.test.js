@@ -304,7 +304,7 @@ async function run() {
     console.log('\nAll ReconciliationCandidateLeaderboardComparisonState tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationCandidateLeaderboardComparisonState.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -195,7 +195,7 @@ async function run() {
     console.log('\nAll DecentralizedWorldDiscoveryQueryRegistryBridge tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('DecentralizedWorldDiscoveryQueryRegistryBridge.test.js FAILED:', error);
     process.exitCode = 1;
 });

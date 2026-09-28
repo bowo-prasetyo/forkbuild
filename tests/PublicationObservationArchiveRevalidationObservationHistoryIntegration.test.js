@@ -452,7 +452,7 @@ async function run() {
     console.log('\nAll PublicationObservationArchiveRevalidationObservationHistoryIntegration tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationObservationArchiveRevalidationObservationHistoryIntegration.test.js FAILED:', error);
     process.exitCode = 1;
 });

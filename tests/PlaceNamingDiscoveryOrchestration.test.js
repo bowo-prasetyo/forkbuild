@@ -587,7 +587,7 @@ async function runTests() {
     console.log('\n✅ All Place Naming Discovery Orchestration tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

@@ -376,7 +376,7 @@ async function run() {
     console.log('\nAll Publication Snapshot Placement Inspection UX tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationSnapshotPlacementInspectionUX.test.js FAILED:', error);
     process.exitCode = 1;
 });

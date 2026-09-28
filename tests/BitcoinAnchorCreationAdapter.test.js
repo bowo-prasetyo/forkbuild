@@ -281,7 +281,7 @@ async function run() {
     console.log('\nAll BitcoinAnchorCreationAdapter tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BitcoinAnchorCreationAdapter.test.js FAILED:', error);
     process.exitCode = 1;
 });

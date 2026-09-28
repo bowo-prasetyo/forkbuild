@@ -773,7 +773,7 @@ async function run() {
     console.log('\nAll Decentralized Publication Repository Merge tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('DecentralizedPublicationRepositoryMerge.test.js FAILED:', error);
     process.exitCode = 1;
 });

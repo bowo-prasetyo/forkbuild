@@ -435,7 +435,7 @@ async function run() {
     console.log('\n✅ All Arweave Gateway Settings UI (0.9.366) tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ArweaveGatewaySettingsEntryPoint.test.js FAILED:', error);
     process.exitCode = 1;
 });

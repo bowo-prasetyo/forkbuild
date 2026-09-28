@@ -132,7 +132,7 @@ async function run() {
     console.log('\nAll LocalFirstSnapshotResolution tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('LocalFirstSnapshotResolution.test.js FAILED:', error);
     process.exitCode = 1;
 });

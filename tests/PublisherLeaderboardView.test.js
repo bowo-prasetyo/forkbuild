@@ -325,7 +325,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublisherLeaderboardView.test.js FAILED:', error);
     process.exitCode = 1;
 });

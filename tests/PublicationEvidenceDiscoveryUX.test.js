@@ -486,7 +486,7 @@ async function run() {
     console.log('\nAll Publication Evidence Discovery UX tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationEvidenceDiscoveryUX.test.js FAILED:', error);
     process.exitCode = 1;
 });

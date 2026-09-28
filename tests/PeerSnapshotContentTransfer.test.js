@@ -478,7 +478,7 @@ async function run() {
     console.log('\nAll Explicit Peer Snapshot Content Transfer tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PeerSnapshotContentTransfer.test.js FAILED:', error);
     process.exitCode = 1;
 });

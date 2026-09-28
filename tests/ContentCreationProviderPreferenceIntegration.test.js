@@ -435,7 +435,7 @@ async function run() {
     console.log('\nAll Content Creation Provider Preference Integration tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ContentCreationProviderPreferenceIntegration.test.js FAILED:', error);
     process.exitCode = 1;
 });

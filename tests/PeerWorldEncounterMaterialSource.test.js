@@ -411,7 +411,7 @@ async function run() {
     console.log('\nAll Peer World Encounter Material Source tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PeerWorldEncounterMaterialSource.test.js FAILED:', error);
     process.exitCode = 1;
 });

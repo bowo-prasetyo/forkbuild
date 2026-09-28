@@ -381,7 +381,7 @@ async function run() {
     console.log('\n✅ All PublicationReplicaContentKnowledge tests passed');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('❌ PublicationReplicaContentKnowledge tests failed:', error);
     process.exitCode = 1;
 });

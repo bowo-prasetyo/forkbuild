@@ -358,7 +358,7 @@ async function runTests() {
     console.log('\n✅ All Automatic Snapshot Encounter Retention Policy tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

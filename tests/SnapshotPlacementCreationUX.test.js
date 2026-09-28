@@ -428,7 +428,7 @@ async function run() {
     console.log('\nAll Explicit Snapshot Placement Creation UX tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('SnapshotPlacementCreationUX.test.js FAILED:', error);
     process.exitCode = 1;
 });

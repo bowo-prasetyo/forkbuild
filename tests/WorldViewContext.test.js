@@ -282,4 +282,4 @@ async function runTests() {
     console.log('✅ All World View Context & Selection Model tests passed.');
 }
 
-runTests().catch((e) => { console.error(e); throw e; });
+await runTests().catch((e) => { console.error(e); throw e; });

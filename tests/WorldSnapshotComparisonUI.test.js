@@ -506,7 +506,7 @@ async function run() {
     console.log('\n✅ All World Snapshot Comparison UI tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

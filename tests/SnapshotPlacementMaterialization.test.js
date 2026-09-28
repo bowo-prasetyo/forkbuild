@@ -445,7 +445,7 @@ async function run() {
     console.log('\n✅ All SnapshotPlacementMaterialization tests passed');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('❌ Test failed:', error.message);
     console.error(error.stack);
     process.exitCode = 1;

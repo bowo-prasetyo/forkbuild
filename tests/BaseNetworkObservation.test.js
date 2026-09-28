@@ -405,7 +405,7 @@ async function run() {
     console.log('\nAll BaseNetworkObservation tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BaseNetworkObservation.test.js FAILED:', error);
     process.exitCode = 1;
 });

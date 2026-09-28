@@ -577,7 +577,7 @@ async function runTests() {
     console.log('\n✅ All NotificationDeduplicationPolicy tests passed.');
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All NotificationDeduplicationPolicy tests passed');
 }).catch((error) => {
     console.error('\n✗ NotificationDeduplicationPolicy tests failed:', error.message);

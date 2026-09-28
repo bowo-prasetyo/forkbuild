@@ -467,7 +467,7 @@ async function run() {
     console.log('\n✅ All Publication Display-Kind Integration tests passed.');
 }
 
-run().then(() => {
+await run().then(() => {
     console.log('\n✓ All PublicationDisplayKindIntegration tests passed');
 }).catch((error) => {
     console.error('\n✗ PublicationDisplayKindIntegration tests failed:', error.message);

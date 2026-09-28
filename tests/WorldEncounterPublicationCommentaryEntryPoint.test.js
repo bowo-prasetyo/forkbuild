@@ -695,7 +695,7 @@ async function runTests() {
     console.log('\n✅ All World Encounter Publication Commentary Entry Point tests passed.');
 }
 
-runTests().catch((err) => {
+await runTests().catch((err) => {
     console.error(err);
     process.exit(1);
 });

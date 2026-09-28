@@ -426,7 +426,7 @@ async function run() {
     console.log('\nAll Persistent Publication Snapshot Placement Catalog tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PersistentPublicationSnapshotPlacementCatalog.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -227,7 +227,7 @@ async function run() {
     console.log('\nAll Live World View tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('LiveWorldView.test.js FAILED:', error);
     process.exitCode = 1;
 });

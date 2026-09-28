@@ -358,7 +358,7 @@ async function run() {
     console.log('\n✅ All Snapshot Discovery World Position Claim tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('SnapshotDiscoveryWorldPositionClaim.test.js FAILED:', error);
     process.exitCode = 1;
 });

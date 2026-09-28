@@ -1184,7 +1184,7 @@ async function main() {
     console.log('This codebase runs three deliberately separate, correctly-named presence protocols (avatar-presence, world-presence, world-spatial-presence) over one authoritative peer-connection layer — never one conflated mechanism. Identity separation holds across all seven axes tested, including through reconnection. Enter/leave semantics are two genuinely different, both-correct designs (explicit for World membership, elapsed-time-inferred plus heartbeat for avatar bodies) rather than an inconsistency. World, avatar/vehicle, and content boundaries all held under live, multi-Wanderer, and adversarial-input testing, and the data model itself (a Map keyed by worldDocumentId) never conflates two Worlds\' own presence records. One real, precisely-named characteristic (N10, not a gap): a live authenticated connection receives every World its peer advertises, not only the one(s) the receiver also happens to be in — correct World-scoping is a property of which worldDocumentId key a caller queries, which every real call site in this codebase (WorldNavigationSession\'s own getWorldPresenceRoster()/getWorldSpatialPresenceRoster(), always called with the current View\'s own documentId) already gets right, confirmed by source citation in Section A/F. No concrete product gap was found; per this milestone\'s own brief, no follow-up implementation milestone is recommended from this audit alone.');
 }
 
-main().then(() => {
+await main().then(() => {
     console.log('\n✓✓✓ ALL WANDERER PRESENCE & SESSION CONTINUITY TESTS PASSED ✓✓✓');
 }).catch((error) => {
     console.error('✗ TEST FAILED:', error.message);

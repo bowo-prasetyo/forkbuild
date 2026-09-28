@@ -150,7 +150,7 @@ async function run() {
     console.log('\nAll ArweavePlaceNamingDiscoverySource tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ArweavePlaceNamingDiscoverySource.test.js FAILED:', error);
     process.exitCode = 1;
 });

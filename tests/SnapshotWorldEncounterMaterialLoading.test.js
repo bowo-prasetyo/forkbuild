@@ -651,7 +651,7 @@ async function run() {
     console.log('\n✅ All Snapshot World Encounter Material Loading tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

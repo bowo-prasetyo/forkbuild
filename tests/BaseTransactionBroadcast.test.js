@@ -646,7 +646,7 @@ async function run() {
     console.log('\nAll BaseTransactionBroadcast tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BaseTransactionBroadcast.test.js FAILED:', error);
     process.exitCode = 1;
 });

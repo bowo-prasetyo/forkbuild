@@ -574,7 +574,7 @@ async function runTests() {
     console.log('\n✅ All Observer-Local Novel Publication Encounter Presentation tests passed.');
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All ObserverLocalNovelPublicationEncounterPresentation tests passed');
 }).catch((error) => {
     console.error('\n✗ ObserverLocalNovelPublicationEncounterPresentation tests failed:', error.message);

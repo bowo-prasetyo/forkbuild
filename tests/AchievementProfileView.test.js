@@ -328,7 +328,7 @@ async function run() {
     console.log('\nAll AchievementProfileView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('AchievementProfileView.test.js FAILED:', error);
     process.exitCode = 1;
 });

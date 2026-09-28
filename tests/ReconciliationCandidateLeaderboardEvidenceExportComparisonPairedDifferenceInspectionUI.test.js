@@ -257,7 +257,7 @@ async function main() {
     console.log('\nAll ReconciliationCandidateLeaderboardEvidenceExportComparisonPairedDifferenceInspectionUI tests passed.');
 }
 
-main().catch((error) => {
+await main().catch((error) => {
     console.error(error.message);
     process.exit(1);
 });

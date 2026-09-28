@@ -298,7 +298,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationDeduplicationView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationDecisionRevalidationObservationDeduplicationView.test.js FAILED:', error);
     process.exitCode = 1;
 });

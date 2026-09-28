@@ -346,7 +346,7 @@ async function runTests() {
     console.log('\n✅ All Diagnostic Tools Surface tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

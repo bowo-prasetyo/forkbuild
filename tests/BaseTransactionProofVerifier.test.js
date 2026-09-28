@@ -383,7 +383,7 @@ async function run() {
     console.log('\n✅ All BaseTransactionProofVerifier tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BaseTransactionProofVerifier.test.js FAILED:', error);
     process.exitCode = 1;
 });

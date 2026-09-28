@@ -232,7 +232,7 @@ async function runTests() {
     console.log('\n✅ All GetPublicationCommentariesUseCase tests passed.');
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All GetPublicationCommentariesUseCase tests passed');
 }).catch((error) => {
     console.error('\n✗ GetPublicationCommentariesUseCase tests failed:', error.message);

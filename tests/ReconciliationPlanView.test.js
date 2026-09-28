@@ -294,7 +294,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationPlanView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationPlanView.test.js FAILED:', error);
     process.exitCode = 1;
 });

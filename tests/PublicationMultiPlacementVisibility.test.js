@@ -409,7 +409,7 @@ async function runTests() {
     console.log('\n✅ All Publication Multi-Placement Visibility tests passed.');
 }
 
-runTests().catch((err) => {
+await runTests().catch((err) => {
     console.error(err);
     process.exit(1);
 });

@@ -436,7 +436,7 @@ async function run() {
     console.log('✅ All StructureRelativeFaceSnapping tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('StructureRelativeFaceSnapping.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -442,7 +442,7 @@ async function run() {
     console.log('\nAll BaseAnchorPublicationRecord tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BaseAnchorPublicationRecord.test.js FAILED:', error);
     process.exitCode = 1;
 });

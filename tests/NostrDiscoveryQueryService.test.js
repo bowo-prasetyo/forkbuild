@@ -238,7 +238,7 @@ async function run() {
     console.log('\nAll NostrDiscoveryQueryService tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('NostrDiscoveryQueryService.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -962,7 +962,7 @@ Section L is where this milestone's second, and most concrete, product-level fin
 The flagship (M) demonstrates the brief's own closing scenario directly, live, end to end, including its own added unsaved-editing branch and failure branch, both holding exactly as this milestone's own investigation into Sections C/D/H predicts. If a follow-up is wanted, the two real, honest leads this milestone surfaces are its own: (1) whether the Editor's Document Info panel should ever report a document it directly published as PUBLISHED, and (2) whether the autosave scheduler's stop()-on-unmount should flush a still-pending checkpoint before cancelling it — both narrow, both optional, and both a genuinely different kind of question than World/Publication identity, which 0.9.576-0.9.578 already closed.`);
 }
 
-main().catch((err) => {
+await main().catch((err) => {
     console.error(err);
     process.exit(1);
 });

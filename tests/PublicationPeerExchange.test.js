@@ -310,7 +310,7 @@ async function run() {
     console.log('\nAll Peer Publication Exchange tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationPeerExchange.test.js FAILED:', error);
     process.exitCode = 1;
 });

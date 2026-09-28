@@ -208,7 +208,7 @@ async function run() {
     console.log('\nAll PublicationDistributionRuntimeProvider tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

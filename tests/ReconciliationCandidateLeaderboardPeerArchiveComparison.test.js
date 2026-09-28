@@ -317,7 +317,7 @@ async function run() {
     console.log('\nAll ReconciliationCandidateLeaderboardPeerArchiveComparison tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationCandidateLeaderboardPeerArchiveComparison.test.js FAILED:', error);
     process.exitCode = 1;
 });

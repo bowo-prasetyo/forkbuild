@@ -83,7 +83,7 @@ async function run() {
     console.log(`\n✅ All Publications View Template Bindings tests passed (${assertionCount} assertions).`);
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationsViewTemplateBindings.test.js FAILED:', error);
     process.exit(1);
 });

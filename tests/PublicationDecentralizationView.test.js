@@ -493,7 +493,7 @@ async function run() {
     console.log('\nAll Publication Decentralization View tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationDecentralizationView.test.js FAILED:', error);
     process.exitCode = 1;
 });

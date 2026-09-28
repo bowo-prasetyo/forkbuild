@@ -432,7 +432,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionRevalidationObservationEvolutionAgreementView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationCandidateDecisionRevalidationObservationEvolutionAgreementView.test.js FAILED:', error);
     process.exitCode = 1;
 });

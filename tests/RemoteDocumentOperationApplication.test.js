@@ -357,7 +357,7 @@ async function runTests() {
 
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All RemoteDocumentOperationApplication tests passed');
 }).catch((error) => {
     console.error('\n✗ RemoteDocumentOperationApplication tests failed:', error.message);

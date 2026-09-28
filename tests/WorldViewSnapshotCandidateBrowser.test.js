@@ -443,7 +443,7 @@ async function runTests() {
     console.log('\n✅ All World View Snapshot Candidate Browser tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

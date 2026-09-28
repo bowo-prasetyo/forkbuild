@@ -377,7 +377,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardSnapshotClaimExchange tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublisherLeaderboardSnapshotClaimExchange.test.js FAILED:', error);
     process.exitCode = 1;
 });

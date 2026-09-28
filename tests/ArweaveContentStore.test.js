@@ -361,7 +361,7 @@ function expectThrowsSync(fn, message) {
     assert(threw, message);
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ArweaveContentStore.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -676,7 +676,7 @@ async function runTests() {
     console.log('\n✅ All Nearby Place Naming Claim Navigation tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

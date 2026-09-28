@@ -459,7 +459,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecisionHistorySynchronization tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationDecisionHistorySynchronization.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -435,7 +435,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationCandidateDecisionEvolutionView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationCandidateDecisionEvolutionView.test.js FAILED:', error);
     process.exitCode = 1;
 });

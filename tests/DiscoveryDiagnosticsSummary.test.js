@@ -295,4 +295,4 @@ async function runTests() {
     console.log('✅ All Trust-Aware Spatial Discovery & Diagnostics tests passed.');
 }
 
-runTests().catch((e) => { console.error(e); throw e; });
+await runTests().catch((e) => { console.error(e); throw e; });

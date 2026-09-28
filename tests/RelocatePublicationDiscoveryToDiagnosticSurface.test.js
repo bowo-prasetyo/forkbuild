@@ -435,7 +435,7 @@ async function run() {
     console.log('\n✅ All Relocate Publication Discovery to a Secondary Diagnostic Surface tests passed.');
 }
 
-run().catch((err) => {
+await run().catch((err) => {
     console.error(err);
     throw err;
 });

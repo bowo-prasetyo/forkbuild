@@ -2227,3 +2227,23 @@ not these catalog envelopes, whose content is read from a store that also holds 
   content-kind names as `tests/PublicationDisplayKindIntegration.test.js` requires.
 - Tests: `tests/OwnLegacyRepublishAdvice.test.js`; `tests/PublicationsPageLayoutBrowser.test.js` covers the order,
   the badge, the advice and the link, and that other people's cards get none of it.
+
+## Test files wait for their own tests (unnumbered, 2026-09-28)
+
+**Every test file now awaits the async work it starts at top level, and both runners refuse one that doesn't.**
+479 of the Node test files ended with `run();` or `run().catch(...)`. Importing such a file resolves before `run()`
+finishes, which `tests/support/RunTestFile.mjs` takes as "the test is done": once nothing is left to wait on it ends
+the process, with a pass if nothing had failed yet, even though later checks never ran. That is how
+`tests/IdentityEventErrorBoundaryAudit.test.js` passed on `main` with an assertion that no longer held (fixed
+in #1263); whether it passed depended on timing.
+
+- Each of those 479 calls is now `await run(...)`. The full suite passes with every file running to its end, so no
+  other test had been hiding a failure this way.
+- Guard: `tests/support/UnawaitedTopLevelWork.mjs` finds a column-0 call to a function the file declares async
+  (`async function name(` or `const name = async`) that isn't awaited. `tests/run.mjs` and `tests/run-browser.mjs`
+  fail such a file without running it, naming the line. Synchronous `run();` calls are left alone: they finish before
+  the import does.
+- Docs: `docs/CodingConventions.md` and `docs/DeveloperFAQ.md` state the rule for Node files too (it was written only
+  for browser tests).
+- Tests: `tests/UnawaitedTopLevelWork.test.js` drives the detector on sample sources, then runs `tests/run.mjs` on a
+  scratch file to show the refusal end to end.

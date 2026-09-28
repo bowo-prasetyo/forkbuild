@@ -439,7 +439,7 @@ async function run() {
     console.log('\nAll Content Provider Preference Settings Entry Point tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ContentProviderPreferenceSettingsEntryPoint.test.js FAILED:', error);
     process.exitCode = 1;
 });

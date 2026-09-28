@@ -399,7 +399,7 @@ bobStack.editorSession.dispose();
 
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All EditorRuntimeCollaboration tests passed');
 }).catch((error) => {
     console.error('\n✗ EditorRuntimeCollaboration tests failed:', error.message);

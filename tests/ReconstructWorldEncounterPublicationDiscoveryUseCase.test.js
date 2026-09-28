@@ -242,7 +242,7 @@ async function run() {
     console.log('\nAll ReconstructWorldEncounterPublicationDiscoveryUseCase tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('✗ ReconstructWorldEncounterPublicationDiscoveryUseCase tests failed:', error.message);
     console.error(error);
     process.exitCode = 1;

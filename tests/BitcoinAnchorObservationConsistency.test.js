@@ -354,7 +354,7 @@ async function run() {
     console.log('\nAll BitcoinAnchorObservationConsistency tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BitcoinAnchorObservationConsistency.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -359,7 +359,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecisionCandidateCorrespondenceView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationDecisionCandidateCorrespondenceView.test.js FAILED:', error);
     process.exitCode = 1;
 });

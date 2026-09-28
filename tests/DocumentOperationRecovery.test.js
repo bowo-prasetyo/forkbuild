@@ -546,7 +546,7 @@ console.log('\n0.9.230 — a replica that knows it is missing a causal predecess
 
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All DocumentOperationRecovery tests passed');
 }).catch((error) => {
     console.error('\n✗ DocumentOperationRecovery tests failed:', error.message);

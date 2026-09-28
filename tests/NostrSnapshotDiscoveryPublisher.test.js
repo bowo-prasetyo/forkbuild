@@ -264,7 +264,7 @@ async function run() {
     console.log('\nAll NostrSnapshotDiscoveryPublisher tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('NostrSnapshotDiscoveryPublisher.test.js FAILED:', error);
     process.exitCode = 1;
 });

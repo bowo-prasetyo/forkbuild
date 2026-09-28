@@ -386,7 +386,7 @@ async function run() {
     console.log('\nAll ArweaveAnchorProviderImplementation tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ArweaveAnchorProviderImplementation.test.js FAILED:', error);
     process.exitCode = 1;
 });

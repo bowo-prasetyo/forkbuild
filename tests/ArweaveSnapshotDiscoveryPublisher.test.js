@@ -383,7 +383,7 @@ async function run() {
     console.log('\nAll ArweaveSnapshotDiscoveryPublisher tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ArweaveSnapshotDiscoveryPublisher.test.js FAILED:', error);
     process.exitCode = 1;
 });

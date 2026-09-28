@@ -144,4 +144,4 @@ async function runTests() {
     console.log('✅ All Avatar Presence tests passed.');
 }
 
-runTests().catch((e) => { console.error(e); throw e; });
+await runTests().catch((e) => { console.error(e); throw e; });

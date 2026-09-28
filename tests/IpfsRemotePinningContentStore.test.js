@@ -177,7 +177,7 @@ async function run() {
     console.log('\nAll IpfsRemotePinningContentStore tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('IpfsRemotePinningContentStore.test.js FAILED:', error);
     process.exitCode = 1;
 });

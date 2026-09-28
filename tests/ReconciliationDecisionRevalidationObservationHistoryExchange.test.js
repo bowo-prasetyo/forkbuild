@@ -506,7 +506,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryExchange tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationDecisionRevalidationObservationHistoryExchange.test.js FAILED:', error);
     process.exitCode = 1;
 });

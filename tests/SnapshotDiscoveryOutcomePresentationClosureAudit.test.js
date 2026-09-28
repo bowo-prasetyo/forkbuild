@@ -582,7 +582,7 @@ async function runTests() {
     console.log('\n✅ All Snapshot Discovery Outcome Presentation Closure Audit tests passed (Sections A-H clean; Section I\'s own originally-named finding is now closed by 0.9.591).');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error('✗ SnapshotDiscoveryOutcomePresentationClosureAudit tests failed:', error.message);
     process.exitCode = 1;
 });

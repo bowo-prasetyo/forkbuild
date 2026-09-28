@@ -381,7 +381,7 @@ async function run() {
     console.log('\nAll Publication Replica Knowledge View tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationReplicaKnowledgeView.test.js FAILED:', error);
     process.exitCode = 1;
 });

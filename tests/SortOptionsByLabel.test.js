@@ -156,7 +156,7 @@ async function run() {
     console.log(`\n✅ All Sort Options By Label tests passed (${assertionCount} assertions).`);
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('SortOptionsByLabel.test.js FAILED:', error);
     process.exit(1);
 });

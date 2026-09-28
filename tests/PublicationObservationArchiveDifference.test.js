@@ -385,7 +385,7 @@ async function run() {
     console.log('\nAll PublicationObservationArchiveDifference tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationObservationArchiveDifference.test.js FAILED:', error);
     console.error(error.stack);
     process.exitCode = 1;

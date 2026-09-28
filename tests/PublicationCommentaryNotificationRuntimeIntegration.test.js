@@ -656,7 +656,7 @@ async function runTests() {
     console.log('\n✅ All PublicationCommentaryNotificationRuntimeIntegration tests passed.');
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All PublicationCommentaryNotificationRuntimeIntegration tests passed');
 }).catch((error) => {
     console.error('\n✗ PublicationCommentaryNotificationRuntimeIntegration tests failed:', error.message);

@@ -348,7 +348,7 @@ async function runTests() {
     console.log('\n✅ All PublicationCommentaryRemoteNotificationBridge tests passed.');
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All PublicationCommentaryRemoteNotificationBridge tests passed');
 }).catch((error) => {
     console.error('\n✗ PublicationCommentaryRemoteNotificationBridge tests failed:', error.message);

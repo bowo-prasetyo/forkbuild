@@ -415,7 +415,7 @@ console.log('\n0.9.236 — the recovered operation replay boundary holds: recove
 
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All RecoveredOperationReplayUseCase tests passed');
 }).catch((error) => {
     console.error('\n✗ RecoveredOperationReplayUseCase tests failed:', error.message);

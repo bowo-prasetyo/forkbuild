@@ -385,7 +385,7 @@ async function run() {
     console.log(`(${assertionCount} assertions)`);
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

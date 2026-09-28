@@ -297,7 +297,7 @@ async function run() {
     console.log('\n✅ All IPFS Gateway Read Failover (0.9.666) tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

@@ -261,7 +261,7 @@ async function run() {
     console.log('\nAll ArweaveGraphqlDiscoveryQueryService tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ArweaveGraphqlDiscoveryQueryService.test.js FAILED:', error);
     process.exitCode = 1;
 });

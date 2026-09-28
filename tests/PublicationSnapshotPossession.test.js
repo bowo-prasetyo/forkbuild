@@ -175,7 +175,7 @@ async function run() {
     console.log('\n✅ All PublicationSnapshotPossession tests passed');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('❌ PublicationSnapshotPossession tests failed:', error);
     process.exitCode = 1;
 });

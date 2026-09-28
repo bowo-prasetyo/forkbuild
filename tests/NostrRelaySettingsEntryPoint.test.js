@@ -581,7 +581,7 @@ async function run() {
     console.log('\n✅ All Nostr Relay Settings UI (0.9.371) tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('NostrRelaySettingsEntryPoint.test.js FAILED:', error);
     process.exitCode = 1;
 });

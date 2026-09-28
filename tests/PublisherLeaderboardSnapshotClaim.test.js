@@ -517,7 +517,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardSnapshotClaim tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublisherLeaderboardSnapshotClaim.test.js FAILED:', error);
     process.exitCode = 1;
 });

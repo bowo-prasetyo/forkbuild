@@ -225,7 +225,7 @@ async function run() {
     console.log('\nAll Publication Anchor Protocol tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationAnchorProtocol.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -476,7 +476,7 @@ async function runTests() {
     console.log('\n✅ All Known Publication Encounter Continuation tests passed.');
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All KnownPublicationEncounterContinuation tests passed');
 }).catch((error) => {
     console.error('\n✗ KnownPublicationEncounterContinuation tests failed:', error.message);

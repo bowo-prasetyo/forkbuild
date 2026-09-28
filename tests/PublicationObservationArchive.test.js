@@ -403,7 +403,7 @@ async function run() {
     console.log('\nAll PublicationObservationArchive tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationObservationArchive.test.js FAILED:', error);
     process.exitCode = 1;
 });

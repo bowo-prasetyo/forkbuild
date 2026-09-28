@@ -439,7 +439,7 @@ async function run() {
     console.log('\nAll Publication Replica Package tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationReplicaPackage.test.js FAILED:', error);
     process.exitCode = 1;
 });

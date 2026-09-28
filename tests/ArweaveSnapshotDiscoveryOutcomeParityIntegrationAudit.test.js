@@ -408,7 +408,7 @@ async function runTests() {
     console.log('\n✅ All Arweave Snapshot Discovery Outcome Parity tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error('✗ ArweaveSnapshotDiscoveryOutcomeParityIntegrationAudit tests failed:', error.message);
     process.exitCode = 1;
 });

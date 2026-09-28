@@ -283,7 +283,7 @@ async function run() {
     console.log('\nAll NostrPublicationDiscoveryPublisher tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('NostrPublicationDiscoveryPublisher.test.js FAILED:', error);
     process.exitCode = 1;
 });

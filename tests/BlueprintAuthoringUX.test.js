@@ -292,7 +292,7 @@ async function run() {
     console.log('\nAll Blueprint Authoring & Versioning UX tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     throw error;
 });

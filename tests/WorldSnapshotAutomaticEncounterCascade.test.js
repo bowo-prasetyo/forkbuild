@@ -828,7 +828,7 @@ async function runTests() {
     console.log('\n✅ All World Snapshot Automatic Encounter Cascade tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

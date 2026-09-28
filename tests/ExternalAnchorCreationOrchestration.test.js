@@ -341,7 +341,7 @@ async function run() {
     console.log('\nAll ExternalAnchorCreationOrchestration tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ExternalAnchorCreationOrchestration.test.js FAILED:', error);
     process.exitCode = 1;
 });

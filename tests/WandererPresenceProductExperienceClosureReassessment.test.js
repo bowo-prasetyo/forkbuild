@@ -910,7 +910,7 @@ inventory of a genuinely different product area.`);
     }
 }
 
-main().catch((error) => {
+await main().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

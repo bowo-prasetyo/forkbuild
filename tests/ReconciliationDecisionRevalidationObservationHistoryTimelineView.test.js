@@ -386,7 +386,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecisionRevalidationObservationHistoryTimelineView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationDecisionRevalidationObservationHistoryTimelineView.test.js FAILED:', error);
     process.exitCode = 1;
 });

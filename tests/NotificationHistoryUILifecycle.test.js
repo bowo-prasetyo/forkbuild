@@ -529,7 +529,7 @@ async function runTests() {
     console.log('\n✅ All NotificationHistoryUILifecycle tests passed.');
 }
 
-runTests().catch((err) => {
+await runTests().catch((err) => {
     console.error(err);
     process.exit(1);
 });

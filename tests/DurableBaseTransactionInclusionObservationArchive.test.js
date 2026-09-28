@@ -379,7 +379,7 @@ async function run() {
     console.log('\nAll DurableBaseTransactionInclusionObservationArchive tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('DurableBaseTransactionInclusionObservationArchive.test.js FAILED:', error);
     console.error(error.stack);
     process.exitCode = 1;

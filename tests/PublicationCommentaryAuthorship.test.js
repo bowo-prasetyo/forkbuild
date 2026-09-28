@@ -276,7 +276,7 @@ async function runTests() {
     console.log('\n✅ All PublicationCommentaryAuthorship tests passed.');
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All PublicationCommentaryAuthorship tests passed');
 }).catch((error) => {
     console.error('\n✗ PublicationCommentaryAuthorship tests failed:', error.message);

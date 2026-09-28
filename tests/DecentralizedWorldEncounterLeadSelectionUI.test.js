@@ -426,7 +426,7 @@ async function run() {
     console.log('\nAll DecentralizedWorldEncounterLeadSelectionUI tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('DecentralizedWorldEncounterLeadSelectionUI.test.js FAILED:', error);
     process.exitCode = 1;
 });

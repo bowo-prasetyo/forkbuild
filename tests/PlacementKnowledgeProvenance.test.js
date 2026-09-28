@@ -511,7 +511,7 @@ async function run() {
     console.log('\nAll Snapshot Placement Provenance & Observation Boundary tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PlacementKnowledgeProvenance.test.js FAILED:', error);
     process.exitCode = 1;
 });

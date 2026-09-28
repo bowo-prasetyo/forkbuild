@@ -371,7 +371,7 @@ function decodeBase64Url(value) {
     return new TextDecoder().decode(bytes);
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ArweaveTaggedTransactionUpload.test.js FAILED:', error);
     process.exitCode = 1;
 });

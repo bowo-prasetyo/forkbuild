@@ -431,7 +431,7 @@ narrow as 0.9.200 recommended.
 `);
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

@@ -306,7 +306,7 @@ async function run() {
     console.log('\nAll BaseAnchorPublicationObservation tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BaseAnchorPublicationObservation.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -420,7 +420,7 @@ async function run() {
     console.log('\nAll BaseReviewedTransactionSigning tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BaseReviewedTransactionSigning.test.js FAILED:', error);
     process.exitCode = 1;
 });

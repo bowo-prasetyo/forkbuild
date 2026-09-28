@@ -241,7 +241,7 @@ async function run() {
     console.log('\nAll IpfsPublicationContentVerificationHistory tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('IpfsPublicationContentVerificationHistory.test.js FAILED:', error);
     process.exitCode = 1;
 });

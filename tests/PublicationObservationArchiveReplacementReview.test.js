@@ -280,7 +280,7 @@ async function run() {
     console.log('\nAll PublicationObservationArchiveReplacementReview tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationObservationArchiveReplacementReview.test.js FAILED:', error);
     console.error(error.stack);
     process.exitCode = 1;

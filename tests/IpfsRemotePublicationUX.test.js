@@ -318,7 +318,7 @@ async function run() {
     console.log('\nAll IpfsRemotePublicationUX tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('IpfsRemotePublicationUX.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -414,7 +414,7 @@ async function run() {
     console.log('\n✅ All Role Provider Preference Application Boundary tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

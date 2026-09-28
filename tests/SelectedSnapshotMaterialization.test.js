@@ -482,7 +482,7 @@ async function run() {
     console.log('\n✅ All Selected Snapshot Materialization tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

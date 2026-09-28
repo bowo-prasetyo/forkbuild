@@ -288,7 +288,7 @@ async function run() {
     console.log('\nAll Publication Center: External Evidence UX tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationEvidenceUX.test.js FAILED:', error);
     process.exitCode = 1;
 });

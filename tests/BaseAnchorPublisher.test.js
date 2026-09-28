@@ -602,7 +602,7 @@ async function run() {
     console.log('\n✅ All BaseAnchorPublisher tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BaseAnchorPublisher.test.js FAILED:', error);
     process.exitCode = 1;
 });

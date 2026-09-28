@@ -227,7 +227,7 @@ async function run() {
     console.log('\nAll AnnouncementIndex tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('AnnouncementIndex.test.js FAILED:', error);
     process.exitCode = 1;
 });

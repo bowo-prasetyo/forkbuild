@@ -412,7 +412,7 @@ async function run() {
     console.log('\nAll PublisherAchievementBadgeView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublisherAchievementBadgeView.test.js FAILED:', error);
     process.exitCode = 1;
 });

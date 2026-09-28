@@ -125,7 +125,7 @@ async function run() {
     console.log('\nAll NarrowDiscoveryTags tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('NarrowDiscoveryTags.test.js FAILED:', error);
     process.exitCode = 1;
 });

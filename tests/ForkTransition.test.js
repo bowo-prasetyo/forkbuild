@@ -244,4 +244,4 @@ async function runTests() {
     console.log('✅ All Fork Transition & World View Document Switching tests passed.');
 }
 
-runTests().catch((e) => { console.error(e); throw e; });
+await runTests().catch((e) => { console.error(e); throw e; });

@@ -414,7 +414,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardSnapshotVerification tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublisherLeaderboardSnapshotVerification.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -234,7 +234,7 @@ async function run() {
     console.log('\nAll BasePublicationTransactionReview tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BasePublicationTransactionReview.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -512,7 +512,7 @@ console.log('\n0.9.237 — the causal application deferral boundary holds: a NOT
 
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All DocumentOperationDeferralUseCase tests passed');
 }).catch((error) => {
     console.error('\n✗ DocumentOperationDeferralUseCase tests failed:', error.message);

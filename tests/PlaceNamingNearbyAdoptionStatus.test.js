@@ -724,7 +724,7 @@ async function runTests() {
     console.log('\n✅ All Nearby Place Naming Claim Adoption Status Indicator tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

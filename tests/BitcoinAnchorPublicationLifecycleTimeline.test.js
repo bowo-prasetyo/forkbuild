@@ -318,7 +318,7 @@ async function run() {
     console.log('\nAll BitcoinAnchorPublicationLifecycleTimeline tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BitcoinAnchorPublicationLifecycleTimeline.test.js FAILED:', error);
     process.exitCode = 1;
 });

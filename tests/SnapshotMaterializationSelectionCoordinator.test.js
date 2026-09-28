@@ -223,7 +223,7 @@ async function main() {
     await run();
 }
 
-main().catch((error) => {
+await main().catch((error) => {
     console.error('SnapshotMaterializationSelectionCoordinator.test.js FAILED:', error);
     process.exitCode = 1;
 });

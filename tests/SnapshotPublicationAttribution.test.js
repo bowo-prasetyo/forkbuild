@@ -345,7 +345,7 @@ async function run() {
     console.log('\n✅ All Snapshot–Publication Attribution tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

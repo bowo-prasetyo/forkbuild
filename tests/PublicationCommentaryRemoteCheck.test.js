@@ -352,7 +352,7 @@ async function run() {
     }
 }
 
-run().then(() => {
+await run().then(() => {
     console.log('PublicationCommentaryRemoteCheck tests passed');
 }).catch((error) => {
     console.error('✗ PublicationCommentaryRemoteCheck tests failed:', error.message);

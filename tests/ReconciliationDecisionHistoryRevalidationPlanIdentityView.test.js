@@ -386,7 +386,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryRevalidationPlanIdentityView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationDecisionHistoryRevalidationPlanIdentityView.test.js FAILED:', error);
     process.exitCode = 1;
 });

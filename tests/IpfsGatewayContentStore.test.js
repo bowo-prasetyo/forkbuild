@@ -305,7 +305,7 @@ async function run() {
     console.log('\nAll IpfsGatewayContentStore tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('IpfsGatewayContentStore.test.js FAILED:', error);
     process.exitCode = 1;
 });

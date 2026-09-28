@@ -948,7 +948,7 @@ async function run() {
     console.log('\n✅ All Rendezvous Configuration Lifecycle & Convergence Audit tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

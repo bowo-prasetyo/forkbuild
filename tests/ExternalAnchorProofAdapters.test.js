@@ -227,7 +227,7 @@ async function run() {
     console.log('\nAll ExternalAnchorProofAdapters tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ExternalAnchorProofAdapters.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -12,6 +12,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { describeUnawaitedTopLevelCalls } from './support/UnawaitedTopLevelWork.mjs';
 
 const testsDir = dirname(fileURLToPath(import.meta.url));
 const TIMEOUT_MS = 180_000;
@@ -30,6 +31,11 @@ const files = readdirSync(testsDir)
     .sort();
 
 function runFile(name) {
+    // Refused without running: its result couldn't be trusted.
+    const unawaited = describeUnawaitedTopLevelCalls(readFileSync(join(testsDir, name), 'utf8'));
+    if (unawaited) {
+        return Promise.resolve({ name, ok: false, ms: 0, output: `[run.mjs] ${name} ${unawaited}` });
+    }
     return new Promise((resolve) => {
         const started = Date.now();
         const child = spawn(process.execPath, ['--import', PRELOAD, RUN_TEST_FILE, join(testsDir, name)], { cwd: join(testsDir, '..') });

@@ -368,7 +368,7 @@ async function run() {
     console.log('\n✅ All EditorView Distribution Result -> Repository Navigation tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

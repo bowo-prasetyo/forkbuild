@@ -512,7 +512,7 @@ async function run() {
     console.log('\nAll Snapshot Possession Observation Exchange tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationSnapshotPossessionExchange.test.js FAILED:', error);
     process.exitCode = 1;
 });

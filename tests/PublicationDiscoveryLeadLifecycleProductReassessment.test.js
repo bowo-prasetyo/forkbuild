@@ -851,7 +851,7 @@ provenance vocabulary was introduced anywhere, exactly as this milestone's own r
 exclude" list requires.`);
 }
 
-run().catch((err) => {
+await run().catch((err) => {
     console.error(err);
     process.exit(1);
 });

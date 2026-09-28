@@ -40,7 +40,7 @@ async function run() {
     console.log('✓ Steem settings: starts from the defaults, never saves them unchanged, and resets');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

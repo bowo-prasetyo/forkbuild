@@ -696,7 +696,7 @@ async function run() {
     console.log('Publication origin this codebase can produce — proceed to 0.9.355\'s product reassessment.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ForkFailureUXConvergenceAudit.test.js FAILED:', error);
     process.exitCode = 1;
 });

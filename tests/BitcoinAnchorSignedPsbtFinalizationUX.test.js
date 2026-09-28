@@ -693,7 +693,7 @@ async function run() {
     console.log('\nAll BitcoinAnchorSignedPsbtFinalizationUX tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BitcoinAnchorSignedPsbtFinalizationUX.test.js FAILED:', error);
     process.exitCode = 1;
 });

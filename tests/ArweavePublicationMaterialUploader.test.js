@@ -321,7 +321,7 @@ async function run() {
     console.log('\nAll ArweavePublicationMaterialUploader tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ArweavePublicationMaterialUploader.test.js FAILED:', error);
     process.exitCode = 1;
 });
