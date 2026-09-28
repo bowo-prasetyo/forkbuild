@@ -1991,3 +1991,25 @@ where it was.
   reach Avatar Control Mode) and `tests/CameraResetKeyBrowser.test.js` (the reset shortcut by default, and off with
   `resetKey: null`).
 - Not done: the Editor's reset still fires while a text field has focus, where Home should only move the cursor.
+
+## Split the Publications guide; Bitcoin wallet on the page (unnumbered, 2026-09-28)
+
+**The Bitcoin wallet can now be connected without an existing anchor.** **Connect Bitcoin Wallet** only appeared
+inside an existing Bitcoin anchor's card, and **Create Bitcoin Anchor** never succeeds, so someone with no anchor
+received from a peer could never reach the Bitcoin pipeline.
+
+- `ui/views/decentralizedPublications/templates/anchoringToolsTab.js`: a page-level **Bitcoin Wallet** card above
+  **Bitcoin Funding**, like **Base Network**, checked against Bitcoin mainnet (the connection view already was).
+  `anchorEvidenceList.js` no longer repeats it inside each Bitcoin anchor's card.
+
+**`docs/user/09-PublicationsAndEvidence.md` is now four guides.** It had grown to about 23,000 words, half of all the
+user docs, with Network Settings (not experimental) buried in it.
+
+- 09 keeps the overview: where claims come from, the Publications page (now with a map of each card's Distribution
+  section and details tabs, and the History tab's Cross-Domain Timeline, which wasn't documented), Commentary, Local
+  Snapshot, Decentralization, and what survives a reload.
+- New `10-NetworkSettings.md`, `11-EvidenceAndStorage.md` (evidence, the Bitcoin and Base pipelines, Snapshot
+  Placements, IPFS publishing, Steem) and `12-ArchiveAndLeaderboards.md`. Together about 11,000 words, rewritten
+  in plain statements. Links from the other guides point at the moved sections.
+- Corrections found on the way: the Proof / Anchoring Provider page also offers Steem, and Historical Bitcoin
+  Anchor Evidence is in the Blockchain Anchoring tab.

@@ -37,7 +37,7 @@ The bar at the top is always visible:
   [Publications & External Evidence](09-PublicationsAndEvidence.md)
 - **Network Settings** — gateways, relays, providers, and peer-connection
   servers, see
-  [Network Settings](09-PublicationsAndEvidence.md#network-settings)
+  [Network Settings](10-NetworkSettings.md)
 - **About** — version info
 
 ## Logging in

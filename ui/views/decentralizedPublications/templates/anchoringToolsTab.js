@@ -50,6 +50,45 @@ export const anchoringToolsTabTemplate = `<div v-show="publicationsToolsTab === 
                 </p>
             </div>
 
+            <!-- Bitcoin wallet: page-level, like Base Network below, so a first
+                 anchor needs no existing one to reach it. This page anchors to
+                 Bitcoin mainnet only. -->
+            <div v-if="bitcoinWalletConnection" class="identity-mgmt-card">
+                <div class="identity-mgmt-card-header">
+                    <span class="identity-mgmt-name">Bitcoin Wallet</span>
+                </div>
+                <p class="form-hint form-hint--neutral">
+                    Connect a Bitcoin wallet to anchor a publication on Bitcoin mainnet. Connecting spends nothing;
+                    every step after it is its own click.
+                </p>
+                <div class="evidence-inspection-adapter">
+                    <span class="peer-badge" :class="bitcoinWalletConnectionBadgeClass()">
+                        {{ bitcoinWalletConnectionView().stateLabel }}
+                    </span>
+                    <dl v-if="isBitcoinWalletConnected()" class="evidence-fields">
+                        <div class="evidence-field"><dt>Account</dt><dd>{{ shortId(bitcoinWalletConnectionView().account) }}</dd></div>
+                        <div class="evidence-field"><dt>Network</dt><dd>{{ bitcoinWalletConnectionView().network }}</dd></div>
+                    </dl>
+                    <!-- A mismatch is named, never resolved on the person's behalf. -->
+                    <p v-if="bitcoinWalletConnectionView().networkMismatch" class="form-hint form-hint--neutral">
+                        Wallet network ({{ bitcoinWalletConnectionView().network }}) is not Bitcoin {{ bitcoinWalletConnectionView().expectedNetwork }}. Connect a wallet on {{ bitcoinWalletConnectionView().expectedNetwork }} to continue.
+                    </p>
+                    <p v-if="bitcoinWalletConnectionState.reason" class="form-hint form-hint--neutral">
+                        {{ bitcoinWalletConnectionState.reason }}
+                    </p>
+                </div>
+                <div class="identity-mgmt-actions">
+                    <button v-if="!isBitcoinWalletConnected()" class="action-btn action-btn--secondary"
+                            :disabled="isBitcoinWalletConnecting()"
+                            @click="connectBitcoinWallet()">
+                        {{ isBitcoinWalletConnecting() ? 'Connecting…' : 'Connect Bitcoin Wallet' }}
+                    </button>
+                    <button v-else class="action-btn action-btn--secondary" @click="disconnectBitcoinWallet()">
+                        Disconnect
+                    </button>
+                </div>
+            </div>
+
             <!-- Bitcoin funding: page-level, for a transaction not built yet.
                  Selects and spends nothing. -->
             <div v-if="bitcoinWalletFundingObserver && isBitcoinWalletConnected()" class="identity-mgmt-card">
