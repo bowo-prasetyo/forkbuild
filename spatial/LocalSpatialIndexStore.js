@@ -1,6 +1,6 @@
 import { SpatialIndexStore } from './SpatialIndexStore.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { computeContentHash } from '../serializer/contentHash.js';
+import { CONTENT_HASH_ALGORITHM, computeContentHash } from '../serializer/contentHash.js';
 
 const INDEX_CONTENT_KEY_PREFIX = 'spatial-index-content:';
 const ROOT_POINTER_KEY = 'spatial-index-root';
@@ -26,7 +26,7 @@ export class LocalSpatialIndexStore extends SpatialIndexStore {
         const hash = computeContentHash(text);
         const reference = new ContentReference({
             hash,
-            algorithm: 'fnv1a-32',
+            algorithm: CONTENT_HASH_ALGORITHM,
             mediaType: 'application/json',
             size: text.length,
             storage: 'spatial-index-local'

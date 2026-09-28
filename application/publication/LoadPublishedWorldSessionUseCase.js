@@ -1,5 +1,6 @@
 import { PublishedWorldSession } from './PublishedWorldSession.js';
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
+import { describeContentHashMismatch } from '../../serializer/contentHash.js';
 
 // Loads a Publication's snapshot into a read-only runtime session.
 //
@@ -36,10 +37,10 @@ export class LoadPublishedWorldSessionUseCase {
             if (!bytes) {
                 throw new Error(`LoadPublishedWorldSessionUseCase: content not found for hash ${publication.contentReference.hash}`);
             }
-            if (!publication.contentReference.verify(bytes)) {
+            if (!publication.contentReference.verify(bytes, { allowLegacy: this._isOwnPublication(publication) })) {
                 throw new Error(
                     `LoadPublishedWorldSessionUseCase: snapshot integrity check failed `
-                    + `for publication ${publication.id} (hash mismatch)`
+                    + `for publication ${publication.id} (${describeContentHashMismatch(publication.contentReference.hash)})`
                 );
             }
             snapshotJson = JSON.parse(bytes);
@@ -60,5 +61,10 @@ export class LoadPublishedWorldSessionUseCase {
 
         const document = this._documentSerializer.deserialize(snapshotJson);
         return new PublishedWorldSession({ document, publication });
+    }
+
+    _isOwnPublication(publication) {
+        return typeof this._publisherProvider?.isOwnPublication === 'function'
+            && this._publisherProvider.isOwnPublication(publication);
     }
 }

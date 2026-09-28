@@ -1,7 +1,7 @@
 import { ContentStore } from './ContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { ContentUnavailableError } from './IpfsContentStore.js';
-import { computeContentHash } from '../serializer/contentHash.js';
+import { CONTENT_HASH_ALGORITHM, computeContentHash } from '../serializer/contentHash.js';
 import { responseContentLength, byteLength } from '../utils/responseSize.js';
 
 const ARWEAVE_URI_PREFIX = 'ar://';
@@ -278,7 +278,7 @@ export class ArweaveContentStore extends ContentStore {
 
         return new ContentReference({
             hash,
-            algorithm: 'fnv1a-32',
+            algorithm: CONTENT_HASH_ALGORITHM,
             mediaType: 'application/json',
             size: text.length,
             uri: ARWEAVE_URI_PREFIX + id,

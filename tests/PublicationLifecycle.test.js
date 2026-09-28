@@ -401,7 +401,7 @@ function createTestDocument(brickCount = 3) {
     const hash1 = computeContentHash(json);
     const hash2 = computeContentHash(json);
     assert(hash1 === hash2, 'same input produces same hash');
-    assert(typeof hash1 === 'string' && hash1.length === 8, 'hash is 8-char hex');
+    assert(typeof hash1 === 'string' && /^[0-9a-f]{64}$/.test(hash1), 'hash is SHA-256 hex (64 characters)');
 
     const differentJson = JSON.stringify({ a: 1, b: 3 });
     const hash3 = computeContentHash(differentJson);

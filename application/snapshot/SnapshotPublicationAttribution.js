@@ -1,4 +1,4 @@
-import { computeContentHash } from '../../serializer/contentHash.js';
+import { computeContentHash, contentHashMatches } from '../../serializer/contentHash.js';
 import { DecentralizedSnapshotResolutionOutcome } from './DecentralizedSnapshotResolutionOutcome.js';
 import { SnapshotPublicationAttributionOutcome } from './SnapshotPublicationAttributionOutcome.js';
 
@@ -150,7 +150,7 @@ export function resolveSnapshotPublicationAttribution(publication, resolvedSnaps
     const snapshotHash = computeContentHash(text);
 
     return {
-        outcome: snapshotHash === publicationHash
+        outcome: contentHashMatches(text, publicationHash)
             ? SnapshotPublicationAttributionOutcome.MATCH
             : SnapshotPublicationAttributionOutcome.NO_MATCH,
         publicationHash,

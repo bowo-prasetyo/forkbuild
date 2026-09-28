@@ -1,6 +1,6 @@
 import { ContentStore } from './ContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { computeContentHash } from '../serializer/contentHash.js';
+import { CONTENT_HASH_ALGORITHM, computeContentHash } from '../serializer/contentHash.js';
 
 const CONTENT_KEY_PREFIX = 'content:';
 
@@ -19,7 +19,7 @@ export class LocalContentStore extends ContentStore {
         const hash = computeContentHash(text);
         const reference = new ContentReference({
             hash,
-            algorithm: 'fnv1a-32',
+            algorithm: CONTENT_HASH_ALGORITHM,
             mediaType: 'application/json',
             size: text.length,
             storage: 'local'

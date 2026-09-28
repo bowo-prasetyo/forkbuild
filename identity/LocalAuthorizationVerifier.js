@@ -24,7 +24,7 @@ import { getPublicationAnchorSigningDescriptor } from '../core/PublicationAnchor
 import { getPublicationSnapshotPlacementSigningDescriptor } from '../core/PublicationSnapshotPlacement.js';
 import { getPublisherLeaderboardSnapshotClaimSigningDescriptor } from '../core/PublisherLeaderboardSnapshotClaim.js';
 import { getPublicationCommentaryDistributionSigningDescriptor } from '../core/PublicationCommentaryDistributionEnvelope.js';
-import { computeContentHash } from '../serializer/contentHash.js';
+import { computeFnv1a32 } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 
 // The V0.1 concrete verifier.
@@ -774,7 +774,9 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
             return { valid: false, signed: true, reason: 'signature domain mismatch' };
         }
         const bytes = Signature.canonicalBytes(descriptor);
-        if (computeContentHash(bytes) !== sig.signedHash) {
+        // signedHash is a cheap pre-check kept for stored signatures; the
+        // Ed25519 verification below is over the full bytes.
+        if (computeFnv1a32(bytes) !== sig.signedHash) {
             return { valid: false, signed: true, reason: 'signed hash mismatch' };
         }
         const ok = Ed25519.verify(

@@ -1,5 +1,5 @@
 import { Structure } from './Structure.js';
-import { computeContentHash } from '../serializer/contentHash.js';
+import { computeFnv1a32 } from '../serializer/contentHash.js';
 
 // 0.6.5 — Blueprint Identity & Attribution.
 //
@@ -148,7 +148,7 @@ export function canonicalizeBlueprint(structure) {
     };
 }
 
-// The fingerprint itself — `"bp:" + computeContentHash(canonical JSON)`,
+// The fingerprint itself — `"bp:" + computeFnv1a32(canonical JSON)`,
 // the exact same FNV-1a content hash serializer/contentHash.js already
 // computes for a published Document's own integrity check
 // (core/ContentReference.js), applied here to a blueprint's canonical
@@ -162,7 +162,7 @@ export function deriveBlueprintFingerprint(structure) {
     if (!canonical) {
         return null;
     }
-    return BLUEPRINT_FINGERPRINT_PREFIX + computeContentHash(JSON.stringify(canonical));
+    return BLUEPRINT_FINGERPRINT_PREFIX + computeFnv1a32(JSON.stringify(canonical));
 }
 
 // True iff both fingerprints are non-null strings and identical —

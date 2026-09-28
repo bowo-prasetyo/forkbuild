@@ -1,6 +1,6 @@
 import { ContentStore } from './ContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { computeContentHash } from '../serializer/contentHash.js';
+import { CONTENT_HASH_ALGORITHM, computeContentHash } from '../serializer/contentHash.js';
 import { uploadTimeoutMs } from '../utils/uploadTimeout.js';
 import { byteLength } from '../utils/responseSize.js';
 
@@ -101,7 +101,7 @@ export class IpfsContentStore extends ContentStore {
 
         return new ContentReference({
             hash,
-            algorithm: 'fnv1a-32',
+            algorithm: CONTENT_HASH_ALGORITHM,
             mediaType: 'application/json',
             size: text.length,
             uri: IPFS_URI_PREFIX + cid,

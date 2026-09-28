@@ -1,6 +1,6 @@
 import { ContentStore } from './ContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { computeContentHash } from '../serializer/contentHash.js';
+import { CONTENT_HASH_ALGORITHM, computeContentHash } from '../serializer/contentHash.js';
 
 const IPFS_URI_PREFIX = 'ipfs://';
 
@@ -104,7 +104,7 @@ export class IpfsRemotePinningContentStore extends ContentStore {
 
         return new ContentReference({
             hash,
-            algorithm: 'fnv1a-32',
+            algorithm: CONTENT_HASH_ALGORITHM,
             mediaType: 'application/json',
             size: text.length,
             uri: IPFS_URI_PREFIX + cid,

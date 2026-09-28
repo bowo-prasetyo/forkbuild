@@ -1,6 +1,6 @@
 import { DocumentManifest } from './DocumentManifest.js';
 import { DocumentRevision } from '../../core/DocumentRevision.js';
-import { computeContentHash } from '../../serializer/contentHash.js';
+import { contentHashMatches } from '../../serializer/contentHash.js';
 
 // Decides whether a recovery checkpoint should be offered for a document
 // by comparing revisions: the checkpoint is available only when it is
@@ -30,8 +30,9 @@ export class CheckRecoveryUseCase {
         }
 
         // Integrity check: reject a tampered/corrupted checkpoint.
-        const actualHash = computeContentHash(JSON.stringify(checkpoint.document));
-        if (checkpoint.contentHash !== actualHash) {
+        // A checkpoint written before SHA-256 content hashes carries an
+        // FNV-1a one; it is this device's own data, so it still recovers.
+        if (!contentHashMatches(JSON.stringify(checkpoint.document), checkpoint.contentHash, { allowLegacy: true })) {
             this._recoveryStore.remove(documentId);
             return { available: false, documentId, recovery: null, savedRevision, obsolete: true };
         }

@@ -1,5 +1,5 @@
 import { DocumentSerializer } from '../../serializer/DocumentSerializer.js';
-import { computeContentHash } from '../../serializer/contentHash.js';
+import { contentHashMatches } from '../../serializer/contentHash.js';
 
 // Loads a recovery checkpoint back into a Document. The checkpoint goes
 // through the SAME pipeline as every other persisted document:
@@ -23,8 +23,9 @@ export class RecoverDocumentUseCase {
         if (!checkpoint) {
             throw new Error(`RecoverDocumentUseCase: no recovery checkpoint for "${documentId}"`);
         }
-        const actualHash = computeContentHash(JSON.stringify(checkpoint.document));
-        if (checkpoint.contentHash !== actualHash) {
+        // A checkpoint written before SHA-256 content hashes carries an
+        // FNV-1a one; it is this device's own data, so it still recovers.
+        if (!contentHashMatches(JSON.stringify(checkpoint.document), checkpoint.contentHash, { allowLegacy: true })) {
             throw new Error(
                 `RecoverDocumentUseCase: recovery checkpoint integrity check failed for "${documentId}"`
             );

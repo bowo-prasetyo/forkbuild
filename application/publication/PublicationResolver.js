@@ -1,6 +1,7 @@
 import { DecentralizedPublication } from '../../core/DecentralizedPublication.js';
 import { validateDecentralizedPublication } from './DecentralizedPublicationValidator.js';
 import { PublicationResolutionOutcome } from './PublicationResolutionOutcome.js';
+import { LEGACY_HASH_REASON, isLegacyContentHash } from '../../serializer/contentHash.js';
 
 // 0.7.0 — Decentralized Publication Protocol & Content Addressing.
 // 0.7.1 — IPFS Content Publication & Resolution.
@@ -207,7 +208,9 @@ export class PublicationResolver {
 
         // 5. verify the retrieved bytes actually match what was signed.
         if (!publication.contentReference.verify(bytes)) {
-            return this._failure(PublicationResolutionOutcome.CONTENT_HASH_MISMATCH, 'retrieved content does not match its own content reference', publication);
+            return this._failure(PublicationResolutionOutcome.CONTENT_HASH_MISMATCH, isLegacyContentHash(publication.contentReference.hash)
+                ? LEGACY_HASH_REASON
+                : 'retrieved content does not match its own content reference', publication);
         }
 
         let contentJson;

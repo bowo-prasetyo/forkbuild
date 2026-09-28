@@ -1973,6 +1973,42 @@ place it** could then never appear at the publisher's real position for anyone e
   `DistributeExistingClaimedPositionThroughSnapshotDistribution` and `SnapshotDistributionRuntimeComposition`.
 - Not done: the Editor's post-publish **Distribute** still announces no position, as before.
 
+## Content hashes are SHA-256 (unnumbered, 2026-09-28)
+
+**A forged build can no longer pass as someone else's signed Publication.** A Publication's signature covers its
+`contentHash`, not its bytes, and the content hash was 32-bit FNV-1a, which has no secret and can be run backwards:
+three chosen characters in any text field made any build match any hash, in about 15 ms. Anyone who could supply bytes
+for a hash (announcing a Snapshot under a victim's hash, a gateway, a Steem node, a pinning service, or a connected
+peer, lobby strangers included) could show a different build under the author's name and valid signature. Reported
+privately as GHSA-8ggw-xpjf-w4rh.
+
+- `serializer/contentHash.js`: `computeContentHash()` is now SHA-256 over the text's UTF-8 bytes (64 hex characters),
+  through the vendored noble-hashes. `computeFnv1a32()` is the old function under its own name.
+  `contentHashMatches(text, hash, { allowLegacy })` picks the algorithm from the hash's length, never from a field an
+  attacker could set, and refuses text with lone surrogates.
+- `core/ContentReference.js#verify()` refuses an FNV-1a hash unless the caller passes `allowLegacy`, and decodes bytes
+  as strict UTF-8 without dropping a byte-order mark, so different bytes can't decode to the same text. It is strict
+  by default, so a path that forgets to choose fails closed.
+- Legacy hashes are honored only for this device's own data: `LocalPublisherProvider#isOwnPublication()` (same id and
+  same hash as one of its own records) lets World View keep loading Publications made here before the change, and
+  crash-recovery checkpoints written by the previous version still recover. Someone else's legacy Publication is
+  refused with a message saying its author needs to publish it again.
+- Content stores, the Steem manifest and new Publications record `algorithm: 'sha256'`. Equivocation and replay
+  checks for presence and profiles use SHA-256.
+- FNV-1a stays, under its own name, where values must not change and a signature covers the real data: the
+  deterministic grid position (every unplaced build would otherwise move), PlacementRecord's own hash and a
+  Signature's `signedHash` pre-check (stored records keep verifying), and blueprint fingerprints.
+- Hashes are 32 bytes, which still fits a Bitcoin OP_RETURN; peer protocols already accepted up to 128 hex characters.
+- New principle: "A Hash That Binds A Signature Must Resist Collisions". Docs: `docs/Protocol.md` ("Document
+  envelope"), `docs/Architecture.md`, `docs/DeveloperFAQ.md`, `docs/ReleaseNotes-1.0.md`.
+- Tests: `tests/ContentHashCollisionResistance.test.js` forges an FNV-1a collision for a real document and checks it
+  is refused by `ContentReference`, by `StoreSnapshotContentUseCase` (which stored it before the change) and under a
+  legacy hash; that malformed UTF-8, a BOM and lone surrogates are refused; that new Publications use SHA-256; that
+  this device's own legacy Publication and recovery checkpoint still load while someone else's is refused; and that
+  grid positions are unchanged. Two tests that asserted an 8-character hash now expect 64.
+- Not done: the Editor and Publications page don't yet offer to re-publish a legacy Publication, and blueprint
+  fingerprints stay FNV-1a. The mock `SigningIdentity#sign()`/`verify()` used by the unwired delegation code is still
+  a mock and must be replaced before delegation is wired.
 ## World View's Home key goes home (unnumbered, 2026-09-28)
 
 **The Home key in World View now does what the Home button does.** The user guides said it returned the camera and

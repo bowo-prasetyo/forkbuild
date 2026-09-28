@@ -1,7 +1,7 @@
 import { createId } from './createId.js';
 import { Position } from './Position.js';
 import { SpatialBounds } from './SpatialBounds.js';
-import { computeContentHash } from '../serializer/contentHash.js';
+import { computeFnv1a32 } from '../serializer/contentHash.js';
 import { SigningIdentity } from '../identity/SigningIdentity.js';
 import { SignatureType } from './Signature.js';
 import { CausalStamp } from './CausalStamp.js';
@@ -144,7 +144,10 @@ export class PlacementRecord {
             createdAt: this._createdAt.toISOString(),
             updatedAt: this._updatedAt.toISOString()
         });
-        return computeContentHash(canonical);
+        // FNV-1a, not the SHA-256 content hash: stored records must keep
+        // verifying, and nothing trusts this value alone, since the Ed25519
+        // signature covers every field it is computed from.
+        return computeFnv1a32(canonical);
     }
 
     // The canonical signing envelope for the REAL (Ed25519) signature.

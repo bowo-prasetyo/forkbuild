@@ -1,7 +1,7 @@
 import { ContentStore, ContentTooLargeError } from './ContentStore.js';
 import { ContentUnavailableError } from './IpfsContentStore.js';
 import { ContentReference } from '../core/ContentReference.js';
-import { computeContentHash } from '../serializer/contentHash.js';
+import { CONTENT_HASH_ALGORITHM, computeContentHash } from '../serializer/contentHash.js';
 import { STEEM_CONTENT_FAMILY, steemDiscoveryThreadPermlink } from '../core/SteemDiscoveryThread.js';
 import { STEEM_RC_REFUSAL } from '../core/SteemResourceCredits.js';
 import { steemPublicationViewUrl } from '../core/ForkBuildAppLinks.js';
@@ -131,7 +131,7 @@ export class SteemContentStore extends ContentStore {
         const author = typeof this._announcer.currentAccount === 'function' ? this._announcer.currentAccount() : null;
         const reference = new ContentReference({
             hash: plan.contentHash,
-            algorithm: 'fnv1a-32',
+            algorithm: CONTENT_HASH_ALGORITHM,
             mediaType: 'application/json',
             size: plan.size,
             storage: STEEM_CONTENT_STORAGE
@@ -366,7 +366,7 @@ export async function planSteemContentUpload(text) {
 function manifestContent(plan, manifestPermlink) {
     return {
         contentHash: plan.contentHash,
-        algorithm: 'fnv1a-32',
+        algorithm: CONTENT_HASH_ALGORITHM,
         mediaType: 'application/json',
         size: plan.size,
         encoding: plan.encoding,

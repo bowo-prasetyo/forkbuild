@@ -2,6 +2,7 @@ import { PublicationSnapshotPlacement } from '../../../core/PublicationSnapshotP
 import { ContentReference } from '../../../core/ContentReference.js';
 import { validatePublicationSnapshotPlacement } from './PublicationSnapshotPlacementValidator.js';
 import { SnapshotPlacementResolutionOutcome } from './SnapshotPlacementResolutionOutcome.js';
+import { LEGACY_HASH_REASON, isLegacyContentHash } from '../../../serializer/contentHash.js';
 
 // 0.8.18 — Decentralized Snapshot Placement Foundation.
 //
@@ -116,7 +117,9 @@ export class SnapshotPlacementResolver {
 
         // 6. verify the retrieved bytes actually match what was placed.
         if (!reference.verify(bytes)) {
-            return this._failure(SnapshotPlacementResolutionOutcome.CONTENT_HASH_MISMATCH, 'retrieved content does not match this placement\'s own contentHash', placement);
+            return this._failure(SnapshotPlacementResolutionOutcome.CONTENT_HASH_MISMATCH, isLegacyContentHash(reference.hash)
+                ? LEGACY_HASH_REASON
+                : 'retrieved content does not match this placement\'s own contentHash', placement);
         }
 
         return { outcome: SnapshotPlacementResolutionOutcome.RESOLVED, bytes, placement, reason: null };

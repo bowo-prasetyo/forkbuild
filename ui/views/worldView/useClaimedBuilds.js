@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { DocumentSerializer } from '../../../serializer/DocumentSerializer.js';
-import { computeContentHash } from '../../../serializer/contentHash.js';
+import { contentHashMatches } from '../../../serializer/contentHash.js';
 import { distanceBetween } from '../../../core/SpatialQuery.js';
 import { SnapshotWorldPlacementOutcome } from '../../../application/snapshot/placement/SnapshotWorldPlacementOutcome.js';
 import {
@@ -128,7 +128,7 @@ export function useClaimedBuilds({
         Promise.resolve()
             .then(() => (publicationContentStore ? publicationContentStore.get({ hash: claim.contentHash }) : null))
             .then((text) => {
-                if (typeof text !== 'string' || computeContentHash(text) !== claim.contentHash) {
+                if (typeof text !== 'string' || !contentHashMatches(text, claim.contentHash)) {
                     throw new Error('claimed build content is unavailable or does not match its hash');
                 }
                 const document = documentSerializer.deserialize(JSON.parse(text));

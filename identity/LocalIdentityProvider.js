@@ -8,7 +8,7 @@ import { FailedUnlockTracker } from './FailedUnlockTracker.js';
 import { isVaultExpired, DEFAULT_VAULT_TIMEOUT_MS } from './VaultTimeoutPolicy.js';
 import * as KeyEncryption from './KeyEncryption.js';
 import { Signature, SIGNING_DOMAIN } from '../core/Signature.js';
-import { computeContentHash } from '../serializer/contentHash.js';
+import { computeFnv1a32 } from '../serializer/contentHash.js';
 import * as Ed25519 from './Ed25519.js';
 import * as IdentityExport from './IdentityExport.js';
 import * as IdentityRecovery from './IdentityRecovery.js';
@@ -893,7 +893,7 @@ export class LocalIdentityProvider extends IdentityProvider {
             algorithm: 'Ed25519',
             signer: signerIdentityId,
             signature: Ed25519.bytesToHex(signatureBytes),
-            signedHash: computeContentHash(bytes),
+            signedHash: computeFnv1a32(bytes),
             domain: SIGNING_DOMAIN + '/' + descriptor.type,
             signedAt: new Date()
         });
@@ -1026,7 +1026,7 @@ export class LocalIdentityProvider extends IdentityProvider {
             algorithm: 'Ed25519',
             signer: SigningIdentity.fromPublicKeyHex(identity.publicKey, { username: identity.label }).id,
             signature: Ed25519.bytesToHex(signatureBytes),
-            signedHash: computeContentHash(bytes),
+            signedHash: computeFnv1a32(bytes),
             domain: SIGNING_DOMAIN + '/' + descriptor.type,
             signedAt: new Date()
         });

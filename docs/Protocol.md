@@ -100,9 +100,20 @@ deserializing and serializing again gives byte-identical JSON):
   `placementPolicy` as `'anyone'`). `placementPolicy` is written only when
   it isn't `'anyone'`, so documents that never set it hash as before.
 - The content hash of a document is serializer/contentHash.js over the
-  canonical JSON (FNV-1a, 32-bit, hex). `core/ContentReference.js`
-  records the algorithm (`fnv1a-32` today), so a stronger hash can be
-  introduced without changing the reference shape.
+  canonical JSON: SHA-256 of its UTF-8 bytes, as 64 lowercase hex
+  characters (`sha256`). `core/ContentReference.js` records the algorithm.
+  A signed record commits to its content through this hash, so a reader
+  accepts bytes from anywhere else only when they match a SHA-256 hash.
+- Content published before 2026-09-28 carries a 32-bit FNV-1a hash
+  (`fnv1a-32`, 8 hex characters), which anyone can match with forged bytes
+  in milliseconds. The two are told apart by length, never by the
+  `algorithm` field. An FNV-1a hash is honored only for this device's own
+  data (its own Publications, crash-recovery checkpoints); bytes from a
+  peer, gateway, node or announcement under an FNV-1a hash are refused,
+  and the author has to publish again. Text is hashed as UTF-8 and must be
+  well formed: bytes that aren't valid UTF-8, a byte-order mark and lone
+  surrogates are refused rather than decoded leniently, so different bytes
+  can't reach the same hash.
 
 ### Brick table (schema 2)
 
@@ -889,7 +900,7 @@ A manifest:
       body: <the notice>,
       json_metadata: JSON.stringify({ app: 'forkbuild/<app version>',
         forkbuild: { version: 2, content: {
-          contentHash, algorithm,              // as in the ContentReference (algorithm 'fnv1a-32' today)
+          contentHash, algorithm,              // as in the ContentReference (algorithm 'sha256')
           mediaType, size,                     // size: the content's length in UTF-8 bytes
           encoding,                            // 'utf8' or 'gzip-base64'
           encodedLength,                       // characters of encoded text, across all parts
@@ -917,7 +928,8 @@ permlinks and hashes are known before anything is posted, so the manifest is pos
 
 The part hashes only let a reader find a wrong or edited part quickly. They are not a security boundary: anyone can
 write a manifest, so what makes content trustworthy is the same as for every other store, `contentHash` and the
-signed Publication that names it. The final check is as strong as `contentHash`'s algorithm (`fnv1a-32` today).
+signed Publication that names it. The final check is as strong as `contentHash`'s algorithm (SHA-256; a legacy
+`fnv1a-32` hash is refused, see "Document envelope").
 
 The locator, used as the `ContentReference`'s `uri` and the Snapshot envelope's `locator`:
 
