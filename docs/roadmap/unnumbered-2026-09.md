@@ -2435,3 +2435,28 @@ nothing prompting anyone to make one.
   enforces, and public storage would keep a passphrase-protected copy of every private key open to offline guessing
   forever.
 
+## Repository cards say where a publication was distributed (unnumbered, 2026-09-28)
+
+**Your own publications' Repository cards now say where this device recorded distributing them ("Stored on IPFS ·
+Announced on Nostr"), replacing "Only on this device".** The old note claimed something this device can't know: a
+distribution made from another device, or a Distribute Snapshot (whose result nothing kept past a reload), left it
+showing on a publication that did exist elsewhere. A positive statement of what was recorded is never false in that
+way; with no record, the card says "No distribution recorded on this device".
+
+- `application/publication/OwnPublicationDistributionRecord.js` (replaces `LocalOnlyPublicationCheck.js`, provided as
+  `publicationDistributionRecord`): `describe(publication)` returns null for anyone else's publication, otherwise
+  `{ stored, announced }`, one entry per kind (IPFS, Arweave, Steem; Nostr, Arweave, Steem) with its locator or
+  announcement id. Sources: the Signed Claim's distribution lifecycle (material storage or URI scheme; discovery origin
+  through `substrateOfOrigin()`), signed snapshot placements, and the new log.
+- `application/snapshot/OwnSnapshotDistributionLog.js` (`own-snapshot-distributions`, backed up with your
+  publications): one entry per content hash, storage and substrate. `ui/main/composePublicationDistribution.js` logs
+  every completed `snapshotDistributionCommand`, so the Editor's dialog, World View and the Publications page all
+  record their snapshot distributions.
+- `ui/components/PublicationCard.js`: the line, with each name's locator or announcement id as its tooltip (no link,
+  so looking never contacts a gateway); the "No distribution recorded" line keeps the link to Your Data.
+- Docs: README, `docs/user/13-YourData.md`, `04`, the user README and `docs/Architecture.md`.
+- Tests: `tests/OwnPublicationDistributionRecord.test.js` (origins, the log, describing publications from each
+  source, and the composed command logging a Distribute Snapshot); `tests/LocalOnlyPublicationCheck.test.js` removed.
+- Not done: checking that a recorded upload is still available, and learning about distributions made from another
+  device.
+

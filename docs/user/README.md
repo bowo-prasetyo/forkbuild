@@ -48,7 +48,7 @@ top-level [docs/](..) folder.
     achievements, publisher labels, and the Leaderboard pages.
 13. **[Your Data](13-YourData.md)** — backing up everything this browser
     holds to one encrypted file and restoring it, the smaller exports, and
-    which of your publications exist only on this device.
+    where this device recorded distributing your publications.
 
 ## Reference
 

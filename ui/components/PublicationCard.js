@@ -4,6 +4,7 @@ import SharePublicationButton from './SharePublicationButton.js';
 import FollowButton from './FollowButton.js';
 import { formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
 import { License } from '../../core/License.js';
+import { DISTRIBUTION_KIND_LABELS } from '../../application/publication/OwnPublicationDistributionRecord.js';
 
 // 0.2.31 — one publication, in card form. Pure presentation: every
 // piece of enriched data (description, parent title, fork count) is
@@ -37,7 +38,7 @@ export default {
         // Read only to decide whether to offer the Comment toggle.
         getPublicationCommentariesCommand: { default: null },
         followingFeed: { default: null },
-        localOnlyPublicationCheck: { default: null }
+        publicationDistributionRecord: { default: null }
     },
     props: {
         publication: { type: Object, required: true },
@@ -61,8 +62,18 @@ export default {
         };
     },
     computed: {
-        onlyOnThisDevice() {
-            return Boolean(this.localOnlyPublicationCheck && this.localOnlyPublicationCheck.isOnlyOnThisDevice(this.publication));
+        // Your own publication: where this device recorded distributing it,
+        // or null for anyone else's.
+        distribution() {
+            if (!this.publicationDistributionRecord) return null;
+            const record = this.publicationDistributionRecord.describe(this.publication);
+            if (!record) return null;
+            const label = (entry) => DISTRIBUTION_KIND_LABELS[entry.kind];
+            return {
+                recorded: record.stored.length + record.announced.length > 0,
+                stored: record.stored.map((entry) => ({ label: label(entry), detail: entry.locator })),
+                announced: record.announced.map((entry) => ({ label: label(entry), detail: entry.id ? `Announcement ${entry.id}` : null }))
+            };
         },
         // Only a verified signer can be followed; the typed author name is
         // a label anyone can choose.
@@ -112,8 +123,17 @@ export default {
             <p class="publication-forks" v-if="forkCount > 0">
                 {{ forkCount }} fork(s)
             </p>
-            <p v-if="onlyOnThisDevice" class="publication-local-only">
-                ⚠ Only on this device: clearing this browser's data deletes it.
+            <p v-if="distribution && distribution.recorded" class="publication-distribution">
+                <template v-if="distribution.stored.length">Stored on
+                    <template v-for="(entry, index) in distribution.stored" :key="'s' + entry.label"><template v-if="index"> and </template><span class="publication-distribution-item" :title="entry.detail">{{ entry.label }}</span></template>
+                </template>
+                <template v-if="distribution.stored.length && distribution.announced.length"> · </template>
+                <template v-if="distribution.announced.length">Announced on
+                    <template v-for="(entry, index) in distribution.announced" :key="'a' + entry.label"><template v-if="index"> and </template><span class="publication-distribution-item" :title="entry.detail">{{ entry.label }}</span></template>
+                </template>
+            </p>
+            <p v-else-if="distribution" class="publication-distribution publication-distribution--none">
+                No distribution recorded on this device.
                 <router-link to="/settings/data">Back it up</router-link>, or Explore it and use Distribute under My Publication.
             </p>
             <div class="publication-actions">
