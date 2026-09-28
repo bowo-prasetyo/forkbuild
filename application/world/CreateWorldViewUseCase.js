@@ -12,6 +12,8 @@ import { StructureDocumentResolver } from '../editor/StructureDocumentResolver.j
 import { PublishDocumentUseCase } from '../publication/PublishDocumentUseCase.js';
 import { UnpublishDocumentUseCase } from '../publication/UnpublishDocumentUseCase.js';
 import { PlacePublicationUseCase } from '../placement/PlacePublicationUseCase.js';
+import { AdoptPublisherPlacementUseCase } from '../placement/AdoptPublisherPlacementUseCase.js';
+import { LocalAuthorizationVerifier } from '../../identity/LocalAuthorizationVerifier.js';
 import { MoveWorldPlacementUseCase } from '../placement/MoveWorldPlacementUseCase.js';
 import { RemoveWorldPlacementUseCase } from '../placement/RemoveWorldPlacementUseCase.js';
 import { GridPlacementStrategy } from '../placement/InitialPlacementStrategy.js';
@@ -98,6 +100,12 @@ export class CreateWorldViewUseCase {
             placementRegistry,
             identityProvider
         );
+        // Publishers' own signed placements, announced beside their Snapshots.
+        const adoptPublisherPlacementUseCase = new AdoptPublisherPlacementUseCase({
+            placementRegistry,
+            verifier: new LocalAuthorizationVerifier(),
+            findPublicationById: (publicationId) => publicationActionDiscoveryProvider.findById(publicationId) || null
+        });
         const moveWorldPlacementUseCase = new MoveWorldPlacementUseCase(
             spatialIndexProvider,
             placementRegistry,
@@ -345,6 +353,7 @@ export class CreateWorldViewUseCase {
                     placementRegistry,
                     moveWorldPlacementUseCase,
                     placePublicationUseCase,
+                    adoptPublisherPlacementUseCase,
                     removeWorldPlacementUseCase,
                     unpublishDocumentUseCase,
                     getPublicationCommentariesUseCase,

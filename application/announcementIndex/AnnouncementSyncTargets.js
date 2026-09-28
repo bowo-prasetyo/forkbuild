@@ -1,5 +1,5 @@
 import { AnnouncementKind } from './AnnouncementKinds.js';
-import { parseSnapshotDiscoveryEnvelope } from '../../core/SnapshotDiscoveryEnvelope.js';
+import { parseSnapshotDiscoveryEnvelope, snapshotCandidateFromEnvelope } from '../../core/SnapshotDiscoveryEnvelope.js';
 import { isPlainObject } from '../../utils/typeGuards.js';
 import { ArweaveSnapshotDiscoveryQueryService } from '../arweave/ArweaveSnapshotDiscoveryQueryService.js';
 import { ArweavePlaceNamingDiscoveryPublisher } from '../placeNaming/ArweavePlaceNamingDiscoveryPublisher.js';
@@ -38,12 +38,7 @@ function recordInto(index, kind, tag) {
 function snapshotCandidateOf(text) {
     const envelope = parseSnapshotDiscoveryEnvelope(text);
     if (envelope === null) return null;
-    const candidate = { contentHash: envelope.contentHash, locator: envelope.locator, storage: envelope.storage };
-    if (envelope.publicationId !== undefined) {
-        candidate.publicationId = envelope.publicationId;
-        candidate.claimedPosition = envelope.claimedPosition;
-    }
-    return candidate;
+    return snapshotCandidateFromEnvelope(envelope);
 }
 
 function jsonObjectOf(text) {

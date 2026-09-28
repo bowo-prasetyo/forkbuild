@@ -157,6 +157,32 @@ export const placementMethods = {
         };
     },
 
+    // The publisher's own signed placement of this Publication, as JSON, for
+    // announcing beside its Snapshot; null when this device holds none. If the
+    // publisher placed it more than once, the most recently updated wins.
+    getPublisherPlacementRecord(publicationId) {
+        const publication = this.findPublicationById(publicationId);
+        const publisherId = publication && publication.publisherIdentity ? publication.publisherIdentity.id : null;
+        if (!publisherId || !this._placementRegistry) return null;
+        const records = this._placementRegistry.findByPublicationId(publicationId)
+            .filter((record) => record.signature && record.ownerIdentity && record.ownerIdentity.id === publisherId);
+        if (records.length === 0) return null;
+        const latest = records.reduce((a, b) => (b.updatedAt > a.updatedAt ? b : a));
+        return latest.toJSON();
+    },
+
+    // Offers a publisher's signed placement received beside a Snapshot to this
+    // device (AdoptPublisherPlacementUseCase). Returns its outcome, or null when
+    // adoption isn't wired or the record couldn't be read. Never throws.
+    adoptPublisherPlacement(recordJson) {
+        if (!this._adoptPublisherPlacementUseCase) return null;
+        try {
+            return this._adoptPublisherPlacementUseCase.execute(recordJson);
+        } catch (err) {
+            return null;
+        }
+    },
+
     // Exact-id Publication lookup for the Snapshot cascade's
     // `findPublicationById`. Reads `_publicationActionDiscoveryProvider`: an
     // exact-id lookup has no documentId-collision risk, so seeing

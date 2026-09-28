@@ -1,5 +1,6 @@
 import { derivePlaceNamingDiscoveryTag, parsePlaceNamingDiscoveryEnvelope } from '../../core/PlaceNamingDiscoveryEnvelope.js';
 import { snapshotCellTag, SNAPSHOT_CELL_TAG_PREFIX } from '../../core/NarrowDiscoveryTags.js';
+import { describeSnapshotPlacementRecord } from '../../core/SnapshotDiscoveryEnvelope.js';
 import { isNonEmptyString, isPlainObject } from '../../utils/typeGuards.js';
 
 // Each kind turns one raw discovery result into the payload the Announcement
@@ -37,11 +38,18 @@ function normalizeSnapshotCandidate(candidate, tag) {
     if (isNonEmptyString(candidate.publicationId) && isPosition(candidate.claimedPosition)) {
         payload.publicationId = candidate.publicationId;
         payload.claimedPosition = { x: candidate.claimedPosition.x, y: candidate.claimedPosition.y, z: candidate.claimedPosition.z };
+        const placementRecord = describeSnapshotPlacementRecord(candidate.placementRecord, payload);
+        if (placementRecord) {
+            payload.placementRecord = JSON.parse(JSON.stringify(placementRecord));
+        }
     }
     if (typeof tag === 'string' && tag.startsWith(SNAPSHOT_CELL_TAG_PREFIX) && snapshotCellTag(payload.claimedPosition) !== tag) {
         return null;
     }
-    return { key: `${payload.storage} ${payload.contentHash} ${payload.locator}`, payload };
+    // A signed placement's own hash joins the key, so a later revision (the
+    // publisher moved it) is kept beside the earlier one instead of ignored.
+    const revision = payload.placementRecord ? ` ${payload.placementRecord.contentHash}` : '';
+    return { key: `${payload.storage} ${payload.contentHash} ${payload.locator}${revision}`, payload };
 }
 
 // The signature is part of the key so a forged copy published under a real

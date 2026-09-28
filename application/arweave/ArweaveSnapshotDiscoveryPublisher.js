@@ -289,7 +289,7 @@ export class ArweaveSnapshotDiscoveryPublisher {
     //   never `contentHash`, never the CONTENT transaction id already
     //   folded into `locator`. See this file's own header, "an
     //   announcement transaction id is never the locator."
-    async publish({ contentHash, locator, storage, publicationId, claimedPosition } = {}) {
+    async publish({ contentHash, locator, storage, publicationId, claimedPosition, placementRecord } = {}) {
         const described = describeSnapshotDiscoveryEnvelope({
             protocol: SNAPSHOT_DISCOVERY_ENVELOPE_PROTOCOL,
             version: SNAPSHOT_DISCOVERY_ENVELOPE_VERSION,
@@ -297,7 +297,8 @@ export class ArweaveSnapshotDiscoveryPublisher {
             locator,
             storage,
             publicationId,
-            claimedPosition
+            claimedPosition,
+            placementRecord
         });
         if (described === null) {
             return null;

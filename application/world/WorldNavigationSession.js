@@ -70,6 +70,9 @@ export class WorldNavigationSession {
         // automatic initial placement, used here for explicit placePublication()
         // calls. Without it, a session can't place a Publication explicitly.
         placePublicationUseCase = null,
+        // Takes a publisher's own signed placement, received beside a Snapshot,
+        // into placementRegistry. Without it, adoptPublisherPlacement() does nothing.
+        adoptPublisherPlacementUseCase = null,
         placementRegistry = null,
         moveWorldPlacementUseCase = null,
         // Optional; without it a session can't remove a placement. See
@@ -165,6 +168,7 @@ export class WorldNavigationSession {
         // Where"). Without these a session can't resolve or move a placement.
         this._placementRegistry = placementRegistry;
         this._placePublicationUseCase = placePublicationUseCase;
+        this._adoptPublisherPlacementUseCase = adoptPublisherPlacementUseCase;
         this._moveWorldPlacementUseCase = moveWorldPlacementUseCase;
         this._removeWorldPlacementUseCase = removeWorldPlacementUseCase;
         this._unpublishDocumentUseCase = unpublishDocumentUseCase;

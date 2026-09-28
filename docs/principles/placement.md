@@ -17,11 +17,20 @@ publication be placed in more than one location.
 
 A publisher may allow only their own placements of a Publication. The
 choice is signed inside the Publication, and is honored when a placement
-is created, merged from a peer, or accepted from a claim. An unknown value
+is created or accepted from a claim. An unknown value
 reads as restrictive. Like a license's fork permission, it binds honest
 software, not a modified client.
 
 [Full text](history/0.9.md#a-publisher-decides-who-may-place-their-publication-2026-09-27)
+
+### A Position Counts Only When Its Publisher Signed It (2026-09-28)
+
+A position from another device is real only when it is the publisher's own
+signed PlacementRecord, checked against a known Publication's key. It is
+adopted automatically, and a later revision replaces an earlier one. Any
+other announced position stays a claim, shown as a ghost until accepted.
+
+[Full text](history/0.9.md#a-position-counts-only-when-its-publisher-signed-it-2026-09-28)
 
 ### Moving A Placement Is Not Editing A Document (0.2.23)
 
