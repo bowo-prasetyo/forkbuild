@@ -747,6 +747,46 @@ they publish (see
 You can still find, view and, if the license allows, fork their build, but
 you can't place it.
 
+### Why can two builds sit in the same spot?
+
+In real life two buildings can't stand in the same place. In ForkBuild they
+can, because a placement doesn't take up land. It's only a signed note
+saying "show this build here", and two notes can name the same spot.
+
+ForkBuild allows this on purpose:
+
+- **Nobody hands out land.** There's no central server that decides who got
+  a spot first, and ForkBuild never picks a winner between two signed
+  placements. Both stay valid.
+- **Each device knows a different set of placements.** A spot that's taken
+  on your friend's device may still be empty on yours, until the
+  placements reach you. A strict "one build per spot" rule would give
+  different answers on different devices, so ForkBuild doesn't pretend to
+  enforce one.
+- **Sometimes you want it.** A courtyard scene inside a building, an older
+  version shown in place of the new one, or exhibits layered on purpose
+  are all builds that belong in the same place.
+
+That doesn't mean anyone can crowd your builds:
+
+- **You're warned first.** **Move…** lists what's already at a spot before
+  you confirm, and ForkBuild never quietly moves your build somewhere else
+  instead (see [World position](#world-position)).
+- **No accidental duplicates.** **Add Placement Here** refuses when a
+  placement already sits exactly where you are.
+- **Someone else's claim is only a ghost.** A position announced by anyone
+  but the build's own publisher is shown only as a translucent ghost, and
+  never at a spot where this device already knows a real placement (see
+  [Claimed Builds](#claimed-builds--other-peoples-builds-where-their-publishers-say-they-stand)).
+- **Only the owner can move or remove a placement** (see
+  [Placements you don't own](#placements-you-dont-own)).
+
+ForkBuild checks only for builds at exactly the same point. Two builds at
+nearby points whose bricks happen to touch aren't flagged. For the design
+reasoning, see
+[Overlap Is A Fact; Collision Is A Policy Decision](../principles/placement.md#overlap-is-a-fact-collision-is-a-policy-decision-0225)
+and the rules after it.
+
 ### Placing vs forking
 
 Both let you have someone else's build in a World of yours, but they're
