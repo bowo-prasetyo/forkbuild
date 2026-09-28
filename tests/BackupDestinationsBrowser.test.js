@@ -12,8 +12,10 @@ import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { assert } from './support/Assert.js';
 
 // Backups to a folder, the remembered key, sharing and the reminder banner,
-// with real Vue, real IndexedDB and a real directory handle (the origin
-// private file system stands in for a folder the person picked).
+// with real Vue and real IndexedDB (the remembered CryptoKey is stored and
+// read back across sessions). The folder is an in-page stand-in for the
+// directory handle a picker returns; tests/BackupReminderAndDestinations.test.js
+// covers the folder's files and pruning.
 
 await new Promise((resolve, reject) => {
     const link = document.createElement('link');
@@ -46,12 +48,48 @@ function click(element) {
     element.click();
 }
 
-async function folderFiles(handle) {
-    const files = {};
-    for await (const entry of handle.values()) {
-        if (entry.kind === 'file') files[entry.name] = new Uint8Array(await (await entry.getFile()).arrayBuffer());
-    }
-    return files;
+// The parts of a FileSystemDirectoryHandle BackupFolder uses.
+function makeFolder(name) {
+    const files = new Map();
+    return {
+        name,
+        files,
+        async queryPermission() { return 'granted'; },
+        async requestPermission() { return 'granted'; },
+        async getFileHandle(fileName) {
+            return {
+                async createWritable() {
+                    let data = null;
+                    return {
+                        async write(bytes) { data = new Uint8Array(bytes); },
+                        async close() { files.set(fileName, data); }
+                    };
+                }
+            };
+        },
+        async *values() {
+            for (const fileName of files.keys()) yield { kind: 'file', name: fileName };
+        },
+        async removeEntry(fileName) { files.delete(fileName); }
+    };
+}
+
+async function folderFiles(folderHandle) {
+    return Object.fromEntries(folderHandle.files);
+}
+
+// Real IndexedDB for everything but the folder: a stand-in handle can't be
+// structured-cloned, so it stays in memory, as if the browser had kept it.
+function valueStoreWithFolder(databaseName, folderHandle) {
+    const idb = new IndexedDbValueStore({ databaseName });
+    let storedFolder = null;
+    return {
+        available: true,
+        get: async (key) => (key === 'folder' ? storedFolder : idb.get(key)),
+        set: async (key, value) => { if (key === 'folder') storedFolder = value; else await idb.set(key, value); },
+        delete: async (key) => { if (key === 'folder') storedFolder = null; else await idb.delete(key); },
+        folderStored: () => storedFolder === folderHandle
+    };
 }
 
 function mount(component, services, props = {}) {
@@ -65,8 +103,7 @@ function mount(component, services, props = {}) {
     return { host, unmount: () => { app.unmount(); host.remove(); } };
 }
 
-const root = await navigator.storage.getDirectory();
-const folder = await root.getDirectoryHandle(`forkbuild-test-${Date.now()}`, { create: true });
+const folder = makeFolder('Dropbox');
 
 const storage = new InMemoryStorageProvider();
 storage.save(DOC, { world: 'mine' });
@@ -74,10 +111,11 @@ storage.save('forkbuild-index', [{ id: DOC, title: 'House' }]);
 const statusStore = new BackupStatusStore(storage);
 const deviceBackup = new DeviceBackupUseCase({ storageProvider: storage, statusStore });
 const databaseName = `forkbuild-backup-test-${Date.now()}`;
+const valueStore = valueStoreWithFolder(databaseName, folder);
 let clock = new Date('2026-09-28T10:00:00Z');
 const makeDestinations = () => new BackupDestinations({
     deviceBackup, statusStore,
-    valueStore: new IndexedDbValueStore({ databaseName }),
+    valueStore,
     showDirectoryPicker: async () => folder,
     now: () => clock
 });
@@ -165,17 +203,19 @@ HTMLAnchorElement.prototype.click = function clickLink() {
     const rootElement = document.scrollingElement;
     assert(rootElement.scrollWidth <= rootElement.clientWidth, `no sideways scroll at 390px (${rootElement.scrollWidth} > ${rootElement.clientWidth})`);
     unmount();
+    console.log('✓ Your Data backs up to the folder, remembers the key, and shares on a second tap');
 }
 
 // --- a later session: remembered folder and key, automatic backup --------------
 {
     const later = makeDestinations();
     const state = await later.state();
-    assert(state.folder && state.folder.name === folder.name && state.keyRemembered, 'the folder and key survive in IndexedDB');
+    assert(state.folder && state.folder.name === folder.name && state.keyRemembered, 'the folder and the key (from IndexedDB) are there in a later session');
     clock = new Date('2026-09-30T12:00:00Z');
     assert(await later.runAutomatic() === AutomaticBackupOutcome.BACKED_UP, 'the automatic backup runs a day later');
     const files = await folderFiles(folder);
     assert((await decodeDeviceBackup(files['forkbuild-backup-2026-09-30.forkbuild-backup'], PASSPHRASE)).entries[DOC], 'with the remembered key');
+    console.log('✓ a later session reads the key back from IndexedDB and backs up automatically');
 }
 
 // --- the reminder banner ----------------------------------------------------------
@@ -208,7 +248,7 @@ HTMLAnchorElement.prototype.click = function clickLink() {
     // With a folder and a remembered key, Back Up Now backs up in one click.
     const oneClick = new BackupDestinations({
         deviceBackup: bannerBackup, statusStore: bannerStatus,
-        valueStore: new IndexedDbValueStore({ databaseName }),
+        valueStore,
         showDirectoryPicker: async () => folder, now: () => now
     });
     const withFolder = mount(BackupReminderBanner, { backupReminder: reminder, backupDestinations: oneClick }, { path: '/repository' });
@@ -218,8 +258,8 @@ HTMLAnchorElement.prototype.click = function clickLink() {
     assert((await folderFiles(folder))['forkbuild-backup-2026-10-28.forkbuild-backup'], 'the banner wrote to the folder');
     assert(bannerStatus.get().lastBackupDestination === 'folder', 'and recorded it');
     withFolder.unmount();
+    console.log('✓ the banner reminds, snoozes, stays off Your Data, and backs up in one click');
 }
 
-await root.removeEntry(folder.name, { recursive: true });
 URL.createObjectURL = originalCreateObjectURL;
 HTMLAnchorElement.prototype.click = originalClick;
