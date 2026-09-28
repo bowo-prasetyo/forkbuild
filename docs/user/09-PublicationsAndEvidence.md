@@ -122,7 +122,7 @@ Below that, two folded sections:
   content (**Create … Placement**) and anchor it (**Create … Anchor**), each
   with a **Configure** link and **Use Preferred Provider**. See
   [Evidence & Storage](11-EvidenceAndStorage.md).
-- **Snapshot, Anchoring, IPFS & Evidence Details**, in four tabs:
+- **Details**, in four tabs:
 
 | Tab | What's there |
 |---|---|
@@ -144,6 +144,14 @@ Below that, two folded sections:
 
 These describe whether the record checks out, not whether the design or name
 is any good.
+
+A publication whose status is anything but **Available** or **Content
+unavailable** can't be opened, distributed or anchored, so it isn't given a
+full card. These are gathered at the bottom of the page in a folded group,
+"*N* publications that can't be used", each with its status, the reason and
+**Re-check**. They're left out of **Anchor Several Publications** too. The
+most common reason is a publication made before content hashes became
+SHA-256: only its author can fix that, by publishing it again.
 
 ## Commentary
 

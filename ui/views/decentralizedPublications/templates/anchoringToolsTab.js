@@ -19,9 +19,13 @@ export const anchoringToolsTabTemplate = `<div v-show="publicationsToolsTab === 
                     <template v-if="batchType.anchorType === 'steem'"> Steem anchors are attested by Steem witnesses,
                     not proof of work: use them next to Bitcoin anchors, not instead of them.</template>
                 </p>
-                <p v-if="entries.length === 0" class="form-hint form-hint--neutral">No publications are cataloged yet.</p>
+                <p v-if="usableEntries.length === 0" class="form-hint form-hint--neutral">
+                    No publication here can be anchored yet<template v-if="failedEntries.length > 0">: the
+                    {{ failedEntries.length }} cataloged failed their check, and an anchor of a hash that can't be
+                    checked would prove nothing</template>.
+                </p>
                 <div v-else class="batch-anchoring-list">
-                    <label v-for="entry in entries" :key="'batch-' + batchType.anchorType + '-' + entry.publication.id" class="anchor-provider-option">
+                    <label v-for="entry in usableEntries" :key="'batch-' + batchType.anchorType + '-' + entry.publication.id" class="anchor-provider-option">
                         <input type="checkbox" v-model="batchAnchoring[batchType.anchorType].selected[entry.publication.id]" />
                         {{ humanizeContentKind(entry.publication.contentKind) }} · {{ shortHash(entry.publication.contentReference.hash) }}
                         · by {{ shortId(entry.publication.publisherIdentity && entry.publication.publisherIdentity.id) }}

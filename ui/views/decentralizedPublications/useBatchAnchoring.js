@@ -7,7 +7,9 @@ import { CREATION_BADGE_CLASSES, humanizeAnchorType } from './presentation.js';
 // approval), for each anchorType whose publisher can (Steem today). The
 // person picks the publications; one click anchors them all, each gets its
 // own signed anchor, and the shared block is watched until it is final.
-export function useBatchAnchoring({ creationCoordinator, entries, loadEvidence, watchFinality, describeFinality }) {
+// `isAnchorable` leaves out publications whose last check failed: their
+// content hash can't be checked, so an anchor of it would prove nothing.
+export function useBatchAnchoring({ creationCoordinator, entries, loadEvidence, watchFinality, describeFinality, isAnchorable = () => true }) {
     const batchAnchorTypes = creationCoordinator && typeof creationCoordinator.batchAnchorTypes === 'function'
         ? creationCoordinator.batchAnchorTypes()
         : [];
@@ -16,7 +18,7 @@ export function useBatchAnchoring({ creationCoordinator, entries, loadEvidence, 
 
     function batchSelectedIds(anchorType) {
         const state = batchAnchoring[anchorType];
-        return state ? entries.filter((entry) => state.selected[entry.publication.id]).map((entry) => entry.publication.id) : [];
+        return state ? entries.filter((entry) => isAnchorable(entry) && state.selected[entry.publication.id]).map((entry) => entry.publication.id) : [];
     }
 
     function batchLimit(anchorType) {
@@ -31,7 +33,7 @@ export function useBatchAnchoring({ creationCoordinator, entries, loadEvidence, 
         if (!state) return;
         let picked = 0;
         for (const entry of entries) {
-            const unanchored = !entry.evidenceAnchors.some((anchor) => anchor.anchorType === anchorType);
+            const unanchored = isAnchorable(entry) && !entry.evidenceAnchors.some((anchor) => anchor.anchorType === anchorType);
             const pick = unanchored && picked < batchLimit(anchorType);
             state.selected[entry.publication.id] = pick;
             if (pick) picked += 1;

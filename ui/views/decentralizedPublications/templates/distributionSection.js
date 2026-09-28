@@ -4,8 +4,9 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                          Content, Proof/Anchoring) for this publication.
                          Presentation only: each role keeps its own verb and
                          collaborator; a placement is never called "publishing".
-                         Open by default because these are the primary actions. -->
-                    <details open class="identity-mgmt-card-details identity-mgmt-distribution">
+                         Folded, like the details below, so a long list stays
+                         scannable. -->
+                    <details class="identity-mgmt-card-details identity-mgmt-distribution">
                         <summary class="identity-mgmt-card-details-summary">Distribution</summary>
 
                         <div v-if="publicationDistributionCommand || multiRelayNostrPublicationDistributionCommand || snapshotDistributionCommand" class="identity-mgmt-distribution-role">
@@ -164,13 +165,12 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                  down. Each half shows only when its
                                  collaborator exists. -->
                             <p v-if="bitcoinWalletConnection || baseAnchorPublisher" class="form-hint form-hint--neutral">
-                                <template v-if="bitcoinWalletConnection">Bitcoin anchoring is wallet-guided and multi-step — the button below only
-                                succeeds once a transaction has been connected, funded, constructed, reviewed, signed,
-                                finalized, and broadcast in the Bitcoin section under &quot;Snapshot, Anchoring, IPFS
-                                &amp; Evidence Details&quot; below.</template>
-                                <template v-if="baseAnchorPublisher"> Base anchoring is also available, through its own
-                                wallet-guided flow — connect a wallet and review a transaction in the Base section under
-                                &quot;Snapshot, Anchoring, IPFS &amp; Evidence Details&quot; below to create one.</template>
+                                <template v-if="bitcoinWalletConnection">Create Bitcoin Anchor works only after you've
+                                built, signed and broadcast its transaction in this card's <strong>Details → Decentralization
+                                &amp; Evidence</strong> tab.</template>
+                                <template v-if="baseAnchorPublisher"> Base anchors are made through their own wallet
+                                steps<template v-if="bitcoinWalletConnection"> in the same tab</template><template v-else> in
+                                this card's <strong>Details → Decentralization &amp; Evidence</strong> tab</template>.</template>
                             </p>
                             <div class="evidence-list">
                                 <div v-for="anchorType in availableAnchorTypes" :key="anchorType" class="evidence-anchor-card">
