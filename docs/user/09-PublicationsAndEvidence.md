@@ -105,7 +105,11 @@ Achievements** (see guides [11](11-EvidenceAndStorage.md) and
 
 Each publication card shows:
 
-- The kind of publication and who published it, shortened to the last few
+- Its name, once its content has been checked: a Publication's title or a
+  place name. Otherwise, or for an authorship claim, the kind of
+  publication.
+- The kind of publication (under the name, when there is one) and who
+  published it, shortened to the last few
   characters of their ID.
 - A **status badge** (see [Status meanings](#status-meanings)), worked out
   again each time the page loads or you click **Re-check**.
@@ -148,10 +152,17 @@ is any good.
 A publication whose status is anything but **Available** or **Content
 unavailable** can't be opened, distributed or anchored, so it isn't given a
 full card. These are gathered at the bottom of the page in a folded group,
-"*N* publications that can't be used", each with its status, the reason and
-**Re-check**. They're left out of **Anchor Several Publications** too. The
-most common reason is a publication made before content hashes became
-SHA-256: only its author can fix that, by publishing it again.
+"*N* publications that can't be used", each with its status, the reason,
+**Re-check** and **Remove from This Device**. They're left out of **Anchor
+Several Publications** too. The most common reason is a publication made
+before content hashes became SHA-256: only its author can fix that, by
+publishing it again.
+
+**Remove from This Device** (or **Remove All *N* from This Device** at the
+top of the group) asks you to confirm, then forgets the publication here.
+It doesn't un-publish anything or reach anyone else, and a connected peer
+that still has the publication may announce it again. Only publications in
+this group can be removed.
 
 ## Commentary
 

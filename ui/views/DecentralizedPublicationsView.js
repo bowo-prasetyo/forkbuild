@@ -301,6 +301,8 @@ export default {
                 // page's lifetime and never written to anything durable.
                 // detailsTab is the open tab of the entry's details disclosure.
                 detailsTab: 'snapshot',
+                // Whether a failed card is asking "Remove from this device?".
+                confirmingRemoval: false,
                 evidenceAnchors: [],
                 evidence: null,
                 evidenceExpanded: false,
@@ -822,6 +824,38 @@ export default {
         const failedEntries = computed(() => entries.filter(failedCheck));
         const anyRetrievable = computed(() => entries.some(canRetrieve));
 
+        // Forgets failed publications on this device only (see
+        // LocalPublicationCatalog#remove()): nothing is un-published, and a
+        // peer that still has one may announce it again. Only a failed entry
+        // can be removed, and only after its confirm step.
+        const confirmingRemoveAllFailed = ref(false);
+        async function removeFailedEntry(entry) {
+            if (!failedCheck(entry)) return;
+            catalog.remove(entry.publication.id);
+            await refreshList();
+        }
+        async function removeAllFailedEntries() {
+            for (const entry of failedEntries.value) {
+                catalog.remove(entry.publication.id);
+            }
+            confirmingRemoveAllFailed.value = false;
+            await refreshList();
+        }
+
+        // A name for the card and the batch-anchor picker, read from content
+        // that passed its check: a Publication's title or a place name
+        // claim's name. Null otherwise (not checked, unavailable, failed, or
+        // a kind without one); callers fall back to the content kind. Long
+        // names are shortened for display only.
+        const TITLE_MAX_LENGTH = 80;
+        function publicationTitle(entry) {
+            const content = entry.view && entry.view.resolved ? entry.view.content : null;
+            const name = content && (content.title || content.name);
+            if (typeof name !== 'string' || !name.trim()) return null;
+            const trimmed = name.trim();
+            return trimmed.length > TITLE_MAX_LENGTH ? `${trimmed.slice(0, TITLE_MAX_LENGTH - 1)}…` : trimmed;
+        }
+
         function formatWhen(iso) {
             return iso ? new Date(iso).toLocaleString() : 'unknown time';
         }
@@ -887,6 +921,7 @@ export default {
             entries, loading, retrievalPeers, retrievalPeerOptions, retrievalPeerLabel, availableAnchorTypes,
             humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck, usableEntries, failedEntries, anyRetrievable,
+            confirmingRemoveAllFailed, removeFailedEntry, removeAllFailedEntries, publicationTitle,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel, verificationNote, creationFinality,
             preferredCreationFinality, batchAnchorTypes, batchAnchoring, batchSelectedIds, batchLimit,
@@ -1113,11 +1148,11 @@ export default {
             <div v-if="!loading && usableEntries.length > 0" class="identity-mgmt-list">
                 <div v-for="entry in usableEntries" :key="entry.publication.id" class="identity-mgmt-card">
                     <div class="identity-mgmt-card-header">
-                        <span class="identity-mgmt-name">{{ humanizeContentKind(entry.publication.contentKind) }}</span>
+                        <span class="identity-mgmt-name">{{ publicationTitle(entry) || humanizeContentKind(entry.publication.contentKind) }}</span>
                         <span class="peer-badge" :class="badgeClass(entry)">{{ statusLabel(entry) }}</span>
                     </div>
                     <p class="identity-mgmt-status">
-                        Published by {{ shortId(entry.publication.publisherIdentity && entry.publication.publisherIdentity.id) }}
+                        <template v-if="publicationTitle(entry)">{{ humanizeContentKind(entry.publication.contentKind) }} · </template>Published by {{ shortId(entry.publication.publisherIdentity && entry.publication.publisherIdentity.id) }}
                         · received {{ formatWhen(entry.receivedAt) }}
                     </p>
                     <p v-if="entry.view && entry.view.contentSummary" class="form-hint form-hint--neutral">
@@ -1237,7 +1272,19 @@ export default {
                 <p class="form-hint form-hint--neutral">
                     These failed their check, so they can't be opened, distributed or anchored. Each says why;
                     one published with an old content hash has to be published again by its author.
+                    Removing one only forgets it on this device; a peer that still has it may announce it again.
                 </p>
+                <div class="identity-mgmt-actions">
+                    <button v-if="!confirmingRemoveAllFailed" class="action-btn action-btn--secondary"
+                            @click="confirmingRemoveAllFailed = true">
+                        Remove All {{ failedEntries.length }} from This Device
+                    </button>
+                    <template v-else>
+                        <span class="form-hint form-hint--neutral">Remove all {{ failedEntries.length }} from this device?</span>
+                        <button class="action-btn action-btn--danger" @click="removeAllFailedEntries()">Remove All</button>
+                        <button class="action-btn action-btn--secondary" @click="confirmingRemoveAllFailed = false">Cancel</button>
+                    </template>
+                </div>
                 <div class="identity-mgmt-list">
                     <div v-for="entry in failedEntries" :key="entry.publication.id" class="identity-mgmt-card">
                         <div class="identity-mgmt-card-header">
@@ -1256,6 +1303,15 @@ export default {
                             <button class="action-btn action-btn--secondary" :disabled="entry.checking" @click="recheck(entry)">
                                 {{ entry.checking ? 'Checking…' : 'Re-check' }}
                             </button>
+                            <button v-if="!entry.confirmingRemoval" class="action-btn action-btn--secondary"
+                                    @click="entry.confirmingRemoval = true">
+                                Remove from This Device
+                            </button>
+                            <template v-else>
+                                <span class="form-hint form-hint--neutral">Remove it from this device?</span>
+                                <button class="action-btn action-btn--danger" @click="removeFailedEntry(entry)">Remove</button>
+                                <button class="action-btn action-btn--secondary" @click="entry.confirmingRemoval = false">Cancel</button>
+                            </template>
                         </div>
                     </div>
                 </div>

@@ -56,6 +56,14 @@ transaction on that network, with one of three outcomes:
   Steem account set under
   [Network Settings → Steem](10-NetworkSettings.md#steem).
 
+A publication made before content hashes became SHA-256 is never anchored,
+by these buttons, the Bitcoin or Base steps, or **Anchor Several
+Publications**: nobody else can check content against its old hash, so a
+record of it would prove nothing. You get **Recording rejected** (or, for
+Bitcoin and Base, a failed transaction step) saying to publish it again,
+before any wallet is asked. The same goes for placements, which end in **No
+placement was created**.
+
 After a success, the button reads **Create Another … Anchor**, which makes
 a second, independent anchor. Base anchors are made differently; see
 [Creating a Base anchor in one step](#creating-a-base-anchor-in-one-step).

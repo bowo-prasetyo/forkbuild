@@ -27,6 +27,7 @@ export const anchoringToolsTabTemplate = `<div v-show="publicationsToolsTab === 
                 <div v-else class="batch-anchoring-list">
                     <label v-for="entry in usableEntries" :key="'batch-' + batchType.anchorType + '-' + entry.publication.id" class="anchor-provider-option">
                         <input type="checkbox" v-model="batchAnchoring[batchType.anchorType].selected[entry.publication.id]" />
+                        <template v-if="publicationTitle(entry)">{{ publicationTitle(entry) }} ·</template>
                         {{ humanizeContentKind(entry.publication.contentKind) }} · {{ shortHash(entry.publication.contentReference.hash) }}
                         · by {{ shortId(entry.publication.publisherIdentity && entry.publication.publisherIdentity.id) }}
                         <span v-if="hasAnchorOfType(entry, batchType.anchorType)" class="form-hint form-hint--neutral">(already has a {{ humanizeAnchorType(batchType.anchorType) }} anchor)</span>
