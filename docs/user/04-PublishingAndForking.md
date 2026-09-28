@@ -7,16 +7,21 @@ history preserved.
 ## Publishing your creation
 
 1. Build something in the Editor.
-2. Give it a title (and, optionally, a description and a license — click
-   **Edit Metadata**, or set them the first time you save a brand-new
-   document).
-3. Press **Save** so it's stored.
-4. Click **Publish**.
+2. Log in and make sure your identity is unlocked (see
+   [Identity & Login](05-IdentityAndLogin.md)). Publishing signs the
+   creation with it; published while logged out, it has no author.
+3. Give it a title — Publish refuses an untitled or empty creation — and,
+   optionally, a description and a license: click **✎** beside the
+   document title in the sidebar to open **Document Properties**. A new
+   document has no license, so nobody can fork it until you pick one.
+4. Press **Save** so it's stored.
+5. Click **Publish**.
 
-Your creation now appears in the **Repository**, where anyone can search for
-it, open it, and fork it. The listing shows your name as the author. It's
-also automatically given a position in the shared world, so **Explore**
-always has somewhere to take people — see
+Your creation now appears in **your own Repository** on this device, where
+you can search for it, open it, and fork it, with your name as the author.
+Other people see it only once you share or distribute it (see the note
+below). It's also automatically given a position in the shared world, so
+**Explore** always has somewhere to take people — see
 [Finding worlds](03-WorldView.md#finding-worlds).
 
 > **Note:** Publishing stores your Document/World on this device only.
@@ -171,9 +176,10 @@ The original is never touched, no matter how much you change your copy.
 
 ## The Repository
 
-The **Repository** is the shared, searchable catalog of everything that's
-been published — built to stay usable whether it holds ten creations or ten
-thousand.
+The **Repository** is the searchable catalog of every published creation
+this device knows about: your own, ones peers have shared with you, and
+ones found on decentralized networks. It's built to stay usable whether it
+holds ten creations or ten thousand.
 
 ```
 Search [________________]  ☐ Include descriptions  [Search]

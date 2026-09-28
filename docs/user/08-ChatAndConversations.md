@@ -77,7 +77,11 @@ bar simply disappearing is the whole story.
 
 You can send a message to an offline friend — it doesn't require them to be
 currently connected. It's queued locally and delivered automatically the
-moment they reconnect; you don't need to resend it yourself. Each outgoing
+next time you're both connected; you don't need to resend it yourself.
+There's no server holding it in between, so it waits on *your* device:
+ForkBuild has to be open on both sides at the same time for it to go
+through. A message still undelivered after 7 days is dropped and marked
+**Undelivered — expired**. Each outgoing
 message shows its own status under the bubble:
 
 | Status | Meaning |

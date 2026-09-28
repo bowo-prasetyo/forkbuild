@@ -23,7 +23,7 @@ world's URL directly. You'll appear next to that creation in the shared world.
 - **Left-drag** — orbit the camera
 - **Right-drag** — pan
 - **Scroll** — zoom in and out
-- **Home** — return to your own world (see below)
+- **Home** button — return to your own world (see below)
 
 As you move, nearby worlds **stream in and out** automatically. The panel on
 the left reads top to bottom: what you're looking at (the header), where you
@@ -194,10 +194,11 @@ left it in — the dialog is pure presentation, nothing about it is tied
 to whether it happens to be open.
 
 The dialog opens with one set of settings, used for everything it
-distributes: a **Storage** — **Arweave**, **IPFS (Local Kubo)**, or **IPFS
-(Remote Pinning)** (the last needs a fresh Endpoint and Credential typed
-in every time; nothing about it is ever saved) — and an **Announcement /
-Discovery substrate** (**Nostr** or **Arweave**). Both open on your saved
+distributes: a **Storage** — **Arweave**, **IPFS (Local Kubo)**, **IPFS
+(Remote Pinning)** (which needs a fresh Endpoint and Credential typed in
+every time; nothing about it is ever saved), or **Steem** (experimental,
+see [Steem](09-PublicationsAndEvidence.md#steem)) — and an **Announcement /
+Discovery substrate** (**Arweave**, **Nostr** or **Steem**). Both open on your saved
 provider preferences. Storage only lists the backends this device can
 actually place a Snapshot on (plus Remote Pinning), so you can't pick one
 that would only fail halfway through.

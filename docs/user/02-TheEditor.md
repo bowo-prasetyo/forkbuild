@@ -300,7 +300,7 @@ extra actions in its **⋮** menu:
 
 | Action | What it does |
 |---|---|
-| **Rename** | Change its name, category, tags, or description |
+| **Rename** | Change its name (its category and description stay as they are) |
 | **Remove** | Delete it from your library |
 
 **My Structures** only ever stores the *structure itself* — a name and a set
@@ -369,8 +369,10 @@ that stays in sync with its source every time you look at it. That's a
 copying its bricks, so editing the source later updates every instance of
 it automatically.
 
-1. Open the **Recent** dropdown in the toolbar.
-2. Next to any saved document, click **Place** (instead of **Load**).
+1. Open the **Recent** dropdown in the toolbar. (It appears once you've
+   saved at least one document.)
+2. Next to any saved document, click **Place**. Clicking the document's
+   name instead opens it, replacing what you have open.
 3. Hover the ground, press `R` to rotate, and click to place it — exactly
    like placing a brick.
 
@@ -395,10 +397,12 @@ exactly what keeps every instance of it in sync.
 
 ## Document Properties
 
-Every creation has a **title**, an optional **description**, and a
-**license** — set them with the **Edit Metadata** button in the Editor's
-document info panel (or in World View), or the first time you save a
-brand-new document. The description shows up as a
+Every creation has a **title**, an optional **description**, a
+**license**, and a **Who can place it in the World** setting — set them
+in the **Document Properties** dialog, opened with the **✎** button beside
+the document title at the top of the Editor's sidebar (in World View, it's
+the **Edit Metadata** button). A new document starts with no license, which
+means nobody else can fork it until you choose one. The description shows up as a
 snippet on its Repository card and is searchable there too; the license
 controls whether — and how — other people are allowed to fork it. See
 [Publishing & Forking](04-PublishingAndForking.md) for what each license
@@ -417,7 +421,8 @@ means.
   identity; nothing is kept until you **Save**. Files exported by earlier
   versions still open (they are converted as they load), but ForkBuild 1.0.0
   and older can't open files exported by this version.
-- **Recent** — reopen something you saved before. Once you've saved enough
+- **Recent** — reopen something you saved before (it appears after your
+  first save; click a document's name to open it). Once you've saved enough
   documents, a filter box appears so you can jump straight to one by name.
   Each entry also has a **Place** button — see
   [Structure instances](#structure-instances-a-live-reference)

@@ -106,8 +106,9 @@ one for each World, under **Lobby** in World View.
 - **Block** hides someone from your lobby lists and blocks them as it does
   everywhere else on this page.
 - **Leave Lobby** takes you out at once. Joining lasts for this visit only:
-  closing the app leaves every lobby, and you're never put back in one
-  when you open it again.
+  closing the app leaves every lobby (your listing can take up to 10
+  minutes to disappear from other people's lists), and you're never put
+  back in one when you open it again.
 
 **What someone who connects to you from a lobby gets.** A lobby connection
 is an ordinary connected peer, even before you Remember or befriend them.
