@@ -24,7 +24,7 @@ import { assert } from './support/Assert.js';
 
 const HASHES = ['fnv1a-32:0000000a', 'fnv1a-32:0000000b', 'fnv1a-32:0000000c'];
 
-function setUp() {
+function setUp({ isAnchorable } = {}) {
     const chain = fakeSteemChain();
     const runtime = composeSteemRuntime({ fetchImpl: chain.fetchImpl, getAccount: () => 'alice', getBroadcaster: () => chain.broadcaster });
     const publicationCatalog = new LocalPublicationCatalog(new InMemoryStorageProvider());
@@ -66,7 +66,8 @@ function setUp() {
         finalityObservers
     });
     const batch = useBatchAnchoring({
-        creationCoordinator, entries, loadEvidence, watchFinality: evidence.watchFinality, describeFinality: evidence.describeFinality
+        creationCoordinator, entries, loadEvidence, watchFinality: evidence.watchFinality, describeFinality: evidence.describeFinality,
+        isAnchorable
     });
     return { chain, entries, evidence, batch, anchorCatalog, loaded };
 }
@@ -140,4 +141,17 @@ async function settle() {
     assert(view.label === 'No anchor was created' && view.reason === 'user_cancel', 'a declined batch says so');
     assert(entries.every((entry) => entry.evidenceAnchors.length === 0) && batch.batchFinality('steem') === null, 'nothing was anchored or watched');
     console.log('✓ a declined batch');
+}
+
+// A publication that failed its check is never picked or anchored, even if
+// it was ticked before its check failed.
+{
+    const { chain, entries, batch } = setUp({ isAnchorable: (entry) => entry.publication.id !== 'pub-1' });
+    batch.selectUnanchoredForBatch('steem');
+    assert(batch.batchSelectedIds('steem').join() === 'pub-0,pub-2', 'Select Unanchored skips the failed publication');
+    batch.batchAnchoring.steem.selected['pub-1'] = true;
+    assert(batch.batchSelectedIds('steem').join() === 'pub-0,pub-2', 'ticking it anyway does not add it');
+    await batch.createBatchAnchors('steem');
+    assert(chain.broadcasts.length === 1 && entries[1].evidenceAnchors.length === 0 && entries[0].evidenceAnchors.length === 1, 'only the usable publications are anchored');
+    console.log('✓ failed publications are left out of a batch');
 }

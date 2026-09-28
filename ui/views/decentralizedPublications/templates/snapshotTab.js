@@ -117,14 +117,17 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                             </p>
                         </div>
 
+                        <!-- One notice for the three peer sections below,
+                             which then show only what they already found. -->
+                        <p v-if="retrievalPeers.length === 0 && (snapshotPeerMaterializationCoordinator || snapshotPeerPossessionCoordinator)" class="form-hint form-hint--neutral">
+                            No peer is connected, so you can't ask peers for this snapshot or whether they have it.
+                            Connect to one from <router-link to="/peers">Peers</router-link>.
+                        </p>
+
                         <!-- The person picks the peer; no ranking and no
                              automatic fallback. -->
-                        <div v-if="snapshotPeerMaterializationCoordinator" class="evidence-list">
-                            <p v-if="retrievalPeers.length === 0" class="form-hint form-hint--neutral">
-                                No authenticated peer is connected right now — connect to one first from
-                                <router-link to="/peers">Peers</router-link>.
-                            </p>
-                            <template v-else>
+                        <div v-if="snapshotPeerMaterializationCoordinator && (retrievalPeers.length > 0 || peerMaterializationView(entry).message)" class="evidence-list">
+                            <template v-if="retrievalPeers.length > 0">
                                 <label class="form-field">
                                     <span class="form-label">Peer</span>
                                     <select v-model="entry.peerMaterializationSelectedPeerId" class="form-input">
@@ -153,13 +156,9 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                         <!-- Asking whether a peer has bytes is separate from
                              asking it for them; a check never transfers
                              anything. -->
-                        <div v-if="snapshotPeerPossessionCoordinator" class="evidence-list">
+                        <div v-if="snapshotPeerPossessionCoordinator && (retrievalPeers.length > 0 || peerPossessionView(entry).message)" class="evidence-list">
                             <span class="evidence-convergence-title">Peer Snapshot Possession</span>
-                            <p v-if="retrievalPeers.length === 0" class="form-hint form-hint--neutral">
-                                No authenticated peer is connected right now — connect to one first from
-                                <router-link to="/peers">Peers</router-link>.
-                            </p>
-                            <template v-else>
+                            <template v-if="retrievalPeers.length > 0">
                                 <label class="form-field">
                                     <span class="form-label">Peer</span>
                                     <select v-model="entry.peerPossessionSelectedPeerId" class="form-input">
@@ -190,13 +189,9 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
 
                         <!-- Several peers at once, with a history; reports what
                              each peer said, never ranks them. -->
-                        <div v-if="snapshotPeerPossessionCoordinator" class="evidence-list">
+                        <div v-if="snapshotPeerPossessionCoordinator && (retrievalPeers.length > 0 || peerPossessionComparisonView(entry).peers.length > 0 || peerPossessionObservationDetailsView(entry).count > 0)" class="evidence-list">
                             <span class="evidence-convergence-title">Peer Snapshot Possession Comparison</span>
-                            <p v-if="retrievalPeers.length === 0" class="form-hint form-hint--neutral">
-                                No authenticated peer is connected right now — connect to one first from
-                                <router-link to="/peers">Peers</router-link>.
-                            </p>
-                            <template v-else>
+                            <template v-if="retrievalPeers.length > 0">
                                 <ul class="replica-knowledge-claim-list">
                                     <li v-for="peer in retrievalPeers" :key="peer.connectionId" class="replica-knowledge-claim">
                                         <label>

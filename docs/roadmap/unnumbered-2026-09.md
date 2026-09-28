@@ -2153,3 +2153,29 @@ principle "Following Is A Local Subscription, Never A Relationship").
 - Not built: a public, signed follow list (as Nostr's contact lists), follower counts, and a per-author discovery tag
   so following could fetch an author's history from relays.
 - Tests: `tests/Following.test.js`. `tests/support/MinimalVueCompositionApiShim.js#mountComponent()` takes props.
+
+## A shorter Publications page (unnumbered, 2026-09-28)
+
+**The Publications page lists publications that failed their check in one folded group of short cards, and every
+card's sections start folded.** Since content hashes became SHA-256, every publication made before then fails with
+"Content does not match its own reference". On a device with twenty of those, each card still opened a full
+Distribution section (about a dozen buttons to announce, place and anchor content that can't be checked), so the page
+ran to dozens of screens, and the batch-anchor picker offered all twenty.
+
+- `ui/views/DecentralizedPublicationsView.js`: `failedCheck(entry)` is true once a check ends in anything but
+  Available or Content unavailable (an unsupported kind included). `usableEntries` get the full card as before;
+  `failedEntries` go in a folded "N publications that can't be used" group (open when nothing usable is listed), each
+  card showing its status, the reason, the content hash and **Re-check** only. Nothing is stored; a Re-check that
+  succeeds moves the card back.
+- The "no peer" notice at the top shows only when some publication could be retrieved. The intro is shorter. The
+  per-card "Snapshot, Anchoring, IPFS & Evidence Details" disclosure is now called **Details**; its tabs already say
+  what's inside.
+- `templates/distributionSection.js`: Distribution is folded by default, as `docs/user/09-PublicationsAndEvidence.md`
+  already said. The Bitcoin/Base hint names the tab that holds those steps instead of repeating the disclosure's long
+  name.
+- `templates/snapshotTab.js`: one "no peer" notice for the three peer sections instead of one each; with no peer
+  connected, those sections show only results they already have.
+- `useBatchAnchoring.js` takes `isAnchorable`: the picker lists, **Select Unanchored** picks and a batch anchors only
+  usable publications, since an anchor of a hash that can't be checked proves nothing.
+- Tests: `tests/PublicationsPageLayoutBrowser.test.js` renders the page with real Vue; `tests/SteemBatchAnchoringUI.test.js`
+  covers a failed publication being left out of a batch.

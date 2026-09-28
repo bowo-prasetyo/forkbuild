@@ -762,7 +762,10 @@ export default {
             batchAnchorTypes, batchAnchoring, batchSelectedIds, batchLimit, selectUnanchoredForBatch,
             clearBatchSelection, hasAnchorOfType, createBatchAnchors, batchCreationView, batchCreationBadgeClass,
             batchFinality, batchButtonLabel, batchButtonDisabled
-        } = useBatchAnchoring({ creationCoordinator, entries, loadEvidence, watchFinality, describeFinality });
+        } = useBatchAnchoring({
+            creationCoordinator, entries, loadEvidence, watchFinality, describeFinality,
+            isAnchorable: (entry) => !failedCheck(entry)
+        });
 
         const {
             publicationDistributionCommand, multiRelayNostrPublicationDistributionCommand,
@@ -798,6 +801,26 @@ export default {
         function canRetrieve(entry) {
             return Boolean(entry.view && entry.view.outcome === PublicationResolutionOutcome.CONTENT_UNAVAILABLE);
         }
+
+        // Whether the last check found this publication unusable: anything but
+        // Available or Content unavailable, including a kind this version
+        // can't display. Such a card offers only Re-check: there are no bytes
+        // it could distribute, and anchoring a hash that can't be checked
+        // proves nothing. An entry not checked yet is not failed; one being
+        // re-checked keeps its last result until the new one arrives.
+        function failedCheck(entry) {
+            if (!entry.view) return false;
+            const outcome = entry.view.outcome;
+            return outcome !== PublicationResolutionOutcome.RESOLVED
+                && outcome !== PublicationResolutionOutcome.CONTENT_UNAVAILABLE;
+        }
+
+        // The page lists usable publications first and folds the failed ones
+        // into one group, so a catalog full of old or broken records doesn't
+        // bury the ones that work. Display order only.
+        const usableEntries = computed(() => entries.filter((entry) => !failedCheck(entry)));
+        const failedEntries = computed(() => entries.filter(failedCheck));
+        const anyRetrievable = computed(() => entries.some(canRetrieve));
 
         function formatWhen(iso) {
             return iso ? new Date(iso).toLocaleString() : 'unknown time';
@@ -863,7 +886,7 @@ export default {
         return {
             entries, loading, retrievalPeers, retrievalPeerOptions, retrievalPeerLabel, availableAnchorTypes,
             humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
-            canRetrieve, retrieve, recheck,
+            canRetrieve, retrieve, recheck, usableEntries, failedEntries, anyRetrievable,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel, verificationNote, creationFinality,
             preferredCreationFinality, batchAnchorTypes, batchAnchoring, batchSelectedIds, batchLimit,
@@ -1036,14 +1059,13 @@ export default {
         <section class="publications-view">
             <h1>Publications</h1>
             <p class="form-hint form-hint--neutral">
-                Every signed publication this device has cataloged — its own, or one a connected peer
-                announced (see <router-link to="/peers">Peers</router-link>). Status is always checked fresh,
-                never remembered from last time: cataloging a publication only ever means this device has SEEN
-                a validly signed locator, never that its content is sitting here right now.
+                Every signed publication this device has seen — its own, or one a connected
+                <router-link to="/peers">peer</router-link> announced. Each status is checked fresh when the
+                page opens: being listed never means the content is on this device.
             </p>
-            <p v-if="retrievalPeers.length === 0" class="form-hint form-hint--neutral">
-                No authenticated peer is connected right now — "Retrieve from Peers" below will do nothing
-                until one is. Connect to a peer first from <router-link to="/peers">Peers</router-link>.
+            <p v-if="retrievalPeers.length === 0 && anyRetrievable" class="form-hint form-hint--neutral">
+                No peer is connected, so "Retrieve from Peers" can't fetch missing content. Connect to one
+                from <router-link to="/peers">Peers</router-link>.
             </p>
 
             <!-- Page-level tools, collapsed so the publication list stays on
@@ -1084,8 +1106,12 @@ export default {
                 has one, and it will show up here.
             </p>
 
-            <div v-else class="identity-mgmt-list">
-                <div v-for="entry in entries" :key="entry.publication.id" class="identity-mgmt-card">
+            <p v-else-if="usableEntries.length === 0" class="locations-panel-empty">
+                None of the cataloged publications passed its check; they are listed below.
+            </p>
+
+            <div v-if="!loading && usableEntries.length > 0" class="identity-mgmt-list">
+                <div v-for="entry in usableEntries" :key="entry.publication.id" class="identity-mgmt-card">
                     <div class="identity-mgmt-card-header">
                         <span class="identity-mgmt-name">{{ humanizeContentKind(entry.publication.contentKind) }}</span>
                         <span class="peer-badge" :class="badgeClass(entry)">{{ statusLabel(entry) }}</span>
@@ -1121,7 +1147,7 @@ export default {
 
                     <!-- Per-publication details, collapsed by default. -->
                     <details class="identity-mgmt-card-details">
-                        <summary class="identity-mgmt-card-details-summary">Snapshot, Anchoring, IPFS &amp; Evidence Details</summary>
+                        <summary class="identity-mgmt-card-details-summary">Details</summary>
 
                         <div class="publications-tools-tabs" role="tablist">
                             <button type="button" role="tab" :aria-selected="entry.detailsTab === 'snapshot'"
@@ -1198,6 +1224,42 @@ export default {
                     </details>
                 </div>
             </div>
+
+            <!-- Publications whose last check failed, folded into one group
+                 with compact cards: nothing here can be distributed or
+                 anchored, so only the status, its reason and Re-check are
+                 shown. -->
+            <details v-if="!loading && failedEntries.length > 0" class="publications-tools-panel"
+                     :open="usableEntries.length === 0">
+                <summary class="publications-tools-panel-summary">
+                    {{ failedEntries.length }} publication{{ failedEntries.length === 1 ? '' : 's' }} that can't be used
+                </summary>
+                <p class="form-hint form-hint--neutral">
+                    These failed their check, so they can't be opened, distributed or anchored. Each says why;
+                    one published with an old content hash has to be published again by its author.
+                </p>
+                <div class="identity-mgmt-list">
+                    <div v-for="entry in failedEntries" :key="entry.publication.id" class="identity-mgmt-card">
+                        <div class="identity-mgmt-card-header">
+                            <span class="identity-mgmt-name">{{ humanizeContentKind(entry.publication.contentKind) }}</span>
+                            <span class="peer-badge" :class="badgeClass(entry)">{{ statusLabel(entry) }}</span>
+                        </div>
+                        <p class="identity-mgmt-status">
+                            Published by {{ shortId(entry.publication.publisherIdentity && entry.publication.publisherIdentity.id) }}
+                            · received {{ formatWhen(entry.receivedAt) }}
+                            · content {{ shortHash(entry.publication.contentReference.hash) }}
+                        </p>
+                        <p v-if="entry.view && entry.view.reason" class="form-hint form-hint--neutral">
+                            {{ entry.view.reason }}
+                        </p>
+                        <div class="identity-mgmt-actions">
+                            <button class="action-btn action-btn--secondary" :disabled="entry.checking" @click="recheck(entry)">
+                                {{ entry.checking ? 'Checking…' : 'Re-check' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </details>
         </section>
     `
 };

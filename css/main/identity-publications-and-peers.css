@@ -133,7 +133,8 @@
 }
 
 /* Page-level wallet/archive/publisher tools panel on the Publications
-   page — same disclosure pattern, one level up. */
+   page — same disclosure pattern, one level up. The folded group of
+   publications that failed their check uses it too. */
 .publications-tools-panel {
     margin: 1.25rem 0;
     background: #1a1a1a;
@@ -176,8 +177,8 @@
 /* Tabs grouping a disclosure's own cards by what they're about, instead of
    one flat stack — used both by the page-level "Wallet, Archive & Publisher
    Tools" panel (3 tabs: Blockchain Anchoring / Archive Tools / References &
-   Achievements) and by each publication entry's own "Snapshot, Anchoring,
-   IPFS & Evidence Details" disclosure (4 tabs: Snapshot / Decentralization &
+   Achievements) and by each publication entry's own "Details"
+   disclosure (4 tabs: Snapshot / Decentralization &
    Evidence / Placements & IPFS / History) — same vocabulary, unscoped to
    either container, reused rather than duplicated. Same visual language as
    .build-library-tab/.build-library-tab--active — reused wholesale rather
