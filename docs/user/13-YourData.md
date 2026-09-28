@@ -142,9 +142,18 @@ backup.
 ## Your publications
 
 A creation you **Publish** is stored on this device only, until you
-distribute it to IPFS or Arweave (see
-[Publishing & Forking](04-PublishingAndForking.md)). Its Repository card
-says **Only on this device** until then. Back it up, or open it in World
-View with **Explore** and use **Distribute** under **My Publication**.
-Sharing it with connected peers doesn't count: they keep a copy only as
-long as they choose to.
+distribute it (see [Publishing & Forking](04-PublishingAndForking.md)).
+Its Repository card says where this device recorded distributing it, for
+example **Stored on IPFS · Announced on Nostr**: where the build or its
+Signed Claim was uploaded (IPFS, Arweave or Steem) and where it was
+announced (Nostr, Arweave or Steem). Hold the pointer over a name to see
+its address or announcement id.
+
+The line only says what this device has a record of. It doesn't check
+that an upload is still available (an IPFS copy lasts only while someone
+keeps it pinned), and a distribution made from another device isn't known
+here. With no record, the card says **No distribution recorded on this
+device**: back it up, or open it in World View with **Explore** and use
+**Distribute** under **My Publication**. Sharing it with connected peers
+isn't recorded as a distribution: they keep a copy only as long as they
+choose to.

@@ -40,7 +40,8 @@ import { BackupStatusStore } from '../application/backup/BackupStatusStore.js';
 import { BackupReminder } from '../application/backup/BackupReminder.js';
 import { BackupDestinations, startAutomaticBackups } from '../application/backup/BackupDestinations.js';
 import { IndexedDbValueStore } from '../storage/IndexedDbValueStore.js';
-import { LocalOnlyPublicationCheck } from '../application/publication/LocalOnlyPublicationCheck.js';
+import { OwnPublicationDistributionRecord } from '../application/publication/OwnPublicationDistributionRecord.js';
+import { OwnSnapshotDistributionLog } from '../application/snapshot/OwnSnapshotDistributionLog.js';
 import { AnnouncementIndex } from '../application/announcementIndex/AnnouncementIndex.js';
 import { createFollowedAnnouncementRetention } from '../application/announcementIndex/FollowedAnnouncementRetention.js';
 import { FollowingFeed } from '../application/publication/FollowingFeed.js';
@@ -409,7 +410,12 @@ app.provide('ipfsPublicationContentVerificationCoordinator', ipfsPublicationCont
 // keeps a single shared instance app-wide.
 app.provide('publicationObservationArchiveStorage', new LocalStoragePublicationObservationArchive());
 app.provide('publicationSnapshotPlacementCatalog', publicationSnapshotPlacementCatalog);
-app.provide('localOnlyPublicationCheck', new LocalOnlyPublicationCheck({ storageProvider: new LocalStorageProvider(), placementCatalog: publicationSnapshotPlacementCatalog }));
+const ownSnapshotDistributionLog = new OwnSnapshotDistributionLog(new LocalStorageProvider());
+app.provide('publicationDistributionRecord', new OwnPublicationDistributionRecord({
+    storageProvider: new LocalStorageProvider(),
+    placementCatalog: publicationSnapshotPlacementCatalog,
+    snapshotDistributionLog: ownSnapshotDistributionLog
+}));
 app.provide('publicationSnapshotPlacementPeerExchange', publicationSnapshotPlacementPeerExchange);
 app.provide('publicationSnapshotPlacementDiscoveryCoordinator', publicationSnapshotPlacementDiscoveryCoordinator);
 app.provide('publicationSnapshotPlacementResolutionCoordinator', publicationSnapshotPlacementResolutionCoordinator);
@@ -626,7 +632,7 @@ const {
     resolvedIpfsNodeApiUrl, snapshotPlacementStoreRegistry, resolvedAnnouncementDiscoveryProvider,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, PUBLICATION_DISCOVERY_TAG,
     publicationDistributionLifecycleStore, arweaveHostSigner, nostrHostPublisher,
-    nostrPublicationRuntimeCapabilities, steemRuntime
+    nostrPublicationRuntimeCapabilities, steemRuntime, snapshotDistributionLog: ownSnapshotDistributionLog
 });
 app.provide('publicationDistributionCommand', publicationDistributionCommand);
 app.provide('multiRelayNostrPublicationDistributionCommand', multiRelayNostrPublicationDistributionCommand);

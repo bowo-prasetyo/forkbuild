@@ -359,9 +359,18 @@ Smaller exports sit where their data is: every saved document from the
 Editor's Recent menu (application/document/DocumentBundle.js), every
 personal structure beside My Structures
 (application/blueprint/BlueprintBundle.js), and one identity with its
-signed lifecycle records (identity/IdentityLifecycleTransfer.js). The
-Repository marks your own publications never uploaded from this device to
-IPFS or Arweave (application/publication/LocalOnlyPublicationCheck.js).
+signed lifecycle records (identity/IdentityLifecycleTransfer.js).
+
+Repository cards of your own publications say where this device recorded
+distributing them (application/publication/OwnPublicationDistributionRecord.js):
+storage from the Signed Claim's distribution lifecycle, signed snapshot
+placements and application/snapshot/OwnSnapshotDistributionLog.js, and
+announcements from the lifecycle's origin (a `ws:`/`wss:` relay is Nostr, a
+steemit.com thread Steem, another URL the Arweave gateway) and the log. The
+log (`own-snapshot-distributions`) is written by the `snapshotDistributionCommand`
+ui/main/composePublicationDistribution.js provides, so every Distribute
+Snapshot is kept past a reload. With no record the card says so, rather
+than claiming the publication exists only here.
 
 ## Announcement Index
 

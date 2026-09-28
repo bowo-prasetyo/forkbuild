@@ -450,14 +450,23 @@
     font-size: 0.8rem;
 }
 
-.publication-local-only {
+.publication-distribution {
     margin: 0.35rem 0;
-    color: #e0b050;
+    color: #8fc9a8;
     font-size: 0.78rem;
 }
 
-.publication-local-only a {
-    color: #e0c070;
+.publication-distribution-item {
+    text-decoration: underline dotted;
+    cursor: help;
+}
+
+.publication-distribution--none {
+    color: #a0a0a0;
+}
+
+.publication-distribution--none a {
+    color: #c0c0c0;
 }
 
 /* 0.2.31 — Publication Catalog & Repository UX. See

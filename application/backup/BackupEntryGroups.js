@@ -66,6 +66,7 @@ const EXACT_NAMES = new Map([
     ['publication-snapshot-placement-catalog:knowledge', BackupEntryGroup.PUBLICATIONS],
     ['publication-observation-archive', BackupEntryGroup.PUBLICATIONS],
     ['publication-commentary:entries', BackupEntryGroup.PUBLICATIONS],
+    ['own-snapshot-distributions', BackupEntryGroup.PUBLICATIONS],
 
     ['public-lobby-display-name', BackupEntryGroup.PEOPLE],
 

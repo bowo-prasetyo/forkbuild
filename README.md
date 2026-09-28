@@ -85,7 +85,8 @@ models").
   passphrase-encrypted file and restores it here or on another device,
   adding what's missing or replacing everything. Documents, structures and
   identities also export on their own pages, all at once or one at a time,
-  and the Repository marks your publications that exist only on this device.
+  and each of your publications in the Repository says where this device
+  recorded distributing it.
   A reminder appears when the last backup is old, a backup can go to your
   device's share sheet, and Chrome and Edge can back up daily to a folder
   your cloud storage syncs. See [Your Data](docs/user/13-YourData.md).

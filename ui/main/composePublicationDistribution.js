@@ -13,7 +13,7 @@ export function composePublicationDistribution({
     resolvedIpfsNodeApiUrl, snapshotPlacementStoreRegistry, resolvedAnnouncementDiscoveryProvider,
     resolvedArweaveGatewayUrl, resolvedNostrRelayUrls, PUBLICATION_DISCOVERY_TAG,
     publicationDistributionLifecycleStore, arweaveHostSigner, nostrHostPublisher,
-    nostrPublicationRuntimeCapabilities, steemRuntime = null
+    nostrPublicationRuntimeCapabilities, steemRuntime = null, snapshotDistributionLog = null
 }) {
     const arweavePublicationRuntimeCapabilities = createArweavePublicationDistributionRuntimeAdapter({ signer: arweaveHostSigner });
     const arweaveAnnouncementUploadTaggedTransaction = createArweaveTaggedTransactionUpload({
@@ -70,6 +70,8 @@ export function composePublicationDistribution({
         if (discoveryProvider === 'steem') return steemSnapshotDiscoveryPublisher;
         return nostrSnapshotDiscoveryPublisher;
     };
+    // Every completed distribution is logged (application/snapshot/OwnSnapshotDistributionLog.js),
+    // so the Repository can say where your publications went after a reload.
     const snapshotDistributionCommand = (bytes, storage = 'ar', publicationId, claimedPosition, discoveryProvider, placementRecord) => executeSnapshotDistributionCommand({
         bytes,
         contentStore: resolveSnapshotDistributionContentStore(snapshotPlacementStoreRegistry, storage),
@@ -77,6 +79,15 @@ export function composePublicationDistribution({
         publicationId,
         claimedPosition,
         placementRecord
+    }).then((result) => {
+        if (snapshotDistributionLog) {
+            try {
+                snapshotDistributionLog.record({ result, substrate: discoveryProvider || resolvedAnnouncementDiscoveryProvider || 'nostr', publicationId });
+            } catch (error) {
+                console.warn('Snapshot distribution: could not log the result', error);
+            }
+        }
+        return result;
     });
     // Lets a Remote IPFS CID be announced without re-uploading the bytes through
     // contentStore.put(). May be null.
