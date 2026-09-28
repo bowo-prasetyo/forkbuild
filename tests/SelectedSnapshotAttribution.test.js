@@ -9,6 +9,7 @@ import { Publication } from '../publisher/Publication.js';
 import { ContentReference } from '../core/ContentReference.js';
 import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
+import { stripHtmlComments } from './support/StripHtmlComments.js';
 
 // 0.9.154 — Selected Snapshot Attribution.
 //
@@ -65,7 +66,7 @@ const SOURCE_ROOT = new URL('../', import.meta.url);
 
 async function codeOnlySource(relativePath) {
     const text = await readFile(new URL(relativePath, SOURCE_ROOT), 'utf8');
-    const withoutHtmlComments = text.replace(/<!--[\s\S]*?-->/g, '');
+    const withoutHtmlComments = stripHtmlComments(text);
     return withoutHtmlComments.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 

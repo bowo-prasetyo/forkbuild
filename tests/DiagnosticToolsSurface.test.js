@@ -4,6 +4,7 @@ import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { worldViewFiles, ownPublicationPanelSource } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { stripHtmlComments } from './support/StripHtmlComments.js';
 
 // 0.9.324 — Diagnostic Tools Surface.
 //
@@ -50,7 +51,7 @@ import { readSource as rawSource } from './support/SourceText.js';
 //            person manually walk) is untouched.
 
 function codeOnlyText(text) {
-    const withoutHtmlComments = text.replace(/<!--[\s\S]*?-->/g, '');
+    const withoutHtmlComments = stripHtmlComments(text);
     return withoutHtmlComments.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 

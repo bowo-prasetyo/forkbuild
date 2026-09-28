@@ -1,4 +1,5 @@
 import { publicationsViewSourceWithTemplate } from './support/SourceFileGroups.js';
+import { stripHtmlComments } from './support/StripHtmlComments.js';
 
 // The Publications page (ui/views/DecentralizedPublicationsView.js) hides
 // many sections behind `v-if="<injected coordinator>"`. A name the template
@@ -26,7 +27,7 @@ const TEMPLATE_GLOBALS = new Set(['String', 'Number', 'Boolean', 'Array', 'Objec
 function splitView(text) {
     const templateStart = text.indexOf('template: `');
     const script = text.slice(0, templateStart);
-    const template = text.slice(templateStart + 'template: `'.length, text.lastIndexOf('`')).replace(/<!--[\s\S]*?-->/g, '');
+    const template = stripHtmlComments(text.slice(templateStart + 'template: `'.length, text.lastIndexOf('`')));
     const returnStart = script.lastIndexOf('\n        return {');
     const returnEnd = script.indexOf('\n        };', returnStart);
     const returnBody = script.slice(returnStart, returnEnd).replace(/\/\/.*$/gm, '');

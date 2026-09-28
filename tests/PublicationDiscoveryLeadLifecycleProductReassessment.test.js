@@ -23,6 +23,7 @@ import { ownPublicationPanelFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { InMemoryStorageProvider } from './support/InMemoryStorageProvider.js';
 import { readSource as rawSource } from './support/SourceText.js';
+import { stripHtmlComments } from './support/StripHtmlComments.js';
 
 // 0.9.538 — Publication Discovery Lead Lifecycle Product Reassessment.
 //
@@ -153,7 +154,7 @@ function makeNostrQueryImpl(events) {
 
 async function codeOnlySource(relativePath) {
     const text = await rawSource(relativePath);
-    const withoutHtmlComments = text.replace(/<!--[\s\S]*?-->/g, '');
+    const withoutHtmlComments = stripHtmlComments(text);
     return withoutHtmlComments.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
 }
 
@@ -707,7 +708,7 @@ async function run() {
             // means to confirm) — never text a Wanderer actually sees, so
             // they are stripped before checking, exactly as codeOnlySource()
             // already strips them for structural checks elsewhere.
-            const template = templateMatch[1].replace(/<!--[\s\S]*?-->/g, '');
+            const template = stripHtmlComments(templateMatch[1]);
             assert(!forbiddenPattern.test(template), `I2. ${file}'s own ACTUALLY-RENDERED template markup (HTML comments excluded) contains no accidental trust/ownership/preference claim (trusted/authentic/official/owned/recommended/"best snapshot"/preferred)`);
             assert(!/\bverified\b/i.test(template), `I3. ${file}'s own actually-rendered template never uses the bare word "verified" — see application/snapshot/SnapshotOutcomeInspectionView.js's own 0.9.528 "Confirmed to match" discipline instead`);
         }
