@@ -2310,3 +2310,45 @@ yourself" meant guessing which card was which.
 - Tests: `tests/FindOwnSharedPublication.test.js` (found, tampered bytes ignored beyond id and hash, every no-match
   case, `findOwnPublication()`); `tests/PublicationsPageLayoutBrowser.test.js` covers the title, the Editor link,
   that only your own entries are looked up, and the fallback.
+
+## The Publications page is a regular feature, with Experimental parts (unnumbered, 2026-09-28)
+
+**The Publications page no longer shows the route-wide Experimental banner or the Exp. badge in the top bar; instead it
+marks its own Experimental parts.** An audit of each feature on the page found that the list and its checks, cleaning
+up failed publications, announcing on Nostr or Arweave, storing on IPFS or Arweave, and a card's local snapshot
+(Check, Import, Get from Peer) rest on the same verifiers and peer layer as the stable core. Anchoring, the
+wallets, Steem (built 2026-09-26 and never run against a live node from this environment), remote pinning and the expert
+tabs and tools don't yet, and stay Experimental.
+
+- Graduated: `/publications` loses `meta: { experimental: true }`; `ui/App.js` drops its nav badge (and
+  `.experimental-badge--nav`, now unused). A line under the intro says what the badges mean.
+- Marked Experimental on the page: the Proof / Anchoring block; Steem and IPFS (Remote Pinning) wherever offered
+  (a badge on a card, "(Experimental)" in an option; storage types through `EXPERIMENTAL_STORAGE_TYPES` and
+  `storageTypeOptionLabel()` in `decentralizedPublications/presentation.js`); the
+  Decentralization & Evidence, Placements & IPFS and History tabs (**Exp.**); the Snapshot tab's Acquisition, Peer
+  Snapshot Possession, Comparison and Snapshot State sections; and the Wallet, Archive & Publisher Tools panel.
+- Removed a button that never worked: **Create Bitcoin Anchor** ran the one-click Bitcoin publisher, which
+  `ui/main/composeAnchoring.js` deliberately wires to a broadcaster that always reports unavailable. The card now
+  lists only `oneClickAnchorTypes()` (neither Bitcoin nor Base) and says Bitcoin and Base anchors are made through
+  their wallet steps. The publisher stays registered, since the Proof / Anchoring Provider page offers Bitcoin.
+- Fixed: Distribute Snapshot announced on the saved Announcement/Discovery provider but always said
+  **Nostr: Announced** and linked **Configure Nostr**. The card now has its own Substrate picker (seeded from that
+  preference), passes it to `snapshotDistributionCommand`, and names the substrate this attempt used. The Remote IPFS
+  publish's badge is named for the provider its announcement went to as well.
+- Fixed: on a World's card, Distribute Snapshot distributed the envelope's content (the Publication record) as if it
+  were the World's snapshot, with no Publication id or position. It now distributes the World's own snapshot
+  (the wrapped Publication's `contentReference`) with its publisher's signed placement when this device holds one,
+  as World View does. `application/placement/PublisherPlacementClaim.js` (new) holds
+  `latestPublisherPlacementRecord()`, now also used by World View's `getPublisherPlacementRecord()`, and
+  `PublisherPlacementClaimLookup`, provided as `publisherPlacementClaimLookup` by
+  `CreatePublisherPlacementClaimLookupUseCase`. Other kinds are still announced by content hash alone.
+- Fixed: a relationship between zero claims read **Agreement** ("Agreement · 0 known placements").
+  `describeClaimRelationship()` says **Nothing to compare yet** in Snapshot State, the Decentralization card and the
+  placement convergence line.
+- Docs: README, `docs/user/01`, `09`, `11`, `12`, the user README and FAQ, `docs/Privacy.md` (Nostr, Arweave and IPFS
+  reads are no longer marked experimental), `docs/Architecture.md` and `docs/DeveloperFAQ.md` (marking part of a page).
+- Tests: `tests/PublicationsPageExperimentalParts.test.js` (one-click anchor types, relationships, labels, the
+  placement lookup and World View picking the same record); `tests/PublicationsPageLayoutBrowser.test.js` covers the
+  badges, the missing Bitcoin card, and Distribute Snapshot on a World and on another kind.
+- Not done: running Steem against a live node, and creating its monthly threads twelve months ahead, both needed
+  before Steem can graduate. The one-click Bitcoin publisher itself is left in place.

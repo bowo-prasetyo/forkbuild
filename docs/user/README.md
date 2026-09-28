@@ -34,14 +34,15 @@ top-level [docs/](..) folder.
    friends-only messaging, offline delivery, read receipts, and voice
    calls.
 9. **[Publications & External Evidence](09-PublicationsAndEvidence.md)** —
-   *experimental in 1.0*. The technical, optional layer: signed authorship
-   and place-name claims, the Publications page, commentary, and what your
-   device holds (Local Snapshot).
+   the technical, optional layer: signed authorship and place-name claims,
+   the Publications page, commentary, and what your device holds (Local
+   Snapshot). Parts of the page are *experimental*, and marked so.
 10. **[Network Settings](10-NetworkSettings.md)** — gateways, relays,
     storage and announcement providers, and peer-connection servers.
-11. **[Evidence & Storage](11-EvidenceAndStorage.md)** — *experimental*.
-    External evidence, the Bitcoin and Base wallet pipelines, snapshot
-    placements, IPFS publishing, and Steem.
+11. **[Evidence & Storage](11-EvidenceAndStorage.md)** — storing content
+    on IPFS or Arweave, and, *experimental*, external evidence, the Bitcoin
+    and Base wallet pipelines, snapshot placements, remote IPFS pinning, and
+    Steem.
 12. **[Archive & Leaderboards](12-ArchiveAndLeaderboards.md)** —
     *experimental*. The observation archive, publication references,
     achievements, publisher labels, and the Leaderboard pages.

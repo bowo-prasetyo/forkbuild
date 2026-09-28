@@ -78,9 +78,9 @@ only when you use the feature, and each server can be changed under
 | A peer connection starts | STUN servers (`stun.l.google.com`) | nothing but a request for your public IP address |
 | You start a peer connection, if the rendezvous server offers a relay | the rendezvous server's `/turn-credentials`, then its TURN relay (Cloudflare) | a request for short-lived relay credentials, at most about once an hour; relayed traffic is end-to-end encrypted by WebRTC |
 | The app is open and its tab visible (background announcement sync) | Nostr relays (`relay.damus.io`), an Arweave gateway (`arweave.net`), Steem nodes (`api.steemit.com`) | queries for ForkBuild's discovery tags: the shared Snapshot and Commentary tags, and the Place Naming regions and map cells you have visited |
-| You distribute or discover publications over Nostr (*experimental*) | Nostr relays (`relay.damus.io`) | signed announcements you publish; your queries |
-| You store or fetch content on Arweave (*experimental*) | an Arweave gateway (`arweave.net`) | the content you publish; what you fetch |
-| You fetch content from IPFS (*experimental*) | an IPFS gateway (`ipfs.io`), or your own IPFS node (`127.0.0.1:5001`) | what you fetch or add |
+| You distribute or discover publications over Nostr | Nostr relays (`relay.damus.io`) | signed announcements you publish; your queries |
+| You store or fetch content on Arweave | an Arweave gateway (`arweave.net`) | the content you publish; what you fetch |
+| You fetch content from IPFS | an IPFS gateway (`ipfs.io`), or your own IPFS node (`127.0.0.1:5001`) | what you fetch or add |
 | You pin content with a remote pinning service (*experimental*) | the service you enter | the content, and the token you type for that one upload (never stored) |
 | You store, announce or anchor on Steem, or discover Steem announcements (*experimental*) | Steem API nodes (`api.steemit.com`, then `api.justyy.com`); signing goes through the Steem Keychain extension | your Steem account name; what you post (announcements, stored content, anchors) is public on the chain for good, and edits leave the earlier version in its history |
 | You distribute a Publication's Signed Claim on Steem (*experimental*) | the Steem image host (`steemitimages.com`) | a 320×200 picture of the build for the post's preview, signed with your Steem posting key |

@@ -1040,16 +1040,22 @@ Distributing a Publication or a Snapshot involves separate choices, each with it
 
 | Choice | Values | Seam |
 |--------|--------|------|
-| Where the bytes go | Arweave, IPFS (Local Kubo), IPFS (Remote Pinning), Steem (Experimental, small builds) | `PublicationMaterialUploaderComposition` (Publication material); `SnapshotPlacementStoreRegistry` + `ipfsRemotePublicationCoordinator` (Snapshot) |
+| Where the bytes go | Arweave, IPFS (Local Kubo), IPFS (Remote Pinning, Experimental), Steem (Experimental, small builds) | `PublicationMaterialUploaderComposition` (Publication material); `SnapshotPlacementStoreRegistry` + `ipfsRemotePublicationCoordinator` (Snapshot) |
 | Where it is announced | Nostr (fan-out to every configured relay), Arweave (tagged transaction) or Steem (Experimental; a reply to a monthly discovery thread) | `*RuntimeComposition` `discoveryProvider` for Publication, Snapshot, Place Naming and Commentary; `resolveSnapshotDiscoveryPublisher()` |
-| Proof / anchoring | Bitcoin, Arweave, Steem (Experimental) (Base only through its own button) | `PreferredPublicationAnchorCreationCoordinator` |
+| Proof / anchoring (Experimental) | Bitcoin, Arweave, Steem (Bitcoin and Base only through their wallet steps) | `PreferredPublicationAnchorCreationCoordinator` |
 
 The saved preferences live in `RoleProviderPreferenceStore` (`CONTENT`, `ANNOUNCEMENT_AND_DISCOVERY`,
 `PROOF_AND_ANCHORING`). They drive the preferred-provider buttons (on the Publications page, "Store on …" and
 "Anchor on …" at the top of a card's Distribution roles, and "Use Preferred Provider" under Details → Placements & IPFS),
 and they seed every picker's first value through `resolveSavedProviderDefault()`; they never override a choice already
 made. The Distribution roles offer that button only for a saved provider they can use
-(`preferredDistributionChoice()`), never for a wallet-guided anchor type, and otherwise show every option. Distribution uses selection,
+(`preferredDistributionChoice()`), never for a wallet-guided anchor type, and otherwise show every option. The
+per-type anchor cards list only `oneClickAnchorTypes()`: the one-click Bitcoin publisher stays registered (the
+Proof / Anchoring Provider page offers Bitcoin) but has no wallet and never succeeds, so it gets no card. On the
+Publications page, Distribute Snapshot on a World distributes the World's own snapshot (the wrapped Publication's
+`contentReference`, not the envelope's) with its publisher's signed placement from `PublisherPlacementClaimLookup`
+(`application/placement/PublisherPlacementClaim.js`, the same record World View's `getPublisherPlacementRecord()`
+picks), on the substrate chosen on that card. Distribution uses selection,
 never fan-out, across substrates. Fan-out happens only across relays within Nostr. Arweave and IPFS gateways use
 ordered failover instead, because any gateway can serve the same content-addressed bytes. The Steem choices are
 described in docs/Protocol.md's three "Proposed: Steem …" sections, which are built and Experimental.
@@ -1223,7 +1229,10 @@ the composables in ui/composables/ share the settings-form logic
 (useEndpointSettingsForm, useEndpointListSettings,
 useRoleProviderPreferenceForm) and the narrow-screen layout
 (useMediaQuery). A route with `meta: { experimental: true }` gets the
-Experimental banner from ui/App.js.
+Experimental banner from ui/App.js. A page that is a regular feature with
+Experimental parts, like the Publications page, marks those parts itself
+with `.experimental-badge` instead; `decentralizedPublications/presentation.js`
+lists its Experimental storage types.
 
 index.html loads the app as ES modules with no build step. Its import map
 resolves `vue`, `vue-router`, `@vue/devtools-api`, `three` and

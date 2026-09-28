@@ -18,6 +18,7 @@ import { RetrieveSharedPublicationUseCase } from '../application/publication/sha
 import { AutoRetrieveSharedPublicationsUseCase } from '../application/publication/sharing/AutoRetrieveSharedPublicationsUseCase.js';
 import { CreatePublicationResolverUseCase } from '../application/publication/CreatePublicationResolverUseCase.js';
 import { CreateFindOwnSharedPublicationUseCase } from '../application/publication/sharing/CreateFindOwnSharedPublicationUseCase.js';
+import { CreatePublisherPlacementClaimLookupUseCase } from '../application/placement/CreatePublisherPlacementClaimLookupUseCase.js';
 import { CreatePublicationPeerExchangeUseCase } from '../application/publication/CreatePublicationPeerExchangeUseCase.js';
 import { CreatePeerContentExchangeUseCase } from '../application/peer/CreatePeerContentExchangeUseCase.js';
 import { CreatePublicationResolutionCoordinatorUseCase } from '../application/publication/CreatePublicationResolutionCoordinatorUseCase.js';
@@ -379,6 +380,9 @@ app.provide('sharePublicationWithPeersUseCase', sharePublicationWithPeersUseCase
 // Which of this device's own Worlds an unresolvable catalog entry shares, for
 // the Publications page's "Open in Editor" on an old, legacy-hash entry.
 app.provide('findOwnSharedPublicationUseCase', new CreateFindOwnSharedPublicationUseCase().execute({ contentStore: publicationContentStore }));
+// The publisher's signed placement of a World, announced beside its Snapshot
+// when the Publications page distributes it, as World View does.
+app.provide('publisherPlacementClaimLookup', new CreatePublisherPlacementClaimLookupUseCase().execute());
 app.provide('retrieveSharedPublicationUseCase', retrieveSharedPublicationUseCase);
 app.provide('autoRetrieveSharedPublicationsUseCase', autoRetrieveSharedPublicationsUseCase);
 app.provide('ipfsRemotePublicationCoordinator', ipfsRemotePublicationCoordinator);

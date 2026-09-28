@@ -3,6 +3,7 @@ import { detectSpatialOverlap } from '../../core/SpatialOverlap.js';
 import { evaluateSpatialAllocation } from '../../core/SpatialAllocationPolicy.js';
 import { isWithinRadius, distanceBetween } from '../../core/SpatialQuery.js';
 import { summarizeDiscoveryDiagnostics } from '../../core/DiscoveryDiagnosticsSummary.js';
+import { latestPublisherPlacementRecord } from '../placement/PublisherPlacementClaim.js';
 
 // Location-browser radii. NEARBY_RADIUS is small but non-zero: the camera
 // essentially never lands exactly on a placement's position (Focus parks it
@@ -164,11 +165,8 @@ export const placementMethods = {
         const publication = this.findPublicationById(publicationId);
         const publisherId = publication && publication.publisherIdentity ? publication.publisherIdentity.id : null;
         if (!publisherId || !this._placementRegistry) return null;
-        const records = this._placementRegistry.findByPublicationId(publicationId)
-            .filter((record) => record.signature && record.ownerIdentity && record.ownerIdentity.id === publisherId);
-        if (records.length === 0) return null;
-        const latest = records.reduce((a, b) => (b.updatedAt > a.updatedAt ? b : a));
-        return latest.toJSON();
+        const latest = latestPublisherPlacementRecord(this._placementRegistry.findByPublicationId(publicationId), publisherId);
+        return latest ? latest.toJSON() : null;
     },
 
     // Offers a publisher's signed placement received beside a Snapshot to this

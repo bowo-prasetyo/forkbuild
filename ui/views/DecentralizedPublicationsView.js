@@ -47,7 +47,8 @@ import { isLegacyContentHash } from '../../serializer/contentHash.js';
 import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import {
     humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, OUTCOME_BADGE_CLASSES, republishAdviceFor,
-    preferredDistributionChoice, WALLET_GUIDED_ANCHOR_TYPES,
+    preferredDistributionChoice, WALLET_GUIDED_ANCHOR_TYPES, oneClickAnchorTypes, humanizeDiscoveryProvider,
+    storageTypeOptionLabel, isExperimentalStorageType, describeClaimRelationship,
     EVIDENCE_BADGE_CLASSES
 } from './decentralizedPublications/presentation.js';
 import { useBaseAnchoring } from './decentralizedPublications/useBaseAnchoring.js';
@@ -539,6 +540,12 @@ export default {
                     defaultAnnouncementDiscoveryProvider, ['nostr', 'arweave', 'steem'], 'nostr'
                 ),
                 discoveryDistributionAttempt: null,
+                // Where Distribute Snapshot announces: seeded the same way,
+                // chosen separately, so the result can name the substrate it
+                // actually used.
+                snapshotDiscoveryProvider: resolveSavedProviderDefault(
+                    defaultAnnouncementDiscoveryProvider, ['nostr', 'arweave', 'steem'], 'nostr'
+                ),
                 // The entry's own Content backend. Seeded from the saved
                 // Content preference when it is currently eligible, else the
                 // first eligible backend, else 'ar'.
@@ -624,7 +631,10 @@ export default {
 
         function snapshotStatePlacementRelationshipLabel(view) {
             if (!view || !view.placements) return null;
-            return view.placements.relationship === SnapshotPlacementRelationship.CONFLICT ? 'Conflict' : 'Agreement';
+            return describeClaimRelationship(
+                view.placements.relationship === SnapshotPlacementRelationship.CONFLICT ? 'conflict' : 'agreement',
+                view.placements.placementCount
+            );
         }
 
         const {
@@ -823,7 +833,10 @@ export default {
         } = useIpfsRemotePublishing({
             archiveIpfsVerificationObservation, archivePublishIpfsRecord,
             ipfsPublicationContentVerificationCoordinator, ipfsRemotePublicationCoordinator,
-            publicationContentStore, snapshotDiscoveryPublisher
+            publicationContentStore, snapshotDiscoveryPublisher,
+            // The saved provider snapshotDiscoveryPublisher was built for
+            // (ui/main/composePublicationDistribution.js).
+            snapshotDiscoveryProvider: inject('defaultAnnouncementDiscoveryProvider', 'nostr')
         });
 
         const {
@@ -867,7 +880,8 @@ export default {
             publicationDistributionLifecycleStore, distributeEntryPublication, distributeEntrySnapshot,
             distributePublicationForEntry, discoveryDistributionButtonLabel, distributeSnapshot,
             snapshotDistributionButtonLabel, discoveryObservationsView,
-            discoveryDistributionConfigurationRoute, snapshotDistributionConfigurationRoute, steemUploadProgressText
+            discoveryDistributionConfigurationRoute, snapshotDistributionConfigurationRoute,
+            snapshotDiscoveryConfigurationRoute, steemUploadProgressText, entryWorld
         } = usePublicationDistribution({
             publicationContentStore
         });
@@ -1057,6 +1071,8 @@ export default {
             distributePublicationForEntry, discoveryDistributionButtonLabel,
             distributeSnapshot, snapshotDistributionButtonLabel,
             discoveryObservationsView, discoveryDistributionConfigurationRoute, snapshotDistributionConfigurationRoute,
+            snapshotDiscoveryConfigurationRoute, entryWorld, oneClickAnchorTypes: oneClickAnchorTypes(availableAnchorTypes),
+            humanizeDiscoveryProvider, storageTypeOptionLabel, isExperimentalStorageType, describeClaimRelationship,
             steemUploadProgressText, toggleInspect, inspectionExpanded, inspectionDetail, inspectionTypeSpecific, inspectionKnowledge,
             evidenceDiscoveryCoordinator, discoverFromPeers, discoveryView, discoveryBadgeClass, discoveryButtonLabel,
             describeKnownPlacementCount, togglePlacements, resolvePlacement, placementBadgeClass, placementLifecycleNote,
@@ -1226,6 +1242,13 @@ export default {
                 <button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">Wallet, Archive &amp; Publisher Tools</button>
                 at the bottom of the page.
             </p>
+            <!-- The page is a regular feature; only the parts marked with an
+                 Experimental badge may change or be removed. -->
+            <p class="form-hint form-hint--neutral">
+                Parts marked <span class="experimental-badge">Experimental</span> (anchoring, wallets, Steem, remote
+                IPFS pinning and the expert tabs and tools) work, but may change or be removed in a later version,
+                and what they produce may not carry over.
+            </p>
             <p v-if="retrievalPeers.length === 0 && anyRetrievable" class="form-hint form-hint--neutral">
                 No peer is connected, so "Retrieve from Peers" can't fetch missing content. Connect to one
                 from <router-link to="/peers">Peers</router-link>.
@@ -1290,17 +1313,17 @@ export default {
                             <button type="button" role="tab" :aria-selected="entry.detailsTab === 'evidence'"
                                     :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'evidence' }]"
                                     @click="setEntryDetailsTab(entry, 'evidence')">
-                                Decentralization &amp; Evidence
+                                Decentralization &amp; Evidence<span class="experimental-badge" title="Experimental: may change or be removed in a later version">Exp.</span>
                             </button>
                             <button type="button" role="tab" :aria-selected="entry.detailsTab === 'placements'"
                                     :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'placements' }]"
                                     @click="setEntryDetailsTab(entry, 'placements')">
-                                Placements &amp; IPFS
+                                Placements &amp; IPFS<span class="experimental-badge" title="Experimental: may change or be removed in a later version">Exp.</span>
                             </button>
                             <button type="button" role="tab" :aria-selected="entry.detailsTab === 'history'"
                                     :class="['publications-tools-tab', { 'publications-tools-tab--active': entry.detailsTab === 'history' }]"
                                     @click="setEntryDetailsTab(entry, 'history')">
-                                History
+                                History<span class="experimental-badge" title="Experimental: may change or be removed in a later version">Exp.</span>
                             </button>
                         </div>
 
@@ -1446,7 +1469,11 @@ export default {
                  need a wallet observed here first. -->
             <details id="publications-tools" class="publications-tools-panel" :open="publicationsToolsOpen"
                      @toggle="publicationsToolsOpen = $event.target.open">
-                <summary class="publications-tools-panel-summary">Wallet, Archive &amp; Publisher Tools</summary>
+                <summary class="publications-tools-panel-summary">Wallet, Archive &amp; Publisher Tools <span class="experimental-badge">Experimental</span></summary>
+                <p class="form-hint form-hint--neutral">
+                    Experimental. Everything in this panel works, but may change or be removed in a later version,
+                    and what it produces may not carry over.
+                </p>
 
                 <!-- Tab panels use v-show so card state survives tab switches. -->
                 <div class="publications-tools-tabs" role="tablist">

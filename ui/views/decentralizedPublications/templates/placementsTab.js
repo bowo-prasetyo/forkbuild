@@ -55,7 +55,7 @@ export const placementsTabTemplate = `<div v-show="entry.detailsTab === 'placeme
                                     </span>
                                 </div>
                             </div>
-                            <p class="form-hint form-hint--neutral">Content binding: {{ entry.placementConvergenceView.relationship === 'conflict' ? 'CONFLICT' : 'AGREEMENT' }}</p>
+                            <p class="form-hint form-hint--neutral">Content binding: {{ describeClaimRelationship(entry.placementConvergenceView.relationship, entry.placementConvergenceView.placementCount) }}</p>
                             <p v-if="entry.placementConvergenceView.hasConflict" class="evidence-convergence-conflict">
                                 ⚠ {{ entry.placementConvergenceView.conflictDescription }}
                             </p>
@@ -258,7 +258,7 @@ export const placementsTabTemplate = `<div v-show="entry.detailsTab === 'placeme
                                          way. -->
                                     <p v-if="entry.ipfsRemoteSnapshotAnnouncement" class="form-hint form-hint--neutral">
                                         <span class="peer-badge" :class="entry.ipfsRemoteSnapshotAnnouncement.announced ? 'peer-badge--authenticated' : 'peer-badge--failed'">
-                                            {{ entry.ipfsRemoteSnapshotAnnouncement.announced ? 'Nostr: Announced' : 'Nostr: Not announced' }}
+                                            {{ humanizeDiscoveryProvider(entry.ipfsRemoteSnapshotAnnouncement.discoveryProvider) }}: {{ entry.ipfsRemoteSnapshotAnnouncement.announced ? 'Announced' : 'Not announced' }}
                                         </span>
                                         <template v-if="entry.ipfsRemoteSnapshotAnnouncement.error"> — {{ entry.ipfsRemoteSnapshotAnnouncement.error }}</template>
                                     </p>

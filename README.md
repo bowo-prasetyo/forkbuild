@@ -57,10 +57,10 @@ models").
   records its lineage, subject to the source's license and fork policy.
 - Repository and Author views with search, sorting, pagination and
   client-side thumbnails.
-- Decentralized publication (*experimental*, see below): content on Arweave or
-  IPFS, announcements over Nostr or Arweave, and optional anchoring evidence on
-  Bitcoin, Arweave or Base. All of it is verified by content hash and
-  signature, never taken on trust.
+- Decentralized publication: content on Arweave or IPFS and announcements over
+  Nostr or Arweave, managed from the **Publications** page, plus (*experimental*,
+  see below) Steem and anchoring evidence on Bitcoin, Arweave, Base or Steem.
+  All of it is verified by content hash and signature, never taken on trust.
 
 **Identity, peers and social**
 - Ed25519 identities (did:key) held on the device, signed with the audited
@@ -84,12 +84,19 @@ models").
 
 These areas work, but may change or be removed in a later version, and what
 they produce may not carry over. The app marks them with an **Experimental**
-banner:
-- the **Publications** page and its decentralized publication tooling;
-- external evidence and anchoring (Bitcoin, Arweave, Base and Steem), and
-  their Network Settings;
-- Steem as a place to store and announce builds (added in 1.1);
+banner, or, on the Publications page, an **Experimental** badge:
+- external evidence and anchoring (Bitcoin, Arweave, Base and Steem), the
+  Bitcoin and Base wallets, and their Network Settings;
+- Steem as a place to store and announce builds (added in 1.1), and remote
+  IPFS pinning;
+- the Publications page's expert parts: the Decentralization & Evidence,
+  Placements & IPFS and History tabs, peer possession checks, and the
+  Wallet, Archive & Publisher Tools panel;
 - the Leaderboard, reconciliation and publisher snapshot claim pages.
+
+The rest of the Publications page (the list and statuses, removing
+publications that can't be used, announcing on Nostr or Arweave, storing on
+IPFS or Arweave, and a card's local snapshot) is a regular feature.
 
 ## Quick Start
 

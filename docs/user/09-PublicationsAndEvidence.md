@@ -1,12 +1,19 @@
 # 09 — Publications & External Evidence
 
-> **Experimental in ForkBuild 1.0.** Everything in this guide and in guides
-> [11](11-EvidenceAndStorage.md) and [12](12-ArchiveAndLeaderboards.md)
-> works, but may change or be removed in a later version, and what it
-> produces may not carry over. The app marks these screens with an
-> **Experimental** banner. Building, saving, publishing to the Repository,
-> forking, identities and peers are the stable core and don't depend on any
-> of it.
+> **Partly experimental.** The Publications page is a regular feature: its
+> list and statuses, removing publications that can't be used, announcing on
+> Nostr or Arweave, storing on IPFS or Arweave, and checking, importing or
+> getting a card's snapshot. The rest is **Experimental**: it works, but may
+> change or be removed in a later version, and what it produces may not
+> carry over. The page marks each such part with an **Experimental** badge
+> (**Exp.** on a tab): every kind of anchoring, the wallets, Steem, remote
+> IPFS pinning, the **Decentralization & Evidence**, **Placements & IPFS**
+> and **History** tabs, the peer possession and summary sections of the
+> **Snapshot** tab, and the whole **Wallet, Archive & Publisher Tools**
+> panel. Guides [11](11-EvidenceAndStorage.md) and
+> [12](12-ArchiveAndLeaderboards.md) say which of their sections are
+> Experimental. Building, saving, publishing to the Repository, forking,
+> identities and peers don't depend on any of it.
 
 None of this is needed to use ForkBuild. Skip it if you just want to build,
 publish and explore.
@@ -127,16 +134,19 @@ Below that, two folded sections:
   it. Storing and anchoring each lead with one button for the provider you
   saved under **Configure** (**Store on IPFS**, **Anchor on Steem**), with
   every other provider folded under **Other … options**. Without a saved
-  provider it can use, all the options show instead. See
-  [Evidence & Storage](11-EvidenceAndStorage.md).
+  provider it can use, all the options show instead. Steem and remote IPFS
+  pinning are marked **Experimental** wherever they're offered, and so is
+  the whole **Proof / Anchoring** block. See
+  [Distributing from the Publications page](#distributing-from-the-publications-page)
+  and [Evidence & Storage](11-EvidenceAndStorage.md).
 - **Details**, in four tabs:
 
 | Tab | What's there |
 |---|---|
 | **Snapshot** | [Local Snapshot](#local-snapshot): what this device holds, and how to get it. |
-| **Decentralization & Evidence** | [Decentralization](#decentralization-at-a-glance), the [evidence list](11-EvidenceAndStorage.md#the-evidence-list), and the Bitcoin and Base transaction steps. |
-| **Placements & IPFS** | The [Snapshot Placements](11-EvidenceAndStorage.md#snapshot-placements) list and [IPFS Publishing](11-EvidenceAndStorage.md#ipfs-publishing). |
-| **History** | **Show Cross-Domain Timeline**: every IPFS and Bitcoin observation for this publication, in time order. |
+| **Decentralization & Evidence** *(Exp.)* | [Decentralization](#decentralization-at-a-glance), the [evidence list](11-EvidenceAndStorage.md#the-evidence-list), and the Bitcoin and Base transaction steps. |
+| **Placements & IPFS** *(Exp.)* | The [Snapshot Placements](11-EvidenceAndStorage.md#snapshot-placements) list and [IPFS Publishing](11-EvidenceAndStorage.md#ipfs-publishing). |
+| **History** *(Exp.)* | **Show Cross-Domain Timeline**: every IPFS and Bitcoin observation for this publication, in time order. |
 
 ### Status meanings
 
@@ -188,6 +198,26 @@ top of the group) asks you to confirm, then forgets the publication here.
 It doesn't un-publish anything or reach anyone else, and a connected peer
 that still has the publication may announce it again. Only publications in
 this group can be removed.
+
+### Distributing from the Publications page
+
+**Distribution → Announcement / Discovery** has two cards:
+
+- **Publication** announces the signed publication itself on the
+  **Substrate** you choose (Arweave, Nostr, or Steem, which is
+  Experimental). It starts on your
+  [Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider).
+- **Snapshot** stores content under **Content** and announces it on its
+  own **Substrate**, which also starts on that provider. For a World, it's
+  the World's own snapshot, announced with where its publisher placed it
+  when this device holds that signed placement, as **Distribute** in World
+  View does. For any other kind, it's the publication's content, announced
+  by its hash alone. This device needs the bytes: for a World you haven't
+  opened, open it in World View or get it from a peer first.
+
+The result names the substrate it used, such as **Steem: Announced**, and
+for a World says whether its publisher's placement went with it. **Not
+announced** means only the announcement failed; the content was stored.
 
 ## Commentary
 
@@ -295,6 +325,8 @@ recent successful one: "Transfer package", "Placement" or "Peer".
 
 ### Asking peers what they have
 
+*Experimental*, as are the **Summaries** below.
+
 **Peer Snapshot Possession** asks one peer whether they hold the bytes,
 without fetching them: choose a peer and click **Check with Peer** (then
 **…Again**). The answer, with an **Observed:** time, is **Peer reports
@@ -326,7 +358,7 @@ peer said at that moment and is never rewritten.
 
 ## Decentralization at a glance
 
-On the **Decentralization & Evidence** tab, once a publication has an anchor
+*Experimental.* On the **Decentralization & Evidence** tab, once a publication has an anchor
 or a placement, **Decentralization** compares
 [External Evidence](11-EvidenceAndStorage.md#external-evidence) and
 [Snapshot Placements](11-EvidenceAndStorage.md#snapshot-placements):
@@ -336,7 +368,8 @@ or a placement, **Decentralization** compares
 - Two cards with how many claims of each kind are known, and whether they
   agree on the content hash (**Agreement**) or not (**Conflict**). If one
   agrees and the other conflicts, a sentence says so; agreement in one
-  doesn't vouch for the other.
+  doesn't vouch for the other. With no claims of a kind yet, it reads
+  **Nothing to compare yet** instead.
 - **Synchronize with Peers** (then **Synchronize Again**) asks each
   connected peer for anchors and placements you don't have, and reports
   **New claims** and **Already known** for each kind.

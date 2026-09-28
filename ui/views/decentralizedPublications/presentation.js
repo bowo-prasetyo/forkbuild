@@ -161,6 +161,59 @@ export function preferredDistributionChoice(savedKey, availableKeys, { walletGui
     return { providerKey: savedKey, savedKey, reason: null };
 }
 
+// Announcement/Discovery substrates, by the key the pickers and
+// resolveSnapshotDiscoveryPublisher() use.
+export const DISCOVERY_PROVIDER_LABELS = {
+    nostr: 'Nostr',
+    arweave: 'Arweave',
+    steem: 'Steem'
+};
+
+export function humanizeDiscoveryProvider(provider) {
+    return DISCOVERY_PROVIDER_LABELS[provider] || humanizeContentKind(provider);
+}
+
+// Where each substrate is configured.
+export function discoveryProviderConfigurationRoute(provider) {
+    if (provider === 'arweave') return '/settings/arweave-gateway';
+    if (provider === 'steem') return '/settings/steem';
+    return '/settings/nostr-relay';
+}
+
+// The parts of the Publications page that stay Experimental while the rest of
+// it is a regular feature: these storage types, Steem as a substrate (its
+// <option> says so in the templates), every anchor type, and the sections
+// that carry an Experimental badge. See docs/user/09-PublicationsAndEvidence.md.
+export const EXPERIMENTAL_STORAGE_TYPES = Object.freeze(['steem', 'remote-pinning']);
+
+export function isExperimentalStorageType(storage) {
+    return EXPERIMENTAL_STORAGE_TYPES.includes(storage);
+}
+
+// An option label that says when a storage type is Experimental, for
+// <select>s, which can't hold a badge.
+export function storageTypeOptionLabel(storage) {
+    const label = humanizeStorageType(storage);
+    return isExperimentalStorageType(storage) ? `${label} (Experimental)` : label;
+}
+
+// The anchor types a card's generic "Create … Anchor" button can make. Bitcoin
+// and Base anchors are made only through their wallet steps: the one-click
+// Bitcoin publisher has no wallet behind it and always ends in "No anchor was
+// created", and Base needs a reviewed plan.
+export function oneClickAnchorTypes(availableAnchorTypes) {
+    return (Array.isArray(availableAnchorTypes) ? availableAnchorTypes : [])
+        .filter((anchorType) => !WALLET_GUIDED_ANCHOR_TYPES.includes(anchorType));
+}
+
+// How a set of claims relates on the content hash: 'Conflict', 'Agreement',
+// or, with no claims at all, 'Nothing to compare yet' (no claims agree on
+// anything).
+export function describeClaimRelationship(relationship, claimCount) {
+    if (!claimCount) return 'Nothing to compare yet';
+    return relationship === 'conflict' ? 'Conflict' : 'Agreement';
+}
+
 export function humanizeAnchorType(anchorType) {
     return ANCHOR_TYPE_LABELS[anchorType] || humanizeContentKind(anchorType);
 }

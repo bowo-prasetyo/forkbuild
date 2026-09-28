@@ -1,6 +1,7 @@
 import { inject } from 'vue';
 import { sortOptionsByLabel } from '../../../utils/sortOptionsByLabel.js';
-import { humanizeStorageType } from './presentation.js';
+import { humanizeStorageType, discoveryProviderConfigurationRoute } from './presentation.js';
+import { Publication } from '../../../publisher/Publication.js';
 import { describeSteemContentUploadProgress } from '../../../application/steem/SteemContentUploadProgressText.js';
 
 // Distributing an entry's publication and snapshot with the same app-wide
@@ -34,6 +35,9 @@ export function usePublicationDistribution({
     // its first entry is the fallback default below.
     const snapshotDistributionStorageOptions = sortOptionsByLabel(snapshotDistributionStorageTypes, humanizeStorageType);
     const publicationDistributionLifecycleStore = inject('publicationDistributionLifecycleStore', null);
+    // The publisher's signed placement of a World, announced beside its
+    // Snapshot. Without it a World's Snapshot is announced with no position.
+    const publisherPlacementClaimLookup = inject('publisherPlacementClaimLookup', null);
 
     // Same as WorldView's distribution actions. Arweave uses the
     // single-target publicationDistributionCommand; Nostr uses the
@@ -60,15 +64,42 @@ export function usePublicationDistribution({
         });
     }
 
+    // The checked World a card wraps, or null. A World's Snapshot is the
+    // World's own bytes (the wrapped Publication's contentReference), not the
+    // card's envelope content, which is the Publication record itself.
+    function entryWorld(entry) {
+        const content = entry.view && entry.view.resolved ? entry.view.content : null;
+        return content instanceof Publication ? content : null;
+    }
+
+    // As World View distributes a World: its Snapshot, announced on the
+    // chosen substrate with the publisher's signed placement when this device
+    // holds one. Any other kind has no World, so its own content is stored and
+    // announced by hash alone.
     async function distributeEntrySnapshot(entry) {
-        if (!snapshotDistributionCommand || !publicationContentStore || !entry.publication.contentReference) {
+        const world = entryWorld(entry);
+        const contentReference = world ? world.contentReference : entry.publication.contentReference;
+        if (!snapshotDistributionCommand || !publicationContentStore || !contentReference) {
             return Promise.reject(new Error('Snapshot distribution is not available.'));
         }
-        const snapshotBytes = await publicationContentStore.get(entry.publication.contentReference);
+        const snapshotBytes = await publicationContentStore.get(contentReference);
         if (snapshotBytes === null || snapshotBytes === undefined) {
-            return Promise.reject(new Error('Snapshot distribution is not available.'));
+            return Promise.reject(new Error(world
+                ? "This World's snapshot isn't on this device. Open it in World View first, or get it from a peer."
+                : 'Snapshot distribution is not available.'));
         }
-        return snapshotDistributionCommand(snapshotBytes, entry.snapshotDistributionStorage);
+        const claim = world && publisherPlacementClaimLookup ? publisherPlacementClaimLookup.claimFor(world) : {};
+        const result = await snapshotDistributionCommand(
+            snapshotBytes,
+            entry.snapshotDistributionStorage,
+            claim.publicationId,
+            claim.claimedPosition,
+            entry.snapshotDiscoveryProvider,
+            claim.placementRecord
+        );
+        // Which substrate it went to, and whether a position went with it, as
+        // chosen for this attempt: the pickers may change afterwards.
+        return { ...result, discoveryProvider: entry.snapshotDiscoveryProvider, positioned: Boolean(claim.claimedPosition) };
     }
 
     // The only writer of entry.discoveryDistributionAttempt. One entry and
@@ -123,9 +154,11 @@ export function usePublicationDistribution({
     // The Settings route for the entry's chosen Announcement/Discovery
     // substrate.
     function discoveryDistributionConfigurationRoute(entry) {
-        if (entry.discoveryDistributionProvider === 'arweave') return '/settings/arweave-gateway';
-        if (entry.discoveryDistributionProvider === 'steem') return '/settings/steem';
-        return '/settings/nostr-relay';
+        return discoveryProviderConfigurationRoute(entry.discoveryDistributionProvider);
+    }
+
+    function snapshotDiscoveryConfigurationRoute(entry) {
+        return discoveryProviderConfigurationRoute(entry.snapshotDiscoveryProvider);
     }
 
     // The Steem upload line for an entry whose Snapshot is being stored on
@@ -152,6 +185,7 @@ export function usePublicationDistribution({
         publicationDistributionLifecycleStore, distributeEntryPublication, distributeEntrySnapshot,
         distributePublicationForEntry, discoveryDistributionButtonLabel, distributeSnapshot,
         snapshotDistributionButtonLabel, discoveryObservationsView, discoveryDistributionConfigurationRoute,
-        snapshotDistributionConfigurationRoute, steemUploadProgressText
+        snapshotDistributionConfigurationRoute, snapshotDiscoveryConfigurationRoute, steemUploadProgressText,
+        entryWorld
     };
 }

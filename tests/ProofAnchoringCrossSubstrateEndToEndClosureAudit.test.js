@@ -733,7 +733,7 @@ async function run() {
         // availableAnchorTypes() list this replica's own registry
         // populates.
         assert(/externalAnchorPublisherRegistry\.register\(arweaveAnchorPublisher\)/.test(mainSrc), n('I5[arweave]. arweaveAnchorPublisher is registered into the registry availableAnchorTypes() reads'));
-        assert(/v-for="anchorType in availableAnchorTypes"/.test((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n')), n('I6[arweave]. a real card is rendered for every available anchorType, Arweave included'));
+        assert(/v-for="anchorType in oneClickAnchorTypes"/.test((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n')), n('I6[arweave]. a real card is rendered for every one-click anchorType, Arweave included (tests/PublicationsPageExperimentalParts.test.js)'));
         assert(/@click="createAnchor\(entry, anchorType\)"/.test((await Promise.all(publicationsPageFiles().map((file) => source(file)))).join('\n')) && viewSrc.includes('async function createAnchor(entry, anchorType)'),
             n('I7[arweave]. that card\'s own button click reaches a real createAnchor(entry, anchorType) action'));
 

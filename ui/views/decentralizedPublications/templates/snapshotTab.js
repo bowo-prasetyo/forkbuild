@@ -10,7 +10,7 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                              hidden until something was checked or attempted
                              this session. -->
                         <div v-if="localSnapshotAvailabilityView(entry).checked || snapshotAcquisitionView(entry).acquisition.attemptCount > 0" class="evidence-list">
-                            <span class="evidence-convergence-title">Snapshot Acquisition</span>
+                            <span class="evidence-convergence-title">Snapshot Acquisition <span class="experimental-badge">Experimental</span></span>
                             <p class="form-hint form-hint--neutral">
                                 Current possession:
                                 {{ localSnapshotAvailabilityView(entry).checked ? localSnapshotAvailabilityView(entry).message : 'Not yet checked.' }}
@@ -157,7 +157,7 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                              asking it for them; a check never transfers
                              anything. -->
                         <div v-if="snapshotPeerPossessionCoordinator && (retrievalPeers.length > 0 || peerPossessionView(entry).message)" class="evidence-list">
-                            <span class="evidence-convergence-title">Peer Snapshot Possession</span>
+                            <span class="evidence-convergence-title">Peer Snapshot Possession <span class="experimental-badge">Experimental</span></span>
                             <template v-if="retrievalPeers.length > 0">
                                 <label class="form-field">
                                     <span class="form-label">Peer</span>
@@ -190,7 +190,7 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                         <!-- Several peers at once, with a history; reports what
                              each peer said, never ranks them. -->
                         <div v-if="snapshotPeerPossessionCoordinator && (retrievalPeers.length > 0 || peerPossessionComparisonView(entry).peers.length > 0 || peerPossessionObservationDetailsView(entry).count > 0)" class="evidence-list">
-                            <span class="evidence-convergence-title">Peer Snapshot Possession Comparison</span>
+                            <span class="evidence-convergence-title">Peer Snapshot Possession Comparison <span class="experimental-badge">Experimental</span></span>
                             <template v-if="retrievalPeers.length > 0">
                                 <ul class="replica-knowledge-claim-list">
                                     <li v-for="peer in retrievalPeers" :key="peer.connectionId" class="replica-knowledge-claim">
@@ -295,7 +295,7 @@ export const snapshotTabTemplate = `<div v-show="entry.detailsTab === 'snapshot'
                          verdict; each hides until observed. -->
                     <div v-if="localSnapshotAvailabilityView(entry).checked || snapshotAcquisitionOutcomeCountsSentence(entry) || entry.placementConvergenceView || peerPossessionComparisonView(entry).peers.length > 0"
                          class="decentralization-summary">
-                        <span class="evidence-convergence-title">Snapshot State</span>
+                        <span class="evidence-convergence-title">Snapshot State <span class="experimental-badge">Experimental</span></span>
 
                         <div class="evidence-list">
                             <span class="evidence-convergence-title">Content</span>
