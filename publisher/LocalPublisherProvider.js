@@ -1,7 +1,7 @@
 import { PublisherProvider } from './PublisherProvider.js';
 import { Publication } from './Publication.js';
 import { createId } from '../core/createId.js';
-import { computeContentHash } from '../serializer/contentHash.js';
+import { contentHashMatches } from '../serializer/contentHash.js';
 import { DocumentSchemaMigrator } from '../serializer/DocumentSchemaMigrator.js';
 import { DocumentValidator } from '../serializer/DocumentValidator.js';
 import { LocalContentStore } from '../content/LocalContentStore.js';
@@ -116,6 +116,16 @@ export class LocalPublisherProvider extends PublisherProvider {
         return true;
     }
 
+    // Whether this device published `publication` itself: same id and same
+    // content hash as one of its own records. Only then may a legacy
+    // (FNV-1a) content hash be trusted, because the bytes never came from
+    // anyone else.
+    isOwnPublication(publication) {
+        if (!publication || !publication.id || !publication.contentHash) return false;
+        const records = this._storageProvider.load(PUBLICATIONS_KEY) || [];
+        return records.some((record) => record.id === publication.id && record.contentHash === publication.contentHash);
+    }
+
     loadSnapshot(publicationId) {
         const json = this._storageProvider.load(SNAPSHOT_KEY_PREFIX + publicationId);
         if (json === null) {
@@ -131,7 +141,8 @@ export class LocalPublisherProvider extends PublisherProvider {
         if (json === null) {
             return false;
         }
-        const actualHash = computeContentHash(JSON.stringify(json));
-        return actualHash === expectedHash;
+        // This device's own snapshot, so a Publication made before SHA-256
+        // content hashes still loads.
+        return contentHashMatches(JSON.stringify(json), expectedHash, { allowLegacy: true });
     }
 }

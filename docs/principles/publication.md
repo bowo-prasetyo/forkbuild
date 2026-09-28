@@ -454,8 +454,8 @@ verification record is a plain, unsigned local fact.
 
 A shared World's bytes come only from connections authenticated as the
 identity that signed the share, and the Publication inside must be signed by
-that identity. Hashes here are 32-bit, so matching bytes from anyone else
-are not enough.
+that identity. A signature from the sharer is what the fetched World is
+checked against, not just the bytes' hash.
 
 [Full text](history/0.9.md#a-shared-world-is-fetched-only-from-whoever-shared-it-2026-09-27)
 

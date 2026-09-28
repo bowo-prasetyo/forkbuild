@@ -1,4 +1,4 @@
-import { computeContentHash } from '../serializer/contentHash.js';
+import { CONTENT_HASH_ALGORITHM, contentHashAlgorithm, contentHashMatches } from '../serializer/contentHash.js';
 
 // Immutable reference to published content.
 //
@@ -7,7 +7,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 //
 // The same content may have multiple retrieval URIs:
 //
-//   sha256:ABC
+//   <sha256 hex>
 //       ├── ipfs://CID
 //       ├── ar://transaction-id
 //       └── https://mirror.example/content/ABC
@@ -17,7 +17,7 @@ import { computeContentHash } from '../serializer/contentHash.js';
 export class ContentReference {
     constructor({
         hash,
-        algorithm = 'fnv1a-32', // Placeholder for sha256 until async crypto is wired
+        algorithm = contentHashAlgorithm(hash) ?? CONTENT_HASH_ALGORITHM,
         mediaType = 'application/json',
         size = null,
         uri = null,
@@ -38,10 +38,21 @@ export class ContentReference {
     get uri() { return this._uri; }
     get storage() { return this._storage; }
 
-    verify(bytes) {
-        const text = typeof bytes === 'string' ? bytes : new TextDecoder().decode(bytes);
-        const actualHash = computeContentHash(text);
-        return actualHash === this._hash;
+    // Whether `bytes` are this content. Only a SHA-256 hash can vouch for
+    // bytes from elsewhere; a legacy FNV-1a hash is honored only when the
+    // caller passes `allowLegacy` because the bytes came from this device.
+    // Bytes must be valid UTF-8: a lenient decode would give different
+    // bytes the same text, and so the same hash.
+    verify(bytes, { allowLegacy = false } = {}) {
+        let text = bytes;
+        if (typeof bytes !== 'string') {
+            try {
+                text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+            } catch {
+                return false;
+            }
+        }
+        return contentHashMatches(text, this._hash, { allowLegacy });
     }
 
     toJSON() {

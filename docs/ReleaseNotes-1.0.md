@@ -88,6 +88,13 @@ over)
 
 ## Since 1.0.0 (not yet released)
 
+- **Security: content hashes are SHA-256.** In 1.0.0 a build's content hash
+  was 32-bit FNV-1a, which anyone can match with a different build, so a
+  forged build could show under another author's name and valid signature
+  (GHSA-8ggw-xpjf-w4rh). Publications are now hashed with SHA-256. Your own
+  earlier publications still open on your device, but other people's
+  publications from before this change are refused until their authors
+  publish them again.
 - **Storage:** data is kept in an IndexedDB database instead of
   `localStorage`, so it is no longer limited to a few megabytes; existing
   data moves over on first start. Published content and snapshots stay on

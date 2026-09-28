@@ -1,4 +1,4 @@
-import { computeContentHash } from '../serializer/contentHash.js';
+import { computeFnv1a32 } from '../serializer/contentHash.js';
 
 // Represents a cryptographic identity capable of signing payloads.
 // In 0.2.17, we use a mock signature scheme for local testing.
@@ -30,7 +30,7 @@ export class SigningIdentity {
     }
 
     async sign(payload) {
-        const hash = computeContentHash(payload);
+        const hash = computeFnv1a32(payload);
         return {
             signerId: this._id,
             payloadHash: hash,
@@ -39,7 +39,7 @@ export class SigningIdentity {
     }
 
     async verify(payload, signature) {
-        const hash = computeContentHash(payload);
+        const hash = computeFnv1a32(payload);
         return signature.signerId === this._id && 
                signature.payloadHash === hash &&
 				signature.signature === `mock-sig-${this._publicKey}-${hash}`; // FIX: Use publicKey

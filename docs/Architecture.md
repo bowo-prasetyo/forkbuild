@@ -351,6 +351,18 @@ operation (docs/Principles.md, "Save is not Publish"):
 | Autosave | AutosaveDocumentUseCase, run by AutosaveScheduler | `recovery:{documentId}` (persistence/LocalRecoveryStore.js) | a recovery checkpoint only; never cleans the dirty flag or publishes |
 | Publish | PublishDocumentUseCase → PublisherProvider | `snapshot:{publicationId}`, and a Publication record in `forkbuild-publications` | an immutable snapshot |
 
+**Content hashes.** Publications, Snapshots and stored content are named
+by the SHA-256 of their canonical text (serializer/contentHash.js,
+`computeContentHash()`), and `ContentReference#verify()` checks bytes
+against it. Content published before 2026-09-28 carries a 32-bit FNV-1a
+hash, which can be forged: `verify()` refuses one unless the caller passes
+`allowLegacy`, which only paths reading this device's own data do
+(LocalPublisherProvider's own snapshots, `isOwnPublication()`, and
+crash-recovery checkpoints). FNV-1a (`computeFnv1a32()`) is still used
+where a value must stay stable and a signature covers the real data: the
+deterministic grid position, PlacementRecord's own hash, a Signature's
+`signedHash` pre-check, and blueprint fingerprints.
+
 Stored, published and exported documents use document schema 2, which
 keeps each building's bricks as one table (core/BrickTable.js: palettes of
 definitions and colors, the ids, and six numbers per brick) rather than
@@ -728,9 +740,9 @@ existing decentralized publication pipeline, without new wire protocols:
   requires the Publication inside to be signed by the sharer, admits it to
   DecentralizedPublicationDiscoveryProvider (the Repository), then fetches
   its snapshot over `forkbuild:snapshot-content-transfer`
-  (MaterializeSnapshotFromPeerUseCase) so World View can load it. Content
-  addresses are 32-bit FNV-1a, which a peer could collide, so no other peer
-  is ever a source.
+  (MaterializeSnapshotFromPeerUseCase) so World View can load it. Only the
+  sharer is ever a source, so what a peer can offer is limited to what its
+  sharer signed.
 - AutoRetrieveSharedPublicationsUseCase runs that retrieval on its own when
   a share arrives or its sharer authenticates, only if the sharer is a
   Friend or Known Peer and not blocked (the predicate is composed in

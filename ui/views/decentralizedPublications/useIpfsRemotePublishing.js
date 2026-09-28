@@ -27,6 +27,7 @@ import {
 import {
     describeIpfsPublicationObservationTimeline, IpfsPublicationObservationTimelineEntryKind
 } from '../../../application/ipfs/IpfsPublicationObservationTimelineView.js';
+import { isLegacyContentHash } from '../../../serializer/contentHash.js';
 
 // Remote IPFS publishing: the pinning-service configuration form, publishing
 // an entry's content, verifying what was published, and the per-entry record,
@@ -128,7 +129,9 @@ export function useIpfsRemotePublishing({
             }
             const isValid = entry.publication.contentReference.verify(bytes);
             if (!isValid) {
-                throw new Error('local snapshot integrity check failed — refusing to publish it externally');
+                throw new Error(isLegacyContentHash(entry.publication.contentReference.hash)
+                    ? 'this build was published with an old, insecure content hash that others can\'t check — publish it again, then publish that copy externally'
+                    : 'local snapshot integrity check failed — refusing to publish it externally');
             }
             entry.ipfsRemotePublicationOutcome = await ipfsRemotePublicationCoordinator.publish({ bytes, configuration });
             // Build the record only from a real PUBLISHED outcome.

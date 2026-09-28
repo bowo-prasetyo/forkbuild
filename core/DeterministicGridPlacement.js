@@ -1,5 +1,5 @@
 import { Position } from './Position.js';
-import { computeContentHash } from '../serializer/contentHash.js';
+import { computeFnv1a32 } from '../serializer/contentHash.js';
 
 // 0.2.24: a pure, replica-agnostic mapping from a stable id (a
 // Publication's own id) to an absolute grid position in shared world
@@ -41,7 +41,7 @@ export function computeDeterministicGridPosition(id) {
     if (!id) {
         return new Position(0, 0, 0);
     }
-    const hash = parseInt(computeContentHash(String(id)), 16);
+    const hash = parseInt(computeFnv1a32(String(id)), 16);
     const col = hash % GRID_EXTENT;
     const row = Math.floor(hash / GRID_EXTENT) % GRID_EXTENT;
     return new Position(col * GRID_SPACING, 0, row * GRID_SPACING);

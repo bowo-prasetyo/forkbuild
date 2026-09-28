@@ -69,3 +69,12 @@ signed record, so a signature made with one key can't be labelled with
 another person's did:key.
 
 [Full text](history/0.9.md#a-didkey-names-its-key-2026-09-28)
+
+### A Hash That Binds A Signature Must Resist Collisions (2026-09-28)
+
+A signature over a content hash vouches for whatever bytes match it, so
+the hash must be one nobody can match with other bytes: SHA-256. A 32-bit
+FNV-1a hash from before this rule is honored only for this device's own
+data, never for bytes from anyone else.
+
+[Full text](history/0.9.md#a-hash-that-binds-a-signature-must-resist-collisions-2026-09-28)

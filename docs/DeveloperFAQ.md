@@ -244,17 +244,22 @@ There are three, and they are independent:
 Most other records carry their own `formatVersion` or `schemaVersion`. See
 [Protocol](Protocol.md), "Versions and identifiers".
 
-### Is the content hash secure?
+### Which hash do I use?
 
-No. Content hashes are 32-bit FNV-1a (`serializer/contentHash.js`,
-algorithm `fnv1a-32`), which is fast and stable but not
-collision-resistant: someone can make other bytes with the same hash.
-What protects content is the signature on the record that names the hash,
-together with where the bytes come from. For example, a World shared with
-peers is fetched only from connections authenticated as its sharer, never
-from another peer. `ContentReference` records the algorithm so a stronger
-hash can be introduced later without changing its shape. Keep this in mind
-before trusting bytes on their hash alone.
+`computeContentHash()` (serializer/contentHash.js) is SHA-256, and it is
+what binds a signed record to its content. To check bytes against a hash,
+use `ContentReference#verify()` or `contentHashMatches()`; never compare
+hashes you computed yourself with `===`, since that skips the checks on
+legacy hashes and malformed text.
+
+Content published before 2026-09-28 carries a 32-bit FNV-1a hash, which
+anyone can match with forged bytes. `verify()` refuses such a hash unless
+you pass `{ allowLegacy: true }`; do that only when the bytes can only
+have come from this device, as for its own Publications
+(`LocalPublisherProvider#isOwnPublication()`) and recovery checkpoints.
+`computeFnv1a32()` is for a cheap, stable number that nobody gains by
+colliding (the grid layout, for example), never for trusting content. See
+[Protocol](Protocol.md), "Document envelope".
 
 ### Is Steem support a proposal or real?
 
