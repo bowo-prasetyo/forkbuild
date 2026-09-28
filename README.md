@@ -10,8 +10,9 @@ each other directly over authenticated peer connections. The only server the
 default setup uses is a rendezvous server that helps peers find each other; see
 [docs/Privacy.md](docs/Privacy.md) for everything the app contacts.
 
-**Version 1.0.0**, released 2026-09-25: see the
-[release notes](docs/ReleaseNotes-1.0.md). Every milestone is recorded in
+**Version 1.1.0**, released 2026-09-28: see the
+[release notes](docs/ReleaseNotes-1.1.md). It fixes two security problems in
+1.0.0, so update any copy you host. Every milestone is recorded in
 [docs/Roadmap.md](docs/Roadmap.md).
 
 See [docs/VISION.md](docs/VISION.md) for the longer-term aim ("Git for 3D
@@ -77,7 +78,7 @@ models").
   over authenticated peers.
 - Collaborative World editing with signed membership grants.
 
-**Experimental in 1.0**
+**Experimental**
 
 These areas work, but may change or be removed in a later version, and what
 they produce may not carry over. The app marks them with an **Experimental**
@@ -85,7 +86,7 @@ banner:
 - the **Publications** page and its decentralized publication tooling;
 - external evidence and anchoring (Bitcoin, Arweave, Base and Steem), and
   their Network Settings;
-- Steem as a place to store and announce builds (added after 1.0.0);
+- Steem as a place to store and announce builds (added in 1.1);
 - the Leaderboard, reconciliation and publisher snapshot claim pages.
 
 ## Quick Start
@@ -170,8 +171,9 @@ See [docs/Architecture.md](docs/Architecture.md) for the full description.
 - [docs/Privacy.md](docs/Privacy.md): what ForkBuild stores, and every server
   it can contact.
 - [CONTRIBUTING.md](CONTRIBUTING.md): how to set up, test and submit changes.
-- [docs/ReleaseNotes-1.0.md](docs/ReleaseNotes-1.0.md): what's in 1.0, what
-  changed on the way to it, and known limitations.
+- [docs/ReleaseNotes-1.1.md](docs/ReleaseNotes-1.1.md) and
+  [docs/ReleaseNotes-1.0.md](docs/ReleaseNotes-1.0.md): what each release
+  includes and changed, how to upgrade, and known limitations.
 
 ## License
 
