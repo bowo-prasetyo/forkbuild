@@ -42,17 +42,38 @@ export class IncorrectBackupPassphraseError extends Error {
 
 // Resolves to the file's bytes. `entries` maps storage names to JSON-safe values.
 export async function encodeDeviceBackup({ entries, passphrase, createdAt = new Date(), iterations = DEFAULT_BACKUP_ITERATIONS }) {
+    const key = await deriveBackupEncryptionKey(passphrase, { iterations });
+    return encodeDeviceBackupWithKey({ entries, key, createdAt });
+}
+
+// The key a passphrase gives, for encryptions that don't ask for the
+// passphrase again (one-click and automatic backups). It can only
+// encrypt, and WebCrypto never reveals its bytes, so keeping it on the
+// device (a CryptoKey can be stored in IndexedDB) lets nothing open a
+// backup. { cryptoKey, salt, iterations }: every file made with it shares
+// the salt, and each still gets a fresh nonce.
+export async function deriveBackupEncryptionKey(passphrase, { iterations = DEFAULT_BACKUP_ITERATIONS } = {}) {
     if (!passphrase || typeof passphrase !== 'string') {
         throw new BackupFileError('A passphrase is required to protect the backup.');
     }
+    if (!Number.isInteger(iterations) || iterations < 1 || iterations > MAX_BACKUP_ITERATIONS) {
+        throw new BackupFileError('The key derivation iteration count is out of range.');
+    }
     const salt = randomBytes(SALT_LENGTH);
+    return { cryptoKey: await deriveKey(passphrase, salt, iterations, 'encrypt'), salt: toHex(salt), iterations };
+}
+
+// Like encodeDeviceBackup(), with a key from deriveBackupEncryptionKey().
+export async function encodeDeviceBackupWithKey({ entries, key, createdAt = new Date() }) {
+    if (!key || !key.cryptoKey || typeof key.salt !== 'string' || !Number.isInteger(key.iterations)) {
+        throw new BackupFileError('A backup key is required to protect the backup.');
+    }
     const nonce = randomBytes(NONCE_LENGTH);
-    const header = { formatVersion: BACKUP_FORMAT_VERSION, kdf: KDF, iterations, cipher: CIPHER, compression: COMPRESSION, salt: toHex(salt), nonce: toHex(nonce) };
+    const header = { formatVersion: BACKUP_FORMAT_VERSION, kdf: KDF, iterations: key.iterations, cipher: CIPHER, compression: COMPRESSION, salt: key.salt, nonce: toHex(nonce) };
     const headerBytes = utf8(`${BACKUP_FILE_MAGIC}\n${JSON.stringify(header)}\n`);
     const payload = { formatVersion: BACKUP_FORMAT_VERSION, createdAt: new Date(createdAt).toISOString(), entries };
     const plaintext = await gzip(utf8(JSON.stringify(payload)));
-    const key = await deriveKey(passphrase, salt, iterations, 'encrypt');
-    const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce, additionalData: headerBytes }, key, plaintext));
+    const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce, additionalData: headerBytes }, key.cryptoKey, plaintext));
     const file = new Uint8Array(headerBytes.length + ciphertext.length);
     file.set(headerBytes, 0);
     file.set(ciphertext, headerBytes.length);

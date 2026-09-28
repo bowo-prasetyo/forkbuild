@@ -39,6 +39,63 @@ identities' passphrases: each identity inside stays protected by its own.
 The backup doesn't include which identity is logged in. After a restore
 you log in again.
 
+Besides **Back Up to a File**, the same section can:
+
+- **Share Backup…** (phones, tablets and some computers): opens your
+  device's share sheet, so you can save the file to a cloud drive, send it
+  by email or move it to another device. If the share sheet doesn't open on
+  the first tap (encrypting took longer than the browser allows), tap
+  **Share Backup** again: the backup is ready and goes straight away.
+- **Back Up to "folder"**: once you've chosen a backup folder (below).
+
+**Remember the backup key on this device** appears once you type a
+passphrase. Tick it to make later backups without typing the passphrase:
+the one-click buttons and automatic backups below use it. ForkBuild doesn't
+keep the passphrase itself, only a key made from it that the browser lets
+ForkBuild use for making backups and never shows to anyone, and that can't
+open a backup. Backups made with it still open with your passphrase.
+**Forget Backup Key** removes it.
+
+## Reminders
+
+If this device hasn't been backed up for a while, a bar under the menu on
+every page says so, with **Back Up Now** and **Remind Me in a Week**:
+
+- It first appears a week after this browser starts holding your work
+  (documents, identities, structures, peers or chat), if you've never backed
+  up.
+- After that, it appears when the last backup is older than you chose under
+  **Reminders and automatic backups → Remind me to back up**: every week,
+  2 weeks, month (the default) or 3 months, or never.
+- **Back Up Now** backs up to your backup folder in one click when you've set
+  one up with a remembered key; otherwise it opens this page.
+
+The same section shows when the last backup was made and where to.
+
+## Backing up to a folder
+
+In Chrome and Edge on a computer, **Choose Folder…** lets you pick a folder
+for backups. Pick one your cloud storage syncs (Dropbox, OneDrive, iCloud
+Drive, Google Drive) or a USB drive, and every backup leaves this device
+without you moving files around. Each day's backup is one file,
+`forkbuild-backup-<date>.forkbuild-backup`; a second backup the same day
+replaces that day's file, and ForkBuild keeps the newest ten of its own
+backups there, never touching anything else in the folder.
+
+The browser asks whether ForkBuild may save in the folder the first time,
+and may ask again in a later visit. **Stop Using This Folder** forgets it;
+the backups already there stay.
+
+**Back up to the folder automatically once a day while ForkBuild is open**
+needs a folder and a remembered key. ForkBuild then checks a minute after it
+opens, and every hour, and backs up if the last backup is a day old. It never
+asks for permission on its own: if the browser wants to ask again, automatic
+backups wait until you back up to the folder once yourself. A failed
+automatic backup is shown on this page.
+
+Other browsers can't save to a folder. Use **Share Backup…** there, or
+download the file and move it yourself.
+
 ## Restoring
 
 Close ForkBuild in any other tab first: a tab left open can write its older
@@ -54,7 +111,8 @@ data back.
    - **Replace everything on this device with the backup**: deletes what
      ForkBuild has stored here first, then restores the backup exactly.
      Tick the confirmation to enable it.
-3. Click **Restore**. The page reloads when it's done.
+3. Click **Restore**. The page reloads when it's done. A restored device
+   counts as backed up on the date the backup was made.
 
 A backup made by a newer version of ForkBuild can't be opened by an older
 one; update this copy first. Anything in a backup this version doesn't

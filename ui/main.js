@@ -36,6 +36,10 @@ import { CreateIpfsPublicationContentVerificationCoordinatorUseCase } from '../a
 import { LocalStoragePublicationObservationArchive } from '../storage/LocalStoragePublicationObservationArchive.js';
 import { LocalStorageProvider, flushLocalStorage } from '../storage/LocalStorageProvider.js';
 import { DeviceBackupUseCase } from '../application/backup/DeviceBackupUseCase.js';
+import { BackupStatusStore } from '../application/backup/BackupStatusStore.js';
+import { BackupReminder } from '../application/backup/BackupReminder.js';
+import { BackupDestinations, startAutomaticBackups } from '../application/backup/BackupDestinations.js';
+import { IndexedDbValueStore } from '../storage/IndexedDbValueStore.js';
 import { LocalOnlyPublicationCheck } from '../application/publication/LocalOnlyPublicationCheck.js';
 import { AnnouncementIndex } from '../application/announcementIndex/AnnouncementIndex.js';
 import { createFollowedAnnouncementRetention } from '../application/announcementIndex/FollowedAnnouncementRetention.js';
@@ -299,7 +303,18 @@ const { coordinator: ipfsPublicationContentVerificationCoordinator } =
     new CreateIpfsPublicationContentVerificationCoordinatorUseCase().execute({ ipfsPublicationContentVerifier });
 
 const app = createApp(App);
-app.provide('deviceBackupUseCase', new DeviceBackupUseCase({ storageProvider: new LocalStorageProvider(), flush: flushLocalStorage }));
+const backupStatusStore = new BackupStatusStore(new LocalStorageProvider());
+const deviceBackupUseCase = new DeviceBackupUseCase({ storageProvider: new LocalStorageProvider(), flush: flushLocalStorage, statusStore: backupStatusStore });
+const backupDestinations = new BackupDestinations({
+    deviceBackup: deviceBackupUseCase,
+    statusStore: backupStatusStore,
+    valueStore: new IndexedDbValueStore({ databaseName: 'forkbuild-backup' })
+});
+startAutomaticBackups(backupDestinations);
+app.provide('deviceBackupUseCase', deviceBackupUseCase);
+app.provide('backupStatusStore', backupStatusStore);
+app.provide('backupReminder', new BackupReminder({ statusStore: backupStatusStore, deviceBackup: deviceBackupUseCase }));
+app.provide('backupDestinations', backupDestinations);
 app.provide('identityUseCase', identityUseCase);
 app.provide('peerSessionManager', peerSessionManager);
 app.provide('peerRelationshipUseCase', peerRelationshipUseCase);

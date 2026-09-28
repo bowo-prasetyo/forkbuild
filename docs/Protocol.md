@@ -530,8 +530,9 @@ ignore the field.
 
 ## Device backup
 
-**Your Data → Back Up to a File** writes every storage entry except the
-login session (`local-session`) to one file, `*.forkbuild-backup`:
+**Your Data → Back Up to a File** (or Share Backup, or a backup folder)
+writes every storage entry except the device-only ones to one file,
+`*.forkbuild-backup`:
 
     FORKBUILD-BACKUP\n
     { formatVersion: 1, kdf: 'PBKDF2-SHA256', iterations, cipher: 'AES-256-GCM', compression: 'gzip',
@@ -539,14 +540,19 @@ login session (`local-session`) to one file, `*.forkbuild-backup`:
     <ciphertext>                                                // raw bytes, ends with the 16-byte GCM tag
 
 The plaintext is gzip-compressed JSON, `{ formatVersion: 1, createdAt,
-entries: { <storage name>: <stored value> } }`. The key is derived from the
+entries: { <storage name>: <stored value> } }`. A key remembered for
+one-click and automatic backups is derived once, so the files it makes share
+its `salt` and `iterations` and each has a fresh `nonce`; they open with the
+passphrase like any other. Backups written to a folder are named
+`forkbuild-backup-YYYY-MM-DD.forkbuild-backup` (UTC date). The key is derived from the
 backup passphrase by PBKDF2-HMAC-SHA256 (600,000 iterations by default, at
 most 10,000,000 accepted), and the magic line plus header line are the
 cipher's additional data, so a changed header fails like a wrong
 passphrase. The backup is never written unencrypted: it can hold private
 keys stored without a passphrase and a TURN credential.
 
-Published content by hash (`content:<hash>`) is included only for your own
+The device-only entries `local-session` and `device-backup-status` are
+never included. Published content by hash (`content:<hash>`) is included only for your own
 publications (a `contentHash` in `forkbuild-publications`), unless the user
 asks for downloaded builds too. A restore writes only names this version
 knows (application/backup/BackupEntryGroups.js) and reports how many it

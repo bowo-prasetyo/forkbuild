@@ -86,7 +86,9 @@ models").
   adding what's missing or replacing everything. Documents, structures and
   identities also export on their own pages, all at once or one at a time,
   and the Repository marks your publications that exist only on this device.
-  See [Your Data](docs/user/13-YourData.md).
+  A reminder appears when the last backup is old, a backup can go to your
+  device's share sheet, and Chrome and Edge can back up daily to a folder
+  your cloud storage syncs. See [Your Data](docs/user/13-YourData.md).
 
 **Experimental**
 

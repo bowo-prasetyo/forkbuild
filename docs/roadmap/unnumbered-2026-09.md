@@ -2401,3 +2401,37 @@ all of it; per-view buttons were added only where moving one kind of thing on it
   links.
 - Not done: a reminder when no backup has been made for a while, and backing up to anywhere but a downloaded file.
 
+## Backup reminders, folder and share destinations (unnumbered, 2026-09-28)
+
+**ForkBuild now reminds people who haven't backed up for a while, can back up to a folder (by click or automatically
+once a day) and can share a backup to another app.** The first backup milestone ended with a downloaded file only, and
+nothing prompting anyone to make one.
+
+- `application/backup/BackupStatusStore.js`: `device-backup-status` (last backup date and destination, the first day
+  the device held work, reminder interval, snooze, automatic backups, the last automatic failure). It joins
+  `local-session` in `DEVICE_ONLY_ENTRY_NAMES`: never backed up or restored, kept by a replacing restore, which records
+  the backup's date (`DeviceBackupUseCase#restore({ createdAt })`).
+- `application/backup/BackupReminder.js`: `backupReminderDue()` (a week after work first appears if never backed up,
+  then after 7/14/30/90 days or never, silenced by a snooze) and `holdsUserData()` (documents, identities, structures,
+  peers or chat). `ui/components/BackupReminderBanner.js` shows it under the header except on Your Data, with Back Up
+  Now (one-click to the folder when possible, otherwise Your Data) and Remind Me in a Week.
+- `DeviceBackupFile#deriveBackupEncryptionKey()` / `encodeDeviceBackupWithKey()`: a non-extractable, encrypt-only
+  key remembered for backups that don't ask for the passphrase. `storage/IndexedDbValueStore.js` keeps it and the
+  folder handle in a separate `forkbuild-backup` database, since neither is JSON.
+- `application/backup/BackupFolder.js` (one file a day, keeps ForkBuild's newest ten, removes nothing else) and
+  `BackupDestinations.js` (choose/forget folder, remember/forget key, back up to the folder asking for permission
+  right after the click, `runAutomatic()` that never asks), started by `startAutomaticBackups()` in `ui/main.js`.
+- Your Data: Share Backup… (Web Share with a file; a slow encryption keeps the file for a second tap), Back Up to
+  "folder", "Remember the backup key", and a Reminders and automatic backups section (last backup, interval, folder,
+  the daily automatic backup, Forget Backup Key).
+- Principles: new "A Remembered Backup Key Can Only Make Backups".
+- Docs: README, `docs/user/13-YourData.md`, the FAQ, `docs/Privacy.md`, `docs/Architecture.md` and `docs/Protocol.md`.
+- Tests: `tests/BackupReminderAndDestinations.test.js` (status store, reminder policy, snooze, device-only entries,
+  the remembered key, the folder's daily files and pruning, destinations, automatic backups, scheduling);
+  `tests/BackupDestinationsBrowser.test.js` (Chromium, with real IndexedDB and a directory handle from the origin
+  private file system: choosing a folder, remembering the key, one-click and automatic backups across sessions, the
+  two-tap share, and the banner).
+- Not done: backing up to peers or to IPFS or Arweave. Peers would need a storage agreement and quotas nobody
+  enforces, and public storage would keep a passphrase-protected copy of every private key open to offline guessing
+  forever.
+
