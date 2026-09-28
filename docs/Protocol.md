@@ -218,6 +218,9 @@ types (`publication`, `placement-record`, `spatial-index-root`,
 `signer` is the did:key of the signing identity.
 identity/LocalAuthorizationVerifier.js checks that the signature is
 authentic and that the signer is the one allowed to sign that object.
+When a record carries its signer's identity (`{ id, algorithm, publicKey }`),
+the `publicKey` must be the key its did:key `id` encodes; a record whose
+identity pairs one did:key with another key is refused.
 
 ## Placement records
 

@@ -60,3 +60,12 @@ forgery. It is detected and reported, never resolved silently by keeping
 one side; whether to tolerate it is an explicit `TrustPolicy` decision.
 
 [Full text](history/0.1-0.2.md#a-valid-signature-proves-authorship-not-exclusivity-0219)
+
+### A did:key Names Its Key (2026-09-28)
+
+A record's carried identity is valid only when its `publicKey` is the key
+its did:key `id` encodes. `verifyDescriptor()` checks this for every
+signed record, so a signature made with one key can't be labelled with
+another person's did:key.
+
+[Full text](history/0.9.md#a-didkey-names-its-key-2026-09-28)

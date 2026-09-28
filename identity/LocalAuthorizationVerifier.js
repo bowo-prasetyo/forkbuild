@@ -765,6 +765,11 @@ export class LocalAuthorizationVerifier extends AuthorizationVerifier {
         if (sig.signer !== identityJson.id) {
             return { valid: false, signed: true, reason: 'signer identity mismatch' };
         }
+        // Records that carry their signer's identity (Publications, placements,
+        // anchors…) could otherwise pair someone else's did:key with their own key.
+        if (!Ed25519.publicKeyMatchesDidKey(identityJson.id, identityJson.publicKey)) {
+            return { valid: false, signed: true, reason: 'public key does not match identity' };
+        }
         if (sig.domain !== SIGNING_DOMAIN + '/' + descriptor.type) {
             return { valid: false, signed: true, reason: 'signature domain mismatch' };
         }

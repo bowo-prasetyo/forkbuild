@@ -1918,6 +1918,25 @@ depends on.
 - Tests updated for the new labels: `PlaceCopyHereDuplicateGuard`, `WorldViewPanelLayoutBrowser`,
   `PublicationPlacementRowActions` and `PublicationPlacementPolicy`.
 
+## Signatures bind the key to the did:key (unnumbered, 2026-09-28)
+
+**A signed record can no longer be passed off as someone else's.** `LocalAuthorizationVerifier#verifyDescriptor()`
+checked a signature against the public key the record carried and that the signature's `signer` equalled the carried
+`id`, but never that the key was the one the did:key `id` encodes. So anyone could sign a Publication with their own
+key, set `publisherIdentity` to `{ id: <someone else's did:key>, publicKey: <their own key> }`, and have
+`verifyPublication()` report it as validly signed by that person.
+
+- Affected: every verifier that checks a record against an identity it carries. `verifyPublication()`,
+  `verifyPlacement()`, `verifyDecentralizedPublication()`, `verifyPublicationAnchor()` and
+  `verifyPublicationSnapshotPlacement()`. The others rebuild the key from the signer's did:key and were never
+  affected; peer authentication already made this check itself.
+- Fix: `identity/Ed25519.js#publicKeyMatchesDidKey()` (new), checked inside `verifyDescriptor()` so every current and
+  future caller gets it; a mismatch is refused with reason "public key does not match identity".
+  `PeerAuthenticationSession` now uses the same helper.
+- This change doesn't go back over records a device verified and stored before it.
+- New principle: "A did:key Names Its Key". Docs: `docs/Protocol.md` ("Signatures").
+- Tests: `tests/VerifierDidKeyBinding.test.js` (the binding helper; a forged Publication and a forged placement
+  refused; genuine ones, and an attacker signing honestly as themselves, still valid).
 ## Publisher placements travel with Snapshots (unnumbered, 2026-09-28)
 
 **Other people now see a build where its publisher put it.** Placement records never left the device that made
