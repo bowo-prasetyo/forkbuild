@@ -173,7 +173,7 @@ row in **Peers**; once they accept, a **Chat** button appears.
 ### I changed a Network Setting but nothing is different
 
 Network settings (servers, relays, gateways) are read when the app starts.
-Reload the page after saving.
+Reload the page after saving. See [Network Settings](10-NetworkSettings.md).
 
 ## Devices and browsers
 
@@ -187,4 +187,4 @@ side panels fold away. See [Touch screens](ControlsReference.md#touch-screens).
 No. Building, saving, publishing, forking, peers and chat need none. A
 wallet or signing extension is only needed for the experimental
 distribution and anchoring features in
-[Publications & External Evidence](09-PublicationsAndEvidence.md).
+[Evidence & Storage](11-EvidenceAndStorage.md).
