@@ -97,11 +97,12 @@ after a reload.
 ## The Publications page
 
 Open **Publications** in the top bar. It lists every signed publication this
-device has cataloged, yours or a peer's. At the top, the folded **Wallet,
+device has cataloged, yours or a peer's. At the bottom, the folded **Wallet,
 Archive & Publisher Tools** panel holds page-wide tools in three tabs:
 **Blockchain Anchoring**, **Archive Tools** and **References &
 Achievements** (see guides [11](11-EvidenceAndStorage.md) and
-[12](12-ArchiveAndLeaderboards.md)).
+[12](12-ArchiveAndLeaderboards.md)). The link to it in the page's intro, and
+in any step that needs a wallet observed first, opens it for you.
 
 Each publication card shows:
 

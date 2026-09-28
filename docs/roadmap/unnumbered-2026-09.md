@@ -2247,3 +2247,18 @@ in #1263); whether it passed depended on timing.
   for browser tests).
 - Tests: `tests/UnawaitedTopLevelWork.test.js` drives the detector on sample sources, then runs `tests/run.mjs` on a
   scratch file to show the refusal end to end.
+
+## The Publications page's tools move below the publications (unnumbered, 2026-09-28)
+
+**Wallet, Archive & Publisher Tools, the folded panel of page-wide tools, is now at the bottom of the Publications page
+instead of above the list,** so the publications come first. Most of it (Base network observation, three kinds of
+archive records, fingerprints) is for experts.
+
+- It stays on the same page, not a route of its own: the per-publication Bitcoin and Base steps use the wallet
+  connection and funding observed in that panel, all held by the page's component, and a separate route would drop
+  that state on every navigation between the two.
+- `openPublicationsTools(tab)` opens the panel on a tab and scrolls to it (the panel's `open` is now bound to
+  `publicationsToolsOpen`). The page intro links to it, and the Bitcoin and Base transaction-plan steps, which said
+  "observe wallet funding above", now link to it instead.
+- Tests: `tests/PublicationsPageLayoutBrowser.test.js` checks the panel comes after the publications and the failed
+  group, starts folded, and that the intro's link opens it on Blockchain Anchoring.

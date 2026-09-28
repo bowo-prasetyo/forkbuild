@@ -13,13 +13,15 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                                     </span>
                                 </div>
                                 <p class="form-hint form-hint--neutral">
-                                    Turns the wallet funding observed above into an unsigned transaction plan for
+                                    Turns the wallet funding observed in Wallet, Archive &amp; Publisher Tools into an unsigned transaction plan for
                                     THIS publication's own content hash. Nothing is signed or broadcast by
                                     constructing this — it only names which observed inputs would be spent, and
                                     what the resulting fee and change would be.
                                 </p>
                                 <p v-if="!isBitcoinAnchorFundingObserved()" class="form-hint form-hint--neutral">
-                                    Observe wallet funding above before creating a transaction plan.
+                                    First observe wallet funding in
+                                    <button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">Wallet, Archive &amp; Publisher Tools</button>
+                                    at the bottom of the page.
                                 </p>
                                 <div class="identity-mgmt-actions">
                                     <button class="action-btn action-btn--primary"
@@ -82,14 +84,16 @@ export const anchorTransactionPlansTemplate = `<!-- Turns observed funding into 
                                     </span>
                                 </div>
                                 <p class="form-hint form-hint--neutral">
-                                    Turns the Base account observed above into an unsigned, self-transfer
+                                    Turns the Base account observed in Wallet, Archive &amp; Publisher Tools into an unsigned, self-transfer
                                     transaction plan carrying THIS publication's own content hash as raw
                                     transaction data. Nothing is signed or broadcast by constructing this — it
                                     only names the nonce, gas limit, and fee figures the account was observed
                                     with, and the exact bytes the transaction would carry.
                                 </p>
                                 <p v-if="!isBaseAccountObserved()" class="form-hint form-hint--neutral">
-                                    Observe a Base account above before creating a transaction plan.
+                                    First observe a Base account in
+                                    <button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">Wallet, Archive &amp; Publisher Tools</button>
+                                    at the bottom of the page.
                                 </p>
                                 <div class="identity-mgmt-actions">
                                     <button class="action-btn action-btn--primary"

@@ -195,8 +195,9 @@ click.
 > Transaction** sends a real transaction. There is no test mode.
 
 All of its page-wide panels are under **Wallet, Archive & Publisher Tools →
-Blockchain Anchoring**, the folded panel at the top of the Publications
-page; the per-publication steps are on each publication's card.
+Blockchain Anchoring**, the folded panel at the bottom of the Publications
+page; the per-publication steps are on each publication's card. Where a step
+needs a wallet or funding observed first, its link opens that panel for you.
 
 ### What you'll need
 

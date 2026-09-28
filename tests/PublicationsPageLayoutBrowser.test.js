@@ -138,6 +138,20 @@ assert(pickerRows[1].textContent.replace(/\s+/g, ' ').trim().startsWith('Structu
 
 assert(!view.textContent.includes('Retrieve from Peers" can'), 'no "no peer" notice when nothing is retrievable');
 
+// The page-wide tools come after the publications, folded; the intro's link
+// opens them on the Blockchain Anchoring tab.
+const toolsPanel = view.querySelector(':scope > #publications-tools');
+assert(toolsPanel && !toolsPanel.open, 'the tools panel is folded');
+const order = [...view.children];
+assert(order.indexOf(mainList) < order.indexOf(toolsPanel) && order.indexOf(failedGroup) < order.indexOf(toolsPanel),
+    'and comes after the publications and the failed group');
+toolsPanel.querySelector('[role="tab"]:nth-child(2)').click();
+await settle();
+buttonNamed(view.querySelector(':scope > p'), 'Wallet, Archive & Publisher Tools').click();
+await settle();
+assert(toolsPanel.open, "the intro's link opens it");
+assert(toolsPanel.querySelector('[role="tab"][aria-selected="true"]').textContent.trim() === 'Blockchain Anchoring', 'on the Blockchain Anchoring tab');
+
 // Removing one failed publication asks first, and Cancel keeps it.
 const firstCard = failedGroup.querySelector('.identity-mgmt-card');
 buttonNamed(firstCard, 'Remove from This Device').click();

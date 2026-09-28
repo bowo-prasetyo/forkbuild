@@ -1,4 +1,4 @@
-import { reactive, ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
+import { reactive, ref, computed, nextTick, onMounted, onBeforeUnmount, inject } from 'vue';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { resolveSavedProviderDefault } from '../../application/settings/SavedProviderDefaultChoice.js';
 import { PublicationResolutionOutcome } from '../../application/publication/PublicationResolutionOutcome.js';
@@ -107,6 +107,17 @@ export default {
         const publicationsToolsTab = ref('anchoring');
         function setPublicationsToolsTab(tab) {
             publicationsToolsTab.value = tab;
+        }
+        // The tools panel sits at the bottom of the page. Opens it on `tab`
+        // and scrolls to it; the panel's own state (wallets, funding) is kept
+        // either way, since it only folds.
+        const publicationsToolsOpen = ref(false);
+        async function openPublicationsTools(tab) {
+            setPublicationsToolsTab(tab);
+            publicationsToolsOpen.value = true;
+            await nextTick();
+            const panel = typeof document !== 'undefined' ? document.getElementById('publications-tools') : null;
+            if (panel && typeof panel.scrollIntoView === 'function') panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         const catalog = inject('publicationCatalog');
@@ -956,6 +967,7 @@ export default {
         });
 
         return {
+            publicationsToolsOpen, openPublicationsTools,
             entries, loading, retrievalPeers, retrievalPeerOptions, retrievalPeerLabel, availableAnchorTypes,
             humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck, usableEntries, failedEntries, anyRetrievable,
@@ -1135,44 +1147,16 @@ export default {
             <p class="form-hint form-hint--neutral">
                 Every signed publication this device has seen — its own, or one a connected
                 <router-link to="/peers">peer</router-link> announced. Each status is checked fresh when the
-                page opens: being listed never means the content is on this device.
+                page opens: being listed never means the content is on this device. Wallets, archives
+                and publisher tools are in
+                <button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">Wallet, Archive &amp; Publisher Tools</button>
+                at the bottom of the page.
             </p>
             <p v-if="retrievalPeers.length === 0 && anyRetrievable" class="form-hint form-hint--neutral">
                 No peer is connected, so "Retrieve from Peers" can't fetch missing content. Connect to one
                 from <router-link to="/peers">Peers</router-link>.
             </p>
 
-            <!-- Page-level tools, collapsed so the publication list stays on
-                 screen. -->
-            <details class="publications-tools-panel">
-                <summary class="publications-tools-panel-summary">Wallet, Archive &amp; Publisher Tools</summary>
-
-                <!-- Tab panels use v-show so card state survives tab switches. -->
-                <div class="publications-tools-tabs" role="tablist">
-                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'anchoring'"
-                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'anchoring' }]"
-                            @click="setPublicationsToolsTab('anchoring')">
-                        Blockchain Anchoring
-                    </button>
-                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'archive'"
-                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'archive' }]"
-                            @click="setPublicationsToolsTab('archive')">
-                        Archive Tools
-                    </button>
-                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'connections'"
-                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'connections' }]"
-                            @click="setPublicationsToolsTab('connections')">
-                        References &amp; Achievements
-                    </button>
-                </div>
-
-            ${anchoringToolsTabTemplate}
-
-            ${archiveToolsTabTemplate}
-
-            ${connectionsToolsTabTemplate}
-
-            </details>
 
             <p v-if="loading" class="locations-panel-empty">Checking cataloged publications…</p>
             <p v-else-if="entries.length === 0" class="locations-panel-empty">
@@ -1368,6 +1352,41 @@ export default {
                         </div>
                     </div>
                 </div>
+            </details>
+
+            <!-- Page-level tools, at the bottom and collapsed so the
+                 publications come first. openPublicationsTools() opens it on
+                 a tab and scrolls to it, for the per-publication steps that
+                 need a wallet observed here first. -->
+            <details id="publications-tools" class="publications-tools-panel" :open="publicationsToolsOpen"
+                     @toggle="publicationsToolsOpen = $event.target.open">
+                <summary class="publications-tools-panel-summary">Wallet, Archive &amp; Publisher Tools</summary>
+
+                <!-- Tab panels use v-show so card state survives tab switches. -->
+                <div class="publications-tools-tabs" role="tablist">
+                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'anchoring'"
+                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'anchoring' }]"
+                            @click="setPublicationsToolsTab('anchoring')">
+                        Blockchain Anchoring
+                    </button>
+                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'archive'"
+                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'archive' }]"
+                            @click="setPublicationsToolsTab('archive')">
+                        Archive Tools
+                    </button>
+                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'connections'"
+                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'connections' }]"
+                            @click="setPublicationsToolsTab('connections')">
+                        References &amp; Achievements
+                    </button>
+                </div>
+
+            ${anchoringToolsTabTemplate}
+
+            ${archiveToolsTabTemplate}
+
+            ${connectionsToolsTabTemplate}
+
             </details>
         </section>
     `
