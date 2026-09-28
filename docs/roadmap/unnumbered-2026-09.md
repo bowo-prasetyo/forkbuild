@@ -1972,3 +1972,22 @@ place it** could then never appear at the publisher's real position for anyone e
   retrying once the Publication is known). Updated for the new source shapes: `ArweaveSnapshotDiscoveryQueryService`,
   `DistributeExistingClaimedPositionThroughSnapshotDistribution` and `SnapshotDistributionRuntimeComposition`.
 - Not done: the Editor's post-publish **Distribute** still announces no position, as before.
+
+## World View's Home key goes home (unnumbered, 2026-09-28)
+
+**The Home key in World View now does what the Home button does.** The user guides said it returned the camera and
+avatar to your own world, but World View's renderer carried the Editor's camera-reset shortcut, so the key snapped the
+camera to (10, 10, 10) looking at the map origin, usually thousands of units from your world, and left the avatar
+where it was.
+
+- `renderer/CameraController.js`: a `resetKey` option (default `Home`); `null` turns the reset shortcut off.
+  `renderer/Renderer.js` passes a `cameraResetKey` through, and `application/world/RenderWorldViewUseCase.js` sets it
+  to `null`. The Editor keeps its reset.
+- `ui/views/worldView/useViewportInput.js`: an unmodified `Home` outside a text field calls the same `goHome()` as the
+  button, and prevents the page scroll.
+- Docs: `docs/user/03-WorldView.md` names the key; `docs/user/ControlsReference.md` also corrects World View's
+  undo/redo, which does have `Ctrl/Cmd+Z` and `Ctrl/Cmd+Shift+Z` / `Ctrl/Cmd+Y` bindings.
+- Tests: `tests/WorldViewHomeKey.test.js` (Home goes home; not in a text field or with a modifier; other keys still
+  reach Avatar Control Mode) and `tests/CameraResetKeyBrowser.test.js` (the reset shortcut by default, and off with
+  `resetKey: null`).
+- Not done: the Editor's reset still fires while a text field has focus, where Home should only move the cursor.

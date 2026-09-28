@@ -23,7 +23,8 @@ world's URL directly. You'll appear next to that creation in the shared world.
 - **Left-drag** — orbit the camera
 - **Right-drag** — pan
 - **Scroll** — zoom in and out
-- **Home** button — return to your own world (see below)
+- **Home** (the key, or the button in the panel) — return to your own world
+  (see below)
 
 As you move, nearby worlds **stream in and out** automatically. The panel on
 the left reads top to bottom: what you're looking at (the header), where you

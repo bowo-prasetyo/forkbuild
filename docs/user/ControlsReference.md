@@ -260,13 +260,13 @@ immediately.
 
 | Input | Action | Where |
 |---|---|---|
-| `Ctrl/Cmd+Z` | Undo | Editor only — no keyboard binding in World View |
-| `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` | Redo | Editor only — no keyboard binding in World View |
+| `Ctrl/Cmd+Z` | Undo | Editor and World View |
+| `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y` | Redo | Editor and World View |
 
-World View still HAS undo/redo — a Region/Landmark naming edit is a real
-command, and its own History panel (see
-[World View](03-WorldView.md#history--previewing-and-restoring-earlier-states)) can preview and
-restore it — there is simply no keyboard shortcut wired to it there.
+In World View, undo and redo apply to its annotation edits: landmarks,
+region names and animal decorations. Its History panel (see
+[World View](03-WorldView.md#history--previewing-and-restoring-earlier-states))
+can also preview and restore them.
 
 ## Editor-only
 

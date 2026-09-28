@@ -19,7 +19,9 @@ const SKY_COLOR = 0x87ceeb;
 // Callers hand it THREE.Object3D instances via add()/remove() — everything
 // about what those objects represent lives in core/ and world/, not here.
 export class Renderer {
-    constructor(container) {
+    // `cameraResetKey` is passed to CameraController; null turns its reset
+    // shortcut off.
+    constructor(container, { cameraResetKey } = {}) {
         this._container = container;
 
         this._webglRenderer = new THREE.WebGLRenderer({ antialias: true });
@@ -32,7 +34,8 @@ export class Renderer {
 
         this._cameraController = new CameraController(
             this._webglRenderer.domElement,
-            container.clientWidth / container.clientHeight
+            container.clientWidth / container.clientHeight,
+            cameraResetKey === undefined ? {} : { resetKey: cameraResetKey }
         );
 
         this._lights = new Lights(this._sceneManager);

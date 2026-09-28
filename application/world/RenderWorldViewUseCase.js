@@ -30,7 +30,9 @@ import { DEFAULT_MAX_WALKING_DEPTH } from '../../core/AvatarWaterWalkability.js'
 // carry modifier state down (precision mode) and gesture feedback up.
 export class RenderWorldViewUseCase {
     execute(container, registry, eventBus = null, { gestureService = null, structureResolver = null } = {}) {
-        const renderer = new Renderer(container);
+        // World View binds Home to "go home" itself (ui/views/worldView/
+        // useViewportInput.js), so the Editor's camera-reset shortcut is off here.
+        const renderer = new Renderer(container, { cameraResetKey: null });
         // 0.2.90 — structureResolver is threaded through for symmetry
         // with RenderWorldUseCase and so WorldRenderer's own placement-
         // rendering path is uniform across both modes (see its header),

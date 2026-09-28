@@ -951,8 +951,9 @@ a different wallet on your behalf; you reconnect the right one yourself.
 
 ### Observing funding
 
-Once a wallet is connected, a page-level **Bitcoin Funding** panel appears
-near the top of the Publications page, above the list of publications:
+Once a wallet is connected, a **Bitcoin Funding** panel appears under
+**Wallet, Archive & Publisher Tools → Blockchain Anchoring**, the folded panel at the top of the Publications page, above the list
+of publications:
 
 ```
 Bitcoin Funding
@@ -1008,8 +1009,8 @@ downstream can ever be left pointing at a stale plan.
 
 ### Reviewing and signing
 
-A successful plan immediately populates a page-level **Review Bitcoin
-Anchor Transaction** panel — no extra click needed, since reviewing
+A successful plan immediately populates the **Review Bitcoin
+Anchor Transaction** panel under **Wallet, Archive & Publisher Tools → Blockchain Anchoring** — no extra click needed, since reviewing
 touches no wallet and commits to nothing:
 
 ```
@@ -1139,8 +1140,8 @@ claim other people can discover.
 
 ### Bitcoin Anchor Publications: a durable identity and lifecycle
 
-A page-level **Bitcoin Anchor Publications** card, further down the
-Publications page, keeps one small, durable fact this pipeline mints —
+A **Bitcoin Anchor Publications** card, under
+**Wallet, Archive & Publisher Tools → Blockchain Anchoring**, keeps one small, durable fact this pipeline mints —
 independent of everything else described as ephemeral just above:
 
 ```
@@ -1231,8 +1232,9 @@ above for the same restraint stated the other way around.
 ### Connecting a wallet and observing an account
 
 Unlike the Bitcoin pipeline's wallet control — nested inside an existing
-anchor's own card — a page-level **Base Network** panel appears near the
-top of the Publications page on its own, with nothing to expand first:
+anchor's own card — a **Base Network** panel sits under
+**Wallet, Archive & Publisher Tools → Blockchain Anchoring**, the folded panel at the top of the Publications page, with no
+anchor needed first:
 
 ```
 Base Network
@@ -1450,7 +1452,7 @@ see [What survives a reload](#what-survives-a-reload).
 
 ### Base Anchor Publications: a durable identity and lifecycle
 
-A page-level **Base Anchor Publications** card, further down the page,
+A **Base Anchor Publications** card, under **Wallet, Archive & Publisher Tools → Blockchain Anchoring**,
 mirrors [Bitcoin Anchor Publications](#bitcoin-anchor-publications-a-durable-identity-and-lifecycle)
 above exactly, one chain over:
 
