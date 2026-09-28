@@ -6,11 +6,14 @@ BrickDefinitions (core/BrickDefinition.js) are pure metadata — id, name,
 category, thumbnail, defaultRotation, tags, description, color. No mesh, no
 Three.js.
 
-Libraries register with the BrickRegistry (core/BrickRegistry.js) at
-startup:
+Libraries register with the BrickRegistry (core/BrickRegistry.js) in
+application/editor/CreateBrickRegistryUseCase.js, which every surface
+(Editor, World View, thumbnails, discovery) calls to build its registry:
 
     registry.register(CoreLibrary);
-    registry.register(MedievalLibrary);
+    registry.register(SomeCommunityLibrary);   // a second library is one more line here
+
+CoreLibrary is the only library today.
 
 BrickRegistry is a catalog, not just a lookup: get(id), has(id),
 getAll(), getByCategory(category), search(tags), groupByCategory().
@@ -23,9 +26,26 @@ on 2026-09-23.)
 
 The renderer never imports a library directly. It asks the registry for a
 brick's definition, then asks renderer/ThreeBrickFactory.js to build the
-mesh for that same definitionId. A community library only needs to ship
-two things: a core-side definitions list (data), and a renderer-side set
-of mesh factories (geometry). No other file changes.
+mesh for that same definitionId. A new brick type therefore needs:
+
+1. its BrickDefinition in a library's `definitions` (core/library/CoreLibrary.js,
+   or a new library registered in CreateBrickRegistryUseCase.js), with
+   `width`/`height`/`depth` (used for placement, bounds and collision) and
+   `color`;
+2. an entry in the `GEOMETRIES` map in renderer/ThreeBrickFactory.js, built
+   centered at the origin with the same dimensions. That map has no
+   registration API; an id missing from it renders as a 1×1×1 box
+   (`FALLBACK_GEOMETRY`), which is also how `core:slope_45` is drawn today;
+3. only if it should be walked on as a slope or steps rather than a flat top,
+   an entry in `SHAPE_KIND_BY_DEFINITION_ID` in core/WalkableSurface.js.
+
+No schema, serializer or migration change is needed: a Brick stores only
+its `definitionId`. But a copy of the app that doesn't know an id can't
+draw a document that uses it: the validator doesn't consult the registry,
+so the document loads, and then renderer/BrickRenderer.js#describe()
+throws "Unknown brick definition" (bounds treat the brick as 1×1×1, and
+avatar collision ignores it). A build using a new brick type therefore only
+works for people running a version that has it.
 
 core:cube, core:slope_45, core:plate_2x4, and core:window_small are the
 original built-in library — see docs/BrickIDs.md for the namespace rules.

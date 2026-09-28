@@ -996,21 +996,22 @@ Distributing a Publication or a Snapshot involves separate choices, each with it
 
 | Choice | Values | Seam |
 |--------|--------|------|
-| Where the bytes go | Arweave, IPFS (Local Kubo), IPFS (Remote Pinning) | `PublicationMaterialUploaderComposition` (Publication material); `SnapshotPlacementStoreRegistry` + `ipfsRemotePublicationCoordinator` (Snapshot) |
-| Where it is announced | Nostr (fan-out to every configured relay) or Arweave (tagged transaction) | `*RuntimeComposition` `discoveryProvider` for Publication, Snapshot, Place Naming and Commentary; `resolveSnapshotDiscoveryPublisher()` |
-| Proof / anchoring | Bitcoin, Arweave (Base only through its own button) | `PreferredPublicationAnchorCreationCoordinator` |
+| Where the bytes go | Arweave, IPFS (Local Kubo), IPFS (Remote Pinning), Steem (Experimental, small builds) | `PublicationMaterialUploaderComposition` (Publication material); `SnapshotPlacementStoreRegistry` + `ipfsRemotePublicationCoordinator` (Snapshot) |
+| Where it is announced | Nostr (fan-out to every configured relay), Arweave (tagged transaction) or Steem (Experimental; a reply to a monthly discovery thread) | `*RuntimeComposition` `discoveryProvider` for Publication, Snapshot, Place Naming and Commentary; `resolveSnapshotDiscoveryPublisher()` |
+| Proof / anchoring | Bitcoin, Arweave, Steem (Experimental) (Base only through its own button) | `PreferredPublicationAnchorCreationCoordinator` |
 
 The saved preferences live in `RoleProviderPreferenceStore` (`CONTENT`, `ANNOUNCEMENT_AND_DISCOVERY`,
 `PROOF_AND_ANCHORING`). They drive the "Use Preferred Provider" buttons, and they seed every picker's first value
 through `resolveSavedProviderDefault()`; they never override a choice already made. Distribution uses selection,
 never fan-out, across substrates. Fan-out happens only across relays within Nostr. Arweave and IPFS gateways use
-ordered failover instead, because any gateway can serve the same content-addressed bytes.
+ordered failover instead, because any gateway can serve the same content-addressed bytes. The Steem choices are
+described in docs/Protocol.md's three "Proposed: Steem …" sections, which are built and Experimental.
 
 In the UI, every distribution control sits in `ui/components/WorldDistributionDialog.js` (World Encounters and My
 Publication) or `ui/components/EditorDistributionDialog.js` (the Editor's post-publish overlay). One settings block
 (Storage, Remote Pinning draft, Announcement/Discovery) feeds both legs. The combined "Distribute" action runs
 Snapshot and Publication one after the other, because both may sign through the same wallet extension. Every
-injected-wallet adapter (Nostr NIP-07, Arweave, UniSat, EIP-1193) has a 120-second approval timeout.
+injected-wallet adapter (Nostr NIP-07, Arweave, UniSat, EIP-1193, Steem Keychain) has a 120-second approval timeout.
 
 A store may limit how large one item can be (`ContentStore#maxContentBytes`, Infinity unless set). The Arweave stores
 take it from the signer's `maxDataBytes`: the injected wallet signs single-chunk transactions, 256 KiB. Snapshot
@@ -1043,6 +1044,7 @@ default still answers and allows CORS.
 | Nostr Relays | `/settings/nostr-relay` | `nostr-relay-configuration` | `relayUrls`, one set for every Nostr feature, fan-out |
 | STUN / TURN / Rendezvous | `/settings/stun`, `/settings/turn-server`, `/settings/rendezvous` | `ice-server-configuration`, `turn-server-configuration`, `rendezvous-configuration` | as before |
 | Content / Announcement / Proof preferences | `/settings/content-provider`, `/settings/announcement-discovery-provider`, `/settings/anchor-provider` | `role-provider-preference:by-role` | one provider key per role |
+| Steem | `/settings/steem` | `steem-reading-configuration`, `steem-announcing-configuration` | ordered `apiNodes` (read failover; anchor verification asks the first three), thread accounts and first month to read; this device's Steem account for posting. Reading changes apply on the next load |
 
 Credentials are never stored. The remote-pinning credential is kept only in tab memory
 (`IpfsRemotePublishingCredentialMemory`).
@@ -1052,10 +1054,10 @@ Credentials are never stored. The remote-pinning credential is kept only in tab 
     addPublicationCommentaryCommand
       1. PublicationCommentaryStore.add()            local, authoritative
       2. PublicationCommentaryDistributionPeerExchange.announce()   WebRTC, best effort
-      3. Nostr (NostrMultiRelayPublicationCommentaryDistribution) OR Arweave — one, best effort
+      3. Nostr (NostrMultiRelayPublicationCommentaryDistribution) OR Arweave OR Steem — one, best effort
 
     refreshPublicationCommentaryCommand (on open / "Check for new comments")
-      Discover...FromNostrUseCase + Discover...FromArweaveUseCase
+      Discover...FromNostrUseCase + Discover...FromArweaveUseCase + Discover...FromSteemUseCase
         -> PublicationCommentaryDistributionExchange.importCommentaryEnvelope()   one verifier, one store
         -> PublicationCommentaryRemoteNotificationBridge                          notify the publisher only
 
@@ -1170,7 +1172,11 @@ Author, World View (`/world/:documentId`), Live World, Avatar, Identity,
 Peers, Chat and Conversations, Publications (`/publications`), the
 settings pages under `/settings/…`, the leaderboard and reconciliation
 views, and About. Views reach application/ through injected services;
-the two composables in ui/composables/ share the settings-form logic.
+the composables in ui/composables/ share the settings-form logic
+(useEndpointSettingsForm, useEndpointListSettings,
+useRoleProviderPreferenceForm) and the narrow-screen layout
+(useMediaQuery). A route with `meta: { experimental: true }` gets the
+Experimental banner from ui/App.js.
 
 index.html loads the app as ES modules with no build step. Its import map
 resolves `vue`, `vue-router`, `@vue/devtools-api`, `three` and

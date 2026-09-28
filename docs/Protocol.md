@@ -6,6 +6,11 @@ format changes. docs/ProtocolHistory.md keeps the milestone-by-milestone
 protocol notes for 0.1.x–0.2.45; docs/Architecture.md describes the code
 that produces these formats.
 
+The three sections titled "Proposed: Steem …" were written as proposals
+and have since been built; each opens with its status (built,
+Experimental). Their titles stay as they are because code comments cite
+them by title.
+
 ## Versions and identifiers
 
 - `PROTOCOL_VERSION` (core/protocolVersion.js) is `'0.1'`. It is
@@ -509,7 +514,8 @@ that evidence is a separate step. Steem is a fourth, Experimental anchor
 type; see "Proposed: Steem Anchoring" below.
 
 Announcements on Nostr (a `t` tag) and Arweave (a matching transaction
-tag) are grouped into families, and a reader only queries its own:
+tag) are grouped into families, and a reader only queries its own (Steem,
+the third substrate, groups them by discovery thread instead; see below):
 
 | Family | Tag | Envelope |
 |--------|-----|----------|
@@ -556,8 +562,8 @@ The `ui/main.js` constants and the `*DiscoveryPublisher` /
 `forkbuild-publications` and `forkbuild-index` are local storage keys,
 not wire tags.
 
-The proposed Steem substrate groups by discovery thread instead of by tag;
-see "Proposed: Steem Announcement Substrate" below.
+The Steem substrate groups by discovery thread instead of by tag; see
+"Proposed: Steem Announcement Substrate" below.
 
 ## Publication Commentary Distribution
 
@@ -578,19 +584,21 @@ authorIdentityId, content, createdAt }` (`id` = `commentaryId`, `revision` = `cr
 that they own the Publication. Arrival is deduplicated by `commentaryId` in `PublicationCommentaryStore`, never by a
 transport's own id.
 
-One envelope, three carriers:
+One envelope, four carriers:
 
 | Carrier | Where | Shape |
 |---------|-------|-------|
 | WebRTC  | peer protocol `forkbuild:commentary-distribution` | `{ kind: 'ANNOUNCE', envelope }` — announce only, no request/response history sync |
 | Nostr   | a kind-1 event on every configured relay (fan-out) | `content` = envelope JSON; tags `['t', 'forkbuild-commentary']` and `['t', 'forkbuild-commentary:<publicationId>']` |
 | Arweave | a tagged transaction | body = envelope JSON; tags `ForkBuild-Commentary-Discovery-Tag: forkbuild-commentary` and `ForkBuild-Commentary-Discovery-Tag: forkbuild-commentary:<publicationId>`, found through GraphQL tag search |
+| Steem (Experimental) | a reply to the month's commentary discovery thread | `json_metadata.forkbuild.envelope` = the envelope; see "Proposed: Steem Announcement Substrate" |
 
 Posting always persists locally first, announces over WebRTC second, and then publishes to one chosen asynchronous
-substrate (Nostr or Arweave; the saved Announcement/Discovery default, overridable per post). It never publishes to
-both. A network failure never undoes the local write. Readers query both substrates when a Commentary section opens
-or on "Check for new comments", under both the shared tag and the Publication's own tag, filter by `publicationId`,
-and import every candidate through the same verifier. The background sync (docs/AnnouncementIndex.md) also imports
+substrate (Nostr, Arweave or Steem; the saved Announcement/Discovery default, overridable per post). It never publishes
+to more than one. A network failure never undoes the local write. Readers query every substrate when a Commentary
+section opens or on "Check for new comments" (Nostr and Arweave under both the shared tag and the Publication's own
+tag, Steem through its monthly threads), filter by `publicationId`, and import every candidate through the same
+verifier. The background sync (docs/AnnouncementIndex.md) also imports
 every verified envelope under the shared tag, whichever Publication it is about.
 A Nostr relay OK means "accepted," not durably stored. On Arweave, "not yet mined," "never published" and "gateway
 unreachable" all surface as `ContentUnavailableError`, and are never reported as "absent."
@@ -600,7 +608,7 @@ unreachable" all surface as `ContentUnavailableError`, and are never reported as
 **Status: built, Experimental.** The discovery threads exist on the chain (from 2026-09), and the app reads and
 announces all four families. It ships as Experimental alongside the other decentralized publication tooling.
 
-Steem would be a third Announcement/Discovery substrate next to Nostr and Arweave. It carries the same envelopes as
+Steem is a third Announcement/Discovery substrate next to Nostr and Arweave. It carries the same envelopes as
 they do, unchanged, and is only a transport: every candidate is verified by content hash and ForkBuild signature
 through the family's existing verifier. A Steem account never becomes a publisher identity, and the UI never shows
 it as a Publication's author.
@@ -720,8 +728,8 @@ its options:
    (default `2026-09`) up to the current UTC month, at most the 36 most recent months. Earlier months' replies are
    cached for 10 minutes, since announcers only reply to the current month's thread; the current month is cached
    for 30 seconds, enough to absorb a burst such as place naming asking region by region.
-2. **API nodes.** Readers use a configured list of API nodes (default `https://api.steemit.com`) and try them in
-   order. Every node serves the same chain, so the first node that answers is enough.
+2. **API nodes.** Readers use a configured list of API nodes (default `https://api.steemit.com`, then
+   `https://api.justyy.com`) and try them in order. Every node serves the same chain, so the first node that answers is enough.
 3. **Fetch.** `condenser_api.get_content_replies(threadAccount, threadPermlink)`. A thread that doesn't exist yields
    nothing. A thread whose author isn't a configured thread account is ignored.
 4. **Direct replies only.** Readers accept a reply only when its `parent_author` and `parent_permlink` name the
@@ -775,7 +783,7 @@ resuming and the RC check, and `get()`), `storage/SteemContentUploadStore.js` (u
 Snapshot storage and resolution; Publication distribution stores Signed Claims through it, and
 `application/worldEncounter/SteemWorldEncounterMaterialResolver.js` reads them back.
 
-Steem would be a third Content substrate next to IPFS and Arweave: a `ContentStore` whose `storage` is `'steem'`,
+Steem is a third Content substrate next to IPFS and Arweave: a `ContentStore` whose `storage` is `'steem'`,
 holding a Snapshot's bytes, or a Publication's Signed Claim, in Steem comments. Storing content is a separate role from announcing it. A Snapshot
 stored on Steem can be announced on Nostr, Arweave or Steem, and one stored on IPFS can be announced on Steem, as
 today. The chain is only a carrier: a reader loads the bytes only after they match `contentHash`, exactly as it does
@@ -1097,7 +1105,7 @@ other anchor types, so the Publications page offers **Create Steem Anchor**, anc
 (Blockchain Anchoring tools), and the Proof/Anchoring settings page offers Steem. Not yet tried against a live node
 or a real Keychain.
 
-Steem would be a fourth Proof/Anchoring choice next to Bitcoin, Arweave and Base: an anchor type `steem` whose
+Steem is a fourth Proof/Anchoring choice next to Bitcoin, Arweave and Base: an anchor type `steem` whose
 evidence is the Publication's `contentHash` in an irreversible Steem block. As with the other anchor types, the
 anchor claims only that the anchoring identity recorded this hash where `locator` says (`core/PublicationAnchor.js`).
 Checking that claim against the chain is a separate step, done by a `ProofVerifier`. Steem anchoring is separate
@@ -1207,12 +1215,13 @@ anchor, against `{ contentHash }`:
 4. The transaction at that position must contain a `custom_json` with `id` `'forkbuild-anchor'`, whose `json` parses
    to `version: 1` and whose `contentHash` equals the anchor's (for a batch anchor: whose `merkleRoot` equals the root
    the path leads to from the anchor's contentHash). Anything else is a definite rejection.
-5. The verifier asks every configured API node (Network Settings → Steem, at most three) separately, and every node
+5. The verifier asks the configured API nodes (Network Settings → Steem, the first three) separately, and every node
    that answers must agree on the block's id, whether it holds the transaction, and whether that carries the anchor.
    If they disagree, the result is unavailable and names each node's answer. If any answering node doesn't see the
    block as irreversible yet, the result is unavailable. A node that returns a block whose id doesn't start with the
-   requested block number is treated as not answering. The default configuration has one node
-   (`https://api.steemit.com`), so adding a second is what makes the check compare nodes.
+   requested block number is treated as not answering. The default configuration has two nodes
+   (`https://api.steemit.com` and `https://api.justyy.com`, `DEFAULT_STEEM_API_NODES`), so the default check
+   already compares two independent operators; with only one node configured, nothing is compared.
 6. Every result carries `details`: the block number, whether it is a batch anchor, and the kept evidence checked
    offline (`evidence: { ok, … }` or null); a valid result adds the block's id, `timestamp` (UTC) and `witness`, and
    how many nodes agreed out of how many were asked; a not-yet-final one adds the last irreversible block.

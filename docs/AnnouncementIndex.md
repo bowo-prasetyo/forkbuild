@@ -102,7 +102,7 @@ kept in memory and written in the background, so reads stay synchronous.
 - **One entry per kind and tag:** `announcement-index:<kind>:<tag>`,
   holding that tag's records.
 - **One entry per sync cursor:**
-  `announcement-sync:<substrate>:<kind>:<tag>` (Phase 3).
+  `announcement-sync:<substrate>:<endpoint>:<target>` (Phase 3).
 
 The size caps above keep the in-memory copy bounded. At about 500 bytes a
 record, a full tag is about 1 MB. The index is small next to the content

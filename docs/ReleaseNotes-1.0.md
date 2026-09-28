@@ -104,6 +104,24 @@ over)
   before anything is signed, pointing to IPFS.
 - **Rendezvous server:** the default server accepts only the GitHub Pages
   site, and reports its relay credential allowance at `/turn-stats`.
+- **Finding people:** an opt-in public lobby (one for everyone and one per
+  World); rendezvous servers carry the connection reply back, so Find by ID
+  and Known Peers connect without copying anything by hand.
+- **Sharing:** **Share with Peers** sends a published World to connected
+  peers' Repositories, and a distributed Publication has a link that opens
+  it in World View on any device (`#/view/steem/…`, `#/view/ar/…`,
+  `#/view/ipfs/…`).
+- **Background discovery:** the app keeps a local index of every
+  announcement it has seen and, about 10 seconds after it opens, starts
+  reading new ones from Nostr, Arweave and Steem in the background. 1.0.0
+  contacted nothing on its own; see [docs/Privacy.md](Privacy.md).
+- **Steem (Experimental):** a third substrate for announcements and content
+  and a fourth anchor type, signed through Steem Keychain.
+- **Placement:** a publisher can limit who may place a Publication, and a
+  publisher's own placement travels with its Snapshot announcement.
+- **Phones and tablets:** touch controls in both views and a compact layout.
+- **Network Settings** default to several free public servers per list,
+  with Reset to Defaults.
 
 ## Known limitations
 
@@ -115,7 +133,7 @@ over)
 - **One rendezvous server** runs by default. If it is down, use invitations
   (copy and paste) to connect, or configure another server under **Network
   Settings**.
-- **Browsers:** current Chrome, Edge, Firefox and Safari. The controls need a
-  mouse and keyboard; touch input isn't supported yet.
+- **Browsers:** current Chrome, Edge, Firefox and Safari. In 1.0.0 the
+  controls need a mouse and keyboard; touch controls came later (see above).
 - The roadmap has no entries for 0.9.400 to 0.9.586; those milestones' notes
   were not kept.

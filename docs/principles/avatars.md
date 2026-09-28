@@ -503,7 +503,8 @@ world tells other people nothing.
 
 ### Step-Up Movement Is A Deterministic Height Constraint, Never A Physics Climb (0.3.2)
 
-`isStepClimbable()` is one comparison against `MAX_STEP_HEIGHT`. A step
+`isStepClimbable()` is one comparison against `DEFAULT_MAX_STEP_HEIGHT`
+(0.6 World Units, core/BrickWalkability.js). A step
 in range is taken in full in one tick, and one out of range is not taken
 at all. There is no momentum, climbing curve or physics engine.
 
