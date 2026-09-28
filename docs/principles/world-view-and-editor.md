@@ -21,11 +21,12 @@ clipboard, groups) was removed from `WorldNavigationSession`, and World
 View no longer builds an action registry, command palette or editing
 sidebar. The `EditorSession` already implemented all of it.
 
-Two exceptions stay because they curate the World rather than build
-content: Region and Landmark naming at the avatar's position (through
-the usual authorization and fork-on-write path), and `movePlacement()`,
-which changes a PlacementRecord and never forks. Undo and redo stay for
-those. Selection now serves focus and inspection only, and "Edit a Copy"
+A few exceptions stay because they curate the World rather than build
+content: Region and Landmark naming at the avatar's position, and World
+Animal Decorations (0.9.702), all through the usual authorization and
+fork-on-write path; and `movePlacement()`/`removePlacement()`, which
+change a PlacementRecord and never fork. Undo and redo stay for the
+commands among them. docs/CapabilityMatrix.md has the full list. Selection now serves focus and inspection only, and "Edit a Copy"
 is the one door from World View into editing.
 
 [Full text](history/0.3-0.7.md#world-view-observes-and-navigates-editor-mutates-and-builds-059)

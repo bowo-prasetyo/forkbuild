@@ -16,7 +16,8 @@ success into a failure.
 ### Choose One Substrate; Fan Out Only Within It (2026-09-20)
 
 A Publication, Snapshot, Place Naming claim or Commentary is announced
-on Nostr or on Arweave, never both from one action. Within a substrate
+on exactly one of Nostr, Arweave or Steem (Experimental), never on
+several from one action. Within a substrate
 the strategy follows the endpoints: Nostr relays don't share events, so
 publishing and querying go to every configured relay; Arweave and IPFS
 gateways serve the same content-addressed bytes, so reads fail over in

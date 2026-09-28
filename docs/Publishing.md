@@ -61,9 +61,9 @@ Publishing and Discovery are deliberately separate adapter families:
 `LocalPublisherProvider` writes to, returning `Publication` objects.
 A remote discovery provider queries its own network and converts what it
 finds into `Publication` objects without the matching publisher knowing it
-exists. The Steem pair planned here was never built;
-`discovery/DecentralizedPublicationDiscoveryProvider.js` (Nostr/Arweave) is
-the real example.
+exists. The Steem publisher/discovery pair planned here was never built as
+such; `discovery/DecentralizedPublicationDiscoveryProvider.js`, fed by
+Nostr, Arweave and (Experimental) Steem announcements, is the real example.
 
 This separation means the UI (Repository View, Author View, World View)
 consumes `Publication` objects through `DiscoveryProvider` without
@@ -166,14 +166,18 @@ The two are independent protocols with separate results. A combined
 choices, one dialog"):
 
 - **Storage** for the bytes: Arweave, IPFS (Local Kubo, at the configured IPFS
-  Node URL), or IPFS (Remote Pinning, any Pinata-compatible service; the
-  credential is kept in tab memory only). Arweave takes at most 256 KB per
-  item (one single-chunk transaction), so a larger build is refused before
-  anything is signed, with a message pointing to IPFS; IPFS has no limit.
+  Node URL), IPFS (Remote Pinning, any Pinata-compatible service; the
+  credential is kept in tab memory only), or Steem (Experimental; up to 20
+  posts of about 48 KiB each, one Keychain approval per post; see
+  `docs/Protocol.md`, "Proposed: Steem Content Storage"). Arweave takes at
+  most 256 KiB per item (one single-chunk transaction), so a larger build is
+  refused before anything is signed, with a message pointing to IPFS; IPFS
+  has no limit.
   Connected peers exchange content of any size (up to 64 MiB), in parts
   when it does not fit one message.
-- **Announcement/Discovery** substrate: Nostr (every configured relay) or
-  Arweave (a tagged transaction). Each action uses one of them, never both.
+- **Announcement/Discovery** substrate: Nostr (every configured relay),
+  Arweave (a tagged transaction) or Steem (Experimental; a reply to a
+  monthly discovery thread). Each action uses one of them, never several.
 - **Proof/Anchoring**, optional and separate: Bitcoin, Arweave, or Base (Base
   only through its own reviewed-transaction button), or Steem (Experimental:
   faster and cheaper, but attested by Steem witnesses rather than proof of
@@ -190,25 +194,35 @@ settings block. The Publications page (`/publications`) keeps the full
 per-entry controls: Remote IPFS publishing, snapshot placements, anchoring,
 evidence and history.
 
-**Discovery and presence.** Distributed Publications are found through Nostr
-or Arweave discovery (and World Encounters while walking), verified, and then
+**Discovery and presence.** Distributed Publications are found through Nostr,
+Arweave or Steem discovery (and World Encounters while walking), verified, and then
 admitted to the Repository. Admissions are recorded durably
 (`LocalPublicationCatalog`, `LocalWorldEncounterPublicationAdmissionLog`) and
 rebuilt at startup, so a placed Publication is still in the World after a
 restart.
 
 **Commentary** on a Publication is signed and distributed the same way
-(WebRTC to connected peers, plus Nostr or Arweave). It is fetched when a
-Commentary section opens. See `docs/Protocol.md`, "Publication Commentary
+(WebRTC to connected peers, plus one of Nostr, Arweave or Steem). It is
+fetched when a Commentary section opens, and imported in the background by
+the announcement sync. See `docs/Protocol.md`, "Publication Commentary
 Distribution".
+
+**Sharing.** Share with Peers (Repository) sends a
+published World to connected peers only, and Share on a distributed
+Publication gives a link (`#/view/steem/…`, `#/view/ar/…`, `#/view/ipfs/…`)
+that opens it in World View on any device. See `docs/Architecture.md`,
+"Sharing Worlds with peers", and `docs/Protocol.md`, "Proposed: Steem
+Content Storage" (the link section applies to all three locators).
 
 A Steem publisher was planned early on (see the Steem examples above) but
 never built. Nostr and Arweave filled that role through the discovery and
 distribution adapters instead, with the `publisher/` contract unchanged.
-Steem is now proposed as a third Announcement/Discovery substrate, not as a
+Steem was later added (Experimental) as a third Announcement/Discovery
+substrate, a third Content store and a fourth anchor type, still not as a
 publisher: announcements are replies to monthly discovery threads posted by
-`@forkbuild`. See `docs/Protocol.md`, "Proposed: Steem Announcement
-Substrate".
+`@forkbuild`, and a Steem account never becomes a ForkBuild identity. See
+`docs/Protocol.md`, "Proposed: Steem Announcement Substrate" (built despite
+the title).
 Real-time collaborative editing also exists now, but as command propagation
 with deterministic ordering (0.2.96/0.2.97), not as a publishing feature and
 never via OT or CRDTs; see `docs/Principles.md`, "Ordering Is A Deterministic

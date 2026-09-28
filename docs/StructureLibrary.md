@@ -85,11 +85,11 @@ ui/components/BuildLibraryPanel.js (0.2.84; replaces the earlier
 standalone ui/components/StructureLibraryPanel.js) is the UI surface
 today: the Structures tab of the unified "Build Library," grouped by
 category via groupByCategory() above, searchable by name/category/tag,
-each entry showing a small rendered preview (application/
+each entry showing a small rendered preview (application/editor/
 LibraryPreviewService.js, same BrickRenderer/ThreeBrickFactory pipeline
 every Structure's bricks already render with) and a Fork button, wired
 through EditorSession.forkStructure(structure) (application/
-EditorSession.js) — which forks, then calls the session's own
+editorSession/structureAndBlueprintMethods.js) — which forks, then calls the session's own
 openDocument(), the identical path Load and "Fork Published World"
 already use. There is no separate structure-editing mode. In 0.2.81
 Fork was the only action a Structure entry offered. That changed later:

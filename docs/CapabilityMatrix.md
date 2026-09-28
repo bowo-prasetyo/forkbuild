@@ -63,7 +63,8 @@ REGION/LANDMARK/STRUCTURE (never COLLABORATOR or GEOGRAPHIC_PLACE) offers
 (for a STRUCTURE, its own content document — never the containing World)
 via the same `/editor?fork=` navigation `ui/components/PublicationCatalog.js#forkPublication()`
 already used, and opens the fork in the Editor. The original is never
-touched. See `application/world/WorldNavigationSession.js#getPublicationIdForDocument()`
+touched. See `WorldNavigationSession#getPublicationIdForDocument()` (in
+`application/worldNavigation/forkOnWriteMethods.js`)
 and `tests/WorldViewReadOnlyFork.test.js`.
 
 ## Surface-Specific Capabilities

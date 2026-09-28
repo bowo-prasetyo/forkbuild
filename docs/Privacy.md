@@ -80,6 +80,9 @@ only when you use the feature, and each server can be changed under
 | You store or fetch content on Arweave (*experimental*) | an Arweave gateway (`arweave.net`) | the content you publish; what you fetch |
 | You fetch content from IPFS (*experimental*) | an IPFS gateway (`ipfs.io`), or your own IPFS node (`127.0.0.1:5001`) | what you fetch or add |
 | You pin content with a remote pinning service (*experimental*) | the service you enter | the content, and the token you type for that one upload (never stored) |
+| You store, announce or anchor on Steem, or discover Steem announcements (*experimental*) | Steem API nodes (`api.steemit.com`, then `api.justyy.com`); signing goes through the Steem Keychain extension | your Steem account name; what you post (announcements, stored content, anchors) is public on the chain for good, and edits leave the earlier version in its history |
+| You distribute a Publication's Signed Claim on Steem (*experimental*) | the Steem image host (`steemitimages.com`) | a 320×200 picture of the build for the post's preview, signed with your Steem posting key |
+| You open a shared link to a Publication (`#/view/…`) | the Steem node, Arweave gateway or IPFS gateway the link names, then the announcement substrates to find its build | which post, transaction or CID you open |
 | You anchor or verify evidence on Bitcoin (*experimental*) | an Esplora API (`blockstream.info`) | the transaction you broadcast or look up |
 | You verify evidence on Base (*experimental*) | a Base JSON-RPC endpoint (`mainnet.base.org`) | the transaction you look up |
 | You connect a browser wallet (*experimental*) | the wallet extension you choose | whatever it asks you to approve |

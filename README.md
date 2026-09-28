@@ -83,8 +83,9 @@ These areas work, but may change or be removed in a later version, and what
 they produce may not carry over. The app marks them with an **Experimental**
 banner:
 - the **Publications** page and its decentralized publication tooling;
-- external evidence and anchoring (Bitcoin, Arweave and Base), and their
-  Network Settings;
+- external evidence and anchoring (Bitcoin, Arweave, Base and Steem), and
+  their Network Settings;
+- Steem as a place to store and announce builds (added after 1.0.0);
 - the Leaderboard, reconciliation and publisher snapshot claim pages.
 
 ## Quick Start
@@ -132,7 +133,7 @@ infrastructure adapters around them:
 - **ui/**: Vue 3 views and components; `ui/main.js` is the composition root.
 - **Adapters**: storage, serializer, publisher, discovery, identity, peer,
   presence, collaboration, replication, placement, spatial, content,
-  anchoring, and the Nostr, Arweave and Base integrations.
+  anchoring, and the Nostr, Arweave, Base and Steem integrations.
 
 See [docs/Architecture.md](docs/Architecture.md) for the full description.
 
@@ -148,6 +149,10 @@ See [docs/Architecture.md](docs/Architecture.md) for the full description.
   vendored libraries and the Content Security Policy.
 - [docs/CapabilityMatrix.md](docs/CapabilityMatrix.md): what each surface
   (Editor, World View, published world) may do.
+- [docs/AnnouncementIndex.md](docs/AnnouncementIndex.md): how announcements
+  are recorded, synced in the background and shared between peers.
+- [docs/DeveloperFAQ.md](docs/DeveloperFAQ.md): answers to questions
+  contributors often have, with pointers into the code.
 - [docs/Roadmap.md](docs/Roadmap.md): every milestone and why it was made.
   This is the project's changelog.
 - [docs/ArchitectureHistory.md](docs/ArchitectureHistory.md) and
