@@ -341,9 +341,5 @@ export class PeerAuthenticationSession {
 }
 
 function identityMatchesPublicKey(identityId, publicKeyHex) {
-    try {
-        return Ed25519.publicKeyToDidKey(Ed25519.hexToBytes(publicKeyHex)) === identityId;
-    } catch {
-        return false;
-    }
+    return Ed25519.publicKeyMatchesDidKey(identityId, publicKeyHex);
 }

@@ -13,7 +13,7 @@ that no longer apply are listed at the end of their theme file under
 | Theme | Rules |
 |---|---|
 | [Foundations (0.1.x to 0.2.16)](principles/foundations.md) | the short, early rules |
-| [Trust, signatures and authorization](principles/trust.md) | 7 |
+| [Trust, signatures and authorization](principles/trust.md) | 8 |
 | [Documents, publishing and forking](principles/documents.md) | 8 |
 | [Placement, world coordinates and overlap](principles/placement.md) | 11 |
 | [World navigation, focus and spatial discovery](principles/navigation.md) | 24 |

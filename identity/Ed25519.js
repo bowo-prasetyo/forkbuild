@@ -147,6 +147,16 @@ export function publicKeyToDidKey(publicKeyBytes) {
     return 'did:key:z' + base58Encode(concatBytes(new Uint8Array([0xed, 0x01]), publicKeyBytes));
 }
 
+// Whether `publicKeyHex` is the key `did` encodes. A did:key names its key,
+// so an identity that pairs one did with another key is a forgery.
+export function publicKeyMatchesDidKey(did, publicKeyHex) {
+    try {
+        return typeof publicKeyHex === 'string' && publicKeyToDidKey(hexToBytes(publicKeyHex)) === did;
+    } catch {
+        return false;
+    }
+}
+
 // Recovers the raw public key from a did:key id — this is what lets a
 // bare signature (signer did only) be verified for objects that carry
 // no separate identity payload, such as the SpatialIndexRoot.
