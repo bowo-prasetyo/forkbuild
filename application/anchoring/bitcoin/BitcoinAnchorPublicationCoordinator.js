@@ -1,5 +1,6 @@
 import { BitcoinAnchorPublisher } from '../../../anchoring/BitcoinAnchorPublisher.js';
 import { BitcoinAnchorPublicationLifecycleState } from './BitcoinAnchorPublicationLifecycleState.js';
+import { LEGACY_HASH_EXTERNAL_REASON, isLegacyContentHash } from '../../../serializer/contentHash.js';
 
 // 0.8.53 — Bitcoin Anchor Publication Lifecycle.
 //
@@ -219,6 +220,11 @@ export class BitcoinAnchorPublicationCoordinator {
             throw new Error(`BitcoinAnchorPublicationCoordinator: publication ${publicationId} not found`);
         }
         const contentHash = publication.contentReference.hash;
+        if (isLegacyContentHash(contentHash)) {
+            return this._outcome(BitcoinAnchorPublicationLifecycleState.PLAN_FAILED, {
+                reachedStage: null, reason: LEGACY_HASH_EXTERNAL_REASON, contentHash
+            });
+        }
 
         // Stage 1 — transaction plan (0.8.47). Only stage with an
         // operational failure of its own (e.g. insufficient funds) rather

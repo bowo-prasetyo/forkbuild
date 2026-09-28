@@ -110,7 +110,10 @@ deserializing and serializing again gives byte-identical JSON):
   `algorithm` field. An FNV-1a hash is honored only for this device's own
   data (its own Publications, crash-recovery checkpoints); bytes from a
   peer, gateway, node or announcement under an FNV-1a hash are refused,
-  and the author has to publish again. Text is hashed as UTF-8 and must be
+  and the author has to publish again. Nothing is anchored or placed under
+  an FNV-1a hash: every anchoring and placement path refuses one before a
+  publisher, wallet or store is asked, and no PublicationAnchor naming one
+  is signed (`LEGACY_HASH_EXTERNAL_REASON` in serializer/contentHash.js). Text is hashed as UTF-8 and must be
   well formed: bytes that aren't valid UTF-8, a byte-order mark and lone
   surrogates are refused rather than decoded leniently, so different bytes
   can't reach the same hash.

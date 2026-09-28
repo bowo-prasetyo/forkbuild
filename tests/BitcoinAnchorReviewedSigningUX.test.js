@@ -427,7 +427,7 @@ async function run() {
         };
     }
 
-    async function observeAndConstruct({ utxos, contentHash = 'deadbeef', publicationId = 'pub-1' }) {
+    async function observeAndConstruct({ utxos, contentHash = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef', publicationId = 'pub-1' }) {
         const { builder } = freshCoordinators();
         const observer = new BitcoinWalletFundingObserver({ fundingSource: fakeFundingSource(utxos) });
         const observation = await observer.observeFunding({ account: aliceAddress, network: 'mainnet' });
@@ -476,7 +476,7 @@ async function run() {
         const reviewOutcome = reviewCoordinator.review({ construction: constructed.construction });
         assert(reviewOutcome.reviewable === true, '1. a real, native-segwit funding observation bridges into a reviewable PSBT description');
         assert(reviewOutcome.description.inputs[0].witnessUtxo.scriptPubKey === '0014' + bytesToHex(keyA.hash160Bytes), '2. the bridge derives the EXACT scriptPubKey corresponding to the real key that will sign — never a placeholder');
-        assert(reviewOutcome.review.contentHash === 'deadbeef', '3. the review reports the exact content hash being anchored');
+        assert(reviewOutcome.review.contentHash === 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef', '3. the review reports the exact content hash being anchored');
 
         // 4. Connect a wallet — a fake, UniSat-shaped provider standing in
         // for a real browser extension.
@@ -520,12 +520,12 @@ async function run() {
         const { psbtBuilder } = freshCoordinators();
         const reviewCoordinator = new BitcoinAnchorTransactionReviewCoordinator({ bitcoinAnchorPsbtBuilder: psbtBuilder });
 
-        const reviewedConstruction = await observeAndConstruct({ utxos: [{ txid: txid(0xbb), vout: 0, valueSats: 150000 }], contentHash: 'deadbeef' });
+        const reviewedConstruction = await observeAndConstruct({ utxos: [{ txid: txid(0xbb), vout: 0, valueSats: 150000 }], contentHash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef' });
         const reviewedOutcome = reviewCoordinator.review({ construction: reviewedConstruction.construction });
 
         // A DIFFERENT transaction — a different content hash, never shown
         // to Alice as the one she reviewed.
-        const substitutedConstruction = await observeAndConstruct({ utxos: [{ txid: txid(0xbb), vout: 0, valueSats: 150000 }], contentHash: 'facefeed' });
+        const substitutedConstruction = await observeAndConstruct({ utxos: [{ txid: txid(0xbb), vout: 0, valueSats: 150000 }], contentHash: 'facefeedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeed' });
         const substitutedOutcome = reviewCoordinator.review({ construction: substitutedConstruction.construction });
 
         const { connection, calls } = connectAlice((psbtHex) => psbtHex);
@@ -634,10 +634,10 @@ async function run() {
         const { psbtBuilder } = freshCoordinators();
         const reviewCoordinator = new BitcoinAnchorTransactionReviewCoordinator({ bitcoinAnchorPsbtBuilder: psbtBuilder });
 
-        const constructed = await observeAndConstruct({ utxos: [{ txid: txid(0x11), vout: 0, valueSats: 150000 }], contentHash: 'deadbeef' });
+        const constructed = await observeAndConstruct({ utxos: [{ txid: txid(0x11), vout: 0, valueSats: 150000 }], contentHash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef' });
         const reviewOutcome = reviewCoordinator.review({ construction: constructed.construction });
 
-        const otherConstructed = await observeAndConstruct({ utxos: [{ txid: txid(0x11), vout: 0, valueSats: 150000 }], contentHash: 'facefeed' });
+        const otherConstructed = await observeAndConstruct({ utxos: [{ txid: txid(0x11), vout: 0, valueSats: 150000 }], contentHash: 'facefeedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeed' });
         const otherOutcome = reviewCoordinator.review({ construction: otherConstructed.construction });
         const deceptiveSignedHex = buildSignedPsbtHex(otherOutcome.description, {
             inputExtras: [[finalScriptWitnessKv(signRealInput(otherOutcome.description, 0, keyA, nonce2), keyA.pubkeyHex)]]

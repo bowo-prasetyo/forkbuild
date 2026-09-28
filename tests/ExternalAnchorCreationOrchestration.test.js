@@ -129,7 +129,7 @@ async function run() {
         const publisher = new BitcoinAnchorPublisher({ network: 'mainnet', broadcaster: net.broadcaster });
         const { publicationCatalog, createExternalPublicationAnchorUseCase } = makeReplica({ publishers: [publisher] });
 
-        const contentHash = 'f00dcafe';
+        const contentHash = 'f00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafe';
         publishContent(publicationCatalog, { id: 'pub-flagship', hash: contentHash });
 
         const result = await createExternalPublicationAnchorUseCase.execute('pub-flagship', 'bitcoin-op-return');
@@ -190,7 +190,7 @@ async function run() {
         const registry = new ExternalAnchorPublisherRegistry().register(publisher);
         const orchestration = new CreateExternalPublicationAnchorUseCase(publicationCatalog, registry, spyCreateAnchor);
 
-        const contentHash = 'deadbeef';
+        const contentHash = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
         publishContent(publicationCatalog, { id: 'pub-spy', hash: contentHash });
 
         const result = await orchestration.execute('pub-spy', 'bitcoin-op-return');
@@ -264,7 +264,7 @@ async function run() {
             [throwingPublisher, ExternalAnchorCreationOutcome.PUBLISH_UNAVAILABLE, 'a throwing publisher']
         ]) {
             const { publicationCatalog, anchorCatalog, createExternalPublicationAnchorUseCase } = makeReplica({ publishers: [publisher] });
-            publishContent(publicationCatalog, { id: 'pub-fail', hash: 'baadf00d' });
+            publishContent(publicationCatalog, { id: 'pub-fail', hash: 'baadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d' });
 
             const result = await createExternalPublicationAnchorUseCase.execute('pub-fail', 'bitcoin-op-return');
             assert(result.outcome === expectedOutcome, `22. ${label} reports the outcome ${expectedOutcome}`);
@@ -288,7 +288,7 @@ async function run() {
             }
         };
         const { publicationCatalog, createExternalPublicationAnchorUseCase } = makeReplica({ publishers: [spyPublisher] });
-        const publication = publishContent(publicationCatalog, { id: 'pub-hash', hash: 'a1b2c3d4' });
+        const publication = publishContent(publicationCatalog, { id: 'pub-hash', hash: 'a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4a1b2c3d4' });
 
         await createExternalPublicationAnchorUseCase.execute('pub-hash', 'bitcoin-op-return');
         assert(receivedHash === publication.contentReference.hash, '26. the publisher always receives the publication\'s OWN contentReference.hash');
@@ -305,7 +305,7 @@ async function run() {
             async publish() { publishCalls += 1; return { published: false, unavailable: true, reason: 'timeout' }; }
         };
         const { publicationCatalog, createExternalPublicationAnchorUseCase } = makeReplica({ publishers: [flakyPublisher] });
-        publishContent(publicationCatalog, { id: 'pub-retry', hash: 'facade00' });
+        publishContent(publicationCatalog, { id: 'pub-retry', hash: 'facade00facade00facade00facade00facade00facade00facade00facade00' });
 
         await createExternalPublicationAnchorUseCase.execute('pub-retry', 'bitcoin-op-return');
         assert(publishCalls === 1, '27. a single execute() call consults the publisher exactly once — no internal retry loop');
@@ -325,7 +325,7 @@ async function run() {
             }
         };
         const { publicationCatalog, anchorCatalog, createExternalPublicationAnchorUseCase } = makeReplica({ publishers: [publisher] });
-        publishContent(publicationCatalog, { id: 'pub-dup', hash: 'facefeed' });
+        publishContent(publicationCatalog, { id: 'pub-dup', hash: 'facefeedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeed' });
 
         const first = await createExternalPublicationAnchorUseCase.execute('pub-dup', 'bitcoin-op-return');
         const second = await createExternalPublicationAnchorUseCase.execute('pub-dup', 'bitcoin-op-return');

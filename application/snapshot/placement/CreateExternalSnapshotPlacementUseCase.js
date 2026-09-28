@@ -1,5 +1,6 @@
 import { retryWhenLoaded } from '../../../storage/StorageEntryNotLoadedError.js';
 import { SnapshotPlacementCreationOutcome } from './SnapshotPlacementCreationOutcome.js';
+import { LEGACY_HASH_EXTERNAL_REASON, isLegacyContentHash } from '../../../serializer/contentHash.js';
 
 // 0.8.18 — Decentralized Snapshot Placement Foundation.
 //
@@ -109,6 +110,12 @@ export class CreateExternalSnapshotPlacementUseCase {
             throw new Error(`CreateExternalSnapshotPlacementUseCase: publication ${publicationId} has no content reference to place`);
         }
         const contentHash = publication.contentReference.hash;
+        // This device can still read its own legacy content, but nobody who
+        // fetches the placed bytes could check them. Refused like a failed
+        // integrity check below, before any store is asked.
+        if (isLegacyContentHash(contentHash)) {
+            throw new Error(`CreateExternalSnapshotPlacementUseCase: ${LEGACY_HASH_EXTERNAL_REASON}`);
+        }
 
         const contentStore = this._storeRegistry.get(storage);
         if (!contentStore) {

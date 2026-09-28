@@ -194,19 +194,20 @@ async function runTests() {
         rows.push('ChatView.js');
 
         // C6 — PeerConnectionsView.js: the most complex real callback —
-        // touches THREE other use cases (peerRelationshipUseCase,
-        // friendRelationshipUseCase, peerBlockUseCase) plus its own
-        // refreshLockState(). Verified explicitly, not assumed from
-        // shape alone: every one of those calls is a pure read-only
-        // getter (getRelationships()/getBlocked()/isUnlocked()), never a
+        // touches FOUR other use cases (peerRelationshipUseCase,
+        // friendRelationshipUseCase, peerBlockUseCase, followUseCase) plus
+        // its own refreshLockState(). Verified explicitly, not assumed from
+        // shape alone: every one of those calls is a pure read-only getter
+        // (getRelationships()/getBlocked()/getFollowing()/isUnlocked()), never a
         // mutating call — the same distinction that made World
         // Presence's refreshWorldPresenceActivity() (which reaches into
         // WorldAuthorizationService AND performs a network broadcast) a
         // realized defect and this one not.
         const peerConnectionsSource = codeOnlyLines(peerConnectionsViewSource()).join('\n');
-        assert(/identityUseCase\.onSessionChanged\(\(\) => \{\s*isAuthenticated\.value = identityUseCase\.isAuthenticated\(\);\s*refreshRelationships\(\);\s*refreshFriendships\(\);\s*refreshBlocked\(\);\s*refreshLockState\(\);\s*\}\);/.test(peerConnectionsSource), 'C6a. PeerConnectionsView.js onSessionChanged callback still calls exactly these four local functions, nothing else');
+        assert(/identityUseCase\.onSessionChanged\(\(\) => \{\s*isAuthenticated\.value = identityUseCase\.isAuthenticated\(\);\s*refreshRelationships\(\);\s*refreshFriendships\(\);\s*refreshBlocked\(\);\s*refreshFollows\(\);\s*refreshLockState\(\);\s*\}\);/.test(peerConnectionsSource), 'C6a. PeerConnectionsView.js onSessionChanged callback still calls exactly these five local functions, nothing else');
         assert(/function refreshRelationships\(list\) \{\s*relationships\.value = list \|\| peerRelationshipUseCase\.getRelationships\(\);\s*\}/.test(peerConnectionsSource), 'C6b. refreshRelationships() is still a pure read via getRelationships(), no mutation');
         assert(/function refreshFriendships\(list\) \{\s*friendships\.value = list \|\| friendRelationshipUseCase\.getRelationships\(\);\s*\}/.test(peerConnectionsSource), 'C6c. refreshFriendships() is still a pure read via getRelationships(), no mutation');
+        assert(/function refreshFollows\(\) \{\s*follows\.value = followUseCase \? followUseCase\.getFollowing\(\) : \[\];\s*\}/.test(peerConnectionsSource), 'C6g. refreshFollows() is still a pure read via getFollowing(), no mutation');
         assert(/function refreshBlocked\(list\) \{\s*blocked\.value = list \|\| peerBlockUseCase\.getBlocked\(\);\s*\}/.test(peerConnectionsSource), 'C6d. refreshBlocked() is still a pure read via getBlocked(), no mutation');
         assert(/isIdentityLocked\.value = !identityUseCase\.isUnlocked\(identityId\);/.test(peerConnectionsSource), 'C6e. refreshLockState() is still a pure read via isUnlocked(), no mutation');
         assert(/identityUseCase\.onVaultLockChanged\(\(\) => refreshLockState\(\)\);/.test(peerConnectionsSource), 'C6f. PeerConnectionsView.js onVaultLockChanged callback still only calls local refreshLockState()');
@@ -357,7 +358,9 @@ async function runTests() {
     console.log('\n✅ All Identity Event/Error Boundary Audit tests passed.');
 }
 
-runTests().catch((error) => {
+// Awaited so tests/support/RunTestFile.mjs can't end the process, with a
+// pass, while a later section is still running.
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

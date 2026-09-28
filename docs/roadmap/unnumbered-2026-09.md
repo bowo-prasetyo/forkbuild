@@ -2179,3 +2179,29 @@ ran to dozens of screens, and the batch-anchor picker offered all twenty.
   usable publications, since an anchor of a hash that can't be checked proves nothing.
 - Tests: `tests/PublicationsPageLayoutBrowser.test.js` renders the page with real Vue; `tests/SteemBatchAnchoringUI.test.js`
   covers a failed publication being left out of a batch.
+
+## No anchors for old hashes, removing failed publications, and titles (unnumbered, 2026-09-28)
+
+**Nothing is anchored or placed under a legacy content hash, failed publications can be removed from this device,
+and Publications page cards and the batch-anchor picker show real names.** Follows "A shorter Publications page"
+above, which only hid the anchoring buttons for failed publications.
+
+- Anchoring: nobody can check bytes against an FNV-1a hash, so a record of one proves nothing.
+  `LEGACY_HASH_EXTERNAL_REASON` (serializer/contentHash.js) is the refusal everywhere, each time before a publisher,
+  wallet or store is asked: `CreateExternalPublicationAnchorUseCase#execute()` and `#executeBatch()` return
+  PUBLISH_REJECTED (a batch holding one legacy hash is refused whole); `BitcoinAnchorTransactionConstructionCoordinator`
+  and `BasePublicationTransactionPlanCoordinator` return FAILED; `BitcoinAnchorPublicationCoordinator#publishAnchor()`
+  returns PLAN_FAILED; `BaseAnchorPublisher#publish()` returns `published: false`. `CreatePublicationAnchorUseCase`
+  throws as a backstop, so no anchor naming one is ever signed. Anchors received from peers or imported are not
+  affected.
+- Placement: `CreateExternalSnapshotPlacementUseCase` throws before its integrity check. This device can still read its
+  own legacy content, but nobody who fetched the placed bytes could check them.
+- Removing: each card in the "can't be used" group has **Remove from This Device**, and the group has **Remove All N
+  from This Device**, each confirmed inline. They call `LocalPublicationCatalog#remove()`, which is local only; a peer
+  that still has the publication may announce it again. Only failed entries can be removed.
+- Names: `publicationTitle(entry)` reads a checked Publication's `title` or a place name claim's `name` (shortened past
+  80 characters). A card leads with it and moves the content kind to the line below; picker rows start with it.
+  Unchecked, unavailable and failed entries, and blueprint attributions, keep the content kind.
+- Tests: `tests/LegacyContentHashAnchoringRefusal.test.js` drives each refusal with collaborators that fail if called.
+  `tests/PublicationsPageLayoutBrowser.test.js` covers Remove, Remove All, Cancel and the names. Ten anchoring tests
+  used 8-hex sample hashes, which are the legacy format; they now use 64-hex ones.

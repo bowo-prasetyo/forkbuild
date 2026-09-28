@@ -129,7 +129,7 @@ async function run() {
         const authVerifier = new LocalAuthorizationVerifier();
         const createAnchor = new CreatePublicationAnchorUseCase(publicationCatalog, alice, authVerifier, anchorCatalog);
 
-        const contentHash = 'f00dcafe';
+        const contentHash = 'f00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafe';
         const publication = publishContent(publicationCatalog, { id: 'pub-flagship', hash: contentHash });
 
         const net = makeFakeBitcoinNetwork();
@@ -197,7 +197,7 @@ async function run() {
     // encoding.
     // ---------------------------------------------------------------
     {
-        const contentHash = 'deadbeef';
+        const contentHash = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
         const net = makeFakeBitcoinNetwork();
         const publisher = new BitcoinAnchorPublisher({ network: 'mainnet', broadcaster: net.broadcaster });
         const evidence = await publisher.publish(contentHash);
@@ -214,7 +214,7 @@ async function run() {
     // Section D — failure modes stay distinguishable.
     // ---------------------------------------------------------------
     {
-        const contentHash = 'cafebabe';
+        const contentHash = 'cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe';
 
         const throwingPublisher = new BitcoinAnchorPublisher({
             broadcaster: { broadcast: async () => { throw new Error('simulated connection failure'); } }
@@ -262,7 +262,7 @@ async function run() {
         const anchorCatalog = new LocalPublicationAnchorCatalog(new InMemoryStorageProvider());
         const authVerifier = new LocalAuthorizationVerifier();
         const createAnchor = new CreatePublicationAnchorUseCase(publicationCatalog, alice, authVerifier, anchorCatalog);
-        const contentHash = 'abad1dea';
+        const contentHash = 'abad1deaabad1deaabad1deaabad1deaabad1deaabad1deaabad1deaabad1dea';
         publishContent(publicationCatalog, { id: 'pub-time', hash: contentHash });
 
         const net = makeFakeBitcoinNetwork();

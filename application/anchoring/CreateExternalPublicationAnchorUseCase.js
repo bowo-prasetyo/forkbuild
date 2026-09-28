@@ -1,3 +1,4 @@
+import { LEGACY_HASH_EXTERNAL_REASON, isLegacyContentHash } from '../../serializer/contentHash.js';
 import { ExternalAnchorCreationOutcome } from './ExternalAnchorCreationOutcome.js';
 
 // 0.8.10 — External Anchor Creation Orchestration & Publisher Registry.
@@ -122,6 +123,10 @@ export class CreateExternalPublicationAnchorUseCase {
         // the publisher and the eventual signed anchor are always bound
         // to the same bytes.
         const contentHash = publication.contentReference.hash;
+        // Refused before the publisher (and any wallet) is asked.
+        if (isLegacyContentHash(contentHash)) {
+            return this._failure(ExternalAnchorCreationOutcome.PUBLISH_REJECTED, LEGACY_HASH_EXTERNAL_REASON);
+        }
 
         let evidence;
         try {
@@ -178,6 +183,10 @@ export class CreateExternalPublicationAnchorUseCase {
             }
             return publication.contentReference.hash;
         });
+        // One legacy hash refuses the whole batch, before any approval.
+        if (contentHashes.some(isLegacyContentHash)) {
+            return { outcome: ExternalAnchorCreationOutcome.PUBLISH_REJECTED, anchors: [], reason: LEGACY_HASH_EXTERNAL_REASON };
+        }
 
         let evidence;
         try {

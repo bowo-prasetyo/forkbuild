@@ -62,6 +62,10 @@ export function contentHashMatches(text, expectedHash, { allowLegacy = false } =
 
 export const LEGACY_HASH_REASON = 'it was published with an old, insecure content hash (FNV-1a) that can\'t be checked; its author needs to publish it again';
 
+// Why a legacy hash is never anchored or placed: nobody else can check
+// bytes against it, so a record of it proves nothing about the content.
+export const LEGACY_HASH_EXTERNAL_REASON = 'it was published with an old, insecure content hash (FNV-1a) that others can\'t check, so anchoring or placing it would prove nothing; publish it again first';
+
 // Why content failed its hash check, for an error message.
 export function describeContentHashMismatch(expectedHash) {
     return isLegacyContentHash(expectedHash) ? LEGACY_HASH_REASON : 'hash mismatch';

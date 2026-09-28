@@ -91,7 +91,7 @@ async function run() {
         const { coordinator } = { coordinator: new BitcoinAnchorTransactionConstructionCoordinator({ bitcoinAnchorTransactionBuilder: builder }) };
 
         const outcome = coordinator.construct({
-            publicationId: 'pub-1', contentHash: 'deadbeef', fundingObservation: observation
+            publicationId: 'pub-1', contentHash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef', fundingObservation: observation
         });
         assert(outcome.state === BitcoinAnchorTransactionConstructionState.CONSTRUCTED, '2. a comfortably funded observation constructs successfully');
         assert(Object.isFrozen(outcome.construction), '3. the construction identity is frozen');
@@ -100,13 +100,13 @@ async function run() {
         // builder contract end to end: calling the SAME builder directly
         // with the observation's own utxos/changeAccount produces the
         // byte-identical plan the coordinator itself produced.
-        const directPlan = builder.build({ contentHash: 'deadbeef', utxos: observation.utxos, changeAddress: observation.changeAccount });
+        const directPlan = builder.build({ contentHash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef', utxos: observation.utxos, changeAddress: observation.changeAccount });
         assert(JSON.stringify(outcome.construction.plan) === JSON.stringify(directPlan), '4. the coordinator\'s plan is byte-identical to calling the unchanged 0.8.47 builder directly with this observation\'s own facts');
 
         const view = describeBitcoinAnchorTransactionConstruction(outcome);
         assert(view.state === BitcoinAnchorTransactionConstructionState.CONSTRUCTED, '5. the view reports the coordinator\'s own state');
         assert(view.stateLabel === describeBitcoinAnchorTransactionConstructionStateLabel(BitcoinAnchorTransactionConstructionState.CONSTRUCTED), '6. the view\'s stateLabel matches the label vocabulary');
-        assert(view.contentHash === 'deadbeef' && view.publicationId === 'pub-1', '7. the view reports the exact publicationId/contentHash construction was requested for');
+        assert(view.contentHash === 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef' && view.publicationId === 'pub-1', '7. the view reports the exact publicationId/contentHash construction was requested for');
         assert(view.network === 'mainnet', '8. the view reports the plan\'s own network');
         assert(view.selectedInputCount === outcome.construction.plan.inputs.length, '9. selectedInputCount reports the builder\'s own resulting selection size');
         assert(view.feeSats === outcome.construction.plan.feeSats && view.totalInputSats === outcome.construction.plan.totalInputSats, '10. the view reports the exact fee and total input value');
@@ -275,8 +275,8 @@ async function run() {
         const builder = new BitcoinAnchorTransactionBuilder({ network: 'mainnet', feeRateSatsPerVByte: 3 });
         const coordinator = new BitcoinAnchorTransactionConstructionCoordinator({ bitcoinAnchorTransactionBuilder: builder });
 
-        const first = coordinator.construct({ publicationId: 'p', contentHash: 'facefeed', fundingObservation: observation });
-        const second = coordinator.construct({ publicationId: 'p', contentHash: 'facefeed', fundingObservation: observation });
+        const first = coordinator.construct({ publicationId: 'p', contentHash: 'facefeedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeed', fundingObservation: observation });
+        const second = coordinator.construct({ publicationId: 'p', contentHash: 'facefeedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeed', fundingObservation: observation });
         assert(JSON.stringify(first.construction.plan) === JSON.stringify(second.construction.plan), '39. same observed inputs + same content hash + same policy produce the same transaction plan');
     }
     console.log('✓ Section I: reconstructing from the same observation and content hash is fully deterministic');

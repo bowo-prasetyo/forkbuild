@@ -1,4 +1,5 @@
 import { BaseReviewedSigningState } from '../application/anchoring/base/BaseReviewedSigningState.js';
+import { LEGACY_HASH_EXTERNAL_REASON, isLegacyContentHash } from '../serializer/contentHash.js';
 
 // 0.9.470 — Review-Preserving Base Anchor Publisher.
 //
@@ -200,6 +201,10 @@ export class BaseAnchorPublisher {
             throw new Error('BaseAnchorPublisher: contentHash is required');
         }
         const expectedContentHash = contentHash.trim().toLowerCase();
+        // Refused before the wallet is asked to sign anything.
+        if (isLegacyContentHash(expectedContentHash)) {
+            return { published: false, reason: LEGACY_HASH_EXTERNAL_REASON };
+        }
         if (!reviewedTransaction || reviewedTransaction.contentHash !== expectedContentHash) {
             throw new Error(`BaseAnchorPublisher: the reviewed transaction's own contentHash (${reviewedTransaction && reviewedTransaction.contentHash}) does not match the supplied contentHash (${expectedContentHash}) — this reviewed transaction was never for this content`);
         }

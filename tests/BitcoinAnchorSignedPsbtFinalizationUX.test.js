@@ -421,7 +421,7 @@ async function run() {
         return new BitcoinAnchorSignedPsbtFinalizationCoordinator({ bitcoinAnchorSignedPsbtFinalizer: new BitcoinAnchorSignedPsbtFinalizer() });
     }
 
-    function buildDescription({ key = keyA, contentHash = 'deadbeef' } = {}) {
+    function buildDescription({ key = keyA, contentHash = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef' } = {}) {
         const transactionBuilder = new BitcoinAnchorTransactionBuilder({ network: 'mainnet', feeRateSatsPerVByte: 1 });
         const psbtBuilder = new BitcoinAnchorPsbtBuilder();
         const plan = transactionBuilder.build({ contentHash, utxos: [utxo('a', 0, 100000, 'p2wpkh')], changeAddress: 'bc1qexamplechangeaddress' });
@@ -446,7 +446,7 @@ async function run() {
         assert(observation.state === BitcoinAnchorFundingObservationState.OBSERVED, 'sanity: a real fundingSource produces a real OBSERVED observation');
 
         const constructionCoordinator = new BitcoinAnchorTransactionConstructionCoordinator({ bitcoinAnchorTransactionBuilder: builder });
-        const constructed = constructionCoordinator.construct({ publicationId: 'pub-1', contentHash: 'deadbeef', fundingObservation: observation });
+        const constructed = constructionCoordinator.construct({ publicationId: 'pub-1', contentHash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef', fundingObservation: observation });
         assert(constructed.state === BitcoinAnchorTransactionConstructionState.CONSTRUCTED, 'sanity: comfortable funding constructs successfully');
 
         const reviewCoordinator = new BitcoinAnchorTransactionReviewCoordinator({ bitcoinAnchorPsbtBuilder: psbtBuilder });
@@ -546,7 +546,7 @@ async function run() {
     {
         const transactionBuilder = new BitcoinAnchorTransactionBuilder({ network: 'mainnet', feeRateSatsPerVByte: 1 });
         const psbtBuilder = new BitcoinAnchorPsbtBuilder();
-        const plan = transactionBuilder.build({ contentHash: 'deadbeef', utxos: [utxo('a', 0, 100000, 'p2tr')], changeAddress: 'bc1pexample' });
+        const plan = transactionBuilder.build({ contentHash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef', utxos: [utxo('a', 0, 100000, 'p2tr')], changeAddress: 'bc1pexample' });
         const description = psbtBuilder.build({
             plan, utxoDetails: [{ txid: plan.inputs[0].txid, vout: 0, scriptPubKey: '5120' + 'c'.repeat(64), valueSats: 100000 }],
             changeScriptPubKey: '0014' + 'b'.repeat(40)
@@ -601,7 +601,7 @@ async function run() {
     // reviewed transaction's own inputs and outputs.
     // ---------------------------------------------------------------
     {
-        const description = buildDescription({ key: keyA, contentHash: 'cafebabe' });
+        const description = buildDescription({ key: keyA, contentHash: 'cafebabecafebabecafebabecafebabecafebabecafebabecafebabecafebabe' });
         const signedHex = buildSignedPsbtHex(description, { inputExtras: [[finalScriptWitnessKv(signRealInput(description, 0, keyA, nonce1), keyA.pubkeyHex)]] });
         const outcome = freshFinalizationCoordinator().finalize({ description, signedPsbt: signedHex });
         assert(outcome.state === BitcoinAnchorSignedPsbtFinalizationState.FINALIZED, 'sanity: this description finalizes');
@@ -623,7 +623,7 @@ async function run() {
     // call of any kind happens inside finalize().
     // ---------------------------------------------------------------
     {
-        const description = buildDescription({ key: keyA, contentHash: 'ba5eba11' });
+        const description = buildDescription({ key: keyA, contentHash: 'ba5eba11ba5eba11ba5eba11ba5eba11ba5eba11ba5eba11ba5eba11ba5eba11' });
         const signedHex = buildSignedPsbtHex(description, { inputExtras: [[finalScriptWitnessKv(signRealInput(description, 0, keyA, nonce1), keyA.pubkeyHex)]] });
 
         const originalFetch = globalThis.fetch;
