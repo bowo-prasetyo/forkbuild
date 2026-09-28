@@ -3,6 +3,8 @@ import { useRoute } from 'vue-router';
 import { CreateDiscoveryUseCase } from '../../application/discovery/CreateDiscoveryUseCase.js';
 import PublicationCatalog from '../components/PublicationCatalog.js';
 import ForkTree from '../components/ForkTree.js';
+import FollowButton from '../components/FollowButton.js';
+import { shortIdentityId } from './following/followedPeople.js';
 import { computeAmbiguousPublishedDateIds, formatPublicationDate } from '../../core/PublicationDateAmbiguity.js';
 // 0.9.525 — Repository Discovery & Material Trust Product
 // Reassessment, Section G. See application/
@@ -30,7 +32,7 @@ import {
 // to always load everything, defeating the point of paginating it.
 export default {
     name: 'AuthorView',
-    components: { PublicationCatalog, ForkTree },
+    components: { PublicationCatalog, ForkTree, FollowButton },
     setup() {
         const route = useRoute();
         const author = route.params.username;
@@ -41,6 +43,7 @@ export default {
         // same merged discovery composition PublicationCatalog itself
         // now uses.
         const decentralizedDiscoveryProvider = inject('decentralizedPublicationDiscoveryProvider', null);
+        const followingFeed = inject('followingFeed', null);
         const { listPublicationsUseCase } = new CreateDiscoveryUseCase().execute({ decentralizedDiscoveryProvider });
 
         onMounted(() => {
@@ -80,9 +83,22 @@ export default {
             authorNameIdentityConvergence.value
         ));
 
+        // Following goes by signing identity, never by the typed name, which
+        // several identities may share: one Follow per verified signer.
+        const signers = computed(() => {
+            if (!followingFeed) return [];
+            const ids = new Set();
+            for (const publication of allPublications.value) {
+                const signer = followingFeed.verifiedPublisherOf(publication);
+                if (signer) ids.add(signer);
+            }
+            return [...ids].sort().map((identityId) => ({ identityId, shortId: shortIdentityId(identityId) }));
+        });
+
         return {
             author,
             allPublications,
+            signers,
             forkTreeRoots,
             authorNameIdentityNotice,
             preciseDateIds,
@@ -93,6 +109,12 @@ export default {
         <section class="author-view">
             <h1>{{ author || 'Anonymous' }}</h1>
             <p class="author-stats">{{ allPublications.length }} publication(s)</p>
+            <ul v-if="signers.length" class="author-follow-list">
+                <li v-for="signer in signers" :key="signer.identityId" class="author-follow-item">
+                    <span :title="signer.identityId">Signed by {{ signer.shortId }}</span>
+                    <FollowButton :identity-id="signer.identityId" :name="author || null" />
+                </li>
+            </ul>
             <p v-if="authorNameIdentityNotice" class="author-identity-convergence-notice">
                 ⚠ {{ authorNameIdentityNotice }}
             </p>

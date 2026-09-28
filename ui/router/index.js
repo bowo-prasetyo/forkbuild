@@ -11,6 +11,7 @@ import LiveWorldView from '../views/LiveWorldView.js';
 import AvatarSettingsView from '../views/AvatarSettingsView.js';
 import IdentityManagementView from '../views/IdentityManagementView.js';
 import PeerConnectionsView from '../views/PeerConnectionsView.js';
+import FollowingView from '../views/FollowingView.js';
 import ChatView from '../views/ChatView.js';
 import ConversationsView from '../views/ConversationsView.js';
 import DecentralizedPublicationsView from '../views/DecentralizedPublicationsView.js';
@@ -69,6 +70,7 @@ const routes = [
     { path: '/avatar', name: 'avatar', component: AvatarSettingsView },
     { path: '/identity', name: 'identity', component: IdentityManagementView },
     { path: '/peers', name: 'peers', component: PeerConnectionsView },
+    { path: '/following', name: 'following', component: FollowingView },
     // 0.2.61 — Direct Peer Messaging & Live Chat. Reached from the
     // Friends list (see ui/views/PeerConnectionsView.js), never a
     // top-nav destination.

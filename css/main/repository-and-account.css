@@ -9,6 +9,7 @@
    needing its own layout logic. */
 .repository-view,
 .author-view,
+.following-view,
 .recent-worlds-view {
     padding: 2rem 2.5rem 3rem;
     max-width: 1400px;
@@ -18,6 +19,7 @@
 
 .repository-view h1,
 .author-view h1,
+.following-view h1,
 .recent-worlds-view h1 {
     margin: 0 0 1.5rem;
 }
@@ -93,6 +95,76 @@
 /* Share with Peers (ui/components/SharePublicationButton.js), on its own row. */
 .share-publication {
     margin-top: 0.5rem;
+}
+
+/* Follow / Following (ui/components/FollowButton.js). */
+.follow-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.publication-follow {
+    margin-top: 0.5rem;
+}
+
+.author-follow-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin: -0.75rem 0 1.5rem;
+    padding: 0;
+}
+
+.author-follow-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #909090;
+    font-size: 0.85rem;
+}
+
+/* The Following page (ui/views/FollowingView.js). */
+.following-people {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0 1.5rem;
+    padding: 0;
+}
+
+.following-person {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem 0.35rem 0.75rem;
+    border: 1px solid #3a3a3a;
+    border-radius: 999px;
+    max-width: 100%;
+}
+
+.following-person--selected {
+    border-color: rgba(76, 175, 125, 0.7);
+}
+
+.following-person-name {
+    background: none;
+    border: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.following-person-count {
+    color: #909090;
+    font-size: 0.8rem;
+    white-space: nowrap;
 }
 
 .share-publication-status {

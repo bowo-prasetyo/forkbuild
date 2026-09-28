@@ -28,8 +28,8 @@ top-level [docs/](..) folder.
    avatar, who can see you, walking, camera perspectives, vehicles,
    animals, and your inventory.
 7. **[Peer Connections & Friends](07-PeerConnectionsAndFriends.md)** —
-   connecting directly to other people, remembering, friending, blocking,
-   automatic reconnection, and your own TURN relay.
+   connecting directly to other people, remembering, friending, following,
+   blocking, automatic reconnection, and your own TURN relay.
 8. **[Chat & Conversations](08-ChatAndConversations.md)** — direct,
    friends-only messaging, offline delivery, read receipts, and voice
    calls.

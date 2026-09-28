@@ -130,6 +130,9 @@ export const stateQueryMethods = {
             // getAvatarDisplayName() falls back to ownerIdentity, then avatarId.
             displayName: this.getAvatarDisplayName(avatarId),
             ownerIdentity: entry.advertisement.ownerIdentity,
+            // Stored presence passed PresenceTrustBoundary, so a signer here is
+            // verified; ownerIdentity is only what the advertisement claims.
+            signerIdentityId: signerOf(entry.advertisement),
             templateLabel: defaultTemplate ? defaultTemplate.displayLabel : null,
             templatePlaceholder: true,
             position: { ...entry.advertisement.position },
@@ -190,3 +193,8 @@ export const stateQueryMethods = {
         return this._getWorldPosition(documentId);
     }
 };
+
+function signerOf(advertisement) {
+    const signature = advertisement ? advertisement.signature : null;
+    return signature && typeof signature.signer === 'string' ? signature.signer : null;
+}

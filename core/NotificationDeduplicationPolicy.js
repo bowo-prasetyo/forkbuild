@@ -131,13 +131,21 @@ export function describeNotificationDeduplicationPolicy() {
     };
 }
 
+// Event types whose subject is not a Commentary name the payload field that
+// takes commentaryId's place. A followed author's new Publication is one fact
+// per Publication, however many times it is discovered.
+const SUBJECT_FIELD_BY_EVENT_TYPE = Object.freeze({
+    'publication.followed-author-published': 'publicationId'
+});
+
 // The adopted logical identity for the current Commentary producer:
 // `commentaryId + eventType + recipientIdentityId`. `eventType` and
 // `recipientIdentityId` are read directly off the `NotificationEvent`;
 // `commentaryId` is read from `payload` — the one payload field this
 // policy elevates to identity, per this file's own header.
 export function notificationDeduplicationIdentity(event) {
-    return `${event.payload.commentaryId}::${event.eventType}::${event.recipientIdentityId}`;
+    const subjectField = SUBJECT_FIELD_BY_EVENT_TYPE[event.eventType] || 'commentaryId';
+    return `${event.payload[subjectField]}::${event.eventType}::${event.recipientIdentityId}`;
 }
 
 export function haveSameNotificationDeduplicationIdentity(eventA, eventB) {

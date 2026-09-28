@@ -15,7 +15,9 @@ send it:
   structures;
 - your identities: each one's public key, and its private key, encrypted with
   your passphrase unless you chose to create it without one;
-- known peers, friends, blocks, chat history and queued messages;
+- known peers, friends, the people you follow, blocks, chat history and
+  queued messages (nobody is told you follow them, and nothing about a follow
+  is ever sent);
 - your avatar profile, settings, and a TURN server's username and credential
   if you enter one under **Network Settings**.
 

@@ -34,6 +34,7 @@ export const peopleSectionTemplate = `<section class="peers-section" aria-labell
                                     <span class="peers-row-title">{{ person.name }}</span>
                                     <span v-if="person.isFriend" class="peers-tag peers-tag--friend">Friend</span>
                                     <span v-else-if="person.isKnown" class="peers-tag">Remembered</span>
+                                    <span v-if="person.isFollowing" class="peers-tag peers-tag--following">Following</span>
                                     <span v-if="person.isBlocked" class="peers-tag peers-tag--blocked">Blocked</span>
                                     <span v-if="isRevoked(person)" class="peers-tag peers-tag--warning" :title="lifecycleTitle(person)">Revoked</span>
                                     <span v-else-if="successorOf(person)" class="peers-tag" :title="lifecycleTitle(person)">New identity declared</span>
@@ -69,6 +70,8 @@ export const peopleSectionTemplate = `<section class="peers-section" aria-labell
                                                 @click="menuAction($event, () => act(person.identityId, () => unfriendByIdentity(person.identityId)))">
                                             Unfriend<span v-if="!person.isOnline" class="peers-menu-note"> (reconnect first)</span>
                                         </button>
+                                        <button v-if="person.isFollowing || canFollow(person)" type="button" class="peers-menu-item"
+                                                @click="menuAction($event, () => act(person.identityId, () => toggleFollow(person)))">{{ person.isFollowing ? 'Unfollow' : 'Follow' }}</button>
                                         <button v-if="person.connectedPeer" type="button" class="peers-menu-item"
                                                 @click="menuAction($event, () => openDetail(person.connectedPeer))">Connection Details</button>
                                         <button v-if="person.connectedPeer" type="button" class="peers-menu-item"

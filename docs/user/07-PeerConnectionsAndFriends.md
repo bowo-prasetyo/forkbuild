@@ -10,7 +10,7 @@ manage who you're connected, known, and friends with.
 Peers                                   Your ID …N6KbN  [Copy full ID]
 
 Needs your attention      connections waiting for you, friend requests
-People  [All|Friends|Online]   one row per person
+People  [All|Friends|Following|Online]   one row per person
 Connect with someone new  [Invite|Paste an invitation|Find by ID|Public lobby]
 ▸ Blocked (N)             only when you've blocked someone
 ```
@@ -22,20 +22,25 @@ Connect with someone new  [Invite|Paste an invitation|Find by ID|Public lobby]
   (**Accept** / **Decline**).
 - **People** has one row per person, however many things you know about
   them. Tags say what they are to you — **Friend**, **Remembered**,
-  **Blocked**, **Request sent**, **Wants to be friends** — and a green dot
+  **Following**, **Blocked**, **Request sent**, **Wants to be friends** —
+  and a green dot
   means online. Online people come first, then friends, then everyone else.
   Each row has its main action (**Chat** for a friend, **Reconnect** when
   they're offline, **Add Friend** for someone you're connected to), and
   the **⋯** menu holds the rest: **Rename** (or **Name & Remember**),
-  **Remember** / **Forget**, **Unfriend**, **Connection Details**,
-  **Disconnect**, and **Block** / **Unblock**.
+  **Remember** / **Forget**, **Unfriend**, **Follow** / **Unfollow**,
+  **Connection Details**, **Disconnect**, and **Block** / **Unblock**.
+  The **Following** filter shows the people here you follow.
 - **Blocked** is folded at the bottom and only shows when you've blocked
   someone.
 
-Behind the list are four independent records — live connections, Known
+Behind the list are five independent records — live connections, Known
 Peers (people you chose to **Remember**, a private note never shared with
-them), Friends (mutual and signed) and Blocked. A person can be a Friend
+them), Friends (mutual and signed), Following (see
+[Following people](#following-people)) and Blocked. A person can be a Friend
 without being Remembered, and so on; the row just shows whichever apply.
+Someone you follow but have never connected to isn't listed here; the
+**Following** page lists everyone you follow.
 
 ## Finding and connecting to someone
 
@@ -148,6 +153,49 @@ Settings**) and an unlocked identity.
   remove the friendship, it just silences it; **Unblock** (in the **⋯** menu,
   or the **Blocked** list) restores hearing from them again, but never
   restores anything blocking silenced in the meantime.
+
+## Following people
+
+**Follow** keeps you up to date with someone's creations, like following an
+account on a social network, without either of you asking the other for
+anything.
+
+- **Where to follow.** **Follow** appears on publication cards in the
+  Repository, next to **Signed by …** on an author's page, in a person's
+  **⋯** menu on this page, and as **Follow Their Work** on an avatar in
+  World View. You follow an *identity*, never a typed author name: several
+  people can publish under the same name, so an author's page shows one
+  **Follow** per identity that signed work under that name.
+- **The Following page** (**Following** in the top bar) lists the people you
+  follow, each with **Unfollow**, and below them the newest work of theirs
+  that has reached this device, newest first. Click a name to see only that
+  person's work.
+- **Notifications.** When a new creation by someone you follow reaches this
+  device, the 🔔 panel gets a **Publication followed author published**
+  entry, once per creation, with **Explore** to open it.
+- **Their shared Worlds are fetched for you.** Worlds that someone you follow
+  shares with connected peers are retrieved automatically, as they already
+  are for Friends and Remembered peers.
+- **Their announcements are kept longer.** This device keeps a record of the
+  announcements it has seen, up to a limit per discovery tag. When a tag is
+  full, the records seen least recently are dropped first, but building
+  placements and place names signed by people you follow are kept ahead of
+  the rest.
+
+**Following is private and one-sided.** The list is kept on this device, for
+the identity you're signed in as. It's never sent anywhere, the people you
+follow are never told, and there are no follower counts: without a server,
+nobody could count them honestly. Following gives the other person nothing
+either: no chat, no view of your avatar, no way to reach you. That's still
+what friendship is for.
+
+**What following doesn't do.** Following picks out the work of the people you
+follow from what reaches this device; it doesn't go and fetch their work by
+itself. Creations still arrive the usual ways: World discovery in World View,
+Worlds shared by connected peers, and links you open. Only work whose
+signature checks out counts, so nobody can get onto your Following page by
+typing someone else's name or identity on their work. Work by someone you've
+**Blocked** stays hidden even if you follow them.
 
 ## TURN: relaying peer connections that can't find a direct path
 
