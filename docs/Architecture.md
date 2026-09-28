@@ -1045,8 +1045,11 @@ Distributing a Publication or a Snapshot involves separate choices, each with it
 | Proof / anchoring | Bitcoin, Arweave, Steem (Experimental) (Base only through its own button) | `PreferredPublicationAnchorCreationCoordinator` |
 
 The saved preferences live in `RoleProviderPreferenceStore` (`CONTENT`, `ANNOUNCEMENT_AND_DISCOVERY`,
-`PROOF_AND_ANCHORING`). They drive the "Use Preferred Provider" buttons, and they seed every picker's first value
-through `resolveSavedProviderDefault()`; they never override a choice already made. Distribution uses selection,
+`PROOF_AND_ANCHORING`). They drive the preferred-provider buttons (on the Publications page, "Store on …" and
+"Anchor on …" at the top of a card's Distribution roles, and "Use Preferred Provider" under Details → Placements & IPFS),
+and they seed every picker's first value through `resolveSavedProviderDefault()`; they never override a choice already
+made. The Distribution roles offer that button only for a saved provider they can use
+(`preferredDistributionChoice()`), never for a wallet-guided anchor type, and otherwise show every option. Distribution uses selection,
 never fan-out, across substrates. Fan-out happens only across relays within Nostr. Arweave and IPFS gateways use
 ordered failover instead, because any gateway can serve the same content-addressed bytes. The Steem choices are
 described in docs/Protocol.md's three "Proposed: Steem …" sections, which are built and Experimental.

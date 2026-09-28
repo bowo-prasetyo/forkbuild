@@ -2247,3 +2247,42 @@ in #1263); whether it passed depended on timing.
   for browser tests).
 - Tests: `tests/UnawaitedTopLevelWork.test.js` drives the detector on sample sources, then runs `tests/run.mjs` on a
   scratch file to show the refusal end to end.
+
+## The Publications page's tools move below the publications (unnumbered, 2026-09-28)
+
+**Wallet, Archive & Publisher Tools, the folded panel of page-wide tools, is now at the bottom of the Publications page
+instead of above the list,** so the publications come first. Most of it (Base network observation, three kinds of
+archive records, fingerprints) is for experts.
+
+- It stays on the same page, not a route of its own: the per-publication Bitcoin and Base steps use the wallet
+  connection and funding observed in that panel, all held by the page's component, and a separate route would drop
+  that state on every navigation between the two.
+- `openPublicationsTools(tab)` opens the panel on a tab and scrolls to it (the panel's `open` is now bound to
+  `publicationsToolsOpen`). The page intro links to it, and the Bitcoin and Base transaction-plan steps, which said
+  "observe wallet funding above", now link to it instead.
+- Tests: `tests/PublicationsPageLayoutBrowser.test.js` checks the panel comes after the publications and the failed
+  group, starts folded, and that the intro's link opens it on Blockchain Anchoring.
+
+## Distribution leads with your preferred provider (unnumbered, 2026-09-28)
+
+**In a Publications card's Distribution section, Content and Proof / Anchoring each lead with one button for the
+provider you saved under Configure, named for it (Store on IPFS, Anchor on Steem), and fold every other provider's card
+under "Other … options".** Opened, the section used to show a card per storage backend and per anchor type (up to
+seven buttons) with a long Bitcoin/Base note, even for someone who had already chosen where their content and anchors
+go.
+
+- Nothing is chosen for the person: the button only ever uses their own saved preference, through the existing
+  preferred-provider coordinators, and every other provider stays one click away. With nothing saved, or a saved
+  provider that can't be used with one click, the cards show open, as before, and a line says why.
+- `preferredDistributionChoice(savedKey, availableKeys, { walletGuidedKeys })` in
+  `decentralizedPublications/presentation.js` decides: the Content preference must be one of
+  `preferableStorageTypes()` (so never Local, nor IPFS Remote Pinning, which needs an endpoint each time), and the
+  anchoring preference one of the available anchor types other than `WALLET_GUIDED_ANCHOR_TYPES` (Bitcoin, Base), which
+  are made through their wallet steps in Details. The view reads both preferences once from `roleProviderPreferenceStore`
+  when it opens.
+- The anchoring "Use Preferred Provider" button is replaced by "Anchor on …" in the same place; the Content one stays in
+  Details → Placements & IPFS, now joined by "Store on …" in Distribution. Announcement / Discovery is unchanged: its
+  substrate picker is already seeded from the saved preference.
+- Tests: `tests/PreferredDistributionChoice.test.js`; `tests/PublicationsPageLayoutBrowser.test.js` covers a usable
+  storage preference (button, folded options, the click reaching the preferred trigger), a Bitcoin anchoring
+  preference (no button, options open, hint), a Steem one, and no storage preference.

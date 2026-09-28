@@ -97,11 +97,12 @@ after a reload.
 ## The Publications page
 
 Open **Publications** in the top bar. It lists every signed publication this
-device has cataloged, yours or a peer's. At the top, the folded **Wallet,
+device has cataloged, yours or a peer's. At the bottom, the folded **Wallet,
 Archive & Publisher Tools** panel holds page-wide tools in three tabs:
 **Blockchain Anchoring**, **Archive Tools** and **References &
 Achievements** (see guides [11](11-EvidenceAndStorage.md) and
-[12](12-ArchiveAndLeaderboards.md)).
+[12](12-ArchiveAndLeaderboards.md)). The link to it in the page's intro, and
+in any step that needs a wallet observed first, opens it for you.
 
 Each publication card shows:
 
@@ -122,9 +123,11 @@ Each publication card shows:
 
 Below that, two folded sections:
 
-- **Distribution** — the buttons that announce the publication, store its
-  content (**Create … Placement**) and anchor it (**Create … Anchor**), each
-  with a **Configure** link and **Use Preferred Provider**. See
+- **Distribution** — announce the publication, store its content and anchor
+  it. Storing and anchoring each lead with one button for the provider you
+  saved under **Configure** (**Store on IPFS**, **Anchor on Steem**), with
+  every other provider folded under **Other … options**. Without a saved
+  provider it can use, all the options show instead. See
   [Evidence & Storage](11-EvidenceAndStorage.md).
 - **Details**, in four tabs:
 

@@ -126,7 +126,8 @@ export const STORAGE_TYPE_LABELS = {
     local: 'Local',
     ipfs: 'IPFS',
     ar: 'Arweave',
-    steem: 'Steem'
+    steem: 'Steem',
+    'remote-pinning': 'IPFS (Remote Pinning)'
 };
 
 export function humanizeStorageType(storage) {
@@ -142,6 +143,23 @@ export const ANCHOR_TYPE_LABELS = {
     arweave: 'Arweave',
     steem: 'Steem'
 };
+
+// Anchor types made through their own wallet steps (transaction plan, review,
+// signing, broadcast) in a card's Details, never by one click.
+export const WALLET_GUIDED_ANCHOR_TYPES = Object.freeze(['bitcoin-op-return', 'base']);
+
+// Whether a Distribution role can offer one button for the person's saved
+// preferred provider: `{ providerKey, savedKey, reason }`. providerKey is the
+// saved key when it can be used here, else null with a reason: 'none' (nothing
+// saved), 'unavailable' (not offered on this device) or 'wallet-guided' (made
+// through wallet steps instead). Only ever the person's own saved choice;
+// nothing is picked for them.
+export function preferredDistributionChoice(savedKey, availableKeys, { walletGuidedKeys = [] } = {}) {
+    if (typeof savedKey !== 'string' || !savedKey) return { providerKey: null, savedKey: null, reason: 'none' };
+    if (!Array.isArray(availableKeys) || !availableKeys.includes(savedKey)) return { providerKey: null, savedKey, reason: 'unavailable' };
+    if (walletGuidedKeys.includes(savedKey)) return { providerKey: null, savedKey, reason: 'wallet-guided' };
+    return { providerKey: savedKey, savedKey, reason: null };
+}
 
 export function humanizeAnchorType(anchorType) {
     return ANCHOR_TYPE_LABELS[anchorType] || humanizeContentKind(anchorType);

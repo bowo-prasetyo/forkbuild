@@ -1,4 +1,4 @@
-import { reactive, ref, computed, onMounted, onBeforeUnmount, inject } from 'vue';
+import { reactive, ref, computed, nextTick, onMounted, onBeforeUnmount, inject } from 'vue';
 import { PeerLifecycleState } from '../../peer/PeerLifecycleState.js';
 import { resolveSavedProviderDefault } from '../../application/settings/SavedProviderDefaultChoice.js';
 import { PublicationResolutionOutcome } from '../../application/publication/PublicationResolutionOutcome.js';
@@ -44,8 +44,10 @@ import { BaseTransactionBroadcastState } from '../../application/anchoring/base/
 import { BaseTransactionInclusionObservationState } from '../../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
 import { isLegacyContentHash } from '../../serializer/contentHash.js';
+import { RoleProviderRole } from '../../core/RoleProviderRole.js';
 import {
     humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, OUTCOME_BADGE_CLASSES, republishAdviceFor,
+    preferredDistributionChoice, WALLET_GUIDED_ANCHOR_TYPES,
     EVIDENCE_BADGE_CLASSES
 } from './decentralizedPublications/presentation.js';
 import { useBaseAnchoring } from './decentralizedPublications/useBaseAnchoring.js';
@@ -107,6 +109,17 @@ export default {
         const publicationsToolsTab = ref('anchoring');
         function setPublicationsToolsTab(tab) {
             publicationsToolsTab.value = tab;
+        }
+        // The tools panel sits at the bottom of the page. Opens it on `tab`
+        // and scrolls to it; the panel's own state (wallets, funding) is kept
+        // either way, since it only folds.
+        const publicationsToolsOpen = ref(false);
+        async function openPublicationsTools(tab) {
+            setPublicationsToolsTab(tab);
+            publicationsToolsOpen.value = true;
+            await nextTick();
+            const panel = typeof document !== 'undefined' ? document.getElementById('publications-tools') : null;
+            if (panel && typeof panel.scrollIntoView === 'function') panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         const catalog = inject('publicationCatalog');
@@ -170,6 +183,41 @@ export default {
         const availableAnchorTypes = creationCoordinator ? creationCoordinator.availableAnchorTypes() : [];
         // Same for storage types and "Create Placement".
         const availableStorageTypes = placementCreationCoordinator ? placementCreationCoordinator.availableStorageTypes() : [];
+
+        // The person's saved Content and Proof/Anchoring providers, read once
+        // (changing them means leaving for Settings, which remounts this
+        // page). When one can be used here, a card's Distribution section
+        // leads with a single button for it and folds the per-type cards;
+        // otherwise it shows the cards and says why. Nothing is chosen for
+        // the person: the button only ever uses their own saved choice.
+        const roleProviderPreferenceStore = inject('roleProviderPreferenceStore', null);
+        function savedProviderKey(role) {
+            try {
+                const preference = roleProviderPreferenceStore ? roleProviderPreferenceStore.get(role) : null;
+                return preference ? preference.providerKey : null;
+            } catch {
+                return null;
+            }
+        }
+        const contentPreference = preferredDistributionChoice(
+            savedProviderKey(RoleProviderRole.CONTENT),
+            preferredPlacementCreationCoordinator && typeof preferredPlacementCreationCoordinator.preferableStorageTypes === 'function'
+                ? preferredPlacementCreationCoordinator.preferableStorageTypes() : []
+        );
+        const anchorPreference = preferredDistributionChoice(
+            savedProviderKey(RoleProviderRole.PROOF_AND_ANCHORING),
+            preferredAnchorCreationCoordinator ? availableAnchorTypes : [],
+            { walletGuidedKeys: WALLET_GUIDED_ANCHOR_TYPES }
+        );
+        function preferenceHint(choice, noun, name) {
+            if (choice.reason === 'unavailable') return `Your preferred ${noun}, ${name(choice.savedKey)}, can't be used with one click here; use the options below.`;
+            if (choice.reason === 'wallet-guided') {
+                return `Your preferred ${noun}, ${name(choice.savedKey)}, is anchored through its wallet steps in this card's Details → Decentralization & Evidence tab.`;
+            }
+            return `No preferred ${noun} is set. Choose one under Configure to get a single button here.`;
+        }
+        const contentPreferenceHint = preferenceHint(contentPreference, 'storage', humanizeStorageType);
+        const anchorPreferenceHint = preferenceHint(anchorPreference, 'anchoring provider', humanizeAnchorType);
 
         const entries = reactive([]);
         const loading = ref(true);
@@ -880,6 +928,15 @@ export default {
             await refreshList();
         }
 
+        function preferredStoreButtonLabel(entry) {
+            return preferredPlacementCreationView(entry).state === 'creating'
+                ? 'Storing…' : `Store on ${humanizeStorageType(contentPreference.providerKey)}`;
+        }
+        function preferredAnchorButtonLabel(entry) {
+            return preferredCreationView(entry).state === 'creating'
+                ? 'Anchoring…' : `Anchor on ${humanizeAnchorType(anchorPreference.providerKey)}`;
+        }
+
         // A name for the card and the batch-anchor picker, read from content
         // that passed its check: a Publication's title or a place name
         // claim's name. Null otherwise (not checked, unavailable, failed, or
@@ -956,11 +1013,14 @@ export default {
         });
 
         return {
+            publicationsToolsOpen, openPublicationsTools,
             entries, loading, retrievalPeers, retrievalPeerOptions, retrievalPeerLabel, availableAnchorTypes,
             humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck, usableEntries, failedEntries, anyRetrievable,
             confirmingRemoveAllFailed, removeFailedEntry, removeAllFailedEntries, publicationTitle,
             isOwnLegacyEntry, ownLegacyCount, ownLegacyRepublishAdvice,
+            contentPreference, anchorPreference, contentPreferenceHint, anchorPreferenceHint,
+            preferredStoreButtonLabel, preferredAnchorButtonLabel,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel, verificationNote, creationFinality,
             preferredCreationFinality, batchAnchorTypes, batchAnchoring, batchSelectedIds, batchLimit,
@@ -1135,44 +1195,16 @@ export default {
             <p class="form-hint form-hint--neutral">
                 Every signed publication this device has seen — its own, or one a connected
                 <router-link to="/peers">peer</router-link> announced. Each status is checked fresh when the
-                page opens: being listed never means the content is on this device.
+                page opens: being listed never means the content is on this device. Wallets, archives
+                and publisher tools are in
+                <button type="button" class="inline-link-btn" @click="openPublicationsTools('anchoring')">Wallet, Archive &amp; Publisher Tools</button>
+                at the bottom of the page.
             </p>
             <p v-if="retrievalPeers.length === 0 && anyRetrievable" class="form-hint form-hint--neutral">
                 No peer is connected, so "Retrieve from Peers" can't fetch missing content. Connect to one
                 from <router-link to="/peers">Peers</router-link>.
             </p>
 
-            <!-- Page-level tools, collapsed so the publication list stays on
-                 screen. -->
-            <details class="publications-tools-panel">
-                <summary class="publications-tools-panel-summary">Wallet, Archive &amp; Publisher Tools</summary>
-
-                <!-- Tab panels use v-show so card state survives tab switches. -->
-                <div class="publications-tools-tabs" role="tablist">
-                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'anchoring'"
-                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'anchoring' }]"
-                            @click="setPublicationsToolsTab('anchoring')">
-                        Blockchain Anchoring
-                    </button>
-                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'archive'"
-                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'archive' }]"
-                            @click="setPublicationsToolsTab('archive')">
-                        Archive Tools
-                    </button>
-                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'connections'"
-                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'connections' }]"
-                            @click="setPublicationsToolsTab('connections')">
-                        References &amp; Achievements
-                    </button>
-                </div>
-
-            ${anchoringToolsTabTemplate}
-
-            ${archiveToolsTabTemplate}
-
-            ${connectionsToolsTabTemplate}
-
-            </details>
 
             <p v-if="loading" class="locations-panel-empty">Checking cataloged publications…</p>
             <p v-else-if="entries.length === 0" class="locations-panel-empty">
@@ -1368,6 +1400,41 @@ export default {
                         </div>
                     </div>
                 </div>
+            </details>
+
+            <!-- Page-level tools, at the bottom and collapsed so the
+                 publications come first. openPublicationsTools() opens it on
+                 a tab and scrolls to it, for the per-publication steps that
+                 need a wallet observed here first. -->
+            <details id="publications-tools" class="publications-tools-panel" :open="publicationsToolsOpen"
+                     @toggle="publicationsToolsOpen = $event.target.open">
+                <summary class="publications-tools-panel-summary">Wallet, Archive &amp; Publisher Tools</summary>
+
+                <!-- Tab panels use v-show so card state survives tab switches. -->
+                <div class="publications-tools-tabs" role="tablist">
+                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'anchoring'"
+                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'anchoring' }]"
+                            @click="setPublicationsToolsTab('anchoring')">
+                        Blockchain Anchoring
+                    </button>
+                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'archive'"
+                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'archive' }]"
+                            @click="setPublicationsToolsTab('archive')">
+                        Archive Tools
+                    </button>
+                    <button type="button" role="tab" :aria-selected="publicationsToolsTab === 'connections'"
+                            :class="['publications-tools-tab', { 'publications-tools-tab--active': publicationsToolsTab === 'connections' }]"
+                            @click="setPublicationsToolsTab('connections')">
+                        References &amp; Achievements
+                    </button>
+                </div>
+
+            ${anchoringToolsTabTemplate}
+
+            ${archiveToolsTabTemplate}
+
+            ${connectionsToolsTabTemplate}
+
             </details>
         </section>
     `

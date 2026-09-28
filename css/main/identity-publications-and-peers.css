@@ -99,10 +99,9 @@
    two different views/locations. Reuses .evidence-list/.evidence-anchor-card/
    .evidence-convergence-title wholesale. Collapsible exactly like
    .identity-mgmt-card-details below (combined with that class on the same
-   <details> element for the shared border/summary-arrow treatment) — the
-   `open` attribute is what keeps these primary actions visible on first
-   load; the flex layout here is the one property that class doesn't
-   already supply. */
+   <details> element for the shared border/summary-arrow treatment). It
+   starts folded; the flex layout here is the one property that class
+   doesn't already supply. */
 .identity-mgmt-distribution {
     display: flex;
     flex-direction: column;
@@ -113,6 +112,25 @@
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
+}
+
+/* A role's per-type cards, folded under its preferred-provider button:
+   a smaller summary than the card's own sections, the same arrow, and room
+   before the next role. */
+.identity-mgmt-distribution-options {
+    margin-bottom: 0.9rem;
+}
+
+.identity-mgmt-distribution-options > summary {
+    font-size: 0.85rem;
+}
+
+.identity-mgmt-distribution-options[open] > .identity-mgmt-card-details-summary::before {
+    transform: rotate(90deg);
+}
+
+.identity-mgmt-distribution-options[open] > summary {
+    margin-bottom: 0.4rem;
 }
 
 /* 0.9.649 — Align Publications with the Application's Identity-Management

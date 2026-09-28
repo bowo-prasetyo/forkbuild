@@ -122,6 +122,42 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                 <span class="evidence-convergence-title">Content</span>
                                 <router-link to="/settings/content-provider" class="action-btn action-btn--secondary">Configure</router-link>
                             </div>
+                            <!-- One button for the saved preferred storage
+                                 (the person's own choice, named); the
+                                 per-backend cards fold below it. Without a
+                                 usable preference the cards show open and
+                                 the hint says why. -->
+                            <div v-if="contentPreference.providerKey" class="evidence-discovery">
+                                <p class="form-hint form-hint--neutral">
+                                    Stores this publication's content on <strong>{{ humanizeStorageType(contentPreference.providerKey) }}</strong>,
+                                    your preferred storage.
+                                </p>
+                                <div class="evidence-discovery-header">
+                                    <button class="action-btn action-btn--primary"
+                                            :disabled="preferredPlacementCreationView(entry).state === 'creating'"
+                                            @click="createPreferredPlacement(entry)">
+                                        {{ preferredStoreButtonLabel(entry) }}
+                                    </button>
+                                    <span v-if="preferredPlacementCreationView(entry).label" class="peer-badge" :class="preferredPlacementCreationBadgeClass(entry)">
+                                        {{ preferredPlacementCreationView(entry).label }}
+                                    </span>
+                                </div>
+                                <p v-if="preferredPlacementCreationView(entry).message" class="form-hint form-hint--neutral">
+                                    {{ preferredPlacementCreationView(entry).message }}
+                                </p>
+                                <p v-if="preferredPlacementCreationView(entry).reason" class="form-hint form-hint--neutral">
+                                    {{ preferredPlacementCreationView(entry).reason }}
+                                </p>
+                                <dl v-if="preferredPlacementCreationView(entry).placement" class="evidence-fields">
+                                    <div class="evidence-field"><dt>Locator</dt><dd>{{ preferredPlacementCreationView(entry).placement.locator }}</dd></div>
+                                    <div class="evidence-field"><dt>Content hash</dt><dd>{{ preferredPlacementCreationView(entry).placement.contentHash }}</dd></div>
+                                </dl>
+                            </div>
+                            <p v-else class="form-hint form-hint--neutral">{{ contentPreferenceHint }}</p>
+                            <details class="identity-mgmt-distribution-options" :open="!contentPreference.providerKey">
+                                <summary class="identity-mgmt-card-details-summary">
+                                    {{ contentPreference.providerKey ? 'Other storage options' : 'Storage options' }} ({{ availableStorageTypes.length }})
+                                </summary>
                             <div class="evidence-list">
                                 <div v-for="storage in availableStorageTypes" :key="storage" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
@@ -149,20 +185,61 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                     </div>
                                 </div>
                             </div>
+                            </details>
                         </div>
 
-                        <!-- Proof / Anchoring: one card per available
-                             anchorType. Configure sets the role-wide preferred
-                             provider; wallet state still renders inline. -->
+                        <!-- Proof / Anchoring: one button for the saved
+                             preferred provider (the person's own choice,
+                             named; never Bitcoin or Base, which take wallet
+                             steps), then one card per available anchorType,
+                             folded when that button is shown. -->
                         <div v-if="availableAnchorTypes.length > 0" class="identity-mgmt-distribution-role">
                             <div class="evidence-discovery-header">
                                 <span class="evidence-convergence-title">Proof / Anchoring</span>
                                 <router-link to="/settings/anchor-provider" class="action-btn action-btn--secondary">Configure</router-link>
                             </div>
+                            <!-- Resolves the saved PROOF_AND_ANCHORING
+                                 preference on every click; never offers Base. -->
+                            <div v-if="preferredAnchorCreationCoordinator" class="evidence-discovery">
+                                <template v-if="anchorPreference.providerKey">
+                                    <p class="form-hint form-hint--neutral">
+                                        Records this publication's content hash on <strong>{{ humanizeAnchorType(anchorPreference.providerKey) }}</strong>,
+                                        your preferred anchoring provider.
+                                    </p>
+                                    <div class="evidence-discovery-header">
+                                        <button class="action-btn action-btn--primary"
+                                                :disabled="preferredCreationView(entry).state === 'creating'"
+                                                @click="createPreferredAnchor(entry)">
+                                            {{ preferredAnchorButtonLabel(entry) }}
+                                        </button>
+                                        <span v-if="preferredCreationView(entry).label" class="peer-badge" :class="preferredCreationBadgeClass(entry)">
+                                            {{ preferredCreationView(entry).label }}
+                                        </span>
+                                    </div>
+                                    <p v-if="preferredCreationView(entry).message" class="form-hint form-hint--neutral">
+                                        {{ preferredCreationView(entry).message }}
+                                    </p>
+                                    <p v-if="preferredCreationView(entry).reason" class="form-hint form-hint--neutral">
+                                        {{ preferredCreationView(entry).reason }}
+                                    </p>
+                                    <p v-if="preferredCreationFinality(entry)" class="form-hint form-hint--neutral">
+                                        <strong>{{ preferredCreationFinality(entry).label }}:</strong> {{ preferredCreationFinality(entry).message }}
+                                    </p>
+                                    <dl v-if="preferredCreationView(entry).anchor" class="evidence-fields">
+                                        <div class="evidence-field"><dt>Transaction</dt><dd>{{ preferredCreationView(entry).anchor.locator }}</dd></div>
+                                        <div class="evidence-field"><dt>Content hash</dt><dd>{{ preferredCreationView(entry).anchor.contentHash }}</dd></div>
+                                    </dl>
+                                </template>
+                                <p v-else class="form-hint form-hint--neutral">{{ anchorPreferenceHint }}</p>
+                            </div>
+                            <details class="identity-mgmt-distribution-options" :open="!anchorPreference.providerKey">
+                                <summary class="identity-mgmt-card-details-summary">
+                                    {{ anchorPreference.providerKey ? 'Other anchoring options' : 'Anchoring options' }} ({{ availableAnchorTypes.length }})
+                                </summary>
                             <!-- The generic loop can't run the wallet-guided
                                  Bitcoin pipeline or Base (which needs a
-                                 reviewed plan), so point to those flows further
-                                 down. Each half shows only when its
+                                 reviewed plan), so point to those flows in the
+                                 card's Details. Each half shows only when its
                                  collaborator exists. -->
                             <p v-if="bitcoinWalletConnection || baseAnchorPublisher" class="form-hint form-hint--neutral">
                                 <template v-if="bitcoinWalletConnection">Create Bitcoin Anchor works only after you've
@@ -203,32 +280,6 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                 </div>
                             </div>
 
-                            <!-- Resolves the saved PROOF_AND_ANCHORING
-                                 preference on every click; never offers Base. -->
-                            <div v-if="preferredAnchorCreationCoordinator" class="evidence-discovery">
-                                <div class="evidence-discovery-header">
-                                    <button class="action-btn action-btn--secondary"
-                                            :disabled="preferredCreationView(entry).state === 'creating'"
-                                            @click="createPreferredAnchor(entry)">
-                                        {{ preferredCreationButtonLabel(entry) }}
-                                    </button>
-                                    <span v-if="preferredCreationView(entry).label" class="peer-badge" :class="preferredCreationBadgeClass(entry)">
-                                        {{ preferredCreationView(entry).label }}
-                                    </span>
-                                </div>
-                                <p v-if="preferredCreationView(entry).message" class="form-hint form-hint--neutral">
-                                    {{ preferredCreationView(entry).message }}
-                                </p>
-                                <p v-if="preferredCreationView(entry).reason" class="form-hint form-hint--neutral">
-                                    {{ preferredCreationView(entry).reason }}
-                                </p>
-                                <p v-if="preferredCreationFinality(entry)" class="form-hint form-hint--neutral">
-                                    <strong>{{ preferredCreationFinality(entry).label }}:</strong> {{ preferredCreationFinality(entry).message }}
-                                </p>
-                                <dl v-if="preferredCreationView(entry).anchor" class="evidence-fields">
-                                    <div class="evidence-field"><dt>Transaction</dt><dd>{{ preferredCreationView(entry).anchor.locator }}</dd></div>
-                                    <div class="evidence-field"><dt>Content hash</dt><dd>{{ preferredCreationView(entry).anchor.contentHash }}</dd></div>
-                                </dl>
-                            </div>
+                            </details>
                         </div>
                     </details>`;

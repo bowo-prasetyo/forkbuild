@@ -12,9 +12,9 @@ For what each server learns about you, see [Privacy](../Privacy.md).
 
 | Page | Route | What it sets |
 |---|---|---|
-| **Content Provider** | `/settings/content-provider` | Where **Use Preferred Provider** stores new content, and which IPFS node it goes to — see [below](#content-provider) |
+| **Content Provider** | `/settings/content-provider` | Where **Store on …** and **Use Preferred Provider** store new content, and which IPFS node it goes to — see [below](#content-provider) |
 | **Announcement / Discovery Provider** | `/settings/announcement-discovery-provider` | Where your announcements go by default: Nostr, Arweave or Steem — see [below](#announcement--discovery-provider) |
-| **Proof / Anchoring Provider** *(experimental)* | `/settings/anchor-provider` | Where **Use Preferred Provider** anchors — see [below](#proof--anchoring-provider) |
+| **Proof / Anchoring Provider** *(experimental)* | `/settings/anchor-provider` | Where **Anchor on …** anchors — see [below](#proof--anchoring-provider) |
 | **Arweave Gateway** | `/settings/arweave-gateway` | Gateways for reading Arweave content — see [below](#arweave-gateway) |
 | **IPFS Gateway** | `/settings/ipfs-gateway` | Gateways for reading IPFS content — see [below](#ipfs-gateway) |
 | **Bitcoin Endpoint** *(experimental)* | `/settings/bitcoin-esplora` | The service Bitcoin anchoring uses — see [below](#bitcoin-endpoint) |
@@ -48,7 +48,8 @@ For what each server learns about you, see [Privacy](../Privacy.md).
 
 ## Content Provider
 
-Choose which storage **Use Preferred Provider** creates a Snapshot
+Choose which storage **Store on …** (the first button in a publication's
+**Content** block) and **Use Preferred Provider** create a Snapshot
 Placement on (see
 [Using a preferred provider](11-EvidenceAndStorage.md#using-a-preferred-provider)),
 from the backends this device has registered, and click **Save**. **Local**
@@ -56,9 +57,10 @@ isn't offered, since every publication is already stored on this device.
 
 **IPFS (Remote Pinning)** is always offered. Choosing it pre-selects
 Remote Pinning as the storage in every **Distribute** dialog; you still type
-the endpoint and credential each time. **Use Preferred Provider** itself
-can't use Remote Pinning, so with it saved that button reports **Preferred
-provider not found**.
+the endpoint and credential each time. The preferred-provider buttons can't
+use Remote Pinning: with it saved, the **Content** block shows every backend
+instead of **Store on …**, and **Use Preferred Provider** reports
+**Preferred provider not found**.
 
 A second section, **IPFS Node**, sets the node new IPFS placements are sent
 to. The default is a local Kubo node at `http://127.0.0.1:5001`. Enter
@@ -77,11 +79,12 @@ Finding other people's content always searches all three.
 
 ## Proof / Anchoring Provider
 
-*Experimental.* Choose where **Use Preferred Provider** creates external
-evidence: **Arweave**, **Bitcoin** or **Steem**, whichever this device has
+*Experimental.* Choose where **Anchor on …** (the first button in a
+publication's **Proof / Anchoring** block) creates external evidence: **Arweave**, **Bitcoin** or **Steem**, whichever this device has
 registered. Base is never offered, because every Base anchor needs you to
-review and sign a wallet transaction. Choosing Bitcoin behaves like
-**Create Bitcoin Anchor** and always reports **No anchor was created**; see
+review and sign a wallet transaction. With Bitcoin chosen there's no
+**Anchor on …** button: the block shows every option and points to the
+wallet steps; see
 [The Bitcoin Anchor Pipeline](11-EvidenceAndStorage.md#the-bitcoin-anchor-pipeline)
 for real Bitcoin anchors.
 
