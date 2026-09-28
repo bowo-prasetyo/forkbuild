@@ -14,7 +14,9 @@ import { assert } from './support/Assert.js';
 // publications can be removed from this device after a confirm step. Cards
 // and picker rows are named by the checked content's title when it has one.
 // An old publication one of this device's identities signed is listed first
-// in the failed group, marked as yours, with how to publish it again. The
+// in the failed group, marked as yours, with how to publish it again, and,
+// when this device still has its record, that World's title and a link that
+// opens it in the Editor. The
 // page-wide tools sit below the publications. A card's Distribution section
 // leads with one button for the saved preferred storage or anchoring
 // provider, folding the per-type cards, and shows the cards with a reason
@@ -96,11 +98,32 @@ function distributionRoles(card) {
     return { content: named('Content'), proof: named('Proof / Anchoring') };
 }
 
+// Renders a route object as path?query, as the real router's href would.
+const RouterLinkStub = {
+    props: ['to'],
+    computed: {
+        href() {
+            return typeof this.to === 'string' ? this.to : `${this.to.path}?${new URLSearchParams(this.to.query || {})}`;
+        }
+    },
+    template: '<a :href="href"><slot /></a>'
+};
+
+// This device's own records know the World that 'mine' shared.
+const findOwnSharedPublicationCalls = [];
+const findsMine = {
+    find: async (envelope) => {
+        findOwnSharedPublicationCalls.push(envelope.id);
+        return envelope.id === 'mine' ? { publicationId: 'pub-castle', documentId: 'doc-castle', title: 'My Castle' } : null;
+    }
+};
+
 const host = document.createElement('div');
 document.body.appendChild(host);
 const app = createApp(DecentralizedPublicationsView);
 app.config.warnHandler = () => {};
-app.component('router-link', { props: ['to'], template: '<a :href="String(to)"><slot /></a>' });
+app.component('router-link', RouterLinkStub);
+app.provide('findOwnSharedPublicationUseCase', findsMine);
 app.provide('publicationCatalog', catalog);
 app.provide('publicationResolutionCoordinator', coordinator);
 app.provide('publicationDisplayKindPlugins', {
@@ -149,11 +172,15 @@ const failedCards = failedGroup.querySelectorAll('.identity-mgmt-card');
 assert(failedCards.length === 3, 'each failed publication has a card');
 assert(failedGroup.textContent.includes('1 is yours'), 'the group says how many are yours');
 const [mineCard, ...othersCards] = failedCards;
-assert(mineCard.textContent.includes('Yours') && mineCard.textContent.includes('Share with Peers under it in the Repository'),
+assert(mineCard.textContent.includes('Yours') && mineCard.textContent.includes('Open it in the Editor and publish it again'),
     'your own old publication is listed first, saying how to publish it again');
 assert(!mineCard.textContent.includes(LEGACY_HASH_REASON), "instead of telling you to ask its author");
-const mineLink = [...mineCard.querySelectorAll('a')].find((link) => link.textContent.trim() === 'Open Repository');
-assert(mineLink && mineLink.getAttribute('href') === '/repository', 'with a link to where you do it');
+assert(mineCard.querySelector('.identity-mgmt-name').textContent.trim() === 'My Castle'
+    && mineCard.querySelector('.identity-mgmt-status').textContent.trim().startsWith('Publication ·'),
+    "it is named by your own record's title, its kind moved to the line below");
+const mineLink = [...mineCard.querySelectorAll('a')].find((link) => link.textContent.trim() === 'Open in Editor');
+assert(mineLink && mineLink.getAttribute('href') === '/editor?load=doc-castle', 'with a link that opens that World in the Editor');
+assert(findOwnSharedPublicationCalls.join() === 'mine', "only your own old entries are looked up, other people's never");
 for (const card of othersCards) {
     assert(!card.textContent.includes('Yours') && !card.querySelector('a'), "someone else's gets no such advice");
 }
@@ -245,7 +272,7 @@ console.log('✓ the Publications page separates usable publications from failed
     document.body.appendChild(secondHost);
     const second = createApp(DecentralizedPublicationsView);
     second.config.warnHandler = () => {};
-    second.component('router-link', { props: ['to'], template: '<a :href="String(to)"><slot /></a>' });
+    second.component('router-link', RouterLinkStub);
     second.provide('publicationCatalog', catalog);
     second.provide('publicationResolutionCoordinator', coordinator);
     second.provide('publicationDisplayKindPlugins', { 'forkbuild.structure': { describe: () => 'a structure' } });
@@ -274,4 +301,40 @@ console.log('✓ the Publications page separates usable publications from failed
     second.unmount();
     secondHost.remove();
     console.log('✓ Distribution leads with the saved preferred provider, or shows every option when there is none');
+}
+
+// Your old entry again, when this device has no record of its World (it was
+// unpublished since, say): the card falls back to the kind's own advice.
+{
+    publications.push(fakePublication('mine', '0000000c', { contentKind: 'forkbuild.publication', publisherId: 'did:key:zme' }));
+    const thirdHost = document.createElement('div');
+    document.body.appendChild(thirdHost);
+    const third = createApp(DecentralizedPublicationsView);
+    third.config.warnHandler = () => {};
+    third.component('router-link', RouterLinkStub);
+    third.provide('publicationCatalog', catalog);
+    third.provide('publicationResolutionCoordinator', coordinator);
+    third.provide('publicationDisplayKindPlugins', {
+        'forkbuild.structure': { describe: () => 'a structure' },
+        'forkbuild.publication': publicationKindPlugin
+    });
+    third.provide('identityUseCase', { listIdentities: () => [{ identityId: 'did:key:zme' }] });
+    third.provide('findOwnSharedPublicationUseCase', { find: async () => null });
+    third.provide('peerSessionManager', { listPeers: () => [] });
+    third.provide('publicationAnchorCreationCoordinator', creationCoordinator);
+    third.provide('publicationEvidenceCoordinator', null);
+    third.provide('publicationPeerExchange', null);
+    third.provide('publicationPeerContentExchange', null);
+    third.mount(thirdHost);
+    await settle();
+
+    const card = [...thirdHost.querySelectorAll('.identity-mgmt-card')].find((candidate) => candidate.textContent.includes('Yours'));
+    assert(card && card.querySelector('.identity-mgmt-name').textContent.trim() === 'Publication', 'without a record, the card keeps its kind as its name');
+    assert(card.textContent.includes('Share with Peers under it in the Repository'), "and the kind's own advice");
+    const link = [...card.querySelectorAll('a')].find((candidate) => candidate.textContent.trim() === 'Open Repository');
+    assert(link && link.getAttribute('href') === '/repository' && !card.textContent.includes('Open in Editor'), 'with a link to the Repository, not the Editor');
+
+    third.unmount();
+    thirdHost.remove();
+    console.log('✓ your own old World opens in the Editor when this device still has its record');
 }

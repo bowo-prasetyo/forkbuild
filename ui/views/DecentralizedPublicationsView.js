@@ -135,6 +135,10 @@ export default {
         // Only to tell which failed publications this device's identities
         // signed; without it none are marked as yours.
         const identityUseCase = inject('identityUseCase', null);
+        // Finds which of this device's own Worlds an old entry shares, from
+        // this device's own records; without it, such a card only says how
+        // to publish again.
+        const findOwnSharedPublicationUseCase = inject('findOwnSharedPublicationUseCase', null);
         const evidenceCoordinator = inject('publicationEvidenceCoordinator');
         const creationCoordinator = inject('publicationAnchorCreationCoordinator');
         // Optional services inject as null (e.g. in a test harness); the UI
@@ -336,6 +340,25 @@ export default {
             } finally {
                 entry.checking = false;
             }
+            await findOwnRecord(entry);
+        }
+
+        // For an entry that failed only because one of this device's
+        // identities shared it under an old hash: which of its own Worlds it
+        // is ({ publicationId, documentId, title }, from this device's own
+        // record, never the entry's bytes), so the card can open it in the
+        // Editor. Null when there is no such record. Looked up once.
+        async function findOwnRecord(entry) {
+            if (!findOwnSharedPublicationUseCase || entry.ownRecordLookedUp || !isOwnLegacyEntry(entry)) return;
+            entry.ownRecordLookedUp = true;
+            try {
+                entry.ownRecord = await findOwnSharedPublicationUseCase.find(entry.publication);
+            } catch {
+                entry.ownRecord = null;
+            }
+        }
+        function ownRecordEditorRoute(entry) {
+            return { path: '/editor', query: { load: entry.ownRecord.documentId } };
         }
 
         // Rebuilds the entry list from the catalog (local and synchronous),
@@ -367,6 +390,9 @@ export default {
                 detailsTab: 'snapshot',
                 // Whether a failed card is asking "Remove from this device?".
                 confirmingRemoval: false,
+                // See findOwnRecord().
+                ownRecord: null,
+                ownRecordLookedUp: false,
                 evidenceAnchors: [],
                 evidence: null,
                 evidenceExpanded: false,
@@ -1018,7 +1044,7 @@ export default {
             humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck, usableEntries, failedEntries, anyRetrievable,
             confirmingRemoveAllFailed, removeFailedEntry, removeAllFailedEntries, publicationTitle,
-            isOwnLegacyEntry, ownLegacyCount, ownLegacyRepublishAdvice,
+            isOwnLegacyEntry, ownLegacyCount, ownLegacyRepublishAdvice, ownRecordEditorRoute,
             contentPreference, anchorPreference, contentPreferenceHint, anchorPreferenceHint,
             preferredStoreButtonLabel, preferredAnchorButtonLabel,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
@@ -1364,15 +1390,23 @@ export default {
                 <div class="identity-mgmt-list">
                     <div v-for="entry in failedEntries" :key="entry.publication.id" class="identity-mgmt-card">
                         <div class="identity-mgmt-card-header">
-                            <span class="identity-mgmt-name">{{ humanizeContentKind(entry.publication.contentKind) }}</span>
+                            <span class="identity-mgmt-name">{{ (entry.ownRecord && entry.ownRecord.title) || humanizeContentKind(entry.publication.contentKind) }}</span>
                             <span class="peer-badge" :class="badgeClass(entry)">{{ statusLabel(entry) }}</span>
                         </div>
                         <p class="identity-mgmt-status">
-                            Published by {{ shortId(entry.publication.publisherIdentity && entry.publication.publisherIdentity.id) }}
+                            <template v-if="entry.ownRecord && entry.ownRecord.title">{{ humanizeContentKind(entry.publication.contentKind) }} · </template>Published by {{ shortId(entry.publication.publisherIdentity && entry.publication.publisherIdentity.id) }}
                             · received {{ formatWhen(entry.receivedAt) }}
                             · content {{ shortHash(entry.publication.contentReference.hash) }}
                         </p>
-                        <p v-if="isOwnLegacyEntry(entry)" class="form-hint form-hint--neutral">
+                        <!-- Found among this device's own Worlds: open that
+                             World, publish it again, share the new copy. -->
+                        <p v-if="isOwnLegacyEntry(entry) && entry.ownRecord" class="form-hint form-hint--neutral">
+                            <span class="peer-badge peer-badge--pending">Yours</span>
+                            You shared this World before content hashes became SHA-256, so nobody can check it.
+                            Open it in the Editor and publish it again, then click Share with Peers under the new
+                            copy in the Repository.
+                        </p>
+                        <p v-else-if="isOwnLegacyEntry(entry)" class="form-hint form-hint--neutral">
                             <span class="peer-badge peer-badge--pending">Yours</span>
                             You published this before content hashes became SHA-256, so nobody can check it.
                             {{ ownLegacyRepublishAdvice(entry).text }}
@@ -1381,7 +1415,11 @@ export default {
                             {{ entry.view.reason }}
                         </p>
                         <div class="identity-mgmt-actions">
-                            <router-link v-if="isOwnLegacyEntry(entry) && ownLegacyRepublishAdvice(entry).route"
+                            <router-link v-if="isOwnLegacyEntry(entry) && entry.ownRecord"
+                                         :to="ownRecordEditorRoute(entry)" class="action-btn action-btn--primary">
+                                Open in Editor
+                            </router-link>
+                            <router-link v-else-if="isOwnLegacyEntry(entry) && ownLegacyRepublishAdvice(entry).route"
                                          :to="ownLegacyRepublishAdvice(entry).route" class="action-btn action-btn--primary">
                                 {{ ownLegacyRepublishAdvice(entry).routeLabel }}
                             </router-link>

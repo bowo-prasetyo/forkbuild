@@ -121,9 +121,18 @@ export class LocalPublisherProvider extends PublisherProvider {
     // (FNV-1a) content hash be trusted, because the bytes never came from
     // anyone else.
     isOwnPublication(publication) {
-        if (!publication || !publication.id || !publication.contentHash) return false;
+        return this.findOwnPublication(publication) !== null;
+    }
+
+    // This device's own record of `publication` (same id and content hash,
+    // see isOwnPublication()) as a Publication, or null. Everything read
+    // from the result comes from this device's own record, never from
+    // whoever supplied `publication`.
+    findOwnPublication(publication) {
+        if (!publication || !publication.id || !publication.contentHash) return null;
         const records = this._storageProvider.load(PUBLICATIONS_KEY) || [];
-        return records.some((record) => record.id === publication.id && record.contentHash === publication.contentHash);
+        const record = records.find((candidate) => candidate.id === publication.id && candidate.contentHash === publication.contentHash);
+        return record ? Publication.fromJSON(record) : null;
     }
 
     loadSnapshot(publicationId) {
