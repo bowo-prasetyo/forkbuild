@@ -288,7 +288,7 @@ async function run() {
             `1. a forkbuild.publication envelope dispatches to the Publication describe() (${publicationView.contentSummary})`);
 
         // D2. forkbuild.blueprint-attribution — real, signed, self-describing.
-        let attribution = new BlueprintAttribution({ fingerprint: 'bp:isolation-check-333', authorIdentityId: alice.getSigningIdentity().id });
+        let attribution = new BlueprintAttribution({ fingerprint: 'bp2:f4f7eba5585a69b51aa365835f29f0207e027712995b5c3f9f4dfd1f737b674d', authorIdentityId: alice.getSigningIdentity().id });
         attribution = attribution.withSignature(alice.signCanonical(attribution.getSigningDescriptor()));
         const attributionEnvelope = await resolver.publish({
             content: attribution, contentKind: BLUEPRINT_ATTRIBUTION_KIND, contentSchemaVersion: ATTRIBUTION_SCHEMA_VERSION, identityProvider: alice

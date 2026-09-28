@@ -360,8 +360,13 @@ hash, which can be forged: `verify()` refuses one unless the caller passes
 (LocalPublisherProvider's own snapshots, `isOwnPublication()`, and
 crash-recovery checkpoints). FNV-1a (`computeFnv1a32()`) is still used
 where a value must stay stable and a signature covers the real data: the
-deterministic grid position, PlacementRecord's own hash, a Signature's
-`signedHash` pre-check, and blueprint fingerprints.
+deterministic grid position, PlacementRecord's own hash and a Signature's
+`signedHash` pre-check. Blueprint fingerprints, which signed authorship
+and lineage claims name designs by, are `bp2:` plus SHA-256; claims made
+under the old `bp:` (FNV-1a) fingerprints are counted apart, never shown
+as authorship or lineage, and refused on import, and their author can
+re-sign one for a design they are looking at
+(`BlueprintAttributionUseCase#resignLegacyAttribution()`).
 
 Stored, published and exported documents use document schema 2, which
 keeps each building's bricks as one table (core/BrickTable.js: palettes of

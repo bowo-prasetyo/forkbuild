@@ -166,7 +166,7 @@ async function run() {
         const bobExchange = new PublicationExchange(bobCatalog, verifier);
 
         const attribution = new BlueprintAttribution({
-            fingerprint: 'bp:farmstead-1',
+            fingerprint: 'bp2:1bc5a12c9226817f3d789596f82fc345c29dd9a16a377541ef74770636951b8a',
             authorIdentityId: alice.getSigningIdentity().id
         });
         const signedAttribution = attribution.withSignature(
@@ -194,7 +194,7 @@ async function run() {
         assert(beforeResult.outcome === PublicationResolutionOutcome.CONTENT_UNAVAILABLE,
             '3. resolving a cataloged publication with no local bytes yet reports CONTENT_UNAVAILABLE');
         assert(bobCatalog.has(publication.id), '4. a CONTENT_UNAVAILABLE resolution never evicts the catalog entry');
-        assert(bobAttributionStore.list('bp:farmstead-1').length === 0,
+        assert(bobAttributionStore.list('bp2:1bc5a12c9226817f3d789596f82fc345c29dd9a16a377541ef74770636951b8a').length === 0,
             '5. nothing was stored on the domain side for an unresolved publication');
 
         // The bytes propagate — exactly the same "bridge two replicas by
@@ -207,9 +207,9 @@ async function run() {
         const afterResult = await bobResolver.resolve(envelope, bobKindPlugin);
         assert(afterResult.outcome === PublicationResolutionOutcome.RESOLVED,
             '6. the identical cataloged publication now resolves once its bytes are locally available');
-        assert(afterResult.content.attribution.fingerprint === 'bp:farmstead-1',
+        assert(afterResult.content.attribution.fingerprint === 'bp2:1bc5a12c9226817f3d789596f82fc345c29dd9a16a377541ef74770636951b8a',
             '7. the resolved content is the correct attribution');
-        assert(bobAttributionStore.has('bp:farmstead-1', signedAttribution.id),
+        assert(bobAttributionStore.has('bp2:1bc5a12c9226817f3d789596f82fc345c29dd9a16a377541ef74770636951b8a', signedAttribution.id),
             '8. resolving now stores the attribution on the domain side');
 
         // The catalog entry itself never changed shape across the

@@ -1,5 +1,5 @@
 import { BlueprintLineageClaim } from '../../core/BlueprintLineageClaim.js';
-import { blueprintFingerprintsEqual } from '../../core/BlueprintFingerprint.js';
+import { LEGACY_BLUEPRINT_FINGERPRINT_REASON, blueprintFingerprintsEqual, isCurrentBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
 import { validateBlueprintLineageClaimPublication } from './BlueprintLineageClaimPublicationValidator.js';
 
 // 0.6.8 — Blueprint Lineage & Revision Discovery.
@@ -64,6 +64,9 @@ export class BlueprintLineageExchange {
     // replica already knew about, never an error.
     importClaim(pkg, { expectedSourceFingerprint = null, expectedDerivedFingerprint = null } = {}) {
         validateBlueprintLineageClaimPublication(pkg);
+        if (!isCurrentBlueprintFingerprint(pkg.sourceFingerprint) || !isCurrentBlueprintFingerprint(pkg.derivedFingerprint)) {
+            throw new Error(`BlueprintLineageExchange: refusing to import this lineage claim — ${LEGACY_BLUEPRINT_FINGERPRINT_REASON}`);
+        }
 
         const claim = BlueprintLineageClaim.fromJSON(pkg);
         const result = this._verifier.verifyBlueprintLineageClaim(claim.toJSON());

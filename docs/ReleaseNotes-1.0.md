@@ -94,7 +94,10 @@ over)
   (GHSA-8ggw-xpjf-w4rh). Publications are now hashed with SHA-256. Your own
   earlier publications still open on your device, but other people's
   publications from before this change are refused until their authors
-  publish them again.
+  publish them again. Blueprint fingerprints, which authorship and lineage
+  claims name designs by, are SHA-256 too: older claims are no longer
+  counted or imported, and you can re-sign your own from a structure's
+  **Info** panel.
 - **Storage:** data is kept in an IndexedDB database instead of
   `localStorage`, so it is no longer limited to a few megabytes; existing
   data moves over on first start. Published content and snapshots stay on

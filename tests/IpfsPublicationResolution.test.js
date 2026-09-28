@@ -97,7 +97,7 @@ async function run() {
     // ---------------------------------------------------------------
     // Alice publishes a BlueprintAttribution ...
     // ---------------------------------------------------------------
-    let attribution = new BlueprintAttribution({ fingerprint: 'bp:farmstead-1', authorIdentityId: alice.getSigningIdentity().id });
+    let attribution = new BlueprintAttribution({ fingerprint: 'bp2:1bc5a12c9226817f3d789596f82fc345c29dd9a16a377541ef74770636951b8a', authorIdentityId: alice.getSigningIdentity().id });
     attribution = attribution.withSignature(alice.signCanonical(attribution.getSigningDescriptor()));
     const attributionPublication = await aliceResolver.publish({
         content: attribution,
@@ -144,8 +144,8 @@ async function run() {
 
     const attributionResult = await bobResolver.resolve(attributionJson, attributionKind);
     assert(attributionResult.outcome === PublicationResolutionOutcome.RESOLVED, '2. Bob resolves the attribution');
-    assert(attributionResult.content.attribution.fingerprint === 'bp:farmstead-1', '3. resolved attribution carries the correct fingerprint');
-    assert(bobAttributionStore.has('bp:farmstead-1', attribution.id), '4. the attribution is now in Bob\'s own store');
+    assert(attributionResult.content.attribution.fingerprint === 'bp2:1bc5a12c9226817f3d789596f82fc345c29dd9a16a377541ef74770636951b8a', '3. resolved attribution carries the correct fingerprint');
+    assert(bobAttributionStore.has('bp2:1bc5a12c9226817f3d789596f82fc345c29dd9a16a377541ef74770636951b8a', attribution.id), '4. the attribution is now in Bob\'s own store');
 
     const namingResult = await bobResolver.resolve(namingJson, namingKind);
     assert(namingResult.outcome === PublicationResolutionOutcome.RESOLVED, '5. Bob resolves the naming claim');

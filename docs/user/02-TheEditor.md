@@ -350,6 +350,12 @@ you'll find:
   independently; nobody's claim ever overrides or replaces another's.
 - **Export Attribution** / **Publish to Network** — once you've claimed
   it, share that claim as a file or announce it to your connected peers.
+- **Re-sign for this design** — claims made before 28 September 2026 used an
+  older kind of design fingerprint that a different design can copy, so
+  they no longer count and the panel says how many there are. If one of
+  them is yours and this really is your design, this button signs your
+  claim again. Check the design first: the button appears for any design
+  that shares the old fingerprint.
 
 This is optional, and entirely separate from placing, forking, or sharing
 the structure itself — it exists for situations where you want to attach

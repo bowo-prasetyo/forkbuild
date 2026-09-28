@@ -2009,3 +2009,34 @@ privately as GHSA-8ggw-xpjf-w4rh.
 - Not done: the Editor and Publications page don't yet offer to re-publish a legacy Publication, and blueprint
   fingerprints stay FNV-1a. The mock `SigningIdentity#sign()`/`verify()` used by the unwired delegation code is still
   a mock and must be replaced before delegation is wired.
+
+## Blueprint fingerprints are SHA-256 (unnumbered, 2026-09-28)
+
+**A different design can no longer take over someone's signed authorship or lineage claims.** Signed attribution and
+lineage claims name a design only by its fingerprint, which was `"bp:"` plus 32-bit FNV-1a of the canonical design.
+Three characters in a description made any design match any fingerprint in about 13 ms, so Alice's signed "I made
+this" showed on Mallory's design, and the import check against "the design on file" passed. The content-hash fix
+earlier the same day left fingerprints on FNV-1a because every stored claim is signed over its fingerprint; this entry
+is that transition. Part of GHSA-8ggw-xpjf-w4rh.
+
+- `core/BlueprintFingerprint.js`: `deriveBlueprintFingerprint()` is `"bp2:"` plus SHA-256 (64 hex characters).
+  `deriveLegacyBlueprintFingerprint()` gives the old `"bp:"` value, only to find claims made under it.
+  `isCurrentBlueprintFingerprint()` and `isLegacyBlueprintFingerprint()` tell them apart by prefix and length.
+- Views: `BlueprintAttributionUseCase#communityView()` and `BlueprintLineageUseCase#lineageView()` add
+  `legacyClaims`, the claims under the design's old fingerprint. They are never counted as authors or shown as
+  lineage, because a different design can share that fingerprint.
+- Re-signing: `communityView()` also gives `myLegacyClaim`, and `resignLegacyAttribution(structure)` signs this
+  identity's authorship under the current fingerprint and retracts the old claim. It runs only when a person clicks
+  **Re-sign for this design** in the Structure info panel, which says how many older claims there are: the app never
+  re-signs on its own, since a forged design that matches the old fingerprint would otherwise get signed. A lineage
+  claim involves two designs, so it is declared again with **Derived from this**.
+- Imports: `BlueprintAttributionExchange`, `BlueprintLineageExchange` and the attribution publication kind refuse any
+  claim whose fingerprint isn't current, with a message saying its author needs to sign it again. Blueprint files
+  still import; their older bundled claims are left out, and the import message says how many.
+- Docs: `docs/Architecture.md`, the fingerprint principle (short version and a "Changed by" note), the Editor guide
+  and the release notes.
+- Tests: `tests/BlueprintFingerprintCollisionResistance.test.js` forges a design with Alice's old fingerprint and
+  checks her old claim counts for neither design; that she can re-sign it for her own design only, after which she is
+  the author and the forged design still has none; that old attributions are refused from files and from the network;
+  and that old lineage claims are counted apart, refused on import, and replaced by declaring the lineage again.
+  `tests/BlueprintIdentityAttribution.test.js` now expects `"bp2:"` fingerprints.

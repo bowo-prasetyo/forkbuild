@@ -64,7 +64,7 @@ async function run() {
         const b = farmstead({ id: 'B987' }); // same content, different LOCAL Structure identity
         const fpA = deriveBlueprintFingerprint(a);
         const fpB = deriveBlueprintFingerprint(b);
-        assert(typeof fpA === 'string' && fpA.startsWith('bp:'), 'fingerprint is a "bp:"-prefixed string');
+        assert(typeof fpA === 'string' && /^bp2:[0-9a-f]{64}$/.test(fpA), 'fingerprint is "bp2:" and a SHA-256 hash');
         assert(blueprintFingerprintsEqual(fpA, fpB), 'identical design content fingerprints identically despite different Structure ids');
 
         // Brick ids never participate either.
@@ -120,7 +120,7 @@ async function run() {
 
         assert(blueprintFingerprintsEqual('bp:abc', 'bp:abc'), 'blueprintFingerprintsEqual: identical strings match');
         assert(!blueprintFingerprintsEqual(null, null), 'blueprintFingerprintsEqual: two nulls never "match" — no fingerprint is never proof of sameness');
-        assert(describeBlueprintFingerprint(fpA).startsWith('bp:') && describeBlueprintFingerprint(fpA).length < fpA.length + 1, 'describeBlueprintFingerprint() is a short display form');
+        assert(describeBlueprintFingerprint(fpA).startsWith('bp2:') && describeBlueprintFingerprint(fpA).length < fpA.length + 1, 'describeBlueprintFingerprint() is a short display form');
         assert(describeBlueprintFingerprint(null) === '', 'describeBlueprintFingerprint(null) is the empty string');
     }
     console.log('✓ Section A: core/BlueprintFingerprint.js — order/id-independent, noise-tolerant, sensitive to real design changes');

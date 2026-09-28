@@ -1,5 +1,5 @@
 import { BlueprintAttribution, BLUEPRINT_ATTRIBUTION_KIND } from '../../core/BlueprintAttribution.js';
-import { blueprintFingerprintsEqual } from '../../core/BlueprintFingerprint.js';
+import { LEGACY_BLUEPRINT_FINGERPRINT_REASON, blueprintFingerprintsEqual, isCurrentBlueprintFingerprint } from '../../core/BlueprintFingerprint.js';
 import { validateBlueprintAttributionPublication } from './BlueprintAttributionPublicationValidator.js';
 
 // 0.7.0 — Decentralized Publication Protocol & Content Addressing.
@@ -59,6 +59,9 @@ export function createBlueprintAttributionPublicationKind({ verifier, store = nu
         verify: (json) => verifier.verifyBlueprintAttribution(json),
 
         crossCheck: (attribution) => {
+            if (!isCurrentBlueprintFingerprint(attribution.fingerprint)) {
+                throw new Error(`createBlueprintAttributionPublicationKind: refusing to resolve this attribution — ${LEGACY_BLUEPRINT_FINGERPRINT_REASON}`);
+            }
             if (expectedFingerprint && !blueprintFingerprintsEqual(expectedFingerprint, attribution.fingerprint)) {
                 throw new Error('createBlueprintAttributionPublicationKind: refusing to resolve an attribution for a different design than the one on file — its fingerprint does not match, even though its signature verified');
             }

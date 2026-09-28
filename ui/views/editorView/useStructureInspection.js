@@ -72,6 +72,22 @@ export function useStructureInspection({
         }
     }
 
+    // Only on a person's click beside the design: a different design can match
+    // the old fingerprint, so the app never re-signs on its own.
+    function resignInspectedAttribution() {
+        const structure = inspectedStructure.value;
+        if (!structure) {
+            return;
+        }
+        try {
+            blueprintAttributionUseCase.resignLegacyAttribution(structure);
+            inspectedStructureAttribution.value = blueprintAttributionUseCase.communityView(structure);
+            feedback.show(`Signed your authorship of "${structure.name}" again`);
+        } catch (e) {
+            feedback.show(e.message.replace(/^BlueprintAttributionUseCase:\s*/, ''));
+        }
+    }
+
     function exportInspectedAttribution() {
         const attribution = inspectedStructureAttribution.value && inspectedStructureAttribution.value.mine;
         if (!attribution) {
@@ -126,6 +142,6 @@ export function useStructureInspection({
         claimAuthorship, claimLineage, exportInspectedAttribution, exportInspectedStructure, inspectStructure,
         inspectedStructure, inspectedStructureAttribution, inspectedStructureLineage,
         inspectedStructureSimilarityCandidates, inspectedStructureSource, placeInspectedStructure,
-        publishInspectedAttributionToNetwork
+        publishInspectedAttributionToNetwork, resignInspectedAttribution
     };
 }
