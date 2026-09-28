@@ -1,7 +1,13 @@
 # 11 — Evidence & Storage
 
-> **Experimental in ForkBuild 1.0.** Everything here may change or be
-> removed in a later version, and what it produces may not carry over.
+> **Mostly experimental.** Storing content on IPFS or Arweave from a card's
+> **Distribution → Content** block ([Creating a placement](#creating-a-placement)
+> and [Using a preferred provider](#using-a-preferred-provider)) is a regular
+> feature. Everything else here is **Experimental**: external evidence and
+> both wallet pipelines, the Snapshot Placements list, remote IPFS pinning,
+> and Steem. It may change or be removed in a later version, and what it
+> produces may not carry over. The page marks these parts with an
+> **Experimental** badge.
 
 Every card on the **Publications** page (see
 [Publications & External Evidence](09-PublicationsAndEvidence.md)) has
@@ -27,6 +33,8 @@ nothing about when the claim was first made.
 
 ## External Evidence
 
+*Experimental.*
+
 An anchor listed here only means this device holds a validly signed record
 saying "this was recorded externally." Whether the recording really
 happened is checked only when you click **Verify Evidence**. Nothing on the
@@ -36,9 +44,11 @@ when you expand the list.
 ### Creating evidence
 
 In a publication card's **Distribution** section, the **Proof / Anchoring**
-block has a card per kind of evidence this device can create, each with its
-own button: **Create Bitcoin Anchor**, **Create Arweave Anchor** and
-**Create Steem Anchor**. When you've saved a preferred provider, these cards
+block (marked **Experimental**) has a card per kind of evidence one click
+can create, each with its own button: **Create Arweave Anchor** and
+**Create Steem Anchor**. Bitcoin and Base anchors have no such card: they're
+made through their wallet steps in the card's **Details → Decentralization
+& Evidence** tab, and the block says so. When you've saved a preferred provider, these cards
 are folded under **Other anchoring options**, below that provider's own
 button (see [Anchoring on a preferred provider](#anchoring-on-a-preferred-provider)).
 Each records the publication's content hash in a transaction on that
@@ -50,9 +60,8 @@ network, with one of three outcomes:
 | **Recording rejected** | The network was reached and refused. |
 | **No anchor was created** | The network couldn't be reached, or this device can't sign for it. |
 
-- **Create Bitcoin Anchor** always ends in **No anchor was created**: no
-  wallet sits behind this button. Use
-  [The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline) instead.
+- For Bitcoin, use [The Bitcoin Anchor Pipeline](#the-bitcoin-anchor-pipeline);
+  for Base, [Creating a Base anchor in one step](#creating-a-base-anchor-in-one-step).
 - **Create Arweave Anchor** needs an Arweave wallet extension, such as
   Wander.
 - **Create Steem Anchor** needs the Steem Keychain extension, and your
@@ -415,8 +424,8 @@ buttons, which still work.
 | **Recording rejected** | Signing, finalizing or broadcasting was refused. |
 | **No anchor was created** | The wallet or network couldn't be reached. |
 
-It then reads **Create Another Base Anchor**. Unlike **Create Bitcoin
-Anchor**, this uses your wallet and sends a real transaction.
+It then reads **Create Another Base Anchor**. It uses your wallet and sends
+a real transaction.
 
 ### Verifying, finalizing and broadcasting
 
@@ -462,6 +471,10 @@ Only **Create Base Anchor** adds an External Evidence entry; the
 step-by-step flow never does.
 
 ## Snapshot Placements
+
+Creating a placement on IPFS, Arweave or Local is a regular feature; the
+**Placements & IPFS** tab's list and everything after
+[Using a preferred provider](#using-a-preferred-provider) is *Experimental*.
 
 A **snapshot placement** is a signed claim that a storage backend — **IPFS**,
 **Arweave**, or this device's own **Local** storage — can serve the bytes
@@ -572,7 +585,7 @@ them, and a larger group isn't treated as more likely correct.
 
 ## IPFS Publishing
 
-The **IPFS Publishing** section, below Snapshot Placements on the card's
+*Experimental.* The **IPFS Publishing** section, below Snapshot Placements on the card's
 **Placements & IPFS** tab, uploads the content to a pinning service you
 choose. (As the section says: a local Kubo node can resolve and publish, a
 remote gateway can only resolve, and remote pinning can only publish.)
@@ -612,7 +625,9 @@ against the content hash and uploads it.
 | **Publish failed** | Anything else, including a local integrity check failing first. |
 
 A published result shows the content hash, locator (`ipfs://<cid>`),
-endpoint and time. A **Nostr: Announced** / **Nostr: Not announced** badge
+endpoint and time. A badge such as **Nostr: Announced** or **Steem: Not
+announced**, named for your
+[Announcement / Discovery Provider](10-NetworkSettings.md#announcement--discovery-provider),
 says whether the publish was also announced for Snapshot discovery, so
 others can find it as they would a local-node publish. **Not announced**
 means only the announcement failed.

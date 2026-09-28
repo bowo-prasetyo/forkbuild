@@ -1,7 +1,10 @@
 # 12 — Archive & Leaderboards
 
-> **Experimental in ForkBuild 1.0.** Everything here may change or be
-> removed in a later version, and what it produces may not carry over.
+> **Experimental.** Everything here may change or be removed in a later
+> version, and what it produces may not carry over. On the Publications
+> page, the **Wallet, Archive & Publisher Tools** panel is marked with an
+> **Experimental** badge; the Leaderboard pages show an **Experimental**
+> banner.
 
 The Bitcoin, Base and IPFS tools in
 [Evidence & Storage](11-EvidenceAndStorage.md) record what they observe in

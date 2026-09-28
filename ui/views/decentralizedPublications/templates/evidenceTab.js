@@ -19,7 +19,7 @@ export const evidenceTabTemplate = `<div v-show="entry.detailsTab === 'evidence'
                                     {{ entry.decentralization.evidence.anchorCount }} anchor claim{{ entry.decentralization.evidence.anchorCount === 1 ? '' : 's' }}
                                 </p>
                                 <p v-if="entry.decentralization.evidence.relationship" class="form-hint form-hint--neutral">
-                                    Relationship: {{ entry.decentralization.evidence.relationship === 'conflict' ? 'Conflict' : 'Agreement' }}
+                                    Relationship: {{ describeClaimRelationship(entry.decentralization.evidence.relationship, entry.decentralization.evidence.anchorCount) }}
                                 </p>
                             </div>
                             <div class="decentralization-dimension">
@@ -29,7 +29,7 @@ export const evidenceTabTemplate = `<div v-show="entry.detailsTab === 'evidence'
                                     · {{ entry.decentralization.placements.storageTypeCount }} storage type{{ entry.decentralization.placements.storageTypeCount === 1 ? '' : 's' }}
                                 </p>
                                 <p v-if="entry.decentralization.placements.relationship" class="form-hint form-hint--neutral">
-                                    Relationship: {{ entry.decentralization.placements.relationship === 'conflict' ? 'Conflict' : 'Agreement' }}
+                                    Relationship: {{ describeClaimRelationship(entry.decentralization.placements.relationship, entry.decentralization.placements.placementCount) }}
                                 </p>
                             </div>
                         </div>

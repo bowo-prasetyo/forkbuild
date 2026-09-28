@@ -96,7 +96,7 @@ export default {
 	                    <router-link to="/peers" class="app-nav-link">Peers</router-link>
 	                    <router-link to="/following" class="app-nav-link">Following</router-link>
 	                    <router-link to="/conversations" class="app-nav-link">Conversations</router-link>
-	                    <router-link to="/publications" class="app-nav-link">Publications<span class="experimental-badge experimental-badge--nav" title="Experimental: may change or be removed in a later version">Exp.</span></router-link>
+	                    <router-link to="/publications" class="app-nav-link">Publications</router-link>
 	                    <router-link to="/settings" class="app-nav-link">Network Settings</router-link>
 	                    <router-link to="/about" class="app-nav-link">About</router-link>
 	                </nav>

@@ -32,8 +32,8 @@ The bar at the top is always visible:
   [Peer Connections & Friends](07-PeerConnectionsAndFriends.md)
 - **Conversations** — your direct messages, see
   [Chat & Conversations](08-ChatAndConversations.md)
-- **Publications** (*experimental*) — signed authorship/place-name claims
-  and their external evidence, see
+- **Publications** — signed authorship/place-name claims, where to store
+  and announce them, and (*experimental*) their external evidence, see
   [Publications & External Evidence](09-PublicationsAndEvidence.md)
 - **Network Settings** — gateways, relays, providers, and peer-connection
   servers, see

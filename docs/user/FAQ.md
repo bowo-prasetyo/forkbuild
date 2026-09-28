@@ -14,8 +14,9 @@ Publishing only stores the creation on your own device and lists it in
   the people you're connected to. A Friend's or Known Peer's device adds it
   by itself; anyone else sees it under **Shared with you** and clicks
   **Retrieve**. You need to be connected at the same time for it to arrive.
-- **Distribute** (experimental) uploads it to Arweave, IPFS or Steem and
-  announces it, so people can find it without being connected to you.
+- **Distribute** uploads it to Arweave or IPFS (or, experimentally,
+  Steem) and announces it, so people can find it without being connected
+  to you.
 
 See [Publishing & Forking](04-PublishingAndForking.md#sharing-with-connected-peers).
 

@@ -4,7 +4,11 @@ import DecentralizedPublicationsView from '../ui/views/DecentralizedPublications
 import { PublicationResolutionOutcome } from '../application/publication/PublicationResolutionOutcome.js';
 import { LEGACY_HASH_REASON } from '../serializer/contentHash.js';
 import { CreatePublicationDisplayKindRegistryUseCase } from '../application/publication/CreatePublicationDisplayKindRegistryUseCase.js';
+import { Publication } from '../publisher/Publication.js';
+import { ContentReference } from '../core/ContentReference.js';
 import { assert } from './support/Assert.js';
+
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 // The Publications page, rendered by real Vue with the shipped CSS over fake
 // services: usable publications are listed as full cards with Distribution
@@ -151,6 +155,16 @@ function buttonNamed(root, label) {
 await settle();
 
 const view = host.querySelector('.publications-view');
+
+// Experimental parts are marked on the page itself: the notice, the tools
+// panel, and the expert detail tabs, not the Snapshot tab.
+assert(view.textContent.includes('Parts marked') && view.querySelector(':scope > p .experimental-badge'), 'the intro says which parts are Experimental');
+assert(view.querySelector('#publications-tools > summary .experimental-badge'), 'the tools panel is marked Experimental');
+{
+    const tabs = [...view.querySelector('.identity-mgmt-card .publications-tools-tabs').querySelectorAll('[role="tab"]')];
+    const marked = tabs.filter((tab) => tab.querySelector('.experimental-badge')).map((tab) => tab.firstChild.textContent.trim());
+    assert(marked.join() === 'Decentralization & Evidence,Placements & IPFS,History', `the expert detail tabs are marked (got ${marked.join()})`);
+}
 const mainList = view.querySelector(':scope > .identity-mgmt-list');
 const usableCards = mainList ? [...mainList.querySelectorAll(':scope > .identity-mgmt-card')] : [];
 assert(usableCards.length === 3, 'only the usable publications get a full card');
@@ -230,8 +244,12 @@ assert(toolsPanel.querySelector('[role="tab"][aria-selected="true"]').textConten
     assert(!buttonNamed(proof, 'Anchor on Bitcoin'), 'no one-click button for a wallet-guided preference');
     assert(proof.textContent.includes('Your preferred anchoring provider, Bitcoin, is anchored through its wallet steps'), 'the hint names it and says where');
     const anchorOptions = proof.querySelector('details.identity-mgmt-distribution-options');
-    assert(anchorOptions.open && anchorOptions.querySelector('summary').textContent.trim() === 'Anchoring options (2)', 'the per-type cards are shown');
+    assert(anchorOptions.open && anchorOptions.querySelector('summary').textContent.trim() === 'Anchoring options (1)', 'the per-type cards are shown');
     assert(buttonNamed(anchorOptions, 'Create Steem Anchor'), 'with their own buttons');
+    assert(!buttonNamed(proof, 'Create Bitcoin Anchor') && !proof.textContent.includes('Bitcoin</span>'),
+        'but no one-click Bitcoin card, which has no wallet behind it and never succeeds');
+    assert(proof.querySelector('.evidence-discovery-header .experimental-badge'), 'Proof / Anchoring is marked Experimental');
+    assert(!content.querySelector('.evidence-discovery-header .experimental-badge'), 'Content is not');
 }
 
 // Removing one failed publication asks first, and Cancel keeps it.
@@ -337,4 +355,101 @@ console.log('✓ the Publications page separates usable publications from failed
     third.unmount();
     thirdHost.remove();
     console.log('✓ your own old World opens in the Editor when this device still has its record');
+}
+
+// Distribute Snapshot on a World announces the World's own snapshot on the
+// chosen substrate, with its publisher's signed placement, and names that
+// substrate in the result; any other kind announces its content by hash
+// alone.
+{
+    const WORLD_HASH = 'd'.repeat(64);
+    const world = new Publication({
+        id: 'pub-world', documentId: 'doc-world', title: 'Stone Harbour', author: 'someone',
+        contentReference: new ContentReference({ hash: WORLD_HASH, storage: 'local' }),
+        publisherIdentity: { id: 'did:key:zpublisher', algorithm: 'Ed25519', publicKey: 'key' }
+    });
+    const envelopes = [
+        fakePublication('world-envelope', 'e'.repeat(64), { contentKind: 'forkbuild.publication' }),
+        fakePublication('claim', 'f'.repeat(64))
+    ];
+    const bytes = { [WORLD_HASH]: 'WORLD-BYTES', ['e'.repeat(64)]: 'ENVELOPE-BYTES', ['f'.repeat(64)]: 'CLAIM-BYTES' };
+    const calls = [];
+    const fourthHost = document.createElement('div');
+    document.body.appendChild(fourthHost);
+    const fourth = createApp(DecentralizedPublicationsView);
+    fourth.config.warnHandler = () => {};
+    fourth.component('router-link', RouterLinkStub);
+    fourth.provide('publicationCatalog', { list: () => [...envelopes], getReceivedAt: () => '2026-09-28T10:00:00.000Z' });
+    fourth.provide('publicationResolutionCoordinator', {
+        resolve: async (json) => ({
+            outcome: PublicationResolutionOutcome.RESOLVED,
+            content: json.id === 'world-envelope' ? world : { title: 'Plain Claim' },
+            reason: null
+        })
+    });
+    fourth.provide('publicationDisplayKindPlugins', {
+        'forkbuild.structure': { describe: () => 'a structure' },
+        'forkbuild.publication': { describe: () => 'a World' }
+    });
+    fourth.provide('peerSessionManager', { listPeers: () => [] });
+    fourth.provide('publicationAnchorCreationCoordinator', creationCoordinator);
+    fourth.provide('publicationEvidenceCoordinator', null);
+    fourth.provide('publicationPeerExchange', null);
+    fourth.provide('publicationPeerContentExchange', null);
+    fourth.provide('publicationContentStore', { get: async (reference) => bytes[reference.hash] ?? null });
+    fourth.provide('defaultAnnouncementDiscoveryProvider', 'steem');
+    fourth.provide('snapshotDistributionAvailableStorageTypes', () => ['ipfs', 'steem']);
+    fourth.provide('defaultContentDistributionProvider', 'ipfs');
+    fourth.provide('publisherPlacementClaimLookup', {
+        claimFor: (publication) => (publication.id === 'pub-world'
+            ? { publicationId: 'pub-world', claimedPosition: { x: 1, y: 2, z: 3 }, placementRecord: { placementId: 'signed' } }
+            : {})
+    });
+    fourth.provide('snapshotDistributionCommand', async (snapshotBytes, storage, publicationId, claimedPosition, discoveryProvider, placementRecord) => {
+        calls.push({ snapshotBytes, storage, publicationId, claimedPosition, discoveryProvider, placementRecord });
+        return { contentReference: { hash: 'h', uri: 'ipfs://cid', storage }, announcement: { id: 'announced' } };
+    });
+    fourth.mount(fourthHost);
+    await settle();
+
+    const cards = [...fourthHost.querySelectorAll('.publications-view > .identity-mgmt-list > .identity-mgmt-card')];
+    const worldCard = cards.find((card) => card.querySelector('.identity-mgmt-name').textContent.trim() === 'Stone Harbour');
+    const claimCard = cards.find((card) => card.querySelector('.identity-mgmt-name').textContent.trim() === 'Plain Claim');
+    assert(worldCard && claimCard, 'both cards are listed');
+    const snapshotCard = (card) => [...card.querySelectorAll('.evidence-anchor-card')]
+        .find((candidate) => candidate.querySelector('.evidence-anchor-type').textContent.trim() === 'Snapshot');
+    const worldSnapshot = snapshotCard(worldCard);
+    const optionTexts = (select) => [...select.options].map((option) => option.textContent.trim());
+    const [storageSelect, substrateSelect] = worldSnapshot.querySelectorAll('select');
+    assert(optionTexts(storageSelect).includes('Steem (Experimental)') && optionTexts(storageSelect).includes('IPFS'), 'Steem storage is labelled Experimental');
+    assert(optionTexts(substrateSelect).join() === 'Arweave,Nostr,Steem (Experimental)', 'and so is the Steem substrate');
+    assert(substrateSelect.value === 'steem', 'the substrate starts on the saved preference');
+    assert([...worldSnapshot.querySelectorAll('a')].some((link) => link.textContent.trim() === 'Configure Steem'), 'with its own Configure link');
+    assert(!worldSnapshot.textContent.includes('Configure Nostr'), 'not always Nostr');
+
+    buttonNamed(worldSnapshot, 'Distribute Snapshot').click();
+    await settle();
+    assert(calls.length === 1 && calls[0].snapshotBytes === 'WORLD-BYTES', "a World's own snapshot is distributed, not its Publication record");
+    assert(calls[0].publicationId === 'pub-world' && same(calls[0].claimedPosition, { x: 1, y: 2, z: 3 }) && calls[0].placementRecord.placementId === 'signed',
+        "with its publisher's signed placement");
+    assert(calls[0].discoveryProvider === 'steem' && calls[0].storage === 'ipfs', 'on the chosen substrate and storage');
+    assert(worldSnapshot.textContent.includes('Steem: Announced') && worldSnapshot.textContent.includes("with its publisher's placement"),
+        'and the result names the substrate it used');
+    assert(!worldSnapshot.textContent.includes('Nostr: Announced'), 'never Nostr regardless');
+
+    const claimSnapshot = snapshotCard(claimCard);
+    const claimSubstrate = claimSnapshot.querySelectorAll('select')[1];
+    claimSubstrate.value = 'nostr';
+    claimSubstrate.dispatchEvent(new Event('change'));
+    await settle();
+    buttonNamed(claimSnapshot, 'Distribute Snapshot').click();
+    await settle();
+    assert(calls.length === 2 && calls[1].snapshotBytes === 'CLAIM-BYTES' && calls[1].publicationId === undefined && calls[1].claimedPosition === undefined,
+        'another kind is announced by its content hash alone');
+    assert(calls[1].discoveryProvider === 'nostr' && claimSnapshot.textContent.includes('Nostr: Announced'), 'on the substrate chosen for it');
+    assert(!claimSnapshot.textContent.includes('placement'), 'saying nothing about a placement');
+
+    fourth.unmount();
+    fourthHost.remove();
+    console.log("✓ Distribute Snapshot announces a World's snapshot with its publisher's placement, and names the substrate it used");
 }

@@ -35,7 +35,7 @@ import { isLegacyContentHash } from '../../../serializer/contentHash.js';
 export function useIpfsRemotePublishing({
     archiveIpfsVerificationObservation, archivePublishIpfsRecord,
     ipfsPublicationContentVerificationCoordinator, ipfsRemotePublicationCoordinator, publicationContentStore,
-    snapshotDiscoveryPublisher
+    snapshotDiscoveryPublisher, snapshotDiscoveryProvider = 'nostr'
 }) {
     // Opening the form only seeds draft fields; nothing is configured until
     // "Save Configuration". Reopening for an existing configuration always
@@ -150,13 +150,14 @@ export function useIpfsRemotePublishing({
                 // And archive it durably.
                 archivePublishIpfsRecord(entry, entry.ipfsPublicationRecordHistory.length - 1, entry.ipfsPublicationRecord);
 
-                // Announce the published snapshot on Nostr through the same
-                // snapshotDiscoveryPublisher "Distribute Snapshot" uses.
+                // Announce the published snapshot through the app-wide
+                // snapshotDiscoveryPublisher, which announces on the saved
+                // Announcement/Discovery provider (`snapshotDiscoveryProvider`).
                 // Called directly rather than through
                 // SnapshotDistributionCommand, which would upload the
                 // already-pinned bytes again. No publicationId: an envelope
                 // needs a publicationId and a claimed position together or
-                // neither, and there is no position here. A Nostr failure
+                // neither, and there is no position here. An announcement failure
                 // never turns the PUBLISHED result into FAILED, hence this
                 // inner try/catch.
                 if (snapshotDiscoveryPublisher) {
@@ -166,9 +167,9 @@ export function useIpfsRemotePublishing({
                             locator: entry.ipfsRemotePublicationOutcome.locator,
                             storage: 'ipfs'
                         });
-                        entry.ipfsRemoteSnapshotAnnouncement = { announced: announcement !== null, announcement, error: null };
+                        entry.ipfsRemoteSnapshotAnnouncement = { announced: announcement !== null, announcement, error: null, discoveryProvider: snapshotDiscoveryProvider };
                     } catch (error) {
-                        entry.ipfsRemoteSnapshotAnnouncement = { announced: false, announcement: null, error: error.message };
+                        entry.ipfsRemoteSnapshotAnnouncement = { announced: false, announcement: null, error: error.message, discoveryProvider: snapshotDiscoveryProvider };
                     }
                 }
             }

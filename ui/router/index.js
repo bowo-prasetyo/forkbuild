@@ -88,7 +88,9 @@ const routes = [
     // replica can browse and fork; this page lists signed
     // DecentralizedPublication envelopes (0.7.0) this replica has
     // cataloged (0.7.2), regardless of whether their content resolves.
-    { path: '/publications', name: 'publications', component: DecentralizedPublicationsView, meta: { experimental: true } },
+    // Not Experimental as a whole: the page marks its Experimental parts
+    // itself (anchoring, wallets, Steem, remote pinning, the expert tabs).
+    { path: '/publications', name: 'publications', component: DecentralizedPublicationsView },
     // Network Settings hub — one top-nav entry point linking to every
     // /settings/* page below, each still its own route and component — see
     // ui/views/NetworkSettingsView.js's own header.

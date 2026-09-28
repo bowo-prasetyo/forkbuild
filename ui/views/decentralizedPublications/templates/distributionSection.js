@@ -29,7 +29,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                                 :disabled="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.distributing">
                                             <option value="arweave">Arweave</option>
                                             <option value="nostr">Nostr</option>
-                                            <option value="steem">Steem</option>
+                                            <option value="steem">Steem (Experimental)</option>
                                         </select>
                                     </label>
                                     <div class="identity-mgmt-actions">
@@ -42,7 +42,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                              substrate; says nothing about
                                              whether it is reachable. -->
                                         <router-link :to="discoveryDistributionConfigurationRoute(entry)" class="action-btn action-btn--secondary">
-                                            Configure {{ entry.discoveryDistributionProvider === 'arweave' ? 'Arweave' : (entry.discoveryDistributionProvider === 'steem' ? 'Steem' : 'Nostr') }}
+                                            Configure {{ humanizeDiscoveryProvider(entry.discoveryDistributionProvider) }}
                                         </router-link>
                                     </div>
                                     <p v-if="entry.discoveryDistributionAttempt && entry.discoveryDistributionAttempt.error" class="form-hint form-hint--neutral">
@@ -66,19 +66,32 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                     <div class="evidence-anchor-header">
                                         <span class="evidence-anchor-type">Snapshot</span>
                                     </div>
-                                    <p class="form-hint form-hint--neutral">
-                                        Distributes this replica's own locally held Snapshot bytes — never
-                                        available when this replica does not currently possess them.
+                                    <p v-if="entryWorld(entry)" class="form-hint form-hint--neutral">
+                                        Stores this World's snapshot and announces it, with where its publisher placed it
+                                        when this device holds that placement, as World View's Distribute does. This
+                                        device needs the World's snapshot.
                                     </p>
-                                    <!-- Where the snapshot's bytes are stored;
-                                         announcement stays on Nostr. Only
-                                         eligible, registered backends are
-                                         offered. -->
+                                    <p v-else class="form-hint form-hint--neutral">
+                                        Stores this publication's content and announces it by its content hash. This
+                                        device needs the content.
+                                    </p>
+                                    <!-- Where the snapshot's bytes are stored and
+                                         where it is announced. Only eligible,
+                                         registered backends are offered. -->
                                     <label v-if="snapshotDistributionStorageTypes.length > 0" class="form-label">
                                         Content
                                         <select v-model="entry.snapshotDistributionStorage" class="form-select"
                                                 :disabled="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing">
-                                            <option v-for="storage in snapshotDistributionStorageOptions" :key="storage" :value="storage">{{ humanizeStorageType(storage) }}</option>
+                                            <option v-for="storage in snapshotDistributionStorageOptions" :key="storage" :value="storage">{{ storageTypeOptionLabel(storage) }}</option>
+                                        </select>
+                                    </label>
+                                    <label class="form-label">
+                                        Substrate
+                                        <select v-model="entry.snapshotDiscoveryProvider" class="form-select"
+                                                :disabled="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.distributing">
+                                            <option value="arweave">Arweave</option>
+                                            <option value="nostr">Nostr</option>
+                                            <option value="steem">Steem (Experimental)</option>
                                         </select>
                                     </label>
                                     <div class="identity-mgmt-actions">
@@ -90,7 +103,9 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                         <router-link :to="snapshotDistributionConfigurationRoute(entry)" class="action-btn action-btn--secondary">
                                             Configure {{ humanizeStorageType(entry.snapshotDistributionStorage) }}
                                         </router-link>
-                                        <router-link to="/settings/nostr-relay" class="action-btn action-btn--secondary">Configure Nostr</router-link>
+                                        <router-link :to="snapshotDiscoveryConfigurationRoute(entry)" class="action-btn action-btn--secondary">
+                                            Configure {{ humanizeDiscoveryProvider(entry.snapshotDiscoveryProvider) }}
+                                        </router-link>
                                     </div>
                                     <p v-if="steemUploadProgressText(entry)" class="form-hint form-hint--neutral" role="status">{{ steemUploadProgressText(entry) }}</p>
                                     <p v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.error" class="form-hint form-hint--neutral">
@@ -102,11 +117,16 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                     <!-- A null announcement is
                                          SnapshotDistributionCommand's ordinary
                                          decline, not a failure; the content is
-                                         placed either way. -->
+                                         placed either way. Named for the
+                                         substrate this attempt used. -->
                                     <p v-if="entry.snapshotDistributionAttempt && entry.snapshotDistributionAttempt.result" class="form-hint form-hint--neutral">
                                         <span class="peer-badge" :class="entry.snapshotDistributionAttempt.result.announcement ? 'peer-badge--authenticated' : 'peer-badge--failed'">
-                                            {{ entry.snapshotDistributionAttempt.result.announcement ? 'Nostr: Announced' : 'Nostr: Not announced' }}
+                                            {{ humanizeDiscoveryProvider(entry.snapshotDistributionAttempt.result.discoveryProvider) }}:
+                                            {{ entry.snapshotDistributionAttempt.result.announcement ? 'Announced' : 'Not announced' }}
                                         </span>
+                                        <template v-if="entry.snapshotDistributionAttempt.result.announcement && entryWorld(entry)">
+                                            {{ entry.snapshotDistributionAttempt.result.positioned ? " — with its publisher's placement" : ' — without a position: this device holds no placement signed by its publisher' }}
+                                        </template>
                                     </p>
                                 </div>
                             </div>
@@ -131,6 +151,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                 <p class="form-hint form-hint--neutral">
                                     Stores this publication's content on <strong>{{ humanizeStorageType(contentPreference.providerKey) }}</strong>,
                                     your preferred storage.
+                                    <span v-if="isExperimentalStorageType(contentPreference.providerKey)" class="experimental-badge">Experimental</span>
                                 </p>
                                 <div class="evidence-discovery-header">
                                     <button class="action-btn action-btn--primary"
@@ -162,6 +183,7 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                                 <div v-for="storage in availableStorageTypes" :key="storage" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
                                         <span class="evidence-anchor-type">{{ humanizeStorageType(storage) }}</span>
+                                        <span v-if="isExperimentalStorageType(storage)" class="experimental-badge">Experimental</span>
                                         <span v-if="placementCreationView(entry, storage).label" class="peer-badge" :class="placementCreationBadgeClass(entry, storage)">
                                             {{ placementCreationView(entry, storage).label }}
                                         </span>
@@ -188,14 +210,16 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                             </details>
                         </div>
 
-                        <!-- Proof / Anchoring: one button for the saved
-                             preferred provider (the person's own choice,
-                             named; never Bitcoin or Base, which take wallet
-                             steps), then one card per available anchorType,
-                             folded when that button is shown. -->
-                        <div v-if="availableAnchorTypes.length > 0" class="identity-mgmt-distribution-role">
+                        <!-- Proof / Anchoring, Experimental as a whole: one
+                             button for the saved preferred provider (the
+                             person's own choice, named; never Bitcoin or
+                             Base, which take wallet steps), then one card per
+                             anchorType a click can make, folded when that
+                             button is shown. -->
+                        <div v-if="oneClickAnchorTypes.length > 0 || bitcoinWalletConnection || baseAnchorPublisher" class="identity-mgmt-distribution-role">
                             <div class="evidence-discovery-header">
                                 <span class="evidence-convergence-title">Proof / Anchoring</span>
+                                <span class="experimental-badge">Experimental</span>
                                 <router-link to="/settings/anchor-provider" class="action-btn action-btn--secondary">Configure</router-link>
                             </div>
                             <!-- Resolves the saved PROOF_AND_ANCHORING
@@ -234,23 +258,20 @@ export const distributionSectionTemplate = `<!-- Distribution: the three roles (
                             </div>
                             <details class="identity-mgmt-distribution-options" :open="!anchorPreference.providerKey">
                                 <summary class="identity-mgmt-card-details-summary">
-                                    {{ anchorPreference.providerKey ? 'Other anchoring options' : 'Anchoring options' }} ({{ availableAnchorTypes.length }})
+                                    {{ anchorPreference.providerKey ? 'Other anchoring options' : 'Anchoring options' }} ({{ oneClickAnchorTypes.length }})
                                 </summary>
                             <!-- The generic loop can't run the wallet-guided
                                  Bitcoin pipeline or Base (which needs a
-                                 reviewed plan), so point to those flows in the
-                                 card's Details. Each half shows only when its
-                                 collaborator exists. -->
+                                 reviewed plan), so they get no card here, only
+                                 a pointer to those flows in the card's
+                                 Details. -->
                             <p v-if="bitcoinWalletConnection || baseAnchorPublisher" class="form-hint form-hint--neutral">
-                                <template v-if="bitcoinWalletConnection">Create Bitcoin Anchor works only after you've
-                                built, signed and broadcast its transaction in this card's <strong>Details → Decentralization
-                                &amp; Evidence</strong> tab.</template>
-                                <template v-if="baseAnchorPublisher"> Base anchors are made through their own wallet
-                                steps<template v-if="bitcoinWalletConnection"> in the same tab</template><template v-else> in
-                                this card's <strong>Details → Decentralization &amp; Evidence</strong> tab</template>.</template>
+                                {{ bitcoinWalletConnection && baseAnchorPublisher ? 'Bitcoin and Base anchors are' : (bitcoinWalletConnection ? 'Bitcoin anchors are' : 'Base anchors are') }}
+                                made through their own wallet steps in this card's <strong>Details → Decentralization
+                                &amp; Evidence</strong> tab.
                             </p>
                             <div class="evidence-list">
-                                <div v-for="anchorType in availableAnchorTypes" :key="anchorType" class="evidence-anchor-card">
+                                <div v-for="anchorType in oneClickAnchorTypes" :key="anchorType" class="evidence-anchor-card">
                                     <div class="evidence-anchor-header">
                                         <span class="evidence-anchor-type">{{ humanizeAnchorType(anchorType) }}</span>
                                         <span v-if="creationView(entry, anchorType).label" class="peer-badge" :class="creationBadgeClass(entry, anchorType)">
