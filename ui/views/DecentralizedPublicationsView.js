@@ -43,8 +43,9 @@ import { BaseSignedTransactionFinalizationState } from '../../application/anchor
 import { BaseTransactionBroadcastState } from '../../application/anchoring/base/BaseTransactionBroadcastState.js';
 import { BaseTransactionInclusionObservationState } from '../../application/anchoring/base/BaseTransactionInclusionObservationState.js';
 import { sortOptionsByLabel } from '../../utils/sortOptionsByLabel.js';
+import { isLegacyContentHash } from '../../serializer/contentHash.js';
 import {
-    humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, OUTCOME_BADGE_CLASSES,
+    humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, OUTCOME_BADGE_CLASSES, republishAdviceFor,
     EVIDENCE_BADGE_CLASSES
 } from './decentralizedPublications/presentation.js';
 import { useBaseAnchoring } from './decentralizedPublications/useBaseAnchoring.js';
@@ -118,6 +119,9 @@ export default {
         const publicationPeerExchange = inject('publicationPeerExchange');
         const publicationPeerContentExchange = inject('publicationPeerContentExchange');
         const peerSessionManager = inject('peerSessionManager');
+        // Only to tell which failed publications this device's identities
+        // signed; without it none are marked as yours.
+        const identityUseCase = inject('identityUseCase', null);
         const evidenceCoordinator = inject('publicationEvidenceCoordinator');
         const creationCoordinator = inject('publicationAnchorCreationCoordinator');
         // Optional services inject as null (e.g. in a test harness); the UI
@@ -288,7 +292,19 @@ export default {
 
         // Rebuilds the entry list from the catalog (local and synchronous),
         // keeping existing entry state, then resolves only the new entries.
+        // The did:key ids of the identities on this device, read again with
+        // the list so one created meanwhile counts.
+        const ownIdentityIds = ref(new Set());
+        function loadOwnIdentityIds() {
+            try {
+                ownIdentityIds.value = new Set((identityUseCase ? identityUseCase.listIdentities() : []).map((identity) => identity.identityId));
+            } catch {
+                ownIdentityIds.value = new Set();
+            }
+        }
+
         async function refreshList() {
+            loadOwnIdentityIds();
             const known = new Map(entries.map((entry) => [entry.publication.id, entry]));
             const current = catalog.list();
             entries.splice(0, entries.length, ...current.map((publication) => known.get(publication.id) || reactive({
@@ -821,7 +837,29 @@ export default {
         // into one group, so a catalog full of old or broken records doesn't
         // bury the ones that work. Display order only.
         const usableEntries = computed(() => entries.filter((entry) => !failedCheck(entry)));
-        const failedEntries = computed(() => entries.filter(failedCheck));
+        // Failed only because one of this device's identities published it
+        // before content hashes became SHA-256. The envelope signature is
+        // checked before the content hash, so the publisher id is genuine.
+        // Such a publication is never accepted: the content store also holds
+        // bytes from peers, so its old hash still can't vouch for them. Its
+        // card says how to publish it again instead.
+        function isOwnLegacyEntry(entry) {
+            const publisherId = entry.publication.publisherIdentity && entry.publication.publisherIdentity.id;
+            return failedCheck(entry)
+                && entry.view.outcome === PublicationResolutionOutcome.CONTENT_HASH_MISMATCH
+                && isLegacyContentHash(entry.publication.contentReference.hash)
+                && ownIdentityIds.value.has(publisherId);
+        }
+        // Yours first, since only you can fix them; otherwise catalog order.
+        const failedEntries = computed(() => {
+            const failed = entries.filter(failedCheck);
+            return [...failed.filter(isOwnLegacyEntry), ...failed.filter((entry) => !isOwnLegacyEntry(entry))];
+        });
+        const ownLegacyCount = computed(() => failedEntries.value.filter(isOwnLegacyEntry).length);
+        // How to publish an entry again, from its kind's display plugin.
+        function ownLegacyRepublishAdvice(entry) {
+            return republishAdviceFor(kindPlugins && kindPlugins[entry.publication.contentKind]);
+        }
         const anyRetrievable = computed(() => entries.some(canRetrieve));
 
         // Forgets failed publications on this device only (see
@@ -922,6 +960,7 @@ export default {
             humanizeContentKind, humanizeStorageType, humanizeAnchorType, shortId, shortHash, formatWhen, badgeClass, statusLabel, availabilityText,
             canRetrieve, retrieve, recheck, usableEntries, failedEntries, anyRetrievable,
             confirmingRemoveAllFailed, removeFailedEntry, removeAllFailedEntries, publicationTitle,
+            isOwnLegacyEntry, ownLegacyCount, ownLegacyRepublishAdvice,
             describeKnownEvidenceCount, toggleEvidence, verifyAnchor, evidenceBadgeClass, lifecycleNote,
             createAnchor, creationView, creationBadgeClass, creationButtonLabel, verificationNote, creationFinality,
             preferredCreationFinality, batchAnchorTypes, batchAnchoring, batchSelectedIds, batchLimit,
@@ -1274,6 +1313,11 @@ export default {
                     one published with an old content hash has to be published again by its author.
                     Removing one only forgets it on this device; a peer that still has it may announce it again.
                 </p>
+                <p v-if="ownLegacyCount > 0" class="form-hint form-hint--neutral">
+                    <strong>{{ ownLegacyCount }} {{ ownLegacyCount === 1 ? 'is' : 'are' }} yours</strong>, published
+                    before content hashes became SHA-256. Each card below says how to publish it again; once you
+                    have, remove the old one.
+                </p>
                 <div class="identity-mgmt-actions">
                     <button v-if="!confirmingRemoveAllFailed" class="action-btn action-btn--secondary"
                             @click="confirmingRemoveAllFailed = true">
@@ -1296,10 +1340,19 @@ export default {
                             · received {{ formatWhen(entry.receivedAt) }}
                             · content {{ shortHash(entry.publication.contentReference.hash) }}
                         </p>
-                        <p v-if="entry.view && entry.view.reason" class="form-hint form-hint--neutral">
+                        <p v-if="isOwnLegacyEntry(entry)" class="form-hint form-hint--neutral">
+                            <span class="peer-badge peer-badge--pending">Yours</span>
+                            You published this before content hashes became SHA-256, so nobody can check it.
+                            {{ ownLegacyRepublishAdvice(entry).text }}
+                        </p>
+                        <p v-else-if="entry.view && entry.view.reason" class="form-hint form-hint--neutral">
                             {{ entry.view.reason }}
                         </p>
                         <div class="identity-mgmt-actions">
+                            <router-link v-if="isOwnLegacyEntry(entry) && ownLegacyRepublishAdvice(entry).route"
+                                         :to="ownLegacyRepublishAdvice(entry).route" class="action-btn action-btn--primary">
+                                {{ ownLegacyRepublishAdvice(entry).routeLabel }}
+                            </router-link>
                             <button class="action-btn action-btn--secondary" :disabled="entry.checking" @click="recheck(entry)">
                                 {{ entry.checking ? 'Checking…' : 'Re-check' }}
                             </button>

@@ -158,6 +158,21 @@ Several Publications** too. The most common reason is a publication made
 before content hashes became SHA-256: only its author can fix that, by
 publishing it again.
 
+If one of these is **yours** (signed by an identity on this device) and
+failed only because of its old hash, it's listed first with a **Yours**
+badge. Instead of "its author needs to publish it again", it tells you how:
+
+| Kind | How to publish it again |
+|---|---|
+| **Publication** (a World) | Publish the World again from the Editor, then **Share with Peers** under it in the Repository (**Open Repository**). |
+| **Blueprint Attribution** | In the Editor, open the structure's **Info** panel, **Re-sign for this design**, then **Publish to Network** (**Open Editor**). |
+| **Place Naming Claim** | In World View, open the place's naming panel and **Publish A Name** again. |
+
+The new copy gets its own card; then remove the old one. The old one is
+never accepted, even though it's yours: this device also stores content
+it received from peers, so the old hash can't prove which bytes you
+published.
+
 **Remove from This Device** (or **Remove All *N* from This Device** at the
 top of the group) asks you to confirm, then forgets the publication here.
 It doesn't un-publish anything or reach anyone else, and a connected peer

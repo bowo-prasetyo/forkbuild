@@ -2205,3 +2205,25 @@ above, which only hid the anchoring buttons for failed publications.
 - Tests: `tests/LegacyContentHashAnchoringRefusal.test.js` drives each refusal with collaborators that fail if called.
   `tests/PublicationsPageLayoutBrowser.test.js` covers Remove, Remove All, Cancel and the names. Ten anchoring tests
   used 8-hex sample hashes, which are the legacy format; they now use 64-hex ones.
+
+## Your own old publications say how to publish them again (unnumbered, 2026-09-28)
+
+**On the Publications page, a publication that one of this device's identities signed, and that failed only because
+of its old FNV-1a hash, is listed first in the "can't be used" group with a Yours badge and the steps to publish it
+again, instead of "its author needs to publish it again".** The 1.1 release notes say publications made with 1.0.0
+still open on your device; that is about the Repository's own records (`LocalPublisherProvider#isOwnPublication()`),
+not these catalog envelopes, whose content is read from a store that also holds bytes received from peers.
+
+- Deliberately not changed: `PublicationResolver` still refuses every legacy hash, yours included. The store can't
+  tell your bytes from a peer's, so accepting "own" legacy content would reopen the forgery the SHA-256 change closed.
+- `isOwnLegacyEntry(entry)` in `DecentralizedPublicationsView.js`: failed with CONTENT_HASH_MISMATCH, a legacy hash,
+  and a publisher id among `identityUseCase.listIdentities()` (read again with every list refresh). The envelope
+  signature is checked before the hash, so that id is genuine. Without `identityUseCase`, nothing is marked as yours.
+- The advice is per kind, so it lives beside each kind's `describe()` in
+  `CreatePublicationDisplayKindRegistryUseCase` as `republishAdvice`: a World is published again and shared (link to
+  the Repository), a blueprint attribution is re-signed and published (link to the Editor), a place name is published
+  again in World View (no single page to link). The page reads it through `republishAdviceFor(kindPlugin)` in
+  `decentralizedPublications/presentation.js`, which gives a kind without advice a generic sentence, and stays free of
+  content-kind names as `tests/PublicationDisplayKindIntegration.test.js` requires.
+- Tests: `tests/OwnLegacyRepublishAdvice.test.js`; `tests/PublicationsPageLayoutBrowser.test.js` covers the order,
+  the badge, the advice and the link, and that other people's cards get none of it.

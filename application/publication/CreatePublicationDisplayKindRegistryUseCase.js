@@ -90,17 +90,33 @@ export class CreatePublicationDisplayKindRegistryUseCase {
 
         const blueprintAttributionKind = {
             ...createBlueprintAttributionPublicationKind({ verifier }),
-            describe: (attribution) => `Blueprint attribution — ${attribution.fingerprint}, claimed by ${shortId(attribution.authorIdentityId)}`
+            describe: (attribution) => `Blueprint attribution — ${attribution.fingerprint}, claimed by ${shortId(attribution.authorIdentityId)}`,
+            republishAdvice: {
+                text: "In the Editor, open the structure's Info panel and click Re-sign for this design, then Publish to Network.",
+                route: '/editor',
+                routeLabel: 'Open Editor'
+            }
         };
         const placeNamingClaimKind = {
             ...createPlaceNamingClaimPublicationKind({ verifier }),
-            describe: (claim) => `Place name claim — "${claim.name}", claimed by ${shortId(claim.authorIdentityId)}`
+            describe: (claim) => `Place name claim — "${claim.name}", claimed by ${shortId(claim.authorIdentityId)}`,
+            // World View opens one World at a time; no single page leads there.
+            republishAdvice: {
+                text: "In World View, open the place's naming panel and use Publish A Name again.",
+                route: null,
+                routeLabel: null
+            }
         };
         const publicationKind = {
             ...createPublicationContentKind({ verifier }),
             describe: (publication) => {
                 const title = publication.title ? `"${publication.title}"` : 'an untitled publication';
                 return publication.author ? `Publication — ${title}, by ${publication.author}` : `Publication — ${title}`;
+            },
+            republishAdvice: {
+                text: 'Publish the World again from the Editor, then click Share with Peers under it in the Repository.',
+                route: '/repository',
+                routeLabel: 'Open Repository'
             }
         };
 
