@@ -38,6 +38,14 @@ export const BACKUP_ENTRY_GROUP_LABELS = Object.freeze({
 // restore did not bring back.
 export const SESSION_ENTRY_NAME = 'local-session';
 
+// When this device was last backed up and its reminder and automatic
+// backup settings (application/backup/BackupStatusStore.js). It describes
+// this device, not the data, so it is neither backed up nor replaced.
+export const BACKUP_STATUS_ENTRY_NAME = 'device-backup-status';
+
+// Entries that belong to this device: never backed up or restored.
+export const DEVICE_ONLY_ENTRY_NAMES = Object.freeze([SESSION_ENTRY_NAME, BACKUP_STATUS_ENTRY_NAME]);
+
 // Published content, by hash: other people's builds as well as your own.
 export const CONTENT_ENTRY_PREFIX = 'content:';
 export const OWN_PUBLICATIONS_ENTRY_NAME = 'forkbuild-publications';
@@ -142,9 +150,9 @@ const PREFIXES = [
 const DOCUMENT_NAME = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // The group an entry belongs to, or null for a name this version doesn't
-// know (and for the session entry, which is never backed up or restored).
+// know (and for device-only entries, which are never backed up or restored).
 export function backupEntryGroupOf(name) {
-    if (typeof name !== 'string' || name === SESSION_ENTRY_NAME) return null;
+    if (typeof name !== 'string' || DEVICE_ONLY_ENTRY_NAMES.includes(name)) return null;
     if (EXACT_NAMES.has(name)) return EXACT_NAMES.get(name);
     const match = PREFIXES.find(([prefix]) => name.startsWith(prefix) && name.length > prefix.length);
     if (match) return match[1];

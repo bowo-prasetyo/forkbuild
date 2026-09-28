@@ -2,8 +2,19 @@ import { computed, inject, onMounted, reactive, ref } from 'vue';
 import { BACKUP_ENTRY_GROUP_LABELS } from '../../application/backup/BackupEntryGroups.js';
 import { BACKUP_FILE_EXTENSION, BackupFileError, IncorrectBackupPassphraseError } from '../../application/backup/DeviceBackupFile.js';
 import { RestoreMode } from '../../application/backup/DeviceBackupUseCase.js';
+import { BackupDestination, REMINDER_INTERVAL_OPTIONS_DAYS } from '../../application/backup/BackupStatusStore.js';
+import { backupFileName } from '../../application/backup/BackupFolder.js';
 import { evaluateNewPassphrase } from '../../application/identity/NewPassphrasePolicy.js';
 import { formatByteSize } from '../../utils/formatByteSize.js';
+import { formatRelativeVisit } from '../../utils/formatRelativeVisit.js';
+
+const REMINDER_LABELS = { 7: 'Every week', 14: 'Every 2 weeks', 30: 'Every month', 90: 'Every 3 months', 0: 'Never' };
+const DESTINATION_LABELS = {
+    [BackupDestination.FILE]: 'to a downloaded file',
+    [BackupDestination.SHARE]: 'shared to another app',
+    [BackupDestination.FOLDER]: 'to the backup folder',
+    [BackupDestination.RESTORE]: 'restored from a backup made then'
+};
 
 // Backs up everything ForkBuild keeps in this browser to one encrypted
 // file, and restores it here or on another device. Clearing the browser's
@@ -14,6 +25,65 @@ export default {
         const deviceBackup = inject('deviceBackupUseCase', null);
         const navigatorStorage = inject('navigatorStorage', globalThis.navigator ? globalThis.navigator.storage : null);
         const reloadPage = inject('reloadPage', () => window.location.reload());
+        const statusStore = inject('backupStatusStore', null);
+        const destinations = inject('backupDestinations', null);
+        // Web Share with files: phones and some desktop browsers.
+        const fileSharing = inject('fileSharing', globalThis.navigator && typeof globalThis.navigator.share === 'function' ? globalThis.navigator : null);
+
+        // --- reminders and destinations ----------------------------------------
+        const status = ref(statusStore ? statusStore.get() : null);
+        const destinationState = ref({ folder: null, keyRemembered: false });
+        const folderSupported = Boolean(destinations && destinations.folderSupported);
+        const destinationForm = reactive({ busy: false, error: '', message: '' });
+        const reminderOptions = REMINDER_INTERVAL_OPTIONS_DAYS.map((days) => ({ days, label: REMINDER_LABELS[days] }));
+
+        function refreshStatus() {
+            if (statusStore) status.value = statusStore.get();
+        }
+
+        async function refreshDestinations() {
+            if (!destinations) return;
+            try {
+                destinationState.value = await destinations.state();
+            } catch {
+                destinationState.value = { folder: null, keyRemembered: false };
+            }
+        }
+
+        const lastBackupText = computed(() => {
+            if (!status.value || !status.value.lastBackupAt) return null;
+            const when = formatRelativeVisit(new Date(status.value.lastBackupAt).getTime()) || 'recently';
+            const where = DESTINATION_LABELS[status.value.lastBackupDestination];
+            return where ? `${when}, ${where}` : when;
+        });
+
+        function setReminderInterval(event) {
+            status.value = statusStore.update({ reminderIntervalDays: Number(event.target.value), snoozedUntil: null });
+        }
+
+        function setAutomatic(event) {
+            status.value = statusStore.update({ automaticFolderBackup: event.target.checked, lastAutomaticBackupError: null });
+        }
+
+        async function runDestinationAction(action, done = '') {
+            destinationForm.error = '';
+            destinationForm.message = '';
+            destinationForm.busy = true;
+            try {
+                await action();
+                destinationForm.message = done;
+            } catch (e) {
+                destinationForm.error = e.message;
+            } finally {
+                destinationForm.busy = false;
+                await refreshDestinations();
+                refreshStatus();
+            }
+        }
+
+        const chooseFolder = () => runDestinationAction(() => destinations.chooseFolder());
+        const forgetFolder = () => runDestinationAction(() => destinations.forgetFolder(), 'ForkBuild no longer saves to that folder. The backups already in it stay.');
+        const forgetKey = () => runDestinationAction(() => destinations.forgetKey(), 'The backup key is forgotten. Backups need the passphrase again.');
 
         // --- what is stored ------------------------------------------------
         const groups = ref({});
@@ -56,31 +126,85 @@ export default {
             }
         }
 
-        onMounted(refreshStorage);
+        onMounted(() => {
+            refreshStorage();
+            refreshDestinations();
+        });
 
         // --- back up ---------------------------------------------------------
         const backupForm = reactive({
-            passphrase: '', confirmation: '', includeDownloadedContent: false,
+            passphrase: '', confirmation: '', includeDownloadedContent: false, rememberKey: false,
             attempted: false, busy: false, error: '', result: null
         });
-        const backupPassphraseHint = computed(() => backupForm.attempted
+        const backupPassphraseHint = computed(() => backupForm.attempted && !usesRememberedKey()
             ? evaluateNewPassphrase({ passphrase: backupForm.passphrase, confirmation: backupForm.confirmation, offerUnprotected: false }).message
             : null);
+        const canShareFiles = Boolean(fileSharing && typeof fileSharing.canShare === 'function'
+            && safeCanShare(fileSharing, [new File([new Uint8Array(1)], 'test' + BACKUP_FILE_EXTENSION)]));
 
-        async function createBackup() {
+        // A folder backup with an empty passphrase uses the remembered key.
+        let pendingDestination = null;
+        // An encrypted backup waiting for a second tap on Share Backup.
+        let preparedShare = null;
+        function usesRememberedKey() {
+            return pendingDestination === BackupDestination.FOLDER && !backupForm.passphrase && destinationState.value.keyRemembered;
+        }
+
+        async function backUp(destination) {
+            pendingDestination = destination;
             backupForm.attempted = true;
             backupForm.error = '';
             backupForm.result = null;
             const evaluation = evaluateNewPassphrase({ passphrase: backupForm.passphrase, confirmation: backupForm.confirmation, offerUnprotected: false });
-            if (!evaluation.ok || backupForm.busy) return;
+            const ready = evaluation.ok || usesRememberedKey() || (destination === BackupDestination.SHARE && preparedShare);
+            if (!ready || backupForm.busy) return;
             backupForm.busy = true;
             try {
-                const { bytes, groups: backedUp, leftOutContentCount } = await deviceBackup.createBackupFile({
-                    passphrase: backupForm.passphrase,
-                    includeDownloadedContent: backupForm.includeDownloadedContent
-                });
-                downloadBytes(bytes, `forkbuild-backup-${new Date().toISOString().slice(0, 10)}${BACKUP_FILE_EXTENSION}`);
-                backupForm.result = { rows: groupRows(backedUp), size: bytes.length, leftOutContentCount };
+                const passphrase = backupForm.passphrase || null;
+                const remember = Boolean(passphrase && backupForm.rememberKey && destinations);
+                let result;
+                if (destination === BackupDestination.FOLDER) {
+                    // The folder permission prompt must follow the click closely,
+                    // so the key is derived afterwards.
+                    const written = await destinations.backUpToFolder(passphrase ? { passphrase } : {});
+                    if (remember) await destinations.rememberKey(passphrase);
+                    result = { rows: groupRows(written.groups), where: `Saved as "${written.fileName}" in "${written.folderName}".` };
+                } else {
+                    let created = destination === BackupDestination.SHARE ? preparedShare : null;
+                    if (!created) {
+                        const key = remember ? await destinations.rememberKey(passphrase) : null;
+                        created = await deviceBackup.createBackupFile({
+                            ...(key ? { key } : { passphrase }),
+                            includeDownloadedContent: backupForm.includeDownloadedContent
+                        });
+                    }
+                    preparedShare = null;
+                    const name = backupFileName(created.createdAt);
+                    if (destination === BackupDestination.SHARE) {
+                        let shared;
+                        try {
+                            shared = await shareBytes(fileSharing, created.bytes, name);
+                        } catch (error) {
+                            // Browsers only open the share sheet right after a tap, and
+                            // encrypting can take longer than that: keep the file for the next tap.
+                            if (error && error.name === 'NotAllowedError') {
+                                preparedShare = created;
+                                backupForm.error = 'The backup is ready: tap Share Backup again to send it.';
+                                return;
+                            }
+                            throw error;
+                        }
+                        if (!shared) return;
+                    } else {
+                        downloadBytes(created.bytes, name);
+                    }
+                    statusStore && statusStore.recordBackup(destination, created.createdAt);
+                    result = {
+                        rows: groupRows(created.groups), size: created.bytes.length, leftOutContentCount: created.leftOutContentCount,
+                        where: destination === BackupDestination.SHARE ? 'Shared.' : 'Downloaded.'
+                    };
+                }
+                backupForm.result = result;
                 backupForm.passphrase = '';
                 backupForm.confirmation = '';
                 backupForm.attempted = false;
@@ -88,8 +212,15 @@ export default {
                 backupForm.error = e.message;
             } finally {
                 backupForm.busy = false;
+                pendingDestination = null;
+                refreshStatus();
+                refreshDestinations();
             }
         }
+
+        const createBackup = () => backUp(BackupDestination.FILE);
+        const shareBackup = () => backUp(BackupDestination.SHARE);
+        const backUpToFolder = () => backUp(BackupDestination.FOLDER);
 
         // --- restore ---------------------------------------------------------
         const restoreForm = reactive({
@@ -136,7 +267,7 @@ export default {
             restoreForm.busy = true;
             restoreForm.error = '';
             try {
-                restoreForm.result = await deviceBackup.restore(restoreForm.preview.entries, { mode: restoreForm.mode });
+                restoreForm.result = await deviceBackup.restore(restoreForm.preview.entries, { mode: restoreForm.mode, createdAt: restoreForm.preview.createdAt });
                 restoreForm.preview = null;
                 restoreForm.bytes = null;
                 // Every store read its data when the app started; running on
@@ -165,7 +296,10 @@ export default {
             available: Boolean(deviceBackup), storedRows, usage, quota, persisted, persistRefused,
             canPersist: Boolean(navigatorStorage && typeof navigatorStorage.persist === 'function'),
             requestPersistence, formatByteSize, formatDate,
-            backupForm, backupPassphraseHint, createBackup,
+            backupForm, backupPassphraseHint, createBackup, shareBackup, backUpToFolder, canShareFiles,
+            status, lastBackupText, reminderOptions, setReminderInterval, setAutomatic,
+            destinationsAvailable: Boolean(destinations), folderSupported, destinationState, destinationForm,
+            chooseFolder, forgetFolder, forgetKey, statusAvailable: Boolean(statusStore),
             restoreForm, onRestoreFileChosen, openBackup, canRestore, restoreBackup, cancelRestore,
             RestoreMode, backupFileExtension: BACKUP_FILE_EXTENSION
         };
@@ -224,13 +358,28 @@ export default {
                     <input type="checkbox" v-model="backupForm.includeDownloadedContent" class="your-data-include-downloaded" />
                     Include builds downloaded from other people (can be large; they can usually be fetched again)
                 </label>
+                <label v-if="destinationsAvailable && backupForm.passphrase" class="your-data-checkbox">
+                    <input type="checkbox" v-model="backupForm.rememberKey" class="your-data-remember-key" />
+                    Remember the backup key on this device, for one-click and automatic backups (the passphrase itself isn't kept, and the key can only make backups, not open them)
+                </label>
                 <p v-if="backupPassphraseHint" class="identity-unlock-error">{{ backupPassphraseHint }}</p>
                 <p v-if="backupForm.error" class="identity-unlock-error">{{ backupForm.error }}</p>
-                <button type="button" class="action-btn action-btn--primary your-data-backup" :disabled="backupForm.busy" @click="createBackup">
-                    {{ backupForm.busy ? 'Backing up…' : 'Back Up to a File' }}
-                </button>
+                <div class="your-data-buttons">
+                    <button type="button" class="action-btn action-btn--primary your-data-backup" :disabled="backupForm.busy" @click="createBackup">
+                        {{ backupForm.busy ? 'Backing up…' : 'Back Up to a File' }}
+                    </button>
+                    <button v-if="canShareFiles" type="button" class="action-btn action-btn--secondary your-data-share" :disabled="backupForm.busy" @click="shareBackup">
+                        Share Backup…
+                    </button>
+                    <button v-if="destinationState.folder" type="button" class="action-btn action-btn--secondary your-data-backup-folder" :disabled="backupForm.busy" @click="backUpToFolder">
+                        Back Up to "{{ destinationState.folder.name }}"
+                    </button>
+                </div>
+                <p v-if="destinationState.folder && destinationState.keyRemembered" class="form-hint form-hint--neutral">
+                    The backup key is remembered: Back Up to "{{ destinationState.folder.name }}" works without the passphrase.
+                </p>
                 <div v-if="backupForm.result" class="identity-import-result your-data-backup-result">
-                    <p>Backup saved ({{ formatByteSize(backupForm.result.size) }}). Keep the file and its passphrase somewhere safe.</p>
+                    <p>{{ backupForm.result.where }}<template v-if="backupForm.result.size"> ({{ formatByteSize(backupForm.result.size) }})</template> Keep the backup and its passphrase somewhere safe.</p>
                     <ul>
                         <li v-for="row in backupForm.result.rows" :key="row.group">{{ row.label }}: {{ row.count }}</li>
                     </ul>
@@ -238,6 +387,58 @@ export default {
                         Left out {{ backupForm.result.leftOutContentCount }} downloaded {{ backupForm.result.leftOutContentCount === 1 ? 'build' : 'builds' }}.
                     </p>
                 </div>
+            </div>
+
+            <div v-if="available && statusAvailable" class="your-data-section your-data-reminders">
+                <h2>Reminders and automatic backups</h2>
+                <p class="form-hint form-hint--neutral your-data-last-backup">
+                    <template v-if="lastBackupText">Last backup: {{ lastBackupText }}.</template>
+                    <template v-else>This device hasn't been backed up yet.</template>
+                </p>
+                <label class="form-field">
+                    <span class="form-label">Remind me to back up</span>
+                    <select class="form-input your-data-reminder-interval" :value="status.reminderIntervalDays" @change="setReminderInterval">
+                        <option v-for="option in reminderOptions" :key="option.days" :value="option.days">{{ option.label }}</option>
+                    </select>
+                </label>
+
+                <h3>Backup folder</h3>
+                <template v-if="folderSupported">
+                    <p class="form-hint form-hint--neutral">
+                        Choose a folder your cloud storage syncs (Dropbox, OneDrive, iCloud Drive, Google Drive) or a USB drive, and
+                        backups go there too, one file a day, keeping the newest ten.
+                    </p>
+                    <p v-if="destinationState.folder" class="your-data-folder">
+                        Folder: <strong>{{ destinationState.folder.name }}</strong>
+                        <template v-if="destinationState.folder.permission !== 'granted'"> (the browser asks again before the next backup)</template>
+                    </p>
+                    <div class="your-data-buttons">
+                        <button type="button" class="action-btn action-btn--secondary your-data-choose-folder" :disabled="destinationForm.busy" @click="chooseFolder">
+                            {{ destinationState.folder ? 'Choose Another Folder' : 'Choose Folder…' }}
+                        </button>
+                        <button v-if="destinationState.folder" type="button" class="action-btn action-btn--secondary your-data-forget-folder" :disabled="destinationForm.busy" @click="forgetFolder">Stop Using This Folder</button>
+                        <button v-if="destinationState.keyRemembered" type="button" class="action-btn action-btn--secondary your-data-forget-key" :disabled="destinationForm.busy" @click="forgetKey">Forget Backup Key</button>
+                    </div>
+                    <label class="your-data-checkbox">
+                        <input type="checkbox" class="your-data-automatic" :checked="status.automaticFolderBackup"
+                               :disabled="!destinationState.folder || !destinationState.keyRemembered" @change="setAutomatic" />
+                        Back up to the folder automatically once a day while ForkBuild is open
+                    </label>
+                    <p v-if="!destinationState.folder || !destinationState.keyRemembered" class="form-hint form-hint--neutral">
+                        Needs a folder, and the backup key remembered: tick "Remember the backup key" when you back up.
+                    </p>
+                    <p v-if="status.automaticFolderBackup && destinationState.folder && destinationState.folder.permission !== 'granted'" class="form-hint">
+                        Automatic backups wait until you back up to the folder once in this session and allow it when the browser asks.
+                    </p>
+                    <p v-if="status.lastAutomaticBackupError" class="identity-unlock-error">The last automatic backup failed: {{ status.lastAutomaticBackupError }}</p>
+                </template>
+                <p v-else class="form-hint form-hint--neutral">
+                    This browser can't save to a folder (Chrome and Edge on computers can).
+                    <template v-if="canShareFiles"> Share Backup sends the file to another app, such as a cloud drive or email.</template>
+                    Download the file and move it to cloud storage or another disk yourself.
+                </p>
+                <p v-if="destinationForm.error" class="identity-unlock-error">{{ destinationForm.error }}</p>
+                <p v-if="destinationForm.message" class="form-hint form-hint--neutral">{{ destinationForm.message }}</p>
             </div>
 
             <div v-if="available" class="your-data-section">
@@ -308,4 +509,24 @@ function downloadBytes(bytes, filename) {
     link.click();
     // The download has started by the time this runs; revoking sooner can cancel it in some browsers.
     setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+function safeCanShare(sharing, files) {
+    try {
+        return sharing.canShare({ files });
+    } catch {
+        return false;
+    }
+}
+
+// Resolves to true once shared, false if the person closed the share sheet.
+async function shareBytes(sharing, bytes, filename) {
+    const file = new File([bytes], filename, { type: 'application/octet-stream' });
+    try {
+        await sharing.share({ files: [file], title: 'ForkBuild backup' });
+        return true;
+    } catch (error) {
+        if (error && error.name === 'AbortError') return false;
+        throw error;
+    }
 }

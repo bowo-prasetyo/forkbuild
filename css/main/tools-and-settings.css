@@ -693,3 +693,22 @@
         padding: 1rem 16px 2rem;
     }
 }
+
+.your-data-section h3 {
+    margin: 1rem 0 0.4rem;
+    font-size: 0.95rem;
+    color: #d0d0d0;
+}
+
+.your-data-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.35rem 0;
+}
+
+.your-data-folder {
+    margin: 0.35rem 0;
+    font-size: 0.85rem;
+    color: #d0d0d0;
+}

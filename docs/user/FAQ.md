@@ -102,7 +102,9 @@ Yes. Documents, identities, friends and chat history all live in this
 browser's storage for this site, and clearing it deletes them for good.
 Back them up first with **Your Data → Back Up to a File**, and keep the
 file and its passphrase safe; **Restore** on the same page brings everything
-back. See [Your Data](13-YourData.md) and [Privacy](../Privacy.md).
+back. ForkBuild reminds you when the last backup is old, and in Chrome or
+Edge on a computer it can back up automatically every day to a folder your
+cloud storage syncs. See [Your Data](13-YourData.md) and [Privacy](../Privacy.md).
 
 ### Can I rename or delete an identity?
 

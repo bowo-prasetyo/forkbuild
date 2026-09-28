@@ -107,3 +107,15 @@ passphrase. A restore writes only entries this version knows, and says what
 it wrote, kept and skipped.
 
 [Full text](history/0.9.md#a-device-backup-is-always-encrypted-and-a-restore-never-logs-anyone-in-2026-09-28)
+
+### A Remembered Backup Key Can Only Make Backups (2026-09-28)
+
+One-click and automatic backups don't ask for the passphrase, so the device
+keeps what they need: a key derived from it, which the browser will use to
+encrypt but never reveals and never uses to decrypt. The passphrase itself is
+never stored, so a remembered key adds nothing for anyone who can already
+read this browser's data, and every backup still opens only with the
+passphrase. Automatic backups never ask for a permission on their own, and a
+reminder can be snoozed or turned off.
+
+[Full text](history/0.9.md#a-remembered-backup-key-can-only-make-backups-2026-09-28)

@@ -335,6 +335,26 @@ lists are combined), waits for flushLocalStorage(), and reloads the page,
 because every store read its data when the app started. The page also
 shows `navigator.storage.estimate()` and asks for persistent storage.
 
+application/backup/BackupStatusStore.js keeps when and where this device
+was last backed up and its reminder and automatic-backup settings, in
+`device-backup-status`, which like `local-session` is device-only: never
+backed up, kept by a replacing restore, and moved forward by a restore to
+the backup's date. BackupReminder.js decides when a reminder is due (a week
+after the device first holds work worth backing up, then after the chosen
+interval, unless snoozed); ui/components/BackupReminderBanner.js shows it
+under the header everywhere but Your Data. BackupDestinations.js adds a
+folder picked through the File System Access API (BackupFolder.js writes one
+file a day and keeps ForkBuild's newest ten) and the remembered backup key:
+a non-extractable, encrypt-only CryptoKey from
+DeviceBackupFile.js#deriveBackupEncryptionKey(). Neither is JSON, so both
+live in storage/IndexedDbValueStore.js (a separate `forkbuild-backup`
+database) and are loaded once, so a click can ask for the folder permission
+before the browser's user-activation window closes. `startAutomaticBackups()`
+(ui/main.js) checks a minute after start-up and hourly and backs up to the
+folder when turned on, allowed without asking, and a day has passed. Web
+Share sends a backup to another app; the page keeps an encrypted backup for
+a second tap when the share sheet refuses to open after a slow encryption.
+
 Smaller exports sit where their data is: every saved document from the
 Editor's Recent menu (application/document/DocumentBundle.js), every
 personal structure beside My Structures

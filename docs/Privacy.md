@@ -25,7 +25,13 @@ Clearing this site's data in the browser deletes all of it, and there is no
 other copy and no way to recover it. Back it up first with **Your Data →
 Back Up to a File**: the file holds all of the above except which identity
 is logged in, encrypted with a passphrase you choose, and stays wherever you
-put it. ForkBuild never uploads it.
+put it. ForkBuild never uploads it. **Share Backup** hands the file to the
+app you pick on your device. If you choose a backup folder, the browser
+keeps ForkBuild's permission for it, and ForkBuild keeps the folder and, if
+you ask, a key made from your backup passphrase that can only make backups
+(never open them) in a separate `forkbuild-backup` IndexedDB database; when
+and where you last backed up is kept with the rest of the data but left out
+of backups.
 
 ## What other people can see
 

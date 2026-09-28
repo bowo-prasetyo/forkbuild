@@ -2,12 +2,13 @@ import { inject, provide, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import UserWidget from './components/UserWidget.js';
 import ExperimentalBanner from './components/ExperimentalBanner.js';
+import BackupReminderBanner from './components/BackupReminderBanner.js';
 import NotificationHistoryPanel from './components/NotificationHistoryPanel.js';
 import { CreatePreviewUseCase } from '../application/editor/CreatePreviewUseCase.js';
 
 export default {
     name: 'App',
-    components: { UserWidget, ExperimentalBanner, NotificationHistoryPanel },
+    components: { UserWidget, ExperimentalBanner, BackupReminderBanner, NotificationHistoryPanel },
     // 0.2.32: one app-wide PreviewService, provided here (same
     // provide/inject convention LoginModal's identityUseCase already
     // uses) so its cache and generation queue survive navigating
@@ -113,6 +114,7 @@ export default {
                 </div>
             </header>
 
+            <BackupReminderBanner :path="$route.path" @open-your-data="$router.push('/settings/data')" />
             <ExperimentalBanner v-if="$route.meta.experimental" />
             <main class="app-content">
                 <router-view />

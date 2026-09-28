@@ -3,11 +3,12 @@ import {
     CONTENT_ENTRY_PREFIX,
     DOCUMENT_INDEX_ENTRY_NAME,
     IDENTITY_INDEX_ENTRY_NAME,
+    BACKUP_STATUS_ENTRY_NAME,
+    DEVICE_ONLY_ENTRY_NAMES,
     OWN_PUBLICATIONS_ENTRY_NAME,
-    SESSION_ENTRY_NAME,
     backupEntryGroupOf
 } from './BackupEntryGroups.js';
-import { encodeDeviceBackup, decodeDeviceBackup } from './DeviceBackupFile.js';
+import { encodeDeviceBackup, encodeDeviceBackupWithKey, decodeDeviceBackup } from './DeviceBackupFile.js';
 
 export const RestoreMode = Object.freeze({
     // Deletes everything on this device first, then writes the backup.
@@ -29,15 +30,18 @@ export const RestoreMode = Object.freeze({
 // `flush` (flushLocalStorage in the app) so everything is on disk before
 // the caller reloads the page: stores keep in-memory copies read at start.
 export class DeviceBackupUseCase {
-    constructor({ storageProvider, flush = () => Promise.resolve() }) {
+    // `statusStore` (BackupStatusStore), when given, learns that a restore
+    // brought this device's data up to the backup's date.
+    constructor({ storageProvider, flush = () => Promise.resolve(), statusStore = null }) {
         this._storage = storageProvider;
         this._flush = flush;
+        this._statusStore = statusStore;
     }
 
     // Counts this device's entries per BackupEntryGroup without reading
     // them (published content stays on disk until read).
     summarize() {
-        const names = this._storage.list().filter((name) => name !== SESSION_ENTRY_NAME);
+        const names = this._storage.list().filter((name) => !DEVICE_ONLY_ENTRY_NAMES.includes(name));
         return describeBackupEntries(Object.fromEntries(names.map((name) => [name, true])));
     }
 
@@ -48,7 +52,7 @@ export class DeviceBackupUseCase {
         const entries = {};
         let leftOutContentCount = 0;
         for (const name of [...this._storage.list()].sort()) {
-            if (name === SESSION_ENTRY_NAME) continue;
+            if (DEVICE_ONLY_ENTRY_NAMES.includes(name)) continue;
             if (name.startsWith(CONTENT_ENTRY_PREFIX) && !includeDownloadedContent
                 && !ownContentHashes.has(name.slice(CONTENT_ENTRY_PREFIX.length))) {
                 leftOutContentCount++;
@@ -60,11 +64,15 @@ export class DeviceBackupUseCase {
         return { entries, groups: describeBackupEntries(entries), leftOutContentCount };
     }
 
-    // Resolves to { bytes, groups, leftOutContentCount }.
-    async createBackupFile({ passphrase, includeDownloadedContent = false, iterations } = {}) {
+    // Resolves to { bytes, createdAt, groups, leftOutContentCount }. Encrypts
+    // with `key` (DeviceBackupFile.js#deriveBackupEncryptionKey()) when
+    // given, otherwise with `passphrase`.
+    async createBackupFile({ passphrase, key = null, includeDownloadedContent = false, iterations, createdAt = new Date() } = {}) {
         const { entries, groups, leftOutContentCount } = await this.collect({ includeDownloadedContent });
-        const bytes = await encodeDeviceBackup({ entries, passphrase, ...(iterations ? { iterations } : {}) });
-        return { bytes, groups, leftOutContentCount };
+        const bytes = key
+            ? await encodeDeviceBackupWithKey({ entries, key, createdAt })
+            : await encodeDeviceBackup({ entries, passphrase, createdAt, ...(iterations ? { iterations } : {}) });
+        return { bytes, createdAt, groups, leftOutContentCount };
     }
 
     // Resolves to { createdAt, entries, groups } without changing anything.
@@ -76,7 +84,8 @@ export class DeviceBackupUseCase {
     // Resolves to { written, kept, skipped }: entries written, entries this
     // device already had and kept (MERGE), and entries skipped because this
     // version doesn't know them.
-    async restore(entries, { mode = RestoreMode.MERGE } = {}) {
+    // `createdAt` is the backup's own date (readBackupFile()).
+    async restore(entries, { mode = RestoreMode.MERGE, createdAt = null } = {}) {
         if (mode !== RestoreMode.REPLACE && mode !== RestoreMode.MERGE) {
             throw new Error(`DeviceBackupUseCase: unknown restore mode "${mode}"`);
         }
@@ -86,7 +95,10 @@ export class DeviceBackupUseCase {
         let kept = 0;
 
         if (mode === RestoreMode.REPLACE) {
-            for (const name of [...this._storage.list()]) this._storage.remove(name);
+            // The login session goes too; this device's backup status stays.
+            for (const name of [...this._storage.list()]) {
+                if (name !== BACKUP_STATUS_ENTRY_NAME) this._storage.remove(name);
+            }
             for (const [name, value] of known) {
                 this._storage.save(name, value);
                 written++;
@@ -106,6 +118,7 @@ export class DeviceBackupUseCase {
                 }
             }
         }
+        if (this._statusStore && createdAt) this._statusStore.recordRestore(createdAt);
         await this._flush();
         return { written, kept, skipped };
     }
