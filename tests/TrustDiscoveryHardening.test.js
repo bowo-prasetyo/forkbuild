@@ -5,7 +5,6 @@ import { Position } from '../core/Position.js';
 import { SpatialBounds } from '../core/SpatialBounds.js';
 import { SpatialIndexRoot } from '../core/SpatialIndexRoot.js';
 import { Delegation, DelegationAction } from '../core/Delegation.js';
-import { SigningIdentity as MockSigningIdentity } from '../core/SigningIdentity.js';
 import { TrustStatus } from '../core/TrustObservation.js';
 import { EquivocationDetector } from '../core/IndexEquivocation.js';
 import { LocalIdentityProvider } from '../identity/LocalIdentityProvider.js';
@@ -286,19 +285,14 @@ async function runTests() {
     //     from whether the delegation remains otherwise valid.
     // -------------------------------------------------------------
     {
-        // Delegation signing uses the 0.2.17 mock scheme
-        // (core/SigningIdentity.js) — see the note in section 17 below.
-        const mockAlice = new MockSigningIdentity({ id: 'mock-alice-13', username: 'alice', providerId: 'local' });
-        const mockBob = new MockSigningIdentity({ id: 'mock-bob-13', username: 'bob', providerId: 'local' });
-
         const resolver = new LocalDelegationResolver(new InMemoryStorageProvider());
-        const createDelegation = new CreateDelegationUseCase(resolver);
+        const createDelegation = new CreateDelegationUseCase(resolver, alice);
         const del = await createDelegation.execute({
-            issuerIdentity: mockAlice, delegateIdentity: mockBob,
+            delegateIdentity: bobIdentity,
             action: DelegationAction.PLACE, subject: { type: 'publication', id: 'pub-1' }
         });
         assert(typeof del.nonce === 'string' && del.nonce.length > 0, '13a. Every delegation carries a nonce');
-        assert(del.issuedFor === mockBob.id, '13b. issuedFor names the delegate flatly');
+        assert(del.issuedFor === bobIdentity.id, '13b. issuedFor names the delegate flatly');
 
         const guard = new ReplayGuard();
         const hash = del.computeHash();
@@ -309,7 +303,7 @@ async function runTests() {
         // A second, semantically-similar-but-freshly-issued delegation
         // is NOT a replay — different nonce, different hash.
         const del2 = await createDelegation.execute({
-            issuerIdentity: mockAlice, delegateIdentity: mockBob,
+            delegateIdentity: bobIdentity,
             action: DelegationAction.PLACE, subject: { type: 'publication', id: 'pub-1' }
         });
         assert(del2.nonce !== del.nonce, '13d. Two issuances of the same terms carry different nonces');
@@ -350,40 +344,34 @@ async function runTests() {
     //     mis-authorized.
     // -------------------------------------------------------------
     {
-        // Delegation's own signature uses the 0.2.17 mock signature
-        // scheme (core/SigningIdentity.js), matching
-        // tests/DelegatedAuthorization.test.js exactly — distinct from
-        // the real Ed25519 identities (alice/bob/carol) used elsewhere
-        // in this file for placement/root signing.
-        const mockAlice = new MockSigningIdentity({ id: 'mock-alice', username: 'alice', providerId: 'local' });
-        const mockBob = new MockSigningIdentity({ id: 'mock-bob', username: 'bob', providerId: 'local' });
-        const mockCarol = new MockSigningIdentity({ id: 'mock-carol', username: 'carol', providerId: 'local' });
+        const carol = createIdentity('carol');
+        const carolIdentity = carol.getSigningIdentity();
 
         const resolver = new LocalDelegationResolver(new InMemoryStorageProvider());
-        const createDelegation = new CreateDelegationUseCase(resolver);
+        const createDelegation = new CreateDelegationUseCase(resolver, alice);
         const verifier = new AuthorizationVerifier();
-
         const grant = await createDelegation.execute({
-            issuerIdentity: mockAlice, delegateIdentity: mockBob,
+            delegateIdentity: bobIdentity,
             action: DelegationAction.PLACE, subject: { type: 'publication', id: 'pub-chain' }
         });
         assert(grant.parentDelegationId === null, 'sanity: a direct-from-owner delegation has no parent');
 
         // Bob attempts to re-delegate to Carol under his OWN delegation
         // (rather than Alice, the actual owner, issuing directly).
-        const chained = new Delegation({
-            issuerIdentity: mockBob, delegateIdentity: mockCarol,
+        const unsignedChain = new Delegation({
+            issuerIdentity: bobIdentity, delegateIdentity: carolIdentity,
             action: DelegationAction.PLACE, subject: { type: 'publication', id: 'pub-chain' },
             parentDelegationId: grant.id
         });
-        chained._signature = await mockBob.sign(chained.getCanonicalPayload());
+        const chained = unsignedChain.withSignature(bob.signCanonical(unsignedChain.getSigningDescriptor()));
         await resolver.save(chained);
 
+        const action = { type: 'placement-record', id: 'chain-placement', revision: 1, payload: { publicationId: 'pub-chain' } };
         const result = await verifier.verify({
-            signerIdentity: mockCarol, ownerIdentity: mockAlice,
+            signerIdentity: carolIdentity, ownerIdentity: aliceIdentity,
             requiredAction: DelegationAction.PLACE,
             subject: { type: 'publication', id: 'pub-chain' },
-            signature: await mockCarol.sign('placement-payload'), payload: 'placement-payload',
+            descriptor: action, signature: carol.signCanonical(action),
             delegationId: chained.id, delegationResolver: resolver
         });
         assert(result.authorized === false && result.reason === 'UNSUPPORTED_DELEGATION_CHAIN',

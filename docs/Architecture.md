@@ -566,8 +566,16 @@ the signer allowed.
 
 **Built and tested, not wired into the running app:**
 
-- delegation: core/Delegation.js grants one PLACE or MOVE capability,
-  checked by identity/DelegationVerifier.js;
+- delegation: core/Delegation.js grants one PLACE or MOVE capability.
+  The issuer signs it through `signCanonical()` (signature type
+  `delegation`, CreateDelegationUseCase), and
+  identity/DelegationVerifier.js and
+  LocalAuthorizationVerifier#verifyDelegation() check it, and the
+  delegate's signed action, as real Ed25519 signatures with each key taken
+  from its did:key (identity/DescriptorSignature.js). Before it is wired
+  in, it still needs a way for grants to travel between devices, a signed
+  revocation, a check of its `nonce` against replay, and a decision on
+  chains, which are refused today;
 - replica merging (application/placement/CreateReplicationUseCase.js,
   replication/ReplicaMergeService.js and LocalReplicationStore.js).
   ConflictResolver compares two causal stamps (EQUAL, BEFORE, AFTER,

@@ -2080,3 +2080,28 @@ is that transition. Part of GHSA-8ggw-xpjf-w4rh.
   the author and the forged design still has none; that old attributions are refused from files and from the network;
   and that old lineage claims are counted apart, refused on import, and replaced by declaring the lineage again.
   `tests/BlueprintIdentityAttribution.test.js` now expects `"bp2:"` fingerprints.
+
+## Delegations are signed for real (unnumbered, 2026-09-28)
+
+**The delegation code no longer trusts a signature anyone can write.** `core/SigningIdentity.js` was a placeholder from
+0.2.17 whose `sign()` produced the text `mock-sig-<publicKey>-<hash>` and whose `verify()` compared that text, so
+anyone who knew a public key (which is public) could "sign" a delegation in its owner's name. Only the delegation code
+used it, and delegation isn't wired into the running app, so nothing live was exposed; this removes the trap before it
+is.
+
+- `core/SigningIdentity.js` is deleted. `core/Delegation.js` uses the real public-key `identity/SigningIdentity.js`,
+  and gains `getSigningDescriptor()` (signature type `delegation`) and `withSignature()`.
+- `CreateDelegationUseCase(resolver, identityProvider)` signs through `signCanonical()`; the issuer is always the
+  provider's own identity.
+- `identity/DescriptorSignature.js` holds the one Ed25519 descriptor check (moved unchanged from
+  `LocalAuthorizationVerifier#verifyDescriptor()`, which now calls it) and `identityForDidKey()`.
+  `LocalAuthorizationVerifier#verifyDelegation()` and `VerifyDelegationUseCase` use it with the issuer's key taken
+  from its did:key; `DelegationVerifier#verify()` takes the action's `descriptor` and `signature` instead of a raw
+  payload and checks both the action and the delegation that way.
+- Tests: `tests/DelegatedAuthorization.test.js` is rewritten on real identities, keeping its 15 cases, and adds
+  forgeries: the old `mock-sig-…` format, a delegation in Alice's name signed by Bob, Alice's did:key paired with Bob's
+  key, a stored delegation changed after signing, and a delegation signature replayed as an action's. It used to end
+  in `runTests().catch(console.error)`, which reported success even when an assertion failed; it now uses top-level
+  `await`. `tests/TrustDiscoveryHardening.test.js` sections 13 and 17 use real identities.
+- Still needed before delegation is wired in: a way for grants to travel between devices, signed revocation, a nonce
+  check against replay, and a decision on chains (refused today). `docs/Architecture.md` lists them.
