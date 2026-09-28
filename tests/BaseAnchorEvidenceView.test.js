@@ -231,7 +231,7 @@ async function run() {
         const identity = makeIdentity('Alice');
         const authVerifier = new LocalAuthorizationVerifier();
 
-        const contentHash = 'f00dcafe';
+        const contentHash = 'f00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafe';
         const publication = new DecentralizedPublication({
             id: 'pub-base-flagship',
             contentKind: 'forkbuild.structure',
@@ -299,7 +299,7 @@ async function run() {
         // A wrong contentHash is a definite rejection, not a crash, and
         // the evidence view's own describe() output is unaffected by
         // it — inspection and verification stay fully independent.
-        const mismatchResult = await verifier.verify(createdAnchor.proof, { contentHash: 'deadbeef' });
+        const mismatchResult = await verifier.verify(createdAnchor.proof, { contentHash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef' });
         assert(mismatchResult.valid === false && !mismatchResult.unavailable, '40. a genuinely mismatched contentHash is a definite rejection, never "unavailable"');
         const typeSpecificAfterMismatch = evidenceViewRegistry.get('base').describe(createdAnchor);
         assert(JSON.stringify(typeSpecificAfterMismatch) === JSON.stringify(typeSpecific), '41. the evidence view\'s own description is byte-identical regardless of what verification later finds — it never depends on or re-derives a verification outcome');

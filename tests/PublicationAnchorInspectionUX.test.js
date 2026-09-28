@@ -65,7 +65,7 @@ async function run() {
         const proof = { txid: '9'.repeat(64), network: 'mainnet', vout: 0 };
         const anchor = new PublicationAnchor({
             publicationId: 'pub-detail',
-            contentHash: 'deadbeef',
+            contentHash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef',
             anchorType: 'bitcoin-op-return',
             locator: `bitcoin:${proof.txid}`,
             proof,
@@ -76,7 +76,7 @@ async function run() {
         const detail = publicationAnchorDetailView(anchor);
         assert(detail.anchorId === anchor.id, '3. anchorId is the anchor\'s own id');
         assert(detail.anchorType === 'bitcoin-op-return', '4. anchorType is carried through unchanged');
-        assert(detail.publicationId === 'pub-detail' && detail.contentHash === 'deadbeef', '5. publicationId/contentHash are the anchor\'s own claim');
+        assert(detail.publicationId === 'pub-detail' && detail.contentHash === 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef', '5. publicationId/contentHash are the anchor\'s own claim');
         assert(detail.locator === anchor.locator, '6. locator is carried through unchanged');
         assert(detail.anchoredAt === '2026-01-01T00:00:00.000Z', '7. anchoredAt is the anchor\'s own reported timestamp, verbatim');
         assert(detail.anchoredAtLabel === 'Claimed external recording time', '8. anchoredAtLabel never says "Verified at"/"Confirmed at"/"Recorded at"');
@@ -89,8 +89,8 @@ async function run() {
         assert(!('txid' in detail) && !('network' in detail) && !('confirmations' in detail),
             '11. no top-level txid/network/confirmations field — this file never reaches into an anchorType-specific proof');
 
-        assert(detail.bindingDescription === describeAnchorBinding('pub-detail', 'deadbeef'), '12. bindingDescription matches the standalone helper');
-        assert(detail.bindingDescription.includes('pub-detail') && detail.bindingDescription.includes('deadbeef'),
+        assert(detail.bindingDescription === describeAnchorBinding('pub-detail', 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'), '12. bindingDescription matches the standalone helper');
+        assert(detail.bindingDescription.includes('pub-detail') && detail.bindingDescription.includes('deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'),
             '13. bindingDescription names both the publicationId and the contentHash');
         const bindingWords = detail.bindingDescription.toLowerCase();
         assert(bindingWords.includes('claims'), '14. bindingDescription is worded as a claim');
@@ -196,7 +196,7 @@ async function run() {
         const publication = new DecentralizedPublication({
             id: 'pub-flagship',
             contentKind: 'forkbuild.structure',
-            contentReference: new ContentReference({ hash: 'f00dcafe' })
+            contentReference: new ContentReference({ hash: 'f00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafe' })
         });
         alicePublicationCatalog.add(publication);
 
@@ -240,7 +240,7 @@ async function run() {
         const verificationHistory = {};
         const beforeHistoryJson = JSON.stringify(verificationHistory);
         const convergenceBefore = derivePublicationEvidenceConvergence({
-            publicationId: 'pub-flagship', expectedContentHash: 'f00dcafe', anchors: discovered
+            publicationId: 'pub-flagship', expectedContentHash: 'f00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafe', anchors: discovered
         });
         const beforeConvergenceJson = JSON.stringify(convergenceBefore);
 
@@ -255,12 +255,12 @@ async function run() {
         assert(JSON.stringify(bobAnchorCatalog.list().map((a) => a.toJSON())) === beforeCatalogJson, '45. INVARIANT: the catalog is unchanged by inspection');
         assert(JSON.stringify(verificationHistory) === beforeHistoryJson, '46. INVARIANT: no verification observation is ever created by inspection');
         const convergenceAfterInspect = derivePublicationEvidenceConvergence({
-            publicationId: 'pub-flagship', expectedContentHash: 'f00dcafe', anchors: bobEvidenceCoordinator.discover('pub-flagship')
+            publicationId: 'pub-flagship', expectedContentHash: 'f00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafe', anchors: bobEvidenceCoordinator.discover('pub-flagship')
         });
         assert(JSON.stringify(convergenceAfterInspect) === beforeConvergenceJson, '47. INVARIANT: the derived evidence convergence is unchanged by inspection');
 
         // The inspection result itself is correct and complete.
-        assert(detail.anchorId === aliceAnchor.id && detail.publicationId === 'pub-flagship' && detail.contentHash === 'f00dcafe',
+        assert(detail.anchorId === aliceAnchor.id && detail.publicationId === 'pub-flagship' && detail.contentHash === 'f00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafe',
             '48. the detail view names the exact anchor Bob is looking at');
         assert(detail.locator === `bitcoin:${txid}`, '49. locator is carried through unchanged');
         assert(JSON.stringify(detail.proof) === JSON.stringify({ txid, network: 'mainnet' }), '50. proof is exactly what Alice\'s anchor carries');
@@ -272,7 +272,7 @@ async function run() {
 
         // --- Bob separately clicks "Verify Evidence." Only NOW does the
         // verifier get consulted, and only now does an observation exist. ---
-        const result = await bobEvidenceCoordinator.verify(anchor, { expectedContentHash: 'f00dcafe', expectedPublicationId: 'pub-flagship' });
+        const result = await bobEvidenceCoordinator.verify(anchor, { expectedContentHash: 'f00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafe', expectedPublicationId: 'pub-flagship' });
         assert(verifyCalls === 1, '53. an explicit "Verify Evidence" click is the only thing that ever consults the verifier');
         verificationHistory[anchor.id] = [createVerificationObservation({ anchorId: anchor.id, outcome: result.outcome, reason: result.reason })];
         assert(verificationHistory[anchor.id].length === 1, '54. verifying explicitly is what creates an observation — inspecting never does');

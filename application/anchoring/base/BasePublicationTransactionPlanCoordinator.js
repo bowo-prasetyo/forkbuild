@@ -1,5 +1,6 @@
 import { BaseNetworkObservationState } from './BaseNetworkObservationState.js';
 import { BasePublicationTransactionPlanState } from './BasePublicationTransactionPlanState.js';
+import { LEGACY_HASH_EXTERNAL_REASON, isLegacyContentHash } from '../../../serializer/contentHash.js';
 
 // 0.8.91 — Explicit Base Publication Transaction Construction.
 //
@@ -123,6 +124,10 @@ export class BasePublicationTransactionPlanCoordinator {
         }
         if (!accountObservation || accountObservation.state !== BaseNetworkObservationState.OBSERVED) {
             throw new Error('BasePublicationTransactionPlanCoordinator: accountObservation must be an OBSERVED Base account observation — this coordinator never observes an account itself');
+        }
+        // No plan is made, so nothing can be signed or spent.
+        if (isLegacyContentHash(contentHash)) {
+            return this._outcome(BasePublicationTransactionPlanState.FAILED, { reason: LEGACY_HASH_EXTERNAL_REASON });
         }
 
         const result = await this._basePublicationTransactionPlanner.plan({

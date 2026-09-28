@@ -1,6 +1,7 @@
 import { PublicationAnchor } from '../../core/PublicationAnchor.js';
 import { resolveSigningIdentityId } from '../../identity/resolveSigningIdentityId.js';
 import { AnchorAcquisitionKind } from './AnchorAcquisitionKind.js';
+import { LEGACY_HASH_EXTERNAL_REASON, isLegacyContentHash } from '../../serializer/contentHash.js';
 
 // 0.8.8 — Explicit Publication Anchor Creation & Lifecycle.
 //
@@ -123,6 +124,11 @@ export class CreatePublicationAnchorUseCase {
             throw new Error(`CreatePublicationAnchorUseCase: publication ${publicationId} not found`);
         }
         const contentHash = publication.contentReference.hash;
+        // The callers refuse earlier, before any wallet is asked; this keeps
+        // every other path from signing such an anchor.
+        if (isLegacyContentHash(contentHash)) {
+            throw new Error(`CreatePublicationAnchorUseCase: ${LEGACY_HASH_EXTERNAL_REASON}`);
+        }
 
         const authorIdentityId = resolveSigningIdentityId(this._identityProvider);
         if (!authorIdentityId) {

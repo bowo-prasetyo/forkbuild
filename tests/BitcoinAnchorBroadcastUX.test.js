@@ -435,7 +435,7 @@ async function run() {
         assert(observation.state === BitcoinAnchorFundingObservationState.OBSERVED, 'sanity: a real fundingSource produces a real OBSERVED observation');
 
         const constructionCoordinator = new BitcoinAnchorTransactionConstructionCoordinator({ bitcoinAnchorTransactionBuilder: builder });
-        const constructed = constructionCoordinator.construct({ publicationId: 'pub-1', contentHash: 'deadbeef', fundingObservation: observation });
+        const constructed = constructionCoordinator.construct({ publicationId: 'pub-1', contentHash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef', fundingObservation: observation });
         assert(constructed.state === BitcoinAnchorTransactionConstructionState.CONSTRUCTED, 'sanity: comfortable funding constructs successfully');
 
         const reviewCoordinator = new BitcoinAnchorTransactionReviewCoordinator({ bitcoinAnchorPsbtBuilder: psbtBuilder });

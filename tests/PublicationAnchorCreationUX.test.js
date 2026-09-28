@@ -154,7 +154,7 @@ async function run() {
         assert(creationCoordinator.availableAnchorTypes().includes('bitcoin-op-return'),
             '1. Alice\'s Publication Center lists Bitcoin as an available anchor type');
 
-        const contentHash = 'f00dcafe';
+        const contentHash = 'f00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafef00dcafe';
         publishContent(publicationCatalog, { id: 'pub-flagship', hash: contentHash });
 
         // Before any click, this publication has no known evidence and no

@@ -447,7 +447,7 @@ async function run() {
         assert(observation.state === BitcoinAnchorFundingObservationState.OBSERVED, 'sanity: a real fundingSource produces a real OBSERVED observation');
 
         const constructionCoordinator = new BitcoinAnchorTransactionConstructionCoordinator({ bitcoinAnchorTransactionBuilder: builder });
-        const constructed = constructionCoordinator.construct({ publicationId: 'pub-1', contentHash: 'deadbeef', fundingObservation: observation });
+        const constructed = constructionCoordinator.construct({ publicationId: 'pub-1', contentHash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef', fundingObservation: observation });
         assert(constructed.state === BitcoinAnchorTransactionConstructionState.CONSTRUCTED, 'sanity: comfortable funding constructs successfully');
 
         const reviewCoordinator = new BitcoinAnchorTransactionReviewCoordinator({ bitcoinAnchorPsbtBuilder: psbtBuilder });
@@ -640,7 +640,7 @@ async function run() {
     // ---------------------------------------------------------------
     {
         const { broadcastOutcome } = await buildRealBroadcastedTransaction();
-        const anchor = { publicationId: 'pub-1', id: 'anchor-1', contentHash: 'deadbeef', anchorType: 'bitcoin-op-return', proof: { txid: broadcastOutcome.txid } };
+        const anchor = { publicationId: 'pub-1', id: 'anchor-1', contentHash: 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef', anchorType: 'bitcoin-op-return', proof: { txid: broadcastOutcome.txid } };
 
         async function reconcileWith(confirmed, proofValid) {
             const source = scriptedConfirmationSource(broadcastOutcome.txid, [

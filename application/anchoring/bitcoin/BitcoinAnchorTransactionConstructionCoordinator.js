@@ -1,5 +1,6 @@
 import { BitcoinAnchorFundingObservationState } from './BitcoinAnchorFundingObservationState.js';
 import { BitcoinAnchorTransactionConstructionState } from './BitcoinAnchorTransactionConstructionState.js';
+import { LEGACY_HASH_EXTERNAL_REASON, isLegacyContentHash } from '../../../serializer/contentHash.js';
 
 // 0.8.61 — Explicit Bitcoin Anchor Transaction Construction UI.
 //
@@ -127,6 +128,10 @@ export class BitcoinAnchorTransactionConstructionCoordinator {
         }
         if (!fundingObservation || fundingObservation.state !== BitcoinAnchorFundingObservationState.OBSERVED) {
             throw new Error('BitcoinAnchorTransactionConstructionCoordinator: fundingObservation must be an OBSERVED funding observation — this coordinator never observes funding itself');
+        }
+        // No transaction is built, so nothing can be signed or spent.
+        if (isLegacyContentHash(contentHash)) {
+            return this._outcome(BitcoinAnchorTransactionConstructionState.FAILED, { reason: LEGACY_HASH_EXTERNAL_REASON });
         }
 
         const plan = this._bitcoinAnchorTransactionBuilder.build({
