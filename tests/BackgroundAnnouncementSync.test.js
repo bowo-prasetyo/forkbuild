@@ -169,7 +169,7 @@ async function run() {
     console.log('\nAll BackgroundAnnouncementSync tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BackgroundAnnouncementSync.test.js FAILED:', error);
     process.exitCode = 1;
 });

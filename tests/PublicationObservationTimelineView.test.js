@@ -376,7 +376,7 @@ async function run() {
     console.log('\nAll PublicationObservationTimelineView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationObservationTimelineView.test.js FAILED:', error);
     process.exitCode = 1;
 });

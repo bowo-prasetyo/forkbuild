@@ -440,7 +440,7 @@ async function run() {
     console.log('are all reconfirmed unchanged.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ForkFailureReasonPresentation.test.js FAILED:', error);
     process.exitCode = 1;
 });

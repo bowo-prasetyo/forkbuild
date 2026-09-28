@@ -468,7 +468,7 @@ async function run() {
     console.log('\nAll Snapshot Placement Lifecycle & Stale Availability Semantics tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('SnapshotPlacementLifecycle.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -701,7 +701,7 @@ reputation, trust scores, moderation, automatic deduplication, persistent encoun
 identity mechanisms) remain excluded because nothing this milestone found makes any of them necessary.`);
 }
 
-main().catch((err) => {
+await main().catch((err) => {
     console.error(err);
     process.exitCode = 1;
 });

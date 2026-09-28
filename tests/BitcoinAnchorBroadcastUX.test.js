@@ -649,7 +649,7 @@ async function run() {
     console.log('\nAll BitcoinAnchorBroadcastUX tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BitcoinAnchorBroadcastUX.test.js FAILED:', error);
     process.exitCode = 1;
 });

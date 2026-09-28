@@ -984,7 +984,7 @@ nothing found here forces one; this arc, like the Repository arc before it, can 
 concrete product question motivating it.`);
 }
 
-main().catch((err) => {
+await main().catch((err) => {
     console.error(err);
     process.exit(1);
 });

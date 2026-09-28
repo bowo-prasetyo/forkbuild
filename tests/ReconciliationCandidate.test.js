@@ -250,7 +250,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliation tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationCandidate.test.js FAILED:', error);
     process.exitCode = 1;
 });

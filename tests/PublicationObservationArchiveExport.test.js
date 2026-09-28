@@ -368,7 +368,7 @@ async function run() {
     console.log('\nAll PublicationObservationArchiveExport tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationObservationArchiveExport.test.js FAILED:', error);
     process.exitCode = 1;
 });

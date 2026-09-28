@@ -453,7 +453,7 @@ async function runTests() {
     console.log('\n✅ All World View Decentralized Publication Retrieval tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

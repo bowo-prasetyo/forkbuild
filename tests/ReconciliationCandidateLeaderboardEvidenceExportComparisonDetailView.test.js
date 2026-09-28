@@ -261,7 +261,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationCandidateLeaderboardEvidenceExportComparisonDetailView.test.js FAILED:', error);
     process.exitCode = 1;
 });

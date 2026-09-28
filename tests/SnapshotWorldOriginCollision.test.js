@@ -325,7 +325,7 @@ async function run() {
     console.log('\n✅ All Snapshot World Origin Collision tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

@@ -483,7 +483,7 @@ async function run() {
     console.log(`\nAll ConcurrentDiscoveryObservationPreservation tests passed (${assertionCount} assertions).`);
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

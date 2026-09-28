@@ -115,7 +115,7 @@ async function runTests() {
     console.log('\n✅ All Discover World Encounter Publication Command tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

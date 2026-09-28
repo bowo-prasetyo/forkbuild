@@ -692,7 +692,7 @@ async function run() {
     console.log('\nAll PublicationObservationArchiveLeaderboardClaimIntegration tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationObservationArchiveLeaderboardClaimIntegration.test.js FAILED:', error);
     process.exitCode = 1;
 });

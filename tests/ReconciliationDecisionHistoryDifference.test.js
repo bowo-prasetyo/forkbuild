@@ -376,7 +376,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryDifference tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationDecisionHistoryDifference.test.js FAILED:', error);
     process.exitCode = 1;
 });

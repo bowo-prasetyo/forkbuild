@@ -379,7 +379,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationCandidateEvidenceSummaryView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationCandidateEvidenceSummaryView.test.js FAILED:', error);
     process.exitCode = 1;
 });

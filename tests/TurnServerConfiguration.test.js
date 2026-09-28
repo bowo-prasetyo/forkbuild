@@ -364,7 +364,7 @@ async function run() {
     console.log('\n✅ All TURN Server Configuration + Persistence + Provider tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('TurnServerConfiguration.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -554,7 +554,7 @@ milestone.
     console.log('✅ All Publication World Rendering Discovery Wiring Fix tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationWorldRenderingDiscoveryWiringFix.test.js FAILED:', error);
     process.exitCode = 1;
 });

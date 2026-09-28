@@ -638,7 +638,7 @@ async function run() {
     console.log('\n✅ All Material Inspection Refresh Precision tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

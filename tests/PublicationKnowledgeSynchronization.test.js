@@ -480,7 +480,7 @@ async function run() {
     console.log('\nAll Publication Knowledge Synchronization tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationKnowledgeSynchronization.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -519,7 +519,7 @@ async function runTests() {
     console.log('\n✅ All Own Publication Distribution Entry Point tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

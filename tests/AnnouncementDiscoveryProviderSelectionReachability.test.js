@@ -438,7 +438,7 @@ async function run() {
     console.log(`\nAll AnnouncementDiscoveryProviderSelectionReachability tests passed (${assertionCount} assertions).`);
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

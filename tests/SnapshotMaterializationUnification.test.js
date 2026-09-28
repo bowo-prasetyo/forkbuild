@@ -365,7 +365,7 @@ async function run() {
     console.log('\n✅ All SnapshotMaterializationUnification tests passed');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('❌ SnapshotMaterializationUnification tests failed:', error);
     process.exitCode = 1;
 });

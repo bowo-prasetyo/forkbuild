@@ -303,7 +303,7 @@ async function runTests() {
     console.log('\n✅ All GetRecipientNotificationEventsUseCase tests passed.');
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All GetRecipientNotificationEventsUseCase tests passed');
 }).catch((error) => {
     console.error('\n✗ GetRecipientNotificationEventsUseCase tests failed:', error.message);

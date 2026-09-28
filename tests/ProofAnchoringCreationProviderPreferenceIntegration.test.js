@@ -319,7 +319,7 @@ async function run() {
     console.log('\nAll Proof/Anchoring Creation Provider Preference Integration tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ProofAnchoringCreationProviderPreferenceIntegration.test.js FAILED:', error);
     process.exitCode = 1;
 });

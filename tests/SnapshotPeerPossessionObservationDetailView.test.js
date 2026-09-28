@@ -256,7 +256,7 @@ async function run() {
     console.log('\n✅ All SnapshotPeerPossessionObservationDetailView tests passed');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('❌ SnapshotPeerPossessionObservationDetailView tests failed:', error);
     process.exitCode = 1;
 });

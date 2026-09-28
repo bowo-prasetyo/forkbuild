@@ -222,7 +222,7 @@ async function run() {
     console.log('\nAll Publication Anchor Creation tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationAnchorCreation.test.js FAILED:', error);
     process.exitCode = 1;
 });

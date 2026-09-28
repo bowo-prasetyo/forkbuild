@@ -571,7 +571,7 @@ async function run() {
     console.log('✓ Section N: the existing ICE-gathering timeout and the peer connection provider/connection classes are completely untouched by this milestone — the new configuration boundary is entirely a composition-root/settings concern layered on top');
 }
 
-run().then(() => {
+await run().then(() => {
     console.log('\n✅ All User-Configurable STUN Server Configuration tests passed.');
 }).catch((error) => {
     console.error('UserConfigurableStunConfiguration.test.js FAILED:', error);

@@ -298,7 +298,7 @@ function EMPTY_PLAN_FINGERPRINT() {
     return describePublisherLeaderboardClaimSnapshotReconciliationPlanIdentity(EMPTY_PLAN).planFingerprint;
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationPlanIdentity.test.js FAILED:', error);
     process.exitCode = 1;
 });

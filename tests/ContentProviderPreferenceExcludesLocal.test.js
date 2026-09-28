@@ -109,7 +109,7 @@ async function run() {
     console.log(`\n✅ All Content Provider Preference Excludes Local tests passed (${assertionCount} assertions).`);
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ContentProviderPreferenceExcludesLocal.test.js FAILED:', error);
     process.exit(1);
 });

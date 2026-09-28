@@ -393,7 +393,7 @@ async function run() {
     console.log('\nAll LeaderboardClaimHistory tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('LeaderboardClaimHistory.test.js FAILED:', error);
     process.exitCode = 1;
 });

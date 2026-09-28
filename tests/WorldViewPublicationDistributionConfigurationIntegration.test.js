@@ -232,7 +232,7 @@ async function run() {
     console.log('\n✅ All World View Publication Distribution Configuration Boundary tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

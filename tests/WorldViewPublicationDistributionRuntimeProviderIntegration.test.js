@@ -238,7 +238,7 @@ async function run() {
     console.log('\n✅ All World View Publication Distribution Runtime Provider tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

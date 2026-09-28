@@ -358,7 +358,7 @@ async function run() {
     console.log('\nAll Persistent Publication Anchor Catalog tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PersistentPublicationAnchorCatalog.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -84,7 +84,7 @@ async function run() {
     console.log('\n✅ All User-Configurable IPFS Node API URL Boundary tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

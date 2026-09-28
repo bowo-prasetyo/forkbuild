@@ -427,7 +427,7 @@ async function runTests() {
     console.log('\n✅ All NotificationEventStore tests passed.');
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All NotificationEventStore tests passed');
 }).catch((error) => {
     console.error('\n✗ NotificationEventStore tests failed:', error.message);

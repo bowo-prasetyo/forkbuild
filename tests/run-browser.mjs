@@ -16,6 +16,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { describeUnawaitedTopLevelCalls } from './support/UnawaitedTopLevelWork.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const testsDir = join(root, 'tests');
@@ -60,6 +61,11 @@ function startServer() {
 }
 
 async function runFile(browser, baseUrl, name) {
+    // Refused without running: its result couldn't be trusted.
+    const unawaited = describeUnawaitedTopLevelCalls(readFileSync(join(testsDir, name), 'utf8'));
+    if (unawaited) {
+        return { name, ok: false, ms: 0, output: `[run-browser.mjs] ${name} ${unawaited}` };
+    }
     const context = await browser.newContext({ permissions: ['microphone'] });
     const page = await context.newPage();
     const output = [];

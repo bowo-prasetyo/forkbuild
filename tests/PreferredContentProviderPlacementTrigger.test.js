@@ -522,7 +522,7 @@ async function run() {
     console.log('\nAll Preferred Content Provider Placement Trigger tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PreferredContentProviderPlacementTrigger.test.js FAILED:', error);
     process.exitCode = 1;
 });

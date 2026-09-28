@@ -343,7 +343,7 @@ async function run() {
     console.log('\nAll NostrRelayQueryClient tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('NostrRelayQueryClient.test.js FAILED:', error);
     process.exitCode = 1;
 });

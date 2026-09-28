@@ -480,7 +480,7 @@ async function run() {
     console.log('\nAll BaseProofVerificationCompositionRoot tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BaseProofVerificationCompositionRoot.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -656,7 +656,7 @@ async function run() {
     console.log('\n✅ All Snapshot World Rendering tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

@@ -248,7 +248,7 @@ async function run() {
     console.log('\nAll BitcoinAnchorDurableEvidenceRestoration tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BitcoinAnchorDurableEvidenceRestoration.test.js FAILED:', error);
     process.exitCode = 1;
 });

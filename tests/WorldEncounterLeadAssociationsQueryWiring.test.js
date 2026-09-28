@@ -380,7 +380,7 @@ async function run() {
     }
 }
 
-run().then(() => {
+await run().then(() => {
     console.log('WorldEncounterLeadAssociationsQueryWiring tests passed');
 }).catch((error) => {
     console.error('✗ WorldEncounterLeadAssociationsQueryWiring tests failed:', error.message);

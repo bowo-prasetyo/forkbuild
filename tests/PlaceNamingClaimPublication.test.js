@@ -412,7 +412,7 @@ async function runTests() {
     console.log('\n✅ All Place Naming Claim Publication Boundary tests passed.');
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All PlaceNamingClaimPublication tests passed');
 }).catch((error) => {
     console.error('\n✗ PlaceNamingClaimPublication tests failed:', error.message);

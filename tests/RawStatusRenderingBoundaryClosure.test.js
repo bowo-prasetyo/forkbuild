@@ -302,7 +302,7 @@ async function run() {
     console.log('VERDICT: CLOSED. Both 0.9.520 SEMANTIC_BOUNDARY_GAP findings are fixed. The Discovery-driven Material/Verification panel now renders through the exact same humanizing functions as the Selection-driven panel, so the two can never communicate different claims about the same underlying fact. The World Location Browser\'s Inspect panel now describes what its TrustObservation actually established (a placement record\'s integrity/signature/authorization) rather than either the bare enum constant or the pre-existing, stronger "Trusted" wording. A fresh mechanical sweep of the whole codebase finds zero remaining SEMANTIC_BOUNDARY_GAP instances. Per this milestone\'s own requesting brief: the 0.9.516-0.9.521 arc is CLOSED.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('RawStatusRenderingBoundaryClosure.test.js FAILED:', error);
     process.exitCode = 1;
 });

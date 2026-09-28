@@ -542,7 +542,7 @@ async function runTests() {
     console.log('\n✅ All Snapshot Export UI Integration tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

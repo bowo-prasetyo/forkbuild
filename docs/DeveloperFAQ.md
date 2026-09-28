@@ -59,8 +59,11 @@ with `tests/support/NodePreload.mjs` (a minimal Vue shim, and WebRTC
 through `node-datachannel`). A file whose first line is
 `// @environment browser` is run in headless Chromium by
 `npm run test:browser` instead (install it with
-`npx playwright-core install chromium`, or set `CHROMIUM_PATH`), and must
-finish its work before its module finishes evaluating.
+`npx playwright-core install chromium`, or set `CHROMIUM_PATH`). Every
+file, Node or browser, must finish its work before its module finishes
+evaluating: `await run();`, never `run();` or `run().catch(...)`, which can
+end the file with a pass before later checks run. The runners refuse a file
+that calls one of its own async functions at top level without `await`.
 
 `tests/support/` has the shared fakes: `InMemoryStorageProvider`,
 `TestIdentity`, `FakeWindowLocalStorage` and `FakeSteemChain` among them.

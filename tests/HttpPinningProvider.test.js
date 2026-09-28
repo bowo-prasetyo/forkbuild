@@ -185,7 +185,7 @@ async function run() {
     console.log('\nAll HttpPinningProvider tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('HttpPinningProvider.test.js FAILED:', error);
     process.exitCode = 1;
 });

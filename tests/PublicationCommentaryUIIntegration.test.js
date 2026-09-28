@@ -456,7 +456,7 @@ async function runTests() {
     console.log('\n✅ All Publication Commentary UI Integration tests passed.');
 }
 
-runTests().catch((err) => {
+await runTests().catch((err) => {
     console.error(err);
     process.exit(1);
 });

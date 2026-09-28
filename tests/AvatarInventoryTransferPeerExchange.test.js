@@ -402,7 +402,7 @@ async function run() {
     console.log('\nAll Avatar Inventory Transfer Peer Exchange tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('AvatarInventoryTransferPeerExchange.test.js FAILED:', error);
     process.exitCode = 1;
 });

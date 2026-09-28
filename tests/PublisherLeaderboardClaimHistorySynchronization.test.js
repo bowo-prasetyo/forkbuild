@@ -343,7 +343,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimHistorySynchronization tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublisherLeaderboardClaimHistorySynchronization.test.js FAILED:', error);
     process.exitCode = 1;
 });

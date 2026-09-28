@@ -230,7 +230,7 @@ async function run() {
     console.log('\nAll AnnouncementSync tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('AnnouncementSync.test.js FAILED:', error);
     process.exitCode = 1;
 });

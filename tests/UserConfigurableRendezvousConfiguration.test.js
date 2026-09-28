@@ -630,7 +630,7 @@ async function run() {
     console.log('✓ Section N: the existing graceful-degradation discipline and the discovery bootstrap/transport classes are completely untouched by this milestone — the new configuration boundary is entirely a composition-root/settings concern layered on top');
 }
 
-run().then(() => {
+await run().then(() => {
     console.log('\n✅ All User-Configurable Rendezvous Server Configuration tests passed.');
 }).catch((error) => {
     console.error('UserConfigurableRendezvousConfiguration.test.js FAILED:', error);

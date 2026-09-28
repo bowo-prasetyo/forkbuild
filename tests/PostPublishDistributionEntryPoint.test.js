@@ -444,7 +444,7 @@ async function runTests() {
     console.log('\n✅ All Post-Publish Distribution Entry Point tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

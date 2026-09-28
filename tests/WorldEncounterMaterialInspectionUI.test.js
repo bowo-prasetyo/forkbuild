@@ -430,7 +430,7 @@ async function run() {
     console.log('\nAll WorldEncounterMaterialInspectionUI tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('WorldEncounterMaterialInspectionUI.test.js FAILED:', error);
     process.exitCode = 1;
 });

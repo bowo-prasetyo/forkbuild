@@ -512,7 +512,7 @@ async function run() {
     console.log('✓ Section P: no default TURN server of any kind is introduced by this settings surface — absence stays absence, exactly as storage/TurnServerConfigurationStore.js\'s own contract already requires');
 }
 
-run().then(() => {
+await run().then(() => {
     console.log(`\n✅ All ${assertionCount} TURN Server Settings UI assertions passed.`);
 }).catch((error) => {
     console.error('TurnServerSettingsUI.test.js FAILED:', error);

@@ -213,7 +213,7 @@ async function run() {
     console.log('\nAll NostrSnapshotDiscoveryQueryService tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('NostrSnapshotDiscoveryQueryService.test.js FAILED:', error);
     process.exitCode = 1;
 });

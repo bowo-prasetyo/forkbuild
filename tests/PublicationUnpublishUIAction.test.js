@@ -432,7 +432,7 @@ function countReferences(source, name) {
     return matches ? matches.length : 0;
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

@@ -277,7 +277,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotDivergenceView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublisherLeaderboardClaimSnapshotDivergenceView.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -281,7 +281,7 @@ async function run() {
     console.log('\nAll WorldEncounterView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('WorldEncounterView.test.js FAILED:', error);
     process.exitCode = 1;
 });

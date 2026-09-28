@@ -357,7 +357,7 @@ async function run() {
     console.log('\nAll ArweaveAnnouncementPublisherImplementation tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ArweaveAnnouncementPublisherImplementation.test.js FAILED:', error);
     process.exitCode = 1;
 });

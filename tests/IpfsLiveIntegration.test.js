@@ -142,7 +142,7 @@ async function run() {
     console.log('\nIpfsLiveIntegration.test.js completed against live node(s).');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('IpfsLiveIntegration.test.js FAILED:', error);
     process.exitCode = 1;
 });

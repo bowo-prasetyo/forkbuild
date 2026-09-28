@@ -767,7 +767,7 @@ async function runTests() {
     console.log('\n✅ All Observer-Local Encounter Inspection Capability tests passed.');
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All ObserverLocalEncounterInspectionCapability tests passed');
 }).catch((error) => {
     console.error('\n✗ ObserverLocalEncounterInspectionCapability tests failed:', error.message);

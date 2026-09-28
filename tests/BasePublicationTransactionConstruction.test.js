@@ -426,7 +426,7 @@ async function run() {
     console.log('\nAll BasePublicationTransactionConstruction tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BasePublicationTransactionConstruction.test.js FAILED:', error);
     process.exitCode = 1;
 });

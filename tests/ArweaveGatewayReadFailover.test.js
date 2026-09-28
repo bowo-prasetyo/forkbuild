@@ -435,7 +435,7 @@ async function run() {
     console.log('\n✅ All Arweave Gateway Read Failover (0.9.440) tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

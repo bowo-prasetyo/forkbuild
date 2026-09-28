@@ -279,7 +279,7 @@ async function run() {
     console.log('\nAll Decentralized Publication UX & Resolution tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationResolutionCoordinator.test.js FAILED:', error);
     process.exitCode = 1;
 });

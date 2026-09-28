@@ -352,7 +352,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimHistoryExchange tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublisherLeaderboardClaimHistoryExchange.test.js FAILED:', error);
     process.exitCode = 1;
 });

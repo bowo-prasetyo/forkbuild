@@ -291,7 +291,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotCorrespondenceView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublisherLeaderboardClaimSnapshotCorrespondenceView.test.js FAILED:', error);
     process.exitCode = 1;
 });

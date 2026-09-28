@@ -253,7 +253,7 @@ async function runTests() {
     console.log('\n✅ All Publication Commentary Count UI tests passed.');
 }
 
-runTests().catch((err) => {
+await runTests().catch((err) => {
     console.error(err);
     process.exit(1);
 });

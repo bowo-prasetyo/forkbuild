@@ -149,7 +149,7 @@ async function run() {
     console.log('\nAll ReconciliationCandidateLeaderboardEvidenceImportUI tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationCandidateLeaderboardEvidenceImportUI.test.js FAILED:', error);
     process.exitCode = 1;
 });

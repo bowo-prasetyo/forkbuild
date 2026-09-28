@@ -197,7 +197,7 @@ async function run() {
     console.log('\nAll BlockchainPublicationIdentity tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BlockchainPublicationIdentity.test.js FAILED:', error);
     process.exitCode = 1;
 });

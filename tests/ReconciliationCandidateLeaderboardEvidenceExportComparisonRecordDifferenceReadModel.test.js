@@ -228,7 +228,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordDifferenceReadModel.test.js FAILED:', error);
     process.exitCode = 1;
 });

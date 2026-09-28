@@ -246,7 +246,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecision tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationDecision.test.js FAILED:', error);
     process.exitCode = 1;
 });

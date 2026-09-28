@@ -377,7 +377,7 @@ async function run() {
     console.log('\nAll Decentralized Snapshot Placement tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('DecentralizedSnapshotPlacement.test.js FAILED:', error);
     process.exitCode = 1;
 });

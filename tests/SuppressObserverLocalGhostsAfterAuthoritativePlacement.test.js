@@ -413,7 +413,7 @@ async function run() {
     console.log('\n✅ All Suppress Observer-Local Ghosts After Authoritative Placement tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

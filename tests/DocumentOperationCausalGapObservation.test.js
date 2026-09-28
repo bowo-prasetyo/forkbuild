@@ -423,7 +423,7 @@ console.log('\n0.9.229 — every operation this replica accepts over the real pr
 
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All DocumentOperationCausalGapObservation tests passed');
 }).catch((error) => {
     console.error('\n✗ DocumentOperationCausalGapObservation tests failed:', error.message);

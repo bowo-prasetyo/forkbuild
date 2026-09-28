@@ -362,7 +362,7 @@ async function run() {
     console.log('\nAll Live World View Registry Subscription tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('LiveWorldViewRegistrySubscription.test.js FAILED:', error);
     process.exitCode = 1;
 });

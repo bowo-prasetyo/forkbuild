@@ -394,7 +394,7 @@ async function run() {
     console.log('\nAll Peer Content Retrieval tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PeerContentExchange.test.js FAILED:', error);
     process.exitCode = 1;
 });

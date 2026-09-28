@@ -232,4 +232,4 @@ async function runTests() {
     console.log('✅ All World Navigation & Spatial Discovery UX tests passed.');
 }
 
-runTests().catch((e) => { console.error(e); throw e; });
+await runTests().catch((e) => { console.error(e); throw e; });

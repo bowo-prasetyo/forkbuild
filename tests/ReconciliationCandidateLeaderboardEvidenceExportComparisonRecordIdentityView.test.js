@@ -302,7 +302,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationCandidateLeaderboardEvidenceExportComparisonRecordIdentityView.test.js FAILED:', error);
     process.exitCode = 1;
 });

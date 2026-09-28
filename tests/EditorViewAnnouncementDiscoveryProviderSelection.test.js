@@ -462,7 +462,7 @@ async function run() {
     console.log(`\n✅ All EditorViewAnnouncementDiscoveryProviderSelection tests passed (${assertionCount} assertions).`);
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('EditorViewAnnouncementDiscoveryProviderSelection.test.js FAILED:', error);
     process.exitCode = 1;
 });

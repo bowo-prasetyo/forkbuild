@@ -177,7 +177,7 @@ async function run() {
     console.log('\nAll IPFS Publication Resolution tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('IpfsPublicationResolution.test.js FAILED:', error);
     process.exitCode = 1;
 });

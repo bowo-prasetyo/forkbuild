@@ -805,7 +805,7 @@ async function run() {
     console.log('look identical, which this audit does not recommend making them.');
 }
 
-run().then(() => {
+await run().then(() => {
     console.log('\n✅ All ProofAnchoringCrossSubstrateEndToEndClosureAudit tests passed.');
 }).catch((error) => {
     console.error('ProofAnchoringCrossSubstrateEndToEndClosureAudit.test.js FAILED:', error);

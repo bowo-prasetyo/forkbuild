@@ -217,4 +217,4 @@ async function runTests() {
     console.log('✅ All Placement Preview UX (Editor) tests passed.');
 }
 
-runTests().catch((e) => { console.error(e); throw e; });
+await runTests().catch((e) => { console.error(e); throw e; });

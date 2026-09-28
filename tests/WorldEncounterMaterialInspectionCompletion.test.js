@@ -411,7 +411,7 @@ async function run() {
     console.log('\nAll WorldEncounterMaterialInspectionCompletion tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

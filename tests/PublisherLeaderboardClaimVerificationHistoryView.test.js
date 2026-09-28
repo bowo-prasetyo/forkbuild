@@ -328,7 +328,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimVerificationHistoryView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublisherLeaderboardClaimVerificationHistoryView.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -12,6 +12,7 @@ import OwnPublicationPanel from '../ui/components/OwnPublicationPanel.js';
 import { worldEncounterCanvasFiles, publicationsPageFiles, worldViewFiles, ownPublicationPanelFiles, mainFiles } from './support/SourceFileGroups.js';
 import { assert } from './support/Assert.js';
 import { readSource } from './support/SourceText.js';
+import { stripHtmlComments } from './support/StripHtmlComments.js';
 
 // 0.9.590 — Snapshot Discovery Outcome Presentation Closure Audit.
 //
@@ -309,7 +310,7 @@ async function runTests() {
         // template's own HTML comments legitimately discuss Nostr/Arweave
         // throughout (documentation, never rendered) — what must never leak
         // is Nostr vocabulary in text a viewer actually sees.
-        const renderedTemplate = template.replace(/<!--[\s\S]*?-->/g, '');
+        const renderedTemplate = stripHtmlComments(template);
         assert(!/nostr/i.test(renderedTemplate), '29. the rendered (comment-stripped) template contains no "Nostr" vocabulary of any kind');
         assert(!/relay/i.test(renderedTemplate), '30. the rendered (comment-stripped) template contains no "relay" vocabulary of any kind');
 
@@ -582,7 +583,7 @@ async function runTests() {
     console.log('\n✅ All Snapshot Discovery Outcome Presentation Closure Audit tests passed (Sections A-H clean; Section I\'s own originally-named finding is now closed by 0.9.591).');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error('✗ SnapshotDiscoveryOutcomePresentationClosureAudit tests failed:', error.message);
     process.exitCode = 1;
 });

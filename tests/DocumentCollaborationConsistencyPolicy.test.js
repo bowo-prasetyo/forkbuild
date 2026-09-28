@@ -470,7 +470,7 @@ console.log('\n0.9.226 — every DOCUMENT_COLLABORATION_CONSISTENCY_POLICY field
 
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All DocumentCollaborationConsistencyPolicy tests passed');
 }).catch((error) => {
     console.error('\n✗ DocumentCollaborationConsistencyPolicy tests failed:', error.message);

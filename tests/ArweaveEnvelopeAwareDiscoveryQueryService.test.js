@@ -425,7 +425,7 @@ async function run() {
     }
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ArweaveEnvelopeAwareDiscoveryQueryService.test.js FAILED:', error);
     process.exitCode = 1;
 });

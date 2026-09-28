@@ -378,7 +378,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationDecisionHistoryTimelineView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationDecisionHistoryTimelineView.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -609,7 +609,7 @@ async function runTests() {
 
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All SharedWorldConflictResolution tests passed');
 }).catch((error) => {
     console.error('\n✗ SharedWorldConflictResolution tests failed:', error.message);

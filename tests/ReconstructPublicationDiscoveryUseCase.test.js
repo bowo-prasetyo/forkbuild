@@ -355,7 +355,7 @@ function throws(fn) {
     try { fn(); return false; } catch { return true; }
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('✗ ReconstructPublicationDiscoveryUseCase tests failed:', error.message);
     console.error(error);
     process.exitCode = 1;

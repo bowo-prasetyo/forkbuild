@@ -728,7 +728,7 @@ async function run() {
     console.log('\nAll Publication Snapshot Placement Peer Exchange tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationSnapshotPlacementPeerExchange.test.js FAILED:', error);
     process.exitCode = 1;
 });

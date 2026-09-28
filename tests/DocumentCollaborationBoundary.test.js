@@ -359,7 +359,7 @@ async function runTests() {
 
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All DocumentCollaborationBoundary tests passed');
 }).catch((error) => {
     console.error('\n✗ DocumentCollaborationBoundary tests failed:', error.message);

@@ -330,7 +330,7 @@ async function run() {
     console.log(`\nAll HostWalletCapabilityLazyResolutionFix tests passed (${assertionCount} assertions).`);
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('HostWalletCapabilityLazyResolutionFix.test.js FAILED:', error);
     process.exitCode = 1;
 });

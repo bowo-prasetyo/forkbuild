@@ -432,7 +432,7 @@ console.log('\n0.9.231 — causal knowledge and document execution are now expli
 
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All DocumentOperationProvenance tests passed');
 }).catch((error) => {
     console.error('\n✗ DocumentOperationProvenance tests failed:', error.message);

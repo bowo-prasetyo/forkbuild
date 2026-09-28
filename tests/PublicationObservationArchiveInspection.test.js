@@ -353,7 +353,7 @@ async function run() {
     console.log('\nAll PublicationObservationArchiveInspection tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationObservationArchiveInspection.test.js FAILED:', error);
     console.error(error.stack);
     process.exitCode = 1;

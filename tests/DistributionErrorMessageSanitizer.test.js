@@ -106,7 +106,7 @@ async function run() {
     console.log('\nAll DistributionErrorMessageSanitizer tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

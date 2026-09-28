@@ -299,7 +299,7 @@ async function run() {
     console.log('\nAll ArweaveWorldEncounterMaterialResolver tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ArweaveWorldEncounterMaterialResolver.test.js FAILED:', error);
     process.exitCode = 1;
 });

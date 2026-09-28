@@ -475,7 +475,7 @@ async function runTests() {
     console.log(`\n✅ All Unified Distribution Action UX tests passed (${assertionCount} assertions).`);
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error('UnifiedDistributionActionUX.test.js FAILED:', error);
     process.exitCode = 1;
 });

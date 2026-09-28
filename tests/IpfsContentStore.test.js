@@ -167,7 +167,7 @@ async function run() {
     console.log('\nAll IpfsContentStore tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('IpfsContentStore.test.js FAILED:', error);
     process.exitCode = 1;
 });

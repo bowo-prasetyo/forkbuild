@@ -325,7 +325,7 @@ async function run() {
     console.log('\n✅ All IPFS Gateway Settings UI (0.9.665) tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('IpfsGatewaySettingsEntryPoint.test.js FAILED:', error);
     process.exitCode = 1;
 });

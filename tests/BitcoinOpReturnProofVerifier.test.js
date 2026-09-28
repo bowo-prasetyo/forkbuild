@@ -177,7 +177,7 @@ async function run() {
     console.log('\nAll BitcoinOpReturnProofVerifier tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BitcoinOpReturnProofVerifier.test.js FAILED:', error);
     process.exitCode = 1;
 });

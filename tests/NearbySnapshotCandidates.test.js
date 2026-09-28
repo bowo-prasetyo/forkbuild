@@ -124,7 +124,7 @@ async function run() {
     console.log('\nAll NearbySnapshotCandidates tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('NearbySnapshotCandidates.test.js FAILED:', error);
     process.exitCode = 1;
 });

@@ -324,7 +324,7 @@ async function run() {
     console.log(`\n✅ All ${assertionCount} Network Settings shared-form assertions passed.`);
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('NetworkSettingsSharedForms.test.js FAILED:', error);
     process.exit(1);
 });

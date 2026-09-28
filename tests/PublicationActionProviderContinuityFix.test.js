@@ -321,7 +321,7 @@ ui/views/WorldView.js (threading the already-injected decentralized provider thr
 `);
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationActionProviderContinuityFix.test.js FAILED:', error);
     process.exitCode = 1;
 });

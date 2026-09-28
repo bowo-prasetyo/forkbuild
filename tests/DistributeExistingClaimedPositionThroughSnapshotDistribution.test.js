@@ -414,7 +414,7 @@ async function run() {
     console.log('✓ Section H: the real production source genuinely implements the shape Sections A-G exercised — never a test double standing in for an unbuilt behavior.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('DistributeExistingClaimedPositionThroughSnapshotDistribution.test.js FAILED:', error);
     process.exitCode = 1;
 });

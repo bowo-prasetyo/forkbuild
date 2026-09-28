@@ -784,7 +784,7 @@ async function run() {
     console.log('separate capability, not a completion of this one. No 0.9.341 is pre-selected by this milestone.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('FederatedRepositoryProductReassessment.test.js FAILED:', error);
     process.exitCode = 1;
 });

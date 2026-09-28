@@ -344,7 +344,7 @@ console.log('\n0.9.228 — causal gap detection distinguishes an absent predeces
 
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All DocumentOperationCausalGapDetector tests passed');
 }).catch((error) => {
     console.error('\n✗ DocumentOperationCausalGapDetector tests failed:', error.message);

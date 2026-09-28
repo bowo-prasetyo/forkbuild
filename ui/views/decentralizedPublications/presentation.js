@@ -107,6 +107,18 @@ export function humanizeContentKind(contentKind) {
         .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+// How to publish again something you published before content hashes became
+// SHA-256: the kind's own `republishAdvice` from the display-kind registry
+// (application/publication/CreatePublicationDisplayKindRegistryUseCase.js),
+// or a generic sentence for a kind without one. `{ text, route, routeLabel }`,
+// route null when no single page leads there.
+export function republishAdviceFor(kindPlugin) {
+    const advice = kindPlugin && kindPlugin.republishAdvice;
+    return advice && advice.text
+        ? { text: advice.text, route: advice.route || null, routeLabel: advice.route ? advice.routeLabel : null }
+        : { text: 'Publish it again from where you first published it.', route: null, routeLabel: null };
+}
+
 // A storage code ('local'/'ipfs'/'ar') is not a word: title-casing gives
 // 'Ar'/'Ipfs'. Known codes get their real name; unknown ones fall back to
 // humanizeContentKind(), never hidden.

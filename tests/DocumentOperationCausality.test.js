@@ -376,7 +376,7 @@ console.log('\n0.9.227 — causal predecessor identity is representable, transit
 
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All DocumentOperationCausality tests passed');
 }).catch((error) => {
     console.error('\n✗ DocumentOperationCausality tests failed:', error.message);

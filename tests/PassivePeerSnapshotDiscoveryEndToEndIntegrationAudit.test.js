@@ -961,7 +961,7 @@ async function run() {
     console.log('\n✅ All Passive Peer Snapshot Discovery End-to-End Integration Audit tests passed.');
 }
 
-run().then(() => {
+await run().then(() => {
     console.log('\n✓ All PassivePeerSnapshotDiscoveryEndToEndIntegrationAudit tests passed');
 }).catch((error) => {
     console.error('\n✗ PassivePeerSnapshotDiscoveryEndToEndIntegrationAudit tests failed:', error.message);

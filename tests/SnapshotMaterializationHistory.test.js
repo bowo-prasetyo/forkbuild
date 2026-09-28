@@ -453,7 +453,7 @@ async function run() {
     console.log('\n✅ All SnapshotMaterializationHistory tests passed');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('❌ SnapshotMaterializationHistory tests failed:', error);
     process.exitCode = 1;
 });

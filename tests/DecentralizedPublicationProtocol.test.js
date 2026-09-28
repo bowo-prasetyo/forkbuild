@@ -260,7 +260,7 @@ async function run() {
     console.log('\nAll Decentralized Publication Protocol tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('DecentralizedPublicationProtocol.test.js FAILED:', error);
     process.exitCode = 1;
 });

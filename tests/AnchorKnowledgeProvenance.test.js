@@ -403,7 +403,7 @@ async function run() {
     console.log('\nAll Evidence Provenance & Observation Boundary tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('AnchorKnowledgeProvenance.test.js FAILED:', error);
     process.exitCode = 1;
 });

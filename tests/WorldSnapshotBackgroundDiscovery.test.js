@@ -351,7 +351,7 @@ async function codeOnlySourceIntervalCountBaseline() {
     return 3;
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

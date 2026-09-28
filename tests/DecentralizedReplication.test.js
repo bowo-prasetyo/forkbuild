@@ -513,4 +513,4 @@ async function runTests() {
     console.log('✅ All Decentralized Replication & Conflict Handling tests passed.');
 }
 
-runTests().catch((e) => { console.error(e); throw e; });
+await runTests().catch((e) => { console.error(e); throw e; });

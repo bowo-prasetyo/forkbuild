@@ -220,7 +220,7 @@ async function runTests() {
     console.log('\n✅ All Discover Snapshot Candidates Command tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

@@ -330,4 +330,4 @@ async function runTests() {
     console.log('✅ All World Placement & Spatial Positioning tests passed.');
 }
 
-runTests().catch((e) => { console.error(e); throw e; });
+await runTests().catch((e) => { console.error(e); throw e; });

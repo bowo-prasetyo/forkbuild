@@ -447,7 +447,7 @@ async function run() {
     console.log('\nAll Automatic Known-Peer Connection tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('AutoConnectKnownPeers.test.js FAILED:', error);
     process.exitCode = 1;
 });

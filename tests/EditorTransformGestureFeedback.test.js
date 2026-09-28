@@ -453,7 +453,7 @@ async function run() {
     console.log('\n✅ All Editor Transform Gesture Feedback tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

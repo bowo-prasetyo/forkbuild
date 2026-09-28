@@ -506,7 +506,7 @@ async function run() {
     console.log('\n✅ All EditorView Post-Publish Distribution Action tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

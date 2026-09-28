@@ -564,7 +564,7 @@ async function run() {
     console.log('\nAll PublicationObservationArchiveReconciliationDecisionHistoryIntegration tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationObservationArchiveReconciliationDecisionHistoryIntegration.test.js FAILED:', error);
     process.exitCode = 1;
 });

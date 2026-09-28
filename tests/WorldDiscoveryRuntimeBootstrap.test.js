@@ -287,7 +287,7 @@ async function run() {
     console.log('\nAll World Discovery Runtime Bootstrap tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('WorldDiscoveryRuntimeBootstrap.test.js FAILED:', error);
     process.exitCode = 1;
 });

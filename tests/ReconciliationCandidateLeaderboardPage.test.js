@@ -346,7 +346,7 @@ async function run() {
     console.log('\nAll PublisherLeaderboardClaimSnapshotReconciliationCandidateLeaderboardPage tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ReconciliationCandidateLeaderboardPage.test.js FAILED:', error);
     process.exitCode = 1;
 });

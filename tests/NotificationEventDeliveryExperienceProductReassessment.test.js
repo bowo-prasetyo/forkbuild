@@ -455,7 +455,7 @@ async function runTests() {
     console.log('\n✅ All NotificationEventDeliveryExperienceProductReassessment tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(`\n✗ NotificationEventDeliveryExperienceProductReassessment tests failed: ${error.message}`);
     console.error(error);
     process.exitCode = 1;

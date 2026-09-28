@@ -328,7 +328,7 @@ async function run() {
     console.log('\n✅ All Decentralized Publication Discovery Presentation Consistency Product Reassessment tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

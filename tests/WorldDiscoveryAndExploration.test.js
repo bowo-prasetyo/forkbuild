@@ -460,7 +460,7 @@ async function run() {
     console.log('  "Exploration Is Derived From Place, Not Stored As Place"');
 }
 
-run().catch((err) => {
+await run().catch((err) => {
     console.error('TEST FAILED:', err.message);
     console.error(err.stack);
     process.exit(1);

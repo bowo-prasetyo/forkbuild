@@ -379,7 +379,7 @@ async function run() {
     console.log('\n✅ All Publication First-Placement Action Wiring Fix tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationFirstPlacementActionWiringFix.test.js FAILED:', error);
     process.exitCode = 1;
 });

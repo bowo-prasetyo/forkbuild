@@ -229,7 +229,7 @@ async function run() {
     console.log('\nAll WorldEncounterInspectionUI tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('WorldEncounterInspectionUI.test.js FAILED:', error);
     process.exitCode = 1;
 });

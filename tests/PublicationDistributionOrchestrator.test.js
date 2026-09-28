@@ -312,7 +312,7 @@ async function run() {
     console.log('\nAll PublicationDistributionOrchestrator tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

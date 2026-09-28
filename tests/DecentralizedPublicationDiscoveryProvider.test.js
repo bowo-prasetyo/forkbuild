@@ -242,7 +242,7 @@ async function run() {
     console.log('\n✅ All Decentralized Publication Discovery Provider tests passed.');
 }
 
-run().then(() => {
+await run().then(() => {
     console.log('\n✓ All DecentralizedPublicationDiscoveryProvider tests passed');
 }).catch((error) => {
     console.error('\n✗ DecentralizedPublicationDiscoveryProvider tests failed:', error.message);

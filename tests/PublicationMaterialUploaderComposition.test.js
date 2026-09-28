@@ -230,7 +230,7 @@ async function run() {
     console.log('\nAll PublicationMaterialUploaderComposition tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

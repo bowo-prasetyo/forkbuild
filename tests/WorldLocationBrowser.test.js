@@ -367,4 +367,4 @@ async function runTests() {
     console.log('✅ All World Location Browser & Spatial Exploration tests passed.');
 }
 
-runTests().catch((e) => { console.error(e); throw e; });
+await runTests().catch((e) => { console.error(e); throw e; });

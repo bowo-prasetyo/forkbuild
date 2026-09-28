@@ -304,7 +304,7 @@ async function run() {
     console.log('\nAll PublicationReferenceGraphView tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationReferenceGraphView.test.js FAILED:', error);
     process.exitCode = 1;
 });

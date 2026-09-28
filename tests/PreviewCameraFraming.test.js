@@ -91,4 +91,4 @@ async function runTests() {
     console.log('✅ All Preview Camera Framing tests passed.');
 }
 
-runTests().catch((e) => { console.error(e); throw e; });
+await runTests().catch((e) => { console.error(e); throw e; });

@@ -266,7 +266,7 @@ async function run() {
     console.log('\nAll Publication Anchor Catalog tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationAnchorCatalog.test.js FAILED:', error);
     process.exitCode = 1;
 });

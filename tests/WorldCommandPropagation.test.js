@@ -344,7 +344,7 @@ async function runTests() {
 
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All WorldCommandPropagation tests passed');
 }).catch((error) => {
     console.error('\n✗ WorldCommandPropagation tests failed:', error.message);

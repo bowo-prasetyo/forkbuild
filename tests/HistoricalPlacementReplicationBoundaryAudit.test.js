@@ -705,7 +705,7 @@ async function runTests() {
         'byte-for-byte untouched.');
 }
 
-runTests().then(() => {
+await runTests().then(() => {
     console.log('\n✓ All HistoricalPlacementReplicationBoundaryAudit tests passed');
 }).catch((error) => {
     console.error('\n✗ HistoricalPlacementReplicationBoundaryAudit tests failed:', error.message);

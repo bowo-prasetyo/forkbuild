@@ -190,7 +190,7 @@ async function run() {
     console.log('compatibility (blank default) preserved for any caller that does not supply defaultDiscoveryTag.');
 }
 
-run().catch((err) => {
+await run().catch((err) => {
     console.error(err);
     throw err;
 });

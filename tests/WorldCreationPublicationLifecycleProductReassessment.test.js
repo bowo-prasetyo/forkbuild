@@ -904,7 +904,7 @@ The flagship (L) demonstrates the brief's own closing scenario directly, live, e
 If a follow-up is wanted, the one real, honest lead this milestone surfaces is the brief's own next suggested direction: the actual Wanderer experience of World-to-World movement and discovery, specifically what a user can understand and do when a World contains multiple kinds of spatial material — a genuinely different product boundary than World/Publication identity, which this milestone (together with 0.9.574/0.9.575/0.9.576) can now be considered closed.`);
 }
 
-main().catch((err) => {
+await main().catch((err) => {
     console.error(err);
     process.exit(1);
 });

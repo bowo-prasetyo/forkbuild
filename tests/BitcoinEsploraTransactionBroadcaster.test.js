@@ -151,7 +151,7 @@ async function run() {
     console.log('\nAll BitcoinEsploraTransactionBroadcaster tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BitcoinEsploraTransactionBroadcaster.test.js FAILED:', error);
     process.exitCode = 1;
 });

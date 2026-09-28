@@ -313,7 +313,7 @@ async function run() {
     console.log('\nAll NostrPlaceNamingDiscoverySource tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('NostrPlaceNamingDiscoverySource.test.js FAILED:', error);
     process.exitCode = 1;
 });

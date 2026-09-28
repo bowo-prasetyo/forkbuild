@@ -497,7 +497,7 @@ async function run() {
     console.log('\nAll AchievementEvidenceExchange tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('AchievementEvidenceExchange.test.js FAILED:', error);
     process.exitCode = 1;
 });

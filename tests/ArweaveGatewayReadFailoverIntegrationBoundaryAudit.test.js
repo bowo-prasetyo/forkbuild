@@ -659,7 +659,7 @@ async function run() {
     }
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('ArweaveGatewayReadFailoverIntegrationBoundaryAudit.test.js FAILED:', error);
     process.exitCode = 1;
 });

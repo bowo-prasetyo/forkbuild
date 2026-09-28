@@ -213,7 +213,7 @@ async function run() {
     console.log('\n✅ All Nostr Relay Configuration Persistence tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

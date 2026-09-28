@@ -410,7 +410,7 @@ async function run() {
     console.log('\nAll External Anchor Lifecycle & Stale Evidence Semantics tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationAnchorLifecycle.test.js FAILED:', error);
     process.exitCode = 1;
 });

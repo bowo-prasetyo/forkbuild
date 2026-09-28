@@ -465,7 +465,7 @@ async function runTests() {
     console.log('\n✅ All World View Discovered Publication Selection tests passed.');
 }
 
-runTests().catch((error) => {
+await runTests().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });

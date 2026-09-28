@@ -283,7 +283,7 @@ async function run() {
     console.log('\nAll Publication Anchor Inspection UX tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('PublicationAnchorInspectionUX.test.js FAILED:', error);
     process.exitCode = 1;
 });

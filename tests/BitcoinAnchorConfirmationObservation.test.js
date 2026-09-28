@@ -575,7 +575,7 @@ async function run() {
     console.log('\nAll BitcoinAnchorConfirmationObservation tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BitcoinAnchorConfirmationObservation.test.js FAILED:', error);
     process.exitCode = 1;
 });

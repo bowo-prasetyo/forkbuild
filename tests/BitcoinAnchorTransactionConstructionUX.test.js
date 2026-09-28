@@ -313,7 +313,7 @@ async function run() {
     console.log('\nAll BitcoinAnchorTransactionConstructionUX tests passed.');
 }
 
-run().catch((error) => {
+await run().catch((error) => {
     console.error('BitcoinAnchorTransactionConstructionUX.test.js FAILED:', error);
     process.exitCode = 1;
 });
