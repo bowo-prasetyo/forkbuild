@@ -86,57 +86,15 @@ over)
   README). If you used the Metered credential or API key that earlier
   versions of the app contained, delete it in Metered: it was public.
 
-## Since 1.0.0 (not yet released)
+## After 1.0.0
 
-- **Security: content hashes are SHA-256.** In 1.0.0 a build's content hash
-  was 32-bit FNV-1a, which anyone can match with a different build, so a
-  forged build could show under another author's name and valid signature
-  (GHSA-8ggw-xpjf-w4rh). Publications are now hashed with SHA-256. Your own
-  earlier publications still open on your device, but other people's
-  publications from before this change are refused until their authors
-  publish them again. Blueprint fingerprints, which authorship and lineage
-  claims name designs by, are SHA-256 too: older claims are no longer
-  counted or imported, and you can re-sign your own from a structure's
-  **Info** panel.
-- **Storage:** data is kept in an IndexedDB database instead of
-  `localStorage`, so it is no longer limited to a few megabytes; existing
-  data moves over on first start. Published content and snapshots stay on
-  disk until they are needed instead of being held in memory.
-- **Large builds:** bricks are drawn as instanced meshes, a few hundred draw
-  calls for tens of thousands of bricks instead of one each.
-- **Document schema 2:** stored and published documents keep bricks as a
-  compact table, and new bricks get 12-character ids, making a large build
-  about a fifth of its former size. Schema 1 documents are upgraded when
-  opened, and published schema 1 snapshots still verify; version 1.0.0
-  cannot open schema 2 documents.
-- **Sharing large builds:** peers send content too large for one message in
-  parts. Arweave takes at most 256 KB per build, and a larger one is refused
-  before anything is signed, pointing to IPFS.
-- **Rendezvous server:** the default server accepts only the GitHub Pages
-  site, and reports its relay credential allowance at `/turn-stats`.
-- **Finding people:** an opt-in public lobby (one for everyone and one per
-  World); rendezvous servers carry the connection reply back, so Find by ID
-  and Known Peers connect without copying anything by hand.
-- **Sharing:** **Share with Peers** sends a published World to connected
-  peers' Repositories, and a distributed Publication has a link that opens
-  it in World View on any device (`#/view/steem/…`, `#/view/ar/…`,
-  `#/view/ipfs/…`).
-- **Background discovery:** the app keeps a local index of every
-  announcement it has seen and, about 10 seconds after it opens, starts
-  reading new ones from Nostr, Arweave and Steem in the background. 1.0.0
-  contacted nothing on its own; see [docs/Privacy.md](Privacy.md).
-- **Steem (Experimental):** a third substrate for announcements and content
-  and a fourth anchor type, signed through Steem Keychain.
-- **Placement:** a publisher can limit who may place a Publication, and a
-  publisher's own placement travels with its Snapshot announcement.
-- **Phones and tablets:** touch controls in both views and a compact layout.
-- **Network Settings** default to several free public servers per list,
-  with Reset to Defaults.
+Released as 1.1.0, which fixes two security problems in 1.0.0; see
+[ReleaseNotes-1.1.md](ReleaseNotes-1.1.md).
 
 ## Known limitations
 
 - **Storage:** everything is kept in the browser's own storage (in 1.0.0,
-  `localStorage`, a few megabytes per site; see above). Export documents and
+  `localStorage`, a few megabytes per site; 1.1 moved it to IndexedDB). Export documents and
   identities you want to keep; clearing the site's data deletes them.
 - **`'unsafe-eval'`:** the security policy still allows it, because Vue
   compiles the app's templates in the browser. Removing it needs a build step.
@@ -144,6 +102,6 @@ over)
   (copy and paste) to connect, or configure another server under **Network
   Settings**.
 - **Browsers:** current Chrome, Edge, Firefox and Safari. In 1.0.0 the
-  controls need a mouse and keyboard; touch controls came later (see above).
+  controls need a mouse and keyboard; 1.1 added touch controls.
 - The roadmap has no entries for 0.9.400 to 0.9.586; those milestones' notes
   were not kept.

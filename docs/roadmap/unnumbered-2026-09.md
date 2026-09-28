@@ -2105,3 +2105,18 @@ is.
   `await`. `tests/TrustDiscoveryHardening.test.js` sections 13 and 17 use real identities.
 - Still needed before delegation is wired in: a way for grants to travel between devices, signed revocation, a nonce
   check against replay, and a decision on chains (refused today). `docs/Architecture.md` lists them.
+
+## Release 1.1.0 (unnumbered, 2026-09-28)
+
+**Version 1.1.0 is released.** Everything since 1.0.0 ships under its own version number, so the security advisory
+GHSA-8ggw-xpjf-w4rh can name a patched version. It is a minor release rather than a patch because it also adds
+features (IndexedDB storage, the compact document format, touch controls, the public lobby, share links, background
+discovery and Steem).
+
+- `package.json`, `package-lock.json` and `core/version.js` (shown on the About page and stamped into new documents
+  as `engineVersion`) say 1.1.0. `PROTOCOL_VERSION` is unchanged.
+- `docs/ReleaseNotes-1.1.md` is new: the two security fixes first (SHA-256 content hashes and blueprint
+  fingerprints, and the did:key binding), then what's new, fixes, upgrading from 1.0.0 and known limitations. The
+  "Since 1.0.0" list in `docs/ReleaseNotes-1.0.md` was missing the did:key fix, the layout work, the Home key fix and
+  the Bitcoin wallet on the Publications page; it moved to the new file and now points there. The README names 1.1.0
+  and links both.
